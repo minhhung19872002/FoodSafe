@@ -1,7 +1,7 @@
 # FoodSafe — Tài liệu Phân tích Dự án
 
 > Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh  
-> Phiên bản: 1.0 — Ngày tạo: 2026-07-25
+> Phiên bản: 2.0 — Cập nhật lần cuối: 2026-07-25 (Full DB Audit)
 
 ---
 
@@ -11,11 +11,18 @@
 |------|----------|-----------|
 | [01-functional-requirements.md](01-functional-requirements.md) | 57 chức năng chi tiết theo nhóm A/B/C/E/F | ✅ Hoàn thành |
 | [02-domain-model.md](02-domain-model.md) | Domain entities, Value Objects, Aggregates, Domain Events | ✅ Hoàn thành |
-| [03-database-schema.sql](03-database-schema.sql) | PostgreSQL DDL — 43 bảng tùy chỉnh + ABP built-in | ✅ Hoàn thành |
+| [03-database-schema.sql](03-database-schema.sql) | PostgreSQL DDL — **59 bảng tùy chỉnh** + ABP built-in (~80 tổng) | ✅ v2.0 — Full audit |
 | [04-state-machines.md](04-state-machines.md) | 9 workflow state machines + domain events | ✅ Hoàn thành |
 | [05-permission-matrix.md](05-permission-matrix.md) | Ma trận phân quyền 7 vai trò × tất cả chức năng | ✅ Hoàn thành |
 | [06-api-contracts.md](06-api-contracts.md) | API endpoints cho tất cả modules | ✅ Hoàn thành |
 | [07-non-functional-requirements.md](07-non-functional-requirements.md) | Bảo mật, hiệu năng, UI/UX, deployment | ✅ Hoàn thành |
+| [08-database-requirement-traceability.md](08-database-requirement-traceability.md) | Ma trận truy xuất nguồn gốc: 57 STT → bảng DB + gap analysis | ✅ Hoàn thành |
+| [09-database-data-dictionary.md](09-database-data-dictionary.md) | Data dictionary: mô tả 59 bảng, cột, enum, phân loại nhạy cảm | ✅ Hoàn thành |
+| [10-database-index-strategy.md](10-database-index-strategy.md) | Chiến lược index: BTRee/GIN/partial + partitioning recommendations | ✅ Hoàn thành |
+| [11-database-security-and-data-scope.md](11-database-security-and-data-scope.md) | Kiểm soát bảo mật ATTT Cấp 2 ở tầng DB: RLS, encryption, masking | ✅ Hoàn thành |
+| [12-database-history-and-audit-strategy.md](12-database-history-and-audit-strategy.md) | Chiến lược lịch sử trạng thái + ABP audit log retention | ✅ Hoàn thành |
+| [13-database-integration-strategy.md](13-database-integration-strategy.md) | Data contracts cho tích hợp ngoài (Bộ YT, Sở NN, Sở CT) | ✅ Hoàn thành |
+| [14-database-review-report.md](14-database-review-report.md) | Báo cáo tổng hợp: giả định, rủi ro, quyết định thiết kế, next steps | ✅ Hoàn thành |
 
 ---
 
@@ -92,45 +99,79 @@
 
 ---
 
-## Tóm tắt Database Schema
+## Tóm tắt Database Schema (v2.0)
 
-| Module | Tables | Entities chính |
-|--------|--------|---------------|
-| Organizations | 2 | organizations, app_user_profiles |
-| Catalogs | 9 | countries, regions, provinces, districts, communes, product_groups, business_types, business_classifications, ad_types, document_types, testing_centers, testing_services |
+| Module | Bảng | Entities chính |
+|--------|------|---------------|
+| Organizations | **3** | organizations, app_user_profiles, **password_history** |
+| Catalogs | 12 | countries, regions, provinces, districts, communes, product_groups, business_types, business_classifications, ad_types, document_types, testing_centers, testing_services |
 | BusinessManagement | 5 | businesses, business_product_groups, business_handlers, products, self_declarations |
 | Licensing | 6 | product_registrations, advertisement_registrations, ad_reg_products, eligibility_certificates, cfs_certificates, export_food_certificates |
-| Inspection | 3 | inspection_plans, inspection_plan_items, inspection_results, inspection_violations |
-| FoodPoisoning | 4 | food_poisoning_cases, poisoning_case_error_reports, food_poisoning_incidents, poisoning_incident_error_reports |
-| Reporting | 4 | ndtp_reports, ndtp_report_error_notifications, atp_work_reports, action_month_reports |
-| AlertsAndTesting | 6 | atp_alerts, atp_news, news_linked_alerts, risk_analyses, testing_results, regulatory_documents, public_alert_submissions |
+| Inspection | **5** | inspection_plans, inspection_plan_items, inspection_results, **inspection_result_inspectors**, inspection_violations |
+| FoodPoisoning | 6 | food_poisoning_incidents, food_poisoning_cases, poisoning_case_error_reports, poisoning_incident_error_reports |
+| Reporting | **6** | ndtp_reports, ndtp_report_error_notifications, atp_work_reports, **atp_work_report_error_notifications**, action_month_reports, **action_month_report_error_notifications** |
+| AlertsAndTesting | **9** | public_alert_submissions, atp_alerts, atp_news, news_linked_alerts, risk_analyses, testing_results, **testing_result_services**, regulatory_documents |
 | CrossCutting | 3 | file_attachments, status_history, cached_dashboard_stats |
 | DataIntegration | 2 | api_specs, data_sharing_histories |
-| **Tổng** | **~44** | |
+| **Tổng** | **59** | (tăng từ 43, thêm 9 bảng mới — in đậm) |
 
-*+ ABP built-in: ~20 bảng (AbpUsers, AbpRoles, AbpAuditLogs, AbpPermissionGrants, AbpSettings...)*
+*+ ABP built-in: ~21 bảng (AbpUsers, AbpRoles, AbpAuditLogs, AbpPermissionGrants, AbpSettings, OpenIddict...)*  
+*GRAND TOTAL: ~80 bảng*
+
+---
+
+## Tóm tắt Audit v2.0 — Vấn đề đã phát hiện & xử lý
+
+### Critical (C) — Đã sửa tất cả:
+| Mã | Vấn đề | Giải pháp |
+|----|--------|-----------|
+| C-01 | Không có bảng password_history | Thêm bảng `password_history` |
+| C-02 | Thiếu UNIQUE trên `product_registrations.registration_number` | Thêm `uq_product_registrations_number` |
+| C-03 | Thiếu UNIQUE trên `self_declarations.declaration_number` | Thêm `uq_self_declarations_number` |
+| C-04 | Thiếu UNIQUE trên số chứng nhận (elic/cfs/export) | Thêm UNIQUE index trên 3 bảng |
+| C-05 | `inspector_ids UUID[]` — không thể enforce FK | Tạo bảng `inspection_result_inspectors` |
+| C-06 | `testing_results` thiếu FK đến `cat_testing_services` | Tạo bảng `testing_result_services` (M2M) |
+
+### High (H) — Đã sửa tất cả:
+| Mã | Vấn đề | Giải pháp |
+|----|--------|-----------|
+| H-01 | atp_work_reports + action_month_reports thiếu error notification | Thêm 2 bảng error notification |
+| H-02 | `file_attachments` thiếu: checksum, virus_scan, retention | Thêm 4 cột |
+| H-03 | `data_sharing_histories` thiếu idempotency_key, next_retry_at | Thêm 3 cột |
+| H-04 | Không có UNIQUE(plan_id, business_id) trong plan_items | Thêm constraint |
+| H-05 | `food_poisoning_cases` thiếu FK đến incident | Thêm `incident_id` FK |
+| H-06 | `businesses.tax_code` không có unique constraint | Thêm partial UNIQUE index |
+| H-07 | `inspection_plans` thiếu `rejected_reason` | Thêm 3 cột rejection |
+
+### Medium (M) — Đã sửa tất cả:
+| Mã | Vấn đề | Giải pháp |
+|----|--------|-----------|
+| M-01 | `atp_alerts` không link về `public_alert_submissions` | Thêm FK `public_submission_id` |
+| M-02 | `regulatory_documents` thiếu FTS index (STT 38) | Thêm `tsvector` + GIN index + trigger |
+| M-03 | Thiếu index trên `businesses.tax_code`, `advertisement_registrations` | Thêm indexes |
 
 ---
 
 ## Phân tích Rủi ro Thiếu sót
 
-### Đã xử lý:
-1. ✅ File attachments — bảng generic polymorphic (file_attachments)
+### Đã xử lý (v2.0):
+1. ✅ File attachments — polymorphic + checksum + virus scan + retention
 2. ✅ Status history tracking — bảng status_history
-3. ✅ Dashboard cache — bảng cached_dashboard_stats  
-4. ✅ Public submissions — bảng public_alert_submissions riêng
-5. ✅ Error reports — bảng riêng cho từng loại entity
-6. ✅ Bản đồ (Leaflet) — latitude/longitude trên businesses + poisoning
-7. ✅ Workflow state machines — đủ trạng thái + transitions
-8. ✅ DataIntegration — cả API spec + history
-9. ✅ Multi-service testing — testing_service_ids trên testing_results
+3. ✅ Dashboard cache — bảng cached_dashboard_stats
+4. ✅ Public submissions — bảng public_alert_submissions riêng (linked back to atp_alerts)
+5. ✅ Error reports — bảng riêng cho TẤT CẢ 3 loại báo cáo + 2 loại ngộ độc
+6. ✅ Bản đồ (Leaflet) — latitude/longitude trên businesses + poisoning incidents/cases
+7. ✅ Workflow state machines — đủ trạng thái + transitions + rejection fields
+8. ✅ DataIntegration — idempotency + retry + payload checksum
+9. ✅ Multi-service testing — bảng M2M `testing_result_services`
+10. ✅ Password reuse policy — bảng `password_history`
+11. ✅ Full-text search — tsvector + GIN index + auto-trigger trên regulatory_documents
+12. ✅ Inspector integrity — relational table thay UUID array
 
 ### Cân nhắc thêm (Phase 2+):
-- **Notification system**: bảng `notifications` cho thông báo trong app
+- **Notification system**: bảng `notifications` cho thông báo trong app (push + in-app)
 - **Report templates**: lưu template word/excel cho các mẫu báo cáo
-- **Scheduled reports**: cấu hình lịch tự động gửi báo cáo
 - **External system webhooks**: nhận data push từ Bộ Y tế
-- **Full-text search**: tích hợp Meilisearch hoặc PostgreSQL FTS
 - **Mobile app API**: nếu có nhu cầu app di động
 
 ---
