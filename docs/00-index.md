@@ -22,7 +22,8 @@
 | [11-database-security-and-data-scope.md](11-database-security-and-data-scope.md) | Kiểm soát bảo mật ATTT Cấp 2 ở tầng DB: RLS, encryption, masking | ✅ Hoàn thành |
 | [12-database-history-and-audit-strategy.md](12-database-history-and-audit-strategy.md) | Chiến lược lịch sử trạng thái + ABP audit log retention | ✅ Hoàn thành |
 | [13-database-integration-strategy.md](13-database-integration-strategy.md) | Data contracts cho tích hợp ngoài (Bộ YT, Sở NN, Sở CT) | ✅ Hoàn thành |
-| [14-database-review-report.md](14-database-review-report.md) | Báo cáo tổng hợp: giả định, rủi ro, quyết định thiết kế, next steps | ✅ Hoàn thành |
+| [14-database-review-report.md](14-database-review-report.md) | Báo cáo tổng hợp audit: executive summary, findings, readiness assessment | ✅ Hoàn thành |
+| [15-database-assumptions-and-open-questions.md](15-database-assumptions-and-open-questions.md) | 10 giả định (ASM-001–010) + 8 câu hỏi mở (OQ-001–008) cần xác nhận | ✅ Hoàn thành |
 
 ---
 
