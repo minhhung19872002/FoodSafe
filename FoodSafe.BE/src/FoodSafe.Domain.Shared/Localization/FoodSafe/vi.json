@@ -1,0 +1,28 @@
+{
+  "culture": "vi",
+  "texts": {
+    "Menu:Home": "Trang chủ",
+    "Menu:Dashboard": "Bảng điều khiển",
+    "Menu:BusinessManagement": "Quản lý cơ sở",
+    "Menu:Inspection": "Thanh kiểm tra",
+    "Menu:FoodPoisoning": "Ngộ độc thực phẩm",
+    "Menu:Reporting": "Báo cáo",
+    "Menu:Catalogs": "Danh mục",
+    "Menu:Administration": "Quản trị",
+    "Permission:FoodSafe": "FoodSafe",
+    "FoodSafe:Business:0001": "Không tìm thấy cơ sở sản xuất kinh doanh.",
+    "FoodSafe:Business:0002": "Mã số thuế đã tồn tại.",
+    "FoodSafe:Business:0003": "Không thể chỉnh sửa cơ sở đã ngừng hoạt động.",
+    "FoodSafe:Inspection:0001": "Không tìm thấy kế hoạch thanh kiểm tra.",
+    "FoodSafe:Inspection:0002": "Chỉ có thể chỉnh sửa kế hoạch ở trạng thái Nháp.",
+    "FoodSafe:Inspection:0003": "Cơ sở đã có trong kế hoạch.",
+    "FoodSafe:Report:0001": "Không tìm thấy báo cáo.",
+    "FoodSafe:Report:0002": "Chỉ báo cáo ở trạng thái Nháp mới được gửi.",
+    "FoodSafe:Report:0003": "Chỉ báo cáo đã gửi mới được xác minh.",
+    "FoodSafe:Report:0004": "Chỉ báo cáo đã gửi mới được trả lại.",
+    "FoodSafe:Catalog:0001": "Mã danh mục đã tồn tại.",
+    "FoodSafe:Catalog:0002": "Danh mục đang được sử dụng, không thể xóa.",
+    "FoodSafe:FoodPoisoning:0001": "Không tìm thấy ca ngộ độc.",
+    "FoodSafe:FoodPoisoning:0002": "Không tìm thấy vụ ngộ độc."
+  }
+}

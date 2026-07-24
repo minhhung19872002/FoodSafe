@@ -1,0 +1,14 @@
+{
+  "culture": "en",
+  "texts": {
+    "Menu:Home": "Home",
+    "Menu:Dashboard": "Dashboard",
+    "Menu:BusinessManagement": "Business Management",
+    "Menu:Inspection": "Inspection",
+    "Menu:FoodPoisoning": "Food Poisoning",
+    "Menu:Reporting": "Reporting",
+    "Menu:Catalogs": "Catalogs",
+    "Menu:Administration": "Administration",
+    "Permission:FoodSafe": "FoodSafe"
+  }
+}
