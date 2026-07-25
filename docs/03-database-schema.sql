@@ -15,8 +15,8 @@
 --     C-06 FIX: Added testing_result_services table (M2M to cat_testing_services)
 --     H-01 FIX: Added atp_work_report_error_notifications table
 --     H-01 FIX: Added action_month_report_error_notifications table
---     H-02 FIX: Added checksum, virus_scan_status, retention_status,
---               entity_version to file_attachments
+--     H-02 FIX: Added checksum, virus_scan_status, retention_status and the
+--               former entity_version approach (superseded by v2.3 typed submission owners)
 --     H-03 FIX: Added idempotency_key, next_retry_at, payload_checksum
 --               to data_sharing_histories
 --     H-04 FIX: Added UNIQUE(plan_id, business_id) to inspection_plan_items
@@ -42,7 +42,7 @@
 --     RT-H2 FIX: food_poisoning_cases — ALTER TABLE added FK for location_province_id
 --     RT-H3 FIX: public_alert_submissions — ALTER TABLE added FK for location_district_id
 --     RT-H4 FIX: atp_alerts — CHECK source!=2 OR public_submission_id IS NOT NULL
---     RT-H5 FIX: public_alert_submissions — CHECK status!=3 OR converted_alert_id IS NOT NULL
+--     RT-H5 FIX: former reciprocal converted_alert_id check (superseded by v2.3 one-way relation)
 --     RT-H6 FIX: testing_results — partial UNIQUE INDEX(sample_code, organization_id)
 --               WHERE is_deleted = FALSE
 --     RT-H7 FIX: inspection_plans — added submitted_by_id, submitted_at columns
@@ -68,12 +68,18 @@
 --     H-03 FIX: regulatory_documents — CHECK date ordering (issue <= effective <= expiry)
 --     I-01 FIX: business_handlers — CHECK training/health date ranges + added deletion_time + deleter_id
 --     J-01 FIX: public_alert_submissions.assigned_organization_id — added FK to organizations
---     M-01 FIX: file_attachments — added organization_id NULL FK column + index
+--     M-01 FIX: former attachment organization column (superseded by v2.3 document owner)
 --     Q-01 FIX: Added product_id FK indexes on self_declarations, product_registrations
 --     Q-02 FIX: Added geographic FK indexes on food_poisoning_incidents/cases
 --     T-01 FIX: self_declarations unique index scoped to (business_id, declaration_number)
 --     U-01 FIX: public_alert_submissions — replaced created_at/updated_at with ABP audit
 --              columns + added soft-delete (is_deleted + deletion_time + deleter_id)
+--
+--   v2.3 (2026-07-25): Resolution of 27 independent findings against PDF/FR/state/permissions
+--     Accepted 14; Partially accepted 11; Rejected 2. Added composite ownership FKs,
+--     focal-point scopes, immutable report submissions, typed document owners,
+--     hierarchy/geography enforcement, workflow evidence checks, immutable integration
+--     attempts, retained official-number uniqueness, one-way public conversion, and FK indexes.
 -- ============================================================
 
 -- ============================================================
@@ -128,6 +134,7 @@ CREATE TABLE organizations (
     leader_name              VARCHAR(200) NULL,     -- Trưởng đơn vị
     province_id              UUID         NULL,     -- FK to cat_provinces
     district_id              UUID         NULL,     -- FK to cat_districts
+    commune_id               UUID         NULL,     -- FK to cat_communes
     is_active                BOOL         NOT NULL DEFAULT TRUE,
     -- ABP Audit Fields
     extra_properties         JSONB        NULL,
@@ -142,10 +149,18 @@ CREATE TABLE organizations (
     CONSTRAINT pk_organizations PRIMARY KEY (id),
     CONSTRAINT uq_organizations_code UNIQUE (code),
     CONSTRAINT fk_organizations_parent FOREIGN KEY (parent_id) REFERENCES organizations(id),
-    CONSTRAINT chk_organizations_level CHECK (level IN (1, 2, 3))
+    CONSTRAINT chk_organizations_level CHECK (level IN (1, 2, 3)),
+    -- [IDB-006 FIX] Level-1 orgs (province) must have no parent; non-root orgs must have parent
+    CONSTRAINT chk_org_level_parent CHECK (
+        (level = 1 AND parent_id IS NULL) OR
+        (level != 1 AND parent_id IS NOT NULL)
+    )
 );
 CREATE INDEX idx_organizations_parent_id ON organizations(parent_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_organizations_level ON organizations(level) WHERE is_deleted = FALSE;
+CREATE INDEX idx_organizations_province ON organizations(province_id) WHERE province_id IS NOT NULL AND is_deleted = FALSE;
+CREATE INDEX idx_organizations_district ON organizations(district_id) WHERE district_id IS NOT NULL AND is_deleted = FALSE;
+CREATE INDEX idx_organizations_commune ON organizations(commune_id) WHERE commune_id IS NOT NULL AND is_deleted = FALSE;
 
 -- Extended user profile (1-1 với AbpUsers)
 -- Stores business-specific user data not in AbpUsers
@@ -179,6 +194,45 @@ CREATE TABLE password_history (
     CONSTRAINT pk_password_history PRIMARY KEY (id)
 );
 CREATE INDEX idx_password_history_user ON password_history(user_id, created_at DESC);
+
+-- [IDB-005 ACCEPTED] Effective-dated management focal-point scopes.
+-- Organization ownership remains the record's home scope; these grants add an
+-- independently managed jurisdiction for read/write authorization.
+CREATE TABLE management_scope_assignments (
+    id                       UUID         NOT NULL DEFAULT uuid_generate_v4(),
+    grantee_organization_id  UUID         NOT NULL,
+    grantee_user_id          UUID         NULL,       -- AbpUsers.Id; NULL = whole organization
+    scope_type               SMALLINT     NOT NULL,   -- 1=Geography, 2=Business, 3=BusinessType, 4=ProductGroup
+    province_id              UUID         NULL,
+    district_id              UUID         NULL,
+    commune_id               UUID         NULL,
+    business_id              UUID         NULL,
+    business_type_id         UUID         NULL,
+    product_group_id         UUID         NULL,
+    can_view                 BOOL         NOT NULL DEFAULT TRUE,
+    can_create               BOOL         NOT NULL DEFAULT FALSE,
+    can_edit                 BOOL         NOT NULL DEFAULT FALSE,
+    can_delete               BOOL         NOT NULL DEFAULT FALSE,
+    valid_from               TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    valid_to                 TIMESTAMPTZ  NULL,
+    creation_time            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    creator_id               UUID         NULL,
+    CONSTRAINT pk_management_scope_assignments PRIMARY KEY (id),
+    CONSTRAINT fk_msa_grantee_org FOREIGN KEY (grantee_organization_id) REFERENCES organizations(id),
+    CONSTRAINT chk_msa_type CHECK (scope_type IN (1, 2, 3, 4)),
+    CONSTRAINT chk_msa_dates CHECK (valid_to IS NULL OR valid_from < valid_to),
+    CONSTRAINT chk_msa_one_target CHECK (
+        (scope_type = 1 AND business_id IS NULL AND business_type_id IS NULL AND product_group_id IS NULL
+            AND num_nonnulls(province_id, district_id, commune_id) = 1) OR
+        (scope_type = 2 AND business_id IS NOT NULL AND province_id IS NULL AND district_id IS NULL
+            AND commune_id IS NULL AND business_type_id IS NULL AND product_group_id IS NULL) OR
+        (scope_type = 3 AND business_type_id IS NOT NULL AND province_id IS NULL AND district_id IS NULL
+            AND commune_id IS NULL AND business_id IS NULL AND product_group_id IS NULL) OR
+        (scope_type = 4 AND product_group_id IS NOT NULL AND province_id IS NULL AND district_id IS NULL
+            AND commune_id IS NULL AND business_id IS NULL AND business_type_id IS NULL)
+    )
+);
+CREATE INDEX idx_msa_grantee ON management_scope_assignments(grantee_organization_id, grantee_user_id, valid_from, valid_to);
 
 -- ============================================================
 -- SECTION 3: CATALOGS MODULE
@@ -252,7 +306,9 @@ CREATE TABLE cat_districts (
     CONSTRAINT pk_cat_districts PRIMARY KEY (id),
     CONSTRAINT uq_cat_districts_code UNIQUE (code),
     CONSTRAINT fk_cat_districts_province FOREIGN KEY (province_id) REFERENCES cat_provinces(id),
-    CONSTRAINT chk_cat_districts_type CHECK (type IN (1, 2, 3, 4))
+    CONSTRAINT chk_cat_districts_type CHECK (type IN (1, 2, 3, 4)),
+    -- [IDB-007 FIX] Composite unique enables composite FK enforcement of address hierarchy
+    CONSTRAINT uq_cat_districts_id_province UNIQUE (id, province_id)
 );
 CREATE INDEX idx_cat_districts_province ON cat_districts(province_id) WHERE is_deleted = FALSE;
 
@@ -273,7 +329,9 @@ CREATE TABLE cat_communes (
     CONSTRAINT pk_cat_communes PRIMARY KEY (id),
     CONSTRAINT uq_cat_communes_code UNIQUE (code),
     CONSTRAINT fk_cat_communes_district FOREIGN KEY (district_id) REFERENCES cat_districts(id),
-    CONSTRAINT chk_cat_communes_type CHECK (type IN (1, 2, 3))
+    CONSTRAINT chk_cat_communes_type CHECK (type IN (1, 2, 3)),
+    -- [IDB-007 FIX] Composite unique enables composite FK enforcement of address hierarchy
+    CONSTRAINT uq_cat_communes_id_district UNIQUE (id, district_id)
 );
 CREATE INDEX idx_cat_communes_district ON cat_communes(district_id) WHERE is_deleted = FALSE;
 
@@ -282,7 +340,74 @@ CREATE INDEX idx_cat_communes_district ON cat_communes(district_id) WHERE is_del
 -- cat_districts are defined here in Section 3. Added as ALTER TABLE after dependent tables exist.
 ALTER TABLE organizations
     ADD CONSTRAINT fk_organizations_province FOREIGN KEY (province_id) REFERENCES cat_provinces(id),
-    ADD CONSTRAINT fk_organizations_district FOREIGN KEY (district_id) REFERENCES cat_districts(id);
+    ADD CONSTRAINT fk_organizations_district FOREIGN KEY (district_id) REFERENCES cat_districts(id),
+    ADD CONSTRAINT fk_organizations_commune FOREIGN KEY (commune_id) REFERENCES cat_communes(id),
+    ADD CONSTRAINT fk_organizations_district_province FOREIGN KEY (district_id, province_id)
+        REFERENCES cat_districts(id, province_id),
+    ADD CONSTRAINT fk_organizations_commune_district FOREIGN KEY (commune_id, district_id)
+        REFERENCES cat_communes(id, district_id);
+
+-- [IDB-006 ACCEPTED] Parent level, cycle, and geography consistency cannot
+-- be expressed completely with row-local CHECK constraints.
+CREATE OR REPLACE FUNCTION validate_organization_hierarchy()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    parent_row organizations%ROWTYPE;
+BEGIN
+    IF NEW.parent_id = NEW.id THEN
+        RAISE EXCEPTION 'An organization cannot be its own parent';
+    END IF;
+
+    IF NEW.level = 1 THEN
+        IF NEW.parent_id IS NOT NULL OR NEW.district_id IS NOT NULL OR NEW.commune_id IS NOT NULL THEN
+            RAISE EXCEPTION 'Province-level organizations cannot have a parent, district, or commune';
+        END IF;
+        RETURN NEW;
+    END IF;
+
+    SELECT * INTO parent_row FROM organizations WHERE id = NEW.parent_id;
+    IF NOT FOUND OR parent_row.level <> NEW.level - 1 THEN
+        RAISE EXCEPTION 'Organization parent must be exactly one administrative level higher';
+    END IF;
+
+    IF NEW.level = 2 AND (
+        NEW.province_id IS NULL OR
+        parent_row.province_id IS DISTINCT FROM NEW.province_id OR
+        NEW.district_id IS NULL OR NEW.commune_id IS NOT NULL
+    ) THEN
+        RAISE EXCEPTION 'District organization geography must match its province parent';
+    END IF;
+
+    IF NEW.level = 3 AND (
+        NEW.province_id IS NULL OR NEW.district_id IS NULL OR NEW.commune_id IS NULL OR
+        parent_row.province_id IS DISTINCT FROM NEW.province_id OR
+        parent_row.district_id IS DISTINCT FROM NEW.district_id
+    ) THEN
+        RAISE EXCEPTION 'Commune organization geography must match its district parent';
+    END IF;
+
+    IF EXISTS (
+        WITH RECURSIVE ancestors AS (
+            SELECT id, parent_id FROM organizations WHERE id = NEW.parent_id
+            UNION ALL
+            SELECT o.id, o.parent_id
+            FROM organizations o
+            JOIN ancestors a ON o.id = a.parent_id
+        )
+        SELECT 1 FROM ancestors WHERE id = NEW.id
+    ) THEN
+        RAISE EXCEPTION 'Organization hierarchy cycle detected';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_validate_organization_hierarchy
+BEFORE INSERT OR UPDATE OF parent_id, level, province_id, district_id, commune_id
+ON organizations
+FOR EACH ROW EXECUTE FUNCTION validate_organization_hierarchy();
 
 -- Self-referencing hierarchy: Nhóm chính (level 1) → Nhóm phụ (level 2)
 CREATE TABLE cat_product_groups (
@@ -403,7 +528,11 @@ CREATE TABLE cat_testing_centers (
     deletion_time            TIMESTAMPTZ  NULL,
     deleter_id               UUID         NULL,
     CONSTRAINT pk_cat_testing_centers PRIMARY KEY (id),
-    CONSTRAINT uq_cat_testing_centers_code UNIQUE (code)
+    CONSTRAINT uq_cat_testing_centers_code UNIQUE (code),
+    CONSTRAINT chk_ctc_address_chain CHECK (
+        (address_commune_id IS NULL OR address_district_id IS NOT NULL) AND
+        (address_district_id IS NULL OR address_province_id IS NOT NULL)
+    )
 );
 
 -- Dịch vụ kiểm nghiệm của từng cơ sở
@@ -424,6 +553,7 @@ CREATE TABLE cat_testing_services (
     is_deleted               BOOL          NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_cat_testing_services PRIMARY KEY (id),
     CONSTRAINT uq_cat_testing_services_code UNIQUE (testing_center_id, code),
+    CONSTRAINT uq_cat_testing_services_id_center UNIQUE (id, testing_center_id),
     CONSTRAINT fk_cat_testing_services_center FOREIGN KEY (testing_center_id) REFERENCES cat_testing_centers(id)
 );
 CREATE INDEX idx_cat_testing_services_center ON cat_testing_services(testing_center_id) WHERE is_deleted = FALSE;
@@ -435,6 +565,11 @@ ALTER TABLE cat_testing_centers
     ADD CONSTRAINT fk_ctc_district FOREIGN KEY (address_district_id) REFERENCES cat_districts(id);
 ALTER TABLE cat_testing_centers
     ADD CONSTRAINT fk_ctc_province FOREIGN KEY (address_province_id) REFERENCES cat_provinces(id);
+ALTER TABLE cat_testing_centers
+    ADD CONSTRAINT fk_ctc_district_province FOREIGN KEY (address_district_id, address_province_id)
+        REFERENCES cat_districts(id, province_id),
+    ADD CONSTRAINT fk_ctc_commune_district FOREIGN KEY (address_commune_id, address_district_id)
+        REFERENCES cat_communes(id, district_id);
 
 -- ============================================================
 -- SECTION 4: BUSINESS MANAGEMENT MODULE
@@ -490,10 +625,23 @@ CREATE TABLE businesses (
     CONSTRAINT fk_businesses_commune FOREIGN KEY (address_commune_id) REFERENCES cat_communes(id),
     CONSTRAINT fk_businesses_district FOREIGN KEY (address_district_id) REFERENCES cat_districts(id),
     CONSTRAINT fk_businesses_province FOREIGN KEY (address_province_id) REFERENCES cat_provinces(id),
+    CONSTRAINT fk_businesses_district_province FOREIGN KEY (address_district_id, address_province_id)
+        REFERENCES cat_districts(id, province_id),
+    CONSTRAINT fk_businesses_commune_district FOREIGN KEY (address_commune_id, address_district_id)
+        REFERENCES cat_communes(id, district_id),
     CONSTRAINT chk_businesses_status CHECK (status IN (1, 2, 3)),
+    CONSTRAINT chk_businesses_address_chain CHECK (
+        (address_commune_id IS NULL OR address_district_id IS NOT NULL) AND
+        (address_district_id IS NULL OR address_province_id IS NOT NULL)
+    ),
+    CONSTRAINT chk_businesses_coordinates CHECK (
+        (address_latitude IS NULL AND address_longitude IS NULL) OR
+        (address_latitude BETWEEN -90 AND 90 AND address_longitude BETWEEN -180 AND 180)
+    ),
     -- [RT-M1 FIX] Suspended businesses (status=3) must have suspension_reason
     CONSTRAINT chk_businesses_suspension CHECK (status != 3 OR suspension_reason IS NOT NULL)
 );
+ALTER TABLE businesses ADD CONSTRAINT uq_businesses_id_org UNIQUE (id, organization_id);
 CREATE UNIQUE INDEX uq_businesses_code ON businesses(code)
     WHERE code IS NOT NULL AND is_deleted = FALSE;
 -- [H-06 FIX] Unique tax code for active businesses (một MST chỉ một cơ sở hoạt động)
@@ -501,6 +649,8 @@ CREATE UNIQUE INDEX uq_businesses_tax_code ON businesses(tax_code)
     WHERE tax_code IS NOT NULL AND is_deleted = FALSE AND status != 2;
 CREATE INDEX idx_businesses_org_id ON businesses(organization_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_businesses_type ON businesses(business_type_id) WHERE is_deleted = FALSE;
+CREATE INDEX idx_businesses_classification ON businesses(business_classification_id)
+    WHERE business_classification_id IS NOT NULL AND is_deleted = FALSE;
 CREATE INDEX idx_businesses_status ON businesses(status) WHERE is_deleted = FALSE;
 CREATE INDEX idx_businesses_tax_code ON businesses(tax_code) WHERE tax_code IS NOT NULL AND is_deleted = FALSE;
 CREATE INDEX idx_businesses_name_trgm ON businesses USING GIN (name gin_trgm_ops) WHERE is_deleted = FALSE;
@@ -508,6 +658,7 @@ CREATE INDEX idx_businesses_location ON businesses(address_latitude, address_lon
     WHERE address_latitude IS NOT NULL AND address_longitude IS NOT NULL AND is_deleted = FALSE;
 CREATE INDEX idx_businesses_commune ON businesses(address_commune_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_businesses_district ON businesses(address_district_id) WHERE is_deleted = FALSE;
+CREATE INDEX idx_businesses_province ON businesses(address_province_id) WHERE is_deleted = FALSE;
 
 -- Nhóm sản phẩm của cơ sở (M2M)
 CREATE TABLE business_product_groups (
@@ -597,16 +748,28 @@ CREATE TABLE products (
     deletion_time                TIMESTAMPTZ   NULL,
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_products PRIMARY KEY (id),
-    CONSTRAINT fk_products_business FOREIGN KEY (business_id) REFERENCES businesses(id),
+    CONSTRAINT fk_products_business_org FOREIGN KEY (business_id, organization_id)
+        REFERENCES businesses(id, organization_id),
     CONSTRAINT fk_products_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_products_group FOREIGN KEY (product_group_id) REFERENCES cat_product_groups(id),
     CONSTRAINT fk_products_country FOREIGN KEY (manufacturing_country_id) REFERENCES cat_countries(id),
     CONSTRAINT chk_products_status CHECK (status IN (1, 2))
 );
+ALTER TABLE products
+    ADD CONSTRAINT uq_products_id_business_org UNIQUE (id, business_id, organization_id);
 CREATE INDEX idx_products_business ON products(business_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_products_org ON products(organization_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_products_group ON products(product_group_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_products_name_trgm ON products USING GIN (name gin_trgm_ops) WHERE is_deleted = FALSE;
+
+-- Complete forward references for management focal-point scopes.
+ALTER TABLE management_scope_assignments
+    ADD CONSTRAINT fk_msa_province FOREIGN KEY (province_id) REFERENCES cat_provinces(id),
+    ADD CONSTRAINT fk_msa_district FOREIGN KEY (district_id) REFERENCES cat_districts(id),
+    ADD CONSTRAINT fk_msa_commune FOREIGN KEY (commune_id) REFERENCES cat_communes(id),
+    ADD CONSTRAINT fk_msa_business FOREIGN KEY (business_id) REFERENCES businesses(id),
+    ADD CONSTRAINT fk_msa_business_type FOREIGN KEY (business_type_id) REFERENCES cat_business_types(id),
+    ADD CONSTRAINT fk_msa_product_group FOREIGN KEY (product_group_id) REFERENCES cat_product_groups(id);
 
 -- Tự công bố sản phẩm (Nghị định 15/2018)
 CREATE TABLE self_declarations (
@@ -637,19 +800,23 @@ CREATE TABLE self_declarations (
     deletion_time                TIMESTAMPTZ   NULL,
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_self_declarations PRIMARY KEY (id),
-    CONSTRAINT fk_self_declarations_business FOREIGN KEY (business_id) REFERENCES businesses(id),
-    CONSTRAINT fk_self_declarations_product FOREIGN KEY (product_id) REFERENCES products(id),
+    CONSTRAINT fk_self_declarations_business_org FOREIGN KEY (business_id, organization_id)
+        REFERENCES businesses(id, organization_id),
+    CONSTRAINT fk_self_declarations_product_owner FOREIGN KEY (product_id, business_id, organization_id)
+        REFERENCES products(id, business_id, organization_id),
     CONSTRAINT fk_self_declarations_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_self_declarations_status CHECK (status IN (1, 2, 3)),
     -- [E-05 FIX] Revoked status requires revoke_reason
-    CONSTRAINT chk_self_declarations_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
+    CONSTRAINT chk_self_declarations_revoke CHECK (
+        status != 3 OR (revoke_reason IS NOT NULL AND revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)
+    ),
     -- [RT-M3 FIX] Effective date must not be after expiry date
     CONSTRAINT chk_self_declarations_dates CHECK (declaration_date IS NULL OR expiry_date IS NULL OR declaration_date <= expiry_date)
 );
 -- [C-03 FIX] Declaration number must be unique (government-issued numbers are system-wide unique)
 -- [T-01 FIX] Self-declaration numbers are business-controlled, not nationally unique
 -- Scope uniqueness to (business_id, declaration_number) not globally
-CREATE UNIQUE INDEX uq_self_declarations_number ON self_declarations(business_id, declaration_number) WHERE is_deleted = FALSE;
+CREATE UNIQUE INDEX uq_self_declarations_number ON self_declarations(business_id, declaration_number);
 CREATE INDEX idx_self_declarations_business ON self_declarations(business_id) WHERE is_deleted = FALSE;
 -- [Q-01 FIX] Index FK column product_id (join from products to self_declarations)
 CREATE INDEX idx_self_declarations_product ON self_declarations(product_id) WHERE product_id IS NOT NULL AND is_deleted = FALSE;
@@ -691,17 +858,21 @@ CREATE TABLE product_registrations (
     deletion_time                TIMESTAMPTZ   NULL,
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_product_registrations PRIMARY KEY (id),
-    CONSTRAINT fk_product_reg_business FOREIGN KEY (business_id) REFERENCES businesses(id),
-    CONSTRAINT fk_product_reg_product FOREIGN KEY (product_id) REFERENCES products(id),
+    CONSTRAINT fk_product_reg_business_org FOREIGN KEY (business_id, organization_id)
+        REFERENCES businesses(id, organization_id),
+    CONSTRAINT fk_product_reg_product_owner FOREIGN KEY (product_id, business_id, organization_id)
+        REFERENCES products(id, business_id, organization_id),
     CONSTRAINT fk_product_reg_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_product_reg_status CHECK (status IN (1, 2, 3)),
     -- [E-05 FIX] Revoked status requires revoke_reason
-    CONSTRAINT chk_product_reg_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
+    CONSTRAINT chk_product_reg_revoke CHECK (
+        status != 3 OR (revoke_reason IS NOT NULL AND revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)
+    ),
     -- [H-01 FIX] Registration date must not be after expiry date
     CONSTRAINT chk_product_reg_dates CHECK (expiry_date IS NULL OR registration_date <= expiry_date)
 );
 -- [C-02 FIX] Registration number is unique per government issuance
-CREATE UNIQUE INDEX uq_product_registrations_number ON product_registrations(registration_number) WHERE is_deleted = FALSE;
+CREATE UNIQUE INDEX uq_product_registrations_number ON product_registrations(registration_number);
 CREATE INDEX idx_product_registrations_business ON product_registrations(business_id) WHERE is_deleted = FALSE;
 -- [Q-01 FIX] Index FK column product_id
 CREATE INDEX idx_product_registrations_product ON product_registrations(product_id) WHERE product_id IS NOT NULL AND is_deleted = FALSE;
@@ -736,16 +907,21 @@ CREATE TABLE advertisement_registrations (
     deletion_time                TIMESTAMPTZ   NULL,
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_advertisement_registrations PRIMARY KEY (id),
-    CONSTRAINT fk_ad_reg_business FOREIGN KEY (business_id) REFERENCES businesses(id),
+    CONSTRAINT fk_ad_reg_business_org FOREIGN KEY (business_id, organization_id)
+        REFERENCES businesses(id, organization_id),
     CONSTRAINT fk_ad_reg_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_ad_reg_type FOREIGN KEY (advertisement_type_id) REFERENCES cat_advertisement_types(id),
     CONSTRAINT chk_ad_reg_status CHECK (status IN (1, 2, 3)),
     -- [E-05 FIX] Revoked status requires revoke_reason
-    CONSTRAINT chk_ad_reg_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
+    CONSTRAINT chk_ad_reg_revoke CHECK (
+        status != 3 OR (revoke_reason IS NOT NULL AND revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)
+    ),
     -- [H-02 FIX] Registration date must not be after expiry date
     CONSTRAINT chk_ad_reg_dates CHECK (expiry_date IS NULL OR registration_date <= expiry_date)
 );
-CREATE UNIQUE INDEX uq_advertisement_registrations_number ON advertisement_registrations(registration_number) WHERE is_deleted = FALSE;
+ALTER TABLE advertisement_registrations
+    ADD CONSTRAINT uq_ad_reg_id_business_org UNIQUE (id, business_id, organization_id);
+CREATE UNIQUE INDEX uq_advertisement_registrations_number ON advertisement_registrations(registration_number);
 CREATE INDEX idx_ad_reg_business ON advertisement_registrations(business_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_ad_reg_org ON advertisement_registrations(organization_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_ad_reg_expiry ON advertisement_registrations(expiry_date, status) WHERE is_deleted = FALSE;
@@ -754,9 +930,13 @@ CREATE INDEX idx_ad_reg_expiry ON advertisement_registrations(expiry_date, statu
 CREATE TABLE advertisement_registration_products (
     advertisement_registration_id UUID NOT NULL,
     product_id                    UUID NOT NULL,
+    business_id                   UUID NOT NULL,
+    organization_id               UUID NOT NULL,
     CONSTRAINT pk_ad_reg_products PRIMARY KEY (advertisement_registration_id, product_id),
-    CONSTRAINT fk_arp_ad_reg FOREIGN KEY (advertisement_registration_id) REFERENCES advertisement_registrations(id) ON DELETE CASCADE,
-    CONSTRAINT fk_arp_product FOREIGN KEY (product_id) REFERENCES products(id)
+    CONSTRAINT fk_arp_ad_reg_owner FOREIGN KEY (advertisement_registration_id, business_id, organization_id)
+        REFERENCES advertisement_registrations(id, business_id, organization_id) ON DELETE CASCADE,
+    CONSTRAINT fk_arp_product_owner FOREIGN KEY (product_id, business_id, organization_id)
+        REFERENCES products(id, business_id, organization_id)
 );
 CREATE INDEX idx_arp_product ON advertisement_registration_products(product_id);
 
@@ -787,16 +967,19 @@ CREATE TABLE eligibility_certificates (
     deletion_time                TIMESTAMPTZ   NULL,
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_eligibility_certificates PRIMARY KEY (id),
-    CONSTRAINT fk_elic_business FOREIGN KEY (business_id) REFERENCES businesses(id),
+    CONSTRAINT fk_elic_business_org FOREIGN KEY (business_id, organization_id)
+        REFERENCES businesses(id, organization_id),
     CONSTRAINT fk_elic_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_elic_status CHECK (status IN (1, 2, 3)),
     -- [E-05 FIX] Revoked status requires revoke_reason
-    CONSTRAINT chk_elic_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
+    CONSTRAINT chk_elic_revoke CHECK (
+        status != 3 OR (revoke_reason IS NOT NULL AND revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)
+    ),
     -- [RT-M3 FIX] Issue date must not be after expiry date
     CONSTRAINT chk_elic_dates CHECK (issue_date IS NULL OR expiry_date IS NULL OR issue_date <= expiry_date)
 );
 -- [C-04 FIX] Certificate number is unique per government issuance
-CREATE UNIQUE INDEX uq_eligibility_certificates_number ON eligibility_certificates(certificate_number) WHERE is_deleted = FALSE;
+CREATE UNIQUE INDEX uq_eligibility_certificates_number ON eligibility_certificates(certificate_number);
 CREATE INDEX idx_eligibility_certificates_business ON eligibility_certificates(business_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_eligibility_certificates_expiry ON eligibility_certificates(expiry_date, status) WHERE is_deleted = FALSE;
 CREATE INDEX idx_eligibility_certificates_org ON eligibility_certificates(organization_id) WHERE is_deleted = FALSE;
@@ -828,18 +1011,22 @@ CREATE TABLE cfs_certificates (
     deletion_time                TIMESTAMPTZ   NULL,
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_cfs_certificates PRIMARY KEY (id),
-    CONSTRAINT fk_cfs_business FOREIGN KEY (business_id) REFERENCES businesses(id),
-    CONSTRAINT fk_cfs_product FOREIGN KEY (product_id) REFERENCES products(id),
+    CONSTRAINT fk_cfs_business_org FOREIGN KEY (business_id, organization_id)
+        REFERENCES businesses(id, organization_id),
+    CONSTRAINT fk_cfs_product_owner FOREIGN KEY (product_id, business_id, organization_id)
+        REFERENCES products(id, business_id, organization_id),
     CONSTRAINT fk_cfs_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_cfs_country FOREIGN KEY (destination_country_id) REFERENCES cat_countries(id),
     CONSTRAINT chk_cfs_status CHECK (status IN (1, 2, 3)),
     -- [E-05 FIX] Revoked status requires revoke_reason
-    CONSTRAINT chk_cfs_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
+    CONSTRAINT chk_cfs_revoke CHECK (
+        status != 3 OR (revoke_reason IS NOT NULL AND revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)
+    ),
     -- [RT-M3 FIX] Issue date must not be after expiry date
     CONSTRAINT chk_cfs_dates CHECK (issue_date IS NULL OR expiry_date IS NULL OR issue_date <= expiry_date)
 );
 -- [C-04 FIX] Certificate number must be unique
-CREATE UNIQUE INDEX uq_cfs_certificates_number ON cfs_certificates(certificate_number) WHERE is_deleted = FALSE;
+CREATE UNIQUE INDEX uq_cfs_certificates_number ON cfs_certificates(certificate_number);
 CREATE INDEX idx_cfs_business ON cfs_certificates(business_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_cfs_org ON cfs_certificates(organization_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_cfs_expiry ON cfs_certificates(expiry_date, status) WHERE is_deleted = FALSE;
@@ -874,18 +1061,22 @@ CREATE TABLE export_food_certificates (
     deletion_time                TIMESTAMPTZ   NULL,
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_export_food_certificates PRIMARY KEY (id),
-    CONSTRAINT fk_efc_business FOREIGN KEY (business_id) REFERENCES businesses(id),
-    CONSTRAINT fk_efc_product FOREIGN KEY (product_id) REFERENCES products(id),
+    CONSTRAINT fk_efc_business_org FOREIGN KEY (business_id, organization_id)
+        REFERENCES businesses(id, organization_id),
+    CONSTRAINT fk_efc_product_owner FOREIGN KEY (product_id, business_id, organization_id)
+        REFERENCES products(id, business_id, organization_id),
     CONSTRAINT fk_efc_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_efc_country FOREIGN KEY (destination_country_id) REFERENCES cat_countries(id),
     CONSTRAINT chk_efc_status CHECK (status IN (1, 2, 3)),
     -- [E-05 FIX] Revoked status requires revoke_reason
-    CONSTRAINT chk_efc_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
+    CONSTRAINT chk_efc_revoke CHECK (
+        status != 3 OR (revoke_reason IS NOT NULL AND revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)
+    ),
     -- [RT-M3 FIX] Issue date must not be after expiry date
     CONSTRAINT chk_efc_dates CHECK (issue_date IS NULL OR expiry_date IS NULL OR issue_date <= expiry_date)
 );
 -- [C-04 FIX] Certificate number must be unique
-CREATE UNIQUE INDEX uq_export_food_certificates_number ON export_food_certificates(certificate_number) WHERE is_deleted = FALSE;
+CREATE UNIQUE INDEX uq_export_food_certificates_number ON export_food_certificates(certificate_number);
 CREATE INDEX idx_efc_business ON export_food_certificates(business_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_efc_org ON export_food_certificates(organization_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_efc_expiry ON export_food_certificates(expiry_date, status) WHERE is_deleted = FALSE;
@@ -938,6 +1129,15 @@ CREATE TABLE inspection_plans (
     CONSTRAINT fk_plans_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_inspection_plans_type CHECK (plan_type IN (1, 2, 3, 4)),
     CONSTRAINT chk_inspection_plans_status CHECK (status IN (1, 2, 3, 4, 5, 6)),
+    CONSTRAINT chk_inspection_plan_submission CHECK (
+        (status = 1) OR (submitted_by_id IS NOT NULL AND submitted_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_inspection_plan_approval CHECK (
+        status NOT IN (3, 4, 5) OR (approved_by_id IS NOT NULL AND approved_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_inspection_plan_cancellation CHECK (
+        status <> 6 OR (cancelled_by_id IS NOT NULL AND cancelled_at IS NOT NULL AND cancelled_reason IS NOT NULL)
+    ),
     -- [RT-M2 FIX] Start must not be after end
     CONSTRAINT chk_inspection_plans_dates CHECK (start_date IS NULL OR end_date IS NULL OR start_date <= end_date)
 );
@@ -962,9 +1162,9 @@ CREATE TABLE inspection_plan_items (
     CONSTRAINT fk_ipi_business FOREIGN KEY (business_id) REFERENCES businesses(id),
     -- [H-04 FIX] Each business can only appear once per plan
     CONSTRAINT uq_ipi_plan_business UNIQUE (plan_id, business_id),
+    CONSTRAINT uq_ipi_id_plan_business UNIQUE (id, plan_id, business_id),
     CONSTRAINT chk_ipi_status CHECK (status IN (1, 2, 3, 4))
 );
-CREATE INDEX idx_inspection_plan_items_plan ON inspection_plan_items(plan_id);
 CREATE INDEX idx_inspection_plan_items_business ON inspection_plan_items(business_id);
 
 -- Kết quả thanh kiểm tra từng cơ sở
@@ -1005,16 +1205,26 @@ CREATE TABLE inspection_results (
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_inspection_results PRIMARY KEY (id),
     CONSTRAINT fk_ir_plan FOREIGN KEY (plan_id) REFERENCES inspection_plans(id),
-    CONSTRAINT fk_ir_plan_item FOREIGN KEY (plan_item_id) REFERENCES inspection_plan_items(id),
-    CONSTRAINT fk_ir_business FOREIGN KEY (business_id) REFERENCES businesses(id),
+    CONSTRAINT fk_ir_plan_item_tuple FOREIGN KEY (plan_item_id, plan_id, business_id)
+        REFERENCES inspection_plan_items(id, plan_id, business_id),
+    CONSTRAINT fk_ir_business_org FOREIGN KEY (business_id, organization_id)
+        REFERENCES businesses(id, organization_id),
     CONSTRAINT fk_ir_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_ir_type CHECK (inspection_type IN (1, 2, 3, 4)),
-    CONSTRAINT chk_ir_result CHECK (overall_result IN (1, 2, 3))
+    CONSTRAINT chk_ir_result CHECK (overall_result IN (1, 2, 3)),
+    CONSTRAINT chk_ir_plan_tuple CHECK (
+        (plan_item_id IS NULL AND plan_id IS NULL) OR
+        (plan_item_id IS NOT NULL AND plan_id IS NOT NULL)
+    )
 );
+CREATE UNIQUE INDEX uq_inspection_results_primary_plan_item ON inspection_results(plan_item_id)
+    WHERE plan_item_id IS NOT NULL AND inspection_type <> 3 AND is_deleted = FALSE;
 CREATE INDEX idx_inspection_results_business ON inspection_results(business_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_inspection_results_date ON inspection_results(inspection_date) WHERE is_deleted = FALSE;
 CREATE INDEX idx_inspection_results_org ON inspection_results(organization_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_inspection_results_plan ON inspection_results(plan_id) WHERE plan_id IS NOT NULL AND is_deleted = FALSE;
+CREATE INDEX idx_inspection_results_plan_item ON inspection_results(plan_item_id)
+    WHERE plan_item_id IS NOT NULL AND is_deleted = FALSE;
 CREATE INDEX idx_inspection_results_violation ON inspection_results(has_violation) WHERE has_violation = TRUE AND is_deleted = FALSE;
 
 -- [C-05 NEW TABLE] Inspectors per inspection result (replaces inspector_ids UUID[])
@@ -1113,6 +1323,23 @@ CREATE TABLE food_poisoning_incidents (
     CONSTRAINT chk_fpi_counts CHECK (
         exposed_count >= 0 AND affected_count >= 0 AND
         hospitalized_count >= 0 AND death_count >= 0
+    ),
+    CONSTRAINT chk_fpi_address_chain CHECK (
+        (location_commune_id IS NULL OR location_district_id IS NOT NULL) AND
+        (location_district_id IS NULL OR location_province_id IS NOT NULL)
+    ),
+    CONSTRAINT chk_fpi_coordinates CHECK (
+        (location_latitude IS NULL AND location_longitude IS NULL) OR
+        (location_latitude BETWEEN -90 AND 90 AND location_longitude BETWEEN -180 AND 180)
+    ),
+    CONSTRAINT chk_fpi_report_evidence CHECK (
+        status = 1 OR (reported_by_id IS NOT NULL AND reported_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_fpi_verify_evidence CHECK (
+        status NOT IN (3, 4) OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_fpi_conclude_evidence CHECK (
+        status <> 4 OR (concluded_by_id IS NOT NULL AND concluded_at IS NOT NULL)
     )
 );
 CREATE INDEX idx_fpi_org ON food_poisoning_incidents(organization_id) WHERE is_deleted = FALSE;
@@ -1128,7 +1355,11 @@ CREATE INDEX idx_fpi_province ON food_poisoning_incidents(location_province_id) 
 -- [RT-C5 FIX] food_poisoning_incidents missing FK constraints for district and province
 ALTER TABLE food_poisoning_incidents
     ADD CONSTRAINT fk_fpi_district FOREIGN KEY (location_district_id) REFERENCES cat_districts(id),
-    ADD CONSTRAINT fk_fpi_province FOREIGN KEY (location_province_id) REFERENCES cat_provinces(id);
+    ADD CONSTRAINT fk_fpi_province FOREIGN KEY (location_province_id) REFERENCES cat_provinces(id),
+    ADD CONSTRAINT fk_fpi_district_province FOREIGN KEY (location_district_id, location_province_id)
+        REFERENCES cat_districts(id, province_id),
+    ADD CONSTRAINT fk_fpi_commune_district FOREIGN KEY (location_commune_id, location_district_id)
+        REFERENCES cat_communes(id, district_id);
 
 -- Ca ngộ độc thực phẩm nhỏ lẻ (individual cases)
 CREATE TABLE food_poisoning_cases (
@@ -1195,7 +1426,21 @@ CREATE TABLE food_poisoning_cases (
     CONSTRAINT fk_fpc_district FOREIGN KEY (location_district_id) REFERENCES cat_districts(id),
     CONSTRAINT chk_fpc_status CHECK (status IN (1, 2, 3)),
     CONSTRAINT chk_fpc_gender CHECK (victim_gender IS NULL OR victim_gender IN (1, 2, 3)),
-    CONSTRAINT chk_fpc_result CHECK (treatment_result IS NULL OR treatment_result IN (1, 2, 3))
+    CONSTRAINT chk_fpc_result CHECK (treatment_result IS NULL OR treatment_result IN (1, 2, 3)),
+    CONSTRAINT chk_fpc_address_chain CHECK (
+        (location_commune_id IS NULL OR location_district_id IS NOT NULL) AND
+        (location_district_id IS NULL OR location_province_id IS NOT NULL)
+    ),
+    CONSTRAINT chk_fpc_coordinates CHECK (
+        (location_latitude IS NULL AND location_longitude IS NULL) OR
+        (location_latitude BETWEEN -90 AND 90 AND location_longitude BETWEEN -180 AND 180)
+    ),
+    CONSTRAINT chk_fpc_report_evidence CHECK (
+        status = 1 OR (reported_by_id IS NOT NULL AND reported_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_fpc_verify_evidence CHECK (
+        status <> 3 OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)
+    )
 );
 CREATE INDEX idx_fpc_org ON food_poisoning_cases(organization_id) WHERE is_deleted = FALSE;
 -- [Q-02 FIX] Index on location_province_id FK column (added via ALTER TABLE)
@@ -1208,7 +1453,11 @@ CREATE UNIQUE INDEX uq_fpc_case_code ON food_poisoning_cases(case_code, organiza
 
 -- [RT-H2 FIX] food_poisoning_cases missing FK for location_province_id
 ALTER TABLE food_poisoning_cases
-    ADD CONSTRAINT fk_fpc_province FOREIGN KEY (location_province_id) REFERENCES cat_provinces(id);
+    ADD CONSTRAINT fk_fpc_province FOREIGN KEY (location_province_id) REFERENCES cat_provinces(id),
+    ADD CONSTRAINT fk_fpc_district_province FOREIGN KEY (location_district_id, location_province_id)
+        REFERENCES cat_districts(id, province_id),
+    ADD CONSTRAINT fk_fpc_commune_district FOREIGN KEY (location_commune_id, location_district_id)
+        REFERENCES cat_communes(id, district_id);
 
 -- Phiếu thông báo sai sót ca ngộ độc
 -- Created only when case is Verified; tracks correction requests
@@ -1282,6 +1531,7 @@ CREATE TABLE ndtp_reports (
     submission_version           SMALLINT      NOT NULL DEFAULT 1,
     -- Workflow: 1=Draft, 2=Submitted, 3=Verified, 4=Returned, 5=Completed
     status                       SMALLINT      NOT NULL DEFAULT 1,
+    submitted_to_organization_id UUID          NULL,
     submitted_by_id              UUID          NULL,
     submitted_at                 TIMESTAMPTZ   NULL,
     verified_by_id               UUID          NULL,
@@ -1306,12 +1556,23 @@ CREATE TABLE ndtp_reports (
     CONSTRAINT fk_ndtp_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_ndtp_month CHECK (period_month BETWEEN 1 AND 12),
     CONSTRAINT chk_ndtp_status CHECK (status IN (1, 2, 3, 4, 5)),
+    CONSTRAINT fk_ndtp_recipient FOREIGN KEY (submitted_to_organization_id) REFERENCES organizations(id),
+    CONSTRAINT chk_ndtp_submission_evidence CHECK (
+        status = 1 OR (submitted_to_organization_id IS NOT NULL AND submitted_by_id IS NOT NULL AND submitted_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_ndtp_verification_evidence CHECK (
+        status NOT IN (3, 5) OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_ndtp_completion_evidence CHECK (
+        status <> 5 OR (completed_by_id IS NOT NULL AND completed_at IS NOT NULL)
+    ),
     -- [E-04 FIX] Returned status requires return_reason
-    CONSTRAINT chk_ndtp_return CHECK (status != 4 OR return_reason IS NOT NULL)
+    CONSTRAINT chk_ndtp_return CHECK (
+        status != 4 OR (return_reason IS NOT NULL AND returned_by_id IS NOT NULL AND returned_at IS NOT NULL)
+    )
 );
 -- [RT-C2 FIX] Partial unique index (not inline UNIQUE) to allow re-creation after soft-delete
 CREATE UNIQUE INDEX uq_ndtp_reports_period ON ndtp_reports(organization_id, period_year, period_month) WHERE is_deleted = FALSE;
-CREATE INDEX idx_ndtp_reports_org_period ON ndtp_reports(organization_id, period_year, period_month) WHERE is_deleted = FALSE;
 CREATE INDEX idx_ndtp_reports_status ON ndtp_reports(status) WHERE is_deleted = FALSE;
 
 -- Phiếu thông báo sai sót báo cáo NĐTP
@@ -1382,6 +1643,7 @@ CREATE TABLE atp_work_reports (
     submission_version               SMALLINT      NOT NULL DEFAULT 1,
     -- Workflow: 1=Draft, 2=Submitted, 3=Verified, 4=Returned, 5=Completed
     status                           SMALLINT      NOT NULL DEFAULT 1,
+    submitted_to_organization_id     UUID          NULL,
     submitted_by_id                  UUID          NULL,
     submitted_at                     TIMESTAMPTZ   NULL,
     verified_by_id                   UUID          NULL,
@@ -1403,14 +1665,26 @@ CREATE TABLE atp_work_reports (
     deleter_id                       UUID          NULL,
     CONSTRAINT pk_atp_work_reports PRIMARY KEY (id),
     CONSTRAINT fk_awr_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    CONSTRAINT fk_awr_recipient FOREIGN KEY (submitted_to_organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_awr_period_type CHECK (period_type IN (1, 2)),
     CONSTRAINT chk_awr_period_half CHECK (
         (period_type = 1 AND period_half IN (1, 2)) OR
         (period_type = 2 AND period_half IS NULL)
     ),
     CONSTRAINT chk_awr_status CHECK (status IN (1, 2, 3, 4, 5)),
+    CONSTRAINT chk_awr_submission_evidence CHECK (
+        status = 1 OR (submitted_to_organization_id IS NOT NULL AND submitted_by_id IS NOT NULL AND submitted_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_awr_verification_evidence CHECK (
+        status NOT IN (3, 5) OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_awr_completion_evidence CHECK (
+        status <> 5 OR (completed_by_id IS NOT NULL AND completed_at IS NOT NULL)
+    ),
     -- [E-04 FIX] Returned status requires return_reason
-    CONSTRAINT chk_awr_return CHECK (status != 4 OR return_reason IS NOT NULL)
+    CONSTRAINT chk_awr_return CHECK (
+        status != 4 OR (return_reason IS NOT NULL AND returned_by_id IS NOT NULL AND returned_at IS NOT NULL)
+    )
 );
 -- NULL !== NULL in PostgreSQL UNIQUE — use partial indexes
 CREATE UNIQUE INDEX uq_atp_work_reports_halfyear ON atp_work_reports(organization_id, period_year, period_half)
@@ -1472,6 +1746,7 @@ CREATE TABLE action_month_reports (
     submission_version               SMALLINT      NOT NULL DEFAULT 1,
     -- Workflow: 1=Draft, 2=Submitted, 3=Verified, 4=Returned, 5=Completed
     status                           SMALLINT      NOT NULL DEFAULT 1,
+    submitted_to_organization_id     UUID          NULL,
     submitted_by_id                  UUID          NULL,
     submitted_at                     TIMESTAMPTZ   NULL,
     verified_by_id                   UUID          NULL,
@@ -1494,13 +1769,24 @@ CREATE TABLE action_month_reports (
     CONSTRAINT pk_action_month_reports PRIMARY KEY (id),
     -- [B-02 FIX] Inline UNIQUE removed; partial index below handles soft-delete-safe uniqueness
     CONSTRAINT fk_amr_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    CONSTRAINT fk_amr_recipient FOREIGN KEY (submitted_to_organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_amr_status CHECK (status IN (1, 2, 3, 4, 5)),
+    CONSTRAINT chk_amr_submission_evidence CHECK (
+        status = 1 OR (submitted_to_organization_id IS NOT NULL AND submitted_by_id IS NOT NULL AND submitted_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_amr_verification_evidence CHECK (
+        status NOT IN (3, 5) OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)
+    ),
+    CONSTRAINT chk_amr_completion_evidence CHECK (
+        status <> 5 OR (completed_by_id IS NOT NULL AND completed_at IS NOT NULL)
+    ),
     -- [E-04 FIX] Returned status requires return_reason
-    CONSTRAINT chk_amr_return CHECK (status != 4 OR return_reason IS NOT NULL)
+    CONSTRAINT chk_amr_return CHECK (
+        status != 4 OR (return_reason IS NOT NULL AND returned_by_id IS NOT NULL AND returned_at IS NOT NULL)
+    )
 );
 -- [RT-C3 FIX] Partial unique index to allow re-creation of report after soft-delete
 CREATE UNIQUE INDEX uq_action_month_reports ON action_month_reports(organization_id, period_year) WHERE is_deleted = FALSE;
-CREATE INDEX idx_amr_org_year ON action_month_reports(organization_id, period_year) WHERE is_deleted = FALSE;
 CREATE INDEX idx_amr_status ON action_month_reports(status) WHERE is_deleted = FALSE;
 
 -- [H-01 NEW TABLE] Phiếu thông báo sai sót báo cáo Tháng hành động
@@ -1523,6 +1809,68 @@ CREATE TABLE action_month_report_error_notifications (
     CONSTRAINT chk_amren_status CHECK (status IN (1, 2, 3))
 );
 CREATE INDEX idx_amren_report ON action_month_report_error_notifications(report_id);
+
+-- [IDB-002 ACCEPTED] Immutable content snapshots for every official submission.
+-- The application role receives INSERT/SELECT only on these tables; no UPDATE/DELETE.
+CREATE TABLE ndtp_report_submissions (
+    id                           UUID         NOT NULL DEFAULT uuid_generate_v4(),
+    report_id                    UUID         NOT NULL,
+    submission_version           SMALLINT     NOT NULL,
+    submitting_organization_id   UUID         NOT NULL,
+    recipient_organization_id    UUID         NOT NULL,
+    submitted_by_id              UUID         NOT NULL,
+    submitted_at                 TIMESTAMPTZ  NOT NULL,
+    content_snapshot             JSONB        NOT NULL,
+    content_sha256               VARCHAR(64)  NOT NULL,
+    CONSTRAINT pk_ndtp_report_submissions PRIMARY KEY (id),
+    CONSTRAINT uq_ndtp_report_submission UNIQUE (report_id, submission_version),
+    CONSTRAINT fk_ndtprs_report FOREIGN KEY (report_id) REFERENCES ndtp_reports(id),
+    CONSTRAINT fk_ndtprs_from_org FOREIGN KEY (submitting_organization_id) REFERENCES organizations(id),
+    CONSTRAINT fk_ndtprs_to_org FOREIGN KEY (recipient_organization_id) REFERENCES organizations(id),
+    CONSTRAINT chk_ndtprs_version CHECK (submission_version > 0),
+    CONSTRAINT chk_ndtprs_hash CHECK (content_sha256 ~ '^[0-9A-Fa-f]{64}$')
+);
+CREATE INDEX idx_ndtprs_recipient ON ndtp_report_submissions(recipient_organization_id, submitted_at DESC);
+
+CREATE TABLE atp_work_report_submissions (
+    id                           UUID         NOT NULL DEFAULT uuid_generate_v4(),
+    report_id                    UUID         NOT NULL,
+    submission_version           SMALLINT     NOT NULL,
+    submitting_organization_id   UUID         NOT NULL,
+    recipient_organization_id    UUID         NOT NULL,
+    submitted_by_id              UUID         NOT NULL,
+    submitted_at                 TIMESTAMPTZ  NOT NULL,
+    content_snapshot             JSONB        NOT NULL,
+    content_sha256               VARCHAR(64)  NOT NULL,
+    CONSTRAINT pk_atp_work_report_submissions PRIMARY KEY (id),
+    CONSTRAINT uq_atp_work_report_submission UNIQUE (report_id, submission_version),
+    CONSTRAINT fk_awrs_report FOREIGN KEY (report_id) REFERENCES atp_work_reports(id),
+    CONSTRAINT fk_awrs_from_org FOREIGN KEY (submitting_organization_id) REFERENCES organizations(id),
+    CONSTRAINT fk_awrs_to_org FOREIGN KEY (recipient_organization_id) REFERENCES organizations(id),
+    CONSTRAINT chk_awrs_version CHECK (submission_version > 0),
+    CONSTRAINT chk_awrs_hash CHECK (content_sha256 ~ '^[0-9A-Fa-f]{64}$')
+);
+CREATE INDEX idx_awrs_recipient ON atp_work_report_submissions(recipient_organization_id, submitted_at DESC);
+
+CREATE TABLE action_month_report_submissions (
+    id                           UUID         NOT NULL DEFAULT uuid_generate_v4(),
+    report_id                    UUID         NOT NULL,
+    submission_version           SMALLINT     NOT NULL,
+    submitting_organization_id   UUID         NOT NULL,
+    recipient_organization_id    UUID         NOT NULL,
+    submitted_by_id              UUID         NOT NULL,
+    submitted_at                 TIMESTAMPTZ  NOT NULL,
+    content_snapshot             JSONB        NOT NULL,
+    content_sha256               VARCHAR(64)  NOT NULL,
+    CONSTRAINT pk_action_month_report_submissions PRIMARY KEY (id),
+    CONSTRAINT uq_action_month_report_submission UNIQUE (report_id, submission_version),
+    CONSTRAINT fk_amrs_report FOREIGN KEY (report_id) REFERENCES action_month_reports(id),
+    CONSTRAINT fk_amrs_from_org FOREIGN KEY (submitting_organization_id) REFERENCES organizations(id),
+    CONSTRAINT fk_amrs_to_org FOREIGN KEY (recipient_organization_id) REFERENCES organizations(id),
+    CONSTRAINT chk_amrs_version CHECK (submission_version > 0),
+    CONSTRAINT chk_amrs_hash CHECK (content_sha256 ~ '^[0-9A-Fa-f]{64}$')
+);
+CREATE INDEX idx_amrs_recipient ON action_month_report_submissions(recipient_organization_id, submitted_at DESC);
 
 -- ============================================================
 -- SECTION 9: ALERTS AND TESTING MODULE
@@ -1555,8 +1903,6 @@ CREATE TABLE public_alert_submissions (
     assigned_to_id               UUID          NULL,       -- Staff user handling this
     assigned_organization_id     UUID          NULL,
     review_notes                 TEXT          NULL,
-    -- Set when converted to alert
-    converted_alert_id           UUID          NULL,
     dismissed_reason             TEXT          NULL,
     dismissed_by_id              UUID          NULL,
     dismissed_at                 TIMESTAMPTZ   NULL,
@@ -1573,11 +1919,16 @@ CREATE TABLE public_alert_submissions (
     CONSTRAINT uq_pas_tracking_code UNIQUE (tracking_code),
     CONSTRAINT fk_pas_commune FOREIGN KEY (location_commune_id) REFERENCES cat_communes(id),
     CONSTRAINT chk_pas_status CHECK (status IN (1, 2, 3, 4)),
-    -- [RT-H5 FIX] status=3 (ConvertedToAlert) must have converted_alert_id
-    CONSTRAINT chk_pas_converted CHECK (status != 3 OR converted_alert_id IS NOT NULL)
+    CONSTRAINT chk_pas_address_chain CHECK (location_commune_id IS NULL OR location_district_id IS NOT NULL),
+    CONSTRAINT chk_pas_coordinates CHECK (
+        (location_latitude IS NULL AND location_longitude IS NULL) OR
+        (location_latitude BETWEEN -90 AND 90 AND location_longitude BETWEEN -180 AND 180)
+    ),
+    CONSTRAINT chk_pas_dismissal CHECK (
+        status <> 4 OR (dismissed_reason IS NOT NULL AND dismissed_by_id IS NOT NULL AND dismissed_at IS NOT NULL)
+    )
 );
 CREATE INDEX idx_pas_status ON public_alert_submissions(status, creation_time DESC);
-CREATE INDEX idx_pas_tracking ON public_alert_submissions(tracking_code);
 
 -- Cảnh báo VSATTP (Food Safety Alerts)
 CREATE TABLE atp_alerts (
@@ -1621,24 +1972,30 @@ CREATE TABLE atp_alerts (
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_atp_alerts PRIMARY KEY (id),
     CONSTRAINT fk_alerts_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    CONSTRAINT fk_alerts_business FOREIGN KEY (business_id) REFERENCES businesses(id),
+    CONSTRAINT fk_alerts_business_org FOREIGN KEY (business_id, organization_id)
+        REFERENCES businesses(id, organization_id),
     -- [M-01 FIX] FK to public submission
     CONSTRAINT fk_alerts_submission FOREIGN KEY (public_submission_id) REFERENCES public_alert_submissions(id),
+    CONSTRAINT uq_alerts_public_submission UNIQUE (public_submission_id),
     CONSTRAINT chk_alerts_category CHECK (category IN (1, 2, 3, 4, 5, 6)),
     CONSTRAINT chk_alerts_severity CHECK (severity IN (1, 2, 3, 4)),
     CONSTRAINT chk_alerts_source CHECK (source IN (1, 2, 3)),
     CONSTRAINT chk_alerts_status CHECK (status IN (1, 2, 3)),
     -- [E-02 FIX] Recalled status requires recall_reason
-    CONSTRAINT chk_alerts_recall CHECK (status != 3 OR recall_reason IS NOT NULL),
+    CONSTRAINT chk_alerts_publish CHECK (
+        status = 1 OR (published_at IS NOT NULL AND published_by_id IS NOT NULL AND is_public = TRUE)
+    ),
+    CONSTRAINT chk_alerts_recall CHECK (
+        status != 3 OR (recall_reason IS NOT NULL AND recalled_at IS NOT NULL AND recalled_by_id IS NOT NULL)
+    ),
     -- [RT-H4 FIX] source=2 (PublicReport) must have public_submission_id
     CONSTRAINT chk_alerts_source_submission CHECK (source != 2 OR public_submission_id IS NOT NULL)
 );
--- Also update public_alert_submissions.converted_alert_id to reference atp_alerts
-ALTER TABLE public_alert_submissions
-    ADD CONSTRAINT fk_pas_converted_alert FOREIGN KEY (converted_alert_id) REFERENCES atp_alerts(id);
 -- [RT-H3 FIX] public_alert_submissions missing FK for location_district_id
 ALTER TABLE public_alert_submissions
-    ADD CONSTRAINT fk_pas_district FOREIGN KEY (location_district_id) REFERENCES cat_districts(id);
+    ADD CONSTRAINT fk_pas_district FOREIGN KEY (location_district_id) REFERENCES cat_districts(id),
+    ADD CONSTRAINT fk_pas_commune_district FOREIGN KEY (location_commune_id, location_district_id)
+        REFERENCES cat_communes(id, district_id);
 -- [J-01 FIX] assigned_organization_id missing FK
 ALTER TABLE public_alert_submissions
     ADD CONSTRAINT fk_pas_assigned_org FOREIGN KEY (assigned_organization_id) REFERENCES organizations(id);
@@ -1646,6 +2003,7 @@ CREATE INDEX idx_atp_alerts_org ON atp_alerts(organization_id, status) WHERE is_
 CREATE INDEX idx_atp_alerts_public ON atp_alerts(is_public, status, published_at DESC) WHERE is_deleted = FALSE;
 CREATE INDEX idx_atp_alerts_severity ON atp_alerts(severity, status) WHERE is_deleted = FALSE;
 CREATE INDEX idx_atp_alerts_submission ON atp_alerts(public_submission_id) WHERE public_submission_id IS NOT NULL;
+CREATE INDEX idx_atp_alerts_business ON atp_alerts(business_id) WHERE business_id IS NOT NULL AND is_deleted = FALSE;
 
 -- Tin tức và hoạt động ATTP
 CREATE TABLE atp_news (
@@ -1681,7 +2039,12 @@ CREATE TABLE atp_news (
     CONSTRAINT fk_news_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_news_status CHECK (status IN (1, 2, 3)),
     -- [E-03 FIX] Recalled status requires recalled_reason
-    CONSTRAINT chk_news_recall CHECK (status != 3 OR recalled_reason IS NOT NULL)
+    CONSTRAINT chk_news_publish CHECK (
+        status = 1 OR (published_at IS NOT NULL AND published_by_id IS NOT NULL AND is_public = TRUE)
+    ),
+    CONSTRAINT chk_news_recall CHECK (
+        status != 3 OR (recalled_reason IS NOT NULL AND recalled_at IS NOT NULL AND recalled_by_id IS NOT NULL)
+    )
 );
 CREATE INDEX idx_atp_news_public ON atp_news(is_public, status, published_at DESC) WHERE is_deleted = FALSE;
 CREATE INDEX idx_atp_news_title_trgm ON atp_news USING GIN (title gin_trgm_ops) WHERE is_deleted = FALSE;
@@ -1728,7 +2091,10 @@ CREATE TABLE risk_analyses (
     CONSTRAINT pk_risk_analyses PRIMARY KEY (id),
     CONSTRAINT fk_ra_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_ra_risk_level CHECK (risk_level IN (1, 2, 3, 4)),
-    CONSTRAINT chk_ra_status CHECK (status IN (1, 2))
+    CONSTRAINT chk_ra_status CHECK (status IN (1, 2)),
+    CONSTRAINT chk_ra_publish CHECK (
+        status = 1 OR (published_at IS NOT NULL AND published_by_id IS NOT NULL AND is_public = TRUE)
+    )
 );
 CREATE INDEX idx_ra_org ON risk_analyses(organization_id, status) WHERE is_deleted = FALSE;
 CREATE INDEX idx_ra_public ON risk_analyses(is_public, status) WHERE is_deleted = FALSE;
@@ -1766,16 +2132,22 @@ CREATE TABLE testing_results (
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_testing_results PRIMARY KEY (id),
     CONSTRAINT fk_tr_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    CONSTRAINT fk_tr_business FOREIGN KEY (business_id) REFERENCES businesses(id),
-    CONSTRAINT fk_tr_product FOREIGN KEY (product_id) REFERENCES products(id),
+    CONSTRAINT fk_tr_business_org FOREIGN KEY (business_id, organization_id)
+        REFERENCES businesses(id, organization_id),
+    CONSTRAINT fk_tr_product_owner FOREIGN KEY (product_id, business_id, organization_id)
+        REFERENCES products(id, business_id, organization_id),
     CONSTRAINT fk_tr_center FOREIGN KEY (testing_center_id) REFERENCES cat_testing_centers(id),
     CONSTRAINT fk_tr_inspection FOREIGN KEY (inspection_result_id) REFERENCES inspection_results(id),
-    CONSTRAINT chk_tr_result CHECK (overall_result IS NULL OR overall_result IN (1, 2, 3))
+    CONSTRAINT chk_tr_result CHECK (overall_result IS NULL OR overall_result IN (1, 2, 3)),
+    CONSTRAINT chk_tr_product_business CHECK (product_id IS NULL OR business_id IS NOT NULL)
 );
+ALTER TABLE testing_results
+    ADD CONSTRAINT uq_testing_results_id_center UNIQUE (id, testing_center_id);
 CREATE INDEX idx_testing_results_org ON testing_results(organization_id) WHERE is_deleted = FALSE;
 -- [RT-H6 FIX] Prevent duplicate sample codes within same organization
 CREATE UNIQUE INDEX uq_testing_results_sample_code ON testing_results(sample_code, organization_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_testing_results_business ON testing_results(business_id) WHERE is_deleted = FALSE;
+CREATE INDEX idx_testing_results_product ON testing_results(product_id) WHERE product_id IS NOT NULL AND is_deleted = FALSE;
 CREATE INDEX idx_testing_results_center ON testing_results(testing_center_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_testing_results_result ON testing_results(overall_result) WHERE is_deleted = FALSE;
 CREATE INDEX idx_testing_results_inspection ON testing_results(inspection_result_id)
@@ -1786,9 +2158,12 @@ CREATE INDEX idx_testing_results_inspection ON testing_results(inspection_result
 CREATE TABLE testing_result_services (
     testing_result_id        UUID NOT NULL,
     testing_service_id       UUID NOT NULL,
+    testing_center_id        UUID NOT NULL,
     CONSTRAINT pk_testing_result_services PRIMARY KEY (testing_result_id, testing_service_id),
-    CONSTRAINT fk_trs_result FOREIGN KEY (testing_result_id) REFERENCES testing_results(id) ON DELETE CASCADE,
-    CONSTRAINT fk_trs_service FOREIGN KEY (testing_service_id) REFERENCES cat_testing_services(id)
+    CONSTRAINT fk_trs_result_center FOREIGN KEY (testing_result_id, testing_center_id)
+        REFERENCES testing_results(id, testing_center_id) ON DELETE CASCADE,
+    CONSTRAINT fk_trs_service_center FOREIGN KEY (testing_service_id, testing_center_id)
+        REFERENCES cat_testing_services(id, testing_center_id)
 );
 CREATE INDEX idx_trs_service ON testing_result_services(testing_service_id);
 
@@ -1834,6 +2209,10 @@ CREATE TABLE regulatory_documents (
     )
 );
 CREATE INDEX idx_rd_org ON regulatory_documents(organization_id, status) WHERE is_deleted = FALSE;
+CREATE INDEX idx_rd_document_type ON regulatory_documents(document_type_id)
+    WHERE document_type_id IS NOT NULL AND is_deleted = FALSE;
+CREATE INDEX idx_rd_replaced_by ON regulatory_documents(replaced_by_id)
+    WHERE replaced_by_id IS NOT NULL AND is_deleted = FALSE;
 CREATE INDEX idx_rd_title_trgm ON regulatory_documents USING GIN (title gin_trgm_ops) WHERE is_deleted = FALSE;
 -- [M-02 FIX] Full-text search index for document content lookup (STT 38)
 CREATE INDEX idx_rd_search_vector ON regulatory_documents USING GIN (search_vector) WHERE is_deleted = FALSE;
@@ -1860,18 +2239,24 @@ CREATE TRIGGER trg_regulatory_documents_search_vector
 -- SECTION 10: FILE ATTACHMENTS (Cross-cutting)
 -- ============================================================
 
--- File attachments for all entity types (polymorphic association)
+-- [IDB-004 ACCEPTED] Enforceable attachment-owner supertype. Each attachable
+-- aggregate uses its own id as the document-owner id (shared-primary-key pattern).
+CREATE TABLE document_owners (
+    id                           UUID          NOT NULL,
+    organization_id              UUID          NULL,       -- NULL only for anonymous/system-wide owners
+    owner_type                   VARCHAR(100)  NOT NULL,
+    creation_time                TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    CONSTRAINT pk_document_owners PRIMARY KEY (id),
+    CONSTRAINT uq_document_owners_id_org UNIQUE (id, organization_id),
+    CONSTRAINT fk_document_owners_org FOREIGN KEY (organization_id) REFERENCES organizations(id)
+);
+CREATE INDEX idx_document_owners_org ON document_owners(organization_id, owner_type);
+
+-- File attachments for typed owners
 -- Files stored in MinIO; this table stores metadata only
 CREATE TABLE file_attachments (
     id                           UUID          NOT NULL DEFAULT uuid_generate_v4(),
-    -- [M-01 FIX] Organization scope — needed for org-scoped storage queries and authorization checks
-    organization_id              UUID          NULL,       -- NULL for system-level attachments
-    entity_type                  VARCHAR(100)  NOT NULL,   -- 'business', 'inspection_result', 'product', etc.
-    entity_id                    UUID          NOT NULL,
-    -- [H-02 FIX] entity_version tracks which version of the entity this file belongs to
-    -- For reports: incremented each time report goes Draft→Submitted after a Return
-    -- NULL = not versioned (entities that don't have submission versions)
-    entity_version               SMALLINT      NULL,
+    document_owner_id            UUID          NOT NULL,
     file_name                    VARCHAR(500)  NOT NULL,   -- Stored object name in MinIO
     original_name                VARCHAR(500)  NOT NULL,   -- User's original filename
     storage_path                 VARCHAR(1000) NOT NULL,   -- MinIO bucket/object path
@@ -1895,18 +2280,53 @@ CREATE TABLE file_attachments (
     deletion_time                TIMESTAMPTZ   NULL,
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_file_attachments PRIMARY KEY (id),
-    CONSTRAINT fk_fa_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    CONSTRAINT fk_fa_owner FOREIGN KEY (document_owner_id) REFERENCES document_owners(id),
     CONSTRAINT chk_fa_virus_scan CHECK (virus_scan_status IN (1, 2, 3, 4)),
     CONSTRAINT chk_fa_retention CHECK (retention_status IN (1, 2, 3)),
     CONSTRAINT chk_fa_file_size CHECK (file_size > 0)
 );
--- [M-01 FIX] Org-scoped file query index
-CREATE INDEX idx_file_attachments_org ON file_attachments(organization_id) WHERE organization_id IS NOT NULL AND is_deleted = FALSE;
-CREATE INDEX idx_file_attachments_entity ON file_attachments(entity_type, entity_id) WHERE is_deleted = FALSE;
-CREATE INDEX idx_file_attachments_entity_version ON file_attachments(entity_type, entity_id, entity_version)
-    WHERE entity_version IS NOT NULL AND is_deleted = FALSE;
+CREATE UNIQUE INDEX uq_file_attachments_storage_path ON file_attachments(storage_path);
+CREATE INDEX idx_file_attachments_owner ON file_attachments(document_owner_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_file_attachments_scan ON file_attachments(virus_scan_status)
     WHERE virus_scan_status = 1;  -- Pending scan
+
+-- Typed owner membership and organization equality.
+ALTER TABLE products ADD CONSTRAINT fk_products_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE self_declarations ADD CONSTRAINT fk_self_declarations_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE product_registrations ADD CONSTRAINT fk_product_reg_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE advertisement_registrations ADD CONSTRAINT fk_ad_reg_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE eligibility_certificates ADD CONSTRAINT fk_elic_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE cfs_certificates ADD CONSTRAINT fk_cfs_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE export_food_certificates ADD CONSTRAINT fk_efc_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE inspection_plans ADD CONSTRAINT fk_plans_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE inspection_results ADD CONSTRAINT fk_ir_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE ndtp_report_submissions ADD CONSTRAINT fk_ndtprs_document_owner
+    FOREIGN KEY (id, submitting_organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE atp_work_report_submissions ADD CONSTRAINT fk_awrs_document_owner
+    FOREIGN KEY (id, submitting_organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE action_month_report_submissions ADD CONSTRAINT fk_amrs_document_owner
+    FOREIGN KEY (id, submitting_organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE public_alert_submissions ADD CONSTRAINT fk_pas_document_owner
+    FOREIGN KEY (id) REFERENCES document_owners(id);
+ALTER TABLE atp_alerts ADD CONSTRAINT fk_alerts_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE atp_news ADD CONSTRAINT fk_news_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE risk_analyses ADD CONSTRAINT fk_ra_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE testing_results ADD CONSTRAINT fk_tr_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
+ALTER TABLE regulatory_documents ADD CONSTRAINT fk_rd_document_owner
+    FOREIGN KEY (id, organization_id) REFERENCES document_owners(id, organization_id);
 
 -- ============================================================
 -- SECTION 11: DATA INTEGRATION MODULE
@@ -1996,9 +2416,38 @@ CREATE UNIQUE INDEX uq_dsh_idempotency ON data_sharing_histories(idempotency_key
     WHERE idempotency_key IS NOT NULL;
 CREATE INDEX idx_dsh_org_type ON data_sharing_histories(organization_id, data_type, direction);
 CREATE INDEX idx_dsh_entity ON data_sharing_histories(entity_type, entity_id);
+CREATE INDEX idx_dsh_api_spec ON data_sharing_histories(api_spec_id) WHERE api_spec_id IS NOT NULL;
 CREATE INDEX idx_dsh_initiated ON data_sharing_histories(initiated_at DESC);
 CREATE INDEX idx_dsh_retry ON data_sharing_histories(status, next_retry_at)
     WHERE status IN (2, 4) AND next_retry_at IS NOT NULL;  -- Failed or Retrying + scheduled
+
+-- [IDB-018 ACCEPTED] Immutable per-attempt history. The parent is the
+-- integration envelope/current delivery state; every initial call and retry
+-- inserts one attempt row rather than overwriting prior evidence.
+CREATE TABLE data_sharing_attempts (
+    id                           UUID          NOT NULL DEFAULT uuid_generate_v4(),
+    data_sharing_history_id      UUID          NOT NULL,
+    attempt_number               INT           NOT NULL,
+    endpoint_url                 VARCHAR(1000) NULL,
+    request_payload              TEXT          NULL,
+    request_checksum_sha256      VARCHAR(64)   NULL,
+    response_status_code         INT           NULL,
+    response_payload             TEXT          NULL,
+    response_checksum_sha256     VARCHAR(64)   NULL,
+    started_at                   TIMESTAMPTZ   NOT NULL,
+    completed_at                 TIMESTAMPTZ   NULL,
+    duration_ms                  INT           NULL,
+    outcome                      SMALLINT      NOT NULL,   -- 1=Success, 2=HTTPError, 3=Timeout, 4=TransportError
+    error_code                   VARCHAR(50)   NULL,
+    error_message                TEXT          NULL,
+    CONSTRAINT pk_data_sharing_attempts PRIMARY KEY (id),
+    CONSTRAINT uq_dsa_attempt UNIQUE (data_sharing_history_id, attempt_number),
+    CONSTRAINT fk_dsa_history FOREIGN KEY (data_sharing_history_id) REFERENCES data_sharing_histories(id),
+    CONSTRAINT chk_dsa_attempt_number CHECK (attempt_number > 0),
+    CONSTRAINT chk_dsa_outcome CHECK (outcome IN (1, 2, 3, 4)),
+    CONSTRAINT chk_dsa_times CHECK (completed_at IS NULL OR completed_at >= started_at)
+);
+CREATE INDEX idx_dsa_history_time ON data_sharing_attempts(data_sharing_history_id, started_at DESC);
 
 -- ============================================================
 -- SECTION 12: STATISTICS / DASHBOARD CACHE
@@ -2066,7 +2515,8 @@ CREATE INDEX idx_status_history_org ON status_history(organization_id, changed_a
 -- ============================================================
 -- SECTION 14: TABLE COUNT SUMMARY
 -- ============================================================
--- Section 2:  Organizations          3 tables  (organizations, app_user_profiles, password_history)
+-- Section 2:  Organizations          4 tables  (organizations, app_user_profiles, password_history,
+--                                              management_scope_assignments)
 -- Section 3:  Catalogs              12 tables  (cat_countries, cat_regions, cat_provinces,
 --                                              cat_districts, cat_communes, cat_product_groups,
 --                                              cat_business_types, cat_business_classifications,
@@ -2081,68 +2531,26 @@ CREATE INDEX idx_status_history_org ON status_history(organization_id, changed_a
 -- Section 6:  Inspection             5 tables  (inspection_plans, inspection_plan_items,
 --                                              inspection_results, inspection_result_inspectors[NEW],
 --                                              inspection_violations)
--- Section 7:  FoodPoisoning          6 tables  (food_poisoning_incidents, food_poisoning_cases,
+-- Section 7:  FoodPoisoning          4 tables  (food_poisoning_incidents, food_poisoning_cases,
 --                                              poisoning_case_error_reports,
 --                                              poisoning_incident_error_reports)
 --                                             NOTE: incidents declared before cases
--- Section 8:  Reporting              8 tables  (ndtp_reports, ndtp_report_error_notifications,
+-- Section 8:  Reporting              9 tables  (ndtp_reports, ndtp_report_error_notifications,
 --                                              atp_work_reports, atp_work_report_error_notifications[NEW],
---                                              action_month_reports, action_month_report_error_notifications[NEW])
--- Section 9:  AlertsAndTesting       9 tables  (public_alert_submissions, atp_alerts, atp_news,
+--                                              action_month_reports, action_month_report_error_notifications[NEW],
+--                                              ndtp_report_submissions, atp_work_report_submissions,
+--                                              action_month_report_submissions)
+-- Section 9:  AlertsAndTesting       8 tables  (public_alert_submissions, atp_alerts, atp_news,
 --                                              news_linked_alerts, risk_analyses, testing_results,
 --                                              testing_result_services[NEW], regulatory_documents)
--- Section 10: FileAttachments        1 table   (file_attachments)
--- Section 11: DataIntegration        2 tables  (api_specs, data_sharing_histories)
+-- Section 10: FileAttachments        2 tables  (document_owners, file_attachments)
+-- Section 11: DataIntegration        3 tables  (api_specs, data_sharing_histories,
+--                                              data_sharing_attempts)
 -- Section 12: DashboardCache         1 table   (cached_dashboard_stats)
 -- Section 13: StatusHistory          1 table   (status_history)
 -- ============================================================
--- TOTAL CUSTOM TABLES: 59 tables (was 43, added 9 new, removed 0)
--- [9 new: password_history, inspection_result_inspectors, testing_result_services,
---         atp_work_report_error_notifications, action_month_report_error_notifications,
---         (public_alert_submissions moved earlier), plus structural fixes]
+-- TOTAL CUSTOM TABLES: 60 tables
 -- ============================================================
 -- + ABP built-in: ~21 tables (AbpUsers, AbpRoles, AbpUserRoles, etc.)
--- GRAND TOTAL: ~80 tables
+-- GRAND TOTAL: ~81 tables
 -- ============================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

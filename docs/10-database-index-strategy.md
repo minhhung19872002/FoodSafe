@@ -586,3 +586,15 @@ ORDER BY schemaname, tablename;
 | `idx_bpg_product_group` | business_product_groups | btree | Missing FK index |
 | `idx_nla_alert_id` | news_linked_alerts | btree | Missing FK index |
 | `idx_arp_product_id` | advertisement_registration_products | btree | Missing FK index |
+## v2.3 independent-resolution index changes
+
+- Removed indexes duplicated by an identical unique key/predicate:
+  `idx_ndtp_reports_org_period`, `idx_amr_org_year`, `idx_pas_tracking`, and
+  `idx_inspection_plan_items_plan`.
+- Added FK/join indexes for organization province/district, business
+  classification/province, inspection `plan_item_id`, alert business, testing
+  product, regulatory document type/replacement, and integration API spec.
+- Added access paths for focal-point grantees, report-submission recipients,
+  document owners, and integration attempts.
+- Official document-number unique indexes intentionally have no
+  `is_deleted = FALSE` predicate; retained identifiers are never released.

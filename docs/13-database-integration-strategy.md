@@ -373,3 +373,12 @@ All data exchanged under TT31 remains within Vietnamese government infrastructur
 - Partner systems are also on-premises Vietnamese government systems
 - No data transits through foreign infrastructure
 - MinIO for payload storage is self-hosted (not AWS S3) — data residency is guaranteed
+## v2.3 retry-history correction
+
+`data_sharing_histories` is the logical envelope and current delivery/scheduling
+state. The initial exchange and every retry insert one immutable
+`data_sharing_attempts` row. Attempt rows preserve endpoint, request/response,
+checksums, timing, outcome, and error; retry processing must never overwrite an
+earlier attempt. Partner-scoped idempotency/correlation and immutable API-spec
+revisioning remain open contract questions and were not added without source
+authority.

@@ -1203,6 +1203,23 @@ public class FileAttachment : Entity<Guid>
 
 ---
 
+## Cross-cutting persistence invariants (v2.3)
+
+- `OrganizationId` is authoritative record ownership. Active
+  `ManagementScopeAssignment` objects add focal-point jurisdiction without
+  reparenting the record.
+- Facility/product children use composite ownership identities; a document or
+  result cannot name a product from another facility/organization.
+- `DocumentOwner` is the attachment supertype. Org-scoped aggregate IDs share
+  the owner ID and organization; `FileAttachment` references only this owner.
+- Report headers are mutable workflow aggregates. Each Submit creates an
+  immutable typed `*ReportSubmission` snapshot with sender, recipient, version,
+  actor/time, full content, and hash.
+- `DataSharingHistory` is a delivery envelope; `DataSharingAttempt` is immutable
+  evidence for the initial call or a retry.
+- `AtpAlert.PublicSubmissionId` is the single authoritative, optional one-to-one
+  conversion relationship.
+
 ## Domain Events Summary
 
 | Event | Trigger | Handler |

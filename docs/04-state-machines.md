@@ -53,6 +53,12 @@
 
 ### Business Rules:
 - **Không cho sửa trực tiếp** sau khi Submit — phải Return về Draft
+- `Submit()` inserts exactly one immutable typed submission snapshot for the
+  current `submission_version`, including sender, recipient, actor/time,
+  complete content JSON, and SHA-256. The transaction fails if the snapshot
+  cannot be inserted.
+- Attachments sealed with an official submission reference that submission
+  snapshot's `document_owner`, not the mutable report header.
 - **Phiếu thông báo sai sót** (ErrorNotification) chỉ tạo được khi report đang ở Verified
 - Mỗi tổ hợp (org_id, period_year, period_month) chỉ có 1 báo cáo NĐTP active
 - Cùng kỳ nếu muốn tạo lại: phải Completed cũ trước, hoặc báo cáo cũ đang Draft/Returned
@@ -229,7 +235,9 @@
 - Tracking code sinh ngẫu nhiên 10 ký tự, unique — gửi lại cho người dân tra cứu
 - CAPTCHA bắt buộc trước khi gửi
 - Cán bộ xem danh sách Pending → Phân công xử lý → Xác minh → Quyết định
-- Nếu Convert: tạo AtpAlert mới, điền sẵn thông tin từ submission
+- Nếu Convert: tạo đúng một AtpAlert mới, điền sẵn thông tin từ submission.
+  `atp_alerts.public_submission_id` là FK duy nhất/có UNIQUE và là quan hệ
+  authoritative; không lưu reverse FK độc lập trên submission.
 
 ---
 

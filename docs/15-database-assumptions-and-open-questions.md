@@ -10,7 +10,12 @@
 
 ### ASM-001: PDF Source Document
 
-**Assumption**: The original PDF source document (`Mẫu số 03. YCKT (1).pdf`, 42 pages) could not be parsed directly during this audit. The existing functional requirements document (`docs/01-functional-requirements.md`) claims to be derived from this PDF. This audit treats `01-functional-requirements.md` as an accurate and complete extraction.
+**Resolution (2026-07-25):** The original PDF (`Mẫu số 03. YCKT (1).pdf`,
+42 pages) was parsed and checked page-by-page during resolution of IDB-001
+through IDB-027. This is no longer an assumption. The comparison found one
+material omission in the distilled requirements: scope by **management focal
+point** in addition to managed geography. `01`, `05`, and the database scope
+design were corrected.
 
 **Scope of impact**: All 57 functional requirements, the entire domain model, all state machines.
 
@@ -22,7 +27,10 @@
 
 ### ASM-002: License Number Uniqueness Scope
 
-**Assumption**: `registration_number` (in `product_registrations`), `declaration_number` (in `self_declarations`), and `certificate_number` (in `eligibility_certificates`, `cfs_certificates`, `export_food_certificates`) are unique **globally** across the system — not unique per business or per issuing authority.
+**Current design:** self-declaration numbers are unique per business; government
+registration/certificate numbers are unique globally within their document
+table. Uniqueness covers soft-deleted retained history and therefore does not
+release an official identifier.
 
 **Rationale**: These are government-issued document numbers. In Vietnamese administrative practice, government-issued numbers (số đăng ký, số chứng nhận) are assigned sequentially by the issuing authority and are globally unique identifiers. A registration number should unambiguously identify exactly one document in the country.
 
@@ -143,29 +151,22 @@ This allows multiple `NULL` values (multiple businesses without a tax code) whil
 
 **Finding during audit**: The initial schema had `testing_results` missing a FK to `testing_services`. When adding `testing_service_id`, it was assumed that one test result record corresponds to exactly one testing service. However, the domain may require that a single test result references multiple services (e.g., a sample is tested for microbiological AND chemical indicators simultaneously).
 
-**Current implementation**: `testing_service_id UUID NOT NULL REFERENCES testing_services(id)` — one service per result record.
+**Resolution (2026-07-25):** Multiple services are supported through
+`testing_result_services`. The junction also carries `testing_center_id` and
+uses composite FKs so a result cannot select a service from another center.
 
-**Alternative**: If multiple services are needed per result, a junction table `testing_result_services(testing_result_id, testing_service_id)` would be required.
-
-**Risk**: Low — if multiple services are needed, the FE would need to display multiple service badges per result, and the DTO changes. The DB change (add junction table, remove FK column) is straightforward but requires migration.
-
-**Stakeholder question**: Can a single testing result record reference multiple testing services? Or is each result always for exactly one service?
+No further schema question remains for service cardinality. Parameter-level
+laboratory result lines were explicitly rejected as a source requirement in
+IDB-013; they may be proposed later as a new requirement.
 
 ---
 
 ### ASM-010: data_sharing_histories.status Update on Retry
 
-**Assumption**: The `data_sharing_histories` table, while conceptually insert-only (no business-driven updates), allows the retry lifecycle fields (`status`, `retry_count`, `next_retry_at`, `http_status_code`, `response_payload`, `completed_at`, `error_message`) to be updated by the retry background job. This is the only case where a `data_sharing_histories` record is updated.
-
-**Alternative (stricter immutability)**: Insert a new child record `data_sharing_history_attempts(id, history_id, attempt_number, status, http_status_code, response_payload, attempted_at, error_message)` for each retry attempt. The parent `data_sharing_histories` record would store only the final aggregated status.
-
-**Trade-off**: 
-- Current approach: simpler schema, slightly less audit granularity (cannot distinguish attempt 1 from attempt 3 outcomes without reading through the updates)
-- Strict approach: more audit granularity, more schema complexity, more storage
-
-**Recommendation for Phase 2+**: Implement the `data_sharing_history_attempts` child table after Phase 1 validation. Phase 1 uses the simpler approach.
-
-**Impact**: Schema change if strict immutability required — add `data_sharing_history_attempts` table, remove retry fields from `data_sharing_histories`.
+**Resolution (2026-07-25):** The envelope may update overall delivery/scheduling
+fields. Every initial call and retry inserts an immutable
+`data_sharing_attempts` row. Attempt-level request, response, checksums,
+timing, outcome, and error are never overwritten.
 
 ---
 
@@ -273,6 +274,65 @@ This allows multiple `NULL` values (multiple businesses without a tax code) whil
 **Impact on schema**: If one-to-one (ad reg → product): add `product_id NOT NULL FK` directly to `advertisement_registrations` and remove `ad_reg_products`. If many-to-many: keep `ad_reg_products` as-is. The current many-to-many design is safer.
 
 ---
+
+## Open questions from independent-finding resolution
+
+### OQ-IDB-001: Report aggregation lineage
+
+Which exact subordinate report submissions and source records must be frozen as
+members of an upper-level aggregate? Must membership preserve only IDs, or also
+source hashes/values at aggregation time? This resolves the unimplemented part
+of IDB-003.
+
+### OQ-IDB-002: Food-safety commitment record
+
+Does “xác nhận cơ sở đã nộp bản cam kết” require only a current confirmation, or
+must the system manage the commitment number/form, signed/submitted/effective
+dates, receiver, status, replacement, and file? This resolves IDB-011.
+
+### OQ-IDB-003: Risk-management model
+
+Define the required risk-group/risk catalogs, forecast period/geography,
+assessment scoring, evidence links, and publication revision rules named
+generally by PDF STT 36. This resolves IDB-012 without inventing a taxonomy.
+
+### OQ-IDB-004: Database workflow locking scope
+
+Beyond immutable report submissions, which exact protected fields and states
+must be DB-trigger locked for poisoning records, plans, alerts, news, and risk
+analysis? Confirm whether all writes must go through stored transitions. This
+resolves IDB-014.
+
+### OQ-IDB-005: Correction-cycle identity
+
+Must every error notification reference a particular immutable submission,
+target organization, decision event, and resolution submission? Define repeated
+return semantics before changing the notice tables (IDB-016).
+
+### OQ-IDB-006: Integration identity and contract versioning
+
+For each partner/operation, define inbound idempotency ownership, correlation and
+external entity IDs, replay behavior, large-payload object paths, mandatory API
+contract linkage, and immutable API-spec revision rules. This covers IDB-017,
+IDB-019, and IDB-020.
+
+### OQ-IDB-007: Facility/product deduplication
+
+Confirm normalization and uniqueness for tax codes across inactive history,
+facilities without tax codes, product codes, and import-source provenance before
+introducing candidate/fuzzy duplicate rules (IDB-021).
+
+### OQ-IDB-008: Identity FK and actor snapshots
+
+Confirm ABP table creation order, account deletion/soft-delete policy, and which
+legal workflow events must snapshot user name, organization, and role before
+adding account FKs/snapshots (IDB-024).
+
+### OQ-IDB-009: Retention classification for cascaded children
+
+Classify junction/child rows as replaceable association or legal evidence and
+define hard-delete rights/retention before replacing the remaining cascades
+(IDB-025).
 
 ## Known Limitations of This Audit
 

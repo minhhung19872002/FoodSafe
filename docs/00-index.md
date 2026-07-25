@@ -1,7 +1,7 @@
 ﻿# FoodSafe — Tài liệu Phân tích Dự án
 
 > Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh  
-> Phiên bản: 2.2 — Cập nhật lần cuối: 2026-07-25 (v2.2 Independent Review — Critical=0, High=0)
+> Phiên bản: 2.3 — Cập nhật lần cuối: 2026-07-25 (independent-finding resolution: 14 Accepted / 11 Partially accepted / 2 Rejected)
 
 ---
 
@@ -11,19 +11,20 @@
 |------|----------|-----------|
 | [01-functional-requirements.md](01-functional-requirements.md) | 57 chức năng chi tiết theo nhóm A/B/C/E/F | ✅ Hoàn thành |
 | [02-domain-model.md](02-domain-model.md) | Domain entities, Value Objects, Aggregates, Domain Events | ✅ Hoàn thành |
-| [03-database-schema.sql](03-database-schema.sql) | PostgreSQL DDL — 55 bảng tùy chỉnh (DDL-counted) + ABP built-in (~80 tổng) | ✅ v2.2 — Độc lập red-team lần 2 (Critical=0, High=0) |
+| [03-database-schema.sql](03-database-schema.sql) | PostgreSQL DDL — 60 bảng tùy chỉnh + ABP built-in (~81 tổng) | ✅ v2.3 — DDL chạy thành công trên PostgreSQL 15 |
 | [04-state-machines.md](04-state-machines.md) | 9 workflow state machines + domain events | ✅ Hoàn thành |
 | [05-permission-matrix.md](05-permission-matrix.md) | Ma trận phân quyền 7 vai trò × tất cả chức năng | ✅ Hoàn thành |
 | [06-api-contracts.md](06-api-contracts.md) | API endpoints cho tất cả modules | ✅ Hoàn thành |
 | [07-non-functional-requirements.md](07-non-functional-requirements.md) | Bảo mật, hiệu năng, UI/UX, deployment | ✅ Hoàn thành |
 | [08-database-requirement-traceability.md](08-database-requirement-traceability.md) | Ma trận truy xuất nguồn gốc: 57 STT → bảng DB + gap analysis | ✅ Hoàn thành |
-| [09-database-data-dictionary.md](09-database-data-dictionary.md) | Data dictionary: mô tả 59 bảng, cột, enum, phân loại nhạy cảm | ✅ Hoàn thành |
+| [09-database-data-dictionary.md](09-database-data-dictionary.md) | Data dictionary + v2.3 added/changed structures | ✅ Hoàn thành |
 | [10-database-index-strategy.md](10-database-index-strategy.md) | Chiến lược index: BTRee/GIN/partial + partitioning recommendations | ✅ Hoàn thành |
 | [11-database-security-and-data-scope.md](11-database-security-and-data-scope.md) | Kiểm soát bảo mật ATTT Cấp 2 ở tầng DB: RLS, encryption, masking | ✅ Hoàn thành |
 | [12-database-history-and-audit-strategy.md](12-database-history-and-audit-strategy.md) | Chiến lược lịch sử trạng thái + ABP audit log retention | ✅ Hoàn thành |
 | [13-database-integration-strategy.md](13-database-integration-strategy.md) | Data contracts cho tích hợp ngoài (Bộ YT, Sở NN, Sở CT) | ✅ Hoàn thành |
-| [14-database-review-report.md](14-database-review-report.md) | Báo cáo tổng hợp audit v2.2: Section 11 (v2.1) + Section 12 (v2.2 independent, Critical=0, High=0) | ✅ Hoàn thành |
-| [15-database-assumptions-and-open-questions.md](15-database-assumptions-and-open-questions.md) | 10 giả định (ASM-001–010) + 8 câu hỏi mở (OQ-001–008) + 4 giả định v2.2 (ASM-v22-001–004) | ✅ Hoàn thành |
+| [14-database-review-report.md](14-database-review-report.md) | Báo cáo audit tổng hợp đến v2.3 | ✅ Hoàn thành |
+| [15-database-assumptions-and-open-questions.md](15-database-assumptions-and-open-questions.md) | Giả định/câu hỏi mở, gồm 9 nhóm câu hỏi từ findings partially accepted | ✅ Hoàn thành |
+| [16-independent-database-review.md](16-independent-database-review.md) | 27 findings độc lập + evidence/resolution từng finding | ✅ Đã resolution |
 
 ---
 
@@ -100,24 +101,24 @@
 
 ---
 
-## Tóm tắt Database Schema (v2.0)
+## Tóm tắt Database Schema (v2.3)
 
 | Module | Bảng | Entities chính |
 |--------|------|---------------|
-| Organizations | **3** | organizations, app_user_profiles, **password_history** |
+| Organizations | **4** | organizations, app_user_profiles, password_history, **management_scope_assignments** |
 | Catalogs | 12 | countries, regions, provinces, districts, communes, product_groups, business_types, business_classifications, ad_types, document_types, testing_centers, testing_services |
 | BusinessManagement | 5 | businesses, business_product_groups, business_handlers, products, self_declarations |
 | Licensing | 6 | product_registrations, advertisement_registrations, ad_reg_products, eligibility_certificates, cfs_certificates, export_food_certificates |
 | Inspection | **5** | inspection_plans, inspection_plan_items, inspection_results, **inspection_result_inspectors**, inspection_violations |
-| FoodPoisoning | 6 | food_poisoning_incidents, food_poisoning_cases, poisoning_case_error_reports, poisoning_incident_error_reports |
-| Reporting | **6** | ndtp_reports, ndtp_report_error_notifications, atp_work_reports, **atp_work_report_error_notifications**, action_month_reports, **action_month_report_error_notifications** |
-| AlertsAndTesting | **9** | public_alert_submissions, atp_alerts, atp_news, news_linked_alerts, risk_analyses, testing_results, **testing_result_services**, regulatory_documents |
-| CrossCutting | 3 | file_attachments, status_history, cached_dashboard_stats |
-| DataIntegration | 2 | api_specs, data_sharing_histories |
-| **Tổng** | **59** | (tăng từ 43, thêm 9 bảng mới — in đậm) |
+| FoodPoisoning | 4 | food_poisoning_incidents, food_poisoning_cases, poisoning_case_error_reports, poisoning_incident_error_reports |
+| Reporting | **9** | 3 report headers, 3 error-notification tables, **3 immutable submission tables** |
+| AlertsAndTesting | **8** | public_alert_submissions, atp_alerts, atp_news, news_linked_alerts, risk_analyses, testing_results, testing_result_services, regulatory_documents |
+| CrossCutting | 4 | **document_owners**, file_attachments, status_history, cached_dashboard_stats |
+| DataIntegration | 3 | api_specs, data_sharing_histories, **data_sharing_attempts** |
+| **Tổng** | **60** | v2.3 thêm 6 cấu trúc accepted; số liệu DDL-counted |
 
 *+ ABP built-in: ~21 bảng (AbpUsers, AbpRoles, AbpAuditLogs, AbpPermissionGrants, AbpSettings, OpenIddict...)*  
-*GRAND TOTAL: ~80 bảng*
+*GRAND TOTAL: ~81 bảng*
 
 ---
 
@@ -142,7 +143,7 @@
 | RT-H2 | `food_poisoning_cases.location_province_id` thiếu FK | ALTER TABLE thêm FK đến `cat_provinces` |
 | RT-H3 | `public_alert_submissions.location_district_id` thiếu FK | ALTER TABLE thêm FK đến `cat_districts` |
 | RT-H4 | `atp_alerts`: `source=2` không bắt buộc `public_submission_id` NOT NULL | Thêm `CONSTRAINT chk_alerts_source_submission CHECK (source != 2 OR public_submission_id IS NOT NULL)` |
-| RT-H5 | `public_alert_submissions`: `status=3` không bắt buộc `converted_alert_id` NOT NULL | Thêm `CONSTRAINT chk_pas_converted CHECK (status != 3 OR converted_alert_id IS NOT NULL)` |
+| RT-H5 | Quan hệ conversion hai chiều có thể không nhất quán | **Superseded v2.3:** chỉ giữ UNIQUE `atp_alerts.public_submission_id` authoritative |
 | RT-H6 | `testing_results.sample_code` không có UNIQUE per organization | Thêm partial UNIQUE index `(sample_code, organization_id) WHERE is_deleted = FALSE` |
 | RT-H7 | `inspection_plans` thiếu `submitted_by_id`/`submitted_at` — không theo dõi ai submit kế hoạch | Thêm 2 cột `submitted_by_id UUID NULL`, `submitted_at TIMESTAMPTZ NULL` |
 
@@ -247,7 +248,7 @@ dtp_reports có CẢ inline UNIQUE lẫn partial index cùng tên — duplicate 
 
 ## Bước Tiếp theo
 
-1. **Tạo EF Core migrations** từ database schema đã thiết kế
+1. **Chạy invariant tests trên PostgreSQL 15** từ database schema đã thiết kế
 2. **Phase 2**: Implement Organizations + Catalogs module (BE + FE)
 3. **Phase 3**: Implement BusinessManagement module
 4. **Phase 4**: Implement Licensing module

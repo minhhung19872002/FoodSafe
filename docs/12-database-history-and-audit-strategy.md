@@ -29,7 +29,7 @@ FoodSafe uses five complementary mechanisms. Each serves a different purpose and
 | 3 | **`status_history` table** | Domain | All workflow transitions | Manual (called from Domain entities) |
 | 4 | **Error notification tables** | Domain | Correction requests per report/case type | Manual (called from AppService) |
 | 5 | **Soft delete (`is_deleted`)** | Infrastructure | All domain entities | Automatic (ABP soft-delete filter) |
-| 6 | **`entity_version` in `file_attachments`** | Domain | Document versioning per workflow cycle | Manual (called from AppService) |
+| 6 | **Typed `document_owners` + immutable report submissions** | Domain | Enforceable attachment ownership and files sealed per submission | FK + insert-only snapshots |
 
 ---
 
@@ -261,56 +261,18 @@ Cycle 2: Draft (user uploads files v2, possibly replacing v1) → Submit → Ver
 
 Without versioning, it is impossible to know which files were attached at the time of the first submission versus the second submission. This matters for legal audit purposes.
 
-### 4.2 Solution: entity_version in file_attachments
+### 4.2 Solution: typed document owners and immutable submission owners
 
-The `file_attachments` table has an `entity_version` column:
+`file_attachments.document_owner_id` has a real FK to `document_owners`.
+Every attachable aggregate uses the shared-primary-key owner pattern and, for
+org-scoped data, a composite FK also enforces organization equality.
 
-```sql
-CREATE TABLE file_attachments (
-    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    entity_type         VARCHAR(100) NOT NULL,   -- 'NdtpReport', 'InspectionResult', etc.
-    entity_id           UUID NOT NULL,
-    entity_version      INTEGER NOT NULL DEFAULT 1, -- increments with each submit cycle
-    file_name           VARCHAR(500) NOT NULL,
-    file_path           VARCHAR(1000) NOT NULL,  -- MinIO object key
-    file_size           BIGINT NOT NULL,
-    content_type        VARCHAR(200) NOT NULL,
-    checksum_sha256     VARCHAR(64),             -- SHA-256 of file content
-    virus_scan_status   VARCHAR(20) NOT NULL DEFAULT 'Pending', -- Pending/Clean/Infected/Error
-    retention_status    VARCHAR(20) NOT NULL DEFAULT 'Active',  -- Active/Archived/MarkedForDeletion
-    uploaded_by_id      UUID NOT NULL,
-    uploaded_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
-    is_deleted          BOOLEAN NOT NULL DEFAULT FALSE,
-    -- ABP audit
-    creation_time       TIMESTAMPTZ NOT NULL DEFAULT now(),
-    creator_id          UUID
-);
-
-CREATE INDEX idx_file_attachments_entity ON file_attachments (entity_type, entity_id, entity_version);
-```
-
-**Version increment rules:**
-- Version 1: all files uploaded during the initial Draft
-- On Submit: the current version is "sealed" — no more files can be added with this version number
-- On Return: the AppService increments `entity_version` for the parent entity (stored in the report table as `submission_count`), so new files uploaded in the correction cycle get version 2
-- Deleting a file in a new cycle does NOT delete version-1 files — it adds a new record with `is_deleted = true` for the current version, leaving older versions intact
-
-**Querying files for a specific submission:**
-```sql
-SELECT * FROM file_attachments
-WHERE entity_type = 'NdtpReport'
-  AND entity_id = $reportId
-  AND entity_version = $versionNumber
-  AND is_deleted = FALSE;
-```
-
-**Querying only current files:**
-```sql
-SELECT DISTINCT ON (file_name) *
-FROM file_attachments
-WHERE entity_type = 'NdtpReport' AND entity_id = $reportId AND is_deleted = FALSE
-ORDER BY file_name, entity_version DESC;
-```
+For reports, the mutable header is not the owner of sealed evidence. Each
+`*_report_submissions` row is an immutable owner. Files included in submission
+version N reference that submission row's owner. A later correction creates a
+new snapshot/owner, so version-N files cannot be confused with current draft
+files. `storage_path` is unique and file checksum/scan/retention metadata remain
+on `file_attachments`.
 
 ---
 
@@ -346,16 +308,12 @@ Error notifications complement `status_history` by providing structured correcti
 
 ### 5.3 Re-submission Tracking
 
-To distinguish submission cycle 1 from cycle 2, the report tables include:
-
-```sql
--- In ndtp_reports (and equivalent for other report types)
-submission_count    INTEGER NOT NULL DEFAULT 0,  -- increments on each Submit action
-submitted_at        TIMESTAMPTZ,                  -- timestamp of most recent submission
-submitted_by_id     UUID                          -- actor of most recent submission
-```
-
-`submission_count` is incremented in the `Report.Submit()` domain method. Combined with `entity_version` in `file_attachments`, this allows the audit to reconstruct exactly what was submitted in each cycle.
+The report header retains `submission_version` and current workflow evidence.
+Every `Submit()` transaction inserts one row into the corresponding immutable
+`ndtp_report_submissions`, `atp_work_report_submissions`, or
+`action_month_report_submissions` table. The unique `(report_id,
+submission_version)` key prevents duplicate cycle numbers; `content_snapshot`
+and `content_sha256` preserve exactly what was sent, to whom, by whom, and when.
 
 ---
 
@@ -363,7 +321,10 @@ submitted_by_id     UUID                          -- actor of most recent submis
 
 ### 6.1 data_sharing_histories Coverage
 
-Every outbound and inbound API call with external partners is recorded in `data_sharing_histories`. This table is **insert-only** — no Update or Delete operations exist.
+Every outbound and inbound integration envelope is recorded in
+`data_sharing_histories`; each concrete call is an insert-only
+`data_sharing_attempts` row. The envelope may update only overall delivery and
+scheduling fields and is never deleted.
 
 **Schema:**
 ```sql
@@ -427,9 +388,11 @@ Retry attempt 3: retry_count = 3, next_retry_at = now() + 12h
 Retry attempt 4: retry_count = 4 → status = ManualReview (no more auto-retry)
 ```
 
-Hangfire picks up records where `status = Failed AND next_retry_at <= now()`. The Hangfire job does NOT create new records — it updates the existing record's status and retry fields (this is the only case where `data_sharing_histories` is "updated"; a strict interpretation would insert a new record per attempt, but this creates excessive rows and complicates aggregation).
-
-**Alternative strict immutability approach** (recommended for Phase 2+): Insert a new `data_sharing_history_attempts` child record per attempt, and update only `data_sharing_histories.status` to reflect the overall outcome. This preserves full attempt-by-attempt history.
+Hangfire picks up envelopes where `status = Failed AND next_retry_at <= now()`.
+The envelope may update its overall delivery state, but the initial call and
+every retry insert an immutable `data_sharing_attempts` row. Attempt rows retain
+attempt number, endpoint, request/response and checksums, start/end/duration,
+outcome, and error. No retry overwrites an earlier attempt.
 
 ---
 
@@ -477,7 +440,7 @@ Immutability is enforced at two layers:
 | Before/after values for data changes | ✅ | ABP EntityChange + PropertyChange |
 | Workflow history with actor and timestamp | ✅ | `status_history` table |
 | Correction tracking for reports | ✅ | Error notification tables (all 3 report types) |
-| File attachment versioning | ✅ | `entity_version` in `file_attachments` |
+| File attachment versioning | ✅ | Typed submission `document_owner_id` in `file_attachments` |
 | Integration call logging | ✅ | `data_sharing_histories` (insert-only) |
 | Soft delete (no hard delete of domain records) | ✅ | `is_deleted` on all domain entities |
 | PII access logging | ✅ | ABP AuditLog + `[DisableAuditing]` for hash columns |
