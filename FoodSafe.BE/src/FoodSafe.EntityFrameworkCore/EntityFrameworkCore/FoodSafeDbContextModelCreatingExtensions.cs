@@ -634,6 +634,84 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasDatabaseName("idx_arp_product");
         });
 
+        builder.Entity<EligibilityCertificate>(entity =>
+        {
+            entity.ToTable("eligibility_certificates", table =>
+            {
+                table.HasCheckConstraint(
+                    "chk_elic_status",
+                    "status IN (1, 2, 3)");
+                table.HasCheckConstraint(
+                    "chk_elic_dates",
+                    "expiry_date IS NULL OR issue_date <= expiry_date");
+                table.HasCheckConstraint(
+                    "chk_elic_revoke",
+                    "(status != 3 AND revoke_reason IS NULL AND " +
+                    "revoked_at IS NULL AND revoked_by_id IS NULL) OR " +
+                    "(status = 3 AND revoke_reason IS NOT NULL AND " +
+                    "revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)");
+            });
+            ConfigureAggregateAudit(
+                entity,
+                "pk_eligibility_certificates");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id");
+            entity.Property(x => x.CertificateNumber)
+                .HasColumnName("certificate_number")
+                .HasMaxLength(100)
+                .IsRequired();
+            entity.Property(x => x.IssueDate)
+                .HasColumnName("issue_date")
+                .HasColumnType("date");
+            entity.Property(x => x.ExpiryDate)
+                .HasColumnName("expiry_date")
+                .HasColumnType("date");
+            entity.Property(x => x.CertifyingAuthority)
+                .HasColumnName("certifying_authority")
+                .HasMaxLength(200);
+            entity.Property(x => x.CertificationScope)
+                .HasColumnName("certification_scope");
+            entity.Property(x => x.Status)
+                .HasColumnName("status")
+                .HasConversion<short>();
+            entity.Property(x => x.RevokeReason)
+                .HasColumnName("revoke_reason");
+            entity.Property(x => x.RevokedAt).HasColumnName("revoked_at");
+            entity.Property(x => x.RevokedById)
+                .HasColumnName("revoked_by_id");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+            entity.HasOne<Business>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    x.Id,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_elic_business_org");
+            entity.HasOne<Organization>().WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_elic_org");
+            entity.HasIndex(x => x.CertificateNumber)
+                .IsUnique()
+                .HasDatabaseName("uq_eligibility_certificates_number");
+            entity.HasIndex(x => x.BusinessId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_eligibility_certificates_business");
+            entity.HasIndex(x => new { x.ExpiryDate, x.Status })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_eligibility_certificates_expiry");
+            entity.HasIndex(x => x.OrganizationId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_eligibility_certificates_org");
+        });
+
         builder.Entity<ManagementScopeAssignment>(entity =>
         {
             entity.HasOne<Business>().WithMany().HasForeignKey(x => x.BusinessId)

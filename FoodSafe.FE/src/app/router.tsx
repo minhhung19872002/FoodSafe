@@ -10,6 +10,8 @@ import {
   ProductRegistrationPage,
   PublicProductRegistrationLookupPage,
   AdvertisementRegistrationPage,
+  EligibilityCertificatePage,
+  PublicEligibilityCertificateLookupPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -23,6 +25,14 @@ import {
 } from "./routeComponents";
 
 export const router = createBrowserRouter([
+  {
+    path: "/tra-cuu-giay-du-dieu-kien",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicEligibilityCertificateLookupPage />
+      </Suspense>
+    ),
+  },
   {
     path: "/tra-cuu-dang-ky-cong-bo",
     element: (
@@ -146,6 +156,16 @@ export const router = createBrowserRouter([
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.Licensing.AdRegistrations.View">
               <AdvertisementRegistrationPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "eligibility-certificates",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Licensing.EligibilityCertificates.View">
+              <EligibilityCertificatePage />
             </PermissionRoute>
           </Suspense>
         ),

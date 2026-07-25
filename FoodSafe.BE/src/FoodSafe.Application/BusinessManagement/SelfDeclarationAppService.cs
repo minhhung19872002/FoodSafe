@@ -135,7 +135,9 @@ public class SelfDeclarationAppService :
             x.Status == ProductStatus.Active);
         if (!scope.HasGlobalAccess)
         {
-            var allowedIds = await AllowedBusinessIdsAsync(scope);
+            var allowedIds = await AllowedBusinessIdsAsync(
+                scope,
+                includeProductGroups: false);
             var groupIds =
                 scope.ProductGroupIds ?? new HashSet<Guid>();
             query = query.Where(x =>
@@ -285,7 +287,9 @@ public class SelfDeclarationAppService :
         if (scope.HasGlobalAccess)
             return query;
 
-        var allowedBusinessIds = await AllowedBusinessIdsAsync(scope);
+        var allowedBusinessIds = await AllowedBusinessIdsAsync(
+            scope,
+            includeProductGroups: false);
         var productGroupIds = scope.ProductGroupIds ?? new HashSet<Guid>();
         var products = await _products.GetQueryableAsync();
         return query.Where(x =>
@@ -347,7 +351,9 @@ public class SelfDeclarationAppService :
             x.OrganizationId == business.OrganizationId);
         if (!scope.HasGlobalAccess)
         {
-            var allowedBusinessIds = await AllowedBusinessIdsAsync(scope);
+            var allowedBusinessIds = await AllowedBusinessIdsAsync(
+                scope,
+                includeProductGroups: false);
             var productGroupIds =
                 scope.ProductGroupIds ?? new HashSet<Guid>();
             query = query.Where(x =>
@@ -363,7 +369,8 @@ public class SelfDeclarationAppService :
     }
 
     private async Task<IQueryable<Guid>> AllowedBusinessIdsAsync(
-        CurrentDataScope scope)
+        CurrentDataScope scope,
+        bool includeProductGroups = true)
     {
         var businesses = await _businesses.GetQueryableAsync();
         var links = await _businessProductGroups.GetQueryableAsync();
@@ -386,9 +393,9 @@ public class SelfDeclarationAppService :
                 (x.AddressCommuneId.HasValue &&
                  scope.CommuneIds.Contains(
                      x.AddressCommuneId.Value)) ||
-                links.Any(link =>
+                (includeProductGroups && links.Any(link =>
                     link.BusinessId == x.Id &&
-                    productGroupIds.Contains(link.ProductGroupId)))
+                    productGroupIds.Contains(link.ProductGroupId))))
             .Select(x => x.Id);
     }
 

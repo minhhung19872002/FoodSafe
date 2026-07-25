@@ -41,6 +41,8 @@ public sealed class BusinessManagementMappingTests
                 typeof(AdvertisementRegistrationProduct))!
             .GetTableName().ShouldBe(
                 "advertisement_registration_products");
+        context.Model.FindEntityType(typeof(EligibilityCertificate))!
+            .GetTableName().ShouldBe("eligibility_certificates");
     }
 
     [Fact]
@@ -139,5 +141,21 @@ public sealed class BusinessManagementMappingTests
             key.GetConstraintName() == "fk_arp_ad_reg_owner");
         link.GetForeignKeys().ShouldContain(key =>
             key.GetConstraintName() == "fk_arp_product_owner");
+    }
+
+    [Fact]
+    public void Eligibility_certificate_should_enforce_ownership_and_number()
+    {
+        using var context = CreateContext();
+        var certificate =
+            context.Model.FindEntityType(typeof(EligibilityCertificate))!;
+
+        certificate.GetForeignKeys().ShouldContain(key =>
+            key.GetConstraintName() == "fk_elic_business_org");
+        var unique = certificate.GetIndexes().Single(index =>
+            index.GetDatabaseName() ==
+            "uq_eligibility_certificates_number");
+        unique.IsUnique.ShouldBeTrue();
+        unique.GetFilter().ShouldBeNull();
     }
 }

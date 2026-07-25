@@ -47,6 +47,14 @@ export const AdvertisementRegistrationPage = lazy(
   () =>
     import("@/features/advertisement-registrations/pages/AdvertisementRegistrationPage"),
 );
+export const EligibilityCertificatePage = lazy(
+  () =>
+    import("@/features/eligibility-certificates/pages/EligibilityCertificatePage"),
+);
+export const PublicEligibilityCertificateLookupPage = lazy(
+  () =>
+    import("@/features/eligibility-certificates/pages/PublicEligibilityCertificateLookupPage"),
+);
 
 export function RouteLoading() {
   return (

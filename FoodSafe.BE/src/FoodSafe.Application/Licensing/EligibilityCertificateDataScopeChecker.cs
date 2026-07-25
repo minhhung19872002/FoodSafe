@@ -8,60 +8,49 @@ using Volo.Abp.Threading;
 
 namespace FoodSafe.Licensing;
 
-public interface IProductRegistrationDataScopeChecker
+public interface IEligibilityCertificateDataScopeChecker
 {
-    Task EnsureAccessAsync(
-        Guid registrationId,
-        DataScopeOperation operation);
+    Task EnsureAccessAsync(Guid id, DataScopeOperation operation);
 }
 
-public sealed class ProductRegistrationDataScopeChecker(
-    IRepository<ProductRegistration, Guid> registrations,
+public sealed class EligibilityCertificateDataScopeChecker(
+    IRepository<EligibilityCertificate, Guid> certificates,
     IRepository<Business, Guid> businesses,
-    IRepository<Product, Guid> products,
+    IRepository<BusinessProductGroup> businessProductGroups,
     ICurrentDataScopeProvider dataScopeProvider,
     ICancellationTokenProvider cancellationTokens,
     IAsyncQueryableExecuter asyncExecuter) :
-    IProductRegistrationDataScopeChecker,
+    IEligibilityCertificateDataScopeChecker,
     ITransientDependency
 {
     public async Task EnsureAccessAsync(
-        Guid registrationId,
+        Guid id,
         DataScopeOperation operation)
     {
         var scope = await dataScopeProvider.GetAsync(
             operation,
             cancellationTokens.Token);
-        var query = await registrations.GetQueryableAsync();
+        var query = await certificates.GetQueryableAsync();
         if (!scope.HasGlobalAccess)
         {
-            var allowedBusinessIds = await AllowedBusinessIdsAsync(scope);
-            var productGroupIds =
-                scope.ProductGroupIds ?? new HashSet<Guid>();
-            var productQuery = await products.GetQueryableAsync();
-            query = query.Where(x =>
-                allowedBusinessIds.Contains(x.BusinessId) ||
-                (x.ProductId.HasValue &&
-                 productQuery.Any(product =>
-                     product.Id == x.ProductId.Value &&
-                     product.ProductGroupId.HasValue &&
-                     productGroupIds.Contains(
-                         product.ProductGroupId.Value))));
+            var allowed = await AllowedBusinessIdsAsync(scope);
+            query = query.Where(x => allowed.Contains(x.BusinessId));
         }
         if (!await asyncExecuter.AnyAsync(
-                query.Where(x => x.Id == registrationId),
+                query.Where(x => x.Id == id),
                 cancellationTokens.Token))
             throw new AbpAuthorizationException(
-                "The product registration is outside the current user's data scope.");
+                "The eligibility certificate is outside the current user's data scope.");
     }
 
     private async Task<IQueryable<Guid>> AllowedBusinessIdsAsync(
         CurrentDataScope scope)
     {
         var businessQuery = await businesses.GetQueryableAsync();
+        var links = await businessProductGroups.GetQueryableAsync();
         var businessIds = scope.BusinessIds ?? new HashSet<Guid>();
-        var businessTypeIds =
-            scope.BusinessTypeIds ?? new HashSet<Guid>();
+        var businessTypeIds = scope.BusinessTypeIds ?? new HashSet<Guid>();
+        var productGroupIds = scope.ProductGroupIds ?? new HashSet<Guid>();
         return businessQuery.Where(x =>
                 scope.OrganizationIds.Contains(x.OrganizationId) ||
                 businessIds.Contains(x.Id) ||
@@ -72,7 +61,10 @@ public sealed class ProductRegistrationDataScopeChecker(
                 (x.AddressDistrictId.HasValue &&
                  scope.DistrictIds.Contains(x.AddressDistrictId.Value)) ||
                 (x.AddressCommuneId.HasValue &&
-                 scope.CommuneIds.Contains(x.AddressCommuneId.Value)))
+                 scope.CommuneIds.Contains(x.AddressCommuneId.Value)) ||
+                links.Any(link =>
+                    link.BusinessId == x.Id &&
+                    productGroupIds.Contains(link.ProductGroupId)))
             .Select(x => x.Id);
     }
 }

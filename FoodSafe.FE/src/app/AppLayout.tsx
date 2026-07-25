@@ -88,6 +88,13 @@ function buildMenuItems(
       label: "Đăng ký quảng cáo",
     });
   }
+  if (hasPermission("FoodSafe.Licensing.EligibilityCertificates.View")) {
+    items.push({
+      key: "/eligibility-certificates",
+      icon: <FileProtectOutlined />,
+      label: "Giấy đủ điều kiện ATTP",
+    });
+  }
   if (hasPermission("FoodSafe.SystemAdministration")) {
     items.push({
       key: "/administration/identity",

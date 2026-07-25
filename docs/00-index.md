@@ -29,6 +29,7 @@
 | [48-self-declaration-management.md](48-self-declaration-management.md) | STT 21 self-declaration implementation and validation | Active |
 | [49-product-registration-management.md](49-product-registration-management.md) | STT 22 product-registration implementation and validation | Active |
 | [50-advertisement-registration-management.md](50-advertisement-registration-management.md) | STT 23 advertisement-registration implementation and validation | Active |
+| [51-eligibility-certificate-management.md](51-eligibility-certificate-management.md) | STT 24 eligibility-certificate implementation and validation | Active |
 
 | File | Nội dung | Trạng thái |
 |------|----------|-----------|

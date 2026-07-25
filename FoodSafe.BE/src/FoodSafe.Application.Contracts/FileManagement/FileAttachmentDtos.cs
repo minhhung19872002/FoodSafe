@@ -93,3 +93,19 @@ public interface IAdvertisementRegistrationAttachmentAppService :
         Guid attachmentId);
     Task DeleteAsync(Guid registrationId, Guid attachmentId);
 }
+
+public interface IEligibilityCertificateAttachmentAppService :
+    IApplicationService
+{
+    Task<IReadOnlyList<FileAttachmentDto>> GetListAsync(Guid certificateId);
+    Task<FileAttachmentDto> UploadAsync(
+        Guid certificateId,
+        byte[] content,
+        string originalName,
+        string contentType,
+        string? description);
+    Task<FileAttachmentDownloadDto> DownloadAsync(
+        Guid certificateId,
+        Guid attachmentId);
+    Task DeleteAsync(Guid certificateId, Guid attachmentId);
+}

@@ -561,6 +561,17 @@ public class FoodSafeHttpApiHostModule : AbpModule
                         ? "SE Asia Standard Time"
                         : "Asia/Bangkok")
             });
+        recurringJobs.AddOrUpdate<IEligibilityCertificateExpiryJob>(
+            "eligibility-certificate-expiry",
+            job => job.ExecuteAsync(),
+            Cron.Daily,
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.FindSystemTimeZoneById(
+                    OperatingSystem.IsWindows()
+                        ? "SE Asia Standard Time"
+                        : "Asia/Bangkok")
+            });
 
         app.UseForwardedHeaders();
 

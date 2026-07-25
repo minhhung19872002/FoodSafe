@@ -157,6 +157,26 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             FoodSafePermissions.Licensing.AdRegistrations.Delete,
             LocalizableString.Create<FoodSafeResource>(
                 "Permission:AdRegistrations.Delete"));
+        var eligibilityCertificates = licensing.AddChild(
+            FoodSafePermissions.Licensing.EligibilityCertificates.Default,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:EligibilityCertificates"));
+        eligibilityCertificates.AddChild(
+            FoodSafePermissions.Licensing.EligibilityCertificates.View,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:EligibilityCertificates.View"));
+        eligibilityCertificates.AddChild(
+            FoodSafePermissions.Licensing.EligibilityCertificates.Create,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:EligibilityCertificates.Create"));
+        eligibilityCertificates.AddChild(
+            FoodSafePermissions.Licensing.EligibilityCertificates.Edit,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:EligibilityCertificates.Edit"));
+        eligibilityCertificates.AddChild(
+            FoodSafePermissions.Licensing.EligibilityCertificates.Delete,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:EligibilityCertificates.Delete"));
 
         var systemAdministration = group.AddPermission(
             FoodSafePermissions.SystemAdministration.Default,

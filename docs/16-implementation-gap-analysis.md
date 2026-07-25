@@ -4,18 +4,18 @@
 
 - Audit date: 2026-07-25
 - Source priority: original 42-page technical-requirement PDF, accepted decisions, state machines/permission matrix, database documents, API contract, implementation
-- Backend baseline: Release build has 0 warnings; 122 tests pass, including
+- Backend baseline: Release build has 0 warnings; 126 tests pass, including
   domain, application, PostgreSQL/EF, host-security, API-contract, and
   architecture checks.
-- Frontend baseline: Prettier, Oxlint, strict TypeScript, 41 component/route
-  tests, authenticated STT 08–23 browser lifecycles, and the production build
+- Frontend baseline: Prettier, Oxlint, strict TypeScript, 44 component/route
+  tests, authenticated STT 08–24 browser lifecycles, and the production build
   pass.
-- Database baseline: eleven EF migrations apply cleanly to PostgreSQL 15 and EF
+- Database baseline: twelve EF migrations apply cleanly to PostgreSQL 15 and EF
   reports no pending model changes.
 - Runtime baseline: production-shaped Compose images and a complete
   development stack pass health, authentication, authorization, recovery, and
   versioned-OpenAPI probes.
-- Overall conclusion: deployable foundation through STT 23; still not
+- Overall conclusion: deployable foundation through STT 24; still not
   production-ready because most of the 57 functional requirements and the
   final security/recovery gates remain incomplete.
 
@@ -48,7 +48,7 @@ Status vocabulary: **Built-in** means ABP supplies a partial capability that sti
 | STT-21 | Self-declarations | Implemented | Implemented | Migrated | Domain/EF/UI/Docker E2E | Scoped and reviewed | None in approved STT-21 scope | Done |
 | STT-22 | Product registrations | Implemented | Implemented, including public lookup | Migrated | Domain/EF/UI/Docker E2E | Scoped, private files and safe public projection | None in approved STT-22 scope | Done |
 | STT-23 | Advertising registration | Implemented | Implemented | Migrated | Domain/EF/UI/Docker E2E | Scoped, private files and retained number identity | None in approved STT-23 scope | Done |
-| STT-24 | Eligibility certificates | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P0 |
+| STT-24 | Eligibility certificates | Implemented | Implemented, including public lookup | Migrated | Domain/EF/UI/Docker E2E | Scoped, private files, derived business cache and safe public projection | None in approved STT-24 scope | Done |
 | STT-25 | CFS certificates | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P1 |
 | STT-26 | Export certificates | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P1 |
 | STT-27 | Inspection plans | Missing | Missing | Design only | Missing | High gaps | Explicit transitions, targets, files, export | P0 |

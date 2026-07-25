@@ -17,7 +17,6 @@ public sealed class AdvertisementRegistrationDataScopeChecker(
     IRepository<AdvertisementRegistration, Guid> registrations,
     IRepository<Business, Guid> businesses,
     IRepository<Product, Guid> products,
-    IRepository<BusinessProductGroup> businessProductGroups,
     ICurrentDataScopeProvider dataScopeProvider,
     ICancellationTokenProvider cancellationTokens,
     IAsyncQueryableExecuter asyncExecuter) :
@@ -56,10 +55,8 @@ public sealed class AdvertisementRegistrationDataScopeChecker(
         CurrentDataScope scope)
     {
         var businessQuery = await businesses.GetQueryableAsync();
-        var links = await businessProductGroups.GetQueryableAsync();
         var businessIds = scope.BusinessIds ?? new HashSet<Guid>();
         var businessTypeIds = scope.BusinessTypeIds ?? new HashSet<Guid>();
-        var productGroupIds = scope.ProductGroupIds ?? new HashSet<Guid>();
         return businessQuery.Where(x =>
                 scope.OrganizationIds.Contains(x.OrganizationId) ||
                 businessIds.Contains(x.Id) ||
@@ -70,10 +67,7 @@ public sealed class AdvertisementRegistrationDataScopeChecker(
                 (x.AddressDistrictId.HasValue &&
                  scope.DistrictIds.Contains(x.AddressDistrictId.Value)) ||
                 (x.AddressCommuneId.HasValue &&
-                 scope.CommuneIds.Contains(x.AddressCommuneId.Value)) ||
-                links.Any(link =>
-                    link.BusinessId == x.Id &&
-                    productGroupIds.Contains(link.ProductGroupId)))
+                 scope.CommuneIds.Contains(x.AddressCommuneId.Value)))
             .Select(x => x.Id);
     }
 }

@@ -166,7 +166,9 @@ public class ProductAppService : ApplicationService, IProductAppService
         var products = await _products.GetQueryableAsync();
         if (scope.HasGlobalAccess) return products;
 
-        var allowedBusinessIds = await AllowedBusinessIdsAsync(scope);
+        var allowedBusinessIds = await AllowedBusinessIdsAsync(
+            scope,
+            includeProductGroups: false);
         var productGroupIds = scope.ProductGroupIds ?? new HashSet<Guid>();
         return products.Where(x =>
             allowedBusinessIds.Contains(x.BusinessId) ||
@@ -175,7 +177,8 @@ public class ProductAppService : ApplicationService, IProductAppService
     }
 
     private async Task<IQueryable<Guid>> AllowedBusinessIdsAsync(
-        CurrentDataScope scope)
+        CurrentDataScope scope,
+        bool includeProductGroups = true)
     {
         var businesses = await _businesses.GetQueryableAsync();
         var links = await _businessProductGroups.GetQueryableAsync();
@@ -197,9 +200,9 @@ public class ProductAppService : ApplicationService, IProductAppService
                  districtIds.Contains(x.AddressDistrictId.Value)) ||
                 (x.AddressCommuneId.HasValue &&
                  communeIds.Contains(x.AddressCommuneId.Value)) ||
-                links.Any(link =>
+                (includeProductGroups && links.Any(link =>
                     link.BusinessId == x.Id &&
-                    productGroupIds.Contains(link.ProductGroupId)))
+                    productGroupIds.Contains(link.ProductGroupId))))
             .Select(x => x.Id);
     }
 

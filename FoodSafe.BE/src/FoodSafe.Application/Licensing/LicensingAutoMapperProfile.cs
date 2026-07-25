@@ -15,5 +15,8 @@ public sealed class LicensingAutoMapperProfile : Profile
                 x => x.AdvertisementTypeName,
                 options => options.Ignore())
             .ForMember(x => x.DaysUntilExpiry, options => options.Ignore());
+        CreateMap<EligibilityCertificate, EligibilityCertificateDto>()
+            .ForMember(x => x.BusinessName, options => options.Ignore())
+            .ForMember(x => x.DaysUntilExpiry, options => options.Ignore());
     }
 }

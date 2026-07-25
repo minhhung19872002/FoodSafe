@@ -127,6 +127,11 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.Licensing.AdRegistrations.Create,
         FoodSafePermissions.Licensing.AdRegistrations.Edit,
         FoodSafePermissions.Licensing.AdRegistrations.Delete,
+        FoodSafePermissions.Licensing.EligibilityCertificates.Default,
+        FoodSafePermissions.Licensing.EligibilityCertificates.View,
+        FoodSafePermissions.Licensing.EligibilityCertificates.Create,
+        FoodSafePermissions.Licensing.EligibilityCertificates.Edit,
+        FoodSafePermissions.Licensing.EligibilityCertificates.Delete,
         FoodSafePermissions.DataScope.All
     ];
 
@@ -214,7 +219,11 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Licensing.AdRegistrations.Default,
                 FoodSafePermissions.Licensing.AdRegistrations.View,
                 FoodSafePermissions.Licensing.AdRegistrations.Create,
-                FoodSafePermissions.Licensing.AdRegistrations.Edit
+                FoodSafePermissions.Licensing.AdRegistrations.Edit,
+                FoodSafePermissions.Licensing.EligibilityCertificates.Default,
+                FoodSafePermissions.Licensing.EligibilityCertificates.View,
+                FoodSafePermissions.Licensing.EligibilityCertificates.Create,
+                FoodSafePermissions.Licensing.EligibilityCertificates.Edit
             ]),
         new(
             "DistrictAdmin",
@@ -230,6 +239,10 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.Licensing.AdRegistrations.View)
                 .Append(FoodSafePermissions.Licensing.AdRegistrations.Create)
                 .Append(FoodSafePermissions.Licensing.AdRegistrations.Edit)
+                .Append(FoodSafePermissions.Licensing.EligibilityCertificates.Default)
+                .Append(FoodSafePermissions.Licensing.EligibilityCertificates.View)
+                .Append(FoodSafePermissions.Licensing.EligibilityCertificates.Create)
+                .Append(FoodSafePermissions.Licensing.EligibilityCertificates.Edit)
                 .ToArray()),
         new(
             "DistrictStaff",
@@ -264,7 +277,9 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Licensing.AdRegistrations.Default,
                 FoodSafePermissions.Licensing.AdRegistrations.View,
                 FoodSafePermissions.Licensing.AdRegistrations.Create,
-                FoodSafePermissions.Licensing.AdRegistrations.Edit
+                FoodSafePermissions.Licensing.AdRegistrations.Edit,
+                FoodSafePermissions.Licensing.EligibilityCertificates.Default,
+                FoodSafePermissions.Licensing.EligibilityCertificates.View
             ]),
         new(
             "CommuneAdmin",
@@ -275,6 +290,8 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.Licensing.ProductRegistrations.View)
                 .Append(FoodSafePermissions.Licensing.AdRegistrations.Default)
                 .Append(FoodSafePermissions.Licensing.AdRegistrations.View)
+                .Append(FoodSafePermissions.Licensing.EligibilityCertificates.Default)
+                .Append(FoodSafePermissions.Licensing.EligibilityCertificates.View)
                 .ToArray()),
         new(
             "CommuneStaff",
@@ -302,7 +319,9 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Licensing.ProductRegistrations.Default,
                 FoodSafePermissions.Licensing.ProductRegistrations.View,
                 FoodSafePermissions.Licensing.AdRegistrations.Default,
-                FoodSafePermissions.Licensing.AdRegistrations.View
+                FoodSafePermissions.Licensing.AdRegistrations.View,
+                FoodSafePermissions.Licensing.EligibilityCertificates.Default,
+                FoodSafePermissions.Licensing.EligibilityCertificates.View
             ])
     ];
 

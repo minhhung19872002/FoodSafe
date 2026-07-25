@@ -15,6 +15,8 @@ import type {
 
 interface Props {
   registration?: Pick<ProductRegistration, "registrationNumber">;
+  documentNumber?: string;
+  titlePrefix?: string;
   attachments: FileAttachment[];
   loading: boolean;
   editable: boolean;
@@ -74,8 +76,10 @@ export function ProductRegistrationAttachmentsModal(props: Props) {
 
   return (
     <Modal
-      open={Boolean(props.registration)}
-      title={`Tệp đăng ký — ${props.registration?.registrationNumber ?? ""}`}
+      open={Boolean(props.registration || props.documentNumber)}
+      title={`${props.titlePrefix ?? "Tệp đăng ký"} — ${
+        props.documentNumber ?? props.registration?.registrationNumber ?? ""
+      }`}
       width={760}
       footer={null}
       onCancel={props.onCancel}

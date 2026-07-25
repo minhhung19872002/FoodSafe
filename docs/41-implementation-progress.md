@@ -17,7 +17,8 @@ Last updated: 2026-07-25
 | Self-declarations | Tested and reviewed | STT 21 scoped CRUD, effective expiry alerts, terminal revocation, retained number identity, Excel export and secure shared attachments pass PostgreSQL, frontend and authenticated Docker E2E gates |
 | Product registrations | Tested and reviewed | STT 22 scoped CRUD, daily expiry synchronization, 30/60/90-day alerts, terminal revocation, global retained number identity, safe public lookup, Excel and secure attachments pass all gates |
 | Advertisement registrations | Tested and reviewed | STT 23 scoped multi-product CRUD, daily expiry synchronization, alerts, terminal revocation, global retained number identity, Excel and secure attachments pass all gates |
-| Remaining regulatory modules | Not started | STT 24–26 in Milestone 3 |
+| Eligibility certificates | Tested and reviewed | STT 24 scoped CRUD, derived business cache, daily expiry, alerts, terminal revocation, safe public lookup, Excel and secure attachments pass all gates |
+| Remaining regulatory modules | Not started | STT 25–26 in Milestone 3 |
 | Inspection/warnings/news | Not started | Milestone 4 |
 | Poisoning/reporting | Not started | Milestone 5 |
 | Hazard/labs/dashboard/statistics | Not started | Milestone 6 |
@@ -270,3 +271,24 @@ Last updated: 2026-07-25
   to use project-reference build mode.
 - Backend builds with zero warnings and 122 tests pass. Frontend format,
   Oxlint, strict TypeScript, 41 tests and production build pass.
+
+## Eligibility-certificate completion evidence added on 2026-07-25
+
+- Added the `EligibilityCertificate` aggregate, four permissions,
+  operation-aware facility scope, safe anonymous projection and
+  `AddEligibilityCertificates` migration.
+- PostgreSQL enforces global official-number uniqueness across retained
+  history, business/organization ownership, date ordering, status values,
+  complete revocation metadata and typed document ownership.
+- `Business.HasEligibilityCertificate` is derived from active certificates
+  after every mutation and by the daily Hangfire expiry job.
+- Added Vietnamese CRUD, business/status/expiry filters, 30/60/90-day
+  warnings, terminal revocation, Excel, secure files and exact-number public
+  lookup.
+- The scope review removed product-group-derived facility broadening from the
+  STT 20–23 product/declaration/registration queries and attachment checkers.
+- Docker migration, OpenAPI, PostgreSQL constraint and Hangfire inspection
+  pass. Authenticated Playwright covers cache on/off, Excel, clean PDF,
+  public lookup, revocation, blocked upload and retained-number rejection.
+- Backend builds with zero warnings and 126 tests pass. Frontend format,
+  Oxlint, strict TypeScript, 44 tests and production build pass.

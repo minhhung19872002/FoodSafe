@@ -109,6 +109,18 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:AdvertisementRegistration:0007";
     }
 
+    public static class EligibilityCertificate
+    {
+        public const string DuplicateNumber =
+            "FoodSafe:EligibilityCertificate:0001";
+        public const string InvalidDateRange =
+            "FoodSafe:EligibilityCertificate:0002";
+        public const string AlreadyRevoked =
+            "FoodSafe:EligibilityCertificate:0003";
+        public const string CannotModifyRevoked =
+            "FoodSafe:EligibilityCertificate:0004";
+    }
+
     public static class Inspection
     {
         public const string PlanNotFound = "FoodSafe:Inspection:0001";

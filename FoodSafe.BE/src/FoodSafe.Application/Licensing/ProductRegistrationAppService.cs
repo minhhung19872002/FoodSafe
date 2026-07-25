@@ -137,7 +137,9 @@ public class ProductRegistrationAppService :
             x.Status == ProductStatus.Active);
         if (!scope.HasGlobalAccess)
         {
-            var allowedIds = await AllowedBusinessIdsAsync(scope);
+            var allowedIds = await AllowedBusinessIdsAsync(
+                scope,
+                includeProductGroups: false);
             var groupIds = scope.ProductGroupIds ?? new HashSet<Guid>();
             query = query.Where(x =>
                 allowedIds.Contains(x.BusinessId) ||
@@ -276,7 +278,9 @@ public class ProductRegistrationAppService :
         var query = await _registrations.GetQueryableAsync();
         if (scope.HasGlobalAccess)
             return query;
-        var allowedBusinessIds = await AllowedBusinessIdsAsync(scope);
+        var allowedBusinessIds = await AllowedBusinessIdsAsync(
+            scope,
+            includeProductGroups: false);
         var productGroupIds = scope.ProductGroupIds ?? new HashSet<Guid>();
         var products = await _products.GetQueryableAsync();
         return query.Where(x =>
@@ -337,7 +341,9 @@ public class ProductRegistrationAppService :
             x.OrganizationId == business.OrganizationId);
         if (!scope.HasGlobalAccess)
         {
-            var allowedBusinessIds = await AllowedBusinessIdsAsync(scope);
+            var allowedBusinessIds = await AllowedBusinessIdsAsync(
+                scope,
+                includeProductGroups: false);
             var productGroupIds =
                 scope.ProductGroupIds ?? new HashSet<Guid>();
             query = query.Where(x =>
@@ -351,7 +357,8 @@ public class ProductRegistrationAppService :
     }
 
     private async Task<IQueryable<Guid>> AllowedBusinessIdsAsync(
-        CurrentDataScope scope)
+        CurrentDataScope scope,
+        bool includeProductGroups = true)
     {
         var businesses = await _businesses.GetQueryableAsync();
         var links = await _businessProductGroups.GetQueryableAsync();
@@ -369,9 +376,9 @@ public class ProductRegistrationAppService :
                  scope.DistrictIds.Contains(x.AddressDistrictId.Value)) ||
                 (x.AddressCommuneId.HasValue &&
                  scope.CommuneIds.Contains(x.AddressCommuneId.Value)) ||
-                links.Any(link =>
+                (includeProductGroups && links.Any(link =>
                     link.BusinessId == x.Id &&
-                    productGroupIds.Contains(link.ProductGroupId)))
+                    productGroupIds.Contains(link.ProductGroupId))))
             .Select(x => x.Id);
     }
 
