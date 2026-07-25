@@ -53,9 +53,9 @@ Perform full authorization/security/performance reviews, Dockerize API/SPA and d
 | Gate | Result on 2026-07-25 |
 |---|---|
 | Backend build | Pass, 0 warnings |
-| Backend tests | Pass, 36 tests including PostgreSQL migration/constraint integration, request contracts, password policy, CAPTCHA provider/middleware behavior and root-promotion authorization; coverage remains incomplete |
+| Backend tests | Pass, 65 tests including PostgreSQL migration/constraint integration, catalog application contracts, request contracts, password policy, CAPTCHA provider/middleware behavior and root-promotion authorization; coverage remains incomplete |
 | Frontend strict production build | Pass |
-| Frontend tests | Pass, 11 tests including authentication, CAPTCHA lifecycle/failure handling, forced password change, permissions, catalog form and generated API routes; coverage remains incomplete |
+| Frontend tests | Pass, 20 Vitest tests plus authenticated Playwright catalog CRUD, including authentication, CAPTCHA lifecycle/failure handling, forced password change, permissions, RHF/Zod catalog validation, MSW API integration and generated routes; coverage remains incomplete |
 | EF migrations | Pass; five migrations apply cleanly and repeat idempotently, with no pending model changes |
 | Docker full stack | Pass; six-service base stack and development Mailpit profile build and run, with a one-shot migrator and non-root API/SPA containers |
 | CI and dependency gates | Pass locally; GitHub Actions covers backend/frontend build/test, EF drift, audited dependency allowlists, production Compose rendering and image builds |

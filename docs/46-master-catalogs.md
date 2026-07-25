@@ -37,3 +37,21 @@ Việt Nam, and eight regions. The database was removed after validation.
 The development stack is healthy. Authenticated cookie/fresh-CSRF lifecycle
 checks covered create, update, dependency rejection (`403`), delete, and
 cleanup. OpenAPI exposes 27 versioned master-catalog paths.
+
+## Frontend architecture and regression coverage
+
+The catalog feature was aligned with the repository `CLAUDE.md` conventions
+before starting STT 19–20:
+
+- transport DTOs are normalized by adapters, including nullable API fields;
+- TanStack Query queries and mutations are isolated under the feature `api/`;
+- the page is a stateful container and the table is a pure presenter;
+- modal input uses React Hook Form with one Zod schema for common and
+  catalog-specific rules;
+- Vitest integration tests use MSW v2 instead of mocking the Axios client; and
+- Playwright exercises authenticated document-type create, edit, delete, and
+  deterministic cleanup against the rebuilt Docker stack.
+
+The application contract suite also verifies all 36 catalog operations are
+implemented and that view/create/edit/delete methods retain least-privilege
+permission boundaries.

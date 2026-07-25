@@ -177,8 +177,8 @@ Last updated: 2026-07-25
   update -> user create/setup email -> edit -> lock/unlock -> reset -> forced
   password completion -> login -> authenticated password rotation/audit ->
   deactivate -> role delete.
-- Backend builds with zero warnings and 53 tests pass. Frontend formatting,
-  lint, strict TypeScript, 15 tests, production bundle, and rebuilt non-root
+- Backend builds with zero warnings and 65 tests pass. Frontend formatting,
+  lint, strict TypeScript, 20 tests, production bundle, and rebuilt non-root
   containers pass.
 
 ## Master-catalog completion evidence added on 2026-07-25
@@ -192,3 +192,8 @@ Last updated: 2026-07-25
   hierarchy, risk, geography, accreditation, and service fields.
 - Clean PostgreSQL migration, 27 OpenAPI paths, live authenticated lifecycle
   checks, dependency rejection, and cleanup all passed.
+- The follow-up architecture gate split catalog DTO adapters, Query hooks,
+  page containers, and presenters; replaced Ant Form state with RHF + Zod;
+  added MSW v2 integration coverage and authenticated Playwright
+  create/edit/delete regression; and normalized nullable API fields discovered
+  by the browser lifecycle.

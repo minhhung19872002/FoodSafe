@@ -27,7 +27,7 @@ export const IdentityAdministrationPage = lazy(
   () => import("@/features/identity/pages/IdentityAdministrationPage"),
 );
 export const MasterCatalogPage = lazy(
-  () => import("@/features/catalogs/MasterCatalogPage"),
+  () => import("@/features/catalogs/pages/MasterCatalogPage"),
 );
 
 export function RouteLoading() {
