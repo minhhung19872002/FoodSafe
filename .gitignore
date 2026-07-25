@@ -12,6 +12,7 @@ TestResults/
 appsettings.Development.json
 appsettings.Production.json
 secrets.json
+*.secrets.json
 
 # Rider / JetBrains
 .idea/

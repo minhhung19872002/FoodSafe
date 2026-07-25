@@ -36,11 +36,18 @@ FoodSafe.BE/
 ├── src/
 │   ├── FoodSafe.Domain.Shared/
 │   ├── FoodSafe.Domain/
+│   │   └── Data/
+│   │       ├── IFoodSafeDbSchemaMigrator.cs
+│   │       └── FoodSafeDbMigrationService.cs
 │   ├── FoodSafe.Application.Contracts/
 │   ├── FoodSafe.Application/
 │   ├── FoodSafe.EntityFrameworkCore/
+│   │   └── EntityFrameworkCore/
+│   │       └── EntityFrameworkCoreFoodSafeDbSchemaMigrator.cs
 │   ├── FoodSafe.HttpApi/
-│   └── FoodSafe.HttpApi.Host/
+│   ├── FoodSafe.HttpApi.Host/
+│   ├── FoodSafe.HttpApi.Client/      ← ABP dynamic HTTP client proxy
+│   └── FoodSafe.DbMigrator/          ← Console app chạy EF migrations + seed
 └── test/
     ├── FoodSafe.TestBase/
     ├── FoodSafe.Domain.Tests/
