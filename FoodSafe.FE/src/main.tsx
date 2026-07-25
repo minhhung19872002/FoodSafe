@@ -7,6 +7,7 @@ import { ConfigProvider, App as AntdApp } from "antd";
 import viVN from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import "leaflet/dist/leaflet.css";
 import { queryClient } from "./lib/queryClient";
 import { router } from "./app/router";
 import "./index.css";

@@ -24,10 +24,11 @@ delivery are implemented and verified.
 
 Catalog slices precede facilities/products. The file mechanism is completed before attachment-bearing regulatory records. Facility/product import validates the full workbook before transaction commit.
 
-Status: in progress. Catalog prerequisites are complete; the executable
-business/product domain, scoped application services, EF mapping, and clean
-PostgreSQL migration are implemented. UI, import/export, attachments, and
-end-to-end validation remain.
+Status: in progress. Catalog prerequisites and the business/product core are
+implemented end to end: scoped APIs, persistence, Vietnamese CRUD UI, map
+selection, responsible-person management, permission-aware navigation, MSW
+tests, and authenticated Playwright lifecycle coverage. Excel import/export
+and the shared secure attachment mechanism remain.
 
 ## Milestone 3 — Declarations, registrations and certificates
 
@@ -58,9 +59,9 @@ Perform full authorization/security/performance reviews, Dockerize API/SPA and d
 | Gate | Result on 2026-07-25 |
 |---|---|
 | Backend build | Pass, 0 warnings |
-| Backend tests | Pass, 65 tests including PostgreSQL migration/constraint integration, catalog application contracts, request contracts, password policy, CAPTCHA provider/middleware behavior and root-promotion authorization; coverage remains incomplete |
+| Backend tests | Pass, 86 tests including PostgreSQL migration/constraint integration, business/product contracts, current-user permission projection, request contracts, password policy, CAPTCHA provider/middleware behavior and root-promotion authorization; coverage remains incomplete |
 | Frontend strict production build | Pass |
-| Frontend tests | Pass, 20 Vitest tests plus authenticated Playwright catalog CRUD, including authentication, CAPTCHA lifecycle/failure handling, forced password change, permissions, RHF/Zod catalog validation, MSW API integration and generated routes; coverage remains incomplete |
+| Frontend tests | Pass, 29 Vitest tests plus two authenticated Playwright CRUD lifecycles for catalogs and business/product/handler management; coverage remains incomplete |
 | EF migrations | Pass; five migrations apply cleanly and repeat idempotently, with no pending model changes |
 | Docker full stack | Pass; six-service base stack and development Mailpit profile build and run, with a one-shot migrator and non-root API/SPA containers |
 | CI and dependency gates | Pass locally; GitHub Actions covers backend/frontend build/test, EF drift, audited dependency allowlists, production Compose rendering and image builds |

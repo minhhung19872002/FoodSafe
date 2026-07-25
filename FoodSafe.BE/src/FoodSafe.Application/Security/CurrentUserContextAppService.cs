@@ -28,6 +28,15 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.Catalogs.Create,
         FoodSafePermissions.Catalogs.Edit,
         FoodSafePermissions.Catalogs.Delete,
+        FoodSafePermissions.BusinessManagement.Businesses.View,
+        FoodSafePermissions.BusinessManagement.Businesses.Create,
+        FoodSafePermissions.BusinessManagement.Businesses.Edit,
+        FoodSafePermissions.BusinessManagement.Businesses.Delete,
+        FoodSafePermissions.BusinessManagement.Businesses.Import,
+        FoodSafePermissions.BusinessManagement.Products.View,
+        FoodSafePermissions.BusinessManagement.Products.Create,
+        FoodSafePermissions.BusinessManagement.Products.Edit,
+        FoodSafePermissions.BusinessManagement.Products.Delete,
         FoodSafePermissions.SystemAdministration.Default,
         FoodSafePermissions.DataScope.All
     ];

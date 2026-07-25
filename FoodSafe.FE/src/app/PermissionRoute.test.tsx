@@ -42,4 +42,21 @@ describe("PermissionRoute", () => {
     expect(screen.queryByText("Danh sách đơn vị")).not.toBeInTheDocument();
     expect(screen.getByText("Không có quyền truy cập")).toBeInTheDocument();
   });
+
+  it("allows a route when any accepted permission is granted", () => {
+    useAuthStore.getState().setAuth(user);
+
+    render(
+      <PermissionRoute
+        permission={[
+          "FoodSafe.BusinessManagement.Businesses.View",
+          "FoodSafe.Organizations.View",
+        ]}
+      >
+        <div>Nội dung dùng chung</div>
+      </PermissionRoute>,
+    );
+
+    expect(screen.getByText("Nội dung dùng chung")).toBeInTheDocument();
+  });
 });

@@ -64,6 +64,32 @@ public class ProductAppService : ApplicationService, IProductAppService
         return new(total, ObjectMapper.Map<List<Product>, List<ProductDto>>(items));
     }
 
+    public async Task<IReadOnlyList<ProductBusinessOptionDto>>
+        GetBusinessOptionsAsync()
+    {
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.View,
+            _cancellationTokens.Token);
+        var query = await _businesses.GetQueryableAsync();
+        query = query.Where(x => x.Status == BusinessStatus.Active);
+        if (!scope.HasGlobalAccess)
+        {
+            var allowedIds = await AllowedBusinessIdsAsync(scope);
+            query = query.Where(x => allowedIds.Contains(x.Id));
+        }
+
+        return await AsyncExecuter.ToListAsync(
+            query.OrderBy(x => x.Name)
+                .Take(500)
+                .Select(x => new ProductBusinessOptionDto
+                {
+                    Id = x.Id,
+                    Code = x.Code,
+                    Name = x.Name
+                }),
+            _cancellationTokens.Token);
+    }
+
     public async Task<ProductDto> GetAsync(Guid id) =>
         ObjectMapper.Map<Product, ProductDto>(
             await GetScopedAsync(id, DataScopeOperation.View));

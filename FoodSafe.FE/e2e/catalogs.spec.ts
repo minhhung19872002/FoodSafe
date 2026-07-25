@@ -1,41 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-
-async function signInAsAdmin(page: Page) {
-  const password = process.env.E2E_ADMIN_PASSWORD;
-  if (!password) {
-    throw new Error(
-      "E2E_ADMIN_PASSWORD is required for authenticated E2E tests",
-    );
-  }
-
-  const request = page.context().request;
-  const configuration = await request.get(
-    "/api/abp/application-configuration?IncludeLocalizationResources=false",
-  );
-  expect(configuration.ok()).toBeTruthy();
-
-  const cookies = await page.context().cookies();
-  const xsrfCookie = cookies.find((cookie) => cookie.name === "XSRF-TOKEN");
-  expect(xsrfCookie, "XSRF-TOKEN cookie").toBeDefined();
-
-  const login = await request.post("/api/account/login", {
-    headers: {
-      RequestVerificationToken: decodeURIComponent(xsrfCookie!.value),
-    },
-    data: {
-      userNameOrEmailAddress: "admin",
-      password,
-      captchaToken: "XXXX.DUMMY.TOKEN.XXXX",
-      rememberMe: false,
-    },
-  });
-  expect(login.ok(), await login.text()).toBeTruthy();
-
-  const refresh = await request.get(
-    "/api/abp/application-configuration?IncludeLocalizationResources=false",
-  );
-  expect(refresh.ok()).toBeTruthy();
-}
+import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
 
 async function removeStaleE2eArtifacts(page: Page) {
   const request = page.context().request;
@@ -46,10 +10,7 @@ async function removeStaleE2eArtifacts(page: Page) {
   const pageResult = (await response.json()) as {
     items: Array<{ id: string; code: string }>;
   };
-  const xsrfCookie = (await page.context().cookies()).find(
-    (cookie) => cookie.name === "XSRF-TOKEN",
-  );
-  expect(xsrfCookie, "XSRF-TOKEN cookie").toBeDefined();
+  const token = await requestVerificationToken(page);
 
   for (const item of pageResult.items.filter(({ code }) =>
     code.startsWith("E2E-"),
@@ -58,7 +19,7 @@ async function removeStaleE2eArtifacts(page: Page) {
       `/api/v1/app/master-catalog/${item.id}/document-type`,
       {
         headers: {
-          RequestVerificationToken: decodeURIComponent(xsrfCookie!.value),
+          RequestVerificationToken: token,
         },
       },
     );

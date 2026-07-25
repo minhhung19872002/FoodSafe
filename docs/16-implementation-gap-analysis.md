@@ -42,8 +42,8 @@ Status vocabulary: **Built-in** means ABP supplies a partial capability that sti
 | STT-16 | Laboratories | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
 | STT-17 | Laboratory services | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
 | STT-18 | Document types | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
-| STT-19 | Facilities | Missing | Missing | Design only | Missing | High gaps | CRUD, scope, history, map, import/export, attachments | P0 |
-| STT-20 | Products | Missing | Missing | Design only | Missing | High gaps | CRUD, scope, history, import/export | P0 |
+| STT-19 | Facilities | Implemented core | Implemented core | Migrated | Covered core | Reviewed core | Excel import/export and attachments remain | P0 |
+| STT-20 | Products | Implemented core | Implemented core | Migrated | Covered core | Reviewed core | Excel import/export and attachments remain | P0 |
 | STT-21 | Self-declarations | Missing | Missing | Design only | Missing | High gaps | Lifecycle, files, scope, exports | P0 |
 | STT-22 | Product registrations | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P0 |
 | STT-23 | Advertising registration | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P1 |

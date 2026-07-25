@@ -3,12 +3,16 @@ import { Result } from "antd";
 import { useAuthStore } from "@/features/auth/store/authStore";
 
 interface Props {
-  permission: string;
+  permission: string | string[];
   children: ReactNode;
 }
 
 export function PermissionRoute({ permission, children }: Props) {
-  const allowed = useAuthStore((state) => state.hasPermission(permission));
+  const allowed = useAuthStore((state) =>
+    (Array.isArray(permission) ? permission : [permission]).some(
+      state.hasPermission,
+    ),
+  );
 
   if (!allowed) {
     return (

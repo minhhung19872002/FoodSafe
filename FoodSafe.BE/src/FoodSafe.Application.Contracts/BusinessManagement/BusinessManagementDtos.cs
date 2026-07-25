@@ -177,6 +177,13 @@ public sealed class UpdateProductDto : UpsertProductDto
     public ProductStatus Status { get; set; } = ProductStatus.Active;
 }
 
+public sealed class ProductBusinessOptionDto
+{
+    public Guid Id { get; set; }
+    public string? Code { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
 public interface IBusinessAppService : IApplicationService
 {
     Task<PagedResultDto<BusinessDto>> GetListAsync(BusinessListInput input);
@@ -192,6 +199,7 @@ public interface IBusinessAppService : IApplicationService
 public interface IProductAppService : IApplicationService
 {
     Task<PagedResultDto<ProductDto>> GetListAsync(ProductListInput input);
+    Task<IReadOnlyList<ProductBusinessOptionDto>> GetBusinessOptionsAsync();
     Task<ProductDto> GetAsync(Guid id);
     Task<ProductDto> CreateAsync(UpsertProductDto input);
     Task<ProductDto> UpdateAsync(Guid id, UpdateProductDto input);

@@ -29,8 +29,24 @@ disposable PostgreSQL 15 database and created the four expected tables. The
 database was dropped after verification. Domain, application-contract,
 mapping, architecture, and existing regression tests pass.
 
+The Vietnamese SPA now provides permission-aware facility and product tabs,
+search/status filters, paged CRUD, map selection, catalog-backed fields, and
+responsible-person lifecycle management. All Ant Design form controls are
+bound through React Hook Form controllers and validated by Zod; ABP sequential
+GUID values are accepted without weakening the 36-character GUID shape check.
+The authenticated current-user projection includes every business/product
+permission used by navigation and route guards. Product-only sessions use a
+separately scoped business-option endpoint and never depend on the facility
+view permission.
+
+Authenticated Playwright validation completes create/edit/delete for a
+facility, creates its responsible person, and creates/deletes its product
+against the Docker stack. Frontend type checking, lint, 29 Vitest tests,
+production build, and both Playwright suites pass. The backend builds with
+zero warnings and all 86 tests pass.
+
 ## Remaining in this slice
 
-Frontend list/detail/forms, map selection, handler editing, product screens,
-Excel import/export, attachments, MSW integration tests, authenticated
-Playwright coverage, and rebuilt full-stack validation remain in progress.
+Excel import/export and the shared secure attachment mechanism remain. They
+stay explicitly open rather than being represented by placeholder buttons or
+mock endpoints.

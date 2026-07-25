@@ -18,6 +18,7 @@ import {
   KeyOutlined,
   SafetyCertificateOutlined,
   DatabaseOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -53,6 +54,16 @@ function buildMenuItems(
       key: "/catalogs",
       icon: <DatabaseOutlined />,
       label: "Danh mục dùng chung",
+    });
+  }
+  if (
+    hasPermission("FoodSafe.BusinessManagement.Businesses.View") ||
+    hasPermission("FoodSafe.BusinessManagement.Products.View")
+  ) {
+    items.push({
+      key: "/businesses",
+      icon: <ShopOutlined />,
+      label: "Cơ sở và sản phẩm",
     });
   }
   if (hasPermission("FoodSafe.SystemAdministration")) {

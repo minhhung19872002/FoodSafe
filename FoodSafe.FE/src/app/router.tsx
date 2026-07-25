@@ -5,6 +5,7 @@ import { PrivateRoute } from "./PrivateRoute";
 import { PermissionRoute } from "./PermissionRoute";
 import {
   ChangePasswordPage,
+  BusinessManagementPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -86,6 +87,21 @@ export const router = createBrowserRouter([
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.GeographicCatalogs.View">
               <GeographicCatalogPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "businesses",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute
+              permission={[
+                "FoodSafe.BusinessManagement.Businesses.View",
+                "FoodSafe.BusinessManagement.Products.View",
+              ]}
+            >
+              <BusinessManagementPage />
             </PermissionRoute>
           </Suspense>
         ),

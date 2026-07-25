@@ -1,0 +1,136 @@
+import { expect, test, type Page } from "@playwright/test";
+import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
+
+interface ListItem {
+  id: string;
+  code?: string;
+}
+
+async function removeStaleArtifacts(page: Page) {
+  const request = page.context().request;
+  const token = await requestVerificationToken(page);
+  const headers = { RequestVerificationToken: token };
+
+  const products = await request.get(
+    "/api/v1/app/product?Filter=E2E-&MaxResultCount=100",
+  );
+  expect(products.ok()).toBeTruthy();
+  for (const item of ((await products.json()) as { items: ListItem[] }).items) {
+    if (item.code?.startsWith("E2E-")) {
+      const deletion = await request.delete(`/api/v1/app/product/${item.id}`, {
+        headers,
+      });
+      expect(deletion.ok(), await deletion.text()).toBeTruthy();
+    }
+  }
+
+  const businesses = await request.get(
+    "/api/v1/app/business?Filter=E2E-&MaxResultCount=100",
+  );
+  expect(businesses.ok()).toBeTruthy();
+  for (const item of ((await businesses.json()) as { items: ListItem[] })
+    .items) {
+    if (item.code?.startsWith("E2E-")) {
+      const deletion = await request.delete(`/api/v1/app/business/${item.id}`, {
+        headers,
+      });
+      expect(deletion.ok(), await deletion.text()).toBeTruthy();
+    }
+  }
+}
+
+async function chooseFirstOption(page: Page, label: string) {
+  await page.getByRole("combobox", { name: label }).click();
+  await page
+    .locator(".ant-select-dropdown:visible .ant-select-item-option")
+    .first()
+    .click();
+}
+
+test.describe("business and product management", () => {
+  test.setTimeout(60_000);
+
+  test("completes the business, handler, and product lifecycle", async ({
+    page,
+  }) => {
+    await signInAsAdmin(page);
+    await removeStaleArtifacts(page);
+    await page.goto("/businesses");
+
+    await expect(
+      page.getByRole("heading", { name: "Cơ sở và sản phẩm" }),
+    ).toBeVisible();
+
+    const suffix = Date.now().toString().slice(-8);
+    const businessCode = `E2E-CS-${suffix}`;
+    const businessName = `Cơ sở E2E ${suffix}`;
+    const updatedBusinessName = `${businessName} cập nhật`;
+    const productCode = `E2E-SP-${suffix}`;
+    const productName = `Sản phẩm E2E ${suffix}`;
+    const handlerName = `Phụ trách E2E ${suffix}`;
+
+    await page.getByRole("button", { name: /thêm cơ sở/i }).click();
+    await chooseFirstOption(page, "Đơn vị quản lý");
+    await page.getByRole("textbox", { name: "Mã cơ sở" }).fill(businessCode);
+    await page.getByRole("textbox", { name: "Tên cơ sở" }).fill(businessName);
+    await page.getByRole("button", { name: "Lưu", exact: true }).click();
+    await expect(page.getByText("Đã thêm cơ sở")).toBeVisible();
+
+    let businessRow = page.getByRole("row").filter({ hasText: businessCode });
+    await expect(businessRow).toContainText(businessName);
+
+    await businessRow
+      .getByRole("button", { name: `Sửa ${businessName}` })
+      .click();
+    await expect(
+      page.getByRole("dialog", { name: "Cập nhật cơ sở" }),
+    ).toBeVisible();
+    await page
+      .getByRole("textbox", { name: "Tên cơ sở" })
+      .fill(updatedBusinessName);
+    await page.getByRole("button", { name: "Lưu", exact: true }).click();
+    await expect(page.getByText("Đã cập nhật cơ sở")).toBeVisible();
+    businessRow = page.getByRole("row").filter({ hasText: businessCode });
+    await expect(businessRow).toContainText(updatedBusinessName);
+
+    await businessRow
+      .getByRole("button", {
+        name: `Người phụ trách ${updatedBusinessName}`,
+      })
+      .click();
+    await page.getByRole("button", { name: /thêm người phụ trách/i }).click();
+    await page
+      .getByRole("textbox", { name: "Họ tên người phụ trách" })
+      .fill(handlerName);
+    await page.getByRole("button", { name: "Lưu người phụ trách" }).click();
+    await expect(page.getByText("Đã lưu người phụ trách")).toBeVisible();
+
+    await page.getByRole("tab", { name: "Sản phẩm" }).click();
+    await page.getByRole("button", { name: /thêm sản phẩm/i }).click();
+    await page.getByRole("combobox", { name: "Cơ sở" }).click();
+    await page.getByText(updatedBusinessName, { exact: false }).last().click();
+    await page.getByRole("textbox", { name: "Mã sản phẩm" }).fill(productCode);
+    await page.getByRole("textbox", { name: "Tên sản phẩm" }).fill(productName);
+    await page.getByRole("button", { name: "Lưu", exact: true }).click();
+    await expect(page.getByText("Đã thêm sản phẩm")).toBeVisible();
+
+    const productRow = page.getByRole("row").filter({ hasText: productCode });
+    await expect(productRow).toContainText(productName);
+    await productRow
+      .getByRole("button", { name: `Xóa ${productName}` })
+      .click();
+    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await expect(page.getByText("Đã xóa sản phẩm")).toBeVisible();
+
+    await page.getByRole("tab", { name: "Cơ sở SXKD" }).click();
+    businessRow = page.getByRole("row").filter({ hasText: businessCode });
+    await businessRow
+      .getByRole("button", { name: `Xóa ${updatedBusinessName}` })
+      .click();
+    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await expect(page.getByText("Đã xóa cơ sở")).toBeVisible();
+    await expect(
+      page.getByRole("row").filter({ hasText: businessCode }),
+    ).toHaveCount(0);
+  });
+});

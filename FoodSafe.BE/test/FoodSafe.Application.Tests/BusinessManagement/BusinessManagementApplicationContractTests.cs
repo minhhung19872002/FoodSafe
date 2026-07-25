@@ -17,6 +17,7 @@ public sealed class BusinessManagementApplicationContractTests
     [InlineData(typeof(BusinessAppService), "DeleteAsync",
         FoodSafePermissions.BusinessManagement.Businesses.Delete)]
     [InlineData(typeof(ProductAppService), "GetListAsync", null)]
+    [InlineData(typeof(ProductAppService), "GetBusinessOptionsAsync", null)]
     [InlineData(typeof(ProductAppService), "CreateAsync",
         FoodSafePermissions.BusinessManagement.Products.Create)]
     [InlineData(typeof(ProductAppService), "UpdateAsync",
