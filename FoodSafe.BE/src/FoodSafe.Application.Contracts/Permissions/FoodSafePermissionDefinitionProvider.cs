@@ -51,6 +51,44 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
         catalogs.AddChild(FoodSafePermissions.Catalogs.Delete,
             LocalizableString.Create<FoodSafeResource>("Permission:Catalogs.Delete"));
 
+        var businessManagement = group.AddPermission(
+            FoodSafePermissions.BusinessManagement.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:BusinessManagement"));
+        var businesses = businessManagement.AddChild(
+            FoodSafePermissions.BusinessManagement.Businesses.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:Businesses"));
+        businesses.AddChild(
+            FoodSafePermissions.BusinessManagement.Businesses.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:Businesses.View"));
+        businesses.AddChild(
+            FoodSafePermissions.BusinessManagement.Businesses.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:Businesses.Create"));
+        businesses.AddChild(
+            FoodSafePermissions.BusinessManagement.Businesses.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:Businesses.Edit"));
+        businesses.AddChild(
+            FoodSafePermissions.BusinessManagement.Businesses.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:Businesses.Delete"));
+        businesses.AddChild(
+            FoodSafePermissions.BusinessManagement.Businesses.Import,
+            LocalizableString.Create<FoodSafeResource>("Permission:Businesses.Import"));
+
+        var products = businessManagement.AddChild(
+            FoodSafePermissions.BusinessManagement.Products.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:Products"));
+        products.AddChild(
+            FoodSafePermissions.BusinessManagement.Products.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:Products.View"));
+        products.AddChild(
+            FoodSafePermissions.BusinessManagement.Products.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:Products.Create"));
+        products.AddChild(
+            FoodSafePermissions.BusinessManagement.Products.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:Products.Edit"));
+        products.AddChild(
+            FoodSafePermissions.BusinessManagement.Products.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:Products.Delete"));
+
         var systemAdministration = group.AddPermission(
             FoodSafePermissions.SystemAdministration.Default,
             LocalizableString.Create<FoodSafeResource>("Permission:SystemAdmin"));

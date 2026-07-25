@@ -29,6 +29,30 @@ public static class FoodSafePermissions
         public const string Delete = Default + ".Delete";
     }
 
+    public static class BusinessManagement
+    {
+        public const string Default = GroupName + ".BusinessManagement";
+
+        public static class Businesses
+        {
+            public const string Default = BusinessManagement.Default + ".Businesses";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string Import = Default + ".Import";
+        }
+
+        public static class Products
+        {
+            public const string Default = BusinessManagement.Default + ".Products";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+        }
+    }
+
     public static class SystemAdministration
     {
         public const string Default = GroupName + ".SystemAdmin";

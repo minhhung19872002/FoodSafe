@@ -5,6 +5,7 @@ using FoodSafe.Organizations;
 using FoodSafe.Catalogs;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using FoodSafe.Security;
+using FoodSafe.BusinessManagement;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -17,6 +18,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
         ConfigureGeographicCatalogs(builder);
         ConfigureMasterCatalogs(builder);
         ConfigureDataScope(builder);
+        ConfigureBusinessManagement(builder);
 
         builder.Entity<Organization>(entity =>
         {
@@ -78,6 +80,207 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasDatabaseName("idx_organizations_parent_id");
             entity.HasIndex(x => x.Level)
                 .HasDatabaseName("idx_organizations_level");
+        });
+    }
+
+    private static void ConfigureBusinessManagement(ModelBuilder builder)
+    {
+        builder.Entity<Business>(entity =>
+        {
+            entity.ToTable("businesses", table =>
+            {
+                table.HasCheckConstraint("chk_businesses_status", "status IN (1, 2, 3)");
+                table.HasCheckConstraint(
+                    "chk_businesses_address_chain",
+                    "(address_commune_id IS NULL OR address_district_id IS NOT NULL) AND " +
+                    "(address_district_id IS NULL OR address_province_id IS NOT NULL)");
+                table.HasCheckConstraint(
+                    "chk_businesses_coordinates",
+                    "(address_latitude IS NULL AND address_longitude IS NULL) OR " +
+                    "(address_latitude BETWEEN -90 AND 90 AND address_longitude BETWEEN -180 AND 180)");
+                table.HasCheckConstraint(
+                    "chk_businesses_suspension",
+                    "status != 3 OR suspension_reason IS NOT NULL");
+                table.HasCheckConstraint(
+                    "chk_businesses_employee_count",
+                    "employee_count IS NULL OR employee_count >= 0");
+            });
+            ConfigureAggregateAudit(entity, "pk_businesses");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
+            entity.Property(x => x.Code).HasColumnName("code").HasMaxLength(50);
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.BusinessTypeId).HasColumnName("business_type_id");
+            entity.Property(x => x.BusinessClassificationId).HasColumnName("business_classification_id");
+            entity.Property(x => x.TaxCode).HasColumnName("tax_code").HasMaxLength(50);
+            entity.Property(x => x.RepresentativeName).HasColumnName("representative_name").HasMaxLength(200);
+            entity.Property(x => x.RepresentativeIdCard).HasColumnName("representative_id_card").HasMaxLength(50);
+            entity.Property(x => x.ContactPhone).HasColumnName("contact_phone").HasMaxLength(50);
+            entity.Property(x => x.ContactEmail).HasColumnName("contact_email").HasMaxLength(200);
+            entity.Property(x => x.ContactWebsite).HasColumnName("contact_website").HasMaxLength(500);
+            entity.Property(x => x.AddressStreet).HasColumnName("address_street");
+            entity.Property(x => x.AddressProvinceId).HasColumnName("address_province_id");
+            entity.Property(x => x.AddressDistrictId).HasColumnName("address_district_id");
+            entity.Property(x => x.AddressCommuneId).HasColumnName("address_commune_id");
+            entity.Property(x => x.AddressLatitude).HasColumnName("address_latitude");
+            entity.Property(x => x.AddressLongitude).HasColumnName("address_longitude");
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<short>();
+            entity.Property(x => x.SuspensionReason).HasColumnName("suspension_reason");
+            entity.Property(x => x.SuspendedAt).HasColumnName("suspended_at");
+            entity.Property(x => x.HasEligibilityCertificate).HasColumnName("has_eligibility_certificate");
+            entity.Property(x => x.HasVsattpCommitment).HasColumnName("has_vsattp_commitment");
+            entity.Property(x => x.EstablishedDate).HasColumnName("established_date").HasColumnType("date");
+            entity.Property(x => x.EmployeeCount).HasColumnName("employee_count");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+
+            entity.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_organization");
+            entity.HasOne<BusinessType>().WithMany().HasForeignKey(x => x.BusinessTypeId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_type");
+            entity.HasOne<BusinessClassification>().WithMany()
+                .HasForeignKey(x => x.BusinessClassificationId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_classification");
+            entity.HasOne<Province>().WithMany().HasForeignKey(x => x.AddressProvinceId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_province");
+            entity.HasOne<District>().WithMany()
+                .HasForeignKey(x => new { x.AddressDistrictId, x.AddressProvinceId })
+                .HasPrincipalKey(x => new { AddressDistrictId = x.Id, AddressProvinceId = x.ProvinceId })
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_district_province");
+            entity.HasOne<Commune>().WithMany()
+                .HasForeignKey(x => new { x.AddressCommuneId, x.AddressDistrictId })
+                .HasPrincipalKey(x => new { AddressCommuneId = x.Id, AddressDistrictId = x.DistrictId })
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_commune_district");
+
+            entity.HasAlternateKey(x => new { x.Id, x.OrganizationId })
+                .HasName("uq_businesses_id_org");
+            entity.HasIndex(x => x.Code).IsUnique()
+                .HasFilter("code IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("uq_businesses_code");
+            entity.HasIndex(x => x.TaxCode).IsUnique()
+                .HasFilter("tax_code IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("uq_businesses_tax_code");
+            entity.HasIndex(x => x.OrganizationId).HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_businesses_org_id");
+            entity.HasIndex(x => x.BusinessTypeId).HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_businesses_type");
+            entity.HasIndex(x => x.BusinessClassificationId)
+                .HasFilter("business_classification_id IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("idx_businesses_classification");
+            entity.HasIndex(x => x.Status).HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_businesses_status");
+            entity.HasIndex(x => x.AddressProvinceId).HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_businesses_province");
+            entity.HasIndex(x => x.AddressDistrictId).HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_businesses_district");
+            entity.HasIndex(x => x.AddressCommuneId).HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_businesses_commune");
+        });
+
+        builder.Entity<BusinessProductGroup>(entity =>
+        {
+            entity.ToTable("business_product_groups");
+            entity.HasKey(x => new { x.BusinessId, x.ProductGroupId })
+                .HasName("pk_business_product_groups");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.ProductGroupId).HasColumnName("product_group_id");
+            entity.HasOne<Business>().WithMany().HasForeignKey(x => x.BusinessId)
+                .OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_bpg_business");
+            entity.HasOne<ProductGroup>().WithMany().HasForeignKey(x => x.ProductGroupId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_bpg_product_group");
+            entity.HasIndex(x => x.ProductGroupId).HasDatabaseName("idx_bpg_product_group");
+        });
+
+        builder.Entity<BusinessHandler>(entity =>
+        {
+            entity.ToTable("business_handlers", table =>
+            {
+                table.HasCheckConstraint(
+                    "chk_bh_training_dates",
+                    "training_date IS NULL OR training_expiry_date IS NULL OR training_date <= training_expiry_date");
+                table.HasCheckConstraint(
+                    "chk_bh_health_dates",
+                    "health_check_date IS NULL OR health_check_expiry_date IS NULL OR health_check_date <= health_check_expiry_date");
+            });
+            ConfigureFullAudit(entity, "pk_business_handlers");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.FullName).HasColumnName("full_name").HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Position).HasColumnName("position").HasMaxLength(200);
+            entity.Property(x => x.IdCardNumber).HasColumnName("id_card_number").HasMaxLength(50);
+            entity.Property(x => x.TrainingCertificateNumber).HasColumnName("training_certificate_number").HasMaxLength(100);
+            entity.Property(x => x.TrainingDate).HasColumnName("training_date").HasColumnType("date");
+            entity.Property(x => x.TrainingOrganization).HasColumnName("training_organization").HasMaxLength(300);
+            entity.Property(x => x.TrainingExpiryDate).HasColumnName("training_expiry_date").HasColumnType("date");
+            entity.Property(x => x.HealthCertificateNumber).HasColumnName("health_certificate_number").HasMaxLength(100);
+            entity.Property(x => x.HealthCheckDate).HasColumnName("health_check_date").HasColumnType("date");
+            entity.Property(x => x.HealthCheckFacility).HasColumnName("health_check_facility").HasMaxLength(300);
+            entity.Property(x => x.HealthCheckExpiryDate).HasColumnName("health_check_expiry_date").HasColumnType("date");
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+            entity.HasOne<Business>().WithMany().HasForeignKey(x => x.BusinessId)
+                .OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_business_handlers_business");
+            entity.HasIndex(x => x.BusinessId).HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_business_handlers_business");
+            entity.HasIndex(x => x.TrainingExpiryDate)
+                .HasFilter("training_expiry_date IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("idx_business_handlers_training_expiry");
+            entity.HasIndex(x => x.HealthCheckExpiryDate)
+                .HasFilter("health_check_expiry_date IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("idx_business_handlers_health_expiry");
+        });
+
+        builder.Entity<Product>(entity =>
+        {
+            entity.ToTable("products", table =>
+            {
+                table.HasCheckConstraint("chk_products_status", "status IN (1, 2)");
+                table.HasCheckConstraint(
+                    "chk_products_expiry",
+                    "expiry_period_months IS NULL OR expiry_period_months >= 0");
+            });
+            ConfigureAggregateAudit(entity, "pk_products");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
+            entity.Property(x => x.Code).HasColumnName("code").HasMaxLength(50);
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.ProductGroupId).HasColumnName("product_group_id");
+            entity.Property(x => x.BrandName).HasColumnName("brand_name").HasMaxLength(200);
+            entity.Property(x => x.Manufacturer).HasColumnName("manufacturer").HasMaxLength(300);
+            entity.Property(x => x.ManufacturingCountryId).HasColumnName("manufacturing_country_id");
+            entity.Property(x => x.NetWeight).HasColumnName("net_weight").HasMaxLength(100);
+            entity.Property(x => x.Specifications).HasColumnName("specifications");
+            entity.Property(x => x.Ingredients).HasColumnName("ingredients");
+            entity.Property(x => x.ExpiryPeriodMonths).HasColumnName("expiry_period_months");
+            entity.Property(x => x.StorageConditions).HasColumnName("storage_conditions");
+            entity.Property(x => x.UsageInstructions).HasColumnName("usage_instructions");
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<short>();
+            entity.Property(x => x.Notes).HasColumnName("notes");
+            entity.HasOne<Business>().WithMany()
+                .HasForeignKey(x => new { x.BusinessId, x.OrganizationId })
+                .HasPrincipalKey(x => new { x.Id, x.OrganizationId })
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_products_business_org");
+            entity.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_products_org");
+            entity.HasOne<ProductGroup>().WithMany().HasForeignKey(x => x.ProductGroupId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_products_group");
+            entity.HasOne<Country>().WithMany().HasForeignKey(x => x.ManufacturingCountryId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_products_country");
+            entity.HasAlternateKey(x => new { x.Id, x.BusinessId, x.OrganizationId })
+                .HasName("uq_products_id_business_org");
+            entity.HasIndex(x => new { x.BusinessId, x.Code }).IsUnique()
+                .HasFilter("code IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("uq_products_business_code");
+            entity.HasIndex(x => x.BusinessId).HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_products_business");
+            entity.HasIndex(x => x.OrganizationId).HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_products_org");
+            entity.HasIndex(x => x.ProductGroupId).HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_products_group");
+        });
+
+        builder.Entity<ManagementScopeAssignment>(entity =>
+        {
+            entity.HasOne<Business>().WithMany().HasForeignKey(x => x.BusinessId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_business");
+            entity.HasIndex(x => x.BusinessId).HasDatabaseName("idx_msa_business");
         });
     }
 
@@ -374,5 +577,34 @@ public static class FoodSafeDbContextModelCreatingExtensions
         entity.Property(x => x.Description).HasColumnName("description").HasMaxLength(2000);
         entity.Property(x => x.IsActive).HasColumnName("is_active");
         entity.Property(x => x.SortOrder).HasColumnName("sort_order");
+    }
+
+    private static void ConfigureAggregateAudit<TEntity>(
+        EntityTypeBuilder<TEntity> entity,
+        string primaryKeyName)
+        where TEntity : Volo.Abp.Domain.Entities.Auditing.FullAuditedAggregateRoot<Guid>
+    {
+        ConfigureFullAudit(entity, primaryKeyName);
+        entity.Property(x => x.ExtraProperties)
+            .HasColumnName("extra_properties")
+            .HasColumnType("jsonb");
+        entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp").HasMaxLength(40);
+    }
+
+    private static void ConfigureFullAudit<TEntity>(
+        EntityTypeBuilder<TEntity> entity,
+        string primaryKeyName)
+        where TEntity : class, Volo.Abp.Domain.Entities.IEntity<Guid>
+    {
+        entity.ConfigureByConvention();
+        entity.HasKey("Id").HasName(primaryKeyName);
+        entity.Property<Guid>("Id").HasColumnName("id");
+        entity.Property<DateTime>("CreationTime").HasColumnName("creation_time");
+        entity.Property<Guid?>("CreatorId").HasColumnName("creator_id");
+        entity.Property<DateTime?>("LastModificationTime").HasColumnName("last_modification_time");
+        entity.Property<Guid?>("LastModifierId").HasColumnName("last_modifier_id");
+        entity.Property<bool>("IsDeleted").HasColumnName("is_deleted");
+        entity.Property<DateTime?>("DeletionTime").HasColumnName("deletion_time");
+        entity.Property<Guid?>("DeleterId").HasColumnName("deleter_id");
     }
 }

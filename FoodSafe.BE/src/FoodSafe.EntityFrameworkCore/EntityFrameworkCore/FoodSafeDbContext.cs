@@ -13,6 +13,7 @@ using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using FoodSafe.Organizations;
 using FoodSafe.Catalogs;
 using FoodSafe.Security;
+using FoodSafe.BusinessManagement;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -47,6 +48,10 @@ public class FoodSafeDbContext :
     public DbSet<AppUserProfile> AppUserProfiles { get; set; }
     public DbSet<PasswordHistory> PasswordHistory { get; set; }
     public DbSet<ManagementScopeAssignment> ManagementScopeAssignments { get; set; }
+    public DbSet<Business> Businesses { get; set; }
+    public DbSet<BusinessProductGroup> BusinessProductGroups { get; set; }
+    public DbSet<BusinessHandler> BusinessHandlers { get; set; }
+    public DbSet<Product> Products { get; set; }
 
     public FoodSafeDbContext(DbContextOptions<FoodSafeDbContext> options)
         : base(options)

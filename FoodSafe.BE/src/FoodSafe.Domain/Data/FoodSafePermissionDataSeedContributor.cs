@@ -98,6 +98,18 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.Catalogs.Create,
         FoodSafePermissions.Catalogs.Edit,
         FoodSafePermissions.Catalogs.Delete,
+        FoodSafePermissions.BusinessManagement.Default,
+        FoodSafePermissions.BusinessManagement.Businesses.Default,
+        FoodSafePermissions.BusinessManagement.Businesses.View,
+        FoodSafePermissions.BusinessManagement.Businesses.Create,
+        FoodSafePermissions.BusinessManagement.Businesses.Edit,
+        FoodSafePermissions.BusinessManagement.Businesses.Delete,
+        FoodSafePermissions.BusinessManagement.Businesses.Import,
+        FoodSafePermissions.BusinessManagement.Products.Default,
+        FoodSafePermissions.BusinessManagement.Products.View,
+        FoodSafePermissions.BusinessManagement.Products.Create,
+        FoodSafePermissions.BusinessManagement.Products.Edit,
+        FoodSafePermissions.BusinessManagement.Products.Delete,
         FoodSafePermissions.DataScope.All
     ];
 
@@ -119,7 +131,16 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.GeographicCatalogs.Default,
         FoodSafePermissions.GeographicCatalogs.View,
         FoodSafePermissions.Catalogs.Default,
-        FoodSafePermissions.Catalogs.View
+        FoodSafePermissions.Catalogs.View,
+        FoodSafePermissions.BusinessManagement.Default,
+        FoodSafePermissions.BusinessManagement.Businesses.Default,
+        FoodSafePermissions.BusinessManagement.Businesses.View,
+        FoodSafePermissions.BusinessManagement.Businesses.Create,
+        FoodSafePermissions.BusinessManagement.Businesses.Edit,
+        FoodSafePermissions.BusinessManagement.Products.Default,
+        FoodSafePermissions.BusinessManagement.Products.View,
+        FoodSafePermissions.BusinessManagement.Products.Create,
+        FoodSafePermissions.BusinessManagement.Products.Edit
     ];
 
     private static readonly RoleSeedDefinition[] DefaultRoles =
@@ -147,12 +168,24 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Catalogs.View,
                 FoodSafePermissions.Catalogs.Create,
                 FoodSafePermissions.Catalogs.Edit,
-                FoodSafePermissions.Catalogs.Delete
+                FoodSafePermissions.Catalogs.Delete,
+                FoodSafePermissions.BusinessManagement.Default,
+                FoodSafePermissions.BusinessManagement.Businesses.Default,
+                FoodSafePermissions.BusinessManagement.Businesses.View,
+                FoodSafePermissions.BusinessManagement.Businesses.Create,
+                FoodSafePermissions.BusinessManagement.Businesses.Edit,
+                FoodSafePermissions.BusinessManagement.Businesses.Import,
+                FoodSafePermissions.BusinessManagement.Products.Default,
+                FoodSafePermissions.BusinessManagement.Products.View,
+                FoodSafePermissions.BusinessManagement.Products.Create,
+                FoodSafePermissions.BusinessManagement.Products.Edit
             ]),
         new(
             "DistrictAdmin",
             "Quản trị cấp huyện",
-            UserAdministratorPermissions),
+            UserAdministratorPermissions
+                .Append(FoodSafePermissions.BusinessManagement.Businesses.Import)
+                .ToArray()),
         new(
             "DistrictStaff",
             "Cán bộ cấp huyện",
@@ -162,7 +195,17 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.GeographicCatalogs.Default,
                 FoodSafePermissions.GeographicCatalogs.View,
                 FoodSafePermissions.Catalogs.Default,
-                FoodSafePermissions.Catalogs.View
+                FoodSafePermissions.Catalogs.View,
+                FoodSafePermissions.BusinessManagement.Default,
+                FoodSafePermissions.BusinessManagement.Businesses.Default,
+                FoodSafePermissions.BusinessManagement.Businesses.View,
+                FoodSafePermissions.BusinessManagement.Businesses.Create,
+                FoodSafePermissions.BusinessManagement.Businesses.Edit,
+                FoodSafePermissions.BusinessManagement.Businesses.Import,
+                FoodSafePermissions.BusinessManagement.Products.Default,
+                FoodSafePermissions.BusinessManagement.Products.View,
+                FoodSafePermissions.BusinessManagement.Products.Create,
+                FoodSafePermissions.BusinessManagement.Products.Edit
             ]),
         new(
             "CommuneAdmin",
@@ -177,7 +220,14 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.GeographicCatalogs.Default,
                 FoodSafePermissions.GeographicCatalogs.View,
                 FoodSafePermissions.Catalogs.Default,
-                FoodSafePermissions.Catalogs.View
+                FoodSafePermissions.Catalogs.View,
+                FoodSafePermissions.BusinessManagement.Default,
+                FoodSafePermissions.BusinessManagement.Businesses.Default,
+                FoodSafePermissions.BusinessManagement.Businesses.View,
+                FoodSafePermissions.BusinessManagement.Businesses.Create,
+                FoodSafePermissions.BusinessManagement.Products.Default,
+                FoodSafePermissions.BusinessManagement.Products.View,
+                FoodSafePermissions.BusinessManagement.Products.Create
             ])
     ];
 

@@ -25,6 +25,7 @@
 | [44-account-security-and-recovery.md](44-account-security-and-recovery.md) | Cookie/CSRF, CAPTCHA and password-recovery security boundary | Active |
 | [45-identity-administration.md](45-identity-administration.md) | Scoped user, role, permission and lifecycle administration | Active |
 | [46-master-catalogs.md](46-master-catalogs.md) | STT 08–18 master-catalog implementation and validation | Active |
+| [47-business-product-management.md](47-business-product-management.md) | STT 19–20 business/product implementation and validation | In progress |
 
 | File | Nội dung | Trạng thái |
 |------|----------|-----------|

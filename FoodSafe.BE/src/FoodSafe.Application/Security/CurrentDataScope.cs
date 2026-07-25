@@ -18,10 +18,24 @@ public sealed record CurrentDataScope(
     IReadOnlySet<Guid> OrganizationIds,
     IReadOnlySet<Guid> ProvinceIds,
     IReadOnlySet<Guid> DistrictIds,
-    IReadOnlySet<Guid> CommuneIds)
+    IReadOnlySet<Guid> CommuneIds,
+    IReadOnlySet<Guid>? BusinessIds = null,
+    IReadOnlySet<Guid>? BusinessTypeIds = null,
+    IReadOnlySet<Guid>? ProductGroupIds = null)
 {
     public bool IncludesOrganization(Guid organizationId) =>
         HasGlobalAccess || OrganizationIds.Contains(organizationId);
+
+    public bool IncludesBusiness(Guid businessId) =>
+        HasGlobalAccess || (BusinessIds?.Contains(businessId) ?? false);
+
+    public bool IncludesBusinessType(Guid? businessTypeId) =>
+        HasGlobalAccess ||
+        (businessTypeId.HasValue &&
+         (BusinessTypeIds?.Contains(businessTypeId.Value) ?? false));
+
+    public bool IncludesProductGroup(Guid productGroupId) =>
+        HasGlobalAccess || (ProductGroupIds?.Contains(productGroupId) ?? false);
 }
 
 public interface ICurrentDataScopeProvider
@@ -80,7 +94,9 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
             return new(
                 userId, null, true,
                 new HashSet<Guid>(), new HashSet<Guid>(),
-                new HashSet<Guid>(), new HashSet<Guid>());
+                new HashSet<Guid>(), new HashSet<Guid>(),
+                new HashSet<Guid>(), new HashSet<Guid>(),
+                new HashSet<Guid>());
         }
 
         var profileQuery = await _profiles.GetQueryableAsync();
@@ -107,6 +123,9 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
         var provinces = new HashSet<Guid>();
         var districts = new HashSet<Guid>();
         var communes = new HashSet<Guid>();
+        var businesses = new HashSet<Guid>();
+        var businessTypes = new HashSet<Guid>();
+        var productGroups = new HashSet<Guid>();
         AddGeography(home, provinces, districts, communes);
 
         var assignmentQuery = await _assignments.GetQueryableAsync();
@@ -119,12 +138,25 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
                 (!x.ValidTo.HasValue || now < x.ValidTo.Value)),
             cancellationToken);
 
-        foreach (var assignment in assignments.Where(x =>
-                     x.ScopeType == ManagementScopeType.Geography && x.Allows(operation)))
+        foreach (var assignment in assignments.Where(x => x.Allows(operation)))
         {
-            if (assignment.ProvinceId.HasValue) provinces.Add(assignment.ProvinceId.Value);
-            if (assignment.DistrictId.HasValue) districts.Add(assignment.DistrictId.Value);
-            if (assignment.CommuneId.HasValue) communes.Add(assignment.CommuneId.Value);
+            switch (assignment.ScopeType)
+            {
+                case ManagementScopeType.Geography:
+                    if (assignment.ProvinceId.HasValue) provinces.Add(assignment.ProvinceId.Value);
+                    if (assignment.DistrictId.HasValue) districts.Add(assignment.DistrictId.Value);
+                    if (assignment.CommuneId.HasValue) communes.Add(assignment.CommuneId.Value);
+                    break;
+                case ManagementScopeType.Business when assignment.BusinessId.HasValue:
+                    businesses.Add(assignment.BusinessId.Value);
+                    break;
+                case ManagementScopeType.BusinessType when assignment.BusinessTypeId.HasValue:
+                    businessTypes.Add(assignment.BusinessTypeId.Value);
+                    break;
+                case ManagementScopeType.ProductGroup when assignment.ProductGroupId.HasValue:
+                    productGroups.Add(assignment.ProductGroupId.Value);
+                    break;
+            }
         }
 
         return new(
@@ -134,7 +166,10 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
             allowedOrganizationIds,
             provinces,
             districts,
-            communes);
+            communes,
+            businesses,
+            businessTypes,
+            productGroups);
     }
 
     public async Task EnsureOrganizationAccessAsync(

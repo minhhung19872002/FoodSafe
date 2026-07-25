@@ -44,6 +44,21 @@ public static class FoodSafeDomainErrorCodes
         public const string NotFound = "FoodSafe:Business:0001";
         public const string DuplicateTaxCode = "FoodSafe:Business:0002";
         public const string CannotModifyInactive = "FoodSafe:Business:0003";
+        public const string InvalidStatus = "FoodSafe:Business:0004";
+        public const string SuspensionReasonRequired = "FoodSafe:Business:0005";
+        public const string InvalidGeography = "FoodSafe:Business:0006";
+        public const string InvalidCoordinates = "FoodSafe:Business:0007";
+        public const string InvalidEmployeeCount = "FoodSafe:Business:0008";
+        public const string InvalidCertificateDates = "FoodSafe:Business:0009";
+    }
+
+    public static class Product
+    {
+        public const string NotFound = "FoodSafe:Product:0001";
+        public const string InvalidStatus = "FoodSafe:Product:0002";
+        public const string InvalidExpiryPeriod = "FoodSafe:Product:0003";
+        public const string OrganizationMismatch = "FoodSafe:Product:0004";
+        public const string DuplicateCode = "FoodSafe:Product:0005";
     }
 
     public static class Inspection

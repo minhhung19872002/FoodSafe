@@ -24,6 +24,11 @@ delivery are implemented and verified.
 
 Catalog slices precede facilities/products. The file mechanism is completed before attachment-bearing regulatory records. Facility/product import validates the full workbook before transaction commit.
 
+Status: in progress. Catalog prerequisites are complete; the executable
+business/product domain, scoped application services, EF mapping, and clean
+PostgreSQL migration are implemented. UI, import/export, attachments, and
+end-to-end validation remain.
+
 ## Milestone 3 — Declarations, registrations and certificates
 
 Implement self-declarations, product/ad registrations, eligibility, CFS and export certificates with scoped official identifiers, lifecycle history, secure attachments and exports.
