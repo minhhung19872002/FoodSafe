@@ -4,17 +4,17 @@
 
 - Audit date: 2026-07-25
 - Source priority: original 42-page technical-requirement PDF, accepted decisions, state machines/permission matrix, database documents, API contract, implementation
-- Backend baseline: Release build has 0 warnings; 42 tests pass, including
+- Backend baseline: Release build has 0 warnings; 53 tests pass, including
   domain, application, PostgreSQL/EF, host-security, API-contract, and
   architecture checks.
-- Frontend baseline: Prettier, Oxlint, strict TypeScript, 11 component/route
+- Frontend baseline: Prettier, Oxlint, strict TypeScript, 15 component/route
   tests, and the production build pass.
 - Database baseline: five EF migrations apply cleanly to PostgreSQL 15 and EF
   reports no pending model changes.
 - Runtime baseline: production-shaped Compose images and a complete
   development stack pass health, authentication, authorization, recovery, and
   versioned-OpenAPI probes.
-- Overall conclusion: deployable foundation with two completed administrative
+- Overall conclusion: deployable foundation with three completed administrative
   slices; still not production-ready because most of the 57 functional
   requirements and the final security/recovery gates remain incomplete.
 
@@ -24,13 +24,13 @@ Status vocabulary: **Built-in** means ABP supplies a partial capability that sti
 
 | ID | Module | Backend | Frontend | Database | Tests | Security | Missing work | Priority |
 |---|---|---|---|---|---|---|---|---|
-| STT-01 | Roles | Built-in | Missing | Migrated ABP | Indirect | Partial | Scoped role administration, UI, lifecycle and negative tests | P0 |
-| STT-02 | Users | Partial | Recovery/security pages | Identity + password history | Security/host | Hardened foundation | User administration, assignments, activate/lock/unlock, scoped lifecycle and audit UI | P0 |
+| STT-01 | Roles | Implemented | Implemented | Migrated ABP | Domain/API/UI/live | Hardened | Remaining release-wide accessibility/E2E regression only | P0 |
+| STT-02 | Users | Implemented | Implemented | Identity + password history | Domain/API/UI/live | Hardened and scoped | Remaining release-wide accessibility/E2E regression only | P0 |
 | STT-03 | Audit log | Built-in | Missing | Migrated ABP | Indirect | Partial | Scoped query UI/API, retention, masking and export controls | P1 |
 | STT-04 | Settings | Built-in | Missing | Migrated ABP | Indirect | Partial | Typed FoodSafe settings, permissions, UI and audit tests | P1 |
-| STT-05 | Access management | Partial | Permission-aware routes/actions | Permission grants + scope assignments | Domain/application | Scoped foundation | Permission/assignment administration UI and full negative matrix | P0 |
+| STT-05 | Access management | Implemented | Implemented | Permission grants + scope assignments | Domain/API/UI/live | Scoped grant ceiling | Remaining release-wide negative-matrix regression only | P0 |
 | STT-06 | Organizations | Implemented | Implemented | Migrated | Domain/application/EF/UI/live | Scoped | Remaining release-wide accessibility/E2E regression only | P0 |
-| STT-07 | Organization accounts | Partial | Missing | Scope assignments migrated | Scope resolver | Scoped foundation | Account-to-organization/geography assignment lifecycle and administration UI | P0 |
+| STT-07 | Organization accounts | Implemented | Implemented | Scope assignments migrated | Domain/API/UI/live | Operation-scoped | Remaining release-wide accessibility/E2E regression only | P0 |
 | STT-08 | Countries | Missing | Missing | Design only | Missing | Unreviewed | Full vertical slice | P0 |
 | STT-09 | Regions | Missing | Missing | Design only | Missing | Unreviewed | Full vertical slice | P0 |
 | STT-10 | Provinces | Implemented | Implemented | Migrated | Domain/EF/UI/live | Scoped | Remaining release-wide accessibility/E2E regression only | P0 |
@@ -86,14 +86,14 @@ Status vocabulary: **Built-in** means ABP supplies a partial capability that sti
 
 | Area | Current status | Required remediation |
 |---|---|---|
-| Authentication | HttpOnly same-site cookie/CSRF session, short OpenIddict tokens, lockout, expiry/history, forced change, Turnstile login and email recovery are implemented and live-tested | Add administrator lifecycle/revocation coverage and complete security/E2E review |
+| Authentication | HttpOnly same-site cookie/CSRF session, post-login token refresh, lockout, expiry/history, CAPTCHA-protected first-login change, Turnstile login and transactional email recovery are implemented and live-tested | Complete release-wide security and browser E2E review |
 | Authorization | Permission-aware SPA plus server-side organization/geography scope resolver; organization and geography operations are enforced | Apply the same mandatory list/detail/mutation/file/export scope pattern to every remaining module |
 | Database | PostgreSQL 15 EF baseline plus organization, scope, geography, account-security and ABP-upgrade migrations; clean apply/model-drift checks pass | Implement and migrate the remaining approved aggregates and their PostgreSQL constraints/tests |
 | Files | Missing | MinIO abstraction, metadata, validation, scanning state, authorized streaming |
 | Error handling | ABP application errors and RFC Problem Details for version negotiation are documented, correlated and production-safe | Add automated API tests for every error class and stable FoodSafe codes per remaining slice |
 | API versioning | `/api/v1/app` and `/api/v1/security` are emitted in OpenAPI; unsupported versions advertise `1.0` and legacy app routes are absent | Preserve the v1 compatibility contract and add examples/schemas as modules land |
 | Rate limiting | Global partitions cover login, reset, public and normal API traffic; 429 behavior was live-tested | Add endpoint-specific integration/download limits and distributed-policy validation before scale-out |
-| Frontend foundation | Cookie hydration, permission/private routes, shared API/cache setup, forms, loading/errors and two administration slices exist | Add URL table state, reusable files/exports, accessibility audit and full browser regression |
+| Frontend foundation | Cookie hydration, permission/private routes, shared API/cache setup, forms, loading/errors and three administration slices exist | Add URL table state, reusable files/exports, accessibility audit and full browser regression |
 | Docker | Non-root API/migrator and SPA images plus PostgreSQL, Redis, MinIO and development Mailpit; health/migration gates and persistent key ring pass | Production TLS deployment and backup/restore rehearsal remain release blockers |
 | CI/CD | Format, warnings-as-errors, tests/coverage, architecture, publish, clean PostgreSQL migration, drift, dependency, secret/config, Compose, image-build and image-vulnerability gates are defined | Enforce branch protection and validate the workflow on the remote runner |
 | Operations | Local, CI/CD, deployment, operations and DR guides exist with RTO/RPO and restore criteria | Complete and record a production-like backup/restore rehearsal and operational handoff |

@@ -8,10 +8,14 @@ public sealed class LoginCaptchaMiddleware(RequestDelegate next)
         HttpContext context,
         ICaptchaVerifier captchaVerifier)
     {
-        if (!HttpMethods.IsPost(context.Request.Method)
-            || !context.Request.Path.Equals(
+        var isProtectedPath =
+            context.Request.Path.Equals(
                 "/api/account/login",
-                StringComparison.OrdinalIgnoreCase))
+                StringComparison.OrdinalIgnoreCase) ||
+            context.Request.Path.Equals(
+                "/api/v1/app/account-security/complete-initial-password-change",
+                StringComparison.OrdinalIgnoreCase);
+        if (!HttpMethods.IsPost(context.Request.Method) || !isProtectedPath)
         {
             await next(context);
             return;

@@ -5,9 +5,11 @@ import { PrivateRoute } from "./PrivateRoute";
 import { PermissionRoute } from "./PermissionRoute";
 import {
   ChangePasswordPage,
+  CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
   GeographicCatalogPage,
+  IdentityAdministrationPage,
   LoginPage,
   OrganizationListPage,
   ResetPasswordPage,
@@ -36,6 +38,14 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<RouteLoading />}>
         <ResetPasswordPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/account/complete-password-change",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <CompleteInitialPasswordChangePage />
       </Suspense>
     ),
   },
@@ -75,6 +85,16 @@ export const router = createBrowserRouter([
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.GeographicCatalogs.View">
               <GeographicCatalogPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "administration/identity",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.SystemAdministration">
+              <IdentityAdministrationPage />
             </PermissionRoute>
           </Suspense>
         ),

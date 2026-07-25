@@ -11,6 +11,9 @@ export const ForgotPasswordPage = lazy(
 export const ResetPasswordPage = lazy(
   () => import("@/features/auth/pages/ResetPasswordPage"),
 );
+export const CompleteInitialPasswordChangePage = lazy(
+  () => import("@/features/auth/pages/CompleteInitialPasswordChangePage"),
+);
 export const DashboardPage = lazy(
   () => import("@/features/dashboard/pages/DashboardPage"),
 );
@@ -19,6 +22,9 @@ export const OrganizationListPage = lazy(
 );
 export const GeographicCatalogPage = lazy(
   () => import("@/features/geography/pages/GeographicCatalogPage"),
+);
+export const IdentityAdministrationPage = lazy(
+  () => import("@/features/identity/pages/IdentityAdministrationPage"),
 );
 
 export function RouteLoading() {

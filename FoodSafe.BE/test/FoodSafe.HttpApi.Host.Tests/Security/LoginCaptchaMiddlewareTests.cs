@@ -48,11 +48,32 @@ public sealed class LoginCaptchaMiddlewareTests
         context.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
     }
 
-    private static DefaultHttpContext CreateLoginContext(string json)
+    [Fact]
+    public async Task Initial_password_change_should_require_captcha()
+    {
+        var nextCalled = false;
+        var middleware = new LoginCaptchaMiddleware(_ =>
+        {
+            nextCalled = true;
+            return Task.CompletedTask;
+        });
+        var context = CreateLoginContext(
+            """{"userNameOrEmailAddress":"admin","currentPassword":"old","newPassword":"new"}""",
+            "/api/v1/app/account-security/complete-initial-password-change");
+
+        await middleware.InvokeAsync(context, new StubVerifier(false));
+
+        context.Response.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
+        nextCalled.ShouldBeFalse();
+    }
+
+    private static DefaultHttpContext CreateLoginContext(
+        string json,
+        string path = "/api/account/login")
     {
         var context = new DefaultHttpContext();
         context.Request.Method = HttpMethods.Post;
-        context.Request.Path = "/api/account/login";
+        context.Request.Path = path;
         context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(json));
         context.Request.ContentLength = context.Request.Body.Length;
         context.Response.Body = new MemoryStream();

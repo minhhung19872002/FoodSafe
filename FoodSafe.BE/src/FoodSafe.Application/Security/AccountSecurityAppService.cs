@@ -42,38 +42,59 @@ public class AccountSecurityAppService :
 
     public async Task ChangePasswordAsync(ChangeOwnPasswordDto input)
     {
-        var token = _cancellationTokens.Token;
         var userId = _currentUser.GetId();
         var user = await _userManager.GetByIdAsync(userId);
+        var profile = await GetProfileAsync(userId);
+        await ChangePasswordCoreAsync(
+            user,
+            profile,
+            input.CurrentPassword,
+            input.NewPassword);
+    }
 
-        if (!await _userManager.CheckPasswordAsync(user, input.CurrentPassword))
+    [AllowAnonymous]
+    public async Task CompleteInitialPasswordChangeAsync(
+        CompleteInitialPasswordChangeDto input)
+    {
+        var identifier = input.UserNameOrEmailAddress.Trim();
+        var user = await _userManager.FindByNameAsync(identifier)
+                   ?? await _userManager.FindByEmailAsync(identifier);
+        if (user is null ||
+            !user.IsActive ||
+            await _userManager.IsLockedOutAsync(user))
         {
             throw new BusinessException(
                 FoodSafeDomainErrorCodes.Account.InvalidCurrentPassword);
         }
 
-        var historyQuery = await _passwordHistory.GetQueryableAsync();
-        var histories = await AsyncExecuter.ToListAsync(
-            historyQuery
-                .Where(x => x.UserId == userId)
-                .OrderByDescending(x => x.CreatedAt),
-            token);
-
-        if (PasswordHistoryPolicy.IsReused(
-                user,
-                input.NewPassword,
-                new[] { user.PasswordHash }
-                    .Concat(histories.Select(x => x.PasswordHash)),
-                _userManager.PasswordHasher))
+        var profile = await GetProfileAsync(user.Id);
+        if (!user.ShouldChangePasswordOnNextLogin &&
+            profile?.MustChangePassword != true &&
+            profile?.IsPasswordExpired(Clock.Now) != true)
         {
             throw new BusinessException(
-                FoodSafeDomainErrorCodes.Account.PasswordReused);
+                FoodSafeDomainErrorCodes.Account.InvalidCurrentPassword);
         }
 
-        var result = await _userManager.ChangePasswordAsync(
+        await ChangePasswordCoreAsync(
             user,
+            profile,
             input.CurrentPassword,
             input.NewPassword);
+    }
+
+    [AllowAnonymous]
+    public async Task ResetPasswordAsync(CompletePasswordResetDto input)
+    {
+        var user = await _userManager.GetByIdAsync(input.UserId);
+        var profile = await GetProfileAsync(user.Id);
+        var histories = await GetPasswordHistoryAsync(user.Id);
+        EnsurePasswordIsNotReused(user, input.Password, histories);
+
+        var result = await _userManager.ResetPasswordAsync(
+            user,
+            input.ResetToken,
+            input.Password);
         if (!result.Succeeded)
         {
             throw new BusinessException(
@@ -83,9 +104,48 @@ public class AccountSecurityAppService :
                     string.Join("; ", result.Errors.Select(x => x.Description)));
         }
 
+        await FinalizePasswordChangeAsync(user, profile, histories);
+    }
+
+    private async Task ChangePasswordCoreAsync(
+        IdentityUser user,
+        AppUserProfile? profile,
+        string currentPassword,
+        string newPassword)
+    {
+        if (!await _userManager.CheckPasswordAsync(user, currentPassword))
+        {
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Account.InvalidCurrentPassword);
+        }
+
+        var histories = await GetPasswordHistoryAsync(user.Id);
+        EnsurePasswordIsNotReused(user, newPassword, histories);
+
+        var result = await _userManager.ChangePasswordAsync(
+            user,
+            currentPassword,
+            newPassword);
+        if (!result.Succeeded)
+        {
+            throw new BusinessException(
+                    FoodSafeDomainErrorCodes.Account.PasswordChangeFailed)
+                .WithData(
+                    "IdentityErrors",
+                    string.Join("; ", result.Errors.Select(x => x.Description)));
+        }
+
+        await FinalizePasswordChangeAsync(user, profile, histories);
+    }
+
+    private async Task FinalizePasswordChangeAsync(
+        IdentityUser user,
+        AppUserProfile? profile,
+        IReadOnlyList<PasswordHistory> histories)
+    {
+        var token = _cancellationTokens.Token;
         user.SetShouldChangePasswordOnNextLogin(false);
         await _userManager.UpdateAsync(user);
-
         if (histories.Count >= PasswordHistoryPolicy.RetainedPasswordCount)
         {
             await _passwordHistory.DeleteManyAsync(
@@ -97,7 +157,7 @@ public class AccountSecurityAppService :
         await _passwordHistory.InsertAsync(
             PasswordHistory.Create(
                 _guidGenerator.Create(),
-                userId,
+                user.Id,
                 user.PasswordHash
                     ?? throw new InvalidOperationException(
                         "The changed password did not produce a password hash."),
@@ -105,10 +165,42 @@ public class AccountSecurityAppService :
             autoSave: false,
             cancellationToken: token);
 
-        var profileQuery = await _profiles.GetQueryableAsync();
-        var profile = await AsyncExecuter.FirstOrDefaultAsync(
-            profileQuery.Where(x => x.UserId == userId),
-            token);
         profile?.RecordPasswordChanged(Clock.Now, PasswordValidity);
+    }
+
+    private async Task<List<PasswordHistory>> GetPasswordHistoryAsync(
+        Guid userId)
+    {
+        var historyQuery = await _passwordHistory.GetQueryableAsync();
+        return await AsyncExecuter.ToListAsync(
+            historyQuery
+                .Where(x => x.UserId == userId)
+                .OrderByDescending(x => x.CreatedAt),
+            _cancellationTokens.Token);
+    }
+
+    private void EnsurePasswordIsNotReused(
+        IdentityUser user,
+        string newPassword,
+        IEnumerable<PasswordHistory> histories)
+    {
+        if (PasswordHistoryPolicy.IsReused(
+                user,
+                newPassword,
+                new[] { user.PasswordHash }
+                    .Concat(histories.Select(x => x.PasswordHash)),
+                _userManager.PasswordHasher))
+        {
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Account.PasswordReused);
+        }
+    }
+
+    private async Task<AppUserProfile?> GetProfileAsync(Guid userId)
+    {
+        var profileQuery = await _profiles.GetQueryableAsync();
+        return await AsyncExecuter.FirstOrDefaultAsync(
+            profileQuery.Where(x => x.UserId == userId),
+            _cancellationTokens.Token);
     }
 }

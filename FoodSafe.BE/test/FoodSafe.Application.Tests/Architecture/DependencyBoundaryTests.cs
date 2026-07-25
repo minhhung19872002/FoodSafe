@@ -1,4 +1,5 @@
 using System.Reflection;
+using Volo.Abp.Application.Services;
 using Xunit;
 
 namespace FoodSafe.Architecture;
@@ -25,6 +26,22 @@ public sealed class ApplicationDependencyBoundaryTests
             "FoodSafe.EntityFrameworkCore",
             "FoodSafe.HttpApi",
             "FoodSafe.HttpApi.Host");
+    }
+
+    [Fact]
+    public void Application_services_should_remain_proxyable()
+    {
+        var sealedApplicationServices = typeof(FoodSafeApplicationModule).Assembly
+            .GetTypes()
+            .Where(type =>
+                type.IsClass &&
+                !type.IsAbstract &&
+                type.IsSealed &&
+                typeof(IApplicationService).IsAssignableFrom(type))
+            .Select(type => type.FullName)
+            .ToArray();
+
+        Assert.Empty(sealedApplicationServices);
     }
 
     private static void AssertDoesNotReference(

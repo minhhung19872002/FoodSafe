@@ -1,6 +1,7 @@
 import { api } from "@/lib/axios";
 import type {
   ChangePasswordRequest,
+  CompleteInitialPasswordChangeRequest,
   CurrentUserDto,
   LoginRequest,
   LoginResponse,
@@ -17,7 +18,11 @@ export const authApi = {
 
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     await authApi.initializeCsrf();
-    return api.post<LoginResponse>("/account/login", data).then((r) => r.data);
+    const response = await api.post<LoginResponse>("/account/login", data);
+    if (response.data.result === 1) {
+      await authApi.initializeCsrf();
+    }
+    return response.data;
   },
 
   logout: async (): Promise<void> => {
@@ -32,6 +37,18 @@ export const authApi = {
     await authApi.initializeCsrf();
     return api
       .post<void>("/v1/app/account-security/change-password", data)
+      .then(() => undefined);
+  },
+
+  completeInitialPasswordChange: async (
+    data: CompleteInitialPasswordChangeRequest,
+  ): Promise<void> => {
+    await authApi.initializeCsrf();
+    return api
+      .post<void>(
+        "/v1/app/account-security/complete-initial-password-change",
+        data,
+      )
       .then(() => undefined);
   },
 
@@ -61,7 +78,7 @@ export const authApi = {
   resetPassword: async (data: ResetPasswordRequest): Promise<void> => {
     await authApi.initializeCsrf();
     return api
-      .post<void>("/account/reset-password", data)
+      .post<void>("/v1/app/account-security/reset-password", data)
       .then(() => undefined);
   },
 };

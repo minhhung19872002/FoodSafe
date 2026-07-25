@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using FoodSafe.Security;
+using FoodSafe.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using System.Reflection;
@@ -25,6 +26,19 @@ public sealed class ApiContractTests
 
         route.ShouldNotBeNull();
         route.Template.ShouldBe(ApiContract.CaptchaRootPath);
+        versions.ShouldNotBeNull();
+        versions.Versions.ShouldHaveSingleItem().ToString().ShouldBe(ApiContract.Version);
+    }
+
+    [Fact]
+    public void Identity_administration_should_use_the_explicit_v1_route()
+    {
+        var controllerType = typeof(IdentityAdministrationController);
+        var route = controllerType.GetCustomAttribute<RouteAttribute>();
+        var versions = controllerType.GetCustomAttribute<ApiVersionAttribute>();
+
+        route.ShouldNotBeNull();
+        route.Template.ShouldBe("api/v1/administration");
         versions.ShouldNotBeNull();
         versions.Versions.ShouldHaveSingleItem().ToString().ShouldBe(ApiContract.Version);
     }

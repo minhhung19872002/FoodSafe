@@ -33,6 +33,11 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface CompleteInitialPasswordChangeRequest extends ChangePasswordRequest {
+  userNameOrEmailAddress: string;
+  captchaToken: string;
+}
+
 export interface ResetPasswordRequest {
   userId: string;
   resetToken: string;

@@ -401,6 +401,10 @@ public class FoodSafeHttpApiHostModule : AbpModule
             options.Password.RequireUppercase = true;
             options.Password.RequireNonAlphanumeric = true;
         });
+        context.Services.Configure<SecurityStampValidatorOptions>(options =>
+        {
+            options.ValidationInterval = TimeSpan.Zero;
+        });
 
         context.Services.PostConfigure<CookieAuthenticationOptions>(
             IdentityConstants.ApplicationScheme,

@@ -528,18 +528,45 @@ GET    /api/catalogs/testing-services?testingCenterId=x
 
 ---
 
-## ABP Identity APIs (built-in)
+## Account and identity-administration APIs
+
+Cookie-session account endpoints:
 
 ```
 POST   /api/account/login
 POST   /api/account/logout
-POST   /api/account/change-password
-GET    /api/identity/users
-POST   /api/identity/users
-PUT    /api/identity/users/{id}
-DELETE /api/identity/users/{id}
-GET    /api/identity/roles
-POST   /api/identity/roles
-GET    /api/identity/permissions?providerName=R&providerKey={roleName}
-PUT    /api/identity/permissions?providerName=R&providerKey={roleName}
+POST   /api/account/send-password-reset-code
+POST   /api/account/verify-password-reset-token
+POST   /api/v1/app/account-security/reset-password
+POST   /api/v1/app/account-security/change-password
+POST   /api/v1/app/account-security/complete-initial-password-change
+GET    /api/v1/app/current-user-context
+```
+
+The initial-password endpoint is anonymous only while the named account is
+marked for a forced or expired password change. It requires the current
+credential, a policy-compliant new credential, a server-verified CAPTCHA, and
+the password rate-limit partition.
+
+FoodSafe does not expose ABP's generic identity-management controllers.
+Administrative operations use explicit versioned routes and enforce FoodSafe
+organization/geographic scope:
+
+```
+GET    /api/v1/administration/users
+POST   /api/v1/administration/users
+GET    /api/v1/administration/users/{id}
+PUT    /api/v1/administration/users/{id}
+PUT    /api/v1/administration/users/{id}/activation
+PUT    /api/v1/administration/users/{id}/lock
+POST   /api/v1/administration/users/{id}/password-reset
+GET    /api/v1/administration/users/{id}/activity
+
+GET    /api/v1/administration/roles
+POST   /api/v1/administration/roles
+GET    /api/v1/administration/roles/{id}
+PUT    /api/v1/administration/roles/{id}
+DELETE /api/v1/administration/roles/{id}
+GET    /api/v1/administration/roles/{id}/permissions
+PUT    /api/v1/administration/roles/{id}/permissions
 ```

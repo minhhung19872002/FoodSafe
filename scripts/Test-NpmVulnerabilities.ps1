@@ -54,3 +54,4 @@ if ($unexpected.Count -gt 0) {
 }
 
 Write-Host 'Production npm vulnerability gate passed.'
+exit 0

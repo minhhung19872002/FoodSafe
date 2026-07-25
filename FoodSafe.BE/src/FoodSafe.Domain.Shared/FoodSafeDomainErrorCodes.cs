@@ -28,6 +28,17 @@ public static class FoodSafeDomainErrorCodes
         public const string PasswordChangeFailed = "FoodSafe:Account:0003";
     }
 
+    public static class IdentityAdministration
+    {
+        public const string SelfLifecycleChange = "FoodSafe:Identity:0001";
+        public const string RoleInUse = "FoodSafe:Identity:0002";
+        public const string LastAdministrator = "FoodSafe:Identity:0003";
+        public const string IncompatibleRole = "FoodSafe:Identity:0004";
+        public const string InactiveRole = "FoodSafe:Identity:0005";
+        public const string SelfPermissionChange = "FoodSafe:Identity:0006";
+        public const string InvalidScope = "FoodSafe:Identity:0007";
+    }
+
     public static class Business
     {
         public const string NotFound = "FoodSafe:Business:0001";

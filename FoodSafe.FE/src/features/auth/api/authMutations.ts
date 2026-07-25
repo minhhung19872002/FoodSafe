@@ -3,7 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { message } from "antd";
 import { authApi } from "./authApi";
 import { useAuthStore } from "../store/authStore";
-import type { ChangePasswordRequest, LoginRequest } from "../types/auth.types";
+import type {
+  ChangePasswordRequest,
+  CompleteInitialPasswordChangeRequest,
+  LoginRequest,
+} from "../types/auth.types";
+
+class InitialPasswordChangeRequiredError extends Error {
+  readonly userNameOrEmailAddress: string;
+
+  constructor(userNameOrEmailAddress: string) {
+    super("Initial password change required");
+    this.userNameOrEmailAddress = userNameOrEmailAddress;
+  }
+}
 
 export function useLogin() {
   const navigate = useNavigate();
@@ -13,6 +26,11 @@ export function useLogin() {
   return useMutation({
     mutationFn: async (data: LoginRequest) => {
       const response = await authApi.login(data);
+      if (response.result === 4) {
+        throw new InitialPasswordChangeRequiredError(
+          data.userNameOrEmailAddress,
+        );
+      }
       if (response.result !== 1) {
         throw new Error(response.description);
       }
@@ -37,7 +55,13 @@ export function useLogin() {
         navigate("/");
       }
     },
-    onError: () => {
+    onError: (error) => {
+      if (error instanceof InitialPasswordChangeRequiredError) {
+        navigate(
+          `/account/complete-password-change?userName=${encodeURIComponent(error.userNameOrEmailAddress)}`,
+        );
+        return;
+      }
       message.error("Tên đăng nhập hoặc mật khẩu không đúng.");
     },
   });
@@ -54,6 +78,23 @@ export function useLogout() {
       queryClient.removeQueries({ queryKey: ["auth"] });
       clearAuth();
       navigate("/login");
+    },
+  });
+}
+
+export function useCompleteInitialPasswordChange() {
+  const navigate = useNavigate();
+  return useMutation({
+    mutationFn: (data: CompleteInitialPasswordChangeRequest) =>
+      authApi.completeInitialPasswordChange(data),
+    onSuccess: () => {
+      message.success("Mật khẩu đã được thay đổi. Vui lòng đăng nhập.");
+      navigate("/login");
+    },
+    onError: () => {
+      message.error(
+        "Không thể thay đổi mật khẩu. Kiểm tra thông tin và thử lại.",
+      );
     },
   });
 }

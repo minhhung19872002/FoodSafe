@@ -9,6 +9,7 @@ Last updated: 2026-07-25
 | PostgreSQL design validation | Tested | Approved SQL executes cleanly and creates 60 tables on disposable PostgreSQL 15 |
 | EF migration baseline | Tested | Initial runtime migration applies to a clean PostgreSQL 15 database and is idempotent on second update |
 | Authentication | Implemented (foundation) | Cookie/CSRF session, lockout, expiry/history, forced change, server-verified Turnstile login, and full email recovery/reset lifecycle validated live |
+| User and role administration | Implemented | Scoped user lifecycle, role lifecycle, permission tree/ceiling, default roles, activity feed, setup email, and permission-gated SPA validated live |
 | Authorization and data scope | Implemented (foundation) | Global permission plus organization-descendant and geographic assignment resolver implemented; organization API enforces operation-aware scope |
 | Organizations | Implemented | Scoped list/tree/detail/create/edit/delete API and permission-gated create/edit/delete UI pass; hierarchy/geography validation, descendant-safe parent selection and root-promotion authorization are enforced |
 | Master data | In progress | Administrative geography model, validated CRUD API and permission-gated province/district/commune UI implemented; broader business/product/inspection catalogs remain |
@@ -150,3 +151,32 @@ Last updated: 2026-07-25
   eventual final readiness report.
 - Backend builds with zero warnings and 42 tests pass. Frontend formatting,
   lint, strict TypeScript, 11 tests, and the production bundle pass.
+
+## Scoped identity-administration evidence added on 2026-07-25
+
+- Added explicit `/api/v1/administration/users` and
+  `/api/v1/administration/roles` contracts; conventional ABP identity
+  management routes remain disabled.
+- User list/search/filter, create/edit, organization and geographic scope,
+  role assignment, activation, lock/unlock, reset email, forced change,
+  password expiry, and activity history are implemented with operation-aware
+  server scope.
+- Role search/pagination, descriptions, status, assigned-user filtering,
+  safe deletion, and hierarchical FoodSafe permission assignment are
+  implemented. A grant cannot exceed the assigning user's permissions.
+- Seven static default roles are idempotently seeded. Scoped administrators
+  can assign only active roles matching the target organization level.
+- Self lock/deactivation and self admin-role removal are rejected; active,
+  unlocked administrator counting prevents removal of the final administrator.
+- The global bootstrap administrator is visible without requiring a fabricated
+  organization profile, while scoped administrators still see only profiled
+  users in their permitted organization set.
+- Post-login CSRF refresh and the CAPTCHA/rate-limited first-login password
+  completion flow close two runtime-only cookie/Identity integration gaps.
+- Live PostgreSQL/Compose validation completed role create -> permission
+  update -> user create/setup email -> edit -> lock/unlock -> reset -> forced
+  password completion -> login -> authenticated password rotation/audit ->
+  deactivate -> role delete.
+- Backend builds with zero warnings and 53 tests pass. Frontend formatting,
+  lint, strict TypeScript, 15 tests, production bundle, and rebuilt non-root
+  containers pass.

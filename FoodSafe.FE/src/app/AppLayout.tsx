@@ -16,6 +16,7 @@ import {
   UserOutlined,
   LogoutOutlined,
   KeyOutlined,
+  SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -44,6 +45,13 @@ function buildMenuItems(
       key: "/geography",
       icon: <EnvironmentOutlined />,
       label: "Địa bàn",
+    });
+  }
+  if (hasPermission("FoodSafe.SystemAdministration")) {
+    items.push({
+      key: "/administration/identity",
+      icon: <SafetyCertificateOutlined />,
+      label: "Tài khoản và quyền",
     });
   }
   return items;

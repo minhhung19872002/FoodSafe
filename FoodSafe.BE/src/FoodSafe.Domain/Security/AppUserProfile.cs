@@ -41,6 +41,23 @@ public sealed class AppUserProfile : Entity<Guid>, IAggregateRoot<Guid>
     public bool IsPasswordExpired(DateTime now) =>
         PasswordExpiresAt.HasValue && PasswordExpiresAt.Value <= now;
 
+    public void ChangeDetails(
+        Guid organizationId,
+        string fullName,
+        string? position,
+        string? department,
+        DateTime now)
+    {
+        OrganizationId = organizationId;
+        FullName = Check.NotNullOrWhiteSpace(
+            fullName,
+            nameof(fullName),
+            200).Trim();
+        Position = NormalizeOptional(position, 200, nameof(position));
+        Department = NormalizeOptional(department, 200, nameof(department));
+        LastModificationTime = now;
+    }
+
     public void RecordPasswordChanged(DateTime now, TimeSpan validityPeriod)
     {
         if (validityPeriod <= TimeSpan.Zero)
@@ -52,6 +69,14 @@ public sealed class AppUserProfile : Entity<Guid>, IAggregateRoot<Guid>
         MustChangePassword = false;
         LastModificationTime = now;
     }
+
+    private static string? NormalizeOptional(
+        string? value,
+        int maxLength,
+        string parameterName) =>
+        string.IsNullOrWhiteSpace(value)
+            ? null
+            : Check.NotNullOrWhiteSpace(value, parameterName, maxLength).Trim();
 }
 
 public sealed class PasswordHistory : Entity<Guid>, IAggregateRoot<Guid>

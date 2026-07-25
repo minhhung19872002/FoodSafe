@@ -1,0 +1,671 @@
+import { useMemo, useState } from "react";
+import {
+  Button,
+  Card,
+  Input,
+  message,
+  Popconfirm,
+  Select,
+  Space,
+  Table,
+  Tabs,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
+import {
+  AuditOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  KeyOutlined,
+  LockOutlined,
+  PlusOutlined,
+  SafetyCertificateOutlined,
+  StopOutlined,
+  TeamOutlined,
+  UnlockOutlined,
+} from "@ant-design/icons";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
+import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
+import {
+  useCreateAdminRole,
+  useCreateAdminUser,
+  useDeleteAdminRole,
+  useSendPasswordReset,
+  useSetUserActivation,
+  useSetUserLock,
+  useUpdateAdminRole,
+  useUpdateAdminUser,
+  useUpdateRolePermissions,
+} from "../api/identityMutations";
+import {
+  useAdminRoles,
+  useAdminUsers,
+  useRolePermissions,
+  useUserActivity,
+} from "../api/identityQueries";
+import { RoleEditorModal } from "../components/RoleEditorModal";
+import { RolePermissionsDrawer } from "../components/RolePermissionsDrawer";
+import { UserActivityDrawer } from "../components/UserActivityDrawer";
+import { UserEditorModal } from "../components/UserEditorModal";
+import type {
+  AdminRole,
+  AdminUser,
+  RoleFilter,
+  SaveRoleInput,
+  SaveUserInput,
+  UserFilter,
+} from "../types/identity.types";
+
+const permission = {
+  users: "FoodSafe.SystemAdministration.Users",
+  createUser: "FoodSafe.SystemAdministration.Users.Create",
+  editUser: "FoodSafe.SystemAdministration.Users.Edit",
+  activateUser: "FoodSafe.SystemAdministration.Users.Activate",
+  lockUser: "FoodSafe.SystemAdministration.Users.Lock",
+  resetPassword: "FoodSafe.SystemAdministration.Users.ResetPassword",
+  activity: "FoodSafe.SystemAdministration.Users.ViewActivity",
+  roles: "FoodSafe.SystemAdministration.Roles",
+  createRole: "FoodSafe.SystemAdministration.Roles.Create",
+  editRole: "FoodSafe.SystemAdministration.Roles.Edit",
+  deleteRole: "FoodSafe.SystemAdministration.Roles.Delete",
+  permissions: "FoodSafe.SystemAdministration.Roles.ManagePermissions",
+} as const;
+
+const pageSize = 10;
+
+function organizationOptions(
+  items: OrganizationTreeNode[],
+  depth = 0,
+): Array<{ value: string; label: string }> {
+  return items.flatMap((item) => [
+    {
+      value: item.id,
+      label: `${"\u00a0".repeat(depth * 3)}${item.name}`,
+    },
+    ...organizationOptions(item.children, depth + 1),
+  ]);
+}
+
+export default function IdentityAdministrationPage() {
+  const currentUser = useAuthStore((state) => state.user);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canViewUsers = hasPermission(permission.users);
+  const canViewRoles = hasPermission(permission.roles);
+  const [userFilter, setUserFilter] = useState<UserFilter>({
+    skipCount: 0,
+    maxResultCount: pageSize,
+    sorting: "UserName",
+  });
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>({
+    skipCount: 0,
+    maxResultCount: pageSize,
+    sorting: "Name",
+  });
+  const [editingUser, setEditingUser] = useState<AdminUser>();
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [activityUser, setActivityUser] = useState<AdminUser>();
+  const [editingRole, setEditingRole] = useState<AdminRole>();
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [permissionRole, setPermissionRole] = useState<AdminRole>();
+  const [activeTab, setActiveTab] = useState(canViewUsers ? "users" : "roles");
+
+  const users = useAdminUsers(userFilter);
+  const roles = useAdminRoles(roleFilter);
+  const roleOptions = useAdminRoles({
+    skipCount: 0,
+    maxResultCount: 500,
+    sorting: "Name",
+    isActive: true,
+  });
+  const organizations = useOrganizationTree();
+  const activity = useUserActivity(activityUser?.id);
+  const rolePermissions = useRolePermissions(permissionRole?.id);
+
+  const createUser = useCreateAdminUser();
+  const updateUser = useUpdateAdminUser();
+  const setActivation = useSetUserActivation();
+  const setLock = useSetUserLock();
+  const sendReset = useSendPasswordReset();
+  const createRole = useCreateAdminRole();
+  const updateRole = useUpdateAdminRole();
+  const deleteRole = useDeleteAdminRole();
+  const updatePermissions = useUpdateRolePermissions();
+
+  const showSuccess = (content: string) => void message.success(content);
+  const showError = () =>
+    void message.error("Không thể thực hiện thao tác. Vui lòng kiểm tra lại.");
+
+  const roleSelectOptions = useMemo(
+    () =>
+      roleOptions.data?.items.map((role) => ({
+        value: role.id,
+        label: role.name,
+      })) ?? [],
+    [roleOptions.data],
+  );
+  const organizationSelectOptions = useMemo(
+    () => organizationOptions(organizations.data?.items ?? []),
+    [organizations.data],
+  );
+
+  const userTab = {
+    key: "users",
+    label: "Tài khoản",
+    children: (
+      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+        <Space wrap>
+          <Input.Search
+            aria-label="Tìm tài khoản"
+            allowClear
+            placeholder="Tên, email hoặc số điện thoại"
+            style={{ width: 290 }}
+            onSearch={(filter) =>
+              setUserFilter((current) => ({
+                ...current,
+                filter: filter || undefined,
+                skipCount: 0,
+              }))
+            }
+          />
+          <Select
+            aria-label="Lọc vai trò"
+            allowClear
+            placeholder="Vai trò"
+            options={roleSelectOptions}
+            style={{ width: 180 }}
+            onChange={(roleId) =>
+              setUserFilter((current) => ({
+                ...current,
+                roleId,
+                skipCount: 0,
+              }))
+            }
+          />
+          <Select
+            aria-label="Lọc đơn vị"
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Đơn vị"
+            options={organizationSelectOptions}
+            style={{ width: 210 }}
+            onChange={(organizationId) =>
+              setUserFilter((current) => ({
+                ...current,
+                organizationId,
+                skipCount: 0,
+              }))
+            }
+          />
+          <Select
+            aria-label="Lọc trạng thái tài khoản"
+            allowClear
+            placeholder="Trạng thái"
+            style={{ width: 160 }}
+            options={[
+              { value: "active", label: "Đang hoạt động" },
+              { value: "inactive", label: "Đã vô hiệu hóa" },
+              { value: "locked", label: "Đang khóa" },
+            ]}
+            onChange={(value) =>
+              setUserFilter((current) => ({
+                ...current,
+                isActive:
+                  value === "active"
+                    ? true
+                    : value === "inactive"
+                      ? false
+                      : undefined,
+                isLocked: value === "locked" ? true : undefined,
+                skipCount: 0,
+              }))
+            }
+          />
+          {hasPermission(permission.createUser) && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                setEditingUser(undefined);
+                setUserModalOpen(true);
+              }}
+            >
+              Tạo tài khoản
+            </Button>
+          )}
+        </Space>
+        <Table<AdminUser>
+          rowKey="id"
+          loading={users.isLoading}
+          dataSource={users.data?.items}
+          scroll={{ x: 1100 }}
+          pagination={{
+            total: users.data?.totalCount,
+            current: userFilter.skipCount / pageSize + 1,
+            pageSize,
+            showSizeChanger: false,
+            onChange: (page) =>
+              setUserFilter((current) => ({
+                ...current,
+                skipCount: (page - 1) * pageSize,
+              })),
+          }}
+          columns={[
+            {
+              title: "Tài khoản",
+              render: (_, user) => (
+                <Space direction="vertical" size={0}>
+                  <Typography.Text strong>{user.fullName}</Typography.Text>
+                  <Typography.Text type="secondary">
+                    {user.userName} · {user.email}
+                  </Typography.Text>
+                </Space>
+              ),
+            },
+            {
+              title: "Đơn vị",
+              dataIndex: "organizationName",
+              render: (value: string | undefined) => value ?? "Toàn hệ thống",
+            },
+            {
+              title: "Vai trò",
+              dataIndex: "roleNames",
+              render: (names: string[]) => (
+                <Space wrap>
+                  {names.map((name) => (
+                    <Tag key={name}>{name}</Tag>
+                  ))}
+                </Space>
+              ),
+            },
+            {
+              title: "Trạng thái",
+              width: 145,
+              render: (_, user) => (
+                <Space direction="vertical" size={2}>
+                  <Tag color={user.isActive ? "green" : "default"}>
+                    {user.isActive ? "Hoạt động" : "Vô hiệu"}
+                  </Tag>
+                  {user.isLocked && <Tag color="red">Đang khóa</Tag>}
+                  {user.mustChangePassword && (
+                    <Tag color="orange">Đổi mật khẩu</Tag>
+                  )}
+                </Space>
+              ),
+            },
+            {
+              title: "Thao tác",
+              fixed: "right",
+              width: 260,
+              render: (_, user) => {
+                const isSelf = user.id === currentUser?.id;
+                return (
+                  <Space wrap>
+                    {hasPermission(permission.editUser) && (
+                      <Tooltip title="Cập nhật">
+                        <Button
+                          aria-label={`Sửa ${user.fullName}`}
+                          icon={<EditOutlined />}
+                          onClick={() => {
+                            setEditingUser(user);
+                            setUserModalOpen(true);
+                          }}
+                        />
+                      </Tooltip>
+                    )}
+                    {hasPermission(permission.activateUser) && (
+                      <Tooltip
+                        title={user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
+                      >
+                        <Button
+                          aria-label={`${user.isActive ? "Vô hiệu hóa" : "Kích hoạt"} ${user.fullName}`}
+                          disabled={isSelf}
+                          danger={user.isActive}
+                          icon={<StopOutlined />}
+                          loading={
+                            setActivation.isPending &&
+                            setActivation.variables?.id === user.id
+                          }
+                          onClick={() =>
+                            setActivation.mutate(
+                              { id: user.id, isActive: !user.isActive },
+                              {
+                                onSuccess: () =>
+                                  showSuccess("Đã cập nhật trạng thái"),
+                                onError: showError,
+                              },
+                            )
+                          }
+                        />
+                      </Tooltip>
+                    )}
+                    {hasPermission(permission.lockUser) && (
+                      <Tooltip title={user.isLocked ? "Mở khóa" : "Khóa"}>
+                        <Button
+                          aria-label={`${user.isLocked ? "Mở khóa" : "Khóa"} ${user.fullName}`}
+                          disabled={isSelf}
+                          icon={
+                            user.isLocked ? (
+                              <UnlockOutlined />
+                            ) : (
+                              <LockOutlined />
+                            )
+                          }
+                          onClick={() =>
+                            setLock.mutate(
+                              { id: user.id, isLocked: !user.isLocked },
+                              {
+                                onSuccess: () =>
+                                  showSuccess("Đã cập nhật khóa tài khoản"),
+                                onError: showError,
+                              },
+                            )
+                          }
+                        />
+                      </Tooltip>
+                    )}
+                    {hasPermission(permission.resetPassword) && (
+                      <Popconfirm
+                        title="Gửi liên kết đặt lại mật khẩu?"
+                        onConfirm={() =>
+                          sendReset.mutate(user.id, {
+                            onSuccess: () =>
+                              showSuccess("Đã gửi email đặt lại mật khẩu"),
+                            onError: showError,
+                          })
+                        }
+                      >
+                        <Tooltip title="Đặt lại mật khẩu">
+                          <Button
+                            aria-label={`Đặt lại mật khẩu ${user.fullName}`}
+                            icon={<KeyOutlined />}
+                          />
+                        </Tooltip>
+                      </Popconfirm>
+                    )}
+                    {hasPermission(permission.activity) && (
+                      <Tooltip title="Nhật ký hoạt động">
+                        <Button
+                          aria-label={`Hoạt động ${user.fullName}`}
+                          icon={<AuditOutlined />}
+                          onClick={() => setActivityUser(user)}
+                        />
+                      </Tooltip>
+                    )}
+                  </Space>
+                );
+              },
+            },
+          ]}
+        />
+      </Space>
+    ),
+  };
+
+  const roleTab = {
+    key: "roles",
+    label: "Vai trò và quyền",
+    children: (
+      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+        <Space wrap>
+          <Input.Search
+            aria-label="Tìm vai trò"
+            allowClear
+            placeholder="Tên hoặc mô tả vai trò"
+            style={{ width: 290 }}
+            onSearch={(filter) =>
+              setRoleFilter((current) => ({
+                ...current,
+                filter: filter || undefined,
+                skipCount: 0,
+              }))
+            }
+          />
+          <Select
+            aria-label="Lọc trạng thái vai trò"
+            allowClear
+            placeholder="Trạng thái"
+            style={{ width: 160 }}
+            options={[
+              { value: true, label: "Đang hoạt động" },
+              { value: false, label: "Đã vô hiệu hóa" },
+            ]}
+            onChange={(isActive) =>
+              setRoleFilter((current) => ({
+                ...current,
+                isActive,
+                skipCount: 0,
+              }))
+            }
+          />
+          {hasPermission(permission.createRole) && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                setEditingRole(undefined);
+                setRoleModalOpen(true);
+              }}
+            >
+              Tạo vai trò
+            </Button>
+          )}
+        </Space>
+        <Table<AdminRole>
+          rowKey="id"
+          loading={roles.isLoading}
+          dataSource={roles.data?.items}
+          pagination={{
+            total: roles.data?.totalCount,
+            current: roleFilter.skipCount / pageSize + 1,
+            pageSize,
+            showSizeChanger: false,
+            onChange: (page) =>
+              setRoleFilter((current) => ({
+                ...current,
+                skipCount: (page - 1) * pageSize,
+              })),
+          }}
+          columns={[
+            {
+              title: "Vai trò",
+              render: (_, role) => (
+                <Space direction="vertical" size={0}>
+                  <Typography.Text strong>{role.name}</Typography.Text>
+                  <Typography.Text type="secondary">
+                    {role.description || "Không có mô tả"}
+                  </Typography.Text>
+                </Space>
+              ),
+            },
+            {
+              title: "Người dùng",
+              dataIndex: "userCount",
+              width: 110,
+            },
+            {
+              title: "Trạng thái",
+              width: 140,
+              render: (_, role) => (
+                <Space>
+                  <Tag color={role.isActive ? "green" : "default"}>
+                    {role.isActive ? "Hoạt động" : "Vô hiệu"}
+                  </Tag>
+                  {role.isStatic && <Tag>Hệ thống</Tag>}
+                </Space>
+              ),
+            },
+            {
+              title: "Thao tác",
+              width: 190,
+              render: (_, role) => (
+                <Space>
+                  {hasPermission(permission.editRole) && (
+                    <Tooltip title="Cập nhật">
+                      <Button
+                        aria-label={`Sửa vai trò ${role.name}`}
+                        icon={<EditOutlined />}
+                        onClick={() => {
+                          setEditingRole(role);
+                          setRoleModalOpen(true);
+                        }}
+                      />
+                    </Tooltip>
+                  )}
+                  {hasPermission(permission.permissions) && (
+                    <Tooltip title="Phân quyền">
+                      <Button
+                        aria-label={`Phân quyền ${role.name}`}
+                        icon={<SafetyCertificateOutlined />}
+                        onClick={() => setPermissionRole(role)}
+                      />
+                    </Tooltip>
+                  )}
+                  {canViewUsers && (
+                    <Tooltip title="Xem người dùng được gán">
+                      <Button
+                        aria-label={`Người dùng vai trò ${role.name}`}
+                        icon={<TeamOutlined />}
+                        onClick={() => {
+                          setUserFilter((current) => ({
+                            ...current,
+                            roleId: role.id,
+                            skipCount: 0,
+                          }));
+                          setActiveTab("users");
+                        }}
+                      />
+                    </Tooltip>
+                  )}
+                  {hasPermission(permission.deleteRole) && !role.isStatic && (
+                    <Popconfirm
+                      title={`Xóa vai trò “${role.name}”?`}
+                      description={
+                        role.userCount > 0
+                          ? "Vai trò đang được sử dụng và không thể xóa."
+                          : undefined
+                      }
+                      disabled={role.userCount > 0}
+                      onConfirm={() =>
+                        deleteRole.mutate(role.id, {
+                          onSuccess: () => showSuccess("Đã xóa vai trò"),
+                          onError: showError,
+                        })
+                      }
+                    >
+                      <Button
+                        aria-label={`Xóa vai trò ${role.name}`}
+                        danger
+                        disabled={role.userCount > 0}
+                        icon={<DeleteOutlined />}
+                      />
+                    </Popconfirm>
+                  )}
+                </Space>
+              ),
+            },
+          ]}
+        />
+      </Space>
+    ),
+  };
+
+  return (
+    <>
+      <Card>
+        <Typography.Title level={3} style={{ marginTop: 0 }}>
+          Quản trị tài khoản và phân quyền
+        </Typography.Title>
+        <Typography.Paragraph type="secondary">
+          Dữ liệu và thao tác được giới hạn theo đơn vị, địa bàn và quyền của
+          tài khoản đang đăng nhập.
+        </Typography.Paragraph>
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            ...(canViewUsers ? [userTab] : []),
+            ...(canViewRoles ? [roleTab] : []),
+          ]}
+        />
+      </Card>
+
+      <UserEditorModal
+        open={userModalOpen}
+        user={editingUser}
+        roles={roleOptions.data?.items ?? []}
+        organizationTree={organizations.data?.items ?? []}
+        loading={createUser.isPending || updateUser.isPending}
+        onCancel={() => setUserModalOpen(false)}
+        onSubmit={(input: SaveUserInput) => {
+          const callbacks = {
+            onSuccess: () => {
+              setUserModalOpen(false);
+              showSuccess(
+                editingUser
+                  ? "Đã cập nhật tài khoản"
+                  : "Đã tạo tài khoản và gửi hướng dẫn thiết lập",
+              );
+            },
+            onError: showError,
+          };
+          if (editingUser) {
+            updateUser.mutate({ id: editingUser.id, input }, callbacks);
+          } else {
+            createUser.mutate(input, callbacks);
+          }
+        }}
+      />
+      <UserActivityDrawer
+        user={activityUser}
+        items={activity.data?.items ?? []}
+        loading={activity.isLoading}
+        onClose={() => setActivityUser(undefined)}
+      />
+      <RoleEditorModal
+        open={roleModalOpen}
+        role={editingRole}
+        loading={createRole.isPending || updateRole.isPending}
+        onCancel={() => setRoleModalOpen(false)}
+        onSubmit={(input: SaveRoleInput) => {
+          const callbacks = {
+            onSuccess: () => {
+              setRoleModalOpen(false);
+              showSuccess(
+                editingRole ? "Đã cập nhật vai trò" : "Đã tạo vai trò",
+              );
+            },
+            onError: showError,
+          };
+          if (editingRole) {
+            updateRole.mutate({ id: editingRole.id, input }, callbacks);
+          } else {
+            createRole.mutate(input, callbacks);
+          }
+        }}
+      />
+      <RolePermissionsDrawer
+        role={permissionRole}
+        groups={rolePermissions.data?.items ?? []}
+        loading={rolePermissions.isLoading}
+        saving={updatePermissions.isPending}
+        onClose={() => setPermissionRole(undefined)}
+        onSave={(permissions) => {
+          if (!permissionRole) return;
+          updatePermissions.mutate(
+            { id: permissionRole.id, permissions },
+            {
+              onSuccess: () => {
+                showSuccess("Đã cập nhật quyền");
+                setPermissionRole(undefined);
+              },
+              onError: showError,
+            },
+          );
+        }}
+      />
+    </>
+  );
+}

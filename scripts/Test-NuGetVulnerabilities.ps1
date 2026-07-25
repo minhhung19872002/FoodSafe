@@ -59,3 +59,4 @@ if ($unexpected.Count -gt 0) {
 }
 
 Write-Host 'NuGet vulnerability gate passed.'
+exit 0
