@@ -35,6 +35,7 @@
     "Permission:Products.Create": "Thêm sản phẩm",
     "Permission:Products.Edit": "Sửa sản phẩm",
     "Permission:Products.Delete": "Xóa sản phẩm",
+    "Permission:Products.Import": "Import sản phẩm",
     "Permission:SystemAdmin": "Quản trị hệ thống",
     "Permission:SystemAdmin.Users": "Xem người dùng",
     "Permission:SystemAdmin.Users.Create": "Tạo người dùng",

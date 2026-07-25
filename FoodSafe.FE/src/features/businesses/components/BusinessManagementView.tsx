@@ -2,6 +2,8 @@ import {
   DeleteOutlined,
   EditOutlined,
   EnvironmentOutlined,
+  ExportOutlined,
+  ImportOutlined,
   PlusOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
@@ -45,6 +47,8 @@ interface BusinessManagementViewProps {
     createBusiness: boolean;
     editBusiness: boolean;
     deleteBusiness: boolean;
+    importBusiness: boolean;
+    importProduct: boolean;
     createProduct: boolean;
     editProduct: boolean;
     deleteProduct: boolean;
@@ -57,6 +61,10 @@ interface BusinessManagementViewProps {
   onBusinessPageChange: (page: number) => void;
   onProductPageChange: (page: number) => void;
   onCreateBusiness: () => void;
+  onImportBusiness: () => void;
+  onExportBusiness: () => void;
+  onImportProduct: () => void;
+  onExportProduct: () => void;
   onEditBusiness: (business: Business) => void;
   onDeleteBusiness: (id: string) => void;
   onShowMap: (business: Business) => void;
@@ -245,6 +253,17 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
                 Thêm cơ sở
               </Button>
             )}
+            {props.permissions.importBusiness && (
+              <Button
+                icon={<ImportOutlined />}
+                onClick={props.onImportBusiness}
+              >
+                Import Excel
+              </Button>
+            )}
+            <Button icon={<ExportOutlined />} onClick={props.onExportBusiness}>
+              Export Excel
+            </Button>
           </Space>
           <Table
             rowKey="id"
@@ -291,6 +310,17 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
                 Thêm sản phẩm
               </Button>
             )}
+            {props.permissions.importProduct && (
+              <Button
+                icon={<ImportOutlined />}
+                onClick={props.onImportProduct}
+              >
+                Import Excel
+              </Button>
+            )}
+            <Button icon={<ExportOutlined />} onClick={props.onExportProduct}>
+              Export Excel
+            </Button>
           </Space>
           <Table
             rowKey="id"

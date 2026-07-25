@@ -9,10 +9,18 @@ import type {
 } from "@/features/organizations/types/organization.types";
 import {
   useAddBusinessHandler,
+  useConfirmBusinessImport,
+  useConfirmProductImport,
   useCreateBusiness,
   useCreateProduct,
   useDeleteBusiness,
   useDeleteProduct,
+  useDownloadBusinessTemplate,
+  useDownloadProductTemplate,
+  useExportBusinesses,
+  useExportProducts,
+  usePreviewBusinessImport,
+  usePreviewProductImport,
   useDeleteBusinessHandler,
   useUpdateBusinessHandler,
   useUpdateBusiness,
@@ -26,6 +34,7 @@ import {
 } from "../api/businessQueries";
 import { BusinessEditorModal } from "../components/BusinessEditorModal";
 import { BusinessHandlersModal } from "../components/BusinessHandlersModal";
+import { BusinessImportModal } from "../components/BusinessImportModal";
 import { BusinessManagementView } from "../components/BusinessManagementView";
 import { MapPicker } from "../components/MapPicker";
 import { ProductEditorModal } from "../components/ProductEditorModal";
@@ -42,6 +51,15 @@ import type {
 } from "../types/business.types";
 
 const pageSize = 20;
+
+function saveDownload(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
 
 function flattenOrganizations(
   nodes: OrganizationTreeNode[],
@@ -85,6 +103,8 @@ export default function BusinessManagementPage() {
   const [editingProduct, setEditingProduct] = useState<Product>();
   const [creatingProduct, setCreatingProduct] = useState(false);
   const [mappedBusiness, setMappedBusiness] = useState<Business>();
+  const [importingBusinesses, setImportingBusinesses] = useState(false);
+  const [importingProducts, setImportingProducts] = useState(false);
   const [managingHandlersBusinessId, setManagingHandlersBusinessId] =
     useState<string>();
 
@@ -120,6 +140,14 @@ export default function BusinessManagementPage() {
   const addBusinessHandler = useAddBusinessHandler();
   const updateBusinessHandler = useUpdateBusinessHandler();
   const deleteBusinessHandler = useDeleteBusinessHandler();
+  const downloadBusinessTemplate = useDownloadBusinessTemplate();
+  const previewBusinessImport = usePreviewBusinessImport();
+  const confirmBusinessImport = useConfirmBusinessImport();
+  const exportBusinesses = useExportBusinesses();
+  const downloadProductTemplate = useDownloadProductTemplate();
+  const previewProductImport = usePreviewProductImport();
+  const confirmProductImport = useConfirmProductImport();
+  const exportProducts = useExportProducts();
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
@@ -213,6 +241,12 @@ export default function BusinessManagementPage() {
           deleteBusiness: hasPermission(
             "FoodSafe.BusinessManagement.Businesses.Delete",
           ),
+          importBusiness:
+            hasPermission("FoodSafe.BusinessManagement.Businesses.Import") &&
+            hasPermission("FoodSafe.BusinessManagement.Businesses.Create"),
+          importProduct:
+            hasPermission("FoodSafe.BusinessManagement.Products.Import") &&
+            hasPermission("FoodSafe.BusinessManagement.Products.Create"),
           createProduct: hasPermission(
             "FoodSafe.BusinessManagement.Products.Create",
           ),
@@ -243,6 +277,44 @@ export default function BusinessManagementPage() {
         onBusinessPageChange={setBusinessPage}
         onProductPageChange={setProductPage}
         onCreateBusiness={() => setCreatingBusiness(true)}
+        onImportBusiness={() => setImportingBusinesses(true)}
+        onExportBusiness={() =>
+          exportBusinesses.mutate(
+            {
+              filter: businessFilter || undefined,
+              status: businessStatus,
+              skipCount: 0,
+              maxResultCount: pageSize,
+            },
+            {
+              onSuccess: ({ blob, fileName }) => {
+                saveDownload(blob, fileName);
+                void message.success("Đã xuất danh sách cơ sở");
+              },
+              onError: () =>
+                void message.error("Không thể xuất danh sách cơ sở"),
+            },
+          )
+        }
+        onImportProduct={() => setImportingProducts(true)}
+        onExportProduct={() =>
+          exportProducts.mutate(
+            {
+              filter: productFilter || undefined,
+              status: productStatus,
+              skipCount: 0,
+              maxResultCount: pageSize,
+            },
+            {
+              onSuccess: ({ blob, fileName }) => {
+                saveDownload(blob, fileName);
+                void message.success("Đã xuất danh sách sản phẩm");
+              },
+              onError: () =>
+                void message.error("Không thể xuất danh sách sản phẩm"),
+            },
+          )
+        }
         onEditBusiness={(business) => setEditingBusinessId(business.id)}
         onShowMap={setMappedBusiness}
         onManageHandlers={(business) =>
@@ -330,6 +402,76 @@ export default function BusinessManagementPage() {
             },
           );
         }}
+      />
+      <BusinessImportModal
+        open={importingBusinesses}
+        preview={previewBusinessImport.data}
+        previewing={previewBusinessImport.isPending}
+        confirming={confirmBusinessImport.isPending}
+        downloadingTemplate={downloadBusinessTemplate.isPending}
+        onCancel={() => {
+          setImportingBusinesses(false);
+          previewBusinessImport.reset();
+        }}
+        onDownloadTemplate={() =>
+          downloadBusinessTemplate.mutate(undefined, {
+            onSuccess: ({ blob, fileName }) => saveDownload(blob, fileName),
+            onError: () => void message.error("Không thể tải file mẫu import"),
+          })
+        }
+        onFileChange={() => previewBusinessImport.reset()}
+        onPreview={(file) =>
+          previewBusinessImport.mutate(file, {
+            onError: () => void message.error("Không thể kiểm tra file Excel"),
+          })
+        }
+        onConfirm={(token) =>
+          confirmBusinessImport.mutate(token, {
+            onSuccess: ({ importedCount }) => {
+              setImportingBusinesses(false);
+              previewBusinessImport.reset();
+              void message.success(`Đã import ${importedCount} cơ sở`);
+            },
+            onError: () => void message.error("Không thể import dữ liệu cơ sở"),
+          })
+        }
+      />
+      <BusinessImportModal
+        open={importingProducts}
+        title="Import sản phẩm từ Excel"
+        entityLabel="sản phẩm"
+        preview={previewProductImport.data}
+        previewing={previewProductImport.isPending}
+        confirming={confirmProductImport.isPending}
+        downloadingTemplate={downloadProductTemplate.isPending}
+        onCancel={() => {
+          setImportingProducts(false);
+          previewProductImport.reset();
+        }}
+        onDownloadTemplate={() =>
+          downloadProductTemplate.mutate(undefined, {
+            onSuccess: ({ blob, fileName }) => saveDownload(blob, fileName),
+            onError: () =>
+              void message.error("Không thể tải file mẫu import"),
+          })
+        }
+        onFileChange={() => previewProductImport.reset()}
+        onPreview={(file) =>
+          previewProductImport.mutate(file, {
+            onError: () => void message.error("Không thể kiểm tra file Excel"),
+          })
+        }
+        onConfirm={(token) =>
+          confirmProductImport.mutate(token, {
+            onSuccess: ({ importedCount }) => {
+              setImportingProducts(false);
+              previewProductImport.reset();
+              void message.success(`Đã import ${importedCount} sản phẩm`);
+            },
+            onError: () =>
+              void message.error("Không thể import dữ liệu sản phẩm"),
+          })
+        }
       />
       <Modal
         open={Boolean(mappedBusiness)}

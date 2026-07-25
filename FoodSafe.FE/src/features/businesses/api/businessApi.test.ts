@@ -105,4 +105,70 @@ describe("business management API", () => {
       { id: "business-1", code: "CS-01", name: "Cơ sở 01" },
     ]);
   });
+
+  it("uploads Excel for preview and confirms with the returned token", async () => {
+    let uploaded = false;
+    let confirmedToken = "";
+    server.use(
+      http.post("*/api/v1/app/business/excel/preview", async ({ request }) => {
+        const form = await request.formData();
+        uploaded = form.has("file");
+        return HttpResponse.json({
+          confirmationToken: "preview-token",
+          totalRows: 1,
+          validCount: 1,
+          errorCount: 0,
+          errors: [],
+        });
+      }),
+      http.post("*/api/v1/app/business/excel/confirm", async ({ request }) => {
+        const body = (await request.json()) as {
+          confirmationToken: string;
+        };
+        confirmedToken = body.confirmationToken;
+        return HttpResponse.json({ importedCount: 1 });
+      }),
+    );
+
+    const preview = await businessApi.previewImport(
+      new File(["xlsx"], "co-so.xlsx"),
+    );
+    const result = await businessApi.confirmImport(preview.confirmationToken!);
+
+    expect(uploaded).toBe(true);
+    expect(confirmedToken).toBe("preview-token");
+    expect(result.importedCount).toBe(1);
+  });
+
+  it("uses the product Excel preview and confirm routes", async () => {
+    let uploaded = false;
+    let confirmedToken = "";
+    server.use(
+      http.post("*/api/v1/app/product/excel/preview", async ({ request }) => {
+        uploaded = (await request.formData()).has("file");
+        return HttpResponse.json({
+          confirmationToken: "product-preview-token",
+          totalRows: 1,
+          validCount: 1,
+          errorCount: 0,
+          errors: [],
+        });
+      }),
+      http.post("*/api/v1/app/product/excel/confirm", async ({ request }) => {
+        confirmedToken = (
+          (await request.json()) as { confirmationToken: string }
+        ).confirmationToken;
+        return HttpResponse.json({ importedCount: 1 });
+      }),
+    );
+
+    const preview = await productApi.previewImport(
+      new File(["xlsx"], "san-pham.xlsx"),
+    );
+    const result = await productApi.confirmImport(preview.confirmationToken!);
+
+    expect(uploaded).toBe(true);
+    expect(confirmedToken).toBe("product-preview-token");
+    expect(result.importedCount).toBe(1);
+  });
 });

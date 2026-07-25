@@ -183,3 +183,26 @@ export interface PagedResult<T> {
   items: T[];
   totalCount: number;
 }
+
+export interface ExcelDownload {
+  blob: Blob;
+  fileName: string;
+}
+
+export interface ExcelImportError {
+  rowNumber: number;
+  field: string;
+  message: string;
+}
+
+export interface ExcelImportPreview {
+  confirmationToken?: string;
+  totalRows: number;
+  validCount: number;
+  errorCount: number;
+  errors: ExcelImportError[];
+}
+
+export interface ExcelImportResult {
+  importedCount: number;
+}

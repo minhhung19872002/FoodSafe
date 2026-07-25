@@ -6,6 +6,9 @@ import type {
   BusinessHandler,
   BusinessHandlerInput,
   BusinessInput,
+  ExcelDownload,
+  ExcelImportPreview,
+  ExcelImportResult,
   PagedResult,
   Product,
   ProductBusinessOption,
@@ -17,6 +20,17 @@ import type {
 
 const businessEndpoint = "/v1/app/business";
 const productEndpoint = "/v1/app/product";
+const businessExcelEndpoint = `${businessEndpoint}/excel`;
+const productExcelEndpoint = `${productEndpoint}/excel`;
+
+function excelDownload(data: Blob, contentDisposition?: string): ExcelDownload {
+  const encoded = contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
+  return {
+    blob: data,
+    fileName: decodeURIComponent(encoded ?? plain ?? "export.xlsx"),
+  };
+}
 
 export const businessApi = {
   async list(filter: BusinessFilter): Promise<PagedResult<Business>> {
@@ -77,6 +91,46 @@ export const businessApi = {
   async deleteHandler(businessId: string, handlerId: string): Promise<void> {
     await api.delete(`${businessEndpoint}/${businessId}/handler/${handlerId}`);
   },
+
+  async downloadTemplate(): Promise<ExcelDownload> {
+    const response = await api.get<Blob>(`${businessExcelEndpoint}/template`, {
+      responseType: "blob",
+    });
+    return excelDownload(
+      response.data,
+      response.headers["content-disposition"],
+    );
+  },
+
+  async previewImport(file: File): Promise<ExcelImportPreview> {
+    const form = new FormData();
+    form.append("file", file);
+    const response = await api.post<ExcelImportPreview>(
+      `${businessExcelEndpoint}/preview`,
+      form,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return response.data;
+  },
+
+  async confirmImport(confirmationToken: string): Promise<ExcelImportResult> {
+    const response = await api.post<ExcelImportResult>(
+      `${businessExcelEndpoint}/confirm`,
+      { confirmationToken },
+    );
+    return response.data;
+  },
+
+  async exportExcel(filter: BusinessFilter): Promise<ExcelDownload> {
+    const response = await api.get<Blob>(`${businessExcelEndpoint}/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return excelDownload(
+      response.data,
+      response.headers["content-disposition"],
+    );
+  },
 };
 
 export const productApi = {
@@ -114,5 +168,45 @@ export const productApi = {
 
   async delete(id: string): Promise<void> {
     await api.delete(`${productEndpoint}/${id}`);
+  },
+
+  async downloadTemplate(): Promise<ExcelDownload> {
+    const response = await api.get<Blob>(`${productExcelEndpoint}/template`, {
+      responseType: "blob",
+    });
+    return excelDownload(
+      response.data,
+      response.headers["content-disposition"],
+    );
+  },
+
+  async previewImport(file: File): Promise<ExcelImportPreview> {
+    const form = new FormData();
+    form.append("file", file);
+    const response = await api.post<ExcelImportPreview>(
+      `${productExcelEndpoint}/preview`,
+      form,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return response.data;
+  },
+
+  async confirmImport(confirmationToken: string): Promise<ExcelImportResult> {
+    const response = await api.post<ExcelImportResult>(
+      `${productExcelEndpoint}/confirm`,
+      { confirmationToken },
+    );
+    return response.data;
+  },
+
+  async exportExcel(filter: ProductFilter): Promise<ExcelDownload> {
+    const response = await api.get<Blob>(`${productExcelEndpoint}/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return excelDownload(
+      response.data,
+      response.headers["content-disposition"],
+    );
   },
 };

@@ -35,6 +35,7 @@
     "Permission:Products.Create": "Create products",
     "Permission:Products.Edit": "Edit products",
     "Permission:Products.Delete": "Delete products",
+    "Permission:Products.Import": "Import products",
     "Permission:SystemAdmin": "System administration",
     "Permission:SystemAdmin.Users": "View users",
     "Permission:SystemAdmin.Users.Create": "Create users",

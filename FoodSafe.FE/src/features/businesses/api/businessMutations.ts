@@ -3,8 +3,10 @@ import { businessApi, productApi } from "./businessApi";
 import { businessKeys } from "./businessQueries";
 import type {
   BusinessInput,
+  BusinessFilter,
   BusinessHandlerInput,
   ProductInput,
+  ProductFilter,
   UpdateBusinessInput,
   UpdateProductInput,
 } from "../types/business.types";
@@ -74,6 +76,49 @@ export function useDeleteBusinessHandler() {
       handlerId: string;
     }) => businessApi.deleteHandler(businessId, handlerId),
     onSuccess: useInvalidateBusinessManagement(),
+  });
+}
+
+export function useDownloadBusinessTemplate() {
+  return useMutation({ mutationFn: businessApi.downloadTemplate });
+}
+
+export function usePreviewBusinessImport() {
+  return useMutation({ mutationFn: businessApi.previewImport });
+}
+
+export function useConfirmBusinessImport() {
+  return useMutation({
+    mutationFn: businessApi.confirmImport,
+    onSuccess: useInvalidateBusinessManagement(),
+  });
+}
+
+export function useExportBusinesses() {
+  return useMutation({
+    mutationFn: (filter: BusinessFilter) =>
+      businessApi.exportExcel(filter),
+  });
+}
+
+export function useDownloadProductTemplate() {
+  return useMutation({ mutationFn: productApi.downloadTemplate });
+}
+
+export function usePreviewProductImport() {
+  return useMutation({ mutationFn: productApi.previewImport });
+}
+
+export function useConfirmProductImport() {
+  return useMutation({
+    mutationFn: productApi.confirmImport,
+    onSuccess: useInvalidateBusinessManagement(),
+  });
+}
+
+export function useExportProducts() {
+  return useMutation({
+    mutationFn: (filter: ProductFilter) => productApi.exportExcel(filter),
   });
 }
 

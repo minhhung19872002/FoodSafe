@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
 
@@ -61,6 +62,41 @@ test.describe("business and product management", () => {
       page.getByRole("heading", { name: "Cơ sở và sản phẩm" }),
     ).toBeVisible();
 
+    const exportPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: /export excel/i }).click();
+    const exportDownload = await exportPromise;
+    expect(exportDownload.suggestedFilename()).toMatch(
+      /^danh-sach-co-so-\d{8}-\d{6}\.xlsx$/,
+    );
+    const exportPath = await exportDownload.path();
+    expect(exportPath).not.toBeNull();
+    const exportBytes = await readFile(exportPath!);
+    expect(exportBytes.subarray(0, 2).toString()).toBe("PK");
+
+    await page.getByRole("button", { name: /import excel/i }).click();
+    const importDialog = page.getByRole("dialog", {
+      name: "Import cơ sở từ Excel",
+    });
+    const templatePromise = page.waitForEvent("download");
+    await importDialog.getByRole("button", { name: /tải file mẫu/i }).click();
+    const templateDownload = await templatePromise;
+    const templatePath = await templateDownload.path();
+    expect(templatePath).not.toBeNull();
+    await importDialog.locator('input[type="file"]').setInputFiles({
+      name: templateDownload.suggestedFilename(),
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: await readFile(templatePath!),
+    });
+    await importDialog
+      .getByRole("button", { name: /kiểm tra và xem trước/i })
+      .click();
+    await expect(importDialog.getByText(/Tổng số: 1/)).toBeVisible();
+    await expect(
+      importDialog.getByText(/không phải GUID hợp lệ/).first(),
+    ).toBeVisible();
+    await importDialog.getByRole("button", { name: "Close" }).click();
+
     const suffix = Date.now().toString().slice(-8);
     const businessCode = `E2E-CS-${suffix}`;
     const businessName = `Cơ sở E2E ${suffix}`;
@@ -106,6 +142,46 @@ test.describe("business and product management", () => {
     await expect(page.getByText("Đã lưu người phụ trách")).toBeVisible();
 
     await page.getByRole("tab", { name: "Sản phẩm" }).click();
+    const productExportPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: /export excel/i }).click();
+    const productExport = await productExportPromise;
+    expect(productExport.suggestedFilename()).toMatch(
+      /^danh-sach-san-pham-\d{8}-\d{6}\.xlsx$/,
+    );
+    const productExportPath = await productExport.path();
+    expect(productExportPath).not.toBeNull();
+    expect(
+      (await readFile(productExportPath!)).subarray(0, 2).toString(),
+    ).toBe("PK");
+
+    await page.getByRole("button", { name: /import excel/i }).click();
+    const productImportDialog = page.getByRole("dialog", {
+      name: "Import sản phẩm từ Excel",
+    });
+    const productTemplatePromise = page.waitForEvent("download");
+    await productImportDialog
+      .getByRole("button", { name: /tải file mẫu/i })
+      .click();
+    const productTemplate = await productTemplatePromise;
+    const productTemplatePath = await productTemplate.path();
+    expect(productTemplatePath).not.toBeNull();
+    await productImportDialog.locator('input[type="file"]').setInputFiles({
+      name: productTemplate.suggestedFilename(),
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: await readFile(productTemplatePath!),
+    });
+    await productImportDialog
+      .getByRole("button", { name: /kiểm tra và xem trước/i })
+      .click();
+    await expect(
+      productImportDialog.getByText(/Tổng số: 1/),
+    ).toBeVisible();
+    await expect(
+      productImportDialog.getByText(/Cơ sở không tồn tại/),
+    ).toBeVisible();
+    await productImportDialog.getByRole("button", { name: "Close" }).click();
+
     await page.getByRole("button", { name: /thêm sản phẩm/i }).click();
     await page.getByRole("combobox", { name: "Cơ sở" }).click();
     await page.getByText(updatedBusinessName, { exact: false }).last().click();

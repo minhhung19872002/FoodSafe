@@ -84,8 +84,10 @@ describe("BusinessManagementPage", () => {
       permissions: [
         "FoodSafe.BusinessManagement.Businesses.View",
         "FoodSafe.BusinessManagement.Businesses.Create",
+        "FoodSafe.BusinessManagement.Businesses.Import",
         "FoodSafe.BusinessManagement.Products.View",
         "FoodSafe.BusinessManagement.Products.Create",
+        "FoodSafe.BusinessManagement.Products.Import",
       ],
     });
     const user = userEvent.setup();
@@ -96,10 +98,16 @@ describe("BusinessManagementPage", () => {
     expect(
       screen.getByRole("button", { name: /thêm cơ sở/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /import excel/i }),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: "Sản phẩm" }));
     expect(await screen.findByText("Sản phẩm kiểm thử")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /thêm sản phẩm/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /import excel/i }),
     ).toBeInTheDocument();
   });
 

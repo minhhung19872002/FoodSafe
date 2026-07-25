@@ -108,6 +108,7 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.BusinessManagement.Products.Default,
         FoodSafePermissions.BusinessManagement.Products.View,
         FoodSafePermissions.BusinessManagement.Products.Create,
+        FoodSafePermissions.BusinessManagement.Products.Import,
         FoodSafePermissions.BusinessManagement.Products.Edit,
         FoodSafePermissions.BusinessManagement.Products.Delete,
         FoodSafePermissions.DataScope.All
@@ -140,6 +141,7 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.BusinessManagement.Products.Default,
         FoodSafePermissions.BusinessManagement.Products.View,
         FoodSafePermissions.BusinessManagement.Products.Create,
+        FoodSafePermissions.BusinessManagement.Products.Import,
         FoodSafePermissions.BusinessManagement.Products.Edit
     ];
 
@@ -178,6 +180,7 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.BusinessManagement.Products.Default,
                 FoodSafePermissions.BusinessManagement.Products.View,
                 FoodSafePermissions.BusinessManagement.Products.Create,
+                FoodSafePermissions.BusinessManagement.Products.Import,
                 FoodSafePermissions.BusinessManagement.Products.Edit
             ]),
         new(
@@ -205,6 +208,7 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.BusinessManagement.Products.Default,
                 FoodSafePermissions.BusinessManagement.Products.View,
                 FoodSafePermissions.BusinessManagement.Products.Create,
+                FoodSafePermissions.BusinessManagement.Products.Import,
                 FoodSafePermissions.BusinessManagement.Products.Edit
             ]),
         new(
@@ -227,7 +231,8 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.BusinessManagement.Businesses.Create,
                 FoodSafePermissions.BusinessManagement.Products.Default,
                 FoodSafePermissions.BusinessManagement.Products.View,
-                FoodSafePermissions.BusinessManagement.Products.Create
+                FoodSafePermissions.BusinessManagement.Products.Create,
+                FoodSafePermissions.BusinessManagement.Products.Import
             ])
     ];
 

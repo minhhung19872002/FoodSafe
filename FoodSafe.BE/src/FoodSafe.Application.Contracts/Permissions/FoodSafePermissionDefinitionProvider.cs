@@ -88,6 +88,9 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
         products.AddChild(
             FoodSafePermissions.BusinessManagement.Products.Delete,
             LocalizableString.Create<FoodSafeResource>("Permission:Products.Delete"));
+        products.AddChild(
+            FoodSafePermissions.BusinessManagement.Products.Import,
+            LocalizableString.Create<FoodSafeResource>("Permission:Products.Import"));
 
         var systemAdministration = group.AddPermission(
             FoodSafePermissions.SystemAdministration.Default,

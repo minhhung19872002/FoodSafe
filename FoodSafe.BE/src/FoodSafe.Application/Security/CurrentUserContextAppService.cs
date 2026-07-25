@@ -35,6 +35,7 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.BusinessManagement.Businesses.Import,
         FoodSafePermissions.BusinessManagement.Products.View,
         FoodSafePermissions.BusinessManagement.Products.Create,
+        FoodSafePermissions.BusinessManagement.Products.Import,
         FoodSafePermissions.BusinessManagement.Products.Edit,
         FoodSafePermissions.BusinessManagement.Products.Delete,
         FoodSafePermissions.SystemAdministration.Default,
