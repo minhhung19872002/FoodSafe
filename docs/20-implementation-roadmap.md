@@ -34,13 +34,15 @@ workbook/security tests and authenticated Playwright lifecycle coverage pass.
 
 Implement self-declarations, product/ad registrations, eligibility, CFS and export certificates with scoped official identifiers, lifecycle history, secure attachments and exports.
 
-Status: STT 21–22 are complete. Self-declarations and product registrations
-now have scoped CRUD, effective expiry filtering and 30/60/90-day alerts,
-terminal revocation with actor, time and reason, retained-history number
-uniqueness, secure shared attachments, Excel export and permission-aware
-Vietnamese workspaces. Product registrations also have a safe anonymous
-lookup and a Hangfire daily expiry synchronization job. Authenticated Docker
-E2E passes for both slices. STT 23–26 remain.
+Status: STT 21–23 are complete. Self-declarations, product registrations and
+advertisement registrations now have scoped CRUD, effective expiry filtering
+and 30/60/90-day alerts, terminal revocation with actor, time and reason,
+retained-history number uniqueness, secure shared attachments, Excel export
+and permission-aware Vietnamese workspaces. Advertisement registrations use
+the accepted multi-product model. Product registrations also have a safe
+anonymous lookup; both licensing slices have Hangfire daily expiry
+synchronization. Authenticated Docker E2E passes for all three slices. STT
+24–26 remain.
 
 ## Milestone 4 — Inspection, violations, warnings and news
 
@@ -67,10 +69,10 @@ Perform full authorization/security/performance reviews, Dockerize API/SPA and d
 | Gate | Result on 2026-07-25 |
 |---|---|
 | Backend build | Pass, 0 warnings |
-| Backend tests | Pass, 118 tests including PostgreSQL migration/constraint integration, business/product/declaration/registration rules, Excel contracts, attachment validation/authorization, current-user permission projection, request contracts, password policy, CAPTCHA behavior and root-promotion authorization; coverage remains incomplete |
+| Backend tests | Pass, 122 tests including PostgreSQL migration/constraint integration, business/product/declaration/registration rules, Excel contracts, attachment validation/authorization, current-user permission projection, request contracts, password policy, CAPTCHA behavior and root-promotion authorization; coverage remains incomplete |
 | Frontend strict production build | Pass |
-| Frontend tests | Pass, 38 Vitest tests plus authenticated Playwright catalog, facility/product, self-declaration and product-registration lifecycles; browser coverage includes Excel, clean/infected files, public lookup, revocation and retained official-number identity |
-| EF migrations | Pass; typed-owner attachment, self-declaration and product-registration migrations apply on PostgreSQL through the one-shot migrator |
+| Frontend tests | Pass, 41 Vitest tests plus authenticated Playwright catalog, facility/product, self-declaration, product-registration and advertisement-registration lifecycles; browser coverage includes Excel, multi-product replacement, clean/infected files, public lookup, revocation and retained official-number identity |
+| EF migrations | Pass; typed-owner attachment, self-declaration, product-registration and advertisement-registration migrations apply on PostgreSQL through the one-shot migrator |
 | Docker full stack | Pass; PostgreSQL, Redis, MinIO, ClamAV, one-shot migrator and non-root API/SPA run with dependency health gates; Mailpit is development-only |
 | CI and dependency gates | Pass locally; GitHub Actions covers backend/frontend build/test, EF drift, audited dependency allowlists, production Compose rendering and image builds |
 | Security | Improved but not ready; cookie/CSRF session, lockout, password history/expiry, throttling, server-verified CAPTCHA, full recovery delivery/reset, and foundational data scope are implemented; final review and later-module controls remain |

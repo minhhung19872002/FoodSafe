@@ -16,7 +16,8 @@ Last updated: 2026-07-25
 | Facilities/products/files | Tested and reviewed | STT 19â€“20 scoped CRUD, map, responsible persons, atomic Excel workflows and ClamAV-scanned MinIO product attachments pass backend/frontend tests and authenticated Docker E2E |
 | Self-declarations | Tested and reviewed | STT 21 scoped CRUD, effective expiry alerts, terminal revocation, retained number identity, Excel export and secure shared attachments pass PostgreSQL, frontend and authenticated Docker E2E gates |
 | Product registrations | Tested and reviewed | STT 22 scoped CRUD, daily expiry synchronization, 30/60/90-day alerts, terminal revocation, global retained number identity, safe public lookup, Excel and secure attachments pass all gates |
-| Remaining regulatory modules | Not started | STT 23–26 in Milestone 3 |
+| Advertisement registrations | Tested and reviewed | STT 23 scoped multi-product CRUD, daily expiry synchronization, alerts, terminal revocation, global retained number identity, Excel and secure attachments pass all gates |
+| Remaining regulatory modules | Not started | STT 24–26 in Milestone 3 |
 | Inspection/warnings/news | Not started | Milestone 4 |
 | Poisoning/reporting | Not started | Milestone 5 |
 | Hazard/labs/dashboard/statistics | Not started | Milestone 6 |
@@ -245,3 +246,27 @@ Last updated: 2026-07-25
   terminal revocation and retained-number rejection.
 - Backend builds with zero warnings and 118 tests pass. Frontend format,
   Oxlint, strict TypeScript, 38 tests and production build pass.
+
+## Advertisement-registration completion evidence added on 2026-07-25
+
+- Added the `AdvertisementRegistration` aggregate, many-to-many advertised
+  products, four permissions, operation-aware business/product scope and
+  `AddAdvertisementRegistrations` migration.
+- PostgreSQL enforces global official-number uniqueness across retained
+  history, business/organization and product ownership, date ordering, status
+  values, complete revocation metadata and typed document ownership.
+- Product option and mutation checks independently restrict product-group
+  scope, preventing broader access through an otherwise visible business.
+- Added effective status projection plus the daily Hangfire expiry job, stored
+  as `0 0 * * *` in the `Asia/Bangkok` time zone.
+- Added Vietnamese CRUD, business/type/status/expiry filters, multi-product
+  selection, 30/60/90-day warnings, revocation, Excel and secure file handling.
+- Docker migration, OpenAPI and PostgreSQL constraint inspection pass.
+  Authenticated Playwright covers Excel, multi-product create/replacement,
+  clean PDF upload/download/delete, terminal revocation, blocked upload,
+  soft-delete and retained-number rejection.
+- Runtime validation found and fixed document-owner insertion ordering against
+  the non-deferrable FK. It also corrected the TypeScript 6 CI type-check gate
+  to use project-reference build mode.
+- Backend builds with zero warnings and 122 tests pass. Frontend format,
+  Oxlint, strict TypeScript, 41 tests and production build pass.

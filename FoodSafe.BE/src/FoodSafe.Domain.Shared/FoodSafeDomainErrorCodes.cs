@@ -91,6 +91,24 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:ProductRegistration:0005";
     }
 
+    public static class AdvertisementRegistration
+    {
+        public const string DuplicateNumber =
+            "FoodSafe:AdvertisementRegistration:0001";
+        public const string InvalidDateRange =
+            "FoodSafe:AdvertisementRegistration:0002";
+        public const string ProductMismatch =
+            "FoodSafe:AdvertisementRegistration:0003";
+        public const string AlreadyRevoked =
+            "FoodSafe:AdvertisementRegistration:0004";
+        public const string CannotModifyRevoked =
+            "FoodSafe:AdvertisementRegistration:0005";
+        public const string AdvertisementTypeNotFound =
+            "FoodSafe:AdvertisementRegistration:0006";
+        public const string ProductsRequired =
+            "FoodSafe:AdvertisementRegistration:0007";
+    }
+
     public static class Inspection
     {
         public const string PlanNotFound = "FoodSafe:Inspection:0001";

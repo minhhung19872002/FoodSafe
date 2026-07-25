@@ -495,6 +495,145 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasDatabaseName("idx_product_registrations_org");
         });
 
+        builder.Entity<AdvertisementRegistration>(entity =>
+        {
+            entity.ToTable("advertisement_registrations", table =>
+            {
+                table.HasCheckConstraint(
+                    "chk_ad_reg_status",
+                    "status IN (1, 2, 3)");
+                table.HasCheckConstraint(
+                    "chk_ad_reg_dates",
+                    "expiry_date IS NULL OR registration_date <= expiry_date");
+                table.HasCheckConstraint(
+                    "chk_ad_reg_revoke",
+                    "(status != 3 AND revoke_reason IS NULL AND " +
+                    "revoked_at IS NULL AND revoked_by_id IS NULL) OR " +
+                    "(status = 3 AND revoke_reason IS NOT NULL AND " +
+                    "revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)");
+            });
+            ConfigureAggregateAudit(
+                entity,
+                "pk_advertisement_registrations");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id");
+            entity.Property(x => x.AdvertisementTypeId)
+                .HasColumnName("advertisement_type_id");
+            entity.Property(x => x.RegistrationNumber)
+                .HasColumnName("registration_number")
+                .HasMaxLength(100)
+                .IsRequired();
+            entity.Property(x => x.RegistrationDate)
+                .HasColumnName("registration_date")
+                .HasColumnType("date");
+            entity.Property(x => x.ExpiryDate)
+                .HasColumnName("expiry_date")
+                .HasColumnType("date");
+            entity.Property(x => x.ContentDescription)
+                .HasColumnName("content_description");
+            entity.Property(x => x.Medium)
+                .HasColumnName("medium")
+                .HasMaxLength(200);
+            entity.Property(x => x.Status)
+                .HasColumnName("status")
+                .HasConversion<short>();
+            entity.Property(x => x.RevokeReason)
+                .HasColumnName("revoke_reason");
+            entity.Property(x => x.RevokedAt).HasColumnName("revoked_at");
+            entity.Property(x => x.RevokedById)
+                .HasColumnName("revoked_by_id");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+            entity.HasOne<Business>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    x.Id,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_ad_reg_business_org");
+            entity.HasOne<Organization>().WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_ad_reg_org");
+            entity.HasOne<AdvertisementType>().WithMany()
+                .HasForeignKey(x => x.AdvertisementTypeId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_ad_reg_type");
+            entity.HasAlternateKey(
+                    x => new { x.Id, x.BusinessId, x.OrganizationId })
+                .HasName("uq_ad_reg_id_business_org");
+            entity.HasMany(x => x.Products).WithOne()
+                .HasForeignKey(x => new
+                {
+                    x.AdvertisementRegistrationId,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    x.Id,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_arp_ad_reg_owner");
+            entity.Navigation(x => x.Products)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.HasIndex(x => x.RegistrationNumber)
+                .IsUnique()
+                .HasDatabaseName(
+                    "uq_advertisement_registrations_number");
+            entity.HasIndex(x => x.BusinessId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_ad_reg_business");
+            entity.HasIndex(x => x.OrganizationId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_ad_reg_org");
+            entity.HasIndex(x => new { x.ExpiryDate, x.Status })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_ad_reg_expiry");
+        });
+
+        builder.Entity<AdvertisementRegistrationProduct>(entity =>
+        {
+            entity.ToTable("advertisement_registration_products");
+            entity.HasKey(x => new
+            {
+                x.AdvertisementRegistrationId,
+                x.ProductId
+            })
+                .HasName("pk_ad_reg_products");
+            entity.Property(x => x.AdvertisementRegistrationId)
+                .HasColumnName("advertisement_registration_id");
+            entity.Property(x => x.ProductId).HasColumnName("product_id");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id");
+            entity.HasOne<Product>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.ProductId,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    ProductId = x.Id,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_arp_product_owner");
+            entity.HasIndex(x => x.ProductId)
+                .HasDatabaseName("idx_arp_product");
+        });
+
         builder.Entity<ManagementScopeAssignment>(entity =>
         {
             entity.HasOne<Business>().WithMany().HasForeignKey(x => x.BusinessId)

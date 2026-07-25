@@ -137,6 +137,26 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             FoodSafePermissions.Licensing.ProductRegistrations.Delete,
             LocalizableString.Create<FoodSafeResource>(
                 "Permission:ProductRegistrations.Delete"));
+        var adRegistrations = licensing.AddChild(
+            FoodSafePermissions.Licensing.AdRegistrations.Default,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:AdRegistrations"));
+        adRegistrations.AddChild(
+            FoodSafePermissions.Licensing.AdRegistrations.View,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:AdRegistrations.View"));
+        adRegistrations.AddChild(
+            FoodSafePermissions.Licensing.AdRegistrations.Create,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:AdRegistrations.Create"));
+        adRegistrations.AddChild(
+            FoodSafePermissions.Licensing.AdRegistrations.Edit,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:AdRegistrations.Edit"));
+        adRegistrations.AddChild(
+            FoodSafePermissions.Licensing.AdRegistrations.Delete,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:AdRegistrations.Delete"));
 
         var systemAdministration = group.AddPermission(
             FoodSafePermissions.SystemAdministration.Default,

@@ -19,7 +19,7 @@ public sealed class BusinessManagementMappingTests
     }
 
     [Fact]
-    public void Model_should_map_all_STT_19_to_22_tables()
+    public void Model_should_map_all_STT_19_to_23_tables()
     {
         using var context = CreateContext();
 
@@ -35,6 +35,12 @@ public sealed class BusinessManagementMappingTests
             .GetTableName().ShouldBe("self_declarations");
         context.Model.FindEntityType(typeof(ProductRegistration))!
             .GetTableName().ShouldBe("product_registrations");
+        context.Model.FindEntityType(typeof(AdvertisementRegistration))!
+            .GetTableName().ShouldBe("advertisement_registrations");
+        context.Model.FindEntityType(
+                typeof(AdvertisementRegistrationProduct))!
+            .GetTableName().ShouldBe(
+                "advertisement_registration_products");
     }
 
     [Fact]
@@ -112,5 +118,26 @@ public sealed class BusinessManagementMappingTests
             "uq_product_registrations_number");
         unique.IsUnique.ShouldBeTrue();
         unique.GetFilter().ShouldBeNull();
+    }
+
+    [Fact]
+    public void Advertisement_registration_should_enforce_owned_products()
+    {
+        using var context = CreateContext();
+        var registration =
+            context.Model.FindEntityType(typeof(AdvertisementRegistration))!;
+        var link = context.Model.FindEntityType(
+            typeof(AdvertisementRegistrationProduct))!;
+
+        registration.GetForeignKeys().ShouldContain(key =>
+            key.GetConstraintName() == "fk_ad_reg_business_org");
+        registration.GetIndexes().Single(index =>
+                index.GetDatabaseName() ==
+                "uq_advertisement_registrations_number")
+            .IsUnique.ShouldBeTrue();
+        link.GetForeignKeys().ShouldContain(key =>
+            key.GetConstraintName() == "fk_arp_ad_reg_owner");
+        link.GetForeignKeys().ShouldContain(key =>
+            key.GetConstraintName() == "fk_arp_product_owner");
     }
 }

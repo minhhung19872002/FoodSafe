@@ -14,7 +14,7 @@ import type {
 } from "../types/productRegistration.types";
 
 interface Props {
-  registration?: ProductRegistration;
+  registration?: Pick<ProductRegistration, "registrationNumber">;
   attachments: FileAttachment[];
   loading: boolean;
   editable: boolean;

@@ -122,6 +122,11 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.Licensing.ProductRegistrations.Create,
         FoodSafePermissions.Licensing.ProductRegistrations.Edit,
         FoodSafePermissions.Licensing.ProductRegistrations.Delete,
+        FoodSafePermissions.Licensing.AdRegistrations.Default,
+        FoodSafePermissions.Licensing.AdRegistrations.View,
+        FoodSafePermissions.Licensing.AdRegistrations.Create,
+        FoodSafePermissions.Licensing.AdRegistrations.Edit,
+        FoodSafePermissions.Licensing.AdRegistrations.Delete,
         FoodSafePermissions.DataScope.All
     ];
 
@@ -205,7 +210,11 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Licensing.ProductRegistrations.Default,
                 FoodSafePermissions.Licensing.ProductRegistrations.View,
                 FoodSafePermissions.Licensing.ProductRegistrations.Create,
-                FoodSafePermissions.Licensing.ProductRegistrations.Edit
+                FoodSafePermissions.Licensing.ProductRegistrations.Edit,
+                FoodSafePermissions.Licensing.AdRegistrations.Default,
+                FoodSafePermissions.Licensing.AdRegistrations.View,
+                FoodSafePermissions.Licensing.AdRegistrations.Create,
+                FoodSafePermissions.Licensing.AdRegistrations.Edit
             ]),
         new(
             "DistrictAdmin",
@@ -217,6 +226,10 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.Licensing.ProductRegistrations.View)
                 .Append(FoodSafePermissions.Licensing.ProductRegistrations.Create)
                 .Append(FoodSafePermissions.Licensing.ProductRegistrations.Edit)
+                .Append(FoodSafePermissions.Licensing.AdRegistrations.Default)
+                .Append(FoodSafePermissions.Licensing.AdRegistrations.View)
+                .Append(FoodSafePermissions.Licensing.AdRegistrations.Create)
+                .Append(FoodSafePermissions.Licensing.AdRegistrations.Edit)
                 .ToArray()),
         new(
             "DistrictStaff",
@@ -247,7 +260,11 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Licensing.ProductRegistrations.Default,
                 FoodSafePermissions.Licensing.ProductRegistrations.View,
                 FoodSafePermissions.Licensing.ProductRegistrations.Create,
-                FoodSafePermissions.Licensing.ProductRegistrations.Edit
+                FoodSafePermissions.Licensing.ProductRegistrations.Edit,
+                FoodSafePermissions.Licensing.AdRegistrations.Default,
+                FoodSafePermissions.Licensing.AdRegistrations.View,
+                FoodSafePermissions.Licensing.AdRegistrations.Create,
+                FoodSafePermissions.Licensing.AdRegistrations.Edit
             ]),
         new(
             "CommuneAdmin",
@@ -256,6 +273,8 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.Licensing.Default)
                 .Append(FoodSafePermissions.Licensing.ProductRegistrations.Default)
                 .Append(FoodSafePermissions.Licensing.ProductRegistrations.View)
+                .Append(FoodSafePermissions.Licensing.AdRegistrations.Default)
+                .Append(FoodSafePermissions.Licensing.AdRegistrations.View)
                 .ToArray()),
         new(
             "CommuneStaff",
@@ -281,7 +300,9 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit,
                 FoodSafePermissions.Licensing.Default,
                 FoodSafePermissions.Licensing.ProductRegistrations.Default,
-                FoodSafePermissions.Licensing.ProductRegistrations.View
+                FoodSafePermissions.Licensing.ProductRegistrations.View,
+                FoodSafePermissions.Licensing.AdRegistrations.Default,
+                FoodSafePermissions.Licensing.AdRegistrations.View
             ])
     ];
 

@@ -81,6 +81,13 @@ function buildMenuItems(
       label: "Đăng ký công bố",
     });
   }
+  if (hasPermission("FoodSafe.Licensing.AdRegistrations.View")) {
+    items.push({
+      key: "/advertisement-registrations",
+      icon: <FileProtectOutlined />,
+      label: "Đăng ký quảng cáo",
+    });
+  }
   if (hasPermission("FoodSafe.SystemAdministration")) {
     items.push({
       key: "/administration/identity",

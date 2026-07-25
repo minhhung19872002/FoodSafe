@@ -56,6 +56,11 @@ public class FoodSafeDbContext :
     public DbSet<Product> Products { get; set; }
     public DbSet<SelfDeclaration> SelfDeclarations { get; set; }
     public DbSet<ProductRegistration> ProductRegistrations { get; set; }
+    public DbSet<AdvertisementRegistration> AdvertisementRegistrations
+    { get; set; }
+    public DbSet<AdvertisementRegistrationProduct>
+        AdvertisementRegistrationProducts
+    { get; set; }
     public DbSet<DocumentOwner> DocumentOwners { get; set; }
     public DbSet<FileAttachment> FileAttachments { get; set; }
 

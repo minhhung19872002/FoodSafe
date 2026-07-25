@@ -43,6 +43,10 @@ export const PublicProductRegistrationLookupPage = lazy(
   () =>
     import("@/features/product-registrations/pages/PublicProductRegistrationLookupPage"),
 );
+export const AdvertisementRegistrationPage = lazy(
+  () =>
+    import("@/features/advertisement-registrations/pages/AdvertisementRegistrationPage"),
+);
 
 export function RouteLoading() {
   return (

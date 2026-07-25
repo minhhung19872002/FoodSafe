@@ -9,6 +9,7 @@ import {
   SelfDeclarationPage,
   ProductRegistrationPage,
   PublicProductRegistrationLookupPage,
+  AdvertisementRegistrationPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -135,6 +136,16 @@ export const router = createBrowserRouter([
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.Licensing.ProductRegistrations.View">
               <ProductRegistrationPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "advertisement-registrations",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Licensing.AdRegistrations.View">
+              <AdvertisementRegistrationPage />
             </PermissionRoute>
           </Suspense>
         ),
