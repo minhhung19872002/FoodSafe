@@ -17,7 +17,6 @@ namespace FoodSafe;
 
 [DependsOn(
     typeof(FoodSafeDomainSharedModule),
-    typeof(FoodSafeApplicationContractsModule),
     typeof(AbpAuditLoggingDomainModule),
     typeof(AbpBackgroundJobsDomainModule),
     typeof(AbpFeatureManagementDomainModule),

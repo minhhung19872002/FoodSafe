@@ -1,52 +1,57 @@
-import { useEffect, type ReactNode } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
-import { Spin } from 'antd'
-import { useQuery } from '@tanstack/react-query'
-import { useAuthStore } from '@/features/auth/store/authStore'
-import { authApi } from '@/features/auth/api/authApi'
+import { useEffect, type ReactNode } from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { Spin } from "antd";
+import { useQuery } from "@tanstack/react-query";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { authApi } from "@/features/auth/api/authApi";
 
 interface Props {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function PrivateRoute({ children }: Props) {
-  const setAuth = useAuthStore((state) => state.setAuth)
-  const clearAuth = useAuthStore((state) => state.clearAuth)
-  const user = useAuthStore((state) => state.user)
-  const location = useLocation()
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const user = useAuthStore((state) => state.user);
+  const location = useLocation();
   const currentUser = useQuery({
-    queryKey: ['auth', 'current-user'],
+    queryKey: ["auth", "current-user"],
     queryFn: authApi.getCurrentUser,
     retry: false,
     staleTime: 60_000,
-  })
+  });
 
   useEffect(() => {
     if (currentUser.data) {
-      setAuth(currentUser.data)
+      setAuth(currentUser.data);
     } else if (currentUser.isError) {
-      clearAuth()
+      clearAuth();
     }
-  }, [clearAuth, currentUser.data, currentUser.isError, setAuth])
+  }, [clearAuth, currentUser.data, currentUser.isError, setAuth]);
 
-  if (currentUser.isLoading || (currentUser.data && user?.id !== currentUser.data.id)) {
+  if (
+    currentUser.isLoading ||
+    (currentUser.data && user?.id !== currentUser.data.id)
+  ) {
     return (
-      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+      <div
+        style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}
+      >
         <Spin size="large" tip="Đang xác thực phiên đăng nhập" />
       </div>
-    )
+    );
   }
 
   if (currentUser.isError) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (
-    currentUser.data?.passwordMustChange
-    && location.pathname !== '/account/change-password'
+    currentUser.data?.passwordMustChange &&
+    location.pathname !== "/account/change-password"
   ) {
-    return <Navigate to="/account/change-password" replace />
+    return <Navigate to="/account/change-password" replace />;
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }

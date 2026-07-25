@@ -1,4 +1,4 @@
-# Container Deployment — FoodSafe
+# Deployment Guide — FoodSafe
 
 ## Deployment shape
 

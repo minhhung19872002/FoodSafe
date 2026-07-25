@@ -18,7 +18,7 @@ Last updated: 2026-07-25
 | Poisoning/reporting | Not started | Milestone 5 |
 | Hazard/labs/dashboard/statistics | Not started | Milestone 6 |
 | Public portal/integrations | Not started | Milestone 7 |
-| Docker full stack/CI/operations | In progress | Six-service base stack plus development Mailpit profile, deployment/local guides and CI gates implemented; backup/restore rehearsal and production TLS deployment remain |
+| Docker full stack/CI/operations | In progress | Production-shaped stack, clean-DB/format/publish/security/image CI gates, and docs 36–40 implemented; backup/restore rehearsal and production TLS deployment remain |
 | Final security/readiness review | Not started | Current overall readiness: NOT READY |
 
 “Complete” is intentionally unused until every module quality gate passes.
@@ -83,7 +83,7 @@ Last updated: 2026-07-25
   bootstrap credential, authenticated the administrator with seven expected
   permissions, and retained that authenticated session after force-replacing
   the API container.
-- `docs/42-container-deployment.md` documents local and production settings,
+- `docs/38-deployment-guide.md` documents local and production settings,
   secret handling, health checks, operations, and the remaining backup/restore
   release gate.
 
@@ -128,3 +128,25 @@ Last updated: 2026-07-25
 - Backend builds with zero warnings and 36 tests pass. Frontend lint,
   11 tests, and the production bundle pass. Production rejection probes and
   the complete Compose development profile pass.
+
+## Versioned API and release-gate evidence added on 2026-07-25
+
+- Application services now publish only under `/api/v1/app`; the CAPTCHA
+  configuration endpoint is `/api/v1/security/captcha/config`.
+- API-version negotiation advertises `1.0`, rejects unsupported versions, and
+  emits correlated RFC Problem Details. The legacy `/api/app` surface returns
+  `404`.
+- OpenAPI inspection found 14 versioned FoodSafe application routes, one
+  versioned security route, and no legacy application routes.
+- Permission constants moved into Domain.Shared, removing the Domain-to-
+  Application.Contracts dependency. Four executable architecture tests now
+  prevent that boundary from regressing.
+- CI now enforces backend/frontend formatting, warnings-as-errors, Release
+  publish, clean PostgreSQL migration, architecture tests, repository
+  secret/configuration scanning, and fixed high/critical scanning for every
+  deployable image.
+- CI/CD, deployment, operations, and disaster-recovery procedures occupy the
+  reserved `docs/37`–`docs/40` sequence. `docs/42` remains reserved for the
+  eventual final readiness report.
+- Backend builds with zero warnings and 42 tests pass. Frontend formatting,
+  lint, strict TypeScript, 11 tests, and the production bundle pass.

@@ -19,7 +19,7 @@ Account controls include:
 ## Login CAPTCHA
 
 The login page retrieves only the Turnstile site key and action from
-`GET /api/security/captcha/config`. The secret remains server-side.
+`GET /api/v1/security/captcha/config`. The secret remains server-side.
 
 For every `POST /api/account/login`, middleware:
 

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { useState } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   Layout,
   Menu,
@@ -8,7 +8,7 @@ import {
   Breadcrumb,
   theme,
   type MenuProps,
-} from 'antd'
+} from "antd";
 import {
   DashboardOutlined,
   ApartmentOutlined,
@@ -16,66 +16,70 @@ import {
   UserOutlined,
   LogoutOutlined,
   KeyOutlined,
-} from '@ant-design/icons'
-import { useAuthStore } from '@/features/auth/store/authStore'
-import { useLogout } from '@/features/auth/api/authMutations'
+} from "@ant-design/icons";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { useLogout } from "@/features/auth/api/authMutations";
 
-const { Header, Sider, Content } = Layout
+const { Header, Sider, Content } = Layout;
 
-function buildMenuItems(hasPermission: (permission: string) => boolean): MenuProps['items'] {
-  const items: MenuProps['items'] = [
-  {
-    key: '/dashboard',
-    icon: <DashboardOutlined />,
-    label: 'Bảng điều khiển',
-  },
-  ]
-  if (hasPermission('FoodSafe.Organizations.View')) {
+function buildMenuItems(
+  hasPermission: (permission: string) => boolean,
+): MenuProps["items"] {
+  const items: MenuProps["items"] = [
+    {
+      key: "/dashboard",
+      icon: <DashboardOutlined />,
+      label: "Bảng điều khiển",
+    },
+  ];
+  if (hasPermission("FoodSafe.Organizations.View")) {
     items.push({
-      key: '/organizations',
+      key: "/organizations",
       icon: <ApartmentOutlined />,
-      label: 'Đơn vị',
-    })
+      label: "Đơn vị",
+    });
   }
-  if (hasPermission('FoodSafe.GeographicCatalogs.View')) {
+  if (hasPermission("FoodSafe.GeographicCatalogs.View")) {
     items.push({
-      key: '/geography',
+      key: "/geography",
       icon: <EnvironmentOutlined />,
-      label: 'Địa bàn',
-    })
+      label: "Địa bàn",
+    });
   }
-  return items
+  return items;
 }
 
 export function AppLayout() {
-  const [collapsed, setCollapsed] = useState(false)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const user = useAuthStore((s) => s.user)
-  const hasPermission = useAuthStore((s) => s.hasPermission)
-  const menuItems = buildMenuItems(hasPermission)
-  const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken()
-  const logoutMutation = useLogout()
+  const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const user = useAuthStore((s) => s.user);
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const menuItems = buildMenuItems(hasPermission);
+  const {
+    token: { colorBgContainer, borderRadiusLG },
+  } = theme.useToken();
+  const logoutMutation = useLogout();
 
-  const userMenuItems: MenuProps['items'] = [
+  const userMenuItems: MenuProps["items"] = [
     {
-      key: 'change-password',
+      key: "change-password",
       icon: <KeyOutlined />,
-      label: 'Đổi mật khẩu',
-      onClick: () => navigate('/account/change-password'),
+      label: "Đổi mật khẩu",
+      onClick: () => navigate("/account/change-password"),
     },
-    { type: 'divider' },
+    { type: "divider" },
     {
-      key: 'logout',
+      key: "logout",
       icon: <LogoutOutlined />,
-      label: 'Đăng xuất',
+      label: "Đăng xuất",
       danger: true,
       onClick: () => logoutMutation.mutate(),
     },
-  ]
+  ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: "100vh" }}>
       <Sider
         collapsible
         collapsed={collapsed}
@@ -86,19 +90,19 @@ export function AppLayout() {
         <div
           style={{
             height: 64,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
             fontSize: collapsed ? 14 : 16,
             fontWeight: 700,
-            padding: '0 16px',
-            background: 'rgba(255,255,255,0.05)',
+            padding: "0 16px",
+            background: "rgba(255,255,255,0.05)",
             margin: 8,
             borderRadius: 8,
           }}
         >
-          {collapsed ? 'FS' : 'FoodSafe'}
+          {collapsed ? "FS" : "FoodSafe"}
         </div>
         <Menu
           theme="dark"
@@ -113,31 +117,41 @@ export function AppLayout() {
         <Header
           style={{
             background: colorBgContainer,
-            padding: '0 24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+            padding: "0 24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
           }}
         >
           <Breadcrumb
             items={[
-              { title: user?.organizationName ?? 'Phạm vi toàn hệ thống' },
-              { title: location.pathname.split('/')[1] || 'Trang chủ' },
+              { title: user?.organizationName ?? "Phạm vi toàn hệ thống" },
+              { title: location.pathname.split("/")[1] || "Trang chủ" },
             ]}
           />
 
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1677ff' }} />
-              <span>{user?.name ?? 'Người dùng'}</span>
+            <div
+              style={{
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <Avatar
+                icon={<UserOutlined />}
+                style={{ backgroundColor: "#1677ff" }}
+              />
+              <span>{user?.name ?? "Người dùng"}</span>
             </div>
           </Dropdown>
         </Header>
 
         <Content
           style={{
-            margin: '16px',
+            margin: "16px",
             padding: 24,
             background: colorBgContainer,
             borderRadius: borderRadiusLG,
@@ -148,5 +162,5 @@ export function AppLayout() {
         </Content>
       </Layout>
     </Layout>
-  )
+  );
 }

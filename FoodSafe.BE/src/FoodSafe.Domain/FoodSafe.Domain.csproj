@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FoodSafe.Domain.Shared\FoodSafe.Domain.Shared.csproj" />
-    <ProjectReference Include="..\FoodSafe.Application.Contracts\FoodSafe.Application.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

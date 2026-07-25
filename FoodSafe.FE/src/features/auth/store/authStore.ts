@@ -1,21 +1,21 @@
-import { create } from 'zustand'
+import { create } from "zustand";
 
 interface UserInfo {
-  id: string
-  name: string
-  email: string
-  organizationId: string | null
-  organizationName: string | null
-  roles: string[]
-  permissions: string[]
+  id: string;
+  name: string;
+  email: string;
+  organizationId: string | null;
+  organizationName: string | null;
+  roles: string[];
+  permissions: string[];
 }
 
 interface AuthState {
-  user: UserInfo | null
-  isAuthenticated: boolean
-  setAuth: (user: UserInfo) => void
-  clearAuth: () => void
-  hasPermission: (permission: string) => boolean
+  user: UserInfo | null;
+  isAuthenticated: boolean;
+  setAuth: (user: UserInfo) => void;
+  clearAuth: () => void;
+  hasPermission: (permission: string) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
@@ -27,4 +27,4 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   hasPermission: (permission) =>
     get().user?.permissions.includes(permission) ?? false,
-}))
+}));

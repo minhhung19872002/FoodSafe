@@ -38,21 +38,28 @@ Never commit that file or reuse its credentials outside the local environment.
 See [`docs/36-local-development-guide.md`](docs/36-local-development-guide.md)
 for native commands, tests, troubleshooting, data persistence, and reset-email
 validation. Deployment and production-only controls are documented in
-[`docs/42-container-deployment.md`](docs/42-container-deployment.md).
+[`docs/38-deployment-guide.md`](docs/38-deployment-guide.md). CI, operations,
+and recovery procedures are in [`docs/37-ci-cd-guide.md`](docs/37-ci-cd-guide.md),
+[`docs/39-operations-runbook.md`](docs/39-operations-runbook.md), and
+[`docs/40-disaster-recovery-guide.md`](docs/40-disaster-recovery-guide.md).
 
 ## Quality gates
 
 ```powershell
 dotnet restore FoodSafe.BE/FoodSafe.sln
-dotnet build FoodSafe.BE/FoodSafe.sln --no-restore
+dotnet format FoodSafe.BE/FoodSafe.sln --verify-no-changes --no-restore
+dotnet build FoodSafe.BE/FoodSafe.sln --configuration Release --no-restore --warnaserror
 dotnet test FoodSafe.BE/FoodSafe.sln --no-build --no-restore
 
 Set-Location FoodSafe.FE
 npm ci
+npm run format:check
 npm run lint
+npm run lint:ts
 npm run test -- --run
 npm run build
 ```
 
-CI additionally checks EF model drift, vulnerable dependencies, Production
-Compose rendering, and all deployable images.
+CI additionally applies migrations to clean PostgreSQL, checks EF model drift,
+publishes backend artifacts, audits dependencies, scans secrets/configuration
+and images, renders Production Compose, and builds every deployable image.

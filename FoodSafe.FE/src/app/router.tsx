@@ -1,8 +1,8 @@
-import { Suspense } from 'react'
-import { createBrowserRouter, Navigate } from 'react-router-dom'
-import { AppLayout } from './AppLayout'
-import { PrivateRoute } from './PrivateRoute'
-import { PermissionRoute } from './PermissionRoute'
+import { Suspense } from "react";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import { AppLayout } from "./AppLayout";
+import { PrivateRoute } from "./PrivateRoute";
+import { PermissionRoute } from "./PermissionRoute";
 import {
   ChangePasswordPage,
   DashboardPage,
@@ -12,11 +12,11 @@ import {
   OrganizationListPage,
   ResetPasswordPage,
   RouteLoading,
-} from './routeComponents'
+} from "./routeComponents";
 
 export const router = createBrowserRouter([
   {
-    path: '/login',
+    path: "/login",
     element: (
       <Suspense fallback={<RouteLoading />}>
         <LoginPage />
@@ -24,7 +24,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/account/forgot-password',
+    path: "/account/forgot-password",
     element: (
       <Suspense fallback={<RouteLoading />}>
         <ForgotPasswordPage />
@@ -32,7 +32,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/account/reset-password',
+    path: "/account/reset-password",
     element: (
       <Suspense fallback={<RouteLoading />}>
         <ResetPasswordPage />
@@ -40,7 +40,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/',
+    path: "/",
     element: (
       <PrivateRoute>
         <AppLayout />
@@ -52,7 +52,7 @@ export const router = createBrowserRouter([
         element: <Navigate to="/dashboard" replace />,
       },
       {
-        path: 'dashboard',
+        path: "dashboard",
         element: (
           <Suspense fallback={<RouteLoading />}>
             <DashboardPage />
@@ -60,7 +60,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'organizations',
+        path: "organizations",
         element: (
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.Organizations.View">
@@ -70,7 +70,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'geography',
+        path: "geography",
         element: (
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.GeographicCatalogs.View">
@@ -80,7 +80,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'account/change-password',
+        path: "account/change-password",
         element: (
           <Suspense fallback={<RouteLoading />}>
             <ChangePasswordPage />
@@ -89,4 +89,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-])
+]);

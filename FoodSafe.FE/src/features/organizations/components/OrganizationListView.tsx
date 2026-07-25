@@ -1,39 +1,49 @@
-import { Button, Empty, Input, Popconfirm, Select, Space, Table, Tag, Tree } from 'antd'
+import {
+  Button,
+  Empty,
+  Input,
+  Popconfirm,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Tree,
+} from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
   PlusOutlined,
   ReloadOutlined,
   SearchOutlined,
-} from '@ant-design/icons'
-import type { DataNode } from 'antd/es/tree'
-import { organizationLevelConfig } from './organizationConfig'
+} from "@ant-design/icons";
+import type { DataNode } from "antd/es/tree";
+import { organizationLevelConfig } from "./organizationConfig";
 import type {
   OrganizationDto,
   OrganizationLevel,
   OrganizationTreeNode,
-} from '../types/organization.types'
+} from "../types/organization.types";
 
 interface Props {
-  items: OrganizationDto[]
-  treeItems: OrganizationTreeNode[]
-  totalCount: number
-  loading: boolean
-  page: number
-  pageSize: number
-  filter: string
-  level?: OrganizationLevel
-  canCreate: boolean
-  canEdit: boolean
-  canDelete: boolean
-  deletingId?: string
-  onFilterChange: (value: string) => void
-  onLevelChange: (value?: OrganizationLevel) => void
-  onPageChange: (page: number, pageSize: number) => void
-  onRefresh: () => void
-  onCreate: () => void
-  onEdit: (organization: OrganizationDto) => void
-  onDelete: (organization: OrganizationDto) => void
+  items: OrganizationDto[];
+  treeItems: OrganizationTreeNode[];
+  totalCount: number;
+  loading: boolean;
+  page: number;
+  pageSize: number;
+  filter: string;
+  level?: OrganizationLevel;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  deletingId?: string;
+  onFilterChange: (value: string) => void;
+  onLevelChange: (value?: OrganizationLevel) => void;
+  onPageChange: (page: number, pageSize: number) => void;
+  onRefresh: () => void;
+  onCreate: () => void;
+  onEdit: (organization: OrganizationDto) => void;
+  onDelete: (organization: OrganizationDto) => void;
 }
 
 function toTreeData(items: OrganizationTreeNode[]): DataNode[] {
@@ -47,7 +57,7 @@ function toTreeData(items: OrganizationTreeNode[]): DataNode[] {
       </Space>
     ),
     children: toTreeData(item.children),
-  }))
+  }));
 }
 
 export function OrganizationListView({
@@ -72,7 +82,7 @@ export function OrganizationListView({
   onDelete,
 }: Props) {
   return (
-    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
       <Space wrap>
         <Input
           allowClear
@@ -88,10 +98,12 @@ export function OrganizationListView({
           value={level}
           onChange={onLevelChange}
           style={{ width: 160 }}
-          options={Object.entries(organizationLevelConfig).map(([value, config]) => ({
-            value: Number(value),
-            label: config.label,
-          }))}
+          options={Object.entries(organizationLevelConfig).map(
+            ([value, config]) => ({
+              value: Number(value),
+              label: config.label,
+            }),
+          )}
         />
         <Button icon={<ReloadOutlined />} onClick={onRefresh}>
           Làm mới
@@ -116,64 +128,66 @@ export function OrganizationListView({
           onChange: onPageChange,
         }}
         columns={[
-          { title: 'Mã', dataIndex: 'code', width: 130 },
-          { title: 'Tên đơn vị', dataIndex: 'name' },
+          { title: "Mã", dataIndex: "code", width: 130 },
+          { title: "Tên đơn vị", dataIndex: "name" },
           {
-            title: 'Cấp',
-            dataIndex: 'level',
+            title: "Cấp",
+            dataIndex: "level",
             width: 130,
             render: (value: OrganizationLevel) => {
-              const config = organizationLevelConfig[value]
-              return <Tag color={config.color}>{config.label}</Tag>
+              const config = organizationLevelConfig[value];
+              return <Tag color={config.color}>{config.label}</Tag>;
             },
           },
-          { title: 'Điện thoại', dataIndex: 'phone', width: 150 },
+          { title: "Điện thoại", dataIndex: "phone", width: 150 },
           {
-            title: 'Trạng thái',
-            dataIndex: 'isActive',
+            title: "Trạng thái",
+            dataIndex: "isActive",
             width: 140,
             render: (active: boolean) => (
-              <Tag color={active ? 'success' : 'default'}>
-                {active ? 'Hoạt động' : 'Ngừng hoạt động'}
+              <Tag color={active ? "success" : "default"}>
+                {active ? "Hoạt động" : "Ngừng hoạt động"}
               </Tag>
             ),
           },
           ...(canEdit || canDelete
-            ? [{
-                title: 'Thao tác',
-                key: 'actions',
-                width: 130,
-                render: (_: unknown, organization: OrganizationDto) => (
-                  <Space>
-                    {canEdit && (
-                      <Button
-                        type="text"
-                        aria-label={`Sửa ${organization.name}`}
-                        icon={<EditOutlined />}
-                        onClick={() => onEdit(organization)}
-                      />
-                    )}
-                    {canDelete && (
-                      <Popconfirm
-                        title="Xóa đơn vị?"
-                        description={`Bạn chắc chắn muốn xóa “${organization.name}”?`}
-                        okText="Xóa"
-                        cancelText="Hủy"
-                        okButtonProps={{ danger: true }}
-                        onConfirm={() => onDelete(organization)}
-                      >
+            ? [
+                {
+                  title: "Thao tác",
+                  key: "actions",
+                  width: 130,
+                  render: (_: unknown, organization: OrganizationDto) => (
+                    <Space>
+                      {canEdit && (
                         <Button
                           type="text"
-                          danger
-                          loading={deletingId === organization.id}
-                          aria-label={`Xóa ${organization.name}`}
-                          icon={<DeleteOutlined />}
+                          aria-label={`Sửa ${organization.name}`}
+                          icon={<EditOutlined />}
+                          onClick={() => onEdit(organization)}
                         />
-                      </Popconfirm>
-                    )}
-                  </Space>
-                ),
-              }]
+                      )}
+                      {canDelete && (
+                        <Popconfirm
+                          title="Xóa đơn vị?"
+                          description={`Bạn chắc chắn muốn xóa “${organization.name}”?`}
+                          okText="Xóa"
+                          cancelText="Hủy"
+                          okButtonProps={{ danger: true }}
+                          onConfirm={() => onDelete(organization)}
+                        >
+                          <Button
+                            type="text"
+                            danger
+                            loading={deletingId === organization.id}
+                            aria-label={`Xóa ${organization.name}`}
+                            icon={<DeleteOutlined />}
+                          />
+                        </Popconfirm>
+                      )}
+                    </Space>
+                  ),
+                },
+              ]
             : []),
         ]}
       />
@@ -189,5 +203,5 @@ export function OrganizationListView({
         )}
       </section>
     </Space>
-  )
+  );
 }

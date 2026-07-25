@@ -1,26 +1,29 @@
-import { useMemo, useState } from 'react'
-import { App, Typography } from 'antd'
-import { useAuthStore } from '@/features/auth/store/authStore'
+import { useMemo, useState } from "react";
+import { App, Typography } from "antd";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import {
   useCreateOrganization,
   useDeleteOrganization,
   useUpdateOrganization,
-} from '../api/organizationMutations'
-import { useOrganizationList, useOrganizationTree } from '../api/organizationQueries'
-import { OrganizationCreateModal } from '../components/OrganizationCreateModal'
-import { OrganizationListView } from '../components/OrganizationListView'
+} from "../api/organizationMutations";
+import {
+  useOrganizationList,
+  useOrganizationTree,
+} from "../api/organizationQueries";
+import { OrganizationCreateModal } from "../components/OrganizationCreateModal";
+import { OrganizationListView } from "../components/OrganizationListView";
 import type {
   OrganizationDto,
   OrganizationLevel,
   OrganizationTreeNode,
-} from '../types/organization.types'
+} from "../types/organization.types";
 
-const pageSizeDefault = 20
+const pageSizeDefault = 20;
 
 type OrganizationOption = Pick<
   OrganizationDto,
-  'id' | 'code' | 'name' | 'level'
->
+  "id" | "code" | "name" | "level"
+>;
 
 function flattenTree(items: OrganizationTreeNode[]): OrganizationOption[] {
   return items.flatMap((item) => [
@@ -31,7 +34,7 @@ function flattenTree(items: OrganizationTreeNode[]): OrganizationOption[] {
       level: item.level,
     },
     ...flattenTree(item.children),
-  ])
+  ]);
 }
 
 function descendantIds(
@@ -40,53 +43,55 @@ function descendantIds(
 ): Set<string> {
   for (const item of items) {
     if (item.id === organizationId) {
-      return new Set(flattenTree(item.children).map((child) => child.id))
+      return new Set(flattenTree(item.children).map((child) => child.id));
     }
 
-    const nested = descendantIds(item.children, organizationId)
+    const nested = descendantIds(item.children, organizationId);
     if (nested.size > 0) {
-      return nested
+      return nested;
     }
   }
 
-  return new Set()
+  return new Set();
 }
 
 export default function OrganizationListPage() {
-  const { message } = App.useApp()
-  const hasPermission = useAuthStore((state) => state.hasPermission)
-  const [filter, setFilter] = useState('')
-  const [level, setLevel] = useState<OrganizationLevel>()
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(pageSizeDefault)
-  const [createOpen, setCreateOpen] = useState(false)
-  const [editing, setEditing] = useState<OrganizationDto>()
+  const { message } = App.useApp();
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const [filter, setFilter] = useState("");
+  const [level, setLevel] = useState<OrganizationLevel>();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(pageSizeDefault);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<OrganizationDto>();
 
-  const queryFilter = useMemo(() => ({
-    filter: filter || undefined,
-    level,
-    skipCount: (page - 1) * pageSize,
-    maxResultCount: pageSize,
-  }), [filter, level, page, pageSize])
+  const queryFilter = useMemo(
+    () => ({
+      filter: filter || undefined,
+      level,
+      skipCount: (page - 1) * pageSize,
+      maxResultCount: pageSize,
+    }),
+    [filter, level, page, pageSize],
+  );
 
-  const listQuery = useOrganizationList(queryFilter)
-  const treeQuery = useOrganizationTree()
-  const createMutation = useCreateOrganization()
-  const updateMutation = useUpdateOrganization()
-  const deleteMutation = useDeleteOrganization()
-  const organizationOptions = useMemo(
-    () => {
-      const tree = treeQuery.data?.items ?? []
-      const excluded = editing ? descendantIds(tree, editing.id) : new Set<string>()
-      return flattenTree(tree).filter((item) => !excluded.has(item.id))
-    },
-    [editing, treeQuery.data?.items],
-  )
+  const listQuery = useOrganizationList(queryFilter);
+  const treeQuery = useOrganizationTree();
+  const createMutation = useCreateOrganization();
+  const updateMutation = useUpdateOrganization();
+  const deleteMutation = useDeleteOrganization();
+  const organizationOptions = useMemo(() => {
+    const tree = treeQuery.data?.items ?? [];
+    const excluded = editing
+      ? descendantIds(tree, editing.id)
+      : new Set<string>();
+    return flattenTree(tree).filter((item) => !excluded.has(item.id));
+  }, [editing, treeQuery.data?.items]);
 
   const refresh = () => {
-    void listQuery.refetch()
-    void treeQuery.refetch()
-  }
+    void listQuery.refetch();
+    void treeQuery.refetch();
+  };
 
   return (
     <>
@@ -104,21 +109,23 @@ export default function OrganizationListPage() {
         pageSize={pageSize}
         filter={filter}
         level={level}
-        canCreate={hasPermission('FoodSafe.Organizations.Create')}
-        canEdit={hasPermission('FoodSafe.Organizations.Edit')}
-        canDelete={hasPermission('FoodSafe.Organizations.Delete')}
-        deletingId={deleteMutation.isPending ? deleteMutation.variables : undefined}
+        canCreate={hasPermission("FoodSafe.Organizations.Create")}
+        canEdit={hasPermission("FoodSafe.Organizations.Edit")}
+        canDelete={hasPermission("FoodSafe.Organizations.Delete")}
+        deletingId={
+          deleteMutation.isPending ? deleteMutation.variables : undefined
+        }
         onFilterChange={(value) => {
-          setFilter(value)
-          setPage(1)
+          setFilter(value);
+          setPage(1);
         }}
         onLevelChange={(value) => {
-          setLevel(value)
-          setPage(1)
+          setLevel(value);
+          setPage(1);
         }}
         onPageChange={(nextPage, nextPageSize) => {
-          setPage(nextPage)
-          setPageSize(nextPageSize)
+          setPage(nextPage);
+          setPageSize(nextPageSize);
         }}
         onRefresh={refresh}
         onCreate={() => setCreateOpen(true)}
@@ -126,12 +133,14 @@ export default function OrganizationListPage() {
         onDelete={(organization) => {
           deleteMutation.mutate(organization.id, {
             onSuccess: () => {
-              void message.success('Đã xóa đơn vị')
+              void message.success("Đã xóa đơn vị");
             },
             onError: () => {
-              void message.error('Không thể xóa đơn vị. Đơn vị có thể đang được sử dụng.')
+              void message.error(
+                "Không thể xóa đơn vị. Đơn vị có thể đang được sử dụng.",
+              );
             },
-          })
+          });
         }}
       />
 
@@ -141,36 +150,40 @@ export default function OrganizationListPage() {
         organizations={organizationOptions}
         submitting={createMutation.isPending || updateMutation.isPending}
         errorMessage={
-          (editing ? updateMutation.error : createMutation.error) instanceof Error
+          (editing ? updateMutation.error : createMutation.error) instanceof
+          Error
             ? (editing ? updateMutation.error : createMutation.error)?.message
             : undefined
         }
         onCancel={() => {
-          setCreateOpen(false)
-          setEditing(undefined)
-          createMutation.reset()
-          updateMutation.reset()
+          setCreateOpen(false);
+          setEditing(undefined);
+          createMutation.reset();
+          updateMutation.reset();
         }}
         onSubmit={(input) => {
           if (editing) {
-            updateMutation.mutate({ id: editing.id, input }, {
-              onSuccess: () => {
-                setEditing(undefined)
-                void message.success('Đã cập nhật đơn vị')
+            updateMutation.mutate(
+              { id: editing.id, input },
+              {
+                onSuccess: () => {
+                  setEditing(undefined);
+                  void message.success("Đã cập nhật đơn vị");
+                },
               },
-            })
-            return
+            );
+            return;
           }
 
-          const { isActive: _, ...createInput } = input
+          const { isActive: _, ...createInput } = input;
           createMutation.mutate(createInput, {
-              onSuccess: () => {
-                setCreateOpen(false)
-                void message.success('Đã thêm đơn vị')
-              },
-            })
+            onSuccess: () => {
+              setCreateOpen(false);
+              void message.success("Đã thêm đơn vị");
+            },
+          });
         }}
       />
     </>
-  )
+  );
 }

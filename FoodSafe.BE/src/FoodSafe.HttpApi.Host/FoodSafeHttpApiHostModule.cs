@@ -1,3 +1,5 @@
+using Asp.Versioning;
+using Asp.Versioning.ApplicationModels;
 using FoodSafe.EntityFrameworkCore;
 using FoodSafe.Security;
 using FoodSafe.TextTemplating;
@@ -22,6 +24,7 @@ using Volo.Abp.Account;
 using Volo.Abp.Account.Web;
 using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.AspNetCore.Mvc.AntiForgery;
+using Volo.Abp.AspNetCore.Mvc.Conventions;
 using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.Autofac;
 using Volo.Abp.Identity;
@@ -50,6 +53,17 @@ public class FoodSafeHttpApiHostModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
+        PreConfigure<AbpAspNetCoreMvcOptions>(options =>
+        {
+            options.ConventionalControllers.Create(
+                typeof(FoodSafeApplicationModule).Assembly,
+                controllerOptions =>
+                {
+                    controllerOptions.RootPath = ApiContract.ApplicationRootPath;
+                    controllerOptions.ApiVersions.Add(new ApiVersion(1, 0));
+                });
+        });
+
         PreConfigure<OpenIddictBuilder>(builder =>
         {
             builder.AddValidation(options =>
@@ -78,7 +92,8 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ValidateEmailDelivery(configuration, hostingEnvironment);
         ConfigureDataProtection(context, configuration, hostingEnvironment);
         ConfigureUrls(configuration);
-        ConfigureConventionalControllers();
+        ConfigureProblemDetails(context);
+        ConfigureApiVersioning(context);
         ConfigureCors(context, configuration);
         ConfigureSwagger(context, configuration);
         ConfigureHangfire(context, configuration);
@@ -117,13 +132,44 @@ public class FoodSafeHttpApiHostModule : AbpModule
         });
     }
 
-    private void ConfigureConventionalControllers()
+    private static void ConfigureProblemDetails(ServiceConfigurationContext context)
     {
+        context.Services.AddProblemDetails(options =>
+        {
+            options.CustomizeProblemDetails = problemContext =>
+            {
+                var httpContext = problemContext.HttpContext;
+                var correlationId =
+                    httpContext.Response.Headers["X-Correlation-Id"].FirstOrDefault()
+                    ?? httpContext.Request.Headers["X-Correlation-Id"].FirstOrDefault()
+                    ?? httpContext.TraceIdentifier;
+
+                problemContext.ProblemDetails.Extensions["correlationId"] =
+                    correlationId;
+            };
+        });
+    }
+
+    private void ConfigureApiVersioning(ServiceConfigurationContext context)
+    {
+        var preConfigureActions =
+            context.Services.GetPreConfigureActions<AbpAspNetCoreMvcOptions>();
+
         Configure<AbpAspNetCoreMvcOptions>(options =>
         {
-            options.ConventionalControllers.Create(
-                typeof(FoodSafeApplicationModule).Assembly);
+            preConfigureActions.Configure(options);
+            options.ChangeControllerModelApiExplorerGroupName = false;
         });
+
+        context.Services.AddTransient<IApiControllerFilter, NoControllerFilter>();
+        context.Services.AddAbpApiVersioning(
+            options =>
+            {
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+                options.ReportApiVersions = true;
+                options.AssumeDefaultVersionWhenUnspecified = true;
+            },
+            options => options.ConfigureAbp(preConfigureActions.Configure()));
     }
 
     private void ConfigureCors(ServiceConfigurationContext context, IConfiguration configuration)
@@ -398,7 +444,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
                         return FixedWindow($"password:{client}", 5, TimeSpan.FromMinutes(15));
                     }
 
-                    if (path.StartsWith("/api/app/public", StringComparison.Ordinal))
+                    if (path.StartsWith("/api/v1/app/public", StringComparison.Ordinal))
                     {
                         return FixedWindow($"public:{client}", 60, TimeSpan.FromMinutes(1));
                     }

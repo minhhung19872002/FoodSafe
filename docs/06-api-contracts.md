@@ -1,8 +1,9 @@
 # API Contracts — FoodSafe
 
 > API-first design — DTOs được định nghĩa trước, implement sau  
-> Base URL: `/api/app/` (ABP Application Services pattern)  
+> Base URL: `/api/v1/app/` (ABP Application Services pattern)
 > Auth: Bearer JWT (OpenIddict)
+> Version policy: the major API version is explicit in the URL; supported versions are advertised with `api-supported-versions`.
 
 ---
 
@@ -33,9 +34,15 @@
 }
 ```
 
+Routing/version-negotiation failures use RFC 9457 Problem Details
+(`application/problem+json`). Application failures use the ABP remote-error
+shape above. Every API response includes `X-Correlation-Id`; error bodies also
+include a `correlationId` field so an incident can be traced without exposing
+stack traces or implementation details.
+
 ### Pagination
 ```
-GET /api/app/businesses?skipCount=0&maxResultCount=20&sorting=name ASC
+GET /api/v1/app/businesses?skipCount=0&maxResultCount=20&sorting=name ASC
 ```
 
 ### Date Format: ISO 8601 (server), dd/MM/yyyy (display in FE)
@@ -44,7 +51,7 @@ GET /api/app/businesses?skipCount=0&maxResultCount=20&sorting=name ASC
 
 ## MODULE: BusinessManagement
 
-### GET /api/app/businesses
+### GET /api/v1/app/businesses
 **Query:** `skipCount, maxResultCount, sorting, keyword, businessTypeId, businessClassificationId, organizationId, status, hasExpiredLicense`  
 **Response:** `PagedResultDto<BusinessListItemDto>`
 
@@ -68,7 +75,7 @@ interface BusinessListItemDto {
 }
 ```
 
-### GET /api/app/businesses/{id}
+### GET /api/v1/app/businesses/{id}
 **Response:** `BusinessDetailDto`
 
 ```typescript
@@ -93,7 +100,7 @@ interface BusinessDetailDto extends BusinessListItemDto {
 }
 ```
 
-### POST /api/app/businesses
+### POST /api/v1/app/businesses
 **Body:** `CreateBusinessDto`
 
 ```typescript
@@ -121,12 +128,12 @@ interface CreateBusinessDto {
 }
 ```
 
-### PUT /api/app/businesses/{id}
+### PUT /api/v1/app/businesses/{id}
 **Body:** `UpdateBusinessDto` (same as Create, all optional except validated fields)
 
-### DELETE /api/app/businesses/{id}
+### DELETE /api/v1/app/businesses/{id}
 
-### POST /api/app/businesses/import
+### POST /api/v1/app/businesses/import
 **Body:** `FormData` (file: Excel)  
 **Response:** `ImportResultDto`
 
@@ -139,37 +146,37 @@ interface ImportResultDto {
 }
 ```
 
-### GET /api/app/businesses/export-excel
+### GET /api/v1/app/businesses/export-excel
 **Query:** same filters as GetList  
 **Response:** Binary (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)
 
-### GET /api/app/businesses/{id}/handlers
+### GET /api/v1/app/businesses/{id}/handlers
 **Response:** `BusinessHandlerDto[]`
 
-### POST /api/app/businesses/{id}/handlers
+### POST /api/v1/app/businesses/{id}/handlers
 **Body:** `CreateBusinessHandlerDto`
 
-### PUT /api/app/businesses/{id}/handlers/{handlerId}
+### PUT /api/v1/app/businesses/{id}/handlers/{handlerId}
 
-### DELETE /api/app/businesses/{id}/handlers/{handlerId}
+### DELETE /api/v1/app/businesses/{id}/handlers/{handlerId}
 
 ---
 
 ## MODULE: Products
 
-### GET /api/app/products
+### GET /api/v1/app/products
 **Query:** `skipCount, maxResultCount, sorting, keyword, businessId, productGroupId, status`
 
-### GET /api/app/products/{id}
-### POST /api/app/products
-### PUT /api/app/products/{id}
-### DELETE /api/app/products/{id}
+### GET /api/v1/app/products/{id}
+### POST /api/v1/app/products
+### PUT /api/v1/app/products/{id}
+### DELETE /api/v1/app/products/{id}
 
 ---
 
 ## MODULE: SelfDeclarations
 
-### GET /api/app/self-declarations
+### GET /api/v1/app/self-declarations
 **Query:** `skipCount, maxResultCount, businessId, productId, status, expiringWithinDays`
 
 ```typescript
@@ -185,11 +192,11 @@ interface SelfDeclarationListItemDto {
 }
 ```
 
-### GET /api/app/self-declarations/{id}
-### POST /api/app/self-declarations
-### PUT /api/app/self-declarations/{id}
-### DELETE /api/app/self-declarations/{id}
-### POST /api/app/self-declarations/{id}/revoke
+### GET /api/v1/app/self-declarations/{id}
+### POST /api/v1/app/self-declarations
+### PUT /api/v1/app/self-declarations/{id}
+### DELETE /api/v1/app/self-declarations/{id}
+### POST /api/v1/app/self-declarations/{id}/revoke
 
 ---
 
@@ -197,51 +204,51 @@ interface SelfDeclarationListItemDto {
 
 ### ProductRegistrations
 ```
-GET    /api/app/product-registrations
-GET    /api/app/product-registrations/{id}
-POST   /api/app/product-registrations
-PUT    /api/app/product-registrations/{id}
-DELETE /api/app/product-registrations/{id}
-POST   /api/app/product-registrations/{id}/revoke
-GET    /api/app/product-registrations/export-excel
+GET    /api/v1/app/product-registrations
+GET    /api/v1/app/product-registrations/{id}
+POST   /api/v1/app/product-registrations
+PUT    /api/v1/app/product-registrations/{id}
+DELETE /api/v1/app/product-registrations/{id}
+POST   /api/v1/app/product-registrations/{id}/revoke
+GET    /api/v1/app/product-registrations/export-excel
 ```
 
 ### AdvertisementRegistrations
 ```
-GET    /api/app/advertisement-registrations
-GET    /api/app/advertisement-registrations/{id}
-POST   /api/app/advertisement-registrations
-PUT    /api/app/advertisement-registrations/{id}
-DELETE /api/app/advertisement-registrations/{id}
-POST   /api/app/advertisement-registrations/{id}/revoke
+GET    /api/v1/app/advertisement-registrations
+GET    /api/v1/app/advertisement-registrations/{id}
+POST   /api/v1/app/advertisement-registrations
+PUT    /api/v1/app/advertisement-registrations/{id}
+DELETE /api/v1/app/advertisement-registrations/{id}
+POST   /api/v1/app/advertisement-registrations/{id}/revoke
 ```
 
 ### EligibilityCertificates (DDK)
 ```
-GET    /api/app/eligibility-certificates
-GET    /api/app/eligibility-certificates/{id}
-POST   /api/app/eligibility-certificates
-PUT    /api/app/eligibility-certificates/{id}
-DELETE /api/app/eligibility-certificates/{id}
-POST   /api/app/eligibility-certificates/{id}/revoke
+GET    /api/v1/app/eligibility-certificates
+GET    /api/v1/app/eligibility-certificates/{id}
+POST   /api/v1/app/eligibility-certificates
+PUT    /api/v1/app/eligibility-certificates/{id}
+DELETE /api/v1/app/eligibility-certificates/{id}
+POST   /api/v1/app/eligibility-certificates/{id}/revoke
 ```
 
 ### CfsCertificates
 ```
-GET    /api/app/cfs-certificates
-GET    /api/app/cfs-certificates/{id}
-POST   /api/app/cfs-certificates
-PUT    /api/app/cfs-certificates/{id}
-POST   /api/app/cfs-certificates/{id}/revoke
+GET    /api/v1/app/cfs-certificates
+GET    /api/v1/app/cfs-certificates/{id}
+POST   /api/v1/app/cfs-certificates
+PUT    /api/v1/app/cfs-certificates/{id}
+POST   /api/v1/app/cfs-certificates/{id}/revoke
 ```
 
 ### ExportFoodCertificates
 ```
-GET    /api/app/export-food-certificates
-GET    /api/app/export-food-certificates/{id}
-POST   /api/app/export-food-certificates
-PUT    /api/app/export-food-certificates/{id}
-POST   /api/app/export-food-certificates/{id}/revoke
+GET    /api/v1/app/export-food-certificates
+GET    /api/v1/app/export-food-certificates/{id}
+POST   /api/v1/app/export-food-certificates
+PUT    /api/v1/app/export-food-certificates/{id}
+POST   /api/v1/app/export-food-certificates/{id}/revoke
 ```
 
 ---
@@ -250,40 +257,40 @@ POST   /api/app/export-food-certificates/{id}/revoke
 
 ### InspectionPlans
 ```
-GET    /api/app/inspection-plans
-GET    /api/app/inspection-plans/{id}
-POST   /api/app/inspection-plans
-PUT    /api/app/inspection-plans/{id}
-DELETE /api/app/inspection-plans/{id}
-POST   /api/app/inspection-plans/{id}/submit
-POST   /api/app/inspection-plans/{id}/approve
-POST   /api/app/inspection-plans/{id}/reject
-POST   /api/app/inspection-plans/{id}/complete
-POST   /api/app/inspection-plans/{id}/cancel
+GET    /api/v1/app/inspection-plans
+GET    /api/v1/app/inspection-plans/{id}
+POST   /api/v1/app/inspection-plans
+PUT    /api/v1/app/inspection-plans/{id}
+DELETE /api/v1/app/inspection-plans/{id}
+POST   /api/v1/app/inspection-plans/{id}/submit
+POST   /api/v1/app/inspection-plans/{id}/approve
+POST   /api/v1/app/inspection-plans/{id}/reject
+POST   /api/v1/app/inspection-plans/{id}/complete
+POST   /api/v1/app/inspection-plans/{id}/cancel
 ```
 
 **Manage Items:**
 ```
-GET    /api/app/inspection-plans/{id}/items
-POST   /api/app/inspection-plans/{id}/items
-DELETE /api/app/inspection-plans/{id}/items/{itemId}
+GET    /api/v1/app/inspection-plans/{id}/items
+POST   /api/v1/app/inspection-plans/{id}/items
+DELETE /api/v1/app/inspection-plans/{id}/items/{itemId}
 ```
 
 ### InspectionResults
 ```
-GET    /api/app/inspection-results
-GET    /api/app/inspection-results/{id}
-POST   /api/app/inspection-results
-PUT    /api/app/inspection-results/{id}
-DELETE /api/app/inspection-results/{id}
+GET    /api/v1/app/inspection-results
+GET    /api/v1/app/inspection-results/{id}
+POST   /api/v1/app/inspection-results
+PUT    /api/v1/app/inspection-results/{id}
+DELETE /api/v1/app/inspection-results/{id}
 ```
 
 **Violations:**
 ```
-POST   /api/app/inspection-results/{id}/violations
-PUT    /api/app/inspection-results/{id}/violations/{violationId}
-DELETE /api/app/inspection-results/{id}/violations/{violationId}
-POST   /api/app/inspection-results/{id}/violations/{violationId}/mark-remedied
+POST   /api/v1/app/inspection-results/{id}/violations
+PUT    /api/v1/app/inspection-results/{id}/violations/{violationId}
+DELETE /api/v1/app/inspection-results/{id}/violations/{violationId}
+POST   /api/v1/app/inspection-results/{id}/violations/{violationId}/mark-remedied
 ```
 
 ---
@@ -313,29 +320,29 @@ interface FoodPoisoningCaseDto {
 ```
 
 ```
-GET    /api/app/food-poisoning-cases
-GET    /api/app/food-poisoning-cases/{id}
-POST   /api/app/food-poisoning-cases
-PUT    /api/app/food-poisoning-cases/{id}
-DELETE /api/app/food-poisoning-cases/{id}
-POST   /api/app/food-poisoning-cases/{id}/submit
-POST   /api/app/food-poisoning-cases/{id}/verify
-POST   /api/app/food-poisoning-cases/{id}/error-reports
-GET    /api/app/food-poisoning-cases/{id}/error-reports
+GET    /api/v1/app/food-poisoning-cases
+GET    /api/v1/app/food-poisoning-cases/{id}
+POST   /api/v1/app/food-poisoning-cases
+PUT    /api/v1/app/food-poisoning-cases/{id}
+DELETE /api/v1/app/food-poisoning-cases/{id}
+POST   /api/v1/app/food-poisoning-cases/{id}/submit
+POST   /api/v1/app/food-poisoning-cases/{id}/verify
+POST   /api/v1/app/food-poisoning-cases/{id}/error-reports
+GET    /api/v1/app/food-poisoning-cases/{id}/error-reports
 ```
 
 ### FoodPoisoningIncidents
 
 ```
-GET    /api/app/food-poisoning-incidents
-GET    /api/app/food-poisoning-incidents/{id}
-POST   /api/app/food-poisoning-incidents
-PUT    /api/app/food-poisoning-incidents/{id}
-DELETE /api/app/food-poisoning-incidents/{id}
-POST   /api/app/food-poisoning-incidents/{id}/submit
-POST   /api/app/food-poisoning-incidents/{id}/verify
-POST   /api/app/food-poisoning-incidents/{id}/conclude
-POST   /api/app/food-poisoning-incidents/{id}/error-reports
+GET    /api/v1/app/food-poisoning-incidents
+GET    /api/v1/app/food-poisoning-incidents/{id}
+POST   /api/v1/app/food-poisoning-incidents
+PUT    /api/v1/app/food-poisoning-incidents/{id}
+DELETE /api/v1/app/food-poisoning-incidents/{id}
+POST   /api/v1/app/food-poisoning-incidents/{id}/submit
+POST   /api/v1/app/food-poisoning-incidents/{id}/verify
+POST   /api/v1/app/food-poisoning-incidents/{id}/conclude
+POST   /api/v1/app/food-poisoning-incidents/{id}/error-reports
 ```
 
 ---
@@ -371,20 +378,20 @@ interface ReturnReportDto {
 ```
 
 ```
-GET    /api/app/ndtp-reports
-GET    /api/app/ndtp-reports/{id}
-POST   /api/app/ndtp-reports
-PUT    /api/app/ndtp-reports/{id}/stats
-PUT    /api/app/ndtp-reports/{id}/narrative
-DELETE /api/app/ndtp-reports/{id}
-POST   /api/app/ndtp-reports/{id}/submit
-POST   /api/app/ndtp-reports/{id}/verify
-POST   /api/app/ndtp-reports/{id}/return
-POST   /api/app/ndtp-reports/{id}/complete
-POST   /api/app/ndtp-reports/{id}/error-notifications
-GET    /api/app/ndtp-reports/{id}/error-notifications
-GET    /api/app/ndtp-reports/{id}/export-pdf
-GET    /api/app/ndtp-reports/{id}/export-excel
+GET    /api/v1/app/ndtp-reports
+GET    /api/v1/app/ndtp-reports/{id}
+POST   /api/v1/app/ndtp-reports
+PUT    /api/v1/app/ndtp-reports/{id}/stats
+PUT    /api/v1/app/ndtp-reports/{id}/narrative
+DELETE /api/v1/app/ndtp-reports/{id}
+POST   /api/v1/app/ndtp-reports/{id}/submit
+POST   /api/v1/app/ndtp-reports/{id}/verify
+POST   /api/v1/app/ndtp-reports/{id}/return
+POST   /api/v1/app/ndtp-reports/{id}/complete
+POST   /api/v1/app/ndtp-reports/{id}/error-notifications
+GET    /api/v1/app/ndtp-reports/{id}/error-notifications
+GET    /api/v1/app/ndtp-reports/{id}/export-pdf
+GET    /api/v1/app/ndtp-reports/{id}/export-excel
 ```
 
 *(AtpWorkReports và ActionMonthReports có pattern tương tự)*
@@ -396,54 +403,54 @@ GET    /api/app/ndtp-reports/{id}/export-excel
 ### AtpAlerts
 
 ```
-GET    /api/app/atp-alerts
-GET    /api/app/atp-alerts/{id}
-POST   /api/app/atp-alerts
-PUT    /api/app/atp-alerts/{id}
-DELETE /api/app/atp-alerts/{id}
-POST   /api/app/atp-alerts/{id}/publish
-POST   /api/app/atp-alerts/{id}/recall
+GET    /api/v1/app/atp-alerts
+GET    /api/v1/app/atp-alerts/{id}
+POST   /api/v1/app/atp-alerts
+PUT    /api/v1/app/atp-alerts/{id}
+DELETE /api/v1/app/atp-alerts/{id}
+POST   /api/v1/app/atp-alerts/{id}/publish
+POST   /api/v1/app/atp-alerts/{id}/recall
 ```
 
 ### AtpNews
 
 ```
-GET    /api/app/atp-news
-GET    /api/app/atp-news/{id}
-POST   /api/app/atp-news
-PUT    /api/app/atp-news/{id}
-DELETE /api/app/atp-news/{id}
-POST   /api/app/atp-news/{id}/publish
-POST   /api/app/atp-news/{id}/recall
+GET    /api/v1/app/atp-news
+GET    /api/v1/app/atp-news/{id}
+POST   /api/v1/app/atp-news
+PUT    /api/v1/app/atp-news/{id}
+DELETE /api/v1/app/atp-news/{id}
+POST   /api/v1/app/atp-news/{id}/publish
+POST   /api/v1/app/atp-news/{id}/recall
 ```
 
 ### RiskAnalyses / TestingResults / RegulatoryDocuments
 
 ```
-GET    /api/app/risk-analyses
-POST   /api/app/risk-analyses
-PUT    /api/app/risk-analyses/{id}
-POST   /api/app/risk-analyses/{id}/publish
+GET    /api/v1/app/risk-analyses
+POST   /api/v1/app/risk-analyses
+PUT    /api/v1/app/risk-analyses/{id}
+POST   /api/v1/app/risk-analyses/{id}/publish
 
-GET    /api/app/testing-results
-POST   /api/app/testing-results
-PUT    /api/app/testing-results/{id}
-DELETE /api/app/testing-results/{id}
+GET    /api/v1/app/testing-results
+POST   /api/v1/app/testing-results
+PUT    /api/v1/app/testing-results/{id}
+DELETE /api/v1/app/testing-results/{id}
 
-GET    /api/app/regulatory-documents
-POST   /api/app/regulatory-documents
-PUT    /api/app/regulatory-documents/{id}
-DELETE /api/app/regulatory-documents/{id}
+GET    /api/v1/app/regulatory-documents
+POST   /api/v1/app/regulatory-documents
+PUT    /api/v1/app/regulatory-documents/{id}
+DELETE /api/v1/app/regulatory-documents/{id}
 ```
 
 ### Dashboard & Statistics
 
 ```
-GET    /api/app/dashboard/summary                    # Widget data
-GET    /api/app/statistics/businesses                # Business stats by type/classification
-GET    /api/app/statistics/inspections               # Inspection stats
-GET    /api/app/statistics/food-poisoning            # Poisoning stats
-GET    /api/app/statistics/licenses                  # License stats
+GET    /api/v1/app/dashboard/summary                    # Widget data
+GET    /api/v1/app/statistics/businesses                # Business stats by type/classification
+GET    /api/v1/app/statistics/inspections               # Inspection stats
+GET    /api/v1/app/statistics/food-poisoning            # Poisoning stats
+GET    /api/v1/app/statistics/licenses                  # License stats
 ```
 
 ---
@@ -468,18 +475,18 @@ GET    /api/public/alert-submissions/{trackingCode}  # Tra cứu trạng thái p
 ## MODULE: DataIntegration
 
 ```
-GET    /api/app/api-specs
-GET    /api/app/api-specs/{id}
-POST   /api/app/api-specs
-PUT    /api/app/api-specs/{id}
-DELETE /api/app/api-specs/{id}
-POST   /api/app/api-specs/{id}/activate
-POST   /api/app/api-specs/{id}/deactivate
-POST   /api/app/api-specs/{id}/test-connection
+GET    /api/v1/app/api-specs
+GET    /api/v1/app/api-specs/{id}
+POST   /api/v1/app/api-specs
+PUT    /api/v1/app/api-specs/{id}
+DELETE /api/v1/app/api-specs/{id}
+POST   /api/v1/app/api-specs/{id}/activate
+POST   /api/v1/app/api-specs/{id}/deactivate
+POST   /api/v1/app/api-specs/{id}/test-connection
 
-GET    /api/app/data-sharing-histories
-GET    /api/app/data-sharing-histories/{id}
-POST   /api/app/data-sharing-histories/{id}/retry
+GET    /api/v1/app/data-sharing-histories
+GET    /api/v1/app/data-sharing-histories/{id}
+POST   /api/v1/app/data-sharing-histories/{id}/retry
 ```
 
 ---
@@ -487,16 +494,16 @@ POST   /api/app/data-sharing-histories/{id}/retry
 ## FILE MANAGEMENT
 
 ```
-POST   /api/app/files/upload              # Upload file to MinIO
+POST   /api/v1/app/files/upload              # Upload file to MinIO
   Body: FormData { file, entityType, entityId, description, isPublic }
   Response: { id, fileName, storagePath, fileSize, mimeType, uploadTime }
 
-DELETE /api/app/files/{id}               # Delete file
+DELETE /api/v1/app/files/{id}               # Delete file
 
-GET    /api/app/files/{id}/download      # Download file (streaming)
-GET    /api/app/files/{id}/presigned-url # Get MinIO presigned URL (for direct download)
+GET    /api/v1/app/files/{id}/download      # Download file (streaming)
+GET    /api/v1/app/files/{id}/presigned-url # Get MinIO presigned URL (for direct download)
 
-GET    /api/app/files?entityType=x&entityId=y  # List files for entity
+GET    /api/v1/app/files?entityType=x&entityId=y  # List files for entity
 ```
 
 ---
@@ -517,7 +524,7 @@ GET    /api/catalogs/testing-centers
 GET    /api/catalogs/testing-services?testingCenterId=x
 ```
 
-*(CRUD cho catalogs: các endpoint dưới `/api/app/catalogs/*` — yêu cầu auth)*
+*(CRUD cho catalogs: các endpoint dưới `/api/v1/app/catalogs/*` — yêu cầu auth)*
 
 ---
 
