@@ -1,7 +1,7 @@
 # FoodSafe — Tài liệu Phân tích Dự án
 
 > Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh  
-> Phiên bản: 2.0 — Cập nhật lần cuối: 2026-07-25 (Full DB Audit)
+> Phiên bản: 2.1 — Cập nhật lần cuối: 2026-07-25 (v2.1 Red-Team Review — Critical=0, High=0)
 
 ---
 
@@ -11,7 +11,7 @@
 |------|----------|-----------|
 | [01-functional-requirements.md](01-functional-requirements.md) | 57 chức năng chi tiết theo nhóm A/B/C/E/F | ✅ Hoàn thành |
 | [02-domain-model.md](02-domain-model.md) | Domain entities, Value Objects, Aggregates, Domain Events | ✅ Hoàn thành |
-| [03-database-schema.sql](03-database-schema.sql) | PostgreSQL DDL — **59 bảng tùy chỉnh** + ABP built-in (~80 tổng) | ✅ v2.0 — Full audit |
+| [03-database-schema.sql](03-database-schema.sql) | PostgreSQL DDL — **59 bảng tùy chỉnh** + ABP built-in (~80 tổng) | ✅ v2.1 — Red-team reviewed |
 | [04-state-machines.md](04-state-machines.md) | 9 workflow state machines + domain events | ✅ Hoàn thành |
 | [05-permission-matrix.md](05-permission-matrix.md) | Ma trận phân quyền 7 vai trò × tất cả chức năng | ✅ Hoàn thành |
 | [06-api-contracts.md](06-api-contracts.md) | API endpoints cho tất cả modules | ✅ Hoàn thành |
@@ -22,7 +22,7 @@
 | [11-database-security-and-data-scope.md](11-database-security-and-data-scope.md) | Kiểm soát bảo mật ATTT Cấp 2 ở tầng DB: RLS, encryption, masking | ✅ Hoàn thành |
 | [12-database-history-and-audit-strategy.md](12-database-history-and-audit-strategy.md) | Chiến lược lịch sử trạng thái + ABP audit log retention | ✅ Hoàn thành |
 | [13-database-integration-strategy.md](13-database-integration-strategy.md) | Data contracts cho tích hợp ngoài (Bộ YT, Sở NN, Sở CT) | ✅ Hoàn thành |
-| [14-database-review-report.md](14-database-review-report.md) | Báo cáo tổng hợp audit: executive summary, findings, readiness assessment | ✅ Hoàn thành |
+| [14-database-review-report.md](14-database-review-report.md) | Báo cáo tổng hợp audit v2.1: v2.0 findings + red-team Section 11 (Critical=0, High=0) | ✅ Hoàn thành |
 | [15-database-assumptions-and-open-questions.md](15-database-assumptions-and-open-questions.md) | 10 giả định (ASM-001–010) + 8 câu hỏi mở (OQ-001–008) cần xác nhận | ✅ Hoàn thành |
 
 ---
@@ -118,6 +118,40 @@
 
 *+ ABP built-in: ~21 bảng (AbpUsers, AbpRoles, AbpAuditLogs, AbpPermissionGrants, AbpSettings, OpenIddict...)*  
 *GRAND TOTAL: ~80 bảng*
+
+---
+
+## Tóm tắt Audit v2.1 Red-Team — Vấn đề bổ sung đã phát hiện & xử lý
+
+> Đây là lần review thứ hai (adversarial red-team), thực hiện sau khi v2.0 tuyên bố READY.  
+> **Kết quả: 5 Critical + 7 High + 3 Medium bổ sung → đã sửa toàn bộ. Critical=0, High=0.**
+
+### Red-Team Critical (RT-C) — Đã sửa tất cả:
+| Mã | Vấn đề | Giải pháp |
+|----|--------|-----------|
+| RT-C1 | `organizations` không có FK thực tế cho `province_id`/`district_id` (chỉ có comment) | ALTER TABLE sau `cat_communes` — thêm FK đến `cat_provinces`/`cat_districts` |
+| RT-C2 | `ndtp_reports` dùng inline UNIQUE — chặn tạo lại báo cáo sau soft-delete | Xóa inline UNIQUE, thêm partial index `WHERE is_deleted = FALSE` |
+| RT-C3 | `action_month_reports` cùng vấn đề với RT-C2 | Cùng giải pháp với RT-C2 |
+| RT-C4 | `cat_testing_services` không có UNIQUE trên `(testing_center_id, code)` | Thêm `CONSTRAINT uq_cat_testing_services_code UNIQUE (testing_center_id, code)` |
+| RT-C5 | `food_poisoning_incidents.location_district_id`/`province_id` thiếu FK | ALTER TABLE thêm FK đến `cat_districts`/`cat_provinces` |
+
+### Red-Team High (RT-H) — Đã sửa tất cả:
+| Mã | Vấn đề | Giải pháp |
+|----|--------|-----------|
+| RT-H1 | `file_attachments` dùng `deleted_at` — sai tên cột ABP ISoftDelete | Đổi thành `deletion_time`, thêm `deleter_id UUID NULL` |
+| RT-H2 | `food_poisoning_cases.location_province_id` thiếu FK | ALTER TABLE thêm FK đến `cat_provinces` |
+| RT-H3 | `public_alert_submissions.location_district_id` thiếu FK | ALTER TABLE thêm FK đến `cat_districts` |
+| RT-H4 | `atp_alerts`: `source=2` không bắt buộc `public_submission_id` NOT NULL | Thêm `CONSTRAINT chk_alerts_source_submission CHECK (source != 2 OR public_submission_id IS NOT NULL)` |
+| RT-H5 | `public_alert_submissions`: `status=3` không bắt buộc `converted_alert_id` NOT NULL | Thêm `CONSTRAINT chk_pas_converted CHECK (status != 3 OR converted_alert_id IS NOT NULL)` |
+| RT-H6 | `testing_results.sample_code` không có UNIQUE per organization | Thêm partial UNIQUE index `(sample_code, organization_id) WHERE is_deleted = FALSE` |
+| RT-H7 | `inspection_plans` thiếu `submitted_by_id`/`submitted_at` — không theo dõi ai submit kế hoạch | Thêm 2 cột `submitted_by_id UUID NULL`, `submitted_at TIMESTAMPTZ NULL` |
+
+### Red-Team Medium (RT-M) — Đã sửa tất cả:
+| Mã | Vấn đề | Giải pháp |
+|----|--------|-----------|
+| RT-M1 | `businesses.suspension_reason` có comment "Required when status=3" nhưng không có CHECK | Thêm `CONSTRAINT chk_businesses_suspension CHECK (status != 3 OR suspension_reason IS NOT NULL)` |
+| RT-M2 | `inspection_plans` không có CHECK `start_date <= end_date` | Thêm `CONSTRAINT chk_inspection_plans_dates` |
+| RT-M3 | 4 bảng chứng nhận không có CHECK `issue_date <= expiry_date` | Thêm date range CHECK vào `eligibility_certificates`, `cfs_certificates`, `export_food_certificates`, `self_declarations` |
 
 ---
 

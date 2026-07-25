@@ -1,4 +1,4 @@
--- ============================================================
+﻿-- ============================================================
 -- FoodSafe — PostgreSQL 15 Database Schema (Revised)
 -- Chi cục ATVSTP tỉnh Quảng Ninh
 -- Chuẩn: ABP Framework 9 naming convention (snake_case)
@@ -27,6 +27,28 @@
 --     M-01 FIX: Added public_submission_id FK to atp_alerts
 --     M-02 FIX: Added tsvector column + GIN index to regulatory_documents
 --     M-03 FIX: Added index on businesses.tax_code, advertisement_registrations
+--
+--   v2.1 (2026-07-25): Red-team adversarial review — 5 Critical + 7 High + 3 Medium fixes
+--     RT-C1 FIX: ALTER TABLE organizations — added FK for province_id/district_id
+--               (forward-reference; placed after cat_communes definition)
+--     RT-C2 FIX: ndtp_reports — removed inline UNIQUE; added partial UNIQUE index
+--               WHERE is_deleted = FALSE
+--     RT-C3 FIX: action_month_reports — same fix as RT-C2
+--     RT-C4 FIX: cat_testing_services — added UNIQUE(testing_center_id, code)
+--     RT-C5 FIX: food_poisoning_incidents — ALTER TABLE added FK for
+--               location_district_id, location_province_id
+--     RT-H1 FIX: file_attachments — renamed deleted_at → deletion_time,
+--               added deleter_id (ABP ISoftDelete compliance)
+--     RT-H2 FIX: food_poisoning_cases — ALTER TABLE added FK for location_province_id
+--     RT-H3 FIX: public_alert_submissions — ALTER TABLE added FK for location_district_id
+--     RT-H4 FIX: atp_alerts — CHECK source!=2 OR public_submission_id IS NOT NULL
+--     RT-H5 FIX: public_alert_submissions — CHECK status!=3 OR converted_alert_id IS NOT NULL
+--     RT-H6 FIX: testing_results — partial UNIQUE INDEX(sample_code, organization_id)
+--               WHERE is_deleted = FALSE
+--     RT-H7 FIX: inspection_plans — added submitted_by_id, submitted_at columns
+--     RT-M1 FIX: businesses — CHECK status!=3 OR suspension_reason IS NOT NULL
+--     RT-M2 FIX: inspection_plans — CHECK start_date <= end_date
+--     RT-M3 FIX: eligibility/cfs/export certs + self_declarations — CHECK issue_date <= expiry_date
 -- ============================================================
 
 -- ============================================================
@@ -230,6 +252,13 @@ CREATE TABLE cat_communes (
 );
 CREATE INDEX idx_cat_communes_district ON cat_communes(district_id) WHERE is_deleted = FALSE;
 
+-- [RT-C1 FIX] organizations.province_id / district_id forward-reference FK constraints
+-- Cannot be inline in CREATE TABLE organizations (Section 2) because cat_provinces and
+-- cat_districts are defined here in Section 3. Added as ALTER TABLE after dependent tables exist.
+ALTER TABLE organizations
+    ADD CONSTRAINT fk_organizations_province FOREIGN KEY (province_id) REFERENCES cat_provinces(id),
+    ADD CONSTRAINT fk_organizations_district FOREIGN KEY (district_id) REFERENCES cat_districts(id);
+
 -- Self-referencing hierarchy: Nhóm chính (level 1) → Nhóm phụ (level 2)
 CREATE TABLE cat_product_groups (
     id                       UUID         NOT NULL DEFAULT uuid_generate_v4(),
@@ -369,6 +398,7 @@ CREATE TABLE cat_testing_services (
     last_modifier_id         UUID          NULL,
     is_deleted               BOOL          NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_cat_testing_services PRIMARY KEY (id),
+    CONSTRAINT uq_cat_testing_services_code UNIQUE (testing_center_id, code),
     CONSTRAINT fk_cat_testing_services_center FOREIGN KEY (testing_center_id) REFERENCES cat_testing_centers(id)
 );
 CREATE INDEX idx_cat_testing_services_center ON cat_testing_services(testing_center_id) WHERE is_deleted = FALSE;
@@ -427,7 +457,9 @@ CREATE TABLE businesses (
     CONSTRAINT fk_businesses_commune FOREIGN KEY (address_commune_id) REFERENCES cat_communes(id),
     CONSTRAINT fk_businesses_district FOREIGN KEY (address_district_id) REFERENCES cat_districts(id),
     CONSTRAINT fk_businesses_province FOREIGN KEY (address_province_id) REFERENCES cat_provinces(id),
-    CONSTRAINT chk_businesses_status CHECK (status IN (1, 2, 3))
+    CONSTRAINT chk_businesses_status CHECK (status IN (1, 2, 3)),
+    -- [RT-M1 FIX] Suspended businesses (status=3) must have suspension_reason
+    CONSTRAINT chk_businesses_suspension CHECK (status != 3 OR suspension_reason IS NOT NULL)
 );
 CREATE UNIQUE INDEX uq_businesses_code ON businesses(code)
     WHERE code IS NOT NULL AND is_deleted = FALSE;
@@ -563,7 +595,9 @@ CREATE TABLE self_declarations (
     CONSTRAINT fk_self_declarations_business FOREIGN KEY (business_id) REFERENCES businesses(id),
     CONSTRAINT fk_self_declarations_product FOREIGN KEY (product_id) REFERENCES products(id),
     CONSTRAINT fk_self_declarations_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    CONSTRAINT chk_self_declarations_status CHECK (status IN (1, 2, 3))
+    CONSTRAINT chk_self_declarations_status CHECK (status IN (1, 2, 3)),
+    -- [RT-M3 FIX] Effective date must not be after expiry date
+    CONSTRAINT chk_self_declarations_dates CHECK (effective_date IS NULL OR expiry_date IS NULL OR effective_date <= expiry_date)
 );
 -- [C-03 FIX] Declaration number must be unique (government-issued numbers are system-wide unique)
 CREATE UNIQUE INDEX uq_self_declarations_number ON self_declarations(declaration_number) WHERE is_deleted = FALSE;
@@ -694,7 +728,9 @@ CREATE TABLE eligibility_certificates (
     CONSTRAINT pk_eligibility_certificates PRIMARY KEY (id),
     CONSTRAINT fk_elic_business FOREIGN KEY (business_id) REFERENCES businesses(id),
     CONSTRAINT fk_elic_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    CONSTRAINT chk_elic_status CHECK (status IN (1, 2, 3))
+    CONSTRAINT chk_elic_status CHECK (status IN (1, 2, 3)),
+    -- [RT-M3 FIX] Issue date must not be after expiry date
+    CONSTRAINT chk_elic_dates CHECK (issue_date IS NULL OR expiry_date IS NULL OR issue_date <= expiry_date)
 );
 -- [C-04 FIX] Certificate number is unique per government issuance
 CREATE UNIQUE INDEX uq_eligibility_certificates_number ON eligibility_certificates(certificate_number) WHERE is_deleted = FALSE;
@@ -733,7 +769,9 @@ CREATE TABLE cfs_certificates (
     CONSTRAINT fk_cfs_product FOREIGN KEY (product_id) REFERENCES products(id),
     CONSTRAINT fk_cfs_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_cfs_country FOREIGN KEY (destination_country_id) REFERENCES cat_countries(id),
-    CONSTRAINT chk_cfs_status CHECK (status IN (1, 2, 3))
+    CONSTRAINT chk_cfs_status CHECK (status IN (1, 2, 3)),
+    -- [RT-M3 FIX] Issue date must not be after expiry date
+    CONSTRAINT chk_cfs_dates CHECK (issue_date IS NULL OR expiry_date IS NULL OR issue_date <= expiry_date)
 );
 -- [C-04 FIX] Certificate number must be unique
 CREATE UNIQUE INDEX uq_cfs_certificates_number ON cfs_certificates(certificate_number) WHERE is_deleted = FALSE;
@@ -775,7 +813,9 @@ CREATE TABLE export_food_certificates (
     CONSTRAINT fk_efc_product FOREIGN KEY (product_id) REFERENCES products(id),
     CONSTRAINT fk_efc_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_efc_country FOREIGN KEY (destination_country_id) REFERENCES cat_countries(id),
-    CONSTRAINT chk_efc_status CHECK (status IN (1, 2, 3))
+    CONSTRAINT chk_efc_status CHECK (status IN (1, 2, 3)),
+    -- [RT-M3 FIX] Issue date must not be after expiry date
+    CONSTRAINT chk_efc_dates CHECK (issue_date IS NULL OR expiry_date IS NULL OR issue_date <= expiry_date)
 );
 -- [C-04 FIX] Certificate number must be unique
 CREATE UNIQUE INDEX uq_export_food_certificates_number ON export_food_certificates(certificate_number) WHERE is_deleted = FALSE;
@@ -802,6 +842,9 @@ CREATE TABLE inspection_plans (
     objectives                   TEXT          NULL,
     -- 1=Draft, 2=Submitted, 3=Approved, 4=InProgress, 5=Completed, 6=Cancelled
     status                       SMALLINT      NOT NULL DEFAULT 1,
+    -- [RT-H7 FIX] Submission tracking (Draft -> Submitted)
+    submitted_by_id              UUID          NULL,
+    submitted_at                 TIMESTAMPTZ   NULL,
     -- Approval fields
     approved_by_id               UUID          NULL,
     approved_at                  TIMESTAMPTZ   NULL,
@@ -827,7 +870,9 @@ CREATE TABLE inspection_plans (
     CONSTRAINT uq_inspection_plans_code UNIQUE (plan_code, organization_id),
     CONSTRAINT fk_plans_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_inspection_plans_type CHECK (plan_type IN (1, 2, 3, 4)),
-    CONSTRAINT chk_inspection_plans_status CHECK (status IN (1, 2, 3, 4, 5, 6))
+    CONSTRAINT chk_inspection_plans_status CHECK (status IN (1, 2, 3, 4, 5, 6)),
+    -- [RT-M2 FIX] Start must not be after end
+    CONSTRAINT chk_inspection_plans_dates CHECK (start_date IS NULL OR end_date IS NULL OR start_date <= end_date)
 );
 CREATE INDEX idx_inspection_plans_org ON inspection_plans(organization_id, year) WHERE is_deleted = FALSE;
 CREATE INDEX idx_inspection_plans_status ON inspection_plans(status) WHERE is_deleted = FALSE;
@@ -1005,6 +1050,11 @@ CREATE INDEX idx_fpi_location ON food_poisoning_incidents(location_latitude, loc
     WHERE location_latitude IS NOT NULL AND location_longitude IS NOT NULL AND is_deleted = FALSE;
 CREATE UNIQUE INDEX uq_fpi_incident_code ON food_poisoning_incidents(incident_code, organization_id) WHERE is_deleted = FALSE;
 
+-- [RT-C5 FIX] food_poisoning_incidents missing FK constraints for district and province
+ALTER TABLE food_poisoning_incidents
+    ADD CONSTRAINT fk_fpi_district FOREIGN KEY (location_district_id) REFERENCES cat_districts(id),
+    ADD CONSTRAINT fk_fpi_province FOREIGN KEY (location_province_id) REFERENCES cat_provinces(id);
+
 -- Ca ngộ độc thực phẩm nhỏ lẻ (individual cases)
 CREATE TABLE food_poisoning_cases (
     id                           UUID          NOT NULL DEFAULT uuid_generate_v4(),
@@ -1075,6 +1125,10 @@ CREATE INDEX idx_fpc_incident ON food_poisoning_cases(incident_id) WHERE inciden
 CREATE INDEX idx_fpc_location ON food_poisoning_cases(location_latitude, location_longitude)
     WHERE location_latitude IS NOT NULL AND location_longitude IS NOT NULL AND is_deleted = FALSE;
 CREATE UNIQUE INDEX uq_fpc_case_code ON food_poisoning_cases(case_code, organization_id) WHERE is_deleted = FALSE;
+
+-- [RT-H2 FIX] food_poisoning_cases missing FK for location_province_id
+ALTER TABLE food_poisoning_cases
+    ADD CONSTRAINT fk_fpc_province FOREIGN KEY (location_province_id) REFERENCES cat_provinces(id);
 
 -- Phiếu thông báo sai sót ca ngộ độc
 -- Created only when case is Verified; tracks correction requests
@@ -1173,6 +1227,8 @@ CREATE TABLE ndtp_reports (
     CONSTRAINT chk_ndtp_month CHECK (period_month BETWEEN 1 AND 12),
     CONSTRAINT chk_ndtp_status CHECK (status IN (1, 2, 3, 4, 5))
 );
+-- [RT-C2 FIX] Partial unique index (not inline UNIQUE) to allow re-creation after soft-delete
+CREATE UNIQUE INDEX uq_ndtp_reports_period ON ndtp_reports(organization_id, period_year, period_month) WHERE is_deleted = FALSE;
 CREATE INDEX idx_ndtp_reports_org_period ON ndtp_reports(organization_id, period_year, period_month) WHERE is_deleted = FALSE;
 CREATE INDEX idx_ndtp_reports_status ON ndtp_reports(status) WHERE is_deleted = FALSE;
 
@@ -1356,6 +1412,8 @@ CREATE TABLE action_month_reports (
     CONSTRAINT fk_amr_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_amr_status CHECK (status IN (1, 2, 3, 4, 5))
 );
+-- [RT-C3 FIX] Partial unique index to allow re-creation of report after soft-delete
+CREATE UNIQUE INDEX uq_action_month_reports ON action_month_reports(organization_id, period_year) WHERE is_deleted = FALSE;
 CREATE INDEX idx_amr_org_year ON action_month_reports(organization_id, period_year) WHERE is_deleted = FALSE;
 CREATE INDEX idx_amr_status ON action_month_reports(status) WHERE is_deleted = FALSE;
 
@@ -1421,7 +1479,9 @@ CREATE TABLE public_alert_submissions (
     CONSTRAINT pk_public_alert_submissions PRIMARY KEY (id),
     CONSTRAINT uq_pas_tracking_code UNIQUE (tracking_code),
     CONSTRAINT fk_pas_commune FOREIGN KEY (location_commune_id) REFERENCES cat_communes(id),
-    CONSTRAINT chk_pas_status CHECK (status IN (1, 2, 3, 4))
+    CONSTRAINT chk_pas_status CHECK (status IN (1, 2, 3, 4)),
+    -- [RT-H5 FIX] status=3 (ConvertedToAlert) must have converted_alert_id
+    CONSTRAINT chk_pas_converted CHECK (status != 3 OR converted_alert_id IS NOT NULL)
 );
 CREATE INDEX idx_pas_status ON public_alert_submissions(status, created_at DESC);
 CREATE INDEX idx_pas_tracking ON public_alert_submissions(tracking_code);
@@ -1474,11 +1534,16 @@ CREATE TABLE atp_alerts (
     CONSTRAINT chk_alerts_category CHECK (category IN (1, 2, 3, 4, 5, 6)),
     CONSTRAINT chk_alerts_severity CHECK (severity IN (1, 2, 3, 4)),
     CONSTRAINT chk_alerts_source CHECK (source IN (1, 2, 3)),
-    CONSTRAINT chk_alerts_status CHECK (status IN (1, 2, 3))
+    CONSTRAINT chk_alerts_status CHECK (status IN (1, 2, 3)),
+    -- [RT-H4 FIX] source=2 (PublicReport) must have public_submission_id
+    CONSTRAINT chk_alerts_source_submission CHECK (source != 2 OR public_submission_id IS NOT NULL)
 );
 -- Also update public_alert_submissions.converted_alert_id to reference atp_alerts
 ALTER TABLE public_alert_submissions
     ADD CONSTRAINT fk_pas_converted_alert FOREIGN KEY (converted_alert_id) REFERENCES atp_alerts(id);
+-- [RT-H3 FIX] public_alert_submissions missing FK for location_district_id
+ALTER TABLE public_alert_submissions
+    ADD CONSTRAINT fk_pas_district FOREIGN KEY (location_district_id) REFERENCES cat_districts(id);
 CREATE INDEX idx_atp_alerts_org ON atp_alerts(organization_id, status) WHERE is_deleted = FALSE;
 CREATE INDEX idx_atp_alerts_public ON atp_alerts(is_public, status, published_at DESC) WHERE is_deleted = FALSE;
 CREATE INDEX idx_atp_alerts_severity ON atp_alerts(severity, status) WHERE is_deleted = FALSE;
@@ -1608,6 +1673,8 @@ CREATE TABLE testing_results (
     CONSTRAINT chk_tr_result CHECK (overall_result IS NULL OR overall_result IN (1, 2, 3))
 );
 CREATE INDEX idx_testing_results_org ON testing_results(organization_id) WHERE is_deleted = FALSE;
+-- [RT-H6 FIX] Prevent duplicate sample codes within same organization
+CREATE UNIQUE INDEX uq_testing_results_sample_code ON testing_results(sample_code, organization_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_testing_results_business ON testing_results(business_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_testing_results_center ON testing_results(testing_center_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_testing_results_result ON testing_results(overall_result) WHERE is_deleted = FALSE;
@@ -1925,3 +1992,21 @@ CREATE INDEX idx_status_history_org ON status_history(organization_id, changed_a
 -- + ABP built-in: ~21 tables (AbpUsers, AbpRoles, AbpUserRoles, etc.)
 -- GRAND TOTAL: ~80 tables
 -- ============================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
