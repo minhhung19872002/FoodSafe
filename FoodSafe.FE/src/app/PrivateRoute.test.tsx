@@ -39,6 +39,14 @@ function renderRoute() {
               </PrivateRoute>
             )}
           />
+          <Route
+            path="/account/change-password"
+            element={(
+              <PrivateRoute>
+                <div>Đổi mật khẩu bắt buộc</div>
+              </PrivateRoute>
+            )}
+          />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -76,5 +84,17 @@ describe('PrivateRoute', () => {
 
     expect(await screen.findByText('Đăng nhập')).toBeInTheDocument()
     await waitFor(() => expect(useAuthStore.getState().isAuthenticated).toBe(false))
+  })
+
+  it('forces an expired-password session into the change-password route', async () => {
+    vi.spyOn(authApi, 'getCurrentUser').mockResolvedValue({
+      ...currentUser,
+      passwordMustChange: true,
+    })
+
+    renderRoute()
+
+    expect(await screen.findByText('Đổi mật khẩu bắt buộc')).toBeInTheDocument()
+    expect(screen.queryByText('Nội dung được bảo vệ')).not.toBeInTheDocument()
   })
 })

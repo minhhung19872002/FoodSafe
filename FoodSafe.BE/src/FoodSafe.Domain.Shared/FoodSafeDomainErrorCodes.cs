@@ -21,6 +21,13 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:DataScope:OrganizationNotFound";
     }
 
+    public static class Account
+    {
+        public const string InvalidCurrentPassword = "FoodSafe:Account:0001";
+        public const string PasswordReused = "FoodSafe:Account:0002";
+        public const string PasswordChangeFailed = "FoodSafe:Account:0003";
+    }
+
     public static class Business
     {
         public const string NotFound = "FoodSafe:Business:0001";

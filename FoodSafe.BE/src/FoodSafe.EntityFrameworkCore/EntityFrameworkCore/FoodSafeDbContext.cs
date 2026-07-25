@@ -38,6 +38,7 @@ public class FoodSafeDbContext :
     public DbSet<District> Districts { get; set; }
     public DbSet<Commune> Communes { get; set; }
     public DbSet<AppUserProfile> AppUserProfiles { get; set; }
+    public DbSet<PasswordHistory> PasswordHistory { get; set; }
     public DbSet<ManagementScopeAssignment> ManagementScopeAssignments { get; set; }
 
     public FoodSafeDbContext(DbContextOptions<FoodSafeDbContext> options)

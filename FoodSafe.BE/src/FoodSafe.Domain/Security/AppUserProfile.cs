@@ -37,6 +37,48 @@ public sealed class AppUserProfile : Entity<Guid>, IAggregateRoot<Guid>
             CreationTime = now
         };
     }
+
+    public bool IsPasswordExpired(DateTime now) =>
+        PasswordExpiresAt.HasValue && PasswordExpiresAt.Value <= now;
+
+    public void RecordPasswordChanged(DateTime now, TimeSpan validityPeriod)
+    {
+        if (validityPeriod <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(validityPeriod));
+        }
+
+        PasswordExpiresAt = now.Add(validityPeriod);
+        MustChangePassword = false;
+        LastModificationTime = now;
+    }
+}
+
+public sealed class PasswordHistory : Entity<Guid>, IAggregateRoot<Guid>
+{
+    public Guid UserId { get; private set; }
+    public string PasswordHash { get; private set; } = string.Empty;
+    public DateTime CreatedAt { get; private set; }
+
+    private PasswordHistory() { }
+
+    public static PasswordHistory Create(
+        Guid id,
+        Guid userId,
+        string passwordHash,
+        DateTime createdAt)
+    {
+        return new PasswordHistory
+        {
+            Id = id,
+            UserId = userId,
+            PasswordHash = Check.NotNullOrWhiteSpace(
+                passwordHash,
+                nameof(passwordHash),
+                500),
+            CreatedAt = createdAt
+        };
+    }
 }
 
 public sealed class ManagementScopeAssignment : Entity<Guid>, IAggregateRoot<Guid>

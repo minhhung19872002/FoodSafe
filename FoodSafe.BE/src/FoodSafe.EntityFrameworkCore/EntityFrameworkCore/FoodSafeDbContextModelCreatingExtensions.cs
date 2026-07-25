@@ -175,6 +175,22 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_app_user_profiles_org");
         });
 
+        builder.Entity<PasswordHistory>(entity =>
+        {
+            entity.ToTable("password_history");
+            entity.HasKey(x => x.Id).HasName("pk_password_history");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.PasswordHash)
+                .HasColumnName("password_hash")
+                .HasMaxLength(500)
+                .IsRequired();
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.HasIndex(x => new { x.UserId, x.CreatedAt })
+                .IsDescending(false, true)
+                .HasDatabaseName("idx_password_history_user");
+        });
+
         builder.Entity<ManagementScopeAssignment>(entity =>
         {
             entity.ToTable("management_scope_assignments", table =>

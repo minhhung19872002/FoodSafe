@@ -1,12 +1,18 @@
 using FoodSafe.EntityFrameworkCore;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System.Net;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 using Volo.Abp;
 using Volo.Abp.Account;
 using Volo.Abp.Account.Web;
@@ -66,10 +72,17 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureSwagger(context, configuration);
         ConfigureHangfire(context, configuration);
         ConfigureClock();
-        ConfigureForwardedHeaders(context);
+        ConfigureForwardedHeaders(context, configuration);
         ConfigureResponseCompression(context);
         ConfigureAntiForgery();
+        ConfigureIdentity(context, hostingEnvironment);
+        ConfigureRateLimiting(context);
         context.Services.AddHealthChecks();
+        context.Services.AddHsts(options =>
+        {
+            options.MaxAge = TimeSpan.FromDays(365);
+            options.IncludeSubDomains = true;
+        });
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)
@@ -169,15 +182,24 @@ public class FoodSafeHttpApiHostModule : AbpModule
         });
     }
 
-    private void ConfigureForwardedHeaders(ServiceConfigurationContext context)
+    private void ConfigureForwardedHeaders(
+        ServiceConfigurationContext context,
+        IConfiguration configuration)
     {
         context.Services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor
                 | ForwardedHeaders.XForwardedProto
                 | ForwardedHeaders.XForwardedHost;
-            options.KnownNetworks.Clear();
-            options.KnownProxies.Clear();
+
+            foreach (var configuredProxy in
+                     configuration.GetSection("App:KnownProxies").Get<string[]>() ?? [])
+            {
+                if (IPAddress.TryParse(configuredProxy, out var proxyAddress))
+                {
+                    options.KnownProxies.Add(proxyAddress);
+                }
+            }
         });
     }
 
@@ -207,10 +229,133 @@ public class FoodSafeHttpApiHostModule : AbpModule
         });
     }
 
+    private static void ConfigureIdentity(
+        ServiceConfigurationContext context,
+        IHostEnvironment hostingEnvironment)
+    {
+        context.Services.Configure<IdentityOptions>(options =>
+        {
+            options.Lockout.AllowedForNewUsers = true;
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
+
+            options.Password.RequiredLength = 8;
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = true;
+        });
+
+        context.Services.PostConfigure<CookieAuthenticationOptions>(
+            IdentityConstants.ApplicationScheme,
+            options =>
+            {
+                options.Cookie.Name = "__Host-FoodSafe.Auth";
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
+                options.Cookie.SecurePolicy = hostingEnvironment.IsDevelopment()
+                    ? CookieSecurePolicy.SameAsRequest
+                    : CookieSecurePolicy.Always;
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+                options.SlidingExpiration = true;
+            });
+    }
+
+    private static void ConfigureRateLimiting(ServiceConfigurationContext context)
+    {
+        context.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
+                httpContext =>
+                {
+                    var path = httpContext.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
+                    var identity = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    var client = identity is not null
+                        ? $"user:{identity}"
+                        : $"ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+
+                    if (path == "/api/account/login")
+                    {
+                        return FixedWindow($"login:{client}", 10, TimeSpan.FromMinutes(5));
+                    }
+
+                    if (path.Contains("password-reset", StringComparison.Ordinal)
+                        || path.Contains("reset-password", StringComparison.Ordinal))
+                    {
+                        return FixedWindow($"password:{client}", 5, TimeSpan.FromMinutes(15));
+                    }
+
+                    if (path.StartsWith("/api/app/public", StringComparison.Ordinal))
+                    {
+                        return FixedWindow($"public:{client}", 60, TimeSpan.FromMinutes(1));
+                    }
+
+                    return FixedWindow($"api:{client}", 300, TimeSpan.FromMinutes(1));
+                });
+
+            options.OnRejected = async (rejectedContext, cancellationToken) =>
+            {
+                var response = rejectedContext.HttpContext.Response;
+                response.ContentType = "application/json; charset=utf-8";
+
+                if (rejectedContext.Lease.TryGetMetadata(
+                        MetadataName.RetryAfter,
+                        out var retryAfter))
+                {
+                    response.Headers.RetryAfter =
+                        Math.Ceiling(retryAfter.TotalSeconds).ToString(
+                            System.Globalization.CultureInfo.InvariantCulture);
+                }
+
+                var correlationId =
+                    rejectedContext.HttpContext.Request.Headers["X-Correlation-Id"].FirstOrDefault()
+                    ?? rejectedContext.HttpContext.TraceIdentifier;
+
+                await response.WriteAsJsonAsync(
+                    new
+                    {
+                        error = new
+                        {
+                            code = "FoodSafe:RateLimit:0001",
+                            message = "Too many requests. Please retry later.",
+                            details = (string?)null,
+                            data = new { correlationId }
+                        }
+                    },
+                    cancellationToken);
+            };
+        });
+
+        static RateLimitPartition<string> FixedWindow(
+            string partitionKey,
+            int permitLimit,
+            TimeSpan window)
+        {
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey,
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = permitLimit,
+                    Window = window,
+                    QueueLimit = 0,
+                    AutoReplenishment = true
+                });
+        }
+    }
+
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
         var app = context.GetApplicationBuilder();
         var env = context.GetEnvironment();
+
+        app.UseForwardedHeaders();
+
+        if (!env.IsDevelopment())
+        {
+            app.UseHsts();
+            app.UseHttpsRedirection();
+        }
 
         app.UseResponseCompression();
 
@@ -222,10 +367,10 @@ public class FoodSafeHttpApiHostModule : AbpModule
         app.UseAbpRequestLocalization();
         app.UseCorrelationId();
         app.UseStaticFiles();
-        app.UseForwardedHeaders();
         app.UseCors();
         app.UseRouting();
         app.UseAuthentication();
+        app.UseRateLimiter();
         app.UseAbpOpenIddictValidation();
         app.UseUnitOfWork();
         app.UseDynamicClaims();

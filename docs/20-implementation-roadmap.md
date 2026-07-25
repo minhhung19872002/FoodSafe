@@ -15,7 +15,7 @@ Deliverables:
 - Geographic catalogs and completed organizations UI/API
 - Shared frontend application shell, protected/permission routes and standard states
 
-Remaining risks: reconciling later approved-SQL modules with ABP-owned tables; several open scope decisions in `docs/15`; account lifecycle, abuse controls, API versioning/rate limiting, organization edit/delete UI and production container configuration.
+Remaining risks: reconciling later approved-SQL modules with ABP-owned tables; several open scope decisions in `docs/15`; login CAPTCHA/recovery delivery, API versioning, organization edit/delete UI and production container configuration.
 
 ## Milestone 2 — Master data, facilities, products and files
 
@@ -50,10 +50,10 @@ Perform full authorization/security/performance reviews, Dockerize API/SPA and d
 | Gate | Result on 2026-07-25 |
 |---|---|
 | Backend build | Pass, 0 warnings |
-| Backend tests | Pass, 18 tests including PostgreSQL migration/constraint integration; coverage remains incomplete |
+| Backend tests | Pass, 22 tests including PostgreSQL migration/constraint integration and password policy; coverage remains incomplete |
 | Frontend strict production build | Pass |
-| Frontend tests | Pass, 5 tests including authentication/permission routes; coverage remains incomplete |
-| EF migrations | Pass; three migrations apply cleanly and repeat idempotently, with no pending model changes |
+| Frontend tests | Pass, 6 tests including authentication, forced password change and permission routes; coverage remains incomplete |
+| EF migrations | Pass; four migrations apply cleanly and repeat idempotently, with no pending model changes |
 | Docker full stack | Missing; infrastructure-only Compose exists |
-| Security | Improved but not ready; cookie/CSRF session and foundational data scope are implemented, account abuse/lifecycle controls remain |
+| Security | Improved but not ready; cookie/CSRF session, lockout, password history/expiry, throttling and foundational data scope are implemented; CAPTCHA/recovery and final review remain |
 | Overall | NOT READY |

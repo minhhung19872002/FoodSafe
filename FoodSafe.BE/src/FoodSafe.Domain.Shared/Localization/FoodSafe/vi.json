@@ -43,6 +43,9 @@
     "FoodSafe:Catalog:0001": "Mã danh mục đã tồn tại.",
     "FoodSafe:Catalog:0002": "Danh mục đang được sử dụng, không thể xóa.",
     "FoodSafe:FoodPoisoning:0001": "Không tìm thấy ca ngộ độc.",
-    "FoodSafe:FoodPoisoning:0002": "Không tìm thấy vụ ngộ độc."
+    "FoodSafe:FoodPoisoning:0002": "Không tìm thấy vụ ngộ độc.",
+    "FoodSafe:Account:0001": "Mật khẩu hiện tại không đúng.",
+    "FoodSafe:Account:0002": "Mật khẩu mới không được trùng với 5 mật khẩu gần nhất.",
+    "FoodSafe:Account:0003": "Không thể đổi mật khẩu. Vui lòng kiểm tra các yêu cầu về độ mạnh mật khẩu."
   }
 }

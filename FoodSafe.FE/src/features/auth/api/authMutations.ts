@@ -60,10 +60,17 @@ export function useLogout() {
 
 export function useChangePassword() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const setAuth = useAuthStore((s) => s.setAuth)
 
   return useMutation({
-    mutationFn: (data: ChangePasswordRequest) => authApi.changePassword(data),
-    onSuccess: () => {
+    mutationFn: async (data: ChangePasswordRequest) => {
+      await authApi.changePassword(data)
+      return authApi.getCurrentUser()
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData(['auth', 'current-user'], user)
+      setAuth(user)
       message.success('Đổi mật khẩu thành công.')
       navigate('/')
     },

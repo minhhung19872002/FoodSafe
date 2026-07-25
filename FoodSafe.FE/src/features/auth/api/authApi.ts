@@ -22,6 +22,6 @@ export const authApi = {
 
   changePassword: async (data: ChangePasswordRequest): Promise<void> => {
     await authApi.initializeCsrf()
-    return api.post<void>('/account/my-profile/change-password', data).then(() => undefined)
+    return api.post<void>('/app/account-security/change-password', data).then(() => undefined)
   },
 }

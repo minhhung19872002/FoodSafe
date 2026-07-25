@@ -85,9 +85,9 @@ public class CurrentUserContextAppService :
             OrganizationName = organization?.Name,
             Roles = _currentUser.Roles.ToArray(),
             Permissions = granted.ToArray(),
-            PasswordMustChange = user?.ShouldChangePasswordOnNextLogin
-                ?? profile?.MustChangePassword
-                ?? false
+            PasswordMustChange = user?.ShouldChangePasswordOnNextLogin == true
+                || profile?.MustChangePassword == true
+                || profile?.IsPasswordExpired(Clock.Now) == true
         };
     }
 }

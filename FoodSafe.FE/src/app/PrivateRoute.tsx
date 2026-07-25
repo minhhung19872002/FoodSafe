@@ -41,5 +41,12 @@ export function PrivateRoute({ children }: Props) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
+  if (
+    currentUser.data?.passwordMustChange
+    && location.pathname !== '/account/change-password'
+  ) {
+    return <Navigate to="/account/change-password" replace />
+  }
+
   return <>{children}</>
 }

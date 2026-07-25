@@ -18,6 +18,9 @@
     "Permission:GeographicCatalogs": "Administrative geography catalogs",
     "Permission:GeographicCatalogs.View": "View geography catalogs",
     "Permission:GeographicCatalogs.Manage": "Manage geography catalogs",
-    "Permission:DataScope.All": "Access all data scopes"
+    "Permission:DataScope.All": "Access all data scopes",
+    "FoodSafe:Account:0001": "The current password is incorrect.",
+    "FoodSafe:Account:0002": "The new password must not match any of the five most recent passwords.",
+    "FoodSafe:Account:0003": "The password could not be changed. Check the password policy requirements."
   }
 }
