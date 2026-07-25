@@ -4,7 +4,7 @@ using Volo.Abp.Domain.Services;
 
 namespace FoodSafe.Organizations;
 
-public sealed class OrganizationManager : DomainService
+public class OrganizationManager : DomainService
 {
     private readonly IRepository<Organization, Guid> _repository;
 

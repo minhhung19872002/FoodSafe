@@ -4,25 +4,30 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Threading;
+using FoodSafe.Security;
+using Volo.Abp.Authorization;
 
 namespace FoodSafe.Organizations;
 
-public sealed class OrganizationAppService :
+public class OrganizationAppService :
     ApplicationService,
     IOrganizationAppService
 {
     private readonly IRepository<Organization, Guid> _repository;
     private readonly OrganizationManager _manager;
     private readonly ICancellationTokenProvider _cancellationTokenProvider;
+    private readonly ICurrentDataScopeProvider _dataScopeProvider;
 
     public OrganizationAppService(
         IRepository<Organization, Guid> repository,
         OrganizationManager manager,
-        ICancellationTokenProvider cancellationTokenProvider)
+        ICancellationTokenProvider cancellationTokenProvider,
+        ICurrentDataScopeProvider dataScopeProvider)
     {
         _repository = repository;
         _manager = manager;
         _cancellationTokenProvider = cancellationTokenProvider;
+        _dataScopeProvider = dataScopeProvider;
     }
 
     [Authorize(FoodSafePermissions.Organizations.View)]
@@ -30,6 +35,14 @@ public sealed class OrganizationAppService :
         GetOrganizationListInput input)
     {
         var query = await _repository.GetQueryableAsync();
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.View,
+            _cancellationTokenProvider.Token);
+        if (!scope.HasGlobalAccess)
+        {
+            var allowedIds = scope.OrganizationIds.ToArray();
+            query = query.Where(x => allowedIds.Contains(x.Id));
+        }
         query = ApplyFilter(query, input);
 
         var totalCount = await AsyncExecuter.CountAsync(query);
@@ -46,7 +59,16 @@ public sealed class OrganizationAppService :
     [Authorize(FoodSafePermissions.Organizations.View)]
     public async Task<ListResultDto<OrganizationTreeNodeDto>> GetTreeAsync()
     {
-        var organizations = await _repository.GetListAsync();
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.View,
+            _cancellationTokenProvider.Token);
+        var query = await _repository.GetQueryableAsync();
+        if (!scope.HasGlobalAccess)
+        {
+            var allowedIds = scope.OrganizationIds.ToArray();
+            query = query.Where(x => allowedIds.Contains(x.Id));
+        }
+        var organizations = await AsyncExecuter.ToListAsync(query);
         var dtos = ObjectMapper.Map<List<Organization>, List<OrganizationDto>>(organizations);
         return new ListResultDto<OrganizationTreeNodeDto>(
             OrganizationTreeBuilder.Build(dtos));
@@ -55,6 +77,10 @@ public sealed class OrganizationAppService :
     [Authorize(FoodSafePermissions.Organizations.View)]
     public async Task<OrganizationDto> GetAsync(Guid id)
     {
+        await _dataScopeProvider.EnsureOrganizationAccessAsync(
+            id,
+            DataScopeOperation.View,
+            _cancellationTokenProvider.Token);
         var organization = await _repository.GetAsync(id);
         return ObjectMapper.Map<Organization, OrganizationDto>(organization);
     }
@@ -62,6 +88,21 @@ public sealed class OrganizationAppService :
     [Authorize(FoodSafePermissions.Organizations.Create)]
     public async Task<OrganizationDto> CreateAsync(CreateOrganizationDto input)
     {
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.Create,
+            _cancellationTokenProvider.Token);
+        if (input.ParentId.HasValue)
+        {
+            if (!scope.IncludesOrganization(input.ParentId.Value))
+            {
+                throw new AbpAuthorizationException("Parent organization is outside the current user's data scope.");
+            }
+        }
+        else if (!scope.HasGlobalAccess)
+        {
+            throw new AbpAuthorizationException("Only a global administrator can create a root organization.");
+        }
+
         var organization = await _manager.CreateAsync(
             GuidGenerator.Create(),
             input.Code,
@@ -90,6 +131,17 @@ public sealed class OrganizationAppService :
         Guid id,
         UpdateOrganizationDto input)
     {
+        await _dataScopeProvider.EnsureOrganizationAccessAsync(
+            id,
+            DataScopeOperation.Edit,
+            _cancellationTokenProvider.Token);
+        if (input.ParentId.HasValue)
+        {
+            await _dataScopeProvider.EnsureOrganizationAccessAsync(
+                input.ParentId.Value,
+                DataScopeOperation.Edit,
+                _cancellationTokenProvider.Token);
+        }
         var organization = await _repository.GetAsync(
             id,
             cancellationToken: _cancellationTokenProvider.Token);
@@ -121,6 +173,10 @@ public sealed class OrganizationAppService :
     [Authorize(FoodSafePermissions.Organizations.Delete)]
     public async Task DeleteAsync(Guid id)
     {
+        await _dataScopeProvider.EnsureOrganizationAccessAsync(
+            id,
+            DataScopeOperation.Delete,
+            _cancellationTokenProvider.Token);
         await _manager.EnsureCanDeleteAsync(id, _cancellationTokenProvider.Token);
         await _repository.DeleteAsync(
             id,

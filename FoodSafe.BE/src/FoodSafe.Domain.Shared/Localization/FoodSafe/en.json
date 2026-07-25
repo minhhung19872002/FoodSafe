@@ -9,6 +9,15 @@
     "Menu:Reporting": "Reporting",
     "Menu:Catalogs": "Catalogs",
     "Menu:Administration": "Administration",
-    "Permission:FoodSafe": "FoodSafe"
+    "Permission:FoodSafe": "FoodSafe",
+    "Permission:Organizations": "Organization management",
+    "Permission:Organizations.View": "View organizations",
+    "Permission:Organizations.Create": "Create organizations",
+    "Permission:Organizations.Edit": "Edit organizations",
+    "Permission:Organizations.Delete": "Delete organizations",
+    "Permission:GeographicCatalogs": "Administrative geography catalogs",
+    "Permission:GeographicCatalogs.View": "View geography catalogs",
+    "Permission:GeographicCatalogs.Manage": "Manage geography catalogs",
+    "Permission:DataScope.All": "Access all data scopes"
   }
 }

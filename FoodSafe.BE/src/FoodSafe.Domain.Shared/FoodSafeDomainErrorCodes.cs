@@ -11,6 +11,16 @@ public static class FoodSafeDomainErrorCodes
         public const string InvalidGeography = "FoodSafe:Organization:0005";
     }
 
+    public static class DataScope
+    {
+        public const string ExactlyOneGeographyRequired =
+            "FoodSafe:DataScope:ExactlyOneGeographyRequired";
+        public const string InvalidValidityPeriod =
+            "FoodSafe:DataScope:InvalidValidityPeriod";
+        public const string OrganizationNotFound =
+            "FoodSafe:DataScope:OrganizationNotFound";
+    }
+
     public static class Business
     {
         public const string NotFound = "FoodSafe:Business:0001";
@@ -37,6 +47,9 @@ public static class FoodSafeDomainErrorCodes
     {
         public const string DuplicateCode = "FoodSafe:Catalog:0001";
         public const string InUse = "FoodSafe:Catalog:0002";
+        public const string InvalidCountryCode = "FoodSafe:Catalog:0003";
+        public const string InvalidDistrictType = "FoodSafe:Catalog:0004";
+        public const string InvalidCommuneType = "FoodSafe:Catalog:0005";
     }
 
     public static class FoodPoisoning

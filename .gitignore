@@ -7,6 +7,7 @@ obj/
 *.nupkg
 *.snupkg
 TestResults/
+Logs/
 
 # appsettings with credentials — dùng env vars hoặc secrets.json trên máy local
 appsettings.Development.json

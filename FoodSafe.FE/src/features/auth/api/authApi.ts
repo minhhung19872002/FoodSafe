@@ -2,15 +2,26 @@ import { api } from '@/lib/axios'
 import type { ChangePasswordRequest, CurrentUserDto, LoginRequest, LoginResponse } from '../types/auth.types'
 
 export const authApi = {
-  login: (data: LoginRequest): Promise<LoginResponse> =>
-    api.post<LoginResponse>('/account/login', data).then((r) => r.data),
+  initializeCsrf: (): Promise<void> =>
+    api.get('/abp/application-configuration', {
+      params: { IncludeLocalizationResources: false },
+    }).then(() => undefined),
 
-  logout: (): Promise<void> =>
-    api.post<void>('/account/logout').then(() => undefined),
+  login: async (data: LoginRequest): Promise<LoginResponse> => {
+    await authApi.initializeCsrf()
+    return api.post<LoginResponse>('/account/login', data).then((r) => r.data)
+  },
+
+  logout: async (): Promise<void> => {
+    await authApi.initializeCsrf()
+    return api.post<void>('/account/logout').then(() => undefined)
+  },
 
   getCurrentUser: (): Promise<CurrentUserDto> =>
-    api.get<CurrentUserDto>('/identity/my-profile').then((r) => r.data),
+    api.get<CurrentUserDto>('/app/current-user-context').then((r) => r.data),
 
-  changePassword: (data: ChangePasswordRequest): Promise<void> =>
-    api.post<void>('/account/my-profile/change-password', data).then(() => undefined),
+  changePassword: async (data: ChangePasswordRequest): Promise<void> => {
+    await authApi.initializeCsrf()
+    return api.post<void>('/account/my-profile/change-password', data).then(() => undefined)
+  },
 }

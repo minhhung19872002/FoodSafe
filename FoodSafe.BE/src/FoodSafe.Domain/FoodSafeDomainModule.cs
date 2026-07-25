@@ -11,6 +11,7 @@ using Volo.Abp.OpenIddict;
 using Volo.Abp.PermissionManagement.Identity;
 using Volo.Abp.PermissionManagement.OpenIddict;
 using Volo.Abp.SettingManagement;
+using Volo.Abp.Timing;
 
 namespace FoodSafe;
 
@@ -35,6 +36,11 @@ public class FoodSafeDomainModule : AbpModule
         {
             options.Languages.Add(new LanguageInfo("vi", "vi", "Tiếng Việt"));
             options.Languages.Add(new LanguageInfo("en", "en", "English"));
+        });
+
+        Configure<AbpClockOptions>(options =>
+        {
+            options.Kind = DateTimeKind.Utc;
         });
 
 #if DEBUG

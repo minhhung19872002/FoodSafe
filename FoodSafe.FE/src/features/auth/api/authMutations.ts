@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { message } from 'antd'
 import { authApi } from './authApi'
@@ -7,16 +7,21 @@ import type { ChangePasswordRequest, LoginRequest } from '../types/auth.types'
 
 export function useLogin() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const setAuth = useAuthStore((s) => s.setAuth)
 
   return useMutation({
     mutationFn: async (data: LoginRequest) => {
       const response = await authApi.login(data)
+      if (response.result !== 1) {
+        throw new Error(response.description)
+      }
       const user = await authApi.getCurrentUser()
-      return { token: response.accessToken, user }
+      return user
     },
-    onSuccess: ({ token, user }) => {
-      setAuth(token, {
+    onSuccess: (user) => {
+      queryClient.setQueryData(['auth', 'current-user'], user)
+      setAuth({
         id: user.id,
         name: user.name,
         email: user.email,
@@ -40,11 +45,13 @@ export function useLogin() {
 
 export function useLogout() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const clearAuth = useAuthStore((s) => s.clearAuth)
 
   return useMutation({
     mutationFn: () => authApi.logout(),
     onSettled: () => {
+      queryClient.removeQueries({ queryKey: ['auth'] })
       clearAuth()
       navigate('/login')
     },

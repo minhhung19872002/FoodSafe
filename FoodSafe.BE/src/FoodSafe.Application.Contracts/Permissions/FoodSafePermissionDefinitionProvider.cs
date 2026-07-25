@@ -28,5 +28,19 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
         organizations.AddChild(
             FoodSafePermissions.Organizations.Delete,
             LocalizableString.Create<FoodSafeResource>("Permission:Organizations.Delete"));
+
+        var geography = group.AddPermission(
+            FoodSafePermissions.GeographicCatalogs.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:GeographicCatalogs"));
+        geography.AddChild(
+            FoodSafePermissions.GeographicCatalogs.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:GeographicCatalogs.View"));
+        geography.AddChild(
+            FoodSafePermissions.GeographicCatalogs.Manage,
+            LocalizableString.Create<FoodSafeResource>("Permission:GeographicCatalogs.Manage"));
+
+        group.AddPermission(
+            FoodSafePermissions.DataScope.All,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataScope.All"));
     }
 }

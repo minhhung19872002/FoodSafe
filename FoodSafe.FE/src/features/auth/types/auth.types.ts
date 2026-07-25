@@ -5,18 +5,17 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string
-  tokenType: string
-  expiresIn: number
-  refreshToken?: string
+  result: number
+  description: string
 }
 
 export interface CurrentUserDto {
   id: string
+  userName: string
   name: string
   email: string
-  organizationId: string
-  organizationName: string
+  organizationId: string | null
+  organizationName: string | null
   roles: string[]
   permissions: string[]
   passwordMustChange: boolean

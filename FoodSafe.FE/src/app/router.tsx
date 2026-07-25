@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppLayout } from './AppLayout'
 import { PrivateRoute } from './PrivateRoute'
+import { PermissionRoute } from './PermissionRoute'
 import {
   ChangePasswordPage,
   DashboardPage,
@@ -43,7 +44,9 @@ export const router = createBrowserRouter([
         path: 'organizations',
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <OrganizationListPage />
+            <PermissionRoute permission="FoodSafe.Organizations.View">
+              <OrganizationListPage />
+            </PermissionRoute>
           </Suspense>
         ),
       },

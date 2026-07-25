@@ -11,12 +11,6 @@ import {
 } from 'antd'
 import {
   DashboardOutlined,
-  ShopOutlined,
-  AuditOutlined,
-  AlertOutlined,
-  FileTextOutlined,
-  BookOutlined,
-  SettingOutlined,
   ApartmentOutlined,
   UserOutlined,
   LogoutOutlined,
@@ -27,79 +21,31 @@ import { useLogout } from '@/features/auth/api/authMutations'
 
 const { Header, Sider, Content } = Layout
 
-const menuItems: MenuProps['items'] = [
+function buildMenuItems(hasPermission: (permission: string) => boolean): MenuProps['items'] {
+  const items: MenuProps['items'] = [
   {
     key: '/dashboard',
     icon: <DashboardOutlined />,
     label: 'Bảng điều khiển',
   },
-  {
-    key: '/organizations',
-    icon: <ApartmentOutlined />,
-    label: 'Đơn vị',
-  },
-  {
-    key: 'businesses',
-    icon: <ShopOutlined />,
-    label: 'Quản lý cơ sở',
-    children: [
-      { key: '/businesses', label: 'Danh sách cơ sở' },
-      { key: '/businesses/products', label: 'Sản phẩm' },
-    ],
-  },
-  {
-    key: 'inspection',
-    icon: <AuditOutlined />,
-    label: 'Thanh kiểm tra',
-    children: [
-      { key: '/inspection/plans', label: 'Kế hoạch' },
-      { key: '/inspection/results', label: 'Kết quả' },
-    ],
-  },
-  {
-    key: 'food-poisoning',
-    icon: <AlertOutlined />,
-    label: 'Ngộ độc thực phẩm',
-    children: [
-      { key: '/food-poisoning/cases', label: 'Ca ngộ độc' },
-      { key: '/food-poisoning/incidents', label: 'Vụ ngộ độc' },
-    ],
-  },
-  {
-    key: 'reporting',
-    icon: <FileTextOutlined />,
-    label: 'Báo cáo',
-    children: [
-      { key: '/reporting/ndtp', label: 'Báo cáo NĐTP' },
-      { key: '/reporting/attp-work', label: 'Công tác ATTP' },
-    ],
-  },
-  {
-    key: 'catalogs',
-    icon: <BookOutlined />,
-    label: 'Danh mục',
-    children: [
-      { key: '/catalogs/business-types', label: 'Loại hình cơ sở' },
-      { key: '/catalogs/product-groups', label: 'Nhóm sản phẩm' },
-    ],
-  },
-  {
-    key: 'administration',
-    icon: <SettingOutlined />,
-    label: 'Quản trị',
-    children: [
-      { key: '/admin/users', label: 'Người dùng' },
-      { key: '/admin/roles', label: 'Vai trò' },
-      { key: '/admin/audit-log', label: 'Nhật ký thao tác' },
-    ],
-  },
-]
+  ]
+  if (hasPermission('FoodSafe.Organizations.View')) {
+    items.push({
+      key: '/organizations',
+      icon: <ApartmentOutlined />,
+      label: 'Đơn vị',
+    })
+  }
+  return items
+}
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((s) => s.user)
+  const hasPermission = useAuthStore((s) => s.hasPermission)
+  const menuItems = buildMenuItems(hasPermission)
   const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken()
   const logoutMutation = useLogout()
 
@@ -150,7 +96,6 @@ export function AppLayout() {
           theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
-          defaultOpenKeys={['businesses', 'inspection']}
           items={menuItems}
           onClick={({ key }) => navigate(key)}
         />
@@ -169,7 +114,7 @@ export function AppLayout() {
         >
           <Breadcrumb
             items={[
-              { title: 'Chi cục ATVSTP Quảng Ninh' },
+              { title: user?.organizationName ?? 'Phạm vi toàn hệ thống' },
               { title: location.pathname.split('/')[1] || 'Trang chủ' },
             ]}
           />

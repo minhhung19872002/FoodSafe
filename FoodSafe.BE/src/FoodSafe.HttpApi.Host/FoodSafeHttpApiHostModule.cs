@@ -49,8 +49,8 @@ public class FoodSafeHttpApiHostModule : AbpModule
 
         PreConfigure<OpenIddictServerBuilder>(builder =>
         {
-            builder.SetAccessTokenLifetime(TimeSpan.FromHours(8));
-            builder.SetRefreshTokenLifetime(TimeSpan.FromDays(90));
+            builder.SetAccessTokenLifetime(TimeSpan.FromMinutes(15));
+            builder.SetRefreshTokenLifetime(TimeSpan.FromDays(14));
         });
     }
 
@@ -69,6 +69,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureForwardedHeaders(context);
         ConfigureResponseCompression(context);
         ConfigureAntiForgery();
+        context.Services.AddHealthChecks();
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)
@@ -164,7 +165,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
     {
         Configure<AbpClockOptions>(options =>
         {
-            options.Kind = DateTimeKind.Local;
+            options.Kind = DateTimeKind.Utc;
         });
     }
 
@@ -202,7 +203,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
     {
         Configure<AbpAntiForgeryOptions>(options =>
         {
-            options.AutoValidate = false; // Handled per-endpoint via CSRF token header
+            options.AutoValidate = true;
         });
     }
 

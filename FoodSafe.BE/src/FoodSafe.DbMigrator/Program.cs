@@ -1,5 +1,7 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -42,7 +44,13 @@ class Program
 
     public static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
+            .UseContentRoot(AppContext.BaseDirectory)
             .AddAppSettingsSecretsJson()
+            .ConfigureAppConfiguration((_, configuration) =>
+            {
+                configuration.AddEnvironmentVariables();
+                configuration.AddCommandLine(args);
+            })
             .ConfigureLogging((_, logging) => logging.ClearProviders())
             .ConfigureServices((_, services) =>
             {

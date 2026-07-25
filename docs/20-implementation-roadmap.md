@@ -15,7 +15,7 @@ Deliverables:
 - Geographic catalogs and completed organizations UI/API
 - Shared frontend application shell, protected/permission routes and standard states
 
-Risks: reconciling the large approved SQL with ABP-owned tables; several open scope decisions in `docs/15`; current SPA token storage and disabled CSRF validation.
+Remaining risks: reconciling later approved-SQL modules with ABP-owned tables; several open scope decisions in `docs/15`; account lifecycle, abuse controls, API versioning/rate limiting, organization edit/delete UI and production container configuration.
 
 ## Milestone 2 — Master data, facilities, products and files
 
@@ -50,11 +50,10 @@ Perform full authorization/security/performance reviews, Dockerize API/SPA and d
 | Gate | Result on 2026-07-25 |
 |---|---|
 | Backend build | Pass, 0 warnings |
-| Backend tests | Pass, 6 tests; coverage materially insufficient |
+| Backend tests | Pass, 18 tests including PostgreSQL migration/constraint integration; coverage remains incomplete |
 | Frontend strict production build | Pass |
-| Frontend tests | Pass, 1 test; coverage materially insufficient |
-| EF migrations | Missing |
+| Frontend tests | Pass, 5 tests including authentication/permission routes; coverage remains incomplete |
+| EF migrations | Pass; three migrations apply cleanly and repeat idempotently, with no pending model changes |
 | Docker full stack | Missing; infrastructure-only Compose exists |
-| Security | Not ready; known High findings in authentication/scope |
+| Security | Improved but not ready; cookie/CSRF session and foundational data scope are implemented, account abuse/lifecycle controls remain |
 | Overall | NOT READY |
-

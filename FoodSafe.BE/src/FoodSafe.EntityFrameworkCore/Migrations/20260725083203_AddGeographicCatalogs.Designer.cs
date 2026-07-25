@@ -3,6 +3,7 @@ using System;
 using FoodSafe.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace FoodSafe.Migrations
 {
     [DbContext(typeof(FoodSafeDbContext))]
-    partial class FoodSafeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260725083203_AddGeographicCatalogs")]
+    partial class AddGeographicCatalogs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -494,172 +497,6 @@ namespace FoodSafe.Migrations
                     b.HasIndex("DistrictId", "ProvinceId");
 
                     b.ToTable("organizations", (string)null);
-                });
-
-            modelBuilder.Entity("FoodSafe.Security.AppUserProfile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("creation_time");
-
-                    b.Property<string>("Department")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("department");
-
-                    b.Property<short>("FailedLoginCount")
-                        .HasColumnType("smallint")
-                        .HasColumnName("failed_login_count");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("full_name");
-
-                    b.Property<DateTime?>("LastLoginAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_login_at");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_modification_time");
-
-                    b.Property<DateTime?>("LockedUntil")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("locked_until");
-
-                    b.Property<bool>("MustChangePassword")
-                        .HasColumnType("boolean")
-                        .HasColumnName("must_change_password");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("organization_id");
-
-                    b.Property<DateTime?>("PasswordExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("password_expires_at");
-
-                    b.Property<string>("Position")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("position");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_app_user_profiles");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasDatabaseName("uq_app_user_profiles_user_id");
-
-                    b.ToTable("app_user_profiles", (string)null);
-                });
-
-            modelBuilder.Entity("FoodSafe.Security.ManagementScopeAssignment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid?>("BusinessId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("business_id");
-
-                    b.Property<Guid?>("BusinessTypeId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("business_type_id");
-
-                    b.Property<bool>("CanCreate")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_create");
-
-                    b.Property<bool>("CanDelete")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_delete");
-
-                    b.Property<bool>("CanEdit")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_edit");
-
-                    b.Property<bool>("CanView")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_view");
-
-                    b.Property<Guid?>("CommuneId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("commune_id");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("creation_time");
-
-                    b.Property<Guid?>("CreatorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("creator_id");
-
-                    b.Property<Guid?>("DistrictId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("district_id");
-
-                    b.Property<Guid>("GranteeOrganizationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("grantee_organization_id");
-
-                    b.Property<Guid?>("GranteeUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("grantee_user_id");
-
-                    b.Property<Guid?>("ProductGroupId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("product_group_id");
-
-                    b.Property<Guid?>("ProvinceId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("province_id");
-
-                    b.Property<short>("ScopeType")
-                        .HasColumnType("smallint")
-                        .HasColumnName("scope_type");
-
-                    b.Property<DateTime>("ValidFrom")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("valid_from");
-
-                    b.Property<DateTime?>("ValidTo")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("valid_to");
-
-                    b.HasKey("Id")
-                        .HasName("pk_management_scope_assignments");
-
-                    b.HasIndex("CommuneId");
-
-                    b.HasIndex("DistrictId");
-
-                    b.HasIndex("ProvinceId");
-
-                    b.HasIndex("GranteeOrganizationId", "GranteeUserId", "ValidFrom", "ValidTo")
-                        .HasDatabaseName("idx_msa_grantee");
-
-                    b.ToTable("management_scope_assignments", null, t =>
-                        {
-                            t.HasCheckConstraint("chk_msa_dates", "valid_to IS NULL OR valid_from < valid_to");
-
-                            t.HasCheckConstraint("chk_msa_one_target", "(scope_type = 1 AND business_id IS NULL AND business_type_id IS NULL\n AND product_group_id IS NULL AND num_nonnulls(province_id, district_id, commune_id) = 1)\nOR (scope_type = 2 AND business_id IS NOT NULL AND province_id IS NULL\n AND district_id IS NULL AND commune_id IS NULL AND business_type_id IS NULL\n AND product_group_id IS NULL)\nOR (scope_type = 3 AND business_type_id IS NOT NULL AND province_id IS NULL\n AND district_id IS NULL AND commune_id IS NULL AND business_id IS NULL\n AND product_group_id IS NULL)\nOR (scope_type = 4 AND product_group_id IS NOT NULL AND province_id IS NULL\n AND district_id IS NULL AND commune_id IS NULL AND business_id IS NULL\n AND business_type_id IS NULL)");
-
-                            t.HasCheckConstraint("chk_msa_type", "scope_type IN (1, 2, 3, 4)");
-                        });
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLog", b =>
@@ -2366,44 +2203,6 @@ namespace FoodSafe.Migrations
                         .HasPrincipalKey("Id", "ProvinceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_organizations_district_province");
-                });
-
-            modelBuilder.Entity("FoodSafe.Security.AppUserProfile", b =>
-                {
-                    b.HasOne("FoodSafe.Organizations.Organization", null)
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_app_user_profiles_org");
-                });
-
-            modelBuilder.Entity("FoodSafe.Security.ManagementScopeAssignment", b =>
-                {
-                    b.HasOne("FoodSafe.Catalogs.Commune", null)
-                        .WithMany()
-                        .HasForeignKey("CommuneId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_msa_commune");
-
-                    b.HasOne("FoodSafe.Catalogs.District", null)
-                        .WithMany()
-                        .HasForeignKey("DistrictId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_msa_district");
-
-                    b.HasOne("FoodSafe.Organizations.Organization", null)
-                        .WithMany()
-                        .HasForeignKey("GranteeOrganizationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_msa_grantee_org");
-
-                    b.HasOne("FoodSafe.Catalogs.Province", null)
-                        .WithMany()
-                        .HasForeignKey("ProvinceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_msa_province");
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLogAction", b =>

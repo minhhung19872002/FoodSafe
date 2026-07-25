@@ -3,6 +3,11 @@ import { Alert, Form, Input, Modal, Select } from 'antd'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { ORGANIZATION_LEVEL } from '../types/organization.types'
+import {
+  useCommunes,
+  useDistricts,
+  useProvinces,
+} from '@/hooks/useGeography'
 import type {
   CreateOrganizationInput,
   OrganizationDto,
@@ -26,6 +31,27 @@ const schema = z.object({
   email: z.union([z.literal(''), z.email('Email không hợp lệ')]),
   leaderName: z.string().max(200),
 }).superRefine((value, context) => {
+  if (!value.provinceId) {
+    context.addIssue({
+      code: 'custom',
+      path: ['provinceId'],
+      message: 'Vui lòng chọn tỉnh/thành phố',
+    })
+  }
+  if (value.level >= ORGANIZATION_LEVEL.District && !value.districtId) {
+    context.addIssue({
+      code: 'custom',
+      path: ['districtId'],
+      message: 'Vui lòng chọn huyện/quận',
+    })
+  }
+  if (value.level === ORGANIZATION_LEVEL.Commune && !value.communeId) {
+    context.addIssue({
+      code: 'custom',
+      path: ['communeId'],
+      message: 'Vui lòng chọn xã/phường',
+    })
+  }
   if (value.level > ORGANIZATION_LEVEL.Province && !value.parentId) {
     context.addIssue({
       code: 'custom',
@@ -74,11 +100,17 @@ export function OrganizationCreateModal({
     watch,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues,
   })
   const level = watch('level')
+  const provinceId = watch('provinceId')
+  const districtId = watch('districtId')
+  const provinces = useProvinces()
+  const districts = useDistricts(provinceId)
+  const communes = useCommunes(districtId)
 
   const close = () => {
     reset(defaultValues)
@@ -163,29 +195,75 @@ export function OrganizationCreateModal({
             )}
           />
         )}
-        <Alert
-          type="info"
-          showIcon
-          message="ID địa bàn lấy từ danh mục hành chính"
-          description="Trong lát cắt đầu tiên, nhập UUID từ dữ liệu danh mục. Các combobox địa bàn sẽ được thay thế khi module Catalogs hoàn thành."
-          style={{ marginBottom: 16 }}
+        <Controller
+          name="provinceId"
+          control={control}
+          render={({ field }) => (
+            <Form.Item label="Tỉnh/Thành phố" required validateStatus={errors.provinceId ? 'error' : ''} help={errors.provinceId?.message}>
+              <Select
+                {...field}
+                showSearch
+                loading={provinces.isLoading}
+                optionFilterProp="label"
+                options={(provinces.data?.items ?? []).map((item) => ({
+                  value: item.id,
+                  label: `${item.code} — ${item.name}`,
+                }))}
+                onChange={(value) => {
+                  field.onChange(value)
+                  setValue('districtId', '')
+                  setValue('communeId', '')
+                }}
+              />
+            </Form.Item>
+          )}
         />
-        {(['provinceId', 'districtId', 'communeId'] as const).map((name) => (
+        {level >= ORGANIZATION_LEVEL.District && (
           <Controller
-            key={name}
-            name={name}
+            name="districtId"
             control={control}
             render={({ field }) => (
-              <Form.Item
-                label={{ provinceId: 'ID tỉnh', districtId: 'ID huyện', communeId: 'ID xã/phường' }[name]}
-                validateStatus={errors[name] ? 'error' : ''}
-                help={errors[name]?.message}
-              >
-                <Input {...field} />
+              <Form.Item label="Huyện/Quận" required validateStatus={errors.districtId ? 'error' : ''} help={errors.districtId?.message}>
+                <Select
+                  {...field}
+                  showSearch
+                  loading={districts.isLoading}
+                  disabled={!provinceId}
+                  optionFilterProp="label"
+                  options={(districts.data?.items ?? []).map((item) => ({
+                    value: item.id,
+                    label: `${item.code} — ${item.name}`,
+                  }))}
+                  onChange={(value) => {
+                    field.onChange(value)
+                    setValue('communeId', '')
+                  }}
+                />
               </Form.Item>
             )}
           />
-        ))}
+        )}
+        {level === ORGANIZATION_LEVEL.Commune && (
+          <Controller
+            name="communeId"
+            control={control}
+            render={({ field }) => (
+              <Form.Item label="Xã/Phường" required validateStatus={errors.communeId ? 'error' : ''} help={errors.communeId?.message}>
+                <Select
+                  {...field}
+                  showSearch
+                  loading={communes.isLoading}
+                  disabled={!districtId}
+                  optionFilterProp="label"
+                  options={(communes.data?.items ?? []).map((item) => ({
+                    value: item.id,
+                    label: `${item.code} — ${item.name}`,
+                  }))}
+                />
+              </Form.Item>
+            )}
+          />
+        )}
       </Form>
     </Modal>
   )
