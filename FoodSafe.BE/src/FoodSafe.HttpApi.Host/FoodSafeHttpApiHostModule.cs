@@ -5,6 +5,7 @@ using FoodSafe.Security;
 using FoodSafe.TextTemplating;
 using Hangfire;
 using Hangfire.PostgreSql;
+using FoodSafe.Licensing;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -535,6 +536,20 @@ public class FoodSafeHttpApiHostModule : AbpModule
     {
         var app = context.GetApplicationBuilder();
         var env = context.GetEnvironment();
+
+        var recurringJobs =
+            context.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+        recurringJobs.AddOrUpdate<IProductRegistrationExpiryJob>(
+            "product-registration-expiry",
+            job => job.ExecuteAsync(),
+            Cron.Daily,
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.FindSystemTimeZoneById(
+                    OperatingSystem.IsWindows()
+                        ? "SE Asia Standard Time"
+                        : "Asia/Bangkok")
+            });
 
         app.UseForwardedHeaders();
 

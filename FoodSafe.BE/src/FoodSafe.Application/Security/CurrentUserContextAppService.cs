@@ -42,6 +42,10 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.BusinessManagement.SelfDeclarations.Create,
         FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit,
         FoodSafePermissions.BusinessManagement.SelfDeclarations.Delete,
+        FoodSafePermissions.Licensing.ProductRegistrations.View,
+        FoodSafePermissions.Licensing.ProductRegistrations.Create,
+        FoodSafePermissions.Licensing.ProductRegistrations.Edit,
+        FoodSafePermissions.Licensing.ProductRegistrations.Delete,
         FoodSafePermissions.SystemAdministration.Default,
         FoodSafePermissions.DataScope.All
     ];

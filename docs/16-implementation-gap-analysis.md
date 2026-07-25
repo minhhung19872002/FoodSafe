@@ -4,20 +4,20 @@
 
 - Audit date: 2026-07-25
 - Source priority: original 42-page technical-requirement PDF, accepted decisions, state machines/permission matrix, database documents, API contract, implementation
-- Backend baseline: Release build has 0 warnings; 114 tests pass, including
+- Backend baseline: Release build has 0 warnings; 118 tests pass, including
   domain, application, PostgreSQL/EF, host-security, API-contract, and
   architecture checks.
-- Frontend baseline: Prettier, Oxlint, strict TypeScript, 35 component/route
-  tests, authenticated STT 08–21 browser lifecycles, and the production build
+- Frontend baseline: Prettier, Oxlint, strict TypeScript, 38 component/route
+  tests, authenticated STT 08–22 browser lifecycles, and the production build
   pass.
-- Database baseline: nine EF migrations apply cleanly to PostgreSQL 15 and EF
+- Database baseline: ten EF migrations apply cleanly to PostgreSQL 15 and EF
   reports no pending model changes.
 - Runtime baseline: production-shaped Compose images and a complete
   development stack pass health, authentication, authorization, recovery, and
   versioned-OpenAPI probes.
-- Overall conclusion: deployable foundation with three completed administrative
-  slices; still not production-ready because most of the 57 functional
-  requirements and the final security/recovery gates remain incomplete.
+- Overall conclusion: deployable foundation through STT 22; still not
+  production-ready because most of the 57 functional requirements and the
+  final security/recovery gates remain incomplete.
 
 Status vocabulary: **Built-in** means ABP supplies a partial capability that still needs FoodSafe configuration and verification. **Partial** means working code exists but the requirement quality gate is not met. **Design only** means the reviewed SQL covers the requirement but executable EF persistence does not yet exist.
 
@@ -46,7 +46,7 @@ Status vocabulary: **Built-in** means ABP supplies a partial capability that sti
 | STT-19 | Facilities | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved STT-19 scope | Done |
 | STT-20 | Products | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved STT-20 scope | Done |
 | STT-21 | Self-declarations | Implemented | Implemented | Migrated | Domain/EF/UI/Docker E2E | Scoped and reviewed | None in approved STT-21 scope | Done |
-| STT-22 | Product registrations | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P0 |
+| STT-22 | Product registrations | Implemented | Implemented, including public lookup | Migrated | Domain/EF/UI/Docker E2E | Scoped, private files and safe public projection | None in approved STT-22 scope | Done |
 | STT-23 | Advertising registration | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P1 |
 | STT-24 | Eligibility certificates | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P0 |
 | STT-25 | CFS certificates | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P1 |

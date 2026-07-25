@@ -55,5 +55,17 @@ public sealed class CurrentUserContextPermissionContractTests
         Assert.Contains(
             FoodSafePermissions.BusinessManagement.SelfDeclarations.Delete,
             permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.ProductRegistrations.View,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.ProductRegistrations.Create,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.ProductRegistrations.Edit,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.ProductRegistrations.Delete,
+            permissions);
     }
 }

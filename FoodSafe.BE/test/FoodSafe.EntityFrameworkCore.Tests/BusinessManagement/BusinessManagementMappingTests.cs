@@ -1,4 +1,5 @@
 using FoodSafe.EntityFrameworkCore;
+using FoodSafe.Licensing;
 using FoodSafe.Security;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
@@ -18,7 +19,7 @@ public sealed class BusinessManagementMappingTests
     }
 
     [Fact]
-    public void Model_should_map_all_STT_19_to_21_tables()
+    public void Model_should_map_all_STT_19_to_22_tables()
     {
         using var context = CreateContext();
 
@@ -32,6 +33,8 @@ public sealed class BusinessManagementMappingTests
             .GetTableName().ShouldBe("products");
         context.Model.FindEntityType(typeof(SelfDeclaration))!
             .GetTableName().ShouldBe("self_declarations");
+        context.Model.FindEntityType(typeof(ProductRegistration))!
+            .GetTableName().ShouldBe("product_registrations");
     }
 
     [Fact]
@@ -89,6 +92,24 @@ public sealed class BusinessManagementMappingTests
         var unique = declaration.GetIndexes().Single(index =>
             index.GetDatabaseName() ==
             "uq_self_declarations_business_number");
+        unique.IsUnique.ShouldBeTrue();
+        unique.GetFilter().ShouldBeNull();
+    }
+
+    [Fact]
+    public void Product_registration_should_enforce_ownership_and_global_number()
+    {
+        using var context = CreateContext();
+        var registration =
+            context.Model.FindEntityType(typeof(ProductRegistration))!;
+
+        registration.GetForeignKeys().ShouldContain(key =>
+            key.GetConstraintName() == "fk_product_reg_business_org");
+        registration.GetForeignKeys().ShouldContain(key =>
+            key.GetConstraintName() == "fk_product_reg_product_owner");
+        var unique = registration.GetIndexes().Single(index =>
+            index.GetDatabaseName() ==
+            "uq_product_registrations_number");
         unique.IsUnique.ShouldBeTrue();
         unique.GetFilter().ShouldBeNull();
     }

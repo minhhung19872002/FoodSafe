@@ -116,6 +116,12 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.BusinessManagement.SelfDeclarations.Create,
         FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit,
         FoodSafePermissions.BusinessManagement.SelfDeclarations.Delete,
+        FoodSafePermissions.Licensing.Default,
+        FoodSafePermissions.Licensing.ProductRegistrations.Default,
+        FoodSafePermissions.Licensing.ProductRegistrations.View,
+        FoodSafePermissions.Licensing.ProductRegistrations.Create,
+        FoodSafePermissions.Licensing.ProductRegistrations.Edit,
+        FoodSafePermissions.Licensing.ProductRegistrations.Delete,
         FoodSafePermissions.DataScope.All
     ];
 
@@ -194,13 +200,23 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.BusinessManagement.SelfDeclarations.Default,
                 FoodSafePermissions.BusinessManagement.SelfDeclarations.View,
                 FoodSafePermissions.BusinessManagement.SelfDeclarations.Create,
-                FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit
+                FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit,
+                FoodSafePermissions.Licensing.Default,
+                FoodSafePermissions.Licensing.ProductRegistrations.Default,
+                FoodSafePermissions.Licensing.ProductRegistrations.View,
+                FoodSafePermissions.Licensing.ProductRegistrations.Create,
+                FoodSafePermissions.Licensing.ProductRegistrations.Edit
             ]),
         new(
             "DistrictAdmin",
             "Quản trị cấp huyện",
             UserAdministratorPermissions
                 .Append(FoodSafePermissions.BusinessManagement.Businesses.Import)
+                .Append(FoodSafePermissions.Licensing.Default)
+                .Append(FoodSafePermissions.Licensing.ProductRegistrations.Default)
+                .Append(FoodSafePermissions.Licensing.ProductRegistrations.View)
+                .Append(FoodSafePermissions.Licensing.ProductRegistrations.Create)
+                .Append(FoodSafePermissions.Licensing.ProductRegistrations.Edit)
                 .ToArray()),
         new(
             "DistrictStaff",
@@ -226,12 +242,21 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.BusinessManagement.SelfDeclarations.Default,
                 FoodSafePermissions.BusinessManagement.SelfDeclarations.View,
                 FoodSafePermissions.BusinessManagement.SelfDeclarations.Create,
-                FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit
+                FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit,
+                FoodSafePermissions.Licensing.Default,
+                FoodSafePermissions.Licensing.ProductRegistrations.Default,
+                FoodSafePermissions.Licensing.ProductRegistrations.View,
+                FoodSafePermissions.Licensing.ProductRegistrations.Create,
+                FoodSafePermissions.Licensing.ProductRegistrations.Edit
             ]),
         new(
             "CommuneAdmin",
             "Quản trị cấp xã",
-            UserAdministratorPermissions),
+            UserAdministratorPermissions
+                .Append(FoodSafePermissions.Licensing.Default)
+                .Append(FoodSafePermissions.Licensing.ProductRegistrations.Default)
+                .Append(FoodSafePermissions.Licensing.ProductRegistrations.View)
+                .ToArray()),
         new(
             "CommuneStaff",
             "Cán bộ cấp xã",
@@ -253,7 +278,10 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.BusinessManagement.SelfDeclarations.Default,
                 FoodSafePermissions.BusinessManagement.SelfDeclarations.View,
                 FoodSafePermissions.BusinessManagement.SelfDeclarations.Create,
-                FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit
+                FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit,
+                FoodSafePermissions.Licensing.Default,
+                FoodSafePermissions.Licensing.ProductRegistrations.Default,
+                FoodSafePermissions.Licensing.ProductRegistrations.View
             ])
     ];
 

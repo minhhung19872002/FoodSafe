@@ -7,6 +7,8 @@ import {
   ChangePasswordPage,
   BusinessManagementPage,
   SelfDeclarationPage,
+  ProductRegistrationPage,
+  PublicProductRegistrationLookupPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -20,6 +22,14 @@ import {
 } from "./routeComponents";
 
 export const router = createBrowserRouter([
+  {
+    path: "/tra-cuu-dang-ky-cong-bo",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicProductRegistrationLookupPage />
+      </Suspense>
+    ),
+  },
   {
     path: "/login",
     element: (
@@ -115,6 +125,16 @@ export const router = createBrowserRouter([
               permission={"FoodSafe.BusinessManagement.SelfDeclarations.View"}
             >
               <SelfDeclarationPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "product-registrations",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Licensing.ProductRegistrations.View">
+              <ProductRegistrationPage />
             </PermissionRoute>
           </Suspense>
         ),

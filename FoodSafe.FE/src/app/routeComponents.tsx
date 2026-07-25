@@ -35,6 +35,14 @@ export const BusinessManagementPage = lazy(
 export const SelfDeclarationPage = lazy(
   () => import("@/features/self-declarations/pages/SelfDeclarationPage"),
 );
+export const ProductRegistrationPage = lazy(
+  () =>
+    import("@/features/product-registrations/pages/ProductRegistrationPage"),
+);
+export const PublicProductRegistrationLookupPage = lazy(
+  () =>
+    import("@/features/product-registrations/pages/PublicProductRegistrationLookupPage"),
+);
 
 export function RouteLoading() {
   return (

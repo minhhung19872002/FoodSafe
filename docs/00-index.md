@@ -27,6 +27,7 @@
 | [46-master-catalogs.md](46-master-catalogs.md) | STT 08–18 master-catalog implementation and validation | Active |
 | [47-business-product-management.md](47-business-product-management.md) | STT 19–20 business/product implementation and validation | Active |
 | [48-self-declaration-management.md](48-self-declaration-management.md) | STT 21 self-declaration implementation and validation | Active |
+| [49-product-registration-management.md](49-product-registration-management.md) | STT 22 product-registration implementation and validation | Active |
 
 | File | Nội dung | Trạng thái |
 |------|----------|-----------|

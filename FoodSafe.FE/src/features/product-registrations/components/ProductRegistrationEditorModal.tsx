@@ -1,0 +1,218 @@
+import { useEffect } from "react";
+import { Col, DatePicker, Form, Input, Modal, Row, Select } from "antd";
+import dayjs, { type Dayjs } from "dayjs";
+import type {
+  BusinessOption,
+  ProductOption,
+  ProductRegistration,
+  ProductRegistrationInput,
+} from "../types/productRegistration.types";
+
+interface FormValues {
+  businessId: string;
+  productId?: string;
+  registrationNumber: string;
+  receiptNumber?: string;
+  registrationDate: Dayjs;
+  receiptDate?: Dayjs;
+  expiryDate?: Dayjs;
+  productName: string;
+  manufacturer?: string;
+  certifyingAuthority?: string;
+  notes?: string;
+}
+
+interface Props {
+  open: boolean;
+  registration?: ProductRegistration;
+  businesses: BusinessOption[];
+  products: ProductOption[];
+  productsLoading: boolean;
+  saving: boolean;
+  onBusinessChange: (businessId?: string) => void;
+  onCancel: () => void;
+  onSubmit: (input: ProductRegistrationInput) => void;
+}
+
+export function ProductRegistrationEditorModal(props: Props) {
+  const [form] = Form.useForm<FormValues>();
+  const businessId = Form.useWatch("businessId", form);
+  const { open, registration, onBusinessChange } = props;
+
+  useEffect(() => {
+    if (!open) return;
+    const item = registration;
+    form.setFieldsValue(
+      item
+        ? {
+            businessId: item.businessId,
+            productId: item.productId,
+            registrationNumber: item.registrationNumber,
+            receiptNumber: item.receiptNumber,
+            registrationDate: dayjs(item.registrationDate),
+            receiptDate: item.receiptDate ? dayjs(item.receiptDate) : undefined,
+            expiryDate: item.expiryDate ? dayjs(item.expiryDate) : undefined,
+            productName: item.productName,
+            manufacturer: item.manufacturer,
+            certifyingAuthority: item.certifyingAuthority,
+            notes: item.notes,
+          }
+        : { registrationDate: dayjs() },
+    );
+    onBusinessChange(item?.businessId);
+  }, [form, open, registration, onBusinessChange]);
+
+  return (
+    <Modal
+      open={open}
+      title={registration ? "Cập nhật đăng ký công bố" : "Thêm đăng ký công bố"}
+      width={820}
+      okText="Lưu"
+      cancelText="Hủy"
+      confirmLoading={props.saving}
+      onCancel={props.onCancel}
+      onOk={() => form.submit()}
+      destroyOnHidden
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        preserve={false}
+        onFinish={(values) =>
+          props.onSubmit({
+            businessId: values.businessId,
+            productId: values.productId,
+            registrationNumber: values.registrationNumber.trim(),
+            receiptNumber: values.receiptNumber?.trim() || undefined,
+            registrationDate: values.registrationDate.format("YYYY-MM-DD"),
+            receiptDate: values.receiptDate?.format("YYYY-MM-DD"),
+            expiryDate: values.expiryDate?.format("YYYY-MM-DD"),
+            productName: values.productName.trim(),
+            manufacturer: values.manufacturer?.trim() || undefined,
+            certifyingAuthority:
+              values.certifyingAuthority?.trim() || undefined,
+            notes: values.notes?.trim() || undefined,
+          })
+        }
+      >
+        <Form.Item
+          name="businessId"
+          label="Cơ sở SXKD"
+          rules={[{ required: true, message: "Vui lòng chọn cơ sở." }]}
+        >
+          <Select
+            showSearch
+            optionFilterProp="label"
+            placeholder="Chọn cơ sở"
+            options={props.businesses.map((item) => ({
+              value: item.id,
+              label: item.code ? `${item.code} — ${item.name}` : item.name,
+            }))}
+            onChange={(value) => {
+              form.setFieldValue("productId", undefined);
+              props.onBusinessChange(value);
+            }}
+          />
+        </Form.Item>
+        <Form.Item name="productId" label="Sản phẩm liên kết">
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            disabled={!businessId}
+            loading={props.productsLoading}
+            placeholder="Không bắt buộc"
+            options={props.products.map((item) => ({
+              value: item.id,
+              label: item.code ? `${item.code} — ${item.name}` : item.name,
+            }))}
+            onChange={(value) => {
+              const product = props.products.find((item) => item.id === value);
+              if (product) form.setFieldValue("productName", product.name);
+            }}
+          />
+        </Form.Item>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              name="registrationNumber"
+              label="Số đăng ký"
+              rules={[
+                { required: true, message: "Vui lòng nhập số đăng ký." },
+                { max: 100 },
+              ]}
+            >
+              <Input autoComplete="off" />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="receiptNumber" label="Số tiếp nhận">
+              <Input maxLength={100} />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item
+              name="registrationDate"
+              label="Ngày đăng ký"
+              rules={[{ required: true, message: "Vui lòng chọn ngày." }]}
+            >
+              <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item name="receiptDate" label="Ngày tiếp nhận">
+              <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item
+              name="expiryDate"
+              label="Ngày hết hạn"
+              dependencies={["registrationDate"]}
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(_, value?: Dayjs) {
+                    const start = getFieldValue("registrationDate") as
+                      Dayjs | undefined;
+                    if (!value || !start || !value.isBefore(start, "day"))
+                      return Promise.resolve();
+                    return Promise.reject(
+                      new Error("Ngày hết hạn không được trước ngày đăng ký."),
+                    );
+                  },
+                }),
+              ]}
+            >
+              <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Form.Item
+          name="productName"
+          label="Tên sản phẩm"
+          rules={[
+            { required: true, message: "Vui lòng nhập tên sản phẩm." },
+            { max: 500 },
+          ]}
+        >
+          <Input />
+        </Form.Item>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item name="manufacturer" label="Nhà sản xuất">
+              <Input maxLength={300} />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="certifyingAuthority" label="Cơ quan cấp">
+              <Input maxLength={200} />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Form.Item name="notes" label="Ghi chú">
+          <Input.TextArea rows={3} />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+}

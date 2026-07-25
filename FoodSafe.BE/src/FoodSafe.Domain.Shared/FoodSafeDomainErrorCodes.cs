@@ -77,6 +77,20 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:SelfDeclaration:0006";
     }
 
+    public static class ProductRegistration
+    {
+        public const string DuplicateNumber =
+            "FoodSafe:ProductRegistration:0001";
+        public const string InvalidDateRange =
+            "FoodSafe:ProductRegistration:0002";
+        public const string ProductMismatch =
+            "FoodSafe:ProductRegistration:0003";
+        public const string AlreadyRevoked =
+            "FoodSafe:ProductRegistration:0004";
+        public const string CannotModifyRevoked =
+            "FoodSafe:ProductRegistration:0005";
+    }
+
     public static class Inspection
     {
         public const string PlanNotFound = "FoodSafe:Inspection:0001";

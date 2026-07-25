@@ -64,6 +64,21 @@ public static class FoodSafePermissions
         }
     }
 
+    public static class Licensing
+    {
+        public const string Default = GroupName + ".Licensing";
+
+        public static class ProductRegistrations
+        {
+            public const string Default =
+                Licensing.Default + ".ProductRegistrations";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+        }
+    }
+
     public static class SystemAdministration
     {
         public const string Default = GroupName + ".SystemAdmin";
