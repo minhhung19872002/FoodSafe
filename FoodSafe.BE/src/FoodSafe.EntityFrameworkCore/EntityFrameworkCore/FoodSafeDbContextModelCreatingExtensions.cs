@@ -15,6 +15,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
         Check.NotNull(builder, nameof(builder));
 
         ConfigureGeographicCatalogs(builder);
+        ConfigureMasterCatalogs(builder);
         ConfigureDataScope(builder);
 
         builder.Entity<Organization>(entity =>
@@ -77,6 +78,93 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasDatabaseName("idx_organizations_parent_id");
             entity.HasIndex(x => x.Level)
                 .HasDatabaseName("idx_organizations_level");
+        });
+    }
+
+    private static void ConfigureMasterCatalogs(ModelBuilder builder)
+    {
+        builder.Entity<ProductGroup>(entity =>
+        {
+            entity.ToTable("cat_product_groups", table =>
+                table.HasCheckConstraint("chk_cat_product_groups_level", "level IN (1, 2)"));
+            ConfigureMasterCatalog(entity);
+            entity.Property(x => x.Level).HasColumnName("level");
+            entity.Property(x => x.ParentId).HasColumnName("parent_id");
+            entity.HasOne<ProductGroup>().WithMany().HasForeignKey(x => x.ParentId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_cat_product_groups_parent");
+            entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("uq_cat_product_groups_code");
+            entity.HasIndex(x => x.ParentId).HasDatabaseName("idx_cat_product_groups_parent");
+        });
+
+        builder.Entity<BusinessType>(entity =>
+        {
+            entity.ToTable("cat_business_types");
+            ConfigureMasterCatalog(entity);
+            entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("uq_business_types_code");
+        });
+
+        builder.Entity<BusinessClassification>(entity =>
+        {
+            entity.ToTable("cat_business_classifications", table =>
+                table.HasCheckConstraint("chk_business_classifications_risk", "risk_level IN (1, 2, 3)"));
+            ConfigureMasterCatalog(entity);
+            entity.Property(x => x.Criteria).HasColumnName("criteria").HasMaxLength(2000).IsRequired();
+            entity.Property(x => x.RiskLevel).HasColumnName("risk_level").HasConversion<short>();
+            entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("uq_business_classifications_code");
+        });
+
+        builder.Entity<AdvertisementType>(entity =>
+        {
+            entity.ToTable("cat_advertisement_types");
+            ConfigureMasterCatalog(entity);
+            entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("uq_advertisement_types_code");
+        });
+
+        builder.Entity<DocumentType>(entity =>
+        {
+            entity.ToTable("cat_document_types");
+            ConfigureMasterCatalog(entity);
+            entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("uq_document_types_code");
+        });
+
+        builder.Entity<TestingCenter>(entity =>
+        {
+            entity.ToTable("cat_testing_centers");
+            ConfigureMasterCatalog(entity);
+            entity.Property(x => x.Address).HasColumnName("address_street").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.ProvinceId).HasColumnName("address_province_id");
+            entity.Property(x => x.DistrictId).HasColumnName("address_district_id");
+            entity.Property(x => x.CommuneId).HasColumnName("address_commune_id");
+            entity.Property(x => x.ContactPerson).HasColumnName("contact_person").HasMaxLength(200);
+            entity.Property(x => x.Phone).HasColumnName("phone").HasMaxLength(50);
+            entity.Property(x => x.Email).HasColumnName("email").HasMaxLength(200);
+            entity.Property(x => x.AccreditationNumber).HasColumnName("accreditation_number").HasMaxLength(100).IsRequired();
+            entity.Property(x => x.AccreditationScope).HasColumnName("accreditation_scope").HasMaxLength(2000).IsRequired();
+            entity.Property(x => x.AccreditationExpiresAt).HasColumnName("accreditation_expiry");
+            entity.HasOne<Province>().WithMany().HasForeignKey(x => x.ProvinceId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_testing_centers_province");
+            entity.HasOne<District>().WithMany().HasForeignKey(x => new { x.DistrictId, x.ProvinceId })
+                .HasPrincipalKey(x => new { DistrictId = x.Id, x.ProvinceId })
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_testing_centers_district_province");
+            entity.HasOne<Commune>().WithMany().HasForeignKey(x => new { x.CommuneId, x.DistrictId })
+                .HasPrincipalKey(x => new { CommuneId = x.Id, x.DistrictId })
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_testing_centers_commune_district");
+            entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("uq_testing_centers_code");
+        });
+
+        builder.Entity<TestingService>(entity =>
+        {
+            entity.ToTable("cat_testing_services");
+            ConfigureMasterCatalog(entity);
+            entity.Property(x => x.TestingCenterId).HasColumnName("testing_center_id");
+            entity.Property(x => x.Unit).HasColumnName("unit").HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Method).HasColumnName("method").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.Price).HasColumnName("unit_price").HasPrecision(18, 2);
+            entity.Property(x => x.TurnaroundDays).HasColumnName("turnaround_days");
+            entity.HasOne<TestingCenter>().WithMany().HasForeignKey(x => x.TestingCenterId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_testing_services_center");
+            entity.HasIndex(x => new { x.TestingCenterId, x.Code }).IsUnique()
+                .HasDatabaseName("uq_testing_services_center_code");
         });
     }
 
@@ -240,6 +328,10 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_district");
             entity.HasOne<Commune>().WithMany().HasForeignKey(x => x.CommuneId)
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_commune");
+            entity.HasOne<BusinessType>().WithMany().HasForeignKey(x => x.BusinessTypeId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_business_type");
+            entity.HasOne<ProductGroup>().WithMany().HasForeignKey(x => x.ProductGroupId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_product_group");
             entity.HasIndex(x => new
             {
                 x.GranteeOrganizationId,
@@ -271,5 +363,16 @@ public static class FoodSafeDbContextModelCreatingExtensions
         entity.Property<DateTime?>("LastModificationTime").HasColumnName("last_modification_time");
         entity.Property<Guid?>("LastModifierId").HasColumnName("last_modifier_id");
         entity.Property<bool>("IsDeleted").HasColumnName("is_deleted");
+    }
+
+    private static void ConfigureMasterCatalog<TEntity>(EntityTypeBuilder<TEntity> entity)
+        where TEntity : MasterCatalog
+    {
+        ConfigureCatalogAudit(entity);
+        entity.Property(x => x.Code).HasColumnName("code").HasMaxLength(50).IsRequired();
+        entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
+        entity.Property(x => x.Description).HasColumnName("description").HasMaxLength(2000);
+        entity.Property(x => x.IsActive).HasColumnName("is_active");
+        entity.Property(x => x.SortOrder).HasColumnName("sort_order");
     }
 }

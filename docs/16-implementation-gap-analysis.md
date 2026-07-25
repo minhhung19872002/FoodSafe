@@ -31,17 +31,17 @@ Status vocabulary: **Built-in** means ABP supplies a partial capability that sti
 | STT-05 | Access management | Implemented | Implemented | Permission grants + scope assignments | Domain/API/UI/live | Scoped grant ceiling | Remaining release-wide negative-matrix regression only | P0 |
 | STT-06 | Organizations | Implemented | Implemented | Migrated | Domain/application/EF/UI/live | Scoped | Remaining release-wide accessibility/E2E regression only | P0 |
 | STT-07 | Organization accounts | Implemented | Implemented | Scope assignments migrated | Domain/API/UI/live | Operation-scoped | Remaining release-wide accessibility/E2E regression only | P0 |
-| STT-08 | Countries | Missing | Missing | Design only | Missing | Unreviewed | Full vertical slice | P0 |
-| STT-09 | Regions | Missing | Missing | Design only | Missing | Unreviewed | Full vertical slice | P0 |
+| STT-08 | Countries | Implemented | Implemented | Migrated/seeded | Covered | Reviewed | None in approved scope | Done |
+| STT-09 | Regions | Implemented | Implemented | Migrated/seeded | Covered | Reviewed | None in approved scope | Done |
 | STT-10 | Provinces | Implemented | Implemented | Migrated | Domain/EF/UI/live | Scoped | Remaining release-wide accessibility/E2E regression only | P0 |
 | STT-11 | Districts/communes | Implemented | Implemented | Migrated | Domain/EF/UI/live | Scoped hierarchy | Remaining release-wide accessibility/E2E regression only | P0 |
-| STT-12 | Facility classifications | Missing | Missing | Design only | Missing | Unreviewed | Full vertical slice | P1 |
-| STT-13 | Product groups | Missing | Missing | Design only | Missing | Unreviewed | Full vertical slice | P1 |
-| STT-14 | Facility business types | Missing | Missing | Design only | Missing | Unreviewed | Full vertical slice | P1 |
-| STT-15 | Advertising types | Missing | Missing | Design only | Missing | Unreviewed | Full vertical slice | P1 |
-| STT-16 | Laboratories | Missing | Missing | Design only | Missing | Unreviewed | Full vertical slice | P1 |
-| STT-17 | Laboratory services | Missing | Missing | Design only | Missing | Unreviewed | Full vertical slice | P1 |
-| STT-18 | Document types | Missing | Missing | Design only | Missing | Unreviewed | Full vertical slice | P1 |
+| STT-12 | Facility classifications | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
+| STT-13 | Product groups | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
+| STT-14 | Facility business types | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
+| STT-15 | Advertising types | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
+| STT-16 | Laboratories | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
+| STT-17 | Laboratory services | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
+| STT-18 | Document types | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
 | STT-19 | Facilities | Missing | Missing | Design only | Missing | High gaps | CRUD, scope, history, map, import/export, attachments | P0 |
 | STT-20 | Products | Missing | Missing | Design only | Missing | High gaps | CRUD, scope, history, import/export | P0 |
 | STT-21 | Self-declarations | Missing | Missing | Design only | Missing | High gaps | Lifecycle, files, scope, exports | P0 |

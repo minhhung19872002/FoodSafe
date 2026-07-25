@@ -93,6 +93,11 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.GeographicCatalogs.Default,
         FoodSafePermissions.GeographicCatalogs.View,
         FoodSafePermissions.GeographicCatalogs.Manage,
+        FoodSafePermissions.Catalogs.Default,
+        FoodSafePermissions.Catalogs.View,
+        FoodSafePermissions.Catalogs.Create,
+        FoodSafePermissions.Catalogs.Edit,
+        FoodSafePermissions.Catalogs.Delete,
         FoodSafePermissions.DataScope.All
     ];
 
@@ -112,7 +117,9 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.Organizations.Default,
         FoodSafePermissions.Organizations.View,
         FoodSafePermissions.GeographicCatalogs.Default,
-        FoodSafePermissions.GeographicCatalogs.View
+        FoodSafePermissions.GeographicCatalogs.View,
+        FoodSafePermissions.Catalogs.Default,
+        FoodSafePermissions.Catalogs.View
     ];
 
     private static readonly RoleSeedDefinition[] DefaultRoles =
@@ -135,7 +142,12 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Organizations.Default,
                 FoodSafePermissions.Organizations.View,
                 FoodSafePermissions.GeographicCatalogs.Default,
-                FoodSafePermissions.GeographicCatalogs.View
+                FoodSafePermissions.GeographicCatalogs.View,
+                FoodSafePermissions.Catalogs.Default,
+                FoodSafePermissions.Catalogs.View,
+                FoodSafePermissions.Catalogs.Create,
+                FoodSafePermissions.Catalogs.Edit,
+                FoodSafePermissions.Catalogs.Delete
             ]),
         new(
             "DistrictAdmin",
@@ -148,7 +160,9 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Organizations.Default,
                 FoodSafePermissions.Organizations.View,
                 FoodSafePermissions.GeographicCatalogs.Default,
-                FoodSafePermissions.GeographicCatalogs.View
+                FoodSafePermissions.GeographicCatalogs.View,
+                FoodSafePermissions.Catalogs.Default,
+                FoodSafePermissions.Catalogs.View
             ]),
         new(
             "CommuneAdmin",
@@ -161,7 +175,9 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Organizations.Default,
                 FoodSafePermissions.Organizations.View,
                 FoodSafePermissions.GeographicCatalogs.Default,
-                FoodSafePermissions.GeographicCatalogs.View
+                FoodSafePermissions.GeographicCatalogs.View,
+                FoodSafePermissions.Catalogs.Default,
+                FoodSafePermissions.Catalogs.View
             ])
     ];
 

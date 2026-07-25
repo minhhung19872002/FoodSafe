@@ -11,6 +11,7 @@ import {
   GeographicCatalogPage,
   IdentityAdministrationPage,
   LoginPage,
+  MasterCatalogPage,
   OrganizationListPage,
   ResetPasswordPage,
   RouteLoading,
@@ -85,6 +86,16 @@ export const router = createBrowserRouter([
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.GeographicCatalogs.View">
               <GeographicCatalogPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "catalogs",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Catalogs.View">
+              <MasterCatalogPage />
             </PermissionRoute>
           </Suspense>
         ),

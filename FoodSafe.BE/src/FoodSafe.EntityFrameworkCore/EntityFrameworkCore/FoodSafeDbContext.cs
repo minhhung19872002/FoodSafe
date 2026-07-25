@@ -37,6 +37,13 @@ public class FoodSafeDbContext :
     public DbSet<Province> Provinces { get; set; }
     public DbSet<District> Districts { get; set; }
     public DbSet<Commune> Communes { get; set; }
+    public DbSet<ProductGroup> ProductGroups { get; set; }
+    public DbSet<BusinessType> BusinessTypes { get; set; }
+    public DbSet<BusinessClassification> BusinessClassifications { get; set; }
+    public DbSet<AdvertisementType> AdvertisementTypes { get; set; }
+    public DbSet<DocumentType> DocumentTypes { get; set; }
+    public DbSet<TestingCenter> TestingCenters { get; set; }
+    public DbSet<TestingService> TestingServices { get; set; }
     public DbSet<AppUserProfile> AppUserProfiles { get; set; }
     public DbSet<PasswordHistory> PasswordHistory { get; set; }
     public DbSet<ManagementScopeAssignment> ManagementScopeAssignments { get; set; }

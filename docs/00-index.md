@@ -23,6 +23,8 @@
 | [40-disaster-recovery-guide.md](40-disaster-recovery-guide.md) | RTO/RPO, protected state, restore and rehearsal procedure | Active |
 | [43-dependency-security-policy.md](43-dependency-security-policy.md) | Automated dependency gates and the temporary ABP advisory mitigation | Active |
 | [44-account-security-and-recovery.md](44-account-security-and-recovery.md) | Cookie/CSRF, CAPTCHA and password-recovery security boundary | Active |
+| [45-identity-administration.md](45-identity-administration.md) | Scoped user, role, permission and lifecycle administration | Active |
+| [46-master-catalogs.md](46-master-catalogs.md) | STT 08–18 master-catalog implementation and validation | Active |
 
 | File | Nội dung | Trạng thái |
 |------|----------|-----------|

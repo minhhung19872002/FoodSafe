@@ -12,7 +12,7 @@ Last updated: 2026-07-25
 | User and role administration | Implemented | Scoped user lifecycle, role lifecycle, permission tree/ceiling, default roles, activity feed, setup email, and permission-gated SPA validated live |
 | Authorization and data scope | Implemented (foundation) | Global permission plus organization-descendant and geographic assignment resolver implemented; organization API enforces operation-aware scope |
 | Organizations | Implemented | Scoped list/tree/detail/create/edit/delete API and permission-gated create/edit/delete UI pass; hierarchy/geography validation, descendant-safe parent selection and root-promotion authorization are enforced |
-| Master data | In progress | Administrative geography model, validated CRUD API and permission-gated province/district/commune UI implemented; broader business/product/inspection catalogs remain |
+| Master data | Implemented | STT 08–18 persistence, seed, CRUD APIs, permissions, specialized UI, integrity guards, tests and live validation complete |
 | Facilities/products/files | Not started | Milestone 2 |
 | Regulatory modules | Not started | Milestone 3 |
 | Inspection/warnings/news | Not started | Milestone 4 |
@@ -180,3 +180,15 @@ Last updated: 2026-07-25
 - Backend builds with zero warnings and 53 tests pass. Frontend formatting,
   lint, strict TypeScript, 15 tests, production bundle, and rebuilt non-root
   containers pass.
+
+## Master-catalog completion evidence added on 2026-07-25
+
+- Added the approved `cat_*` persistence model and `AddMasterCatalogs`
+  migration for all STT 12–18 entities.
+- Added searchable/paged country and region CRUD plus idempotent seed data for
+  Việt Nam and eight socio-economic regions.
+- Added independent view/create/edit/delete permissions with seven-role grants.
+- The SPA `/catalogs` workspace covers all nine catalog groups and specialized
+  hierarchy, risk, geography, accreditation, and service fields.
+- Clean PostgreSQL migration, 27 OpenAPI paths, live authenticated lifecycle
+  checks, dependency rejection, and cleanup all passed.

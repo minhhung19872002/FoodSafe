@@ -1,9 +1,10 @@
 using Volo.Abp;
 using Volo.Abp.Domain.Entities;
+using Volo.Abp.Auditing;
 
 namespace FoodSafe.Catalogs;
 
-public sealed class Country : Entity<Guid>, IAggregateRoot<Guid>, ISoftDelete
+public sealed class Country : Entity<Guid>, IAggregateRoot<Guid>, ISoftDelete, IAuditedObject
 {
     public string CodeAlpha2 { get; private set; } = string.Empty;
     public string? CodeAlpha3 { get; private set; }
@@ -65,7 +66,7 @@ public sealed class Country : Entity<Guid>, IAggregateRoot<Guid>, ISoftDelete
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
-public abstract class AdministrativeArea : Entity<Guid>, IAggregateRoot<Guid>, ISoftDelete
+public abstract class AdministrativeArea : Entity<Guid>, IAggregateRoot<Guid>, ISoftDelete, IAuditedObject
 {
     public string Code { get; protected set; } = string.Empty;
     public string Name { get; protected set; } = string.Empty;

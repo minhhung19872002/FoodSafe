@@ -26,6 +26,9 @@ export const GeographicCatalogPage = lazy(
 export const IdentityAdministrationPage = lazy(
   () => import("@/features/identity/pages/IdentityAdministrationPage"),
 );
+export const MasterCatalogPage = lazy(
+  () => import("@/features/catalogs/MasterCatalogPage"),
+);
 
 export function RouteLoading() {
   return (

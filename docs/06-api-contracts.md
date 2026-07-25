@@ -524,7 +524,22 @@ GET    /api/catalogs/testing-centers
 GET    /api/catalogs/testing-services?testingCenterId=x
 ```
 
-*(CRUD cho catalogs: các endpoint dưới `/api/v1/app/catalogs/*` — yêu cầu auth)*
+The implemented authenticated catalog contract uses
+`/api/v1/app/master-catalog`. List resources are plural; create resources are
+singular; update/delete follow `/{id}/{singular-resource}`:
+
+```
+GET    /api/v1/app/master-catalog/{countries|regions|product-groups}
+GET    /api/v1/app/master-catalog/{business-types|business-classifications}
+GET    /api/v1/app/master-catalog/{advertisement-types|document-types}
+GET    /api/v1/app/master-catalog/{testing-centers|testing-services}
+POST   /api/v1/app/master-catalog/{singular-resource}
+PUT    /api/v1/app/master-catalog/{id}/{singular-resource}
+DELETE /api/v1/app/master-catalog/{id}/{singular-resource}
+```
+
+Lists accept `filter`, `isActive`, paging, and the relevant `parentId` or
+`testingCenterId`. See `46-master-catalogs.md` for integrity rules.
 
 ---
 

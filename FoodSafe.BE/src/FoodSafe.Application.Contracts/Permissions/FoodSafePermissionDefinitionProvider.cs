@@ -39,6 +39,18 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             FoodSafePermissions.GeographicCatalogs.Manage,
             LocalizableString.Create<FoodSafeResource>("Permission:GeographicCatalogs.Manage"));
 
+        var catalogs = group.AddPermission(
+            FoodSafePermissions.Catalogs.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:Catalogs"));
+        catalogs.AddChild(FoodSafePermissions.Catalogs.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:Catalogs.View"));
+        catalogs.AddChild(FoodSafePermissions.Catalogs.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:Catalogs.Create"));
+        catalogs.AddChild(FoodSafePermissions.Catalogs.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:Catalogs.Edit"));
+        catalogs.AddChild(FoodSafePermissions.Catalogs.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:Catalogs.Delete"));
+
         var systemAdministration = group.AddPermission(
             FoodSafePermissions.SystemAdministration.Default,
             LocalizableString.Create<FoodSafeResource>("Permission:SystemAdmin"));
