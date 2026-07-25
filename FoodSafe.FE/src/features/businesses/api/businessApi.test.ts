@@ -1,11 +1,7 @@
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { server } from "@/test/server";
-import {
-  businessApi,
-  productApi,
-  productAttachmentApi,
-} from "./businessApi";
+import { businessApi, productApi, productAttachmentApi } from "./businessApi";
 
 describe("business management API", () => {
   it("normalizes nullable business fields and uses the generated v1 route", async () => {

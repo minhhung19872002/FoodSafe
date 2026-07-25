@@ -79,6 +79,61 @@ public sealed class BusinessManagementTests
             FoodSafeDomainErrorCodes.Business.InvalidCertificateDates);
     }
 
+    [Fact]
+    public void Self_declaration_should_normalize_number_and_derive_expiry()
+    {
+        var declaration = CreateSelfDeclaration(
+            new DateTime(2026, 7, 25),
+            new DateTime(2026, 7, 24));
+
+        declaration.DeclarationNumber.ShouldBe("TCB-01");
+        declaration.Status.ShouldBe(LicenseStatus.Expired);
+        declaration.EffectiveStatus(new DateTime(2026, 7, 25))
+            .ShouldBe(LicenseStatus.Expired);
+    }
+
+    [Fact]
+    public void Self_declaration_should_reject_reversed_dates()
+    {
+        var exception = Should.Throw<BusinessException>(() =>
+            CreateSelfDeclaration(
+                new DateTime(2026, 7, 25),
+                new DateTime(2026, 7, 24),
+                declarationDate: new DateTime(2026, 7, 25)));
+
+        exception.Code.ShouldBe(
+            FoodSafeDomainErrorCodes.SelfDeclaration.InvalidDateRange);
+    }
+
+    [Fact]
+    public void Revoked_self_declaration_should_be_terminal()
+    {
+        var today = new DateTime(2026, 7, 25);
+        var declaration = CreateSelfDeclaration(
+            today,
+            today.AddYears(1));
+        var userId = Guid.NewGuid();
+        declaration.Revoke("Không còn phù hợp", today, userId);
+
+        declaration.Status.ShouldBe(LicenseStatus.Revoked);
+        declaration.RevokedById.ShouldBe(userId);
+        declaration.EffectiveStatus(today.AddYears(2))
+            .ShouldBe(LicenseStatus.Revoked);
+        var exception = Should.Throw<BusinessException>(() =>
+            declaration.Update(
+                null,
+                "TCB-02",
+                today,
+                "Sản phẩm",
+                null,
+                null,
+                today.AddYears(1),
+                null,
+                today));
+        exception.Code.ShouldBe(
+            FoodSafeDomainErrorCodes.SelfDeclaration.CannotModifyRevoked);
+    }
+
     private static Business CreateBusiness(
         Guid organizationId,
         string? code = "CS-01",
@@ -89,4 +144,22 @@ public sealed class BusinessManagementTests
             Guid.NewGuid(), organizationId, code, "Cơ sở kiểm thử", null, null,
             taxCode, null, null, null, null, null, "Hạ Long", null, null, null,
             latitude, longitude, null, null, null);
+
+    private static SelfDeclaration CreateSelfDeclaration(
+        DateTime today,
+        DateTime? expiryDate,
+        DateTime? declarationDate = null) =>
+        SelfDeclaration.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            null,
+            " tcb-01 ",
+            declarationDate ?? new DateTime(2026, 1, 1),
+            "Sản phẩm kiểm thử",
+            null,
+            null,
+            expiryDate,
+            null,
+            today);
 }

@@ -61,6 +61,22 @@ public static class FoodSafeDomainErrorCodes
         public const string DuplicateCode = "FoodSafe:Product:0005";
     }
 
+    public static class SelfDeclaration
+    {
+        public const string DuplicateNumber =
+            "FoodSafe:SelfDeclaration:0001";
+        public const string InvalidDateRange =
+            "FoodSafe:SelfDeclaration:0002";
+        public const string ProductMismatch =
+            "FoodSafe:SelfDeclaration:0003";
+        public const string AlreadyRevoked =
+            "FoodSafe:SelfDeclaration:0004";
+        public const string RevokeReasonRequired =
+            "FoodSafe:SelfDeclaration:0005";
+        public const string CannotModifyRevoked =
+            "FoodSafe:SelfDeclaration:0006";
+    }
+
     public static class Inspection
     {
         public const string PlanNotFound = "FoodSafe:Inspection:0001";

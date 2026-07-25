@@ -6,6 +6,7 @@ import { PermissionRoute } from "./PermissionRoute";
 import {
   ChangePasswordPage,
   BusinessManagementPage,
+  SelfDeclarationPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -102,6 +103,18 @@ export const router = createBrowserRouter([
               ]}
             >
               <BusinessManagementPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "self-declarations",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute
+              permission={"FoodSafe.BusinessManagement.SelfDeclarations.View"}
+            >
+              <SelfDeclarationPage />
             </PermissionRoute>
           </Suspense>
         ),

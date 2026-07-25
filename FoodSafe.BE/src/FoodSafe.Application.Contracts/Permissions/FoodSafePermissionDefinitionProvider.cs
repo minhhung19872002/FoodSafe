@@ -92,6 +92,27 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             FoodSafePermissions.BusinessManagement.Products.Import,
             LocalizableString.Create<FoodSafeResource>("Permission:Products.Import"));
 
+        var selfDeclarations = businessManagement.AddChild(
+            FoodSafePermissions.BusinessManagement.SelfDeclarations.Default,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:SelfDeclarations"));
+        selfDeclarations.AddChild(
+            FoodSafePermissions.BusinessManagement.SelfDeclarations.View,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:SelfDeclarations.View"));
+        selfDeclarations.AddChild(
+            FoodSafePermissions.BusinessManagement.SelfDeclarations.Create,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:SelfDeclarations.Create"));
+        selfDeclarations.AddChild(
+            FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:SelfDeclarations.Edit"));
+        selfDeclarations.AddChild(
+            FoodSafePermissions.BusinessManagement.SelfDeclarations.Delete,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:SelfDeclarations.Delete"));
+
         var systemAdministration = group.AddPermission(
             FoodSafePermissions.SystemAdministration.Default,
             LocalizableString.Create<FoodSafeResource>("Permission:SystemAdmin"));

@@ -19,6 +19,7 @@ import {
   SafetyCertificateOutlined,
   DatabaseOutlined,
   ShopOutlined,
+  FileProtectOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -64,6 +65,13 @@ function buildMenuItems(
       key: "/businesses",
       icon: <ShopOutlined />,
       label: "Cơ sở và sản phẩm",
+    });
+  }
+  if (hasPermission("FoodSafe.BusinessManagement.SelfDeclarations.View")) {
+    items.push({
+      key: "/self-declarations",
+      icon: <FileProtectOutlined />,
+      label: "Hồ sơ tự công bố",
     });
   }
   if (hasPermission("FoodSafe.SystemAdministration")) {

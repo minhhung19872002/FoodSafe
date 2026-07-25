@@ -9,5 +9,6 @@ public sealed class BusinessManagementAutoMapperProfile : Profile
         CreateMap<Business, BusinessDto>();
         CreateMap<BusinessHandler, BusinessHandlerDto>();
         CreateMap<Product, ProductDto>();
+        CreateMap<SelfDeclaration, SelfDeclarationDto>();
     }
 }

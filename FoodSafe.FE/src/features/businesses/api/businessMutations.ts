@@ -96,8 +96,7 @@ export function useConfirmBusinessImport() {
 
 export function useExportBusinesses() {
   return useMutation({
-    mutationFn: (filter: BusinessFilter) =>
-      businessApi.exportExcel(filter),
+    mutationFn: (filter: BusinessFilter) => businessApi.exportExcel(filter),
   });
 }
 
@@ -146,13 +145,8 @@ export function useDeleteProduct() {
 
 export function useUploadProductAttachment() {
   return useMutation({
-    mutationFn: ({
-      productId,
-      file,
-    }: {
-      productId: string;
-      file: File;
-    }) => productAttachmentApi.upload(productId, file),
+    mutationFn: ({ productId, file }: { productId: string; file: File }) =>
+      productAttachmentApi.upload(productId, file),
     onSuccess: useInvalidateBusinessManagement(),
   });
 }

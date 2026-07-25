@@ -52,6 +52,16 @@ public static class FoodSafePermissions
             public const string Delete = Default + ".Delete";
             public const string Import = Default + ".Import";
         }
+
+        public static class SelfDeclarations
+        {
+            public const string Default =
+                BusinessManagement.Default + ".SelfDeclarations";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+        }
     }
 
     public static class SystemAdministration

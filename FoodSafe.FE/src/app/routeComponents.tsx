@@ -32,6 +32,9 @@ export const MasterCatalogPage = lazy(
 export const BusinessManagementPage = lazy(
   () => import("@/features/businesses/pages/BusinessManagementPage"),
 );
+export const SelfDeclarationPage = lazy(
+  () => import("@/features/self-declarations/pages/SelfDeclarationPage"),
+);
 
 export function RouteLoading() {
   return (

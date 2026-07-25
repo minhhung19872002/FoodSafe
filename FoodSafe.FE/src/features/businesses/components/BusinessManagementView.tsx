@@ -319,10 +319,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               </Button>
             )}
             {props.permissions.importProduct && (
-              <Button
-                icon={<ImportOutlined />}
-                onClick={props.onImportProduct}
-              >
+              <Button icon={<ImportOutlined />} onClick={props.onImportProduct}>
                 Import Excel
               </Button>
             )}

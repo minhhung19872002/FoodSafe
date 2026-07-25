@@ -8,10 +8,13 @@ import {
 import { Button, Modal, Popconfirm, Space, Table, Upload } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { RcFile } from "antd/es/upload/interface";
-import type { FileAttachment, Product } from "../types/business.types";
+import type {
+  FileAttachment,
+  SelfDeclaration,
+} from "../types/selfDeclaration.types";
 
 interface Props {
-  product?: Product;
+  declaration?: SelfDeclaration;
   attachments: FileAttachment[];
   loading: boolean;
   editable: boolean;
@@ -28,7 +31,7 @@ function formatBytes(value: number) {
   return `${(value / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function ProductAttachmentsModal(props: Props) {
+export function SelfDeclarationAttachmentsModal(props: Props) {
   const [file, setFile] = useState<RcFile>();
   const columns: ColumnsType<FileAttachment> = [
     { title: "Tên file", dataIndex: "originalName" },
@@ -71,8 +74,8 @@ export function ProductAttachmentsModal(props: Props) {
 
   return (
     <Modal
-      open={Boolean(props.product)}
-      title={`Tệp đính kèm — ${props.product?.name ?? ""}`}
+      open={Boolean(props.declaration)}
+      title={`Tệp hồ sơ — ${props.declaration?.declarationNumber ?? ""}`}
       width={760}
       footer={null}
       onCancel={props.onCancel}

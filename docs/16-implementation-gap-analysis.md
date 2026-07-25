@@ -4,12 +4,13 @@
 
 - Audit date: 2026-07-25
 - Source priority: original 42-page technical-requirement PDF, accepted decisions, state machines/permission matrix, database documents, API contract, implementation
-- Backend baseline: Release build has 0 warnings; 53 tests pass, including
+- Backend baseline: Release build has 0 warnings; 114 tests pass, including
   domain, application, PostgreSQL/EF, host-security, API-contract, and
   architecture checks.
-- Frontend baseline: Prettier, Oxlint, strict TypeScript, 15 component/route
-  tests, and the production build pass.
-- Database baseline: five EF migrations apply cleanly to PostgreSQL 15 and EF
+- Frontend baseline: Prettier, Oxlint, strict TypeScript, 35 component/route
+  tests, authenticated STT 08–21 browser lifecycles, and the production build
+  pass.
+- Database baseline: nine EF migrations apply cleanly to PostgreSQL 15 and EF
   reports no pending model changes.
 - Runtime baseline: production-shaped Compose images and a complete
   development stack pass health, authentication, authorization, recovery, and
@@ -44,7 +45,7 @@ Status vocabulary: **Built-in** means ABP supplies a partial capability that sti
 | STT-18 | Document types | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
 | STT-19 | Facilities | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved STT-19 scope | Done |
 | STT-20 | Products | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved STT-20 scope | Done |
-| STT-21 | Self-declarations | Missing | Missing | Design only | Missing | High gaps | Lifecycle, files, scope, exports | P0 |
+| STT-21 | Self-declarations | Implemented | Implemented | Migrated | Domain/EF/UI/Docker E2E | Scoped and reviewed | None in approved STT-21 scope | Done |
 | STT-22 | Product registrations | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P0 |
 | STT-23 | Advertising registration | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P1 |
 | STT-24 | Eligibility certificates | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P0 |
@@ -89,7 +90,7 @@ Status vocabulary: **Built-in** means ABP supplies a partial capability that sti
 | Authentication | HttpOnly same-site cookie/CSRF session, post-login token refresh, lockout, expiry/history, CAPTCHA-protected first-login change, Turnstile login and transactional email recovery are implemented and live-tested | Complete release-wide security and browser E2E review |
 | Authorization | Permission-aware SPA plus server-side organization/geography scope resolver; organization and geography operations are enforced | Apply the same mandatory list/detail/mutation/file/export scope pattern to every remaining module |
 | Database | PostgreSQL 15 EF baseline plus organization, scope, geography, account-security and ABP-upgrade migrations; clean apply/model-drift checks pass | Implement and migrate the remaining approved aggregates and their PostgreSQL constraints/tests |
-| Files | Shared product attachment foundation implemented: typed owners, PostgreSQL metadata, private MinIO objects, synchronous ClamAV scanning, signature/MIME/size/checksum validation, scoped download and soft deletion | Reuse the mechanism for later attachment-bearing aggregates; add retention cleanup and production malware-definition monitoring |
+| Files | Shared document attachment store is used by products and self-declarations: typed owners, PostgreSQL metadata, private MinIO objects, synchronous ClamAV scanning, signature/MIME/size/checksum validation, scoped download and soft deletion | Reuse the mechanism for later attachment-bearing aggregates; add retention cleanup and production malware-definition monitoring |
 | Error handling | ABP application errors and RFC Problem Details for version negotiation are documented, correlated and production-safe | Add automated API tests for every error class and stable FoodSafe codes per remaining slice |
 | API versioning | `/api/v1/app` and `/api/v1/security` are emitted in OpenAPI; unsupported versions advertise `1.0` and legacy app routes are absent | Preserve the v1 compatibility contract and add examples/schemas as modules land |
 | Rate limiting | Global partitions cover login, reset, public and normal API traffic; 429 behavior was live-tested | Add endpoint-specific integration/download limits and distributed-policy validation before scale-out |

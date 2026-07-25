@@ -43,3 +43,20 @@ public interface IProductAttachmentAppService : IApplicationService
         Guid attachmentId);
     Task DeleteAsync(Guid productId, Guid attachmentId);
 }
+
+public interface ISelfDeclarationAttachmentAppService :
+    IApplicationService
+{
+    Task<IReadOnlyList<FileAttachmentDto>> GetListAsync(
+        Guid declarationId);
+    Task<FileAttachmentDto> UploadAsync(
+        Guid declarationId,
+        byte[] content,
+        string originalName,
+        string contentType,
+        string? description);
+    Task<FileAttachmentDownloadDto> DownloadAsync(
+        Guid declarationId,
+        Guid attachmentId);
+    Task DeleteAsync(Guid declarationId, Guid attachmentId);
+}

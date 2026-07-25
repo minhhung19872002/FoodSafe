@@ -14,7 +14,8 @@ Last updated: 2026-07-25
 | Organizations | Implemented | Scoped list/tree/detail/create/edit/delete API and permission-gated create/edit/delete UI pass; hierarchy/geography validation, descendant-safe parent selection and root-promotion authorization are enforced |
 | Master data | Implemented | STT 08–18 persistence, seed, CRUD APIs, permissions, specialized UI, integrity guards, tests and live validation complete |
 | Facilities/products/files | Tested and reviewed | STT 19â€“20 scoped CRUD, map, responsible persons, atomic Excel workflows and ClamAV-scanned MinIO product attachments pass backend/frontend tests and authenticated Docker E2E |
-| Regulatory modules | Not started | Milestone 3 |
+| Self-declarations | Tested and reviewed | STT 21 scoped CRUD, effective expiry alerts, terminal revocation, retained number identity, Excel export and secure shared attachments pass PostgreSQL, frontend and authenticated Docker E2E gates |
+| Remaining regulatory modules | Not started | STT 22–26 in Milestone 3 |
 | Inspection/warnings/news | Not started | Milestone 4 |
 | Poisoning/reporting | Not started | Milestone 5 |
 | Hazard/labs/dashboard/statistics | Not started | Milestone 6 |
@@ -198,3 +199,27 @@ Last updated: 2026-07-25
   added MSW v2 integration coverage and authenticated Playwright
   create/edit/delete regression; and normalized nullable API fields discovered
   by the browser lifecycle.
+
+## Self-declaration completion evidence added on 2026-07-25
+
+- Added the `SelfDeclaration` aggregate, `LicenseStatus`, four permissions,
+  operation-aware business/product data scope and PostgreSQL
+  `AddSelfDeclarations` migration.
+- PostgreSQL enforces parent business/organization ownership, optional product
+  ownership, date ordering, revocation completeness and business-scoped
+  official-number uniqueness across retained soft-deleted history.
+- Effective status is calculated against the current date for list, detail,
+  filters and export, so expired data remains correct even if a scheduled job
+  is delayed. Revocation is terminal and records reason, actor and time.
+- Refactored product file handling into one shared document attachment store.
+  Self-declaration files reuse the private MinIO, ClamAV fail-closed scan,
+  signature/MIME/ZIP-bomb/size validation, SHA-256 verification and retention
+  behavior. Upload/delete are rejected after revocation.
+- Added the Vietnamese `/self-declarations` page with filters, 30/60/90-day
+  warnings, CRUD, revocation, Excel export and attachment management.
+- The migration applied through the one-shot Docker migrator; API and SPA
+  containers are healthy. Authenticated Playwright completed create, export,
+  clean PDF upload/download/delete, revoke, post-revoke mutation rejection,
+  soft-delete and official-number reuse rejection.
+- Backend builds with zero warnings and 114 tests pass. Frontend format, lint,
+  strict TypeScript, 35 tests and production build pass.

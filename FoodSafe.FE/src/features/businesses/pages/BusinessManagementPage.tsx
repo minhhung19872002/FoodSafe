@@ -506,8 +506,7 @@ export default function BusinessManagementPage() {
         onDownloadTemplate={() =>
           downloadProductTemplate.mutate(undefined, {
             onSuccess: ({ blob, fileName }) => saveDownload(blob, fileName),
-            onError: () =>
-              void message.error("Không thể tải file mẫu import"),
+            onError: () => void message.error("Không thể tải file mẫu import"),
           })
         }
         onFileChange={() => previewProductImport.reset()}

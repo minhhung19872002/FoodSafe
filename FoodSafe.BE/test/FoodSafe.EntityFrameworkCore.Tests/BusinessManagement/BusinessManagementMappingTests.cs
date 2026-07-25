@@ -18,7 +18,7 @@ public sealed class BusinessManagementMappingTests
     }
 
     [Fact]
-    public void Model_should_map_all_STT_19_20_tables()
+    public void Model_should_map_all_STT_19_to_21_tables()
     {
         using var context = CreateContext();
 
@@ -30,6 +30,8 @@ public sealed class BusinessManagementMappingTests
             .GetTableName().ShouldBe("business_handlers");
         context.Model.FindEntityType(typeof(Product))!
             .GetTableName().ShouldBe("products");
+        context.Model.FindEntityType(typeof(SelfDeclaration))!
+            .GetTableName().ShouldBe("self_declarations");
     }
 
     [Fact]
@@ -69,5 +71,25 @@ public sealed class BusinessManagementMappingTests
 
         scope.GetForeignKeys().ShouldContain(key =>
             key.GetConstraintName() == "fk_msa_business");
+    }
+
+    [Fact]
+    public void Self_declaration_should_enforce_parent_ownership_and_number()
+    {
+        using var context = CreateContext();
+        var declaration =
+            context.Model.FindEntityType(typeof(SelfDeclaration))!;
+
+        declaration.GetForeignKeys().ShouldContain(key =>
+            key.GetConstraintName() ==
+            "fk_self_declarations_business_org");
+        declaration.GetForeignKeys().ShouldContain(key =>
+            key.GetConstraintName() ==
+            "fk_self_declarations_product");
+        var unique = declaration.GetIndexes().Single(index =>
+            index.GetDatabaseName() ==
+            "uq_self_declarations_business_number");
+        unique.IsUnique.ShouldBeTrue();
+        unique.GetFilter().ShouldBeNull();
     }
 }

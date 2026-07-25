@@ -57,3 +57,8 @@ public interface IProductExcelAppService : IApplicationService
     Task<ExcelImportResultDto> ConfirmAsync(ConfirmExcelImportDto input);
     Task<ExcelDownloadDto> ExportAsync(ProductListInput input);
 }
+
+public interface ISelfDeclarationExcelAppService : IApplicationService
+{
+    Task<ExcelDownloadDto> ExportAsync(SelfDeclarationListInput input);
+}

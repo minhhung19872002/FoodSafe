@@ -278,6 +278,113 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasDatabaseName("idx_products_group");
         });
 
+        builder.Entity<SelfDeclaration>(entity =>
+        {
+            entity.ToTable("self_declarations", table =>
+            {
+                table.HasCheckConstraint(
+                    "chk_self_declarations_status",
+                    "status IN (1, 2, 3)");
+                table.HasCheckConstraint(
+                    "chk_self_declarations_dates",
+                    "expiry_date IS NULL OR declaration_date <= expiry_date");
+                table.HasCheckConstraint(
+                    "chk_self_declarations_revoke",
+                    "(status != 3 AND revoke_reason IS NULL AND " +
+                    "revoked_at IS NULL AND revoked_by_id IS NULL) OR " +
+                    "(status = 3 AND revoke_reason IS NOT NULL AND " +
+                    "revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)");
+            });
+            ConfigureAggregateAudit(entity, "pk_self_declarations");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.ProductId).HasColumnName("product_id");
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id");
+            entity.Property(x => x.DeclarationNumber)
+                .HasColumnName("declaration_number")
+                .HasMaxLength(100)
+                .IsRequired();
+            entity.Property(x => x.DeclarationDate)
+                .HasColumnName("declaration_date")
+                .HasColumnType("date");
+            entity.Property(x => x.ProductName)
+                .HasColumnName("product_name")
+                .HasMaxLength(500)
+                .IsRequired();
+            entity.Property(x => x.Manufacturer)
+                .HasColumnName("manufacturer")
+                .HasMaxLength(300);
+            entity.Property(x => x.Purpose)
+                .HasColumnName("purpose")
+                .HasMaxLength(200);
+            entity.Property(x => x.ExpiryDate)
+                .HasColumnName("expiry_date")
+                .HasColumnType("date");
+            entity.Property(x => x.Status)
+                .HasColumnName("status")
+                .HasConversion<short>();
+            entity.Property(x => x.RevokeReason)
+                .HasColumnName("revoke_reason");
+            entity.Property(x => x.RevokedAt)
+                .HasColumnName("revoked_at");
+            entity.Property(x => x.RevokedById)
+                .HasColumnName("revoked_by_id");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+
+            entity.HasOne<Business>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    x.Id,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_self_declarations_business_org");
+            entity.HasOne<Product>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.ProductId,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    ProductId = x.Id,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_self_declarations_product");
+            entity.HasOne<Organization>().WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_self_declarations_org");
+
+            entity.HasIndex(x => new
+                {
+                    x.BusinessId,
+                    x.DeclarationNumber
+                })
+                .IsUnique()
+                .HasDatabaseName("uq_self_declarations_business_number");
+            entity.HasIndex(x => x.BusinessId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_self_declarations_business");
+            entity.HasIndex(x => x.ProductId)
+                .HasFilter("product_id IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("idx_self_declarations_product");
+            entity.HasIndex(x => new { x.Status, x.ExpiryDate })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_self_declarations_status_expiry");
+            entity.HasIndex(x => x.OrganizationId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_self_declarations_org");
+        });
+
         builder.Entity<ManagementScopeAssignment>(entity =>
         {
             entity.HasOne<Business>().WithMany().HasForeignKey(x => x.BusinessId)
