@@ -18,7 +18,7 @@ Last updated: 2026-07-25
 | Poisoning/reporting | Not started | Milestone 5 |
 | Hazard/labs/dashboard/statistics | Not started | Milestone 6 |
 | Public portal/integrations | Not started | Milestone 7 |
-| Docker full stack/CI/operations | Not started | Infrastructure-only Compose exists |
+| Docker full stack/CI/operations | In progress | Six-service Compose stack and deployment guide implemented; CI, backup/restore rehearsal and production TLS deployment remain |
 | Final security/readiness review | Not started | Current overall readiness: NOT READY |
 
 “Complete” is intentionally unused until every module quality gate passes.
@@ -60,3 +60,29 @@ Last updated: 2026-07-25
 - Generated OpenAPI was inspected to establish the authoritative ABP mutation routes; frontend route tests cover the `/{id}/{kind}` convention.
 - Live authenticated cookie/CSRF create → update → delete completed against PostgreSQL and the test record was removed.
 - Backend build passes with 0 warnings and 25 tests; frontend lint/build and 9 tests pass.
+
+## Container deployment evidence added on 2026-07-25
+
+- Added multi-stage .NET 9 and Node/Nginx image builds; the API and SPA runtime
+  containers run as non-root users.
+- Added a six-service Compose stack for PostgreSQL, Redis, MinIO, the one-shot
+  migrator, API, and SPA with dependency-aware health gates and persistent named
+  volumes.
+- Infrastructure ports and the web entry point bind to loopback by default; the
+  API remains private to the Compose network.
+- Production secrets are mandatory environment values. The administrator
+  bootstrap password is supplied only to the migrator, and the API does not
+  migrate or seed on startup.
+- Authentication data-protection keys persist across API replacement;
+  Production fails fast unless the key ring is protected by a supplied PKCS#12
+  certificate.
+- SPA fallback, `/api` proxying, health endpoints, forwarded-protocol handling,
+  cookie/CSRF authentication, and security headers were exercised through
+  Nginx.
+- A clean-volume rehearsal migrated and seeded PostgreSQL with a non-default
+  bootstrap credential, authenticated the administrator with seven expected
+  permissions, and retained that authenticated session after force-replacing
+  the API container.
+- `docs/42-container-deployment.md` documents local and production settings,
+  secret handling, health checks, operations, and the remaining backup/restore
+  release gate.

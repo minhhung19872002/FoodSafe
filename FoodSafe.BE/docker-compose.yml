@@ -1,55 +1,157 @@
-version: "3.9"
+name: foodsafe
+
+x-backend-environment: &backend-environment
+  ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:?Set ASPNETCORE_ENVIRONMENT}
+  ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB:-FoodSafe};Username=${POSTGRES_USER:-foodsafe};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+  App__SelfUrl: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+  App__ClientUrl: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+  App__CorsOrigins: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+  App__RedirectAllowedUrls: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+  App__KnownProxies__0: 172.28.0.10
+  AuthServer__Authority: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+  AuthServer__RequireHttpsMetadata: ${REQUIRE_HTTPS_METADATA:?Set REQUIRE_HTTPS_METADATA}
+  StringEncryption__DefaultPassPhrase: ${STRING_ENCRYPTION_PASSPHRASE:?Set STRING_ENCRYPTION_PASSPHRASE}
+  DataProtection__KeysPath: /home/app/.aspnet/DataProtection-Keys
+  DataProtection__CertificatePath: /run/secrets/foodsafe-data-protection.pfx
+  DataProtection__CertificatePassword: ${DATA_PROTECTION_CERTIFICATE_PASSWORD:-}
+  Database__AutoMigrate: "false"
 
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: foodsafe-postgres
     environment:
-      POSTGRES_DB: FoodSafe
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-FoodSafe}
+      POSTGRES_USER: ${POSTGRES_USER:-foodsafe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
     ports:
-      - "5433:5432"
+      - "${INFRA_BIND_ADDRESS:-127.0.0.1}:${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-foodsafe} -d ${POSTGRES_DB:-FoodSafe}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.30
 
   redis:
     image: redis:7-alpine
-    container_name: foodsafe-redis
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "6379:6379"
+      - "${INFRA_BIND_ADDRESS:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
+      interval: 5s
       timeout: 3s
-      retries: 5
+      retries: 20
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.40
 
   minio:
-    image: minio/minio:latest
-    container_name: foodsafe-minio
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${INFRA_BIND_ADDRESS:-127.0.0.1}:${MINIO_API_PORT:-9000}:9000"
+      - "${INFRA_BIND_ADDRESS:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio_data:/data
-    command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.50
+
+  migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      <<: *backend-environment
+      OpenIddict__Applications__FoodSafe_Swagger__RootUrl: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+      Seed__AdminEmail: ${SEED_ADMIN_EMAIL:-admin@foodsafe.local}
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD}
+    entrypoint: ["dotnet", "/app/migrator/FoodSafe.DbMigrator.dll"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.21
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      <<: *backend-environment
+      ASPNETCORE_URLS: http://+:8080
+    volumes:
+      - data_protection_keys:/home/app/.aspnet/DataProtection-Keys
+      - ./secrets:/run/secrets:ro
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "--fail",
+          "--header",
+          "X-Forwarded-Proto: https",
+          "http://127.0.0.1:8080/health"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.20
+
+  frontend:
+    build:
+      context: ../FoodSafe.FE
+      dockerfile: Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:8080"
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.10
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  data_protection_keys:
+
+networks:
+  foodsafe:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24

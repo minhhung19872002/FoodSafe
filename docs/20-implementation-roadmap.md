@@ -15,7 +15,7 @@ Deliverables:
 - Geographic catalogs and completed organizations UI/API
 - Shared frontend application shell, protected/permission routes and standard states
 
-Remaining risks: reconciling later approved-SQL modules with ABP-owned tables; several open scope decisions in `docs/15`; login CAPTCHA/recovery delivery, API versioning, remaining foundation catalogs and production container configuration.
+Remaining risks: reconciling later approved-SQL modules with ABP-owned tables; several open scope decisions in `docs/15`; login CAPTCHA/recovery delivery, API versioning, remaining foundation catalogs and a production backup/restore rehearsal.
 
 ## Milestone 2 — Master data, facilities, products and files
 
@@ -54,6 +54,6 @@ Perform full authorization/security/performance reviews, Dockerize API/SPA and d
 | Frontend strict production build | Pass |
 | Frontend tests | Pass, 9 tests including authentication, forced password change, permissions, catalog form and generated API routes; coverage remains incomplete |
 | EF migrations | Pass; four migrations apply cleanly and repeat idempotently, with no pending model changes |
-| Docker full stack | Missing; infrastructure-only Compose exists |
+| Docker full stack | Pass; six-service health-gated stack builds and runs, with a one-shot migrator and non-root API/SPA containers |
 | Security | Improved but not ready; cookie/CSRF session, lockout, password history/expiry, throttling and foundational data scope are implemented; CAPTCHA/recovery and final review remain |
 | Overall | NOT READY |

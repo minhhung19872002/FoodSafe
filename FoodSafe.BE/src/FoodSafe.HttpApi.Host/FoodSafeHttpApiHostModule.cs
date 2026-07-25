@@ -3,6 +3,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.Net;
 using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.RateLimiting;
 using Volo.Abp;
 using Volo.Abp.Account;
@@ -66,6 +68,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         var hostingEnvironment = context.Services.GetHostingEnvironment();
 
         ConfigureAuthentication(context);
+        ConfigureDataProtection(context, configuration, hostingEnvironment);
         ConfigureUrls(configuration);
         ConfigureConventionalControllers();
         ConfigureCors(context, configuration);
@@ -74,7 +77,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureClock();
         ConfigureForwardedHeaders(context, configuration);
         ConfigureResponseCompression(context);
-        ConfigureAntiForgery();
+        ConfigureAntiForgery(hostingEnvironment);
         ConfigureIdentity(context, hostingEnvironment);
         ConfigureRateLimiting(context);
         context.Services.AddHealthChecks();
@@ -203,6 +206,43 @@ public class FoodSafeHttpApiHostModule : AbpModule
         });
     }
 
+    private static void ConfigureDataProtection(
+        ServiceConfigurationContext context,
+        IConfiguration configuration,
+        IHostEnvironment hostingEnvironment)
+    {
+        var builder = context.Services
+            .AddDataProtection()
+            .SetApplicationName("FoodSafe");
+
+        var keysPath = configuration["DataProtection:KeysPath"];
+        if (!string.IsNullOrWhiteSpace(keysPath))
+        {
+            builder.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+        }
+
+        if (!hostingEnvironment.IsProduction())
+        {
+            return;
+        }
+
+        var certificatePath = configuration["DataProtection:CertificatePath"];
+        var certificatePassword = configuration["DataProtection:CertificatePassword"];
+        if (string.IsNullOrWhiteSpace(certificatePath)
+            || string.IsNullOrWhiteSpace(certificatePassword))
+        {
+            throw new InvalidOperationException(
+                "Production requires DataProtection:CertificatePath and "
+                + "DataProtection:CertificatePassword.");
+        }
+
+        var certificate = X509CertificateLoader.LoadPkcs12FromFile(
+            certificatePath,
+            certificatePassword,
+            X509KeyStorageFlags.EphemeralKeySet);
+        builder.ProtectKeysWithCertificate(certificate);
+    }
+
     private void ConfigureResponseCompression(ServiceConfigurationContext context)
     {
         context.Services.AddResponseCompression(opts =>
@@ -221,11 +261,15 @@ public class FoodSafeHttpApiHostModule : AbpModule
         });
     }
 
-    private void ConfigureAntiForgery()
+    private void ConfigureAntiForgery(IHostEnvironment hostingEnvironment)
     {
         Configure<AbpAntiForgeryOptions>(options =>
         {
             options.AutoValidate = true;
+            options.TokenCookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
+            options.TokenCookie.SecurePolicy = hostingEnvironment.IsDevelopment()
+                ? CookieSecurePolicy.SameAsRequest
+                : CookieSecurePolicy.Always;
         });
     }
 
@@ -250,7 +294,9 @@ public class FoodSafeHttpApiHostModule : AbpModule
             IdentityConstants.ApplicationScheme,
             options =>
             {
-                options.Cookie.Name = "__Host-FoodSafe.Auth";
+                options.Cookie.Name = hostingEnvironment.IsDevelopment()
+                    ? "FoodSafe.Auth"
+                    : "__Host-FoodSafe.Auth";
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
                 options.Cookie.SecurePolicy = hostingEnvironment.IsDevelopment()

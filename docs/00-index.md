@@ -16,6 +16,7 @@
 | [18-backend-architecture.md](18-backend-architecture.md) | Backend boundaries and enforcement rules | Approved for implementation |
 | [19-frontend-architecture.md](19-frontend-architecture.md) | Frontend structure and quality rules | Approved for implementation |
 | [20-implementation-roadmap.md](20-implementation-roadmap.md) | Milestones, gates and current evidence | Active |
+| [42-container-deployment.md](42-container-deployment.md) | Container configuration, secrets, startup and recovery boundary | Active |
 
 | File | Nội dung | Trạng thái |
 |------|----------|-----------|
