@@ -17,6 +17,7 @@ import {
   FileTextOutlined,
   BookOutlined,
   SettingOutlined,
+  ApartmentOutlined,
   UserOutlined,
   LogoutOutlined,
   KeyOutlined,
@@ -31,6 +32,11 @@ const menuItems: MenuProps['items'] = [
     key: '/dashboard',
     icon: <DashboardOutlined />,
     label: 'Bảng điều khiển',
+  },
+  {
+    key: '/organizations',
+    icon: <ApartmentOutlined />,
+    label: 'Đơn vị',
   },
   {
     key: 'businesses',

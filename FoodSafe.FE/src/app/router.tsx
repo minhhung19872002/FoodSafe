@@ -1,24 +1,20 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import { Spin } from 'antd'
 import { AppLayout } from './AppLayout'
 import { PrivateRoute } from './PrivateRoute'
-
-const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
-const ChangePasswordPage = lazy(() => import('@/features/auth/pages/ChangePasswordPage'))
-const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'))
-
-const Loading = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-    <Spin size="large" />
-  </div>
-)
+import {
+  ChangePasswordPage,
+  DashboardPage,
+  LoginPage,
+  OrganizationListPage,
+  RouteLoading,
+} from './routeComponents'
 
 export const router = createBrowserRouter([
   {
     path: '/login',
     element: (
-      <Suspense fallback={<Loading />}>
+      <Suspense fallback={<RouteLoading />}>
         <LoginPage />
       </Suspense>
     ),
@@ -38,15 +34,23 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: (
-          <Suspense fallback={<Loading />}>
+          <Suspense fallback={<RouteLoading />}>
             <DashboardPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'organizations',
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <OrganizationListPage />
           </Suspense>
         ),
       },
       {
         path: 'account/change-password',
         element: (
-          <Suspense fallback={<Loading />}>
+          <Suspense fallback={<RouteLoading />}>
             <ChangePasswordPage />
           </Suspense>
         ),

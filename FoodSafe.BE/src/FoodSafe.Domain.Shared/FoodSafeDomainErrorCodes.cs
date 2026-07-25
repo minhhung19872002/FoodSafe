@@ -2,6 +2,15 @@ namespace FoodSafe;
 
 public static class FoodSafeDomainErrorCodes
 {
+    public static class Organization
+    {
+        public const string DuplicateCode = "FoodSafe:Organization:0001";
+        public const string InvalidParent = "FoodSafe:Organization:0002";
+        public const string CircularHierarchy = "FoodSafe:Organization:0003";
+        public const string HasChildren = "FoodSafe:Organization:0004";
+        public const string InvalidGeography = "FoodSafe:Organization:0005";
+    }
+
     public static class Business
     {
         public const string NotFound = "FoodSafe:Business:0001";

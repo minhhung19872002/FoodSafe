@@ -22,7 +22,8 @@ public class FoodSafeDbContextFactory : IDesignTimeDbContextFactory<FoodSafeDbCo
         var builder = new ConfigurationBuilder()
             .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(),
                 "../FoodSafe.HttpApi.Host/"))
-            .AddJsonFile("appsettings.json", optional: false);
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddEnvironmentVariables();
 
         return builder.Build();
     }

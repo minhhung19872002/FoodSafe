@@ -103,6 +103,20 @@
 
 ### 2.1 Organizations (Đơn vị hành chính)
 
+**Tiến độ 2026-07-25 — vertical slice đầu tiên:**
+
+- [x] API-first DTO/contracts + conventional endpoints
+- [x] Entity `Organization`, enum 3 cấp, chuẩn hóa mã và invariants địa bàn
+- [x] `OrganizationManager`: unique code, parent level, cycle, child-delete guard
+- [x] Permission definitions View/Create/Edit/Delete
+- [x] AppService CRUD, search/filter, paging, tree
+- [x] EF Core mapping khớp bảng `organizations` trong reviewed schema
+- [x] FE route `/organizations`: list/filter/paging/tree/create form
+- [x] Domain, application tree, EF mapping, component tests
+- [ ] Catalog địa lý + combobox tỉnh/huyện/xã (form hiện nhận UUID danh mục)
+- [ ] Application integration tests với DB thật, export Excel, edit/delete UI
+- [ ] Initial migration sau khi geographic Catalog mappings hoàn thành
+
 **Domain:**
 - [ ] Entity `Organization`: Id, Name, Code, Level (Tinh/HuyenTP/XaPhuong), ParentId, Address, IsActive
 - [ ] `OrganizationLevel` enum: Province = 1, District = 2, Commune = 3

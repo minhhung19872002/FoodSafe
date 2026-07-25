@@ -7,6 +7,16 @@
 
 ## Danh sách Tài liệu
 
+### Implementation documents
+
+| Document | Purpose | Status |
+|---|---|---|
+| [16-implementation-gap-analysis.md](16-implementation-gap-analysis.md) | Requirement-by-requirement implementation audit | Active |
+| [17-system-architecture.md](17-system-architecture.md) | Runtime, trust boundaries, deployment shape | Approved for implementation |
+| [18-backend-architecture.md](18-backend-architecture.md) | Backend boundaries and enforcement rules | Approved for implementation |
+| [19-frontend-architecture.md](19-frontend-architecture.md) | Frontend structure and quality rules | Approved for implementation |
+| [20-implementation-roadmap.md](20-implementation-roadmap.md) | Milestones, gates and current evidence | Active |
+
 | File | Nội dung | Trạng thái |
 |------|----------|-----------|
 | [01-functional-requirements.md](01-functional-requirements.md) | 57 chức năng chi tiết theo nhóm A/B/C/E/F | ✅ Hoàn thành |

@@ -10,6 +10,7 @@ using Volo.Abp.Identity.EntityFrameworkCore;
 using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
+using FoodSafe.Organizations;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -28,6 +29,7 @@ public class FoodSafeDbContext :
     public DbSet<IdentityLinkUser> LinkUsers { get; set; }
     public DbSet<IdentityUserDelegation> UserDelegations { get; set; }
     public DbSet<IdentitySession> Sessions { get; set; }
+    public DbSet<Organization> FoodSafeOrganizations { get; set; }
 
     public FoodSafeDbContext(DbContextOptions<FoodSafeDbContext> options)
         : base(options)
