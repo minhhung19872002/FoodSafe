@@ -131,20 +131,29 @@ public class OrganizationAppService :
         Guid id,
         UpdateOrganizationDto input)
     {
-        await _dataScopeProvider.EnsureOrganizationAccessAsync(
-            id,
+        var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.Edit,
             _cancellationTokenProvider.Token);
+        if (!scope.IncludesOrganization(id))
+        {
+            throw new AbpAuthorizationException(
+                "Organization is outside the current user's edit scope.");
+        }
         if (input.ParentId.HasValue)
         {
-            await _dataScopeProvider.EnsureOrganizationAccessAsync(
-                input.ParentId.Value,
-                DataScopeOperation.Edit,
-                _cancellationTokenProvider.Token);
+            if (!scope.IncludesOrganization(input.ParentId.Value))
+            {
+                throw new AbpAuthorizationException(
+                    "Parent organization is outside the current user's edit scope.");
+            }
         }
         var organization = await _repository.GetAsync(
             id,
             cancellationToken: _cancellationTokenProvider.Token);
+        OrganizationAuthorizationRules.EnsureParentChangeAllowed(
+            scope,
+            organization.ParentId,
+            input.ParentId);
 
         await _manager.ChangeAsync(
             organization,

@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Alert, Form, Input, Modal, Select } from 'antd'
+import { useEffect } from 'react'
+import { Alert, Form, Input, Modal, Select, Switch } from 'antd'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { ORGANIZATION_LEVEL } from '../types/organization.types'
@@ -9,8 +10,8 @@ import {
   useProvinces,
 } from '@/hooks/useGeography'
 import type {
-  CreateOrganizationInput,
   OrganizationDto,
+  UpdateOrganizationInput,
 } from '../types/organization.types'
 
 const optionalUuid = z.union([
@@ -30,6 +31,7 @@ const schema = z.object({
   phone: z.string().max(50),
   email: z.union([z.literal(''), z.email('Email không hợp lệ')]),
   leaderName: z.string().max(200),
+  isActive: z.boolean(),
 }).superRefine((value, context) => {
   if (!value.provinceId) {
     context.addIssue({
@@ -65,11 +67,12 @@ type FormValues = z.infer<typeof schema>
 
 interface Props {
   open: boolean
-  organizations: OrganizationDto[]
+  organization?: OrganizationDto
+  organizations: Array<Pick<OrganizationDto, 'id' | 'code' | 'name' | 'level'>>
   submitting: boolean
   errorMessage?: string
   onCancel: () => void
-  onSubmit: (input: CreateOrganizationInput) => void
+  onSubmit: (input: UpdateOrganizationInput) => void
 }
 
 const defaultValues: FormValues = {
@@ -84,10 +87,12 @@ const defaultValues: FormValues = {
   phone: '',
   email: '',
   leaderName: '',
+  isActive: true,
 }
 
 export function OrganizationCreateModal({
   open,
+  organization,
   organizations,
   submitting,
   errorMessage,
@@ -112,6 +117,29 @@ export function OrganizationCreateModal({
   const districts = useDistricts(provinceId)
   const communes = useCommunes(districtId)
 
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    reset(organization
+      ? {
+          code: organization.code,
+          name: organization.name,
+          level: organization.level,
+          parentId: organization.parentId ?? '',
+          provinceId: organization.provinceId ?? '',
+          districtId: organization.districtId ?? '',
+          communeId: organization.communeId ?? '',
+          address: organization.address ?? '',
+          phone: organization.phone ?? '',
+          email: organization.email ?? '',
+          leaderName: organization.leaderName ?? '',
+          isActive: organization.isActive,
+        }
+      : defaultValues)
+  }, [open, organization, reset])
+
   const close = () => {
     reset(defaultValues)
     onCancel()
@@ -134,7 +162,7 @@ export function OrganizationCreateModal({
 
   return (
     <Modal
-      title="Thêm đơn vị"
+      title={organization ? 'Sửa đơn vị' : 'Thêm đơn vị'}
       open={open}
       okText="Lưu"
       cancelText="Hủy"
@@ -188,7 +216,8 @@ export function OrganizationCreateModal({
                 <Select
                   {...field}
                   options={organizations
-                    .filter((item) => item.level === level - 1)
+                    .filter((item) =>
+                      item.id !== organization?.id && item.level === level - 1)
                     .map((item) => ({ value: item.id, label: `${item.code} — ${item.name}` }))}
                 />
               </Form.Item>
@@ -259,6 +288,22 @@ export function OrganizationCreateModal({
                     value: item.id,
                     label: `${item.code} — ${item.name}`,
                   }))}
+                />
+              </Form.Item>
+            )}
+          />
+        )}
+        {organization && (
+          <Controller
+            name="isActive"
+            control={control}
+            render={({ field }) => (
+              <Form.Item label="Trạng thái">
+                <Switch
+                  checked={field.value}
+                  checkedChildren="Hoạt động"
+                  unCheckedChildren="Ngừng hoạt động"
+                  onChange={field.onChange}
                 />
               </Form.Item>
             )}

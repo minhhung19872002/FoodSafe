@@ -10,7 +10,7 @@ Last updated: 2026-07-25
 | EF migration baseline | Tested | Initial runtime migration applies to a clean PostgreSQL 15 database and is idempotent on second update |
 | Authentication | In progress | Cookie/CSRF session validated live; SPA token persistence removed; five-attempt/30-minute lockout, 30-minute sliding session, password complexity, 90-day expiry, five-password history and forced-change routing implemented. Login CAPTCHA and recovery delivery remain |
 | Authorization and data scope | Implemented (foundation) | Global permission plus organization-descendant and geographic assignment resolver implemented; organization API enforces operation-aware scope |
-| Organizations | In progress | Scoped CRUD API, geographic validation, create UI, dependent geographic selectors and tests pass; edit/delete UI remains |
+| Organizations | Implemented | Scoped list/tree/detail/create/edit/delete API and permission-gated create/edit/delete UI pass; hierarchy/geography validation, descendant-safe parent selection and root-promotion authorization are enforced |
 | Master data | In progress | Country/region/province/district/commune model and scoped catalog API implemented with exact hierarchy constraints; broader catalogs remain |
 | Facilities/products/files | Not started | Milestone 2 |
 | Regulatory modules | Not started | Milestone 3 |
@@ -43,3 +43,11 @@ Last updated: 2026-07-25
 - Live cookie + fresh-CSRF probing reached the password service and returned localized `FoodSafe:Account:0001` for a wrong current password without changing the credential.
 - Forwarded headers now trust only framework defaults plus explicitly configured proxy IPs; production enables HSTS and HTTPS redirection.
 - Backend build passes with 0 warnings and 22 tests; frontend lint/build and 6 tests pass; `AddPasswordHistory` applies to PostgreSQL and EF reports no pending model changes.
+
+## Organization slice completion evidence added on 2026-07-25
+
+- Edit and delete actions are shown only with their corresponding permissions; deletion requires explicit confirmation and reports dependency failures.
+- The shared organization form now hydrates edit values, supports active/inactive state and uses the complete scoped tree for parent choices rather than the current result page.
+- The parent selector excludes the organization and all descendants; domain cycle checks remain the authoritative server guard.
+- A scoped administrator cannot detach a child organization into a new root; only global scope can perform that promotion.
+- Backend build passes with 0 warnings and 24 tests; frontend lint/build and 6 tests pass, including the permission-gated edit interaction.

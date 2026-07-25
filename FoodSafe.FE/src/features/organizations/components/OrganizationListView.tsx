@@ -1,5 +1,11 @@
-import { Button, Empty, Input, Select, Space, Table, Tag, Tree } from 'antd'
-import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
+import { Button, Empty, Input, Popconfirm, Select, Space, Table, Tag, Tree } from 'antd'
+import {
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+} from '@ant-design/icons'
 import type { DataNode } from 'antd/es/tree'
 import { organizationLevelConfig } from './organizationConfig'
 import type {
@@ -18,11 +24,16 @@ interface Props {
   filter: string
   level?: OrganizationLevel
   canCreate: boolean
+  canEdit: boolean
+  canDelete: boolean
+  deletingId?: string
   onFilterChange: (value: string) => void
   onLevelChange: (value?: OrganizationLevel) => void
   onPageChange: (page: number, pageSize: number) => void
   onRefresh: () => void
   onCreate: () => void
+  onEdit: (organization: OrganizationDto) => void
+  onDelete: (organization: OrganizationDto) => void
 }
 
 function toTreeData(items: OrganizationTreeNode[]): DataNode[] {
@@ -49,11 +60,16 @@ export function OrganizationListView({
   filter,
   level,
   canCreate,
+  canEdit,
+  canDelete,
+  deletingId,
   onFilterChange,
   onLevelChange,
   onPageChange,
   onRefresh,
   onCreate,
+  onEdit,
+  onDelete,
 }: Props) {
   return (
     <Space orientation="vertical" size="large" style={{ width: '100%' }}>
@@ -122,6 +138,43 @@ export function OrganizationListView({
               </Tag>
             ),
           },
+          ...(canEdit || canDelete
+            ? [{
+                title: 'Thao tác',
+                key: 'actions',
+                width: 130,
+                render: (_: unknown, organization: OrganizationDto) => (
+                  <Space>
+                    {canEdit && (
+                      <Button
+                        type="text"
+                        aria-label={`Sửa ${organization.name}`}
+                        icon={<EditOutlined />}
+                        onClick={() => onEdit(organization)}
+                      />
+                    )}
+                    {canDelete && (
+                      <Popconfirm
+                        title="Xóa đơn vị?"
+                        description={`Bạn chắc chắn muốn xóa “${organization.name}”?`}
+                        okText="Xóa"
+                        cancelText="Hủy"
+                        okButtonProps={{ danger: true }}
+                        onConfirm={() => onDelete(organization)}
+                      >
+                        <Button
+                          type="text"
+                          danger
+                          loading={deletingId === organization.id}
+                          aria-label={`Xóa ${organization.name}`}
+                          icon={<DeleteOutlined />}
+                        />
+                      </Popconfirm>
+                    )}
+                  </Space>
+                ),
+              }]
+            : []),
         ]}
       />
 

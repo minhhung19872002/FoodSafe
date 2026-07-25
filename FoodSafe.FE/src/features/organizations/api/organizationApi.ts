@@ -5,6 +5,7 @@ import type {
   OrganizationFilter,
   OrganizationListResponse,
   OrganizationTreeResponse,
+  UpdateOrganizationInput,
 } from '../types/organization.types'
 
 const endpoint = '/app/organization'
@@ -25,5 +26,14 @@ export const organizationApi = {
   async create(input: CreateOrganizationInput): Promise<OrganizationDto> {
     const response = await api.post<OrganizationDto>(endpoint, input)
     return response.data
+  },
+
+  async update(id: string, input: UpdateOrganizationInput): Promise<OrganizationDto> {
+    const response = await api.put<OrganizationDto>(`${endpoint}/${id}`, input)
+    return response.data
+  },
+
+  async delete(id: string): Promise<void> {
+    await api.delete(`${endpoint}/${id}`)
   },
 }

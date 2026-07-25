@@ -62,3 +62,7 @@ export interface CreateOrganizationInput {
   districtId: string | null
   communeId: string | null
 }
+
+export interface UpdateOrganizationInput extends CreateOrganizationInput {
+  isActive: boolean
+}

@@ -7,6 +7,7 @@ describe('OrganizationListView', () => {
   it('renders organization data and forwards search changes', async () => {
     const user = userEvent.setup()
     const onFilterChange = vi.fn()
+    const onEdit = vi.fn()
 
     render(
       <OrganizationListView
@@ -34,11 +35,15 @@ describe('OrganizationListView', () => {
         pageSize={20}
         filter=""
         canCreate
+        canEdit
+        canDelete={false}
         onFilterChange={onFilterChange}
         onLevelChange={vi.fn()}
         onPageChange={vi.fn()}
         onRefresh={vi.fn()}
         onCreate={vi.fn()}
+        onEdit={onEdit}
+        onDelete={vi.fn()}
       />,
     )
 
@@ -46,5 +51,7 @@ describe('OrganizationListView', () => {
     await user.type(screen.getByPlaceholderText('Tìm theo mã hoặc tên đơn vị'), 'QN')
     expect(onFilterChange).toHaveBeenCalled()
     expect(screen.getByRole('button', { name: /Thêm đơn vị/i })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Sửa Chi cục ATVSTP Quảng Ninh/i }))
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: '1' }))
   })
 })
