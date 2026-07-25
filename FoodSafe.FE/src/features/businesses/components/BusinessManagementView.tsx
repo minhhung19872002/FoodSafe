@@ -4,6 +4,7 @@ import {
   EnvironmentOutlined,
   ExportOutlined,
   ImportOutlined,
+  PaperClipOutlined,
   PlusOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
@@ -72,6 +73,7 @@ interface BusinessManagementViewProps {
   onCreateProduct: () => void;
   onEditProduct: (product: Product) => void;
   onDeleteProduct: (id: string) => void;
+  onManageProductAttachments: (product: Product) => void;
 }
 
 const businessStatusLabels: Record<BusinessStatus, string> = {
@@ -180,6 +182,12 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
       width: 110,
       render: (_: unknown, product) => (
         <Space>
+          <Button
+            type="text"
+            aria-label={`Tệp đính kèm ${product.name}`}
+            icon={<PaperClipOutlined />}
+            onClick={() => props.onManageProductAttachments(product)}
+          />
           {props.permissions.editProduct && (
             <Button
               type="text"

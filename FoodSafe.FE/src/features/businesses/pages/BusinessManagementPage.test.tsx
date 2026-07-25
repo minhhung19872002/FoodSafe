@@ -107,6 +107,11 @@ describe("BusinessManagementPage", () => {
       screen.getByRole("button", { name: /thêm sản phẩm/i }),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("button", {
+        name: /tệp đính kèm sản phẩm kiểm thử/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("button", { name: /import excel/i }),
     ).toBeInTheDocument();
   });

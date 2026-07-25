@@ -1,5 +1,6 @@
 using Volo.Abp.Account;
 using Volo.Abp.AutoMapper;
+using Volo.Abp.BlobStoring;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity;
 using Volo.Abp.Modularity;
@@ -15,7 +16,8 @@ namespace FoodSafe;
     typeof(AbpIdentityApplicationModule),
     typeof(AbpPermissionManagementApplicationModule),
     typeof(AbpFeatureManagementApplicationModule),
-    typeof(AbpSettingManagementApplicationModule)
+    typeof(AbpSettingManagementApplicationModule),
+    typeof(AbpBlobStoringModule)
 )]
 public class FoodSafeApplicationModule : AbpModule
 {

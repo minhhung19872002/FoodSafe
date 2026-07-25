@@ -15,6 +15,8 @@ import {
   useCreateProduct,
   useDeleteBusiness,
   useDeleteProduct,
+  useDeleteProductAttachment,
+  useDownloadProductAttachment,
   useDownloadBusinessTemplate,
   useDownloadProductTemplate,
   useExportBusinesses,
@@ -25,12 +27,14 @@ import {
   useUpdateBusinessHandler,
   useUpdateBusiness,
   useUpdateProduct,
+  useUploadProductAttachment,
 } from "../api/businessMutations";
 import {
   useBusiness,
   useBusinessList,
   useProductBusinessOptions,
   useProductList,
+  useProductAttachments,
 } from "../api/businessQueries";
 import { BusinessEditorModal } from "../components/BusinessEditorModal";
 import { BusinessHandlersModal } from "../components/BusinessHandlersModal";
@@ -38,6 +42,7 @@ import { BusinessImportModal } from "../components/BusinessImportModal";
 import { BusinessManagementView } from "../components/BusinessManagementView";
 import { MapPicker } from "../components/MapPicker";
 import { ProductEditorModal } from "../components/ProductEditorModal";
+import { ProductAttachmentsModal } from "../components/ProductAttachmentsModal";
 import type {
   Business,
   BusinessInput,
@@ -102,6 +107,7 @@ export default function BusinessManagementPage() {
   const [editingBusinessId, setEditingBusinessId] = useState<string>();
   const [editingProduct, setEditingProduct] = useState<Product>();
   const [creatingProduct, setCreatingProduct] = useState(false);
+  const [attachmentsProduct, setAttachmentsProduct] = useState<Product>();
   const [mappedBusiness, setMappedBusiness] = useState<Business>();
   const [importingBusinesses, setImportingBusinesses] = useState(false);
   const [importingProducts, setImportingProducts] = useState(false);
@@ -151,6 +157,10 @@ export default function BusinessManagementPage() {
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
+  const productAttachments = useProductAttachments(attachmentsProduct?.id);
+  const uploadProductAttachment = useUploadProductAttachment();
+  const downloadProductAttachment = useDownloadProductAttachment();
+  const deleteProductAttachment = useDeleteProductAttachment();
 
   const organizationOptions = useMemo(
     () => flattenOrganizations(organizations.data?.items ?? []),
@@ -336,6 +346,7 @@ export default function BusinessManagementPage() {
               void message.error("Không thể xóa sản phẩm đang được sử dụng"),
           })
         }
+        onManageProductAttachments={setAttachmentsProduct}
       />
       {(creatingBusiness || businessDetail.data) && (
         <BusinessEditorModal
@@ -362,6 +373,50 @@ export default function BusinessManagementPage() {
           setEditingProduct(undefined);
         }}
         onSubmit={saveProduct}
+      />
+      <ProductAttachmentsModal
+        product={attachmentsProduct}
+        attachments={productAttachments.data ?? []}
+        loading={productAttachments.isLoading}
+        editable={hasPermission("FoodSafe.BusinessManagement.Products.Edit")}
+        uploading={uploadProductAttachment.isPending}
+        onCancel={() => setAttachmentsProduct(undefined)}
+        onUpload={(file) => {
+          if (!attachmentsProduct) return;
+          uploadProductAttachment.mutate(
+            { productId: attachmentsProduct.id, file },
+            {
+              onSuccess: () => void message.success("Đã tải file lên"),
+              onError: () =>
+                void message.error(
+                  "Không thể tải file lên hoặc file không an toàn",
+                ),
+            },
+          );
+        }}
+        onDownload={(attachment) => {
+          if (!attachmentsProduct) return;
+          downloadProductAttachment.mutate(
+            {
+              productId: attachmentsProduct.id,
+              attachmentId: attachment.id,
+            },
+            {
+              onSuccess: ({ blob, fileName }) => saveDownload(blob, fileName),
+              onError: () => void message.error("Không thể tải file"),
+            },
+          );
+        }}
+        onDelete={(attachmentId) => {
+          if (!attachmentsProduct) return;
+          deleteProductAttachment.mutate(
+            { productId: attachmentsProduct.id, attachmentId },
+            {
+              onSuccess: () => void message.success("Đã xóa file đính kèm"),
+              onError: () => void message.error("Không thể xóa file đính kèm"),
+            },
+          );
+        }}
       />
       <BusinessHandlersModal
         open={Boolean(managingHandlersBusinessId)}

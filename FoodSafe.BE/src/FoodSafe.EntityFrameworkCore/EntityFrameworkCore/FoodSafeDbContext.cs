@@ -14,6 +14,7 @@ using FoodSafe.Organizations;
 using FoodSafe.Catalogs;
 using FoodSafe.Security;
 using FoodSafe.BusinessManagement;
+using FoodSafe.FileManagement;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -52,6 +53,8 @@ public class FoodSafeDbContext :
     public DbSet<BusinessProductGroup> BusinessProductGroups { get; set; }
     public DbSet<BusinessHandler> BusinessHandlers { get; set; }
     public DbSet<Product> Products { get; set; }
+    public DbSet<DocumentOwner> DocumentOwners { get; set; }
+    public DbSet<FileAttachment> FileAttachments { get; set; }
 
     public FoodSafeDbContext(DbContextOptions<FoodSafeDbContext> options)
         : base(options)

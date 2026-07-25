@@ -42,8 +42,8 @@ Status vocabulary: **Built-in** means ABP supplies a partial capability that sti
 | STT-16 | Laboratories | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
 | STT-17 | Laboratory services | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
 | STT-18 | Document types | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved scope | Done |
-| STT-19 | Facilities | Implemented core | Implemented core | Migrated | Covered core | Reviewed core | Excel import/export and attachments remain | P0 |
-| STT-20 | Products | Implemented core | Implemented core | Migrated | Covered core | Reviewed core | Excel import/export and attachments remain | P0 |
+| STT-19 | Facilities | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved STT-19 scope | Done |
+| STT-20 | Products | Implemented | Implemented | Migrated | Covered | Reviewed | None in approved STT-20 scope | Done |
 | STT-21 | Self-declarations | Missing | Missing | Design only | Missing | High gaps | Lifecycle, files, scope, exports | P0 |
 | STT-22 | Product registrations | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P0 |
 | STT-23 | Advertising registration | Missing | Missing | Design only | Missing | High gaps | Full lifecycle slice | P1 |
@@ -89,11 +89,11 @@ Status vocabulary: **Built-in** means ABP supplies a partial capability that sti
 | Authentication | HttpOnly same-site cookie/CSRF session, post-login token refresh, lockout, expiry/history, CAPTCHA-protected first-login change, Turnstile login and transactional email recovery are implemented and live-tested | Complete release-wide security and browser E2E review |
 | Authorization | Permission-aware SPA plus server-side organization/geography scope resolver; organization and geography operations are enforced | Apply the same mandatory list/detail/mutation/file/export scope pattern to every remaining module |
 | Database | PostgreSQL 15 EF baseline plus organization, scope, geography, account-security and ABP-upgrade migrations; clean apply/model-drift checks pass | Implement and migrate the remaining approved aggregates and their PostgreSQL constraints/tests |
-| Files | Missing | MinIO abstraction, metadata, validation, scanning state, authorized streaming |
+| Files | Shared product attachment foundation implemented: typed owners, PostgreSQL metadata, private MinIO objects, synchronous ClamAV scanning, signature/MIME/size/checksum validation, scoped download and soft deletion | Reuse the mechanism for later attachment-bearing aggregates; add retention cleanup and production malware-definition monitoring |
 | Error handling | ABP application errors and RFC Problem Details for version negotiation are documented, correlated and production-safe | Add automated API tests for every error class and stable FoodSafe codes per remaining slice |
 | API versioning | `/api/v1/app` and `/api/v1/security` are emitted in OpenAPI; unsupported versions advertise `1.0` and legacy app routes are absent | Preserve the v1 compatibility contract and add examples/schemas as modules land |
 | Rate limiting | Global partitions cover login, reset, public and normal API traffic; 429 behavior was live-tested | Add endpoint-specific integration/download limits and distributed-policy validation before scale-out |
 | Frontend foundation | Cookie hydration, permission/private routes, shared API/cache setup, forms, loading/errors and three administration slices exist | Add URL table state, reusable files/exports, accessibility audit and full browser regression |
-| Docker | Non-root API/migrator and SPA images plus PostgreSQL, Redis, MinIO and development Mailpit; health/migration gates and persistent key ring pass | Production TLS deployment and backup/restore rehearsal remain release blockers |
+| Docker | Non-root API/migrator and SPA images plus PostgreSQL, Redis, MinIO, ClamAV and development Mailpit; health/migration gates and persistent key ring pass | Production TLS deployment and backup/restore rehearsal remain release blockers |
 | CI/CD | Format, warnings-as-errors, tests/coverage, architecture, publish, clean PostgreSQL migration, drift, dependency, secret/config, Compose, image-build and image-vulnerability gates are defined | Enforce branch protection and validate the workflow on the remote runner |
 | Operations | Local, CI/CD, deployment, operations and DR guides exist with RTO/RPO and restore criteria | Complete and record a production-like backup/restore rehearsal and operational handoff |

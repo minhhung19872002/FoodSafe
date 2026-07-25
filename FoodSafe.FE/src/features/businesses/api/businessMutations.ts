@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { businessApi, productApi } from "./businessApi";
+import { businessApi, productApi, productAttachmentApi } from "./businessApi";
 import { businessKeys } from "./businessQueries";
 import type {
   BusinessInput,
@@ -140,6 +140,44 @@ export function useUpdateProduct() {
 export function useDeleteProduct() {
   return useMutation({
     mutationFn: productApi.delete,
+    onSuccess: useInvalidateBusinessManagement(),
+  });
+}
+
+export function useUploadProductAttachment() {
+  return useMutation({
+    mutationFn: ({
+      productId,
+      file,
+    }: {
+      productId: string;
+      file: File;
+    }) => productAttachmentApi.upload(productId, file),
+    onSuccess: useInvalidateBusinessManagement(),
+  });
+}
+
+export function useDownloadProductAttachment() {
+  return useMutation({
+    mutationFn: ({
+      productId,
+      attachmentId,
+    }: {
+      productId: string;
+      attachmentId: string;
+    }) => productAttachmentApi.download(productId, attachmentId),
+  });
+}
+
+export function useDeleteProductAttachment() {
+  return useMutation({
+    mutationFn: ({
+      productId,
+      attachmentId,
+    }: {
+      productId: string;
+      attachmentId: string;
+    }) => productAttachmentApi.delete(productId, attachmentId),
     onSuccess: useInvalidateBusinessManagement(),
   });
 }

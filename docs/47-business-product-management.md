@@ -1,6 +1,6 @@
 # Business and product management (STT 19–20)
 
-Implementation started on 2026-07-25.
+Implementation completed and reviewed on 2026-07-25.
 
 ## Backend foundation
 
@@ -41,12 +41,24 @@ view permission.
 
 Authenticated Playwright validation completes create/edit/delete for a
 facility, creates its responsible person, and creates/deletes its product
-against the Docker stack. Frontend type checking, lint, 29 Vitest tests,
-production build, and both Playwright suites pass. The backend builds with
-zero warnings and all 86 tests pass.
+against the Docker stack.
 
-## Remaining in this slice
+Both tabs provide permission-aware Excel template download, full-workbook
+preview, error reporting, one-use confirmation tokens, transactional import
+and scope-preserving export. Uploads accept only `.xlsx`, enforce compressed
+and expanded size limits, validate workbook structure and references, and
+never commit a partially valid file.
 
-Excel import/export and the shared secure attachment mechanism remain. They
-stay explicitly open rather than being represented by placeholder buttons or
-mock endpoints.
+Products use the shared-primary-key `document_owners` attachment model.
+Metadata and SHA-256 checksums remain in PostgreSQL while server-generated
+object keys address private MinIO objects. Upload validates file size,
+extension, MIME and content signature, rejects traversal/control-character
+names, scans synchronously through ClamAV, and fails closed. List, download
+and delete re-check product permission and data scope; download also verifies
+the stored checksum. An infected OpenXML EICAR fixture is rejected in Docker
+E2E while a clean PDF completes upload, download and deletion.
+
+Frontend type checking, lint, 32 Vitest tests, production build and both
+Playwright suites pass. The backend builds with zero warnings and all 110
+tests pass. The attachment migration applied through the real PostgreSQL
+migrator and backfilled typed owners for existing products.

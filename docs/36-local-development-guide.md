@@ -77,7 +77,7 @@ npm run build
 ## Database and generated state
 
 The one-shot migrator owns schema migration and seed execution. The API does
-not migrate in Compose. PostgreSQL, Redis, MinIO, Mailpit, and the data
+not migrate in Compose. PostgreSQL, Redis, MinIO, ClamAV, Mailpit, and the data
 protection key ring use named volumes.
 
 `docker compose down` removes containers and the private network but preserves

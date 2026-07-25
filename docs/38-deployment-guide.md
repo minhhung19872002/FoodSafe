@@ -2,7 +2,7 @@
 
 ## Deployment shape
 
-The base Compose stack runs PostgreSQL 15, Redis 7, MinIO, a one-shot database
+The base Compose stack runs PostgreSQL 15, Redis 7, MinIO, ClamAV, a one-shot database
 migrator, the ASP.NET Core API, and the React SPA behind an unprivileged Nginx
 container. The `development` profile adds pinned Mailpit SMTP capture and its
 local inbox. The API is not published on the host. Nginx is the only

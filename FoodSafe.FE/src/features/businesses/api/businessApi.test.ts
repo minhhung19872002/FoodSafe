@@ -1,7 +1,11 @@
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { server } from "@/test/server";
-import { businessApi, productApi } from "./businessApi";
+import {
+  businessApi,
+  productApi,
+  productAttachmentApi,
+} from "./businessApi";
 
 describe("business management API", () => {
   it("normalizes nullable business fields and uses the generated v1 route", async () => {
@@ -170,5 +174,46 @@ describe("business management API", () => {
     expect(uploaded).toBe(true);
     expect(confirmedToken).toBe("product-preview-token");
     expect(result.importedCount).toBe(1);
+  });
+
+  it("uploads and deletes a product attachment through owned routes", async () => {
+    let uploaded = false;
+    let deleted = false;
+    server.use(
+      http.post(
+        "*/api/v1/app/product/product-1/attachments",
+        async ({ request }) => {
+          uploaded = (await request.formData()).has("file");
+          return HttpResponse.json({
+            id: "attachment-1",
+            documentOwnerId: "product-1",
+            originalName: "chung-nhan.pdf",
+            fileSize: 8,
+            mimeType: "application/pdf",
+            checksum: "a".repeat(64),
+            virusScanStatus: 2,
+            uploadTime: "2026-07-25T00:00:00Z",
+          });
+        },
+      ),
+      http.delete(
+        "*/api/v1/app/product/product-1/attachments/attachment-1",
+        () => {
+          deleted = true;
+          return new HttpResponse(null, { status: 204 });
+        },
+      ),
+    );
+
+    const attachment = await productAttachmentApi.upload(
+      "product-1",
+      new File(["%PDF-1.7"], "chung-nhan.pdf", {
+        type: "application/pdf",
+      }),
+    );
+    await productAttachmentApi.delete("product-1", attachment.id);
+
+    expect(uploaded).toBe(true);
+    expect(deleted).toBe(true);
   });
 });

@@ -24,11 +24,11 @@ delivery are implemented and verified.
 
 Catalog slices precede facilities/products. The file mechanism is completed before attachment-bearing regulatory records. Facility/product import validates the full workbook before transaction commit.
 
-Status: in progress. Catalog prerequisites and the business/product core are
-implemented end to end: scoped APIs, persistence, Vietnamese CRUD UI, map
-selection, responsible-person management, permission-aware navigation, MSW
-tests, and authenticated Playwright lifecycle coverage. Excel import/export
-and the shared secure attachment mechanism remain.
+Status: complete for STT 08â€“20. Catalogs, facilities and products are
+implemented end to end with scoped CRUD, map/responsible-person management,
+atomic preview/confirm Excel import, scoped Excel export, and secure product
+attachments backed by PostgreSQL, MinIO and ClamAV. Vietnamese UI, MSW tests,
+workbook/security tests and authenticated Playwright lifecycle coverage pass.
 
 ## Milestone 3 — Declarations, registrations and certificates
 
@@ -59,11 +59,11 @@ Perform full authorization/security/performance reviews, Dockerize API/SPA and d
 | Gate | Result on 2026-07-25 |
 |---|---|
 | Backend build | Pass, 0 warnings |
-| Backend tests | Pass, 86 tests including PostgreSQL migration/constraint integration, business/product contracts, current-user permission projection, request contracts, password policy, CAPTCHA provider/middleware behavior and root-promotion authorization; coverage remains incomplete |
+| Backend tests | Pass, 110 tests including PostgreSQL migration/constraint integration, business/product and Excel contracts, attachment validation/authorization, current-user permission projection, request contracts, password policy, CAPTCHA behavior and root-promotion authorization; coverage remains incomplete |
 | Frontend strict production build | Pass |
-| Frontend tests | Pass, 29 Vitest tests plus two authenticated Playwright CRUD lifecycles for catalogs and business/product/handler management; coverage remains incomplete |
-| EF migrations | Pass; five migrations apply cleanly and repeat idempotently, with no pending model changes |
-| Docker full stack | Pass; six-service base stack and development Mailpit profile build and run, with a one-shot migrator and non-root API/SPA containers |
+| Frontend tests | Pass, 32 Vitest tests plus authenticated Playwright catalog and facility/product lifecycles; the latter covers Excel and clean/infected attachment paths |
+| EF migrations | Pass; attachment migration backfills typed owners for existing products and applies on PostgreSQL through the one-shot migrator |
+| Docker full stack | Pass; PostgreSQL, Redis, MinIO, ClamAV, one-shot migrator and non-root API/SPA run with dependency health gates; Mailpit is development-only |
 | CI and dependency gates | Pass locally; GitHub Actions covers backend/frontend build/test, EF drift, audited dependency allowlists, production Compose rendering and image builds |
 | Security | Improved but not ready; cookie/CSRF session, lockout, password history/expiry, throttling, server-verified CAPTCHA, full recovery delivery/reset, and foundational data scope are implemented; final review and later-module controls remain |
 | Overall | NOT READY |

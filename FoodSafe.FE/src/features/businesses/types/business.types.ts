@@ -206,3 +206,15 @@ export interface ExcelImportPreview {
 export interface ExcelImportResult {
   importedCount: number;
 }
+
+export interface FileAttachment {
+  id: string;
+  documentOwnerId: string;
+  originalName: string;
+  fileSize: number;
+  mimeType: string;
+  checksum: string;
+  virusScanStatus: number;
+  uploadTime: string;
+  description?: string;
+}

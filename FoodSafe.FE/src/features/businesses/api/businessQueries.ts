@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { businessApi, productApi } from "./businessApi";
+import { businessApi, productApi, productAttachmentApi } from "./businessApi";
 import type { BusinessFilter, ProductFilter } from "../types/business.types";
 
 export const businessKeys = {
@@ -47,5 +47,13 @@ export function useProductBusinessOptions(enabled = true) {
     queryKey: businessKeys.productBusinessOptions(),
     queryFn: productApi.businessOptions,
     enabled,
+  });
+}
+
+export function useProductAttachments(productId?: string) {
+  return useQuery({
+    queryKey: [...businessKeys.all, "product-attachments", productId],
+    queryFn: () => productAttachmentApi.list(productId!),
+    enabled: Boolean(productId),
   });
 }

@@ -6,6 +6,7 @@ using FoodSafe.Catalogs;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using FoodSafe.Security;
 using FoodSafe.BusinessManagement;
+using FoodSafe.FileManagement;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
         ConfigureMasterCatalogs(builder);
         ConfigureDataScope(builder);
         ConfigureBusinessManagement(builder);
+        ConfigureFileManagement(builder);
 
         builder.Entity<Organization>(entity =>
         {
@@ -281,6 +283,77 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.HasOne<Business>().WithMany().HasForeignKey(x => x.BusinessId)
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_business");
             entity.HasIndex(x => x.BusinessId).HasDatabaseName("idx_msa_business");
+        });
+    }
+
+    private static void ConfigureFileManagement(ModelBuilder builder)
+    {
+        builder.Entity<DocumentOwner>(entity =>
+        {
+            entity.ToTable("document_owners");
+            entity.HasKey(x => x.Id).HasName("pk_document_owners");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
+            entity.Property(x => x.OwnerType).HasColumnName("owner_type")
+                .HasMaxLength(100).IsRequired();
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.HasOne<Organization>().WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_document_owners_org");
+            entity.HasIndex(x => new { x.OrganizationId, x.OwnerType })
+                .HasDatabaseName("idx_document_owners_org");
+        });
+
+        builder.Entity<FileAttachment>(entity =>
+        {
+            entity.ToTable("file_attachments", table =>
+            {
+                table.HasCheckConstraint(
+                    "chk_fa_virus_scan",
+                    "virus_scan_status IN (1, 2, 3, 4)");
+                table.HasCheckConstraint(
+                    "chk_fa_retention",
+                    "retention_status IN (1, 2, 3)");
+                table.HasCheckConstraint("chk_fa_file_size", "file_size > 0");
+            });
+            ConfigureFullAudit(entity, "pk_file_attachments");
+            entity.Property(x => x.DocumentOwnerId)
+                .HasColumnName("document_owner_id");
+            entity.Property(x => x.FileName).HasColumnName("file_name")
+                .HasMaxLength(500).IsRequired();
+            entity.Property(x => x.OriginalName).HasColumnName("original_name")
+                .HasMaxLength(500).IsRequired();
+            entity.Property(x => x.StoragePath).HasColumnName("storage_path")
+                .HasMaxLength(1000).IsRequired();
+            entity.Property(x => x.FileSize).HasColumnName("file_size");
+            entity.Property(x => x.MimeType).HasColumnName("mime_type")
+                .HasMaxLength(100);
+            entity.Property(x => x.Description).HasColumnName("description")
+                .HasMaxLength(500);
+            entity.Property(x => x.IsPublic).HasColumnName("is_public");
+            entity.Property(x => x.Checksum).HasColumnName("checksum")
+                .HasMaxLength(64).IsRequired();
+            entity.Property(x => x.VirusScanStatus)
+                .HasColumnName("virus_scan_status").HasConversion<short>();
+            entity.Property(x => x.VirusScannedAt)
+                .HasColumnName("virus_scanned_at");
+            entity.Property(x => x.RetentionStatus)
+                .HasColumnName("retention_status").HasConversion<short>();
+            entity.Property(x => x.RetentionExpiresAt)
+                .HasColumnName("retention_expires_at");
+            entity.HasOne<DocumentOwner>().WithMany()
+                .HasForeignKey(x => x.DocumentOwnerId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_fa_owner");
+            entity.HasIndex(x => x.StoragePath).IsUnique()
+                .HasDatabaseName("uq_file_attachments_storage_path");
+            entity.HasIndex(x => x.DocumentOwnerId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_file_attachments_owner");
+            entity.HasIndex(x => x.VirusScanStatus)
+                .HasFilter("virus_scan_status = 1")
+                .HasDatabaseName("idx_file_attachments_scan");
         });
     }
 

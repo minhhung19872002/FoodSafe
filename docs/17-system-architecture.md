@@ -2,7 +2,7 @@
 
 ## Decision
 
-FoodSafe is a **modular monolith with Clean Architecture dependencies and feature-oriented application modules**. It is deployed as one ASP.NET Core API/background-process host, one React SPA, PostgreSQL 15, Redis 7, and MinIO. This meets the integration and operational requirements without premature distributed-system complexity.
+FoodSafe is a **modular monolith with Clean Architecture dependencies and feature-oriented application modules**. It is deployed as one ASP.NET Core API/background-process host, one React SPA, PostgreSQL 15, Redis 7, private MinIO object storage, and ClamAV malware scanning. This meets the integration and operational requirements without premature distributed-system complexity.
 
 ```text
 Browser
@@ -18,6 +18,7 @@ ASP.NET Core + ABP modular monolith
       ├─ PostgreSQL 15 (system of record)
       ├─ Redis 7 (cache/distributed coordination)
       ├─ MinIO (file objects; metadata remains in PostgreSQL)
+      ├─ ClamAV (internal synchronous upload scanning)
       └─ SMTP / external partner APIs
 ```
 
@@ -49,4 +50,3 @@ Local development and the initial production topology use Docker Compose-compati
 - Performance: bounded pagination, indexed filters, projections, cached dashboard aggregates, asynchronous exports.
 - Maintainability: contracts first, feature folders, domain transition methods, no entity exposure or mechanical generic service layer.
 - Accessibility: semantic Vietnamese UI, keyboard support, visible focus, text plus color for statuses.
-

@@ -13,7 +13,7 @@ Last updated: 2026-07-25
 | Authorization and data scope | Implemented (foundation) | Global permission plus organization-descendant and geographic assignment resolver implemented; organization API enforces operation-aware scope |
 | Organizations | Implemented | Scoped list/tree/detail/create/edit/delete API and permission-gated create/edit/delete UI pass; hierarchy/geography validation, descendant-safe parent selection and root-promotion authorization are enforced |
 | Master data | Implemented | STT 08–18 persistence, seed, CRUD APIs, permissions, specialized UI, integrity guards, tests and live validation complete |
-| Facilities/products/files | In progress | Scoped facility/product core, map, responsible persons, UI, migration, MSW and authenticated E2E are tested; Excel import/export and shared secure files remain |
+| Facilities/products/files | Tested and reviewed | STT 19â€“20 scoped CRUD, map, responsible persons, atomic Excel workflows and ClamAV-scanned MinIO product attachments pass backend/frontend tests and authenticated Docker E2E |
 | Regulatory modules | Not started | Milestone 3 |
 | Inspection/warnings/news | Not started | Milestone 4 |
 | Poisoning/reporting | Not started | Milestone 5 |
@@ -66,7 +66,8 @@ Last updated: 2026-07-25
 
 - Added multi-stage .NET 9 and Node/Nginx image builds; the API and SPA runtime
   containers run as non-root users.
-- Added a six-service Compose stack for PostgreSQL, Redis, MinIO, the one-shot
+- Added a seven-service base Compose stack for PostgreSQL, Redis, MinIO,
+  ClamAV, the one-shot
   migrator, API, and SPA with dependency-aware health gates and persistent named
   volumes.
 - Infrastructure ports and the web entry point bind to loopback by default; the

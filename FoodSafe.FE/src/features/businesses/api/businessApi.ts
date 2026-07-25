@@ -9,6 +9,7 @@ import type {
   ExcelDownload,
   ExcelImportPreview,
   ExcelImportResult,
+  FileAttachment,
   PagedResult,
   Product,
   ProductBusinessOption,
@@ -207,6 +208,46 @@ export const productApi = {
     return excelDownload(
       response.data,
       response.headers["content-disposition"],
+    );
+  },
+};
+
+export const productAttachmentApi = {
+  async list(productId: string): Promise<FileAttachment[]> {
+    const response = await api.get<FileAttachment[]>(
+      `${productEndpoint}/${productId}/attachments`,
+    );
+    return response.data;
+  },
+
+  async upload(productId: string, file: File): Promise<FileAttachment> {
+    const form = new FormData();
+    form.append("file", file);
+    const response = await api.post<FileAttachment>(
+      `${productEndpoint}/${productId}/attachments`,
+      form,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return response.data;
+  },
+
+  async download(
+    productId: string,
+    attachmentId: string,
+  ): Promise<ExcelDownload> {
+    const response = await api.get<Blob>(
+      `${productEndpoint}/${productId}/attachments/${attachmentId}/download`,
+      { responseType: "blob" },
+    );
+    return excelDownload(
+      response.data,
+      response.headers["content-disposition"],
+    );
+  },
+
+  async delete(productId: string, attachmentId: string): Promise<void> {
+    await api.delete(
+      `${productEndpoint}/${productId}/attachments/${attachmentId}`,
     );
   },
 };

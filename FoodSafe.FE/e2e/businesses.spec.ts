@@ -7,6 +7,10 @@ interface ListItem {
   code?: string;
 }
 
+interface AttachmentItem {
+  id: string;
+}
+
 async function removeStaleArtifacts(page: Page) {
   const request = page.context().request;
   const token = await requestVerificationToken(page);
@@ -18,6 +22,20 @@ async function removeStaleArtifacts(page: Page) {
   expect(products.ok()).toBeTruthy();
   for (const item of ((await products.json()) as { items: ListItem[] }).items) {
     if (item.code?.startsWith("E2E-")) {
+      const attachments = await request.get(
+        `/api/v1/app/product/${item.id}/attachments`,
+      );
+      expect(attachments.ok()).toBeTruthy();
+      for (const attachment of (await attachments.json()) as AttachmentItem[]) {
+        const attachmentDeletion = await request.delete(
+          `/api/v1/app/product/${item.id}/attachments/${attachment.id}`,
+          { headers },
+        );
+        expect(
+          attachmentDeletion.ok(),
+          await attachmentDeletion.text(),
+        ).toBeTruthy();
+      }
       const deletion = await request.delete(`/api/v1/app/product/${item.id}`, {
         headers,
       });
@@ -192,6 +210,57 @@ test.describe("business and product management", () => {
 
     const productRow = page.getByRole("row").filter({ hasText: productCode });
     await expect(productRow).toContainText(productName);
+    await productRow
+      .getByRole("button", { name: `Tệp đính kèm ${productName}` })
+      .click();
+    const attachmentDialog = page.getByRole("dialog", {
+      name: `Tệp đính kèm — ${productName}`,
+    });
+    await attachmentDialog.locator('input[type="file"]').setInputFiles({
+      name: "eicar.xlsx",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: Buffer.from(
+        "UEsDBBQAAAAIAESn+VziZOZcDwAAABUAAAAPAAAAeGwvd29ya2Jvb2sueG1ssynPL8pOys/PtrPRhzMBUEsDBBQAAAAIAESn+Vy8/hnLDAAAAA8AAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbLMJqSxILbaz0YfQAFBLAwQUAAAACABEp/lcPM9RaEYAAABEAAAACQAAAGVpY2FyLmNvbYsw9VcMUHVwDIg2iQmIijA10QiI0zR3dtY0r1Vx9XR2DNINDnH0c3EMctF19AvxDPMMCg3WDXENDtF18/RxVVTx0PbQAgBQSwECFAAUAAAACABEp/lc4mTmXA8AAAAVAAAADwAAAAAAAAAAAAAAAAAAAAAAeGwvd29ya2Jvb2sueG1sUEsBAhQAFAAAAAgARKf5XLz+GcsMAAAADwAAABMAAAAAAAAAAAAAAAAAPAAAAFtDb250ZW50X1R5cGVzXS54bWxQSwECFAAUAAAACABEp/lcPM9RaEYAAABEAAAACQAAAAAAAAAAAAAAAAB5AAAAZWljYXIuY29tUEsFBgAAAAADAAMAtQAAAOYAAAAAAA==",
+        "base64",
+      ),
+    });
+    await attachmentDialog.getByRole("button", { name: "Tải lên" }).click();
+    await expect(
+      page.getByText("Không thể tải file lên hoặc file không an toàn"),
+    ).toBeVisible();
+    await expect(attachmentDialog.getByText("eicar.xlsx")).toHaveCount(0);
+
+    await attachmentDialog.locator('input[type="file"]').setInputFiles({
+      name: "e2e-chung-nhan.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("%PDF-1.7\n%%EOF\n"),
+    });
+    await attachmentDialog.getByRole("button", { name: "Tải lên" }).click();
+    await expect(page.getByText("Đã tải file lên")).toBeVisible();
+    await expect(
+      attachmentDialog.getByRole("cell", {
+        name: "e2e-chung-nhan.pdf",
+        exact: true,
+      }),
+    ).toBeVisible();
+    const attachmentDownloadPromise = page.waitForEvent("download");
+    await attachmentDialog
+      .getByRole("button", { name: "Tải e2e-chung-nhan.pdf" })
+      .click();
+    const attachmentDownload = await attachmentDownloadPromise;
+    const attachmentPath = await attachmentDownload.path();
+    expect(attachmentPath).not.toBeNull();
+    expect(
+      (await readFile(attachmentPath!)).subarray(0, 4).toString(),
+    ).toBe("%PDF");
+    await attachmentDialog
+      .getByRole("button", { name: "Xóa e2e-chung-nhan.pdf" })
+      .click();
+    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await expect(page.getByText("Đã xóa file đính kèm")).toBeVisible();
+    await attachmentDialog.getByRole("button", { name: "Close" }).click();
+
     await productRow
       .getByRole("button", { name: `Xóa ${productName}` })
       .click();

@@ -15,6 +15,13 @@ x-backend-environment: &backend-environment
   DataProtection__CertificatePath: /run/secrets/foodsafe-data-protection.pfx
   DataProtection__CertificatePassword: ${DATA_PROTECTION_CERTIFICATE_PASSWORD:-}
   Database__AutoMigrate: "false"
+  BlobStorage__Endpoint: minio:9000
+  BlobStorage__AccessKey: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+  BlobStorage__SecretKey: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+  BlobStorage__BucketName: foodsafe-files
+  BlobStorage__WithSsl: "false"
+  MalwareScan__Host: clamav
+  MalwareScan__Port: "3310"
 
 services:
   postgres:
@@ -96,6 +103,21 @@ services:
       foodsafe:
         ipv4_address: 172.28.0.60
 
+  clamav:
+    image: clamav/clamav:1.4
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping", "1"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.70
+
   migrator:
     build:
       context: .
@@ -142,6 +164,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      clamav:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -180,6 +204,7 @@ volumes:
   redis_data:
   minio_data:
   mailpit_data:
+  clamav_data:
   data_protection_keys:
 
 networks:

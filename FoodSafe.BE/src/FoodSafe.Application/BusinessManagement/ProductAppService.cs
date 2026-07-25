@@ -1,5 +1,6 @@
 using FoodSafe.Permissions;
 using FoodSafe.Security;
+using FoodSafe.FileManagement;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -18,19 +19,22 @@ public class ProductAppService : ApplicationService, IProductAppService
     private readonly IRepository<BusinessProductGroup> _businessProductGroups;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
+    private readonly IRepository<DocumentOwner, Guid> _documentOwners;
 
     public ProductAppService(
         IRepository<Product, Guid> products,
         IRepository<Business, Guid> businesses,
         IRepository<BusinessProductGroup> businessProductGroups,
         ICurrentDataScopeProvider dataScopeProvider,
-        ICancellationTokenProvider cancellationTokens)
+        ICancellationTokenProvider cancellationTokens,
+        IRepository<DocumentOwner, Guid> documentOwners)
     {
         _products = products;
         _businesses = businesses;
         _businessProductGroups = businessProductGroups;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
+        _documentOwners = documentOwners;
     }
 
     public async Task<PagedResultDto<ProductDto>> GetListAsync(
@@ -107,6 +111,14 @@ public class ProductAppService : ApplicationService, IProductAppService
             input.Manufacturer, input.ManufacturingCountryId, input.NetWeight,
             input.Specifications, input.Ingredients, input.ExpiryPeriodMonths,
             input.StorageConditions, input.UsageInstructions, input.Notes);
+        await _documentOwners.InsertAsync(
+            DocumentOwner.Create(
+                product.Id,
+                product.OrganizationId,
+                "product",
+                Clock.Now),
+            autoSave: false,
+            cancellationToken: _cancellationTokens.Token);
         await _products.InsertAsync(
             product,
             autoSave: true,

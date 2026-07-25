@@ -27,6 +27,8 @@ using Volo.Abp.AspNetCore.Mvc.AntiForgery;
 using Volo.Abp.AspNetCore.Mvc.Conventions;
 using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.Autofac;
+using Volo.Abp.BlobStoring;
+using Volo.Abp.BlobStoring.Minio;
 using Volo.Abp.Identity;
 using Volo.Abp.MailKit;
 using Volo.Abp.Modularity;
@@ -47,7 +49,8 @@ namespace FoodSafe;
     typeof(AbpAccountWebOpenIddictModule),
     typeof(AbpMailKitModule),
     typeof(AbpAspNetCoreSerilogModule),
-    typeof(AbpSwashbuckleModule)
+    typeof(AbpSwashbuckleModule),
+    typeof(AbpBlobStoringMinioModule)
 )]
 public class FoodSafeHttpApiHostModule : AbpModule
 {
@@ -97,6 +100,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureCors(context, configuration);
         ConfigureSwagger(context, configuration);
         ConfigureHangfire(context, configuration);
+        ConfigureBlobStorage(configuration);
         ConfigureClock();
         ConfigureForwardedHeaders(context, configuration);
         ConfigureResponseCompression(context);
@@ -129,6 +133,27 @@ public class FoodSafeHttpApiHostModule : AbpModule
             options.Applications["Angular"].RootUrl = configuration["App:ClientUrl"];
             options.Applications["Angular"].Urls[AccountUrlNames.PasswordReset] =
                 "account/reset-password";
+        });
+    }
+
+    private void ConfigureBlobStorage(IConfiguration configuration)
+    {
+        Configure<AbpBlobStoringOptions>(options =>
+        {
+            options.Containers.ConfigureDefault(container =>
+            {
+                container.UseMinio(minio =>
+                {
+                    minio.EndPoint = configuration["BlobStorage:Endpoint"]!;
+                    minio.AccessKey = configuration["BlobStorage:AccessKey"]!;
+                    minio.SecretKey = configuration["BlobStorage:SecretKey"]!;
+                    minio.BucketName = configuration["BlobStorage:BucketName"]!;
+                    minio.WithSSL = configuration.GetValue(
+                        "BlobStorage:WithSsl",
+                        false);
+                    minio.CreateBucketIfNotExists = true;
+                });
+            });
         });
     }
 
