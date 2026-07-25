@@ -7,6 +7,7 @@
     <ScribanVersion>7.2.5</ScribanVersion>
     <NewtonsoftJsonVersion>13.0.4</NewtonsoftJsonVersion>
     <SQLitePclRawVersion>2.1.12</SQLitePclRawVersion>
+    <MailKitVersion>4.16.0</MailKitVersion>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <AbpProjectType>app</AbpProjectType>
     <Nullable>enable</Nullable>

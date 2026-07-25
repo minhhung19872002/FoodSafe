@@ -107,6 +107,17 @@ jobs:
       STRING_ENCRYPTION_PASSPHRASE: ci-render-only-passphrase-32-characters
       SEED_ADMIN_PASSWORD: Ci-render-only-bootstrap-password-9!
       DATA_PROTECTION_CERTIFICATE_PASSWORD: ci-render-only-certificate-password
+      CAPTCHA_SITE_KEY: ci-render-only-turnstile-site-key
+      CAPTCHA_SECRET_KEY: ci-render-only-turnstile-secret-key
+      CAPTCHA_EXPECTED_HOSTNAME: foodsafe.example.invalid
+      SMTP_FROM_ADDRESS: noreply@foodsafe.example.invalid
+      SMTP_FROM_NAME: FoodSafe
+      SMTP_HOST: smtp.example.invalid
+      SMTP_PORT: "587"
+      SMTP_ENABLE_SSL: "true"
+      SMTP_USE_DEFAULT_CREDENTIALS: "false"
+      SMTP_USERNAME: ci-render-only
+      SMTP_PASSWORD: ci-render-only-password
 
     steps:
       - name: Check out repository

@@ -16,8 +16,10 @@
 | [18-backend-architecture.md](18-backend-architecture.md) | Backend boundaries and enforcement rules | Approved for implementation |
 | [19-frontend-architecture.md](19-frontend-architecture.md) | Frontend structure and quality rules | Approved for implementation |
 | [20-implementation-roadmap.md](20-implementation-roadmap.md) | Milestones, gates and current evidence | Active |
+| [36-local-development-guide.md](36-local-development-guide.md) | Reproducible container/native development and email testing | Active |
 | [42-container-deployment.md](42-container-deployment.md) | Container configuration, secrets, startup and recovery boundary | Active |
 | [43-dependency-security-policy.md](43-dependency-security-policy.md) | Automated dependency gates and the temporary ABP advisory mitigation | Active |
+| [44-account-security-and-recovery.md](44-account-security-and-recovery.md) | Cookie/CSRF, CAPTCHA and password-recovery security boundary | Active |
 
 | File | Nội dung | Trạng thái |
 |------|----------|-----------|

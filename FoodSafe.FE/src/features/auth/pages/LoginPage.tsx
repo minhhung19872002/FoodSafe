@@ -1,11 +1,15 @@
 import { Card, Form, Input, Button, Typography, Space } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
+import { useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useLogin } from '../api/authMutations'
+import { CaptchaWidget } from '../components/CaptchaWidget'
 
 const loginSchema = z.object({
+  captchaToken: z.string().min(1, 'Vui lòng hoàn thành xác minh CAPTCHA'),
   userNameOrEmailAddress: z.string().min(1, 'Vui lòng nhập tên đăng nhập'),
   password: z.string().min(1, 'Vui lòng nhập mật khẩu'),
 })
@@ -14,10 +18,12 @@ type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const loginMutation = useLogin()
+  const navigate = useNavigate()
 
-  const { control, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
+  const { control, handleSubmit, setValue, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
+      captchaToken: '',
       userNameOrEmailAddress: '',
       password: '',
     },
@@ -26,6 +32,10 @@ export default function LoginPage() {
   const onSubmit = (data: LoginFormData) => {
     loginMutation.mutate(data)
   }
+
+  const handleCaptchaToken = useCallback((token: string) => {
+    setValue('captchaToken', token, { shouldValidate: true })
+  }, [setValue])
 
   return (
     <div
@@ -89,6 +99,23 @@ export default function LoginPage() {
                   />
                 )}
               />
+            </Form.Item>
+
+            <Form.Item
+              required
+              validateStatus={errors.captchaToken ? 'error' : ''}
+              help={errors.captchaToken?.message}
+            >
+              <CaptchaWidget
+                onTokenChange={handleCaptchaToken}
+                resetKey={loginMutation.failureCount}
+              />
+            </Form.Item>
+
+            <Form.Item style={{ textAlign: 'right', marginBottom: 12 }}>
+              <Typography.Link onClick={() => navigate('/account/forgot-password')}>
+                Quên mật khẩu?
+              </Typography.Link>
             </Form.Item>
 
             <Form.Item style={{ marginBottom: 0 }}>

@@ -75,6 +75,27 @@ services:
       foodsafe:
         ipv4_address: 172.28.0.50
 
+  mailpit:
+    image: axllent/mailpit:v1.30.0
+    profiles: ["development"]
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_DATABASE: /data/mailpit.db
+    ports:
+      - "${INFRA_BIND_ADDRESS:-127.0.0.1}:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${INFRA_BIND_ADDRESS:-127.0.0.1}:${MAILPIT_WEB_PORT:-8025}:8025"
+    volumes:
+      - mailpit_data:/data
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.60
+
   migrator:
     build:
       context: .
@@ -100,6 +121,17 @@ services:
     environment:
       <<: *backend-environment
       ASPNETCORE_URLS: http://+:8080
+      Captcha__SiteKey: ${CAPTCHA_SITE_KEY:-1x00000000000000000000AA}
+      Captcha__SecretKey: ${CAPTCHA_SECRET_KEY:-1x0000000000000000000000000000000AA}
+      Captcha__ExpectedHostname: ${CAPTCHA_EXPECTED_HOSTNAME:-localhost}
+      Settings__Abp.Mailing.DefaultFromAddress: ${SMTP_FROM_ADDRESS:-noreply@foodsafe.local}
+      Settings__Abp.Mailing.DefaultFromDisplayName: ${SMTP_FROM_NAME:-FoodSafe}
+      Settings__Abp.Mailing.Smtp.Host: ${SMTP_HOST:-mailpit}
+      Settings__Abp.Mailing.Smtp.Port: ${SMTP_PORT:-1025}
+      Settings__Abp.Mailing.Smtp.EnableSsl: ${SMTP_ENABLE_SSL:-false}
+      Settings__Abp.Mailing.Smtp.UseDefaultCredentials: ${SMTP_USE_DEFAULT_CREDENTIALS:-true}
+      Settings__Abp.Mailing.Smtp.UserName: ${SMTP_USERNAME:-}
+      Settings__Abp.Mailing.Smtp.Password: ${SMTP_PASSWORD:-}
     volumes:
       - data_protection_keys:/home/app/.aspnet/DataProtection-Keys
       - ./secrets:/run/secrets:ro
@@ -147,6 +179,7 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
+  mailpit_data:
   data_protection_keys:
 
 networks:

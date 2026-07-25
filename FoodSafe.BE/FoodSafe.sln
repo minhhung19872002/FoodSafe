@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FoodSafe.Application.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FoodSafe.EntityFrameworkCore.Tests", "test\FoodSafe.EntityFrameworkCore.Tests\FoodSafe.EntityFrameworkCore.Tests.csproj", "{D092A806-DD6C-4935-96D8-02F58326DB1F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FoodSafe.HttpApi.Host.Tests", "test\FoodSafe.HttpApi.Host.Tests\FoodSafe.HttpApi.Host.Tests.csproj", "{02339B2E-0D4E-4F63-8F83-76A143208BD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -199,6 +201,18 @@ Global
 		{D092A806-DD6C-4935-96D8-02F58326DB1F}.Release|x64.Build.0 = Release|Any CPU
 		{D092A806-DD6C-4935-96D8-02F58326DB1F}.Release|x86.ActiveCfg = Release|Any CPU
 		{D092A806-DD6C-4935-96D8-02F58326DB1F}.Release|x86.Build.0 = Release|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Debug|x64.Build.0 = Debug|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Debug|x86.Build.0 = Debug|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Release|x64.ActiveCfg = Release|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Release|x64.Build.0 = Release|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Release|x86.ActiveCfg = Release|Any CPU
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -217,5 +231,6 @@ Global
 		{01F01893-3DA7-46A4-874A-1E9A98A44AFB} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
 		{BB322726-F67F-4F9B-9A4F-38F136048E9B} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
 		{D092A806-DD6C-4935-96D8-02F58326DB1F} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
+		{02339B2E-0D4E-4F63-8F83-76A143208BD5} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
 	EndGlobalSection
 EndGlobal

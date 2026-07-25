@@ -1,5 +1,11 @@
 import { api } from '@/lib/axios'
-import type { ChangePasswordRequest, CurrentUserDto, LoginRequest, LoginResponse } from '../types/auth.types'
+import type {
+  ChangePasswordRequest,
+  CurrentUserDto,
+  LoginRequest,
+  LoginResponse,
+  ResetPasswordRequest,
+} from '../types/auth.types'
 
 export const authApi = {
   initializeCsrf: (): Promise<void> =>
@@ -23,5 +29,29 @@ export const authApi = {
   changePassword: async (data: ChangePasswordRequest): Promise<void> => {
     await authApi.initializeCsrf()
     return api.post<void>('/app/account-security/change-password', data).then(() => undefined)
+  },
+
+  sendPasswordResetCode: async (email: string): Promise<void> => {
+    await authApi.initializeCsrf()
+    return api.post<void>('/account/send-password-reset-code', {
+      email,
+      appName: 'Angular',
+    }).then(() => undefined)
+  },
+
+  verifyPasswordResetToken: async (
+    userId: string,
+    resetToken: string,
+  ): Promise<void> => {
+    await authApi.initializeCsrf()
+    return api.post<void>('/account/verify-password-reset-token', {
+      userId,
+      resetToken,
+    }).then(() => undefined)
+  },
+
+  resetPassword: async (data: ResetPasswordRequest): Promise<void> => {
+    await authApi.initializeCsrf()
+    return api.post<void>('/account/reset-password', data).then(() => undefined)
   },
 }

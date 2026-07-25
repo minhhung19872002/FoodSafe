@@ -6,9 +6,11 @@ import { PermissionRoute } from './PermissionRoute'
 import {
   ChangePasswordPage,
   DashboardPage,
+  ForgotPasswordPage,
   GeographicCatalogPage,
   LoginPage,
   OrganizationListPage,
+  ResetPasswordPage,
   RouteLoading,
 } from './routeComponents'
 
@@ -18,6 +20,22 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<RouteLoading />}>
         <LoginPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/account/forgot-password',
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <ForgotPasswordPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/account/reset-password',
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <ResetPasswordPage />
       </Suspense>
     ),
   },

@@ -1,4 +1,6 @@
 using FoodSafe.EntityFrameworkCore;
+using FoodSafe.Security;
+using FoodSafe.TextTemplating;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -23,11 +25,13 @@ using Volo.Abp.AspNetCore.Mvc.AntiForgery;
 using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.Autofac;
 using Volo.Abp.Identity;
+using Volo.Abp.MailKit;
 using Volo.Abp.Modularity;
 using Volo.Abp.OpenIddict;
 using Volo.Abp.Security.Claims;
 using Volo.Abp.Swashbuckle;
 using Volo.Abp.Timing;
+using Volo.Abp.TextTemplating;
 using Volo.Abp.UI.Navigation.Urls;
 
 namespace FoodSafe;
@@ -38,6 +42,7 @@ namespace FoodSafe;
     typeof(FoodSafeApplicationModule),
     typeof(FoodSafeEntityFrameworkCoreModule),
     typeof(AbpAccountWebOpenIddictModule),
+    typeof(AbpMailKitModule),
     typeof(AbpAspNetCoreSerilogModule),
     typeof(AbpSwashbuckleModule)
 )]
@@ -68,6 +73,9 @@ public class FoodSafeHttpApiHostModule : AbpModule
         var hostingEnvironment = context.Services.GetHostingEnvironment();
 
         ConfigureAuthentication(context);
+        ConfigureSecureTextTemplating();
+        ConfigureCaptcha(context, configuration, hostingEnvironment);
+        ValidateEmailDelivery(configuration, hostingEnvironment);
         ConfigureDataProtection(context, configuration, hostingEnvironment);
         ConfigureUrls(configuration);
         ConfigureConventionalControllers();
@@ -204,6 +212,64 @@ public class FoodSafeHttpApiHostModule : AbpModule
                 }
             }
         });
+    }
+
+    private void ConfigureSecureTextTemplating()
+    {
+        Configure<AbpTextTemplatingOptions>(options =>
+        {
+            options.DefaultRenderingEngine =
+                SecureScribanTemplateRenderingEngine.EngineName;
+            options.RenderingEngines[
+                    SecureScribanTemplateRenderingEngine.EngineName] =
+                typeof(SecureScribanTemplateRenderingEngine);
+        });
+    }
+
+    private static void ConfigureCaptcha(
+        ServiceConfigurationContext context,
+        IConfiguration configuration,
+        IHostEnvironment hostingEnvironment)
+    {
+        var section = configuration.GetSection(CaptchaOptions.SectionName);
+        var options = section.Get<CaptchaOptions>() ?? new CaptchaOptions();
+        CaptchaConfiguration.Validate(options, hostingEnvironment.IsProduction());
+
+        context.Services.Configure<CaptchaOptions>(section);
+        context.Services.AddHttpClient<ICaptchaVerifier, TurnstileCaptchaVerifier>(
+            client => client.Timeout = TimeSpan.FromSeconds(10));
+    }
+
+    private static void ValidateEmailDelivery(
+        IConfiguration configuration,
+        IHostEnvironment hostingEnvironment)
+    {
+        if (!hostingEnvironment.IsProduction())
+        {
+            return;
+        }
+
+        var host = configuration["Settings:Abp.Mailing.Smtp.Host"];
+        var fromAddress = configuration["Settings:Abp.Mailing.DefaultFromAddress"];
+        var enableSsl =
+            configuration.GetValue<bool>("Settings:Abp.Mailing.Smtp.EnableSsl");
+        var useDefaultCredentials =
+            configuration.GetValue<bool>(
+                "Settings:Abp.Mailing.Smtp.UseDefaultCredentials");
+        var userName = configuration["Settings:Abp.Mailing.Smtp.UserName"];
+        var password = configuration["Settings:Abp.Mailing.Smtp.Password"];
+
+        if (string.IsNullOrWhiteSpace(host)
+            || string.IsNullOrWhiteSpace(fromAddress)
+            || !enableSsl
+            || (!useDefaultCredentials
+                && (string.IsNullOrWhiteSpace(userName)
+                    || string.IsNullOrWhiteSpace(password))))
+        {
+            throw new InvalidOperationException(
+                "Production password recovery requires an SSL-enabled SMTP host, "
+                + "from address, and credentials.");
+        }
     }
 
     private static void ConfigureDataProtection(
@@ -428,6 +494,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         app.UseRouting();
         app.UseAuthentication();
         app.UseRateLimiter();
+        app.UseMiddleware<LoginCaptchaMiddleware>();
         app.UseAbpOpenIddictValidation();
         app.UseUnitOfWork();
         app.UseDynamicClaims();

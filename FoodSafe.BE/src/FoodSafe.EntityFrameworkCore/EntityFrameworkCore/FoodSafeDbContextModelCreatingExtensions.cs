@@ -241,12 +241,12 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.HasOne<Commune>().WithMany().HasForeignKey(x => x.CommuneId)
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_commune");
             entity.HasIndex(x => new
-                {
-                    x.GranteeOrganizationId,
-                    x.GranteeUserId,
-                    x.ValidFrom,
-                    x.ValidTo
-                })
+            {
+                x.GranteeOrganizationId,
+                x.GranteeUserId,
+                x.ValidFrom,
+                x.ValidTo
+            })
                 .HasDatabaseName("idx_msa_grantee");
         });
     }

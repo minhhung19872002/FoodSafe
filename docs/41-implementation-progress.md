@@ -8,7 +8,7 @@ Last updated: 2026-07-25
 | System/backend/frontend architecture | Implemented | `docs/17`–`docs/19`; implementation conformance remains ongoing |
 | PostgreSQL design validation | Tested | Approved SQL executes cleanly and creates 60 tables on disposable PostgreSQL 15 |
 | EF migration baseline | Tested | Initial runtime migration applies to a clean PostgreSQL 15 database and is idempotent on second update |
-| Authentication | In progress | Cookie/CSRF session validated live; SPA token persistence removed; five-attempt/30-minute lockout, 30-minute sliding session, password complexity, 90-day expiry, five-password history and forced-change routing implemented. Login CAPTCHA and recovery delivery remain |
+| Authentication | Implemented (foundation) | Cookie/CSRF session, lockout, expiry/history, forced change, server-verified Turnstile login, and full email recovery/reset lifecycle validated live |
 | Authorization and data scope | Implemented (foundation) | Global permission plus organization-descendant and geographic assignment resolver implemented; organization API enforces operation-aware scope |
 | Organizations | Implemented | Scoped list/tree/detail/create/edit/delete API and permission-gated create/edit/delete UI pass; hierarchy/geography validation, descendant-safe parent selection and root-promotion authorization are enforced |
 | Master data | In progress | Administrative geography model, validated CRUD API and permission-gated province/district/commune UI implemented; broader business/product/inspection catalogs remain |
@@ -18,7 +18,7 @@ Last updated: 2026-07-25
 | Poisoning/reporting | Not started | Milestone 5 |
 | Hazard/labs/dashboard/statistics | Not started | Milestone 6 |
 | Public portal/integrations | Not started | Milestone 7 |
-| Docker full stack/CI/operations | In progress | Six-service Compose stack, deployment guide and CI gates implemented; backup/restore rehearsal and production TLS deployment remain |
+| Docker full stack/CI/operations | In progress | Six-service base stack plus development Mailpit profile, deployment/local guides and CI gates implemented; backup/restore rehearsal and production TLS deployment remain |
 | Final security/readiness review | Not started | Current overall readiness: NOT READY |
 
 “Complete” is intentionally unused until every module quality gate passes.
@@ -105,3 +105,26 @@ Last updated: 2026-07-25
   AutoMapper-backed organization request completes without runtime errors.
 - Dependabot monitors NuGet, npm, and GitHub Actions weekly; any dependency
   advisory outside the documented exact package/advisory pairs fails CI.
+
+## CAPTCHA and password-recovery evidence added on 2026-07-25
+
+- Login now requires a bounded Turnstile token that is verified server-side;
+  Production additionally binds the response to the configured action and
+  hostname and fails closed on provider errors.
+- Production startup refuses Cloudflare's published test keys, non-HTTPS
+  verifier URLs, blank expected hostnames, and insecure or incomplete SMTP
+  delivery configuration.
+- Added forgot/reset-password SPA routes with generic request confirmation,
+  pre-submit token verification, normal password-policy validation, and
+  explicit loading/error/expired-link states.
+- Added a pinned Mailpit development profile and corrected ABP 9.3 mail-setting
+  names to `Abp.Mailing.*`; delivery uses the ABP MailKit integration.
+- Resolved the ABP 9.3/Scriban 7 binary boundary with a locally compiled,
+  sandboxed renderer; patched Scriban 7.2.5 remains selected and reset-email
+  rendering now works at runtime.
+- Live disposable-user validation completed account creation → reset request →
+  captured email → token verification → password reset → login with the new
+  password; the disposable account was deleted afterward.
+- Backend builds with zero warnings and 36 tests pass. Frontend lint,
+  11 tests, and the production bundle pass. Production rejection probes and
+  the complete Compose development profile pass.

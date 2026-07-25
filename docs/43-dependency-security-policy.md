@@ -9,8 +9,12 @@ newly reported NuGet advisory fails
 mitigation entry.
 
 Direct security-floor references prevent vulnerable transitive versions of
-Scriban, Newtonsoft.Json, and SQLitePCLRaw from being selected by the ABP 9.3
-dependency graph. Dependabot checks NuGet, npm, and GitHub Actions weekly.
+Scriban, MailKit/MimeKit, Newtonsoft.Json, and SQLitePCLRaw from being selected by the ABP 9.3
+dependency graph. ABP 9.3's template integration is binary-incompatible with
+Scriban 7, so FoodSafe recompiles that small integration against Scriban 7.2.5
+and applies a public-property-only template member filter. Password-reset
+email rendering is exercised live in the container gate. Dependabot checks
+NuGet, npm, and GitHub Actions weekly.
 
 ## Temporary mitigated advisory
 

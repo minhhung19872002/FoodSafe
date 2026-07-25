@@ -15,7 +15,10 @@ Deliverables:
 - Geographic catalogs and completed organizations UI/API
 - Shared frontend application shell, protected/permission routes and standard states
 
-Remaining risks: reconciling later approved-SQL modules with ABP-owned tables; several open scope decisions in `docs/15`; login CAPTCHA/recovery delivery, API versioning, remaining foundation catalogs and a production backup/restore rehearsal.
+Remaining risks: reconciling later approved-SQL modules with ABP-owned tables;
+several open scope decisions in `docs/15`; API versioning, remaining foundation
+catalogs and a production backup/restore rehearsal. Login CAPTCHA and recovery
+delivery are implemented and verified.
 
 ## Milestone 2 — Master data, facilities, products and files
 
@@ -50,11 +53,11 @@ Perform full authorization/security/performance reviews, Dockerize API/SPA and d
 | Gate | Result on 2026-07-25 |
 |---|---|
 | Backend build | Pass, 0 warnings |
-| Backend tests | Pass, 25 tests including PostgreSQL migration/constraint integration, request contracts, password policy and root-promotion authorization; coverage remains incomplete |
+| Backend tests | Pass, 36 tests including PostgreSQL migration/constraint integration, request contracts, password policy, CAPTCHA provider/middleware behavior and root-promotion authorization; coverage remains incomplete |
 | Frontend strict production build | Pass |
-| Frontend tests | Pass, 9 tests including authentication, forced password change, permissions, catalog form and generated API routes; coverage remains incomplete |
+| Frontend tests | Pass, 11 tests including authentication, CAPTCHA lifecycle/failure handling, forced password change, permissions, catalog form and generated API routes; coverage remains incomplete |
 | EF migrations | Pass; five migrations apply cleanly and repeat idempotently, with no pending model changes |
-| Docker full stack | Pass; six-service health-gated stack builds and runs, with a one-shot migrator and non-root API/SPA containers |
+| Docker full stack | Pass; six-service base stack and development Mailpit profile build and run, with a one-shot migrator and non-root API/SPA containers |
 | CI and dependency gates | Pass locally; GitHub Actions covers backend/frontend build/test, EF drift, audited dependency allowlists, production Compose rendering and image builds |
-| Security | Improved but not ready; cookie/CSRF session, lockout, password history/expiry, throttling and foundational data scope are implemented; CAPTCHA/recovery and final review remain |
+| Security | Improved but not ready; cookie/CSRF session, lockout, password history/expiry, throttling, server-verified CAPTCHA, full recovery delivery/reset, and foundational data scope are implemented; final review and later-module controls remain |
 | Overall | NOT READY |

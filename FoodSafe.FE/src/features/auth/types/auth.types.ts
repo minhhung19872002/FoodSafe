@@ -1,7 +1,14 @@
 export interface LoginRequest {
   userNameOrEmailAddress: string
   password: string
+  captchaToken: string
   rememberMe?: boolean
+}
+
+export interface CaptchaConfig {
+  provider: 'turnstile'
+  siteKey: string
+  action: string
 }
 
 export interface LoginResponse {
@@ -24,4 +31,10 @@ export interface CurrentUserDto {
 export interface ChangePasswordRequest {
   currentPassword: string
   newPassword: string
+}
+
+export interface ResetPasswordRequest {
+  userId: string
+  resetToken: string
+  password: string
 }
