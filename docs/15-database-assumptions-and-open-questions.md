@@ -1,4 +1,4 @@
-# Database Assumptions and Open Questions — FoodSafe
+﻿# Database Assumptions and Open Questions — FoodSafe
 
 > Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh  
 > Phiên bản: 1.0 — Ngày tạo: 2026-07-25  
@@ -291,3 +291,53 @@ The following topics were reviewed but **not fully validated** in this audit pas
 6. **Notification system**: An in-app notification table (`notifications`) was identified as a Phase 2+ concern. When report deadlines approach, when an alert submission is resolved, or when an integration call fails, the system should push notifications to relevant users. This requires a `notifications` table not present in the current schema.
 
 7. **Report template storage**: The system needs to store Word/Excel templates for generating report exports (QuestPDF templates, ClosedXML templates). These are file assets, not DB records, and are stored in MinIO. No schema change is required, but the MinIO bucket structure and template versioning strategy need to be documented.
+
+
+---
+
+## v2.2 Independent Review — New Assumptions and Design Decisions
+
+### ASM-v22-001: Self-Declaration Number Scope Changed to Business-Scoped
+
+**Assumption**: declaration_number (in self_declarations) is unique **per business**, not globally. Changed from the original ASM-002 assumption that all document numbers are globally unique.
+
+**Rationale**: Self-declaration numbers (số tự công bố) are assigned by the business itself under Nghị định 15/2018/NĐ-CP. There is no central registry issuing sequential numbers — each business maintains its own numbering sequence. Different businesses may legitimately use the same number formats (e.g., both Business A and Business B may have a declaration numbered "01/TCBS/2024"). Global uniqueness would cause false constraint violations on perfectly valid declarations from different businesses.
+
+**Impact**: Unique index changed from UNIQUE (declaration_number) to UNIQUE (business_id, declaration_number) WHERE is_deleted = FALSE.
+
+**Contrast**: This is different from government-issued numbers (eligibility certificates, CFS certificates, export certificates, product registrations) which ARE globally unique because the issuing authority (Chi cục ATTP, Bộ Y tế) assigns sequential serial numbers from a controlled registry.
+
+**Stakeholder confirmation needed**: Confirm that Nghị định 15/2018 indeed allows businesses to choose their own declaration numbers without central registry enforcement.
+
+---
+
+### ASM-v22-002: file_attachments.organization_id is Nullable
+
+**Assumption**: The organization_id column on ile_attachments is nullable (NULL allowed) because some system-level attachments may not belong to a specific organization — for example, regulatory document templates uploaded by a ProvinceAdmin for system-wide use, or files uploaded by background jobs.
+
+**Impact**: Authorization scoping at the AppService layer must handle the NULL case: a NULL organization_id on a file attachment means the file is accessible to all organizations (or is a system file). This must be explicitly documented in the authorization review (docs/11 §4).
+
+**Risk**: Medium — if the application does not correctly filter files by organization_id, users from Organization A could read attachments belonging to Organization B. The nullable design requires that the authorization filter in AppService explicitly checks organization_id IS NULL OR organization_id = currentOrgId rather than organization_id = currentOrgId.
+
+**Stakeholder confirmation needed**: Confirm that system-level attachments (not org-scoped) are a real use case. If not, change organization_id to NOT NULL.
+
+---
+
+### ASM-v22-003: business_handlers Is a Full Aggregate Part (Has Its Own Soft-Delete)
+
+**Assumption**: usiness_handlers (nhân viên phụ trách của cơ sở) has its own is_deleted + deletion_time + deleter_id columns, meaning individual handlers can be soft-deleted independently of the parent business. A handler can be marked inactive without deleting or modifying the parent business record.
+
+**Impact**: When querying active handlers for a business, the AppService must filter by is_deleted = FALSE on the usiness_handlers table, not just on the usinesses table.
+
+**Alternative**: If business_handlers should always be hard-deleted when a business is deleted, cascade delete would be correct. Current design is: soft-delete both independently.
+
+---
+
+### ASM-v22-004: public_alert_submissions Is Legally Significant Evidence
+
+**Assumption**: Public submissions of food alerts (public_alert_submissions) constitute legally admissible evidence under public health reporting laws. Therefore they must be soft-deletable (preserved) rather than hard-deletable, and must have a full audit trail.
+
+**Impact**: The table was changed from non-ABP audit columns (created_at, updated_at) to full ABP audit columns + soft-delete. Any existing data in this table would require a migration.
+
+**Risk**: This assumption is made on the basis of administrative procedure law (Luật xử lý vi phạm hành chính). If the legal team determines public submissions are not evidentiary, the soft-delete overhead can be removed.
+

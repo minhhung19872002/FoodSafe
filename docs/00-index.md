@@ -1,7 +1,7 @@
-# FoodSafe — Tài liệu Phân tích Dự án
+﻿# FoodSafe — Tài liệu Phân tích Dự án
 
 > Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh  
-> Phiên bản: 2.1 — Cập nhật lần cuối: 2026-07-25 (v2.1 Red-Team Review — Critical=0, High=0)
+> Phiên bản: 2.2 — Cập nhật lần cuối: 2026-07-25 (v2.2 Independent Review — Critical=0, High=0)
 
 ---
 
@@ -11,7 +11,7 @@
 |------|----------|-----------|
 | [01-functional-requirements.md](01-functional-requirements.md) | 57 chức năng chi tiết theo nhóm A/B/C/E/F | ✅ Hoàn thành |
 | [02-domain-model.md](02-domain-model.md) | Domain entities, Value Objects, Aggregates, Domain Events | ✅ Hoàn thành |
-| [03-database-schema.sql](03-database-schema.sql) | PostgreSQL DDL — **59 bảng tùy chỉnh** + ABP built-in (~80 tổng) | ✅ v2.1 — Red-team reviewed |
+| [03-database-schema.sql](03-database-schema.sql) | PostgreSQL DDL — 55 bảng tùy chỉnh (DDL-counted) + ABP built-in (~80 tổng) | ✅ v2.2 — Độc lập red-team lần 2 (Critical=0, High=0) |
 | [04-state-machines.md](04-state-machines.md) | 9 workflow state machines + domain events | ✅ Hoàn thành |
 | [05-permission-matrix.md](05-permission-matrix.md) | Ma trận phân quyền 7 vai trò × tất cả chức năng | ✅ Hoàn thành |
 | [06-api-contracts.md](06-api-contracts.md) | API endpoints cho tất cả modules | ✅ Hoàn thành |
@@ -22,8 +22,8 @@
 | [11-database-security-and-data-scope.md](11-database-security-and-data-scope.md) | Kiểm soát bảo mật ATTT Cấp 2 ở tầng DB: RLS, encryption, masking | ✅ Hoàn thành |
 | [12-database-history-and-audit-strategy.md](12-database-history-and-audit-strategy.md) | Chiến lược lịch sử trạng thái + ABP audit log retention | ✅ Hoàn thành |
 | [13-database-integration-strategy.md](13-database-integration-strategy.md) | Data contracts cho tích hợp ngoài (Bộ YT, Sở NN, Sở CT) | ✅ Hoàn thành |
-| [14-database-review-report.md](14-database-review-report.md) | Báo cáo tổng hợp audit v2.1: v2.0 findings + red-team Section 11 (Critical=0, High=0) | ✅ Hoàn thành |
-| [15-database-assumptions-and-open-questions.md](15-database-assumptions-and-open-questions.md) | 10 giả định (ASM-001–010) + 8 câu hỏi mở (OQ-001–008) cần xác nhận | ✅ Hoàn thành |
+| [14-database-review-report.md](14-database-review-report.md) | Báo cáo tổng hợp audit v2.2: Section 11 (v2.1) + Section 12 (v2.2 independent, Critical=0, High=0) | ✅ Hoàn thành |
+| [15-database-assumptions-and-open-questions.md](15-database-assumptions-and-open-questions.md) | 10 giả định (ASM-001–010) + 8 câu hỏi mở (OQ-001–008) + 4 giả định v2.2 (ASM-v22-001–004) | ✅ Hoàn thành |
 
 ---
 
@@ -155,6 +155,40 @@
 
 ---
 
+## Tóm tắt Audit v2.2 Independent Review — Vấn đề bổ sung đã phát hiện & xử lý
+
+> Đây là lần review thứ ba (độc lập, không tin tuyên bố READY của v2.1).  
+> **Kết quả: 0 Critical mới + 8 High + 11 Medium + 3 Low → đã sửa toàn bộ High. Critical=0, High=0.**
+
+### High mới (B/C/D/G/J) — Đã sửa tất cả:
+| Mã | Vấn đề | Giải pháp |
+|----|--------|-----------|
+| B-01 | 
+dtp_reports có CẢ inline UNIQUE lẫn partial index cùng tên — duplicate constraint | Xóa inline UNIQUE, giữ partial index |
+| B-02 | ction_month_reports cùng vấn đề B-01 | Cùng giải pháp |
+| B-03 | inspection_plans inline UNIQUE chưa được xóa (v2.1 chỉ thêm partial index, không xóa inline) | Xóa inline UNIQUE, thêm partial index |
+| C-01 | ile_attachments DDL vẫn có deleted_at (v2.1 chỉ sửa comment, không sửa DDL) + thiếu deleter_id | Đổi deleted_at → deletion_time, thêm deleter_id UUID NULL |
+| D-01 | cat_testing_centers thiếu FK cho ddress_commune/district/province_id | ALTER TABLE thêm 3 FK |
+| G-01 | ood_poisoning_cases thiếu eported_by_id/eported_at | Thêm 2 cột audit |
+| G-02 | ood_poisoning_incidents thiếu eported_by_id/eported_at | Thêm 2 cột audit |
+| J-01 | public_alert_submissions.assigned_organization_id thiếu FK thực tế | ALTER TABLE thêm FK đến organizations |
+
+### Medium mới — Đã sửa:
+- **E-01**: self_declarations CHECK dùng cột effective_date không tồn tại → sửa thành declaration_date
+- **E-02/E-03**: tp_alerts/tp_news thiếu CHECK status=3 → recall_reason IS NOT NULL
+- **E-04**: 3 bảng báo cáo thiếu CHECK status=4(Returned) → return_reason IS NOT NULL
+- **E-05**: 6 bảng giấy phép thiếu CHECK status=3(Revoked) → revoke_reason IS NOT NULL
+- **H-01/H-02**: product_registrations/dvertisement_registrations thiếu date range CHECK
+- **H-03**: egulatory_documents thiếu CHECK ordering issue ≤ effective ≤ expiry
+- **I-01**: usiness_handlers thiếu date range CHECK + thiếu deletion_time/deleter_id
+- **M-01**: ile_attachments thiếu organization_id → không thể scope file theo org
+- **U-01**: public_alert_submissions dùng cột audit không chuẩn ABP + thiếu soft-delete
+
+### Low mới — Đã sửa:
+- **Q-01/Q-02**: 5 index bổ sung cho FK geography và FK product_id
+- **T-01**: self_declarations unique index đổi scope từ global sang (business_id, declaration_number)
+
+---
 ## Tóm tắt Audit v2.0 — Vấn đề đã phát hiện & xử lý
 
 ### Critical (C) — Đã sửa tất cả:
@@ -225,3 +259,5 @@
 10. **Phase 10**: Implement Public Portal
 11. **Phase 11**: Implement DataIntegration module
 12. **Phase 12**: Security hardening + /security-review
+
+

@@ -49,6 +49,31 @@
 --     RT-M1 FIX: businesses — CHECK status!=3 OR suspension_reason IS NOT NULL
 --     RT-M2 FIX: inspection_plans — CHECK start_date <= end_date
 --     RT-M3 FIX: eligibility/cfs/export certs + self_declarations — CHECK issue_date <= expiry_date
+--
+--   v2.2 (2026-07-25): Independent red-team review (Principal Database Reviewer)
+--     B-01 FIX: ndtp_reports — removed inline UNIQUE (partial index already present, duplicate name)
+--     B-02 FIX: action_month_reports — same as B-01
+--     B-03 FIX: inspection_plans — replaced inline UNIQUE on plan_code with partial index
+--     C-01 FIX: file_attachments — renamed deleted_at -> deletion_time + added deleter_id
+--     D-01 FIX: cat_testing_centers — added FK for address_commune/district/province_id
+--     E-01 FIX: self_declarations CHECK — fixed phantom column (effective_date -> declaration_date)
+--     E-02 FIX: atp_alerts — CHECK status=3(Recalled) requires recall_reason IS NOT NULL
+--     E-03 FIX: atp_news — CHECK status=3(Recalled) requires recalled_reason IS NOT NULL
+--     E-04 FIX: ndtp/atp_work/action_month reports — CHECK status=4 requires return_reason
+--     E-05 FIX: 6 license tables — CHECK status=3(Revoked) requires revoke_reason
+--     G-01 FIX: food_poisoning_cases — added reported_by_id + reported_at
+--     G-02 FIX: food_poisoning_incidents — added reported_by_id + reported_at
+--     H-01 FIX: product_registrations — CHECK registration_date <= expiry_date
+--     H-02 FIX: advertisement_registrations — CHECK registration_date <= expiry_date
+--     H-03 FIX: regulatory_documents — CHECK date ordering (issue <= effective <= expiry)
+--     I-01 FIX: business_handlers — CHECK training/health date ranges + added deletion_time + deleter_id
+--     J-01 FIX: public_alert_submissions.assigned_organization_id — added FK to organizations
+--     M-01 FIX: file_attachments — added organization_id NULL FK column + index
+--     Q-01 FIX: Added product_id FK indexes on self_declarations, product_registrations
+--     Q-02 FIX: Added geographic FK indexes on food_poisoning_incidents/cases
+--     T-01 FIX: self_declarations unique index scoped to (business_id, declaration_number)
+--     U-01 FIX: public_alert_submissions — replaced created_at/updated_at with ABP audit
+--              columns + added soft-delete (is_deleted + deletion_time + deleter_id)
 -- ============================================================
 
 -- ============================================================
@@ -403,6 +428,14 @@ CREATE TABLE cat_testing_services (
 );
 CREATE INDEX idx_cat_testing_services_center ON cat_testing_services(testing_center_id) WHERE is_deleted = FALSE;
 
+-- [D-01 FIX] cat_testing_centers geographic column FKs (forward-reference to cat_communes/districts/provinces)
+ALTER TABLE cat_testing_centers
+    ADD CONSTRAINT fk_ctc_commune FOREIGN KEY (address_commune_id) REFERENCES cat_communes(id);
+ALTER TABLE cat_testing_centers
+    ADD CONSTRAINT fk_ctc_district FOREIGN KEY (address_district_id) REFERENCES cat_districts(id);
+ALTER TABLE cat_testing_centers
+    ADD CONSTRAINT fk_ctc_province FOREIGN KEY (address_province_id) REFERENCES cat_provinces(id);
+
 -- ============================================================
 -- SECTION 4: BUSINESS MANAGEMENT MODULE
 -- ============================================================
@@ -511,6 +544,18 @@ CREATE TABLE business_handlers (
     last_modification_time           TIMESTAMPTZ  NULL,
     last_modifier_id                 UUID         NULL,
     is_deleted                       BOOL         NOT NULL DEFAULT FALSE,
+    -- [NEW ABP FIX] business_handlers was missing ISoftDelete deletion_time + deleter_id
+    deletion_time                    TIMESTAMPTZ  NULL,
+    deleter_id                       UUID         NULL,
+    -- [I-01 FIX] Certificate date ordering
+    CONSTRAINT chk_bh_training_dates CHECK (
+        training_date IS NULL OR training_expiry_date IS NULL OR
+        training_date <= training_expiry_date
+    ),
+    CONSTRAINT chk_bh_health_dates CHECK (
+        health_check_date IS NULL OR health_check_expiry_date IS NULL OR
+        health_check_date <= health_check_expiry_date
+    ),
     CONSTRAINT pk_business_handlers PRIMARY KEY (id),
     CONSTRAINT fk_business_handlers_business FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
 );
@@ -596,12 +641,18 @@ CREATE TABLE self_declarations (
     CONSTRAINT fk_self_declarations_product FOREIGN KEY (product_id) REFERENCES products(id),
     CONSTRAINT fk_self_declarations_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_self_declarations_status CHECK (status IN (1, 2, 3)),
+    -- [E-05 FIX] Revoked status requires revoke_reason
+    CONSTRAINT chk_self_declarations_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
     -- [RT-M3 FIX] Effective date must not be after expiry date
-    CONSTRAINT chk_self_declarations_dates CHECK (effective_date IS NULL OR expiry_date IS NULL OR effective_date <= expiry_date)
+    CONSTRAINT chk_self_declarations_dates CHECK (declaration_date IS NULL OR expiry_date IS NULL OR declaration_date <= expiry_date)
 );
 -- [C-03 FIX] Declaration number must be unique (government-issued numbers are system-wide unique)
-CREATE UNIQUE INDEX uq_self_declarations_number ON self_declarations(declaration_number) WHERE is_deleted = FALSE;
+-- [T-01 FIX] Self-declaration numbers are business-controlled, not nationally unique
+-- Scope uniqueness to (business_id, declaration_number) not globally
+CREATE UNIQUE INDEX uq_self_declarations_number ON self_declarations(business_id, declaration_number) WHERE is_deleted = FALSE;
 CREATE INDEX idx_self_declarations_business ON self_declarations(business_id) WHERE is_deleted = FALSE;
+-- [Q-01 FIX] Index FK column product_id (join from products to self_declarations)
+CREATE INDEX idx_self_declarations_product ON self_declarations(product_id) WHERE product_id IS NOT NULL AND is_deleted = FALSE;
 CREATE INDEX idx_self_declarations_status_expiry ON self_declarations(status, expiry_date) WHERE is_deleted = FALSE;
 CREATE INDEX idx_self_declarations_org ON self_declarations(organization_id) WHERE is_deleted = FALSE;
 
@@ -643,11 +694,17 @@ CREATE TABLE product_registrations (
     CONSTRAINT fk_product_reg_business FOREIGN KEY (business_id) REFERENCES businesses(id),
     CONSTRAINT fk_product_reg_product FOREIGN KEY (product_id) REFERENCES products(id),
     CONSTRAINT fk_product_reg_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    CONSTRAINT chk_product_reg_status CHECK (status IN (1, 2, 3))
+    CONSTRAINT chk_product_reg_status CHECK (status IN (1, 2, 3)),
+    -- [E-05 FIX] Revoked status requires revoke_reason
+    CONSTRAINT chk_product_reg_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
+    -- [H-01 FIX] Registration date must not be after expiry date
+    CONSTRAINT chk_product_reg_dates CHECK (expiry_date IS NULL OR registration_date <= expiry_date)
 );
 -- [C-02 FIX] Registration number is unique per government issuance
 CREATE UNIQUE INDEX uq_product_registrations_number ON product_registrations(registration_number) WHERE is_deleted = FALSE;
 CREATE INDEX idx_product_registrations_business ON product_registrations(business_id) WHERE is_deleted = FALSE;
+-- [Q-01 FIX] Index FK column product_id
+CREATE INDEX idx_product_registrations_product ON product_registrations(product_id) WHERE product_id IS NOT NULL AND is_deleted = FALSE;
 CREATE INDEX idx_product_registrations_expiry ON product_registrations(expiry_date, status) WHERE is_deleted = FALSE;
 CREATE INDEX idx_product_registrations_org ON product_registrations(organization_id) WHERE is_deleted = FALSE;
 
@@ -682,7 +739,11 @@ CREATE TABLE advertisement_registrations (
     CONSTRAINT fk_ad_reg_business FOREIGN KEY (business_id) REFERENCES businesses(id),
     CONSTRAINT fk_ad_reg_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_ad_reg_type FOREIGN KEY (advertisement_type_id) REFERENCES cat_advertisement_types(id),
-    CONSTRAINT chk_ad_reg_status CHECK (status IN (1, 2, 3))
+    CONSTRAINT chk_ad_reg_status CHECK (status IN (1, 2, 3)),
+    -- [E-05 FIX] Revoked status requires revoke_reason
+    CONSTRAINT chk_ad_reg_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
+    -- [H-02 FIX] Registration date must not be after expiry date
+    CONSTRAINT chk_ad_reg_dates CHECK (expiry_date IS NULL OR registration_date <= expiry_date)
 );
 CREATE UNIQUE INDEX uq_advertisement_registrations_number ON advertisement_registrations(registration_number) WHERE is_deleted = FALSE;
 CREATE INDEX idx_ad_reg_business ON advertisement_registrations(business_id) WHERE is_deleted = FALSE;
@@ -729,6 +790,8 @@ CREATE TABLE eligibility_certificates (
     CONSTRAINT fk_elic_business FOREIGN KEY (business_id) REFERENCES businesses(id),
     CONSTRAINT fk_elic_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_elic_status CHECK (status IN (1, 2, 3)),
+    -- [E-05 FIX] Revoked status requires revoke_reason
+    CONSTRAINT chk_elic_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
     -- [RT-M3 FIX] Issue date must not be after expiry date
     CONSTRAINT chk_elic_dates CHECK (issue_date IS NULL OR expiry_date IS NULL OR issue_date <= expiry_date)
 );
@@ -770,6 +833,8 @@ CREATE TABLE cfs_certificates (
     CONSTRAINT fk_cfs_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_cfs_country FOREIGN KEY (destination_country_id) REFERENCES cat_countries(id),
     CONSTRAINT chk_cfs_status CHECK (status IN (1, 2, 3)),
+    -- [E-05 FIX] Revoked status requires revoke_reason
+    CONSTRAINT chk_cfs_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
     -- [RT-M3 FIX] Issue date must not be after expiry date
     CONSTRAINT chk_cfs_dates CHECK (issue_date IS NULL OR expiry_date IS NULL OR issue_date <= expiry_date)
 );
@@ -814,6 +879,8 @@ CREATE TABLE export_food_certificates (
     CONSTRAINT fk_efc_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_efc_country FOREIGN KEY (destination_country_id) REFERENCES cat_countries(id),
     CONSTRAINT chk_efc_status CHECK (status IN (1, 2, 3)),
+    -- [E-05 FIX] Revoked status requires revoke_reason
+    CONSTRAINT chk_efc_revoke CHECK (status != 3 OR revoke_reason IS NOT NULL),
     -- [RT-M3 FIX] Issue date must not be after expiry date
     CONSTRAINT chk_efc_dates CHECK (issue_date IS NULL OR expiry_date IS NULL OR issue_date <= expiry_date)
 );
@@ -867,13 +934,15 @@ CREATE TABLE inspection_plans (
     deletion_time                TIMESTAMPTZ   NULL,
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_inspection_plans PRIMARY KEY (id),
-    CONSTRAINT uq_inspection_plans_code UNIQUE (plan_code, organization_id),
+    -- [B-03 FIX] Inline UNIQUE removed; partial index handles soft-delete-safe uniqueness
     CONSTRAINT fk_plans_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_inspection_plans_type CHECK (plan_type IN (1, 2, 3, 4)),
     CONSTRAINT chk_inspection_plans_status CHECK (status IN (1, 2, 3, 4, 5, 6)),
     -- [RT-M2 FIX] Start must not be after end
     CONSTRAINT chk_inspection_plans_dates CHECK (start_date IS NULL OR end_date IS NULL OR start_date <= end_date)
 );
+-- [B-03 FIX] Partial unique index replaces the removed inline UNIQUE constraint
+CREATE UNIQUE INDEX uq_inspection_plans_code ON inspection_plans(plan_code, organization_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_inspection_plans_org ON inspection_plans(organization_id, year) WHERE is_deleted = FALSE;
 CREATE INDEX idx_inspection_plans_status ON inspection_plans(status) WHERE is_deleted = FALSE;
 
@@ -1018,6 +1087,9 @@ CREATE TABLE food_poisoning_incidents (
     conclusion                   TEXT          NULL,
     -- Workflow: 1=Draft, 2=Reported, 3=Verified, 4=Concluded
     status                       SMALLINT      NOT NULL DEFAULT 1,
+    -- [G-02 FIX] Audit trail for Draft->Reported transition
+    reported_by_id               UUID          NULL,
+    reported_at                  TIMESTAMPTZ   NULL,
     verified_by_id               UUID          NULL,
     verified_at                  TIMESTAMPTZ   NULL,
     concluded_by_id              UUID          NULL,
@@ -1049,6 +1121,9 @@ CREATE INDEX idx_fpi_status ON food_poisoning_incidents(status) WHERE is_deleted
 CREATE INDEX idx_fpi_location ON food_poisoning_incidents(location_latitude, location_longitude)
     WHERE location_latitude IS NOT NULL AND location_longitude IS NOT NULL AND is_deleted = FALSE;
 CREATE UNIQUE INDEX uq_fpi_incident_code ON food_poisoning_incidents(incident_code, organization_id) WHERE is_deleted = FALSE;
+-- [Q-02 FIX] Indexes on geographic FK columns (district/province added via ALTER TABLE)
+CREATE INDEX idx_fpi_district ON food_poisoning_incidents(location_district_id) WHERE location_district_id IS NOT NULL AND is_deleted = FALSE;
+CREATE INDEX idx_fpi_province ON food_poisoning_incidents(location_province_id) WHERE location_province_id IS NOT NULL AND is_deleted = FALSE;
 
 -- [RT-C5 FIX] food_poisoning_incidents missing FK constraints for district and province
 ALTER TABLE food_poisoning_incidents
@@ -1096,6 +1171,9 @@ CREATE TABLE food_poisoning_cases (
     reporter_relation            VARCHAR(100)  NULL,
     -- Workflow: 1=Draft, 2=Reported, 3=Verified
     status                       SMALLINT      NOT NULL DEFAULT 1,
+    -- [G-01 FIX] Audit trail for Draft->Reported transition
+    reported_by_id               UUID          NULL,
+    reported_at                  TIMESTAMPTZ   NULL,
     verified_by_id               UUID          NULL,
     verified_at                  TIMESTAMPTZ   NULL,
     notes                        TEXT          NULL,
@@ -1120,6 +1198,8 @@ CREATE TABLE food_poisoning_cases (
     CONSTRAINT chk_fpc_result CHECK (treatment_result IS NULL OR treatment_result IN (1, 2, 3))
 );
 CREATE INDEX idx_fpc_org ON food_poisoning_cases(organization_id) WHERE is_deleted = FALSE;
+-- [Q-02 FIX] Index on location_province_id FK column (added via ALTER TABLE)
+CREATE INDEX idx_fpc_province ON food_poisoning_cases(location_province_id) WHERE location_province_id IS NOT NULL AND is_deleted = FALSE;
 CREATE INDEX idx_fpc_report_date ON food_poisoning_cases(report_date, status) WHERE is_deleted = FALSE;
 CREATE INDEX idx_fpc_incident ON food_poisoning_cases(incident_id) WHERE incident_id IS NOT NULL AND is_deleted = FALSE;
 CREATE INDEX idx_fpc_location ON food_poisoning_cases(location_latitude, location_longitude)
@@ -1222,10 +1302,12 @@ CREATE TABLE ndtp_reports (
     deletion_time                TIMESTAMPTZ   NULL,
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_ndtp_reports PRIMARY KEY (id),
-    CONSTRAINT uq_ndtp_reports_period UNIQUE (organization_id, period_year, period_month),
+    -- [B-01 FIX] Inline UNIQUE removed; partial index below handles soft-delete-safe uniqueness
     CONSTRAINT fk_ndtp_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_ndtp_month CHECK (period_month BETWEEN 1 AND 12),
-    CONSTRAINT chk_ndtp_status CHECK (status IN (1, 2, 3, 4, 5))
+    CONSTRAINT chk_ndtp_status CHECK (status IN (1, 2, 3, 4, 5)),
+    -- [E-04 FIX] Returned status requires return_reason
+    CONSTRAINT chk_ndtp_return CHECK (status != 4 OR return_reason IS NOT NULL)
 );
 -- [RT-C2 FIX] Partial unique index (not inline UNIQUE) to allow re-creation after soft-delete
 CREATE UNIQUE INDEX uq_ndtp_reports_period ON ndtp_reports(organization_id, period_year, period_month) WHERE is_deleted = FALSE;
@@ -1326,7 +1408,9 @@ CREATE TABLE atp_work_reports (
         (period_type = 1 AND period_half IN (1, 2)) OR
         (period_type = 2 AND period_half IS NULL)
     ),
-    CONSTRAINT chk_awr_status CHECK (status IN (1, 2, 3, 4, 5))
+    CONSTRAINT chk_awr_status CHECK (status IN (1, 2, 3, 4, 5)),
+    -- [E-04 FIX] Returned status requires return_reason
+    CONSTRAINT chk_awr_return CHECK (status != 4 OR return_reason IS NOT NULL)
 );
 -- NULL !== NULL in PostgreSQL UNIQUE — use partial indexes
 CREATE UNIQUE INDEX uq_atp_work_reports_halfyear ON atp_work_reports(organization_id, period_year, period_half)
@@ -1408,9 +1492,11 @@ CREATE TABLE action_month_reports (
     deletion_time                    TIMESTAMPTZ   NULL,
     deleter_id                       UUID          NULL,
     CONSTRAINT pk_action_month_reports PRIMARY KEY (id),
-    CONSTRAINT uq_action_month_reports UNIQUE (organization_id, period_year),
+    -- [B-02 FIX] Inline UNIQUE removed; partial index below handles soft-delete-safe uniqueness
     CONSTRAINT fk_amr_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    CONSTRAINT chk_amr_status CHECK (status IN (1, 2, 3, 4, 5))
+    CONSTRAINT chk_amr_status CHECK (status IN (1, 2, 3, 4, 5)),
+    -- [E-04 FIX] Returned status requires return_reason
+    CONSTRAINT chk_amr_return CHECK (status != 4 OR return_reason IS NOT NULL)
 );
 -- [RT-C3 FIX] Partial unique index to allow re-creation of report after soft-delete
 CREATE UNIQUE INDEX uq_action_month_reports ON action_month_reports(organization_id, period_year) WHERE is_deleted = FALSE;
@@ -1474,8 +1560,15 @@ CREATE TABLE public_alert_submissions (
     dismissed_reason             TEXT          NULL,
     dismissed_by_id              UUID          NULL,
     dismissed_at                 TIMESTAMPTZ   NULL,
-    created_at                   TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
-    updated_at                   TIMESTAMPTZ   NULL,
+    -- [U-01 FIX] ABP standard audit columns (replaced created_at/updated_at)
+    creation_time                TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    creator_id                   UUID          NULL,
+    last_modification_time       TIMESTAMPTZ   NULL,
+    last_modifier_id             UUID          NULL,
+    -- [U-01 FIX] Soft-delete support (submissions may be evidence — hard delete is inappropriate)
+    is_deleted                   BOOL          NOT NULL DEFAULT FALSE,
+    deletion_time                TIMESTAMPTZ   NULL,
+    deleter_id                   UUID          NULL,
     CONSTRAINT pk_public_alert_submissions PRIMARY KEY (id),
     CONSTRAINT uq_pas_tracking_code UNIQUE (tracking_code),
     CONSTRAINT fk_pas_commune FOREIGN KEY (location_commune_id) REFERENCES cat_communes(id),
@@ -1483,7 +1576,7 @@ CREATE TABLE public_alert_submissions (
     -- [RT-H5 FIX] status=3 (ConvertedToAlert) must have converted_alert_id
     CONSTRAINT chk_pas_converted CHECK (status != 3 OR converted_alert_id IS NOT NULL)
 );
-CREATE INDEX idx_pas_status ON public_alert_submissions(status, created_at DESC);
+CREATE INDEX idx_pas_status ON public_alert_submissions(status, creation_time DESC);
 CREATE INDEX idx_pas_tracking ON public_alert_submissions(tracking_code);
 
 -- Cảnh báo VSATTP (Food Safety Alerts)
@@ -1535,6 +1628,8 @@ CREATE TABLE atp_alerts (
     CONSTRAINT chk_alerts_severity CHECK (severity IN (1, 2, 3, 4)),
     CONSTRAINT chk_alerts_source CHECK (source IN (1, 2, 3)),
     CONSTRAINT chk_alerts_status CHECK (status IN (1, 2, 3)),
+    -- [E-02 FIX] Recalled status requires recall_reason
+    CONSTRAINT chk_alerts_recall CHECK (status != 3 OR recall_reason IS NOT NULL),
     -- [RT-H4 FIX] source=2 (PublicReport) must have public_submission_id
     CONSTRAINT chk_alerts_source_submission CHECK (source != 2 OR public_submission_id IS NOT NULL)
 );
@@ -1544,6 +1639,9 @@ ALTER TABLE public_alert_submissions
 -- [RT-H3 FIX] public_alert_submissions missing FK for location_district_id
 ALTER TABLE public_alert_submissions
     ADD CONSTRAINT fk_pas_district FOREIGN KEY (location_district_id) REFERENCES cat_districts(id);
+-- [J-01 FIX] assigned_organization_id missing FK
+ALTER TABLE public_alert_submissions
+    ADD CONSTRAINT fk_pas_assigned_org FOREIGN KEY (assigned_organization_id) REFERENCES organizations(id);
 CREATE INDEX idx_atp_alerts_org ON atp_alerts(organization_id, status) WHERE is_deleted = FALSE;
 CREATE INDEX idx_atp_alerts_public ON atp_alerts(is_public, status, published_at DESC) WHERE is_deleted = FALSE;
 CREATE INDEX idx_atp_alerts_severity ON atp_alerts(severity, status) WHERE is_deleted = FALSE;
@@ -1581,7 +1679,9 @@ CREATE TABLE atp_news (
     deleter_id                   UUID          NULL,
     CONSTRAINT pk_atp_news PRIMARY KEY (id),
     CONSTRAINT fk_news_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
-    CONSTRAINT chk_news_status CHECK (status IN (1, 2, 3))
+    CONSTRAINT chk_news_status CHECK (status IN (1, 2, 3)),
+    -- [E-03 FIX] Recalled status requires recalled_reason
+    CONSTRAINT chk_news_recall CHECK (status != 3 OR recalled_reason IS NOT NULL)
 );
 CREATE INDEX idx_atp_news_public ON atp_news(is_public, status, published_at DESC) WHERE is_deleted = FALSE;
 CREATE INDEX idx_atp_news_title_trgm ON atp_news USING GIN (title gin_trgm_ops) WHERE is_deleted = FALSE;
@@ -1726,7 +1826,12 @@ CREATE TABLE regulatory_documents (
     CONSTRAINT fk_rd_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_rd_doc_type FOREIGN KEY (document_type_id) REFERENCES cat_document_types(id),
     CONSTRAINT fk_rd_replaced_by FOREIGN KEY (replaced_by_id) REFERENCES regulatory_documents(id),
-    CONSTRAINT chk_rd_status CHECK (status IN (1, 2, 3, 4))
+    CONSTRAINT chk_rd_status CHECK (status IN (1, 2, 3, 4)),
+    -- [H-03 FIX] Dates must be logically ordered
+    CONSTRAINT chk_rd_dates CHECK (
+        (issue_date IS NULL OR effective_date IS NULL OR issue_date <= effective_date) AND
+        (effective_date IS NULL OR expiry_date IS NULL OR effective_date <= expiry_date)
+    )
 );
 CREATE INDEX idx_rd_org ON regulatory_documents(organization_id, status) WHERE is_deleted = FALSE;
 CREATE INDEX idx_rd_title_trgm ON regulatory_documents USING GIN (title gin_trgm_ops) WHERE is_deleted = FALSE;
@@ -1759,6 +1864,8 @@ CREATE TRIGGER trg_regulatory_documents_search_vector
 -- Files stored in MinIO; this table stores metadata only
 CREATE TABLE file_attachments (
     id                           UUID          NOT NULL DEFAULT uuid_generate_v4(),
+    -- [M-01 FIX] Organization scope — needed for org-scoped storage queries and authorization checks
+    organization_id              UUID          NULL,       -- NULL for system-level attachments
     entity_type                  VARCHAR(100)  NOT NULL,   -- 'business', 'inspection_result', 'product', etc.
     entity_id                    UUID          NOT NULL,
     -- [H-02 FIX] entity_version tracks which version of the entity this file belongs to
@@ -1784,12 +1891,17 @@ CREATE TABLE file_attachments (
     retention_status             SMALLINT      NOT NULL DEFAULT 1,
     retention_expires_at         TIMESTAMPTZ   NULL,
     is_deleted                   BOOL          NOT NULL DEFAULT FALSE,
-    deleted_at                   TIMESTAMPTZ   NULL,
+    -- [C-01 FIX] ABP ISoftDelete compliance: deletion_time + deleter_id (not deleted_at)
+    deletion_time                TIMESTAMPTZ   NULL,
+    deleter_id                   UUID          NULL,
     CONSTRAINT pk_file_attachments PRIMARY KEY (id),
+    CONSTRAINT fk_fa_org FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT chk_fa_virus_scan CHECK (virus_scan_status IN (1, 2, 3, 4)),
     CONSTRAINT chk_fa_retention CHECK (retention_status IN (1, 2, 3)),
     CONSTRAINT chk_fa_file_size CHECK (file_size > 0)
 );
+-- [M-01 FIX] Org-scoped file query index
+CREATE INDEX idx_file_attachments_org ON file_attachments(organization_id) WHERE organization_id IS NOT NULL AND is_deleted = FALSE;
 CREATE INDEX idx_file_attachments_entity ON file_attachments(entity_type, entity_id) WHERE is_deleted = FALSE;
 CREATE INDEX idx_file_attachments_entity_version ON file_attachments(entity_type, entity_id, entity_version)
     WHERE entity_version IS NOT NULL AND is_deleted = FALSE;
@@ -1992,6 +2104,30 @@ CREATE INDEX idx_status_history_org ON status_history(organization_id, changed_a
 -- + ABP built-in: ~21 tables (AbpUsers, AbpRoles, AbpUserRoles, etc.)
 -- GRAND TOTAL: ~80 tables
 -- ============================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

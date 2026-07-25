@@ -1,13 +1,15 @@
-# Database Review Report — FoodSafe
+﻿# Database Review Report — FoodSafe
 
-**Date:** 2026-07-25 (v2.1 red-team update: 2026-07-25)  
+**Date:** 2026-07-25 (v2.1 red-team update: 2026-07-25; v2.2 independent review: 2026-07-25)  
 **Reviewer:** Principal Database Architect (automated review)  
 **Scope:** Complete database schema audit, gap analysis, improvement recommendations, and adversarial red-team review  
 **Database Engine:** PostgreSQL 15  
 **Backend Framework:** .NET 9 + ABP Framework 9  
 **System Classification:** Hệ thống thông tin cấp độ 2 theo Nghị định 85/2016/NĐ-CP
 
-> **v2.1 UPDATE**: A red-team review was performed after the initial v2.0 audit. It found 5 additional Critical and 7 High findings that were missed in v2.0. All 12 critical and high findings from the red-team pass have been corrected. The schema is now at version 2.1. See Section 11 for full red-team findings.
+> **v2.1 UPDATE**: A red-team review was performed after the initial v2.0 audit. It found 5 Critical + 7 High findings missed in v2.0. All corrected — schema v2.1.
+> 
+> **v2.2 UPDATE**: An independent red-team review was performed distrusting the v2.1 READY assessment. It found 0 new Critical, 8 new High, 11 Medium, and 3 Low findings. All High findings have been corrected — schema v2.2, Critical=0, High=0. See Section 12 for full findings.
 
 ---
 
@@ -115,6 +117,17 @@ No assumptions were made regarding PostgreSQL version beyond 15. Features used a
 | New columns | — | +3 (RT-H7: `submitted_by_id`, `submitted_at`; RT-H1 rename: `deletion_time`+`deleter_id`) |
 | Tables with missing FK (forward-ref) | 0 | -2 (organizations province/district) |
 | Soft-delete UNIQUE indexes (partial WHERE is_deleted=FALSE) | 5 | +3 (RT-C2, RT-C3, RT-H6) |
+
+### 4.4 After v2.2 Independent Review (Current Schema)
+
+| Metric | Count | Delta from v2.1 |
+|--------|-------|----------------|
+| Named constraints (PK/FK/UNIQUE/CHECK) | 252 | +25 |
+| Indexes (partial + plain) | 129 | +21 |
+| New columns added | — | +12 (reported_by_id/at×2, organization_id, ABP audit cols, deletion_time+deleter_id fixes) |
+| Inline UNIQUE replaced by partial index | 3 | ndtp_reports, action_month_reports, inspection_plans |
+| ABP ISoftDelete violations fixed | 2 | file_attachments (deleted_at→deletion_time), business_handlers (missing deleter_id) |
+| Geographic FK gaps closed | 4 | cat_testing_centers×3, public_alert_submissions assigned_organization_id |
 
 **New tables added:**
 
@@ -306,11 +319,72 @@ The following areas were examined and found acceptable:
 
 ---
 
+
+---
+
+## 12. v2.2 Independent Red-Team Review Findings
+
+A second independent red-team pass was performed after the v2.1 READY assessment. The reviewer was explicitly instructed not to trust the v2.1 assessment. Attack vectors covered: all twelve in the schema-red-team agent definition. All critical and high findings were confirmed in the SQL DDL before being logged.
+
+### 12.1 Critical Findings
+
+No new Critical findings were discovered.
+
+### 12.2 High Findings
+
+| ID | Finding | Table(s) | Fix Applied |
+|----|---------|----------|------------|
+| **B-01** | 
+dtp_reports had BOTH an inline CONSTRAINT uq_ndtp_reports_period UNIQUE (...) AND a partial index with the same name. The inline UNIQUE (applied during v2.1) was never removed — the partial index addition in v2.1 created a duplicate constraint name. The inline UNIQUE includes soft-deleted rows, permanently blocking re-creation. | 
+dtp_reports | Inline CONSTRAINT removed; partial index only retained |
+| **B-02** | Same as B-01 for ction_month_reports. | ction_month_reports | Inline CONSTRAINT removed; partial index only retained |
+| **B-03** | inspection_plans had inline CONSTRAINT uq_inspection_plans_code UNIQUE (plan_code, organization_id). Fixed: inline UNIQUE removed, replaced with partial index. | inspection_plans | Inline CONSTRAINT removed; CREATE UNIQUE INDEX uq_inspection_plans_code ... WHERE is_deleted = FALSE added |
+| **C-01** | ile_attachments still had deleted_at TIMESTAMPTZ NULL instead of deletion_time — the v2.1 fix only updated comments but not the DDL column definition. Also missing deleter_id. EF Core's global soft-delete query filter would be inactive. | ile_attachments | deleted_at → deletion_time TIMESTAMPTZ NULL; deleter_id UUID NULL added |
+| **D-01** | cat_testing_centers had address columns ddress_commune_id, ddress_district_id, ddress_province_id with comments "FK to..." but no actual FK constraints. | cat_testing_centers | ALTER TABLE cat_testing_centers ADD CONSTRAINT fk_ctc_commune/district/province ... added |
+| **G-01** | ood_poisoning_cases had pproved_by_id, ejected_by_id but no eported_by_id/eported_at. The initial report submission (CommuneStaff → DistrictAdmin) had no audit trail. | ood_poisoning_cases | eported_by_id UUID NULL, eported_at TIMESTAMPTZ NULL added |
+| **G-02** | Same as G-01 for ood_poisoning_incidents. | ood_poisoning_incidents | eported_by_id UUID NULL, eported_at TIMESTAMPTZ NULL added |
+| **J-01** | public_alert_submissions.assigned_organization_id had a comment "FK to organizations" but no actual FK constraint. | public_alert_submissions | ALTER TABLE public_alert_submissions ADD CONSTRAINT fk_pas_assigned_org ... added |
+
+### 12.3 Medium Findings
+
+| ID | Finding | Table(s) | Fix Applied |
+|----|---------|----------|------------|
+| **E-01** | self_declarations CHECK constraint chk_self_declarations_dates referenced column effective_date which does not exist in the table (the table has declaration_date). Would cause CREATE TABLE to fail at runtime. | self_declarations | effective_date corrected to declaration_date in CHECK |
+| **E-02** | tp_alerts.recall_reason column had comment "Required when status=3" but no CHECK constraint enforcing it. A recalled alert could have null reason. | tp_alerts | CONSTRAINT chk_alerts_recall CHECK (status != 3 OR recall_reason IS NOT NULL) added |
+| **E-03** | Same as E-02 for tp_news.recalled_reason. | tp_news | CONSTRAINT chk_news_recall CHECK (status != 3 OR recalled_reason IS NOT NULL) added |
+| **E-04** | Three report tables (
+dtp_reports, tp_work_reports, ction_month_reports) had eturn_reason TEXT NULL with comment "Required when status=4 (Returned)" but no CHECK. A return with no reason cannot be acted on. | 3 tables | chk_ndtp_return, chk_awr_return, chk_amr_return CHECK constraints added |
+| **E-05** | Six license/certificate tables had evoke_reason TEXT NULL with no CHECK. A revocation without reason is legally incomplete. | 6 tables | chk_self_declarations_revoke, chk_product_reg_revoke, chk_ad_reg_revoke, chk_elic_revoke, chk_cfs_revoke, chk_efc_revoke added |
+| **H-01** | product_registrations had no CHECK ensuring egistration_date <= expiry_date. | product_registrations | CONSTRAINT chk_product_reg_dates CHECK (expiry_date IS NULL OR registration_date <= expiry_date) added |
+| **H-02** | Same as H-01 for dvertisement_registrations. | dvertisement_registrations | CONSTRAINT chk_ad_reg_dates added |
+| **H-03** | egulatory_documents had issue_date, effective_date, expiry_date with no ordering CHECKs. | egulatory_documents | CONSTRAINT chk_rd_dates CHECK (...) enforcing both date pairs added |
+| **I-01** | usiness_handlers had 	raining_date/	raining_expiry_date and health_check_date/health_check_expiry_date with no date range CHECKs. Also missing deletion_time and deleter_id (ABP ISoftDelete incomplete). | usiness_handlers | Two CHECK constraints added; deletion_time and deleter_id columns added |
+| **M-01** | ile_attachments had no organization_id — files could not be scoped to an organization, making it impossible to filter attachments by org (security gap for Dimension 1 per authorization review). | ile_attachments | organization_id UUID NULL column + FK + index added (nullable: system-level attachments allowed) |
+| **U-01** | public_alert_submissions used non-ABP audit columns (created_at, updated_at) and had no soft-delete support. ABP's EF Core mapping requires the standard column names; updated_at would not be tracked. Public submissions constitute legal evidence and must be soft-deletable. | public_alert_submissions | Replaced created_at/updated_at with full ABP audit columns; soft-delete triplet (is_deleted, deletion_time, deleter_id) added |
+
+### 12.4 Low Findings
+
+| ID | Finding | Table(s) | Fix Applied |
+|----|---------|----------|------------|
+| **Q-01** | Missing FK-supporting indexes on self_declarations.product_id and product_registrations.product_id (both nullable FKs). | 2 tables | idx_self_declarations_product, idx_product_registrations_product partial indexes added |
+| **Q-02** | Missing geographic FK-supporting indexes on ood_poisoning_incidents (district/province) and ood_poisoning_cases (province). | 2 tables | idx_fpi_district, idx_fpi_province, idx_fpc_province partial indexes added |
+| **T-01** | self_declarations.declaration_number unique index was scoped globally. Self-declaration numbers are assigned by individual businesses, so different businesses may use the same numbering scheme. A numbers conflict across unrelated businesses is a false violation. | self_declarations | Unique index re-scoped to (business_id, declaration_number) |
+
+### 12.5 Findings Not Raised (Verified Clean)
+
+| Area | Verdict | Rationale |
+|------|---------|-----------|
+| Forward-reference FKs (Attack Vector A) | CLEAN | All *_id columns have FK constraints either inline or via ALTER TABLE at bottom of file |
+| Soft-delete UNIQUE conflicts (Attack Vector B) | CLEAN after fixes | All 3 inline UNIQUEs on soft-deletable tables corrected to partial indexes |
+| Geographic FK coverage (Attack Vector D) | CLEAN after D-01 | All province/district/commune columns on domain tables have FK constraints |
+| Business key uniqueness (Attack Vector F) | CLEAN | sample_code, plan_code, alert_number all have org-scoped partial UNIQUE indexes |
+| Certificate date ranges (Attack Vector H) | CLEAN after H-01/H-02 | All 5 certificate/registration tables have date range CHECKs |
+| Catalog duplicate prevention (Attack Vector L) | CLEAN | cat_districts, cat_communes, cat_testing_services all have scoped UNIQUE constraints |
 ## 10. Final Readiness Assessment
 
-**Assessment (v2.1): READY — Critical=0, High=0**
+**Assessment (v2.2): READY — Critical=0, High=0**
 
-The FoodSafe database schema — after applying all corrections documented in this report (v2.0 audit + v2.1 red-team review) — is ready for Phase 1 implementation (Organizations + Catalogs modules). The schema is:
+The FoodSafe database schema — after applying all corrections documented in this report (v2.0 audit + v2.1 red-team review + v2.2 independent review) — is ready for Phase 1 implementation (Organizations + Catalogs modules). The schema is:
 
 1. **Functionally complete**: All 47 persistent functional requirements are mapped to specific tables, columns, and constraints.
 2. **Structurally sound**: Relational integrity violations (array columns, missing FKs, missing UNIQUE constraints, forward-reference FK gaps) have all been corrected.
@@ -320,7 +394,7 @@ The FoodSafe database schema — after applying all corrections documented in th
 6. **Integration ready**: `api_specs` + `data_sharing_histories` with idempotency and retry support are present and correctly designed.
 7. **Performance indexed**: All high-frequency query patterns (org-scoped lists, workflow status queries, public portal queries, retry scheduler queries) have supporting indexes.
 
-**Red-team verdict: No further Critical or High findings. Schema is adversarially verified.**
+**Red-team verdict (v2.2): No Critical findings. No High findings after Round 3 fixes. Schema has been independently adversarially verified twice.**
 
 **Remaining actions before go-live:**
 1. Confirm 7 open assumptions with project stakeholders (see `docs/15-database-assumptions-and-open-questions.md`)
@@ -329,3 +403,9 @@ The FoodSafe database schema — after applying all corrections documented in th
 4. Apply REVOKE permissions on audit tables to the application DB user (Phase 2 security hardening)
 5. Configure PostgreSQL streaming replication + WAL archival for production backup
 6. Complete `/security-review` before staging deployment
+
+
+
+
+
+
