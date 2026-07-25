@@ -2,6 +2,11 @@
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <Version>1.0.0</Version>
+    <AbpVersion>9.3.7</AbpVersion>
+    <MicrosoftNetVersion>9.0.5</MicrosoftNetVersion>
+    <ScribanVersion>7.2.5</ScribanVersion>
+    <NewtonsoftJsonVersion>13.0.4</NewtonsoftJsonVersion>
+    <SQLitePclRawVersion>2.1.12</SQLitePclRawVersion>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <AbpProjectType>app</AbpProjectType>
     <Nullable>enable</Nullable>

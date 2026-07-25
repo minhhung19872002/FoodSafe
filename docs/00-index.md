@@ -17,6 +17,7 @@
 | [19-frontend-architecture.md](19-frontend-architecture.md) | Frontend structure and quality rules | Approved for implementation |
 | [20-implementation-roadmap.md](20-implementation-roadmap.md) | Milestones, gates and current evidence | Active |
 | [42-container-deployment.md](42-container-deployment.md) | Container configuration, secrets, startup and recovery boundary | Active |
+| [43-dependency-security-policy.md](43-dependency-security-policy.md) | Automated dependency gates and the temporary ABP advisory mitigation | Active |
 
 | File | Nội dung | Trạng thái |
 |------|----------|-----------|

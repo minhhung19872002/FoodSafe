@@ -53,7 +53,8 @@ Perform full authorization/security/performance reviews, Dockerize API/SPA and d
 | Backend tests | Pass, 25 tests including PostgreSQL migration/constraint integration, request contracts, password policy and root-promotion authorization; coverage remains incomplete |
 | Frontend strict production build | Pass |
 | Frontend tests | Pass, 9 tests including authentication, forced password change, permissions, catalog form and generated API routes; coverage remains incomplete |
-| EF migrations | Pass; four migrations apply cleanly and repeat idempotently, with no pending model changes |
+| EF migrations | Pass; five migrations apply cleanly and repeat idempotently, with no pending model changes |
 | Docker full stack | Pass; six-service health-gated stack builds and runs, with a one-shot migrator and non-root API/SPA containers |
+| CI and dependency gates | Pass locally; GitHub Actions covers backend/frontend build/test, EF drift, audited dependency allowlists, production Compose rendering and image builds |
 | Security | Improved but not ready; cookie/CSRF session, lockout, password history/expiry, throttling and foundational data scope are implemented; CAPTCHA/recovery and final review remain |
 | Overall | NOT READY |

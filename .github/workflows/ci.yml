@@ -1,0 +1,145 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - "codex/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  application:
+    name: Application quality gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: FoodSafe.FE/package-lock.json
+
+      - name: Restore backend
+        working-directory: FoodSafe.BE
+        run: |
+          dotnet tool restore
+          dotnet restore FoodSafe.sln
+
+      - name: Build backend
+        working-directory: FoodSafe.BE
+        run: dotnet build FoodSafe.sln --configuration Release --no-restore
+
+      - name: Test backend
+        working-directory: FoodSafe.BE
+        run: >
+          dotnet test FoodSafe.sln
+          --configuration Release
+          --no-build
+          --verbosity normal
+          --collect:"XPlat Code Coverage"
+          --results-directory TestResults
+
+      - name: Reject pending EF model changes
+        working-directory: FoodSafe.BE
+        run: >
+          dotnet ef migrations has-pending-model-changes
+          --project src/FoodSafe.EntityFrameworkCore
+          --startup-project src/FoodSafe.HttpApi.Host
+          --configuration Release
+          --no-build
+
+      - name: Restore frontend
+        working-directory: FoodSafe.FE
+        run: npm ci
+
+      - name: Lint and type-check frontend
+        working-directory: FoodSafe.FE
+        run: |
+          npm run lint
+          npm run lint:ts
+
+      - name: Test frontend
+        working-directory: FoodSafe.FE
+        run: npm test -- --run
+
+      - name: Build frontend
+        working-directory: FoodSafe.FE
+        run: npm run build
+
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: FoodSafe.BE/TestResults/**/coverage.cobertura.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+  supply-chain:
+    name: Dependency and container gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      ASPNETCORE_ENVIRONMENT: Production
+      PUBLIC_BASE_URL: https://foodsafe.example.invalid
+      REQUIRE_HTTPS_METADATA: "true"
+      POSTGRES_PASSWORD: ci-render-only-postgres-password
+      MINIO_ROOT_USER: ci-render-only
+      MINIO_ROOT_PASSWORD: ci-render-only-minio-password
+      STRING_ENCRYPTION_PASSPHRASE: ci-render-only-passphrase-32-characters
+      SEED_ADMIN_PASSWORD: Ci-render-only-bootstrap-password-9!
+      DATA_PROTECTION_CERTIFICATE_PASSWORD: ci-render-only-certificate-password
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: FoodSafe.FE/package-lock.json
+
+      - name: Audit backend dependencies
+        working-directory: FoodSafe.BE
+        run: |
+          dotnet restore FoodSafe.sln
+          pwsh ../scripts/Test-NuGetVulnerabilities.ps1
+
+      - name: Audit production frontend dependencies
+        working-directory: FoodSafe.FE
+        run: |
+          npm ci
+          pwsh ../scripts/Test-NpmVulnerabilities.ps1
+
+      - name: Validate production Compose rendering
+        working-directory: FoodSafe.BE
+        run: docker compose config --quiet
+
+      - name: Build deployable images
+        working-directory: FoodSafe.BE
+        run: docker compose build api migrator frontend

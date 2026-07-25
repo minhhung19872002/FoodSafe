@@ -18,7 +18,7 @@ Last updated: 2026-07-25
 | Poisoning/reporting | Not started | Milestone 5 |
 | Hazard/labs/dashboard/statistics | Not started | Milestone 6 |
 | Public portal/integrations | Not started | Milestone 7 |
-| Docker full stack/CI/operations | In progress | Six-service Compose stack and deployment guide implemented; CI, backup/restore rehearsal and production TLS deployment remain |
+| Docker full stack/CI/operations | In progress | Six-service Compose stack, deployment guide and CI gates implemented; backup/restore rehearsal and production TLS deployment remain |
 | Final security/readiness review | Not started | Current overall readiness: NOT READY |
 
 “Complete” is intentionally unused until every module quality gate passes.
@@ -86,3 +86,22 @@ Last updated: 2026-07-25
 - `docs/42-container-deployment.md` documents local and production settings,
   secret handling, health checks, operations, and the remaining backup/restore
   release gate.
+
+## CI and dependency-security evidence added on 2026-07-25
+
+- Added GitHub Actions gates for .NET restore/build/tests with coverage,
+  PostgreSQL Testcontainers, pending EF model changes, frontend lint/type/test/
+  build, production dependency audits, Production Compose rendering, and all
+  deployable image builds.
+- Upgraded the supported framework line from ABP 9.0.0 to 9.3.7 and added the
+  reviewed `UpgradeAbp937` migration; the migration applies successfully and EF
+  reports no pending model changes.
+- Raised vulnerable transitive Scriban, Newtonsoft.Json, and SQLitePCLRaw
+  selections to unaffected versions. Narrow audit exceptions document the
+  disabled ABP registration flow, AutoMapper 14 compatibility boundary, and
+  client-only React Router RSC boundary.
+- Live checks confirm self-registration resolves to `false`, both registration
+  endpoints return `404`, administrator cookie/CSRF login succeeds, and an
+  AutoMapper-backed organization request completes without runtime errors.
+- Dependabot monitors NuGet, npm, and GitHub Actions weekly; any dependency
+  advisory outside the documented exact package/advisory pairs fails CI.

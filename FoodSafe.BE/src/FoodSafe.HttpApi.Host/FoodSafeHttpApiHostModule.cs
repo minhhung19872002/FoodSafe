@@ -404,6 +404,17 @@ public class FoodSafeHttpApiHostModule : AbpModule
         }
 
         app.UseResponseCompression();
+        app.Use(async (httpContext, next) =>
+        {
+            if (httpContext.Request.Path.StartsWithSegments("/Account/Register")
+                || httpContext.Request.Path.StartsWithSegments("/api/account/register"))
+            {
+                httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+                return;
+            }
+
+            await next();
+        });
 
         if (env.IsDevelopment())
         {

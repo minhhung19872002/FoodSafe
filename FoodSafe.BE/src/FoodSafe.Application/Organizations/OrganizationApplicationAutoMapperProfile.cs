@@ -6,6 +6,6 @@ public sealed class OrganizationApplicationAutoMapperProfile : Profile
 {
     public OrganizationApplicationAutoMapperProfile()
     {
-        CreateMap<Organization, OrganizationDto>();
+        CreateMap<Organization, OrganizationDto>().MaxDepth(8);
     }
 }
