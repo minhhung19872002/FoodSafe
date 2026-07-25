@@ -5,6 +5,7 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Threading;
+using FoodSafe.Organizations;
 
 namespace FoodSafe.Catalogs;
 
@@ -15,6 +16,7 @@ public class GeographicCatalogAppService : ApplicationService, IGeographicCatalo
     private readonly IRepository<District, Guid> _districts;
     private readonly IRepository<Commune, Guid> _communes;
     private readonly IRepository<Region, Guid> _regions;
+    private readonly IRepository<Organization, Guid> _organizations;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
     public GeographicCatalogAppService(
@@ -22,12 +24,14 @@ public class GeographicCatalogAppService : ApplicationService, IGeographicCatalo
         IRepository<District, Guid> districts,
         IRepository<Commune, Guid> communes,
         IRepository<Region, Guid> regions,
+        IRepository<Organization, Guid> organizations,
         ICancellationTokenProvider cancellationTokens)
     {
         _provinces = provinces;
         _districts = districts;
         _communes = communes;
         _regions = regions;
+        _organizations = organizations;
         _cancellationTokens = cancellationTokens;
     }
 
@@ -78,6 +82,24 @@ public class GeographicCatalogAppService : ApplicationService, IGeographicCatalo
     }
 
     [Authorize(FoodSafePermissions.GeographicCatalogs.Manage)]
+    public async Task DeleteProvinceAsync(Guid id)
+    {
+        var districts = await _districts.GetQueryableAsync();
+        var organizations = await _organizations.GetQueryableAsync();
+        if (await AsyncExecuter.AnyAsync(
+                districts.Where(x => x.ProvinceId == id),
+                _cancellationTokens.Token)
+            || await AsyncExecuter.AnyAsync(
+                organizations.Where(x => x.ProvinceId == id),
+                _cancellationTokens.Token))
+        {
+            throw new BusinessException(FoodSafeDomainErrorCodes.Catalog.InUse);
+        }
+
+        await _provinces.DeleteAsync(id, true, _cancellationTokens.Token);
+    }
+
+    [Authorize(FoodSafePermissions.GeographicCatalogs.Manage)]
     public async Task<DistrictDto> CreateDistrictAsync(UpsertDistrictDto input)
     {
         await _provinces.GetAsync(input.ProvinceId, cancellationToken: _cancellationTokens.Token);
@@ -100,6 +122,24 @@ public class GeographicCatalogAppService : ApplicationService, IGeographicCatalo
     }
 
     [Authorize(FoodSafePermissions.GeographicCatalogs.Manage)]
+    public async Task DeleteDistrictAsync(Guid id)
+    {
+        var communes = await _communes.GetQueryableAsync();
+        var organizations = await _organizations.GetQueryableAsync();
+        if (await AsyncExecuter.AnyAsync(
+                communes.Where(x => x.DistrictId == id),
+                _cancellationTokens.Token)
+            || await AsyncExecuter.AnyAsync(
+                organizations.Where(x => x.DistrictId == id),
+                _cancellationTokens.Token))
+        {
+            throw new BusinessException(FoodSafeDomainErrorCodes.Catalog.InUse);
+        }
+
+        await _districts.DeleteAsync(id, true, _cancellationTokens.Token);
+    }
+
+    [Authorize(FoodSafePermissions.GeographicCatalogs.Manage)]
     public async Task<CommuneDto> CreateCommuneAsync(UpsertCommuneDto input)
     {
         await _districts.GetAsync(input.DistrictId, cancellationToken: _cancellationTokens.Token);
@@ -119,6 +159,20 @@ public class GeographicCatalogAppService : ApplicationService, IGeographicCatalo
         item.Update(input.Code, input.Name, input.DistrictId, input.Type, input.SortOrder, input.IsActive);
         await _communes.UpdateAsync(item, true, _cancellationTokens.Token);
         return ObjectMapper.Map<Commune, CommuneDto>(item);
+    }
+
+    [Authorize(FoodSafePermissions.GeographicCatalogs.Manage)]
+    public async Task DeleteCommuneAsync(Guid id)
+    {
+        var organizations = await _organizations.GetQueryableAsync();
+        if (await AsyncExecuter.AnyAsync(
+                organizations.Where(x => x.CommuneId == id),
+                _cancellationTokens.Token))
+        {
+            throw new BusinessException(FoodSafeDomainErrorCodes.Catalog.InUse);
+        }
+
+        await _communes.DeleteAsync(id, true, _cancellationTokens.Token);
     }
 
     private async Task ValidateRegionAsync(Guid? regionId)

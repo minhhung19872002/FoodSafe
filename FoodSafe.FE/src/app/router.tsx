@@ -6,6 +6,7 @@ import { PermissionRoute } from './PermissionRoute'
 import {
   ChangePasswordPage,
   DashboardPage,
+  GeographicCatalogPage,
   LoginPage,
   OrganizationListPage,
   RouteLoading,
@@ -46,6 +47,16 @@ export const router = createBrowserRouter([
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.Organizations.View">
               <OrganizationListPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: 'geography',
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.GeographicCatalogs.View">
+              <GeographicCatalogPage />
             </PermissionRoute>
           </Suspense>
         ),

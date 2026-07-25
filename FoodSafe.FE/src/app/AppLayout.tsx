@@ -12,6 +12,7 @@ import {
 import {
   DashboardOutlined,
   ApartmentOutlined,
+  EnvironmentOutlined,
   UserOutlined,
   LogoutOutlined,
   KeyOutlined,
@@ -34,6 +35,13 @@ function buildMenuItems(hasPermission: (permission: string) => boolean): MenuPro
       key: '/organizations',
       icon: <ApartmentOutlined />,
       label: 'Đơn vị',
+    })
+  }
+  if (hasPermission('FoodSafe.GeographicCatalogs.View')) {
+    items.push({
+      key: '/geography',
+      icon: <EnvironmentOutlined />,
+      label: 'Địa bàn',
     })
   }
   return items

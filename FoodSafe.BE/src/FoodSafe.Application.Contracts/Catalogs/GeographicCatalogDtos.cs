@@ -58,7 +58,7 @@ public sealed class CommuneDto : GeographicCatalogDto
     public CommuneType Type { get; set; }
 }
 
-public abstract class UpsertGeographicCatalogDto
+public abstract class UpsertGeographicCatalogDto : IValidatableObject
 {
     [Required, StringLength(20)]
     public string Code { get; set; } = string.Empty;
@@ -68,6 +68,18 @@ public abstract class UpsertGeographicCatalogDto
 
     public int SortOrder { get; set; }
     public bool IsActive { get; set; } = true;
+
+    protected virtual int CodeMaxLength => 20;
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (!string.IsNullOrEmpty(Code) && Code.Length > CodeMaxLength)
+        {
+            yield return new ValidationResult(
+                $"Code must not exceed {CodeMaxLength} characters.",
+                [nameof(Code)]);
+        }
+    }
 }
 
 public sealed class UpsertRegionDto : UpsertGeographicCatalogDto
@@ -78,6 +90,8 @@ public sealed class UpsertRegionDto : UpsertGeographicCatalogDto
 
 public sealed class UpsertProvinceDto : UpsertGeographicCatalogDto
 {
+    protected override int CodeMaxLength => 10;
+
     public Guid? RegionId { get; set; }
 
     [StringLength(100)]
@@ -86,6 +100,8 @@ public sealed class UpsertProvinceDto : UpsertGeographicCatalogDto
 
 public sealed class UpsertDistrictDto : UpsertGeographicCatalogDto
 {
+    protected override int CodeMaxLength => 10;
+
     public Guid ProvinceId { get; set; }
     [EnumDataType(typeof(DistrictType))]
     public DistrictType Type { get; set; }
@@ -93,6 +109,8 @@ public sealed class UpsertDistrictDto : UpsertGeographicCatalogDto
 
 public sealed class UpsertCommuneDto : UpsertGeographicCatalogDto
 {
+    protected override int CodeMaxLength => 10;
+
     public Guid DistrictId { get; set; }
     [EnumDataType(typeof(CommuneType))]
     public CommuneType Type { get; set; }
@@ -105,8 +123,11 @@ public interface IGeographicCatalogAppService : IApplicationService
     Task<ListResultDto<CommuneDto>> GetCommunesAsync(Guid districtId, bool activeOnly = true);
     Task<ProvinceDto> CreateProvinceAsync(UpsertProvinceDto input);
     Task<ProvinceDto> UpdateProvinceAsync(Guid id, UpsertProvinceDto input);
+    Task DeleteProvinceAsync(Guid id);
     Task<DistrictDto> CreateDistrictAsync(UpsertDistrictDto input);
     Task<DistrictDto> UpdateDistrictAsync(Guid id, UpsertDistrictDto input);
+    Task DeleteDistrictAsync(Guid id);
     Task<CommuneDto> CreateCommuneAsync(UpsertCommuneDto input);
     Task<CommuneDto> UpdateCommuneAsync(Guid id, UpsertCommuneDto input);
+    Task DeleteCommuneAsync(Guid id);
 }
