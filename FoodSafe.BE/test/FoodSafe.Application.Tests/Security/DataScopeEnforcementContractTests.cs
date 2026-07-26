@@ -2,6 +2,7 @@ using System.Reflection;
 using FoodSafe.AlertsAndTesting;
 using FoodSafe.BusinessManagement;
 using FoodSafe.Dashboard;
+using FoodSafe.DataIntegration;
 using FoodSafe.FoodPoisoning;
 using FoodSafe.Inspection;
 using FoodSafe.Licensing;
@@ -40,6 +41,8 @@ public sealed class DataScopeEnforcementContractTests
         typeof(StatisticsAppService),
         typeof(DashboardAppService),
         typeof(OrganizationAppService),
+        typeof(ApiEndpointAppService),
+        typeof(ApiCallLogAppService),
     ];
 
     [Fact]
