@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { App } from "antd";
 import { HttpResponse, http } from "msw";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { server } from "@/test/server";
 import CompleteInitialPasswordChangePage from "./CompleteInitialPasswordChangePage";
@@ -16,11 +16,21 @@ function renderPage() {
   });
   return render(
     <MemoryRouter
-      initialEntries={["/account/complete-password-change?userName=testuser"]}
+      initialEntries={[
+        {
+          pathname: "/account/complete-password-change",
+          state: { userName: "testuser" },
+        },
+      ]}
     >
       <QueryClientProvider client={client}>
         <App>
-          <CompleteInitialPasswordChangePage />
+          <Routes>
+            <Route
+              path="/account/complete-password-change"
+              element={<CompleteInitialPasswordChangePage />}
+            />
+          </Routes>
         </App>
       </QueryClientProvider>
     </MemoryRouter>,

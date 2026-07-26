@@ -57,9 +57,9 @@ export function useLogin() {
     },
     onError: (error) => {
       if (error instanceof InitialPasswordChangeRequiredError) {
-        navigate(
-          `/account/complete-password-change?userName=${encodeURIComponent(error.userNameOrEmailAddress)}`,
-        );
+        navigate("/account/complete-password-change", {
+          state: { userName: error.userNameOrEmailAddress },
+        });
         return;
       }
       message.error("Tên đăng nhập hoặc mật khẩu không đúng.");

@@ -3,7 +3,7 @@ import { Button, Card, Form, Input, Space, Typography } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useSearchParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { CaptchaWidget } from "../components/CaptchaWidget";
 import { useCompleteInitialPasswordChange } from "../api/authMutations";
 
@@ -29,7 +29,8 @@ const schema = z
 type FormData = z.infer<typeof schema>;
 
 export default function CompleteInitialPasswordChangePage() {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const userName = (location.state as { userName?: string } | null)?.userName ?? "";
   const mutation = useCompleteInitialPasswordChange();
   const {
     control,
@@ -39,7 +40,7 @@ export default function CompleteInitialPasswordChangePage() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      userNameOrEmailAddress: searchParams.get("userName") ?? "",
+      userNameOrEmailAddress: userName,
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
