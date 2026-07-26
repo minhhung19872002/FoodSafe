@@ -306,6 +306,54 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
         news.AddChild(
             FoodSafePermissions.AlertsAndTesting.News.Publish,
             LocalizableString.Create<FoodSafeResource>("Permission:News.Publish"));
+        var riskAnalyses = alertsAndTesting.AddChild(
+            FoodSafePermissions.AlertsAndTesting.RiskAnalyses.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:RiskAnalyses"));
+        riskAnalyses.AddChild(
+            FoodSafePermissions.AlertsAndTesting.RiskAnalyses.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:RiskAnalyses.View"));
+        riskAnalyses.AddChild(
+            FoodSafePermissions.AlertsAndTesting.RiskAnalyses.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:RiskAnalyses.Create"));
+        riskAnalyses.AddChild(
+            FoodSafePermissions.AlertsAndTesting.RiskAnalyses.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:RiskAnalyses.Edit"));
+        riskAnalyses.AddChild(
+            FoodSafePermissions.AlertsAndTesting.RiskAnalyses.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:RiskAnalyses.Delete"));
+        riskAnalyses.AddChild(
+            FoodSafePermissions.AlertsAndTesting.RiskAnalyses.Publish,
+            LocalizableString.Create<FoodSafeResource>("Permission:RiskAnalyses.Publish"));
+        var testingResults = alertsAndTesting.AddChild(
+            FoodSafePermissions.AlertsAndTesting.TestingResults.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:TestingResults"));
+        testingResults.AddChild(
+            FoodSafePermissions.AlertsAndTesting.TestingResults.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:TestingResults.View"));
+        testingResults.AddChild(
+            FoodSafePermissions.AlertsAndTesting.TestingResults.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:TestingResults.Create"));
+        testingResults.AddChild(
+            FoodSafePermissions.AlertsAndTesting.TestingResults.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:TestingResults.Edit"));
+        testingResults.AddChild(
+            FoodSafePermissions.AlertsAndTesting.TestingResults.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:TestingResults.Delete"));
+        var documents = alertsAndTesting.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Documents.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:Documents"));
+        documents.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Documents.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:Documents.View"));
+        documents.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Documents.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:Documents.Create"));
+        documents.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Documents.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:Documents.Edit"));
+        documents.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Documents.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:Documents.Delete"));
 
         var foodPoisoning = group.AddPermission(
             FoodSafePermissions.FoodPoisoning.Default,

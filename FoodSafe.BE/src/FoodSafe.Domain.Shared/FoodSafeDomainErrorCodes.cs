@@ -224,4 +224,20 @@ public static class FoodSafeDomainErrorCodes
         public const string DuplicateLinkedAlert = "FoodSafe:News:0005";
         public const string LinkedAlertNotFound = "FoodSafe:News:0006";
     }
+
+    public static class RiskAnalysis
+    {
+        public const string NotFound = "FoodSafe:RiskAnalysis:0001";
+        public const string CannotModifyNonDraft = "FoodSafe:RiskAnalysis:0002";
+    }
+
+    public static class TestingResult
+    {
+        public const string NotFound = "FoodSafe:TestingResult:0001";
+    }
+
+    public static class Document
+    {
+        public const string NotFound = "FoodSafe:Document:0001";
+    }
 }

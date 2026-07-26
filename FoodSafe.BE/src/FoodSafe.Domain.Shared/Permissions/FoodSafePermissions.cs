@@ -166,6 +166,34 @@ public static class FoodSafePermissions
             public const string Delete = Default + ".Delete";
             public const string Publish = Default + ".Publish";
         }
+
+        public static class RiskAnalyses
+        {
+            public const string Default = AlertsAndTesting.Default + ".RiskAnalyses";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string Publish = Default + ".Publish";
+        }
+
+        public static class TestingResults
+        {
+            public const string Default = AlertsAndTesting.Default + ".TestingResults";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+        }
+
+        public static class Documents
+        {
+            public const string Default = AlertsAndTesting.Default + ".Documents";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+        }
     }
 
     public static class FoodPoisoning

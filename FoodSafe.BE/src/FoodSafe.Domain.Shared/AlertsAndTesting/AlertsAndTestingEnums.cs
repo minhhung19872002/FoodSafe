@@ -38,3 +38,31 @@ public enum NewsStatus : short
     Published = 2,
     Recalled = 3
 }
+
+public enum RiskLevel : short
+{
+    Low = 1,
+    Medium = 2,
+    High = 3,
+    Critical = 4
+}
+
+public enum RiskAnalysisStatus : short
+{
+    Draft = 1,
+    Published = 2
+}
+
+public enum TestingResultOutcome : short
+{
+    Pass = 1,
+    Fail = 2,
+    Conditional = 3
+}
+
+public enum DocumentStatus : short
+{
+    Active = 1,
+    Expired = 2,
+    Revoked = 3
+}

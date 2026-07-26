@@ -32,6 +32,9 @@ import {
   AlertOutlined,
   MedicineBoxOutlined,
   BarChartOutlined,
+  ExperimentOutlined,
+  FundOutlined,
+  BookOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -58,6 +61,9 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   "alerts-news": "Cảnh báo và Tin tức",
   "food-poisoning": "Ngộ độc thực phẩm",
   reporting: "Báo cáo",
+  "risk-analysis": "Phân tích nguy cơ",
+  "testing-results": "Kết quả kiểm nghiệm",
+  documents: "Văn bản pháp quy",
   administration: "Quản trị hệ thống",
   identity: "Tài khoản và quyền",
   account: "Tài khoản",
@@ -173,10 +179,34 @@ const NAV_CONFIG: NavEntry[] = [
     permission: "FoodSafe.Inspection.Plans.View",
   },
   {
-    key: "/alerts-news",
-    icon: <AlertOutlined />,
-    label: "Cảnh báo và Tin tức",
-    permission: "FoodSafe.AlertsAndTesting.Alerts.View",
+    key: "alerts-testing",
+    label: "Cảnh báo & Kiểm nghiệm",
+    children: [
+      {
+        key: "/alerts-news",
+        icon: <AlertOutlined />,
+        label: "Cảnh báo và Tin tức",
+        permission: "FoodSafe.AlertsAndTesting.Alerts.View",
+      },
+      {
+        key: "/risk-analysis",
+        icon: <FundOutlined />,
+        label: "Phân tích nguy cơ",
+        permission: "FoodSafe.AlertsAndTesting.RiskAnalyses.View",
+      },
+      {
+        key: "/testing-results",
+        icon: <ExperimentOutlined />,
+        label: "Kết quả kiểm nghiệm",
+        permission: "FoodSafe.AlertsAndTesting.TestingResults.View",
+      },
+      {
+        key: "/documents",
+        icon: <BookOutlined />,
+        label: "Văn bản pháp quy",
+        permission: "FoodSafe.AlertsAndTesting.Documents.View",
+      },
+    ],
   },
   {
     key: "/food-poisoning",

@@ -78,6 +78,9 @@ public class FoodSafeDbContext :
     public DbSet<AtpAlert> AtpAlerts { get; set; }
     public DbSet<AtpNews> AtpNewsArticles { get; set; }
     public DbSet<NewsLinkedAlert> NewsLinkedAlerts { get; set; }
+    public DbSet<RiskAnalysis> RiskAnalyses { get; set; }
+    public DbSet<TestingResult> TestingResults { get; set; }
+    public DbSet<AdministrativeDocument> AdministrativeDocuments { get; set; }
     public DbSet<FoodPoisoningCase> FoodPoisoningCases { get; set; }
     public DbSet<FoodPoisoningIncident> FoodPoisoningIncidents { get; set; }
     public DbSet<PoisoningCaseErrorReport> PoisoningCaseErrorReports { get; set; }

@@ -1668,6 +1668,119 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .IsUnique()
                 .HasDatabaseName("uq_nla_news_alert");
         });
+
+        builder.Entity<RiskAnalysis>(entity =>
+        {
+            entity.ToTable("risk_analyses", table =>
+            {
+                table.HasCheckConstraint("chk_ra_category", "category IN (1, 2, 3, 4, 5, 6)");
+                table.HasCheckConstraint("chk_ra_risk_level", "risk_level IN (1, 2, 3, 4)");
+                table.HasCheckConstraint("chk_ra_status", "status IN (1, 2)");
+            });
+            ConfigureAggregateAudit(entity, "pk_risk_analyses");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
+            entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.Content).HasColumnName("content").IsRequired();
+            entity.Property(x => x.Category).HasColumnName("category").HasConversion<short>();
+            entity.Property(x => x.RiskLevel).HasColumnName("risk_level").HasConversion<short>();
+            entity.Property(x => x.RelatedProducts).HasColumnName("related_products");
+            entity.Property(x => x.Evidence).HasColumnName("evidence");
+            entity.Property(x => x.Recommendations).HasColumnName("recommendations");
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<short>();
+            entity.Property(x => x.IsPublic).HasColumnName("is_public");
+            entity.Property(x => x.PublishedById).HasColumnName("published_by_id");
+            entity.Property(x => x.PublishedAt).HasColumnName("published_at");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_ra_org")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.Status })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_ra_org_status");
+            entity.HasIndex(x => x.IsPublic)
+                .HasFilter("is_deleted = FALSE AND is_public = TRUE")
+                .HasDatabaseName("idx_ra_public");
+        });
+
+        builder.Entity<TestingResult>(entity =>
+        {
+            entity.ToTable("testing_results", table =>
+            {
+                table.HasCheckConstraint("chk_tr_outcome", "outcome IN (1, 2, 3)");
+            });
+            ConfigureAggregateAudit(entity, "pk_testing_results");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
+            entity.Property(x => x.SampleCode).HasColumnName("sample_code").HasMaxLength(100).IsRequired();
+            entity.Property(x => x.SampleName).HasColumnName("sample_name").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.Description).HasColumnName("description");
+            entity.Property(x => x.TestingCenterId).HasColumnName("testing_center_id");
+            entity.Property(x => x.TestingServiceId).HasColumnName("testing_service_id");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.ProductId).HasColumnName("product_id");
+            entity.Property(x => x.SampleDate).HasColumnName("sample_date");
+            entity.Property(x => x.SubmissionDate).HasColumnName("submission_date");
+            entity.Property(x => x.ResultDate).HasColumnName("result_date");
+            entity.Property(x => x.Outcome).HasColumnName("outcome").HasConversion<short>();
+            entity.Property(x => x.FailedCriteria).HasColumnName("failed_criteria");
+            entity.Property(x => x.CertificateNumber).HasColumnName("certificate_number").HasMaxLength(100);
+            entity.Property(x => x.InspectionResultId).HasColumnName("inspection_result_id");
+            entity.Property(x => x.IsPublic).HasColumnName("is_public");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_tr_org")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.Outcome })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_tr_org_outcome");
+            entity.HasIndex(x => x.SampleCode)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_tr_sample_code");
+            entity.HasIndex(x => x.IsPublic)
+                .HasFilter("is_deleted = FALSE AND is_public = TRUE")
+                .HasDatabaseName("idx_tr_public");
+        });
+
+        builder.Entity<AdministrativeDocument>(entity =>
+        {
+            entity.ToTable("administrative_documents", table =>
+            {
+                table.HasCheckConstraint("chk_ad_status", "status IN (1, 2, 3)");
+            });
+            ConfigureAggregateAudit(entity, "pk_administrative_documents");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
+            entity.Property(x => x.DocumentTypeId).HasColumnName("document_type_id");
+            entity.Property(x => x.DocumentNumber).HasColumnName("document_number").HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.IssuingAuthority).HasColumnName("issuing_authority").HasMaxLength(500);
+            entity.Property(x => x.IssuedDate).HasColumnName("issued_date");
+            entity.Property(x => x.EffectiveDate).HasColumnName("effective_date");
+            entity.Property(x => x.ExpiryDate).HasColumnName("expiry_date");
+            entity.Property(x => x.Summary).HasColumnName("summary");
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<short>();
+            entity.Property(x => x.IsPublic).HasColumnName("is_public");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_ad_org")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.DocumentTypeId })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_ad_org_type");
+            entity.HasIndex(x => x.DocumentNumber)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_ad_doc_number");
+            entity.HasIndex(x => x.IsPublic)
+                .HasFilter("is_deleted = FALSE AND is_public = TRUE")
+                .HasDatabaseName("idx_ad_public");
+        });
     }
 
     private static void ConfigureFoodPoisoning(ModelBuilder builder)

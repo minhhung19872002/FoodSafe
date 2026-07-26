@@ -83,6 +83,15 @@ export const FoodPoisoningPage = lazy(
 export const ReportingPage = lazy(
   () => import("@/features/reporting/pages/ReportingPage"),
 );
+export const RiskAnalysisPage = lazy(
+  () => import("@/features/risk-analysis/pages/RiskAnalysisPage"),
+);
+export const TestingResultsPage = lazy(
+  () => import("@/features/testing-results/pages/TestingResultsPage"),
+);
+export const DocumentsPage = lazy(
+  () => import("@/features/documents/pages/DocumentsPage"),
+);
 
 export function RouteLoading() {
   return (

@@ -20,6 +20,9 @@ import {
   AlertsNewsPage,
   FoodPoisoningPage,
   ReportingPage,
+  RiskAnalysisPage,
+  TestingResultsPage,
+  DocumentsPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -250,6 +253,36 @@ export const router = createBrowserRouter([
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.Reporting.NdtpReports.View">
               <ReportingPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "risk-analysis",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.AlertsAndTesting.RiskAnalyses.View">
+              <RiskAnalysisPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "testing-results",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.AlertsAndTesting.TestingResults.View">
+              <TestingResultsPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "documents",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.AlertsAndTesting.Documents.View">
+              <DocumentsPage />
             </PermissionRoute>
           </Suspense>
         ),
