@@ -15,14 +15,21 @@ import {
   Tag,
   type TableColumnsType,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  ExportOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { saveDownload } from "@/utils/download";
 import { useTestingResults } from "../api/testingResultQueries";
 import {
   useCreateTestingResult,
   useUpdateTestingResult,
   useDeleteTestingResult,
+  useExportTestingResults,
 } from "../api/testingResultMutations";
 import {
   TESTING_OUTCOME,
@@ -44,6 +51,7 @@ export default function TestingResultsPage() {
   const createMut = useCreateTestingResult();
   const updateMut = useUpdateTestingResult();
   const deleteMut = useDeleteTestingResult();
+  const exportMut = useExportTestingResults();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<TestingResult | null>(null);
@@ -172,6 +180,18 @@ export default function TestingResultsPage() {
             setFilter((f) => ({ ...f, outcome: v, skipCount: 0 }))
           }
         />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {hasPermission(
           "FoodSafe.AlertsAndTesting.TestingResults.Create",
         ) && (

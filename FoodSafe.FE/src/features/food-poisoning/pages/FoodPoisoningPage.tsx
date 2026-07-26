@@ -17,6 +17,7 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  ExportOutlined,
   SendOutlined,
   CheckCircleOutlined,
   SolutionOutlined,
@@ -24,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { saveDownload } from "@/utils/download";
 import {
   usePoisoningCases,
   usePoisoningIncidents,
@@ -34,12 +36,14 @@ import {
   useDeleteCase,
   useSubmitCase,
   useVerifyCase,
+  useExportCases,
   useCreateIncident,
   useUpdateIncident,
   useDeleteIncident,
   useSubmitIncident,
   useVerifyIncident,
   useConcludeIncident,
+  useExportIncidents,
 } from "../api/foodPoisoningMutations";
 import { CaseEditorModal } from "../components/CaseEditorModal";
 import { IncidentEditorModal } from "../components/IncidentEditorModal";
@@ -77,6 +81,7 @@ function CasesTab() {
   const deleteMut = useDeleteCase();
   const submitMut = useSubmitCase();
   const verifyMut = useVerifyCase();
+  const exportMut = useExportCases();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<FoodPoisoningCase | undefined>();
@@ -265,6 +270,18 @@ function CasesTab() {
           )}
         />
         <div style={{ flex: 1 }} />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {canCreate && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Tạo ca ngộ độc
@@ -315,6 +332,7 @@ function IncidentsTab() {
   const submitMut = useSubmitIncident();
   const verifyMut = useVerifyIncident();
   const concludeMut = useConcludeIncident();
+  const exportMut = useExportIncidents();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<FoodPoisoningIncident | undefined>();
@@ -521,6 +539,18 @@ function IncidentsTab() {
           )}
         />
         <div style={{ flex: 1 }} />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {canCreate && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Tạo vụ ngộ độc

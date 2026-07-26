@@ -2,10 +2,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { poisoningCaseApi, poisoningIncidentApi } from "./foodPoisoningApi";
 import { caseKeys, incidentKeys } from "./foodPoisoningQueries";
 import type {
+  CaseFilter,
   ConcludeIncidentInput,
   CreateErrorReportInput,
   CreateUpdateCaseInput,
   CreateUpdateIncidentInput,
+  IncidentFilter,
 } from "../types/foodPoisoning.types";
 
 function useCaseRefresh() {
@@ -146,5 +148,19 @@ export function useAddIncidentErrorReport() {
       input: CreateErrorReportInput;
     }) => poisoningIncidentApi.addErrorReport(id, input),
     onSuccess: refresh,
+  });
+}
+
+export function useExportCases() {
+  return useMutation({
+    mutationFn: (filter: CaseFilter) =>
+      poisoningCaseApi.exportExcel(filter),
+  });
+}
+
+export function useExportIncidents() {
+  return useMutation({
+    mutationFn: (filter: IncidentFilter) =>
+      poisoningIncidentApi.exportExcel(filter),
   });
 }

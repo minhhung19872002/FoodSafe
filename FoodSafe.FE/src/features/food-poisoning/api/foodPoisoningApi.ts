@@ -5,6 +5,7 @@ import type {
   CreateErrorReportInput,
   CreateUpdateCaseInput,
   CreateUpdateIncidentInput,
+  FileDownload,
   FoodPoisoningCase,
   FoodPoisoningIncident,
   IncidentFilter,
@@ -13,7 +14,19 @@ import type {
 } from "../types/foodPoisoning.types";
 
 const caseEndpoint = "/v1/app/food-poisoning-case";
+const caseExcelEndpoint = `${caseEndpoint}/excel`;
 const incidentEndpoint = "/v1/app/food-poisoning-incident";
+const incidentExcelEndpoint = `${incidentEndpoint}/excel`;
+
+function download(data: Blob, contentDisposition?: string): FileDownload {
+  const encoded =
+    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
+  return {
+    blob: data,
+    fileName: decodeURIComponent(encoded ?? plain ?? "download"),
+  };
+}
 
 export const poisoningCaseApi = {
   async list(
@@ -63,6 +76,13 @@ export const poisoningCaseApi = {
     input: CreateErrorReportInput,
   ): Promise<void> {
     await api.post(`${caseEndpoint}/${id}/error-report`, input);
+  },
+  async exportExcel(filter: CaseFilter): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${caseExcelEndpoint}/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
   },
 };
 
@@ -139,5 +159,12 @@ export const poisoningIncidentApi = {
     input: CreateErrorReportInput,
   ): Promise<void> {
     await api.post(`${incidentEndpoint}/${id}/error-report`, input);
+  },
+  async exportExcel(filter: IncidentFilter): Promise<FileDownload> {
+    const response = await api.get<Blob>(
+      `${incidentExcelEndpoint}/export`,
+      { params: filter, responseType: "blob" },
+    );
+    return download(response.data, response.headers["content-disposition"]);
   },
 };

@@ -305,3 +305,8 @@ export interface CreateErrorReportInput {
   errorDescription: string;
   correctionRequest: string;
 }
+
+export interface FileDownload {
+  blob: Blob;
+  fileName: string;
+}

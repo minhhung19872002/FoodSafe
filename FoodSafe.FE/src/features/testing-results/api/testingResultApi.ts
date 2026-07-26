@@ -1,5 +1,6 @@
 import { api } from "@/lib/axios";
 import type {
+  FileDownload,
   TestingResult,
   TestingResultFilter,
   CreateUpdateTestingResultInput,
@@ -7,6 +8,17 @@ import type {
 } from "../types/testingResult.types";
 
 const endpoint = "/v1/app/testing-result";
+const excelEndpoint = `${endpoint}/excel`;
+
+function download(data: Blob, contentDisposition?: string): FileDownload {
+  const encoded =
+    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
+  return {
+    blob: data,
+    fileName: decodeURIComponent(encoded ?? plain ?? "download"),
+  };
+}
 
 export const testingResultApi = {
   async list(filter: TestingResultFilter): Promise<PagedResult<TestingResult>> {
@@ -28,5 +40,12 @@ export const testingResultApi = {
   },
   async delete(id: string): Promise<void> {
     await api.delete(`${endpoint}/${id}`);
+  },
+  async exportExcel(filter: TestingResultFilter): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${excelEndpoint}/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
   },
 };

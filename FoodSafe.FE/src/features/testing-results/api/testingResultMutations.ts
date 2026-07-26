@@ -1,7 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { testingResultApi } from "./testingResultApi";
 import { trKeys } from "./testingResultQueries";
-import type { CreateUpdateTestingResultInput } from "../types/testingResult.types";
+import type {
+  CreateUpdateTestingResultInput,
+  TestingResultFilter,
+} from "../types/testingResult.types";
 
 function useRefresh() {
   const qc = useQueryClient();
@@ -36,5 +39,12 @@ export function useDeleteTestingResult() {
   return useMutation({
     mutationFn: (id: string) => testingResultApi.delete(id),
     onSuccess: refresh,
+  });
+}
+
+export function useExportTestingResults() {
+  return useMutation({
+    mutationFn: (filter: TestingResultFilter) =>
+      testingResultApi.exportExcel(filter),
   });
 }
