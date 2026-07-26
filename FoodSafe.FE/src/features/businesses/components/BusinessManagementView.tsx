@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -6,12 +7,14 @@ import {
   ImportOutlined,
   PaperClipOutlined,
   PlusOutlined,
+  TableOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
 import {
   Button,
   Input,
   Popconfirm,
+  Segmented,
   Select,
   Space,
   Table,
@@ -19,6 +22,7 @@ import {
   Tag,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { BusinessLocationMap } from "./BusinessLocationMap";
 import {
   BUSINESS_STATUS,
   PRODUCT_STATUS,
@@ -83,6 +87,8 @@ const businessStatusLabels: Record<BusinessStatus, string> = {
 };
 
 export function BusinessManagementView(props: BusinessManagementViewProps) {
+  const [viewMode, setViewMode] = useState<"table" | "map">("table");
+
   const businessColumns: ColumnsType<Business> = [
     { title: "Mã", dataIndex: "code", width: 120 },
     { title: "Tên cơ sở", dataIndex: "name", ellipsis: true },
@@ -281,22 +287,37 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
             <Button icon={<ExportOutlined />} onClick={props.onExportBusiness}>
               Xuất Excel
             </Button>
+            <Segmented
+              value={viewMode}
+              onChange={(v) => setViewMode(v as "table" | "map")}
+              options={[
+                { value: "table", icon: <TableOutlined />, label: "Bảng" },
+                { value: "map", icon: <EnvironmentOutlined />, label: "Bản đồ" },
+              ]}
+            />
           </div>
-          <Table
-            rowKey="id"
-            size="middle"
-            scroll={{ x: 900 }}
-            loading={props.loading}
-            dataSource={props.businesses}
-            columns={businessColumns}
-            pagination={{
-              current: props.businessPage,
-              pageSize: props.pageSize,
-              total: props.businessTotal,
-              showTotal: (total) => `${total} bản ghi`,
-              onChange: props.onBusinessPageChange,
-            }}
-          />
+          {viewMode === "table" ? (
+            <Table
+              rowKey="id"
+              size="middle"
+              scroll={{ x: 900 }}
+              loading={props.loading}
+              dataSource={props.businesses}
+              columns={businessColumns}
+              pagination={{
+                current: props.businessPage,
+                pageSize: props.pageSize,
+                total: props.businessTotal,
+                showTotal: (total) => `${total} bản ghi`,
+                onChange: props.onBusinessPageChange,
+              }}
+            />
+          ) : (
+            <BusinessLocationMap
+              businesses={props.businesses}
+              onSelect={(b) => props.onEditBusiness(b)}
+            />
+          )}
         </>
       ) : (
         <>

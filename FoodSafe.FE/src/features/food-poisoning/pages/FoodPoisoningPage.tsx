@@ -20,6 +20,7 @@ import {
   SendOutlined,
   CheckCircleOutlined,
   SolutionOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -42,6 +43,7 @@ import {
 } from "../api/foodPoisoningMutations";
 import { CaseEditorModal } from "../components/CaseEditorModal";
 import { IncidentEditorModal } from "../components/IncidentEditorModal";
+import { PoisoningMap } from "../components/PoisoningMap";
 import {
   POISONING_CASE_STATUS,
   POISONING_CASE_STATUS_CONFIG,
@@ -612,6 +614,24 @@ function ConcludeModal(props: {
   );
 }
 
+function MapTab() {
+  const { data: casesData } = usePoisoningCases({
+    skipCount: 0,
+    maxResultCount: 500,
+  });
+  const { data: incidentsData } = usePoisoningIncidents({
+    skipCount: 0,
+    maxResultCount: 500,
+  });
+
+  return (
+    <PoisoningMap
+      cases={casesData?.items ?? []}
+      incidents={incidentsData?.items ?? []}
+    />
+  );
+}
+
 export default function FoodPoisoningPage() {
   return (
     <Card>
@@ -626,6 +646,16 @@ export default function FoodPoisoningPage() {
             key: "incidents",
             label: "Vụ ngộ độc thực phẩm",
             children: <IncidentsTab />,
+          },
+          {
+            key: "map",
+            label: (
+              <span>
+                <EnvironmentOutlined style={{ marginRight: 4 }} />
+                Bản đồ
+              </span>
+            ),
+            children: <MapTab />,
           },
         ]}
       />
