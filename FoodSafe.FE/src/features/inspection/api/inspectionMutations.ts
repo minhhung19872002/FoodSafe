@@ -4,6 +4,10 @@ import {
   inspectionPlanKeys,
   inspectionResultKeys,
 } from "./inspectionQueries";
+import type {
+  InspectionPlanFilter,
+  InspectionResultFilter,
+} from "../types/inspection.types";
 
 function usePlanRefresh<TVariables>(
   mutationFn: (variables: TVariables) => Promise<unknown>,
@@ -102,4 +106,18 @@ export function useUpdateInspectionResult() {
 
 export function useDeleteInspectionResult() {
   return useResultRefresh(inspectionResultApi.delete);
+}
+
+export function useExportInspectionPlans() {
+  return useMutation({
+    mutationFn: (filter: InspectionPlanFilter) =>
+      inspectionPlanApi.exportExcel(filter),
+  });
+}
+
+export function useExportInspectionResults() {
+  return useMutation({
+    mutationFn: (filter: InspectionResultFilter) =>
+      inspectionResultApi.exportExcel(filter),
+  });
 }

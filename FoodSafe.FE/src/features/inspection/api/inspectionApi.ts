@@ -3,6 +3,7 @@ import type {
   BusinessOption,
   CreateUpdateInspectionPlanInput,
   CreateUpdateInspectionResultInput,
+  FileDownload,
   InspectionPlan,
   InspectionPlanFilter,
   InspectionResult,
@@ -12,7 +13,19 @@ import type {
 import type { FollowUpResult } from "../types/inspection.types";
 
 const planEndpoint = "/v1/app/inspection-plan";
+const planExcelEndpoint = `${planEndpoint}/excel`;
 const resultEndpoint = "/v1/app/inspection-result";
+const resultExcelEndpoint = `${resultEndpoint}/excel`;
+
+function download(data: Blob, contentDisposition?: string): FileDownload {
+  const encoded =
+    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
+  return {
+    blob: data,
+    fileName: decodeURIComponent(encoded ?? plain ?? "download"),
+  };
+}
 
 export const inspectionPlanApi = {
   async list(
@@ -69,6 +82,13 @@ export const inspectionPlanApi = {
       await api.post<InspectionPlan>(`${planEndpoint}/${id}/cancel`, { reason })
     ).data;
   },
+  async exportExcel(filter: InspectionPlanFilter): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${planExcelEndpoint}/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
+  },
 };
 
 export const inspectionResultApi = {
@@ -111,5 +131,14 @@ export const inspectionResultApi = {
   },
   async setFollowUpResult(id: string, result: FollowUpResult) {
     await api.post(`${resultEndpoint}/${id}/follow-up-result`, { result });
+  },
+  async exportExcel(
+    filter: InspectionResultFilter,
+  ): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${resultExcelEndpoint}/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
   },
 };

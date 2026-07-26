@@ -1,3 +1,6 @@
+using FoodSafe.BusinessManagement;
+using Volo.Abp.Application.Services;
+
 namespace FoodSafe.Inspection;
 
 public class InspectionPlanExcelRow
@@ -26,4 +29,14 @@ public class InspectionResultExcelRow
     public bool FollowUpRequired { get; set; }
     public string? FollowUpDate { get; set; }
     public string? Notes { get; set; }
+}
+
+public interface IInspectionPlanExcelAppService : IApplicationService
+{
+    Task<ExcelDownloadDto> ExportAsync(InspectionPlanFilterDto input);
+}
+
+public interface IInspectionResultExcelAppService : IApplicationService
+{
+    Task<ExcelDownloadDto> ExportAsync(InspectionResultFilterDto input);
 }

@@ -265,6 +265,11 @@ export interface BusinessOption {
   name: string;
 }
 
+export interface FileDownload {
+  blob: Blob;
+  fileName: string;
+}
+
 export interface PagedResult<T> {
   items: T[];
   totalCount: number;

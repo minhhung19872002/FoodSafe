@@ -4,6 +4,7 @@ import {
   CloseCircleOutlined,
   DeleteOutlined,
   EditOutlined,
+  ExportOutlined,
   PlusOutlined,
   SendOutlined,
   StopOutlined,
@@ -24,6 +25,7 @@ import type { ColumnsType } from "antd/es/table";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { PageHeader } from "@/components/PageHeader";
 import { RevokeModal } from "@/components/RevokeModal";
+import { saveDownload } from "@/utils/download";
 import {
   useApproveInspectionPlan,
   useCancelInspectionPlan,
@@ -32,6 +34,8 @@ import {
   useCreateInspectionResult,
   useDeleteInspectionPlan,
   useDeleteInspectionResult,
+  useExportInspectionPlans,
+  useExportInspectionResults,
   useRejectInspectionPlan,
   useSubmitInspectionPlan,
   useUpdateInspectionPlan,
@@ -121,6 +125,7 @@ function PlansTab() {
   const rejectMutation = useRejectInspectionPlan();
   const completeMutation = useCompleteInspectionPlan();
   const cancelMutation = useCancelInspectionPlan();
+  const exportMutation = useExportInspectionPlans();
 
   const closeEditor = () => {
     setEditorOpen(false);
@@ -351,6 +356,19 @@ function PlansTab() {
           }}
         />
         <div style={{ flex: 1 }} />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMutation.isPending}
+          onClick={() =>
+            exportMutation.mutate(queryFilter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () =>
+                void message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {canCreate && (
           <Button
             type="primary"
@@ -457,6 +475,7 @@ function ResultsTab() {
   const createMutation = useCreateInspectionResult();
   const updateMutation = useUpdateInspectionResult();
   const deleteMutation = useDeleteInspectionResult();
+  const exportMutation = useExportInspectionResults();
 
   const closeEditor = () => {
     setEditorOpen(false);
@@ -604,6 +623,19 @@ function ResultsTab() {
           }}
         />
         <div style={{ flex: 1 }} />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMutation.isPending}
+          onClick={() =>
+            exportMutation.mutate(queryFilter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () =>
+                void message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {canCreate && (
           <Button
             type="primary"
