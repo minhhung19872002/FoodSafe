@@ -142,6 +142,18 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.Licensing.ExportCertificates.Create,
         FoodSafePermissions.Licensing.ExportCertificates.Edit,
         FoodSafePermissions.Licensing.ExportCertificates.Delete,
+        FoodSafePermissions.Inspection.Default,
+        FoodSafePermissions.Inspection.Plans.Default,
+        FoodSafePermissions.Inspection.Plans.View,
+        FoodSafePermissions.Inspection.Plans.Create,
+        FoodSafePermissions.Inspection.Plans.Edit,
+        FoodSafePermissions.Inspection.Plans.Delete,
+        FoodSafePermissions.Inspection.Plans.Approve,
+        FoodSafePermissions.Inspection.Results.Default,
+        FoodSafePermissions.Inspection.Results.View,
+        FoodSafePermissions.Inspection.Results.Create,
+        FoodSafePermissions.Inspection.Results.Edit,
+        FoodSafePermissions.Inspection.Results.Delete,
         FoodSafePermissions.DataScope.All
     ];
 
@@ -241,7 +253,17 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Licensing.ExportCertificates.Default,
                 FoodSafePermissions.Licensing.ExportCertificates.View,
                 FoodSafePermissions.Licensing.ExportCertificates.Create,
-                FoodSafePermissions.Licensing.ExportCertificates.Edit
+                FoodSafePermissions.Licensing.ExportCertificates.Edit,
+                FoodSafePermissions.Inspection.Default,
+                FoodSafePermissions.Inspection.Plans.Default,
+                FoodSafePermissions.Inspection.Plans.View,
+                FoodSafePermissions.Inspection.Plans.Create,
+                FoodSafePermissions.Inspection.Plans.Edit,
+                FoodSafePermissions.Inspection.Plans.Approve,
+                FoodSafePermissions.Inspection.Results.Default,
+                FoodSafePermissions.Inspection.Results.View,
+                FoodSafePermissions.Inspection.Results.Create,
+                FoodSafePermissions.Inspection.Results.Edit
             ]),
         new(
             "DistrictAdmin",
@@ -265,6 +287,15 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.Licensing.CfsCertificates.View)
                 .Append(FoodSafePermissions.Licensing.ExportCertificates.Default)
                 .Append(FoodSafePermissions.Licensing.ExportCertificates.View)
+                .Append(FoodSafePermissions.Inspection.Default)
+                .Append(FoodSafePermissions.Inspection.Plans.Default)
+                .Append(FoodSafePermissions.Inspection.Plans.View)
+                .Append(FoodSafePermissions.Inspection.Plans.Create)
+                .Append(FoodSafePermissions.Inspection.Plans.Edit)
+                .Append(FoodSafePermissions.Inspection.Results.Default)
+                .Append(FoodSafePermissions.Inspection.Results.View)
+                .Append(FoodSafePermissions.Inspection.Results.Create)
+                .Append(FoodSafePermissions.Inspection.Results.Edit)
                 .ToArray()),
         new(
             "DistrictStaff",
@@ -305,7 +336,16 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Licensing.CfsCertificates.Default,
                 FoodSafePermissions.Licensing.CfsCertificates.View,
                 FoodSafePermissions.Licensing.ExportCertificates.Default,
-                FoodSafePermissions.Licensing.ExportCertificates.View
+                FoodSafePermissions.Licensing.ExportCertificates.View,
+                FoodSafePermissions.Inspection.Default,
+                FoodSafePermissions.Inspection.Plans.Default,
+                FoodSafePermissions.Inspection.Plans.View,
+                FoodSafePermissions.Inspection.Plans.Create,
+                FoodSafePermissions.Inspection.Plans.Edit,
+                FoodSafePermissions.Inspection.Results.Default,
+                FoodSafePermissions.Inspection.Results.View,
+                FoodSafePermissions.Inspection.Results.Create,
+                FoodSafePermissions.Inspection.Results.Edit
             ]),
         new(
             "CommuneAdmin",
@@ -322,6 +362,11 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.Licensing.CfsCertificates.View)
                 .Append(FoodSafePermissions.Licensing.ExportCertificates.Default)
                 .Append(FoodSafePermissions.Licensing.ExportCertificates.View)
+                .Append(FoodSafePermissions.Inspection.Default)
+                .Append(FoodSafePermissions.Inspection.Plans.Default)
+                .Append(FoodSafePermissions.Inspection.Plans.View)
+                .Append(FoodSafePermissions.Inspection.Results.Default)
+                .Append(FoodSafePermissions.Inspection.Results.View)
                 .ToArray()),
         new(
             "CommuneStaff",
@@ -355,7 +400,12 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Licensing.CfsCertificates.Default,
                 FoodSafePermissions.Licensing.CfsCertificates.View,
                 FoodSafePermissions.Licensing.ExportCertificates.Default,
-                FoodSafePermissions.Licensing.ExportCertificates.View
+                FoodSafePermissions.Licensing.ExportCertificates.View,
+                FoodSafePermissions.Inspection.Default,
+                FoodSafePermissions.Inspection.Plans.Default,
+                FoodSafePermissions.Inspection.Plans.View,
+                FoodSafePermissions.Inspection.Results.Default,
+                FoodSafePermissions.Inspection.Results.View
             ])
     ];
 

@@ -119,6 +119,30 @@ public static class FoodSafePermissions
         }
     }
 
+    public static class Inspection
+    {
+        public const string Default = GroupName + ".Inspection";
+
+        public static class Plans
+        {
+            public const string Default = Inspection.Default + ".Plans";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string Approve = Default + ".Approve";
+        }
+
+        public static class Results
+        {
+            public const string Default = Inspection.Default + ".Results";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+        }
+    }
+
     public static class SystemAdministration
     {
         public const string Default = GroupName + ".SystemAdmin";

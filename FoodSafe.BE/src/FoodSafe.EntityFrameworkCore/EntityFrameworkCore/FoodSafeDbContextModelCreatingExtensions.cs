@@ -8,6 +8,7 @@ using FoodSafe.Security;
 using FoodSafe.BusinessManagement;
 using FoodSafe.FileManagement;
 using FoodSafe.Licensing;
+using FoodSafe.Inspection;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -22,6 +23,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
         ConfigureDataScope(builder);
         ConfigureBusinessManagement(builder);
         ConfigureFileManagement(builder);
+        ConfigureInspection(builder);
 
         builder.Entity<Organization>(entity =>
         {
@@ -934,6 +936,212 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.HasOne<Business>().WithMany().HasForeignKey(x => x.BusinessId)
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_business");
             entity.HasIndex(x => x.BusinessId).HasDatabaseName("idx_msa_business");
+        });
+    }
+
+    private static void ConfigureInspection(ModelBuilder builder)
+    {
+        builder.Entity<InspectionPlan>(entity =>
+        {
+            entity.ToTable("inspection_plans", table =>
+            {
+                table.HasCheckConstraint("chk_inspection_plans_type", "plan_type IN (1, 2, 3, 4)");
+                table.HasCheckConstraint("chk_inspection_plans_status", "status IN (1, 2, 3, 4, 5, 6)");
+                table.HasCheckConstraint("chk_inspection_plan_submission",
+                    "(status = 1) OR (submitted_by_id IS NOT NULL AND submitted_at IS NOT NULL)");
+                table.HasCheckConstraint("chk_inspection_plan_approval",
+                    "status NOT IN (3, 4, 5) OR (approved_by_id IS NOT NULL AND approved_at IS NOT NULL)");
+                table.HasCheckConstraint("chk_inspection_plan_cancellation",
+                    "status <> 6 OR (cancelled_by_id IS NOT NULL AND cancelled_at IS NOT NULL AND cancelled_reason IS NOT NULL)");
+                table.HasCheckConstraint("chk_inspection_plans_dates",
+                    "start_date IS NULL OR end_date IS NULL OR start_date <= end_date");
+            });
+            ConfigureAggregateAudit(entity, "pk_inspection_plans");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
+            entity.Property(x => x.PlanCode).HasColumnName("plan_code").HasMaxLength(50).IsRequired();
+            entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.PlanType).HasColumnName("plan_type").HasConversion<short>();
+            entity.Property(x => x.Year).HasColumnName("year");
+            entity.Property(x => x.StartDate).HasColumnName("start_date").HasColumnType("date");
+            entity.Property(x => x.EndDate).HasColumnName("end_date").HasColumnType("date");
+            entity.Property(x => x.Description).HasColumnName("description");
+            entity.Property(x => x.Objectives).HasColumnName("objectives");
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<short>();
+            entity.Property(x => x.SubmittedById).HasColumnName("submitted_by_id");
+            entity.Property(x => x.SubmittedAt).HasColumnName("submitted_at");
+            entity.Property(x => x.ApprovedById).HasColumnName("approved_by_id");
+            entity.Property(x => x.ApprovedAt).HasColumnName("approved_at");
+            entity.Property(x => x.RejectedById).HasColumnName("rejected_by_id");
+            entity.Property(x => x.RejectedAt).HasColumnName("rejected_at");
+            entity.Property(x => x.RejectedReason).HasColumnName("rejected_reason");
+            entity.Property(x => x.CancelledById).HasColumnName("cancelled_by_id");
+            entity.Property(x => x.CancelledAt).HasColumnName("cancelled_at");
+            entity.Property(x => x.CancelledReason).HasColumnName("cancelled_reason");
+
+            entity.HasMany(x => x.Items)
+                .WithOne()
+                .HasForeignKey(x => x.PlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_plans_org")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.PlanCode, x.OrganizationId })
+                .IsUnique()
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("uq_inspection_plans_code");
+            entity.HasIndex(x => new { x.OrganizationId, x.Year })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_inspection_plans_org");
+            entity.HasIndex(x => x.Status)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_inspection_plans_status");
+        });
+
+        builder.Entity<InspectionPlanItem>(entity =>
+        {
+            entity.ToTable("inspection_plan_items", table =>
+            {
+                table.HasCheckConstraint("chk_ipi_status", "status IN (1, 2, 3, 4)");
+            });
+            entity.HasKey(x => x.Id).HasName("pk_inspection_plan_items");
+            entity.ConfigureByConvention();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.PlanId).HasColumnName("plan_id");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.SequenceNumber).HasColumnName("sequence_number");
+            entity.Property(x => x.PlannedDate).HasColumnName("planned_date").HasColumnType("date");
+            entity.Property(x => x.AssignedInspectorId).HasColumnName("assigned_inspector_id");
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<short>();
+            entity.Property(x => x.Notes).HasColumnName("notes");
+
+            entity.HasOne<Business>()
+                .WithMany()
+                .HasForeignKey(x => x.BusinessId)
+                .HasConstraintName("fk_ipi_business")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.PlanId, x.BusinessId })
+                .IsUnique()
+                .HasDatabaseName("uq_ipi_plan_business");
+            entity.HasIndex(x => new { x.Id, x.PlanId, x.BusinessId })
+                .IsUnique()
+                .HasDatabaseName("uq_ipi_id_plan_business");
+            entity.HasIndex(x => x.BusinessId)
+                .HasDatabaseName("idx_inspection_plan_items_business");
+        });
+
+        builder.Entity<InspectionResult>(entity =>
+        {
+            entity.ToTable("inspection_results", table =>
+            {
+                table.HasCheckConstraint("chk_ir_type", "inspection_type IN (1, 2, 3, 4)");
+                table.HasCheckConstraint("chk_ir_result", "overall_result IN (1, 2, 3)");
+                table.HasCheckConstraint("chk_ir_plan_tuple",
+                    "(plan_item_id IS NULL AND plan_id IS NULL) OR (plan_item_id IS NOT NULL AND plan_id IS NOT NULL)");
+            });
+            ConfigureAggregateAudit(entity, "pk_inspection_results");
+            entity.Property(x => x.PlanId).HasColumnName("plan_id");
+            entity.Property(x => x.PlanItemId).HasColumnName("plan_item_id");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
+            entity.Property(x => x.InspectionDate).HasColumnName("inspection_date").HasColumnType("date");
+            entity.Property(x => x.InspectionType).HasColumnName("inspection_type").HasConversion<short>();
+            entity.Property(x => x.TeamLeader).HasColumnName("team_leader").HasMaxLength(200);
+            entity.Property(x => x.TeamMembersText).HasColumnName("team_members_text");
+            entity.Property(x => x.OverallResult).HasColumnName("overall_result").HasConversion<short>();
+            entity.Property(x => x.HasViolation).HasColumnName("has_violation");
+            entity.Property(x => x.ViolationDescription).HasColumnName("violation_description");
+            entity.Property(x => x.FineAmount).HasColumnName("fine_amount").HasColumnType("numeric(18,2)");
+            entity.Property(x => x.FineCurrency).HasColumnName("fine_currency").HasMaxLength(3);
+            entity.Property(x => x.AdminDecisionNumber).HasColumnName("admin_decision_number").HasMaxLength(100);
+            entity.Property(x => x.AdminDecisionDate).HasColumnName("admin_decision_date").HasColumnType("date");
+            entity.Property(x => x.FollowUpRequired).HasColumnName("follow_up_required");
+            entity.Property(x => x.FollowUpDate).HasColumnName("follow_up_date").HasColumnType("date");
+            entity.Property(x => x.FollowUpResultValue).HasColumnName("follow_up_result").HasConversion<short?>();
+            entity.Property(x => x.Recommendations).HasColumnName("recommendations");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+
+            entity.HasMany(x => x.Violations)
+                .WithOne()
+                .HasForeignKey(x => x.InspectionResultId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(x => x.Inspectors)
+                .WithOne()
+                .HasForeignKey(x => x.InspectionResultId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<InspectionPlan>()
+                .WithMany()
+                .HasForeignKey(x => x.PlanId)
+                .HasConstraintName("fk_ir_plan")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_ir_org")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => x.PlanItemId)
+                .IsUnique()
+                .HasFilter("plan_item_id IS NOT NULL AND inspection_type <> 3 AND is_deleted = FALSE")
+                .HasDatabaseName("uq_inspection_results_primary_plan_item");
+            entity.HasIndex(x => x.BusinessId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_inspection_results_business");
+            entity.HasIndex(x => x.InspectionDate)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_inspection_results_date");
+            entity.HasIndex(x => x.OrganizationId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_inspection_results_org");
+            entity.HasIndex(x => x.PlanId)
+                .HasFilter("plan_id IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("idx_inspection_results_plan");
+            entity.HasIndex(x => x.PlanItemId)
+                .HasFilter("plan_item_id IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("idx_inspection_results_plan_item");
+            entity.HasIndex(x => x.HasViolation)
+                .HasFilter("has_violation = TRUE AND is_deleted = FALSE")
+                .HasDatabaseName("idx_inspection_results_violation");
+        });
+
+        builder.Entity<InspectionResultInspector>(entity =>
+        {
+            entity.ToTable("inspection_result_inspectors");
+            entity.HasKey(x => new { x.InspectionResultId, x.UserId })
+                .HasName("pk_inspection_result_inspectors");
+            entity.Property(x => x.InspectionResultId).HasColumnName("inspection_result_id");
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.IsTeamLeader).HasColumnName("is_team_leader");
+            entity.HasIndex(x => x.UserId).HasDatabaseName("idx_iri_user");
+        });
+
+        builder.Entity<InspectionViolation>(entity =>
+        {
+            entity.ToTable("inspection_violations");
+            entity.HasKey(x => x.Id).HasName("pk_inspection_violations");
+            entity.ConfigureByConvention();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.InspectionResultId).HasColumnName("inspection_result_id");
+            entity.Property(x => x.ViolationCode).HasColumnName("violation_code").HasMaxLength(50);
+            entity.Property(x => x.Description).HasColumnName("description").IsRequired();
+            entity.Property(x => x.RegulationReference).HasColumnName("regulation_reference");
+            entity.Property(x => x.FineAmount).HasColumnName("fine_amount").HasColumnType("numeric(18,2)");
+            entity.Property(x => x.RemedyRequired).HasColumnName("remedy_required");
+            entity.Property(x => x.RemedyDeadline).HasColumnName("remedy_deadline").HasColumnType("date");
+            entity.Property(x => x.IsRemedied).HasColumnName("is_remedied");
+            entity.Property(x => x.RemediedAt).HasColumnName("remedied_at");
+            entity.Property(x => x.RemediedNotes).HasColumnName("remedied_notes");
+            entity.HasIndex(x => x.InspectionResultId).HasDatabaseName("idx_inspection_violations_result");
+            entity.HasIndex(x => new { x.IsRemedied, x.RemedyDeadline })
+                .HasFilter("is_remedied = FALSE AND remedy_deadline IS NOT NULL")
+                .HasDatabaseName("idx_inspection_violations_remedied");
         });
     }
 

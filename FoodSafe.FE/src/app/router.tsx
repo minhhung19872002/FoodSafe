@@ -16,6 +16,7 @@ import {
   PublicCfsCertificateLookupPage,
   ExportFoodCertificatePage,
   PublicExportFoodCertificateLookupPage,
+  InspectionPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -206,6 +207,16 @@ export const router = createBrowserRouter([
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.Licensing.ExportCertificates.View">
               <ExportFoodCertificatePage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "inspection",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Inspection.Plans.View">
+              <InspectionPage />
             </PermissionRoute>
           </Suspense>
         ),

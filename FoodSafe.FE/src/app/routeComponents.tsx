@@ -71,6 +71,9 @@ export const PublicExportFoodCertificateLookupPage = lazy(
   () =>
     import("@/features/export-food-certificates/pages/PublicExportFoodCertificateLookupPage"),
 );
+export const InspectionPage = lazy(
+  () => import("@/features/inspection/pages/InspectionPage"),
+);
 
 export function RouteLoading() {
   return (

@@ -1,4 +1,5 @@
 using FoodSafe.EntityFrameworkCore;
+using FoodSafe.Inspection;
 using FoodSafe.Licensing;
 using FoodSafe.Security;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,16 @@ public sealed class BusinessManagementMappingTests
             .GetTableName().ShouldBe("cfs_certificates");
         context.Model.FindEntityType(typeof(ExportFoodCertificate))!
             .GetTableName().ShouldBe("export_food_certificates");
+        context.Model.FindEntityType(typeof(InspectionPlan))!
+            .GetTableName().ShouldBe("inspection_plans");
+        context.Model.FindEntityType(typeof(InspectionPlanItem))!
+            .GetTableName().ShouldBe("inspection_plan_items");
+        context.Model.FindEntityType(typeof(InspectionResult))!
+            .GetTableName().ShouldBe("inspection_results");
+        context.Model.FindEntityType(typeof(InspectionResultInspector))!
+            .GetTableName().ShouldBe("inspection_result_inspectors");
+        context.Model.FindEntityType(typeof(InspectionViolation))!
+            .GetTableName().ShouldBe("inspection_violations");
     }
 
     [Fact]

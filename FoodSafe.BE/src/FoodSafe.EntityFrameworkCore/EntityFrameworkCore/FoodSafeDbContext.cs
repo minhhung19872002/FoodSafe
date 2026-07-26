@@ -16,6 +16,7 @@ using FoodSafe.Security;
 using FoodSafe.BusinessManagement;
 using FoodSafe.FileManagement;
 using FoodSafe.Licensing;
+using FoodSafe.Inspection;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -66,6 +67,11 @@ public class FoodSafeDbContext :
     { get; set; }
     public DbSet<ExportFoodCertificate> ExportFoodCertificates
     { get; set; }
+    public DbSet<InspectionPlan> InspectionPlans { get; set; }
+    public DbSet<InspectionPlanItem> InspectionPlanItems { get; set; }
+    public DbSet<InspectionResult> InspectionResults { get; set; }
+    public DbSet<InspectionResultInspector> InspectionResultInspectors { get; set; }
+    public DbSet<InspectionViolation> InspectionViolations { get; set; }
     public DbSet<DocumentOwner> DocumentOwners { get; set; }
     public DbSet<FileAttachment> FileAttachments { get; set; }
 

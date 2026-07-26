@@ -158,6 +158,18 @@ public static class FoodSafeDomainErrorCodes
         public const string PlanNotFound = "FoodSafe:Inspection:0001";
         public const string CannotModifyNonDraft = "FoodSafe:Inspection:0002";
         public const string DuplicateBusiness = "FoodSafe:Inspection:0003";
+        public const string EmptyPlan = "FoodSafe:Inspection:0004";
+        public const string InvalidStatusTransition = "FoodSafe:Inspection:0005";
+        public const string CannotCancelCompleted = "FoodSafe:Inspection:0006";
+        public const string BusinessNotInPlan = "FoodSafe:Inspection:0007";
+        public const string InvalidDateRange = "FoodSafe:Inspection:0008";
+        public const string RejectReasonRequired = "FoodSafe:Inspection:0009";
+        public const string CancelReasonRequired = "FoodSafe:Inspection:0010";
+        public const string ResultNotFound = "FoodSafe:Inspection:0011";
+        public const string ViolationNotFound = "FoodSafe:Inspection:0012";
+        public const string ViolationAlreadyRemedied = "FoodSafe:Inspection:0013";
+        public const string DuplicatePlanCode = "FoodSafe:Inspection:0014";
+        public const string PlanNotApproved = "FoodSafe:Inspection:0015";
     }
 
     public static class Report

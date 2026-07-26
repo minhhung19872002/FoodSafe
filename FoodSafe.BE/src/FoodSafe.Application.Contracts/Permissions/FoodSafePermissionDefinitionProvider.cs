@@ -218,6 +218,54 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             LocalizableString.Create<FoodSafeResource>(
                 "Permission:ExportCertificates.Delete"));
 
+        var inspection = group.AddPermission(
+            FoodSafePermissions.Inspection.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:Inspection"));
+        var inspectionPlans = inspection.AddChild(
+            FoodSafePermissions.Inspection.Plans.Default,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:InspectionPlans"));
+        inspectionPlans.AddChild(
+            FoodSafePermissions.Inspection.Plans.View,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:InspectionPlans.View"));
+        inspectionPlans.AddChild(
+            FoodSafePermissions.Inspection.Plans.Create,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:InspectionPlans.Create"));
+        inspectionPlans.AddChild(
+            FoodSafePermissions.Inspection.Plans.Edit,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:InspectionPlans.Edit"));
+        inspectionPlans.AddChild(
+            FoodSafePermissions.Inspection.Plans.Delete,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:InspectionPlans.Delete"));
+        inspectionPlans.AddChild(
+            FoodSafePermissions.Inspection.Plans.Approve,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:InspectionPlans.Approve"));
+        var inspectionResults = inspection.AddChild(
+            FoodSafePermissions.Inspection.Results.Default,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:InspectionResults"));
+        inspectionResults.AddChild(
+            FoodSafePermissions.Inspection.Results.View,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:InspectionResults.View"));
+        inspectionResults.AddChild(
+            FoodSafePermissions.Inspection.Results.Create,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:InspectionResults.Create"));
+        inspectionResults.AddChild(
+            FoodSafePermissions.Inspection.Results.Edit,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:InspectionResults.Edit"));
+        inspectionResults.AddChild(
+            FoodSafePermissions.Inspection.Results.Delete,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:InspectionResults.Delete"));
+
         var systemAdministration = group.AddPermission(
             FoodSafePermissions.SystemAdministration.Default,
             LocalizableString.Create<FoodSafeResource>("Permission:SystemAdmin"));

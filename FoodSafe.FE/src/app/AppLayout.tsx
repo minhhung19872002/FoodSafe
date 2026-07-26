@@ -28,6 +28,7 @@ import {
   MenuOutlined,
   FileProtectOutlined,
   ExportOutlined,
+  AuditOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -50,6 +51,7 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   "eligibility-certificates": "Giấy đủ điều kiện ATTP",
   "cfs-certificates": "Chứng nhận CFS",
   "export-food-certificates": "GCN Xuất khẩu thực phẩm",
+  inspection: "Thanh tra - Kiểm tra ATTP",
   administration: "Quản trị hệ thống",
   identity: "Tài khoản và quyền",
   account: "Tài khoản",
@@ -157,6 +159,12 @@ const NAV_CONFIG: NavEntry[] = [
         permission: "FoodSafe.Licensing.ExportCertificates.View",
       },
     ],
+  },
+  {
+    key: "/inspection",
+    icon: <AuditOutlined />,
+    label: "Thanh tra - Kiểm tra",
+    permission: "FoodSafe.Inspection.Plans.View",
   },
 ];
 
