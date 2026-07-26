@@ -24,6 +24,16 @@ public sealed class BusinessManagementApplicationContractTests
         FoodSafePermissions.BusinessManagement.Products.Edit)]
     [InlineData(typeof(ProductAppService), "DeleteAsync",
         FoodSafePermissions.BusinessManagement.Products.Delete)]
+    [InlineData(typeof(SelfDeclarationAppService), "GetListAsync", null)]
+    [InlineData(typeof(SelfDeclarationAppService), "GetAsync", null)]
+    [InlineData(typeof(SelfDeclarationAppService), "CreateAsync",
+        FoodSafePermissions.BusinessManagement.SelfDeclarations.Create)]
+    [InlineData(typeof(SelfDeclarationAppService), "UpdateAsync",
+        FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit)]
+    [InlineData(typeof(SelfDeclarationAppService), "DeleteAsync",
+        FoodSafePermissions.BusinessManagement.SelfDeclarations.Delete)]
+    [InlineData(typeof(SelfDeclarationAppService), "RevokeAsync",
+        FoodSafePermissions.BusinessManagement.SelfDeclarations.Edit)]
     public void Operations_should_use_least_privilege_permissions(
         Type serviceType,
         string methodName,
@@ -45,5 +55,8 @@ public sealed class BusinessManagementApplicationContractTests
         typeof(ProductAppService).GetCustomAttribute<AuthorizeAttribute>()!
             .Policy.ShouldBe(
                 FoodSafePermissions.BusinessManagement.Products.View);
+        typeof(SelfDeclarationAppService).GetCustomAttribute<AuthorizeAttribute>()!
+            .Policy.ShouldBe(
+                FoodSafePermissions.BusinessManagement.SelfDeclarations.View);
     }
 }
