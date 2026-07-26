@@ -169,6 +169,14 @@ export default function RiskAnalysisPage() {
   return (
     <Card>
       <Space style={{ marginBottom: 16 }} wrap>
+        <Input.Search
+          placeholder="Tìm kiếm..."
+          allowClear
+          style={{ width: 220 }}
+          onSearch={(v) =>
+            setFilter((f) => ({ ...f, filter: v || undefined, skipCount: 0 }))
+          }
+        />
         <Select
           placeholder="Trạng thái"
           allowClear

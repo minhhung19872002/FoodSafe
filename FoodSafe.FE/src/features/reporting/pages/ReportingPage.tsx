@@ -26,6 +26,9 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { NdtpReportEditorModal } from "../components/NdtpReportEditorModal";
+import { AtpWorkReportEditorModal } from "../components/AtpWorkReportEditorModal";
+import { ActionMonthReportEditorModal } from "../components/ActionMonthReportEditorModal";
 import {
   useNdtpReports,
   useAtpWorkReports,
@@ -97,6 +100,7 @@ function NdtpTab() {
   const returnToDraftMut = useReturnNdtpToDraft();
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [editReport, setEditReport] = useState<NdtpReport | null>(null);
   const [returnOpen, setReturnOpen] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
@@ -144,6 +148,14 @@ function NdtpTab() {
       width: 200,
       render: (_, record) => (
         <Space size="small">
+          {record.status === REPORT_STATUS.Draft &&
+            hasPermission("FoodSafe.Reporting.NdtpReports.Edit") && (
+              <Button
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => setEditReport(record)}
+              />
+            )}
           {record.status === REPORT_STATUS.Draft &&
             hasPermission("FoodSafe.Reporting.NdtpReports.Submit") && (
               <Popconfirm
@@ -225,6 +237,10 @@ function NdtpTab() {
 
   return (
     <>
+      <NdtpReportEditorModal
+        report={editReport}
+        onClose={() => setEditReport(null)}
+      />
       <Space style={{ marginBottom: 16 }} wrap>
         <Select
           placeholder="Trạng thái"
@@ -377,6 +393,7 @@ function AtpWorkTab() {
   const returnToDraftMut = useReturnAtpToDraft();
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [editReport, setEditReport] = useState<AtpWorkReport | null>(null);
   const [returnOpen, setReturnOpen] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
@@ -429,6 +446,14 @@ function AtpWorkTab() {
       width: 200,
       render: (_, record) => (
         <Space size="small">
+          {record.status === REPORT_STATUS.Draft &&
+            hasPermission("FoodSafe.Reporting.AtpWorkReports.Edit") && (
+              <Button
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => setEditReport(record)}
+              />
+            )}
           {record.status === REPORT_STATUS.Draft &&
             hasPermission("FoodSafe.Reporting.AtpWorkReports.Submit") && (
               <Popconfirm
@@ -510,6 +535,10 @@ function AtpWorkTab() {
 
   return (
     <>
+      <AtpWorkReportEditorModal
+        report={editReport}
+        onClose={() => setEditReport(null)}
+      />
       <Space style={{ marginBottom: 16 }} wrap>
         <Select
           placeholder="Trạng thái"
@@ -691,6 +720,7 @@ function ActionMonthTab() {
   const returnToDraftMut = useReturnAmrToDraft();
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [editReport, setEditReport] = useState<ActionMonthReport | null>(null);
   const [returnOpen, setReturnOpen] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
@@ -742,6 +772,16 @@ function ActionMonthTab() {
       width: 200,
       render: (_, record) => (
         <Space size="small">
+          {record.status === REPORT_STATUS.Draft &&
+            hasPermission(
+              "FoodSafe.Reporting.ActionMonthReports.Edit",
+            ) && (
+              <Button
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => setEditReport(record)}
+              />
+            )}
           {record.status === REPORT_STATUS.Draft &&
             hasPermission(
               "FoodSafe.Reporting.ActionMonthReports.Submit",
@@ -835,6 +875,10 @@ function ActionMonthTab() {
 
   return (
     <>
+      <ActionMonthReportEditorModal
+        report={editReport}
+        onClose={() => setEditReport(null)}
+      />
       <Space style={{ marginBottom: 16 }} wrap>
         <Select
           placeholder="Trạng thái"

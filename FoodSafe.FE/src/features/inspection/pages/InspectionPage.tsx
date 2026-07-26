@@ -531,7 +531,7 @@ function ResultsTab() {
               }}
             />
           )}
-          {canDelete && (
+          {canDelete && !item.followUpRequired && (
             <Popconfirm
               title="Xóa kết quả này?"
               okText="Xóa"

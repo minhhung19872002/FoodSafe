@@ -256,14 +256,14 @@ export default function TestingResultsPage() {
           </Form.Item>
           <Space style={{ width: "100%" }}>
             <Form.Item
-              name="testingCenterId"
+              name="testingCenterName"
               label="Cơ sở kiểm nghiệm"
-              rules={[{ required: true }]}
+              rules={[{ required: true, message: "Vui lòng nhập tên cơ sở KN" }]}
             >
-              <Input style={{ width: 290 }} placeholder="ID cơ sở KN" />
+              <Input style={{ width: 290 }} placeholder="Tên cơ sở kiểm nghiệm" />
             </Form.Item>
-            <Form.Item name="testingServiceId" label="Dịch vụ KN">
-              <Input style={{ width: 290 }} placeholder="ID dịch vụ KN" />
+            <Form.Item name="testingServiceName" label="Dịch vụ KN">
+              <Input style={{ width: 290 }} placeholder="Tên dịch vụ kiểm nghiệm" />
             </Form.Item>
           </Space>
           <Space style={{ width: "100%" }}>

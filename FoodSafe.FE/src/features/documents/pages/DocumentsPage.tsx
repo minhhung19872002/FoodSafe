@@ -230,11 +230,23 @@ export default function DocumentsPage() {
           }}
         >
           <Form.Item
-            name="documentTypeId"
+            name="documentTypeName"
             label="Loại văn bản"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Vui lòng chọn loại văn bản" }]}
           >
-            <Input placeholder="ID loại VB" />
+            <Select
+              placeholder="Chọn loại văn bản"
+              options={[
+                { value: "Luật", label: "Luật" },
+                { value: "Nghị định", label: "Nghị định" },
+                { value: "Thông tư", label: "Thông tư" },
+                { value: "Quyết định", label: "Quyết định" },
+                { value: "Chỉ thị", label: "Chỉ thị" },
+                { value: "Công văn", label: "Công văn" },
+                { value: "Hướng dẫn", label: "Hướng dẫn" },
+                { value: "Khác", label: "Khác" },
+              ]}
+            />
           </Form.Item>
           <Form.Item
             name="documentNumber"
