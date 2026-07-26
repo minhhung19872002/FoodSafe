@@ -19,6 +19,7 @@ using FoodSafe.Licensing;
 using FoodSafe.Inspection;
 using FoodSafe.AlertsAndTesting;
 using FoodSafe.FoodPoisoning;
+using FoodSafe.Reporting;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -83,6 +84,12 @@ public class FoodSafeDbContext :
     public DbSet<PoisoningIncidentErrorReport> PoisoningIncidentErrorReports { get; set; }
     public DbSet<DocumentOwner> DocumentOwners { get; set; }
     public DbSet<FileAttachment> FileAttachments { get; set; }
+    public DbSet<NdtpReport> NdtpReports { get; set; }
+    public DbSet<NdtpReportErrorNotification> NdtpReportErrorNotifications { get; set; }
+    public DbSet<AtpWorkReport> AtpWorkReports { get; set; }
+    public DbSet<AtpWorkReportErrorNotification> AtpWorkReportErrorNotifications { get; set; }
+    public DbSet<ActionMonthReport> ActionMonthReports { get; set; }
+    public DbSet<ActionMonthReportErrorNotification> ActionMonthReportErrorNotifications { get; set; }
 
     public FoodSafeDbContext(DbContextOptions<FoodSafeDbContext> options)
         : base(options)

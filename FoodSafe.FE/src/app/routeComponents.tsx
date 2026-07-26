@@ -80,6 +80,9 @@ export const AlertsNewsPage = lazy(
 export const FoodPoisoningPage = lazy(
   () => import("@/features/food-poisoning/pages/FoodPoisoningPage"),
 );
+export const ReportingPage = lazy(
+  () => import("@/features/reporting/pages/ReportingPage"),
+);
 
 export function RouteLoading() {
   return (

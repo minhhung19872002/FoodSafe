@@ -11,6 +11,7 @@ using FoodSafe.Licensing;
 using FoodSafe.Inspection;
 using FoodSafe.AlertsAndTesting;
 using FoodSafe.FoodPoisoning;
+using FoodSafe.Reporting;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -28,6 +29,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
         ConfigureInspection(builder);
         ConfigureAlertsAndTesting(builder);
         ConfigureFoodPoisoning(builder);
+        ConfigureReporting(builder);
 
         builder.Entity<Organization>(entity =>
         {
@@ -1868,6 +1870,274 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.HasCheckConstraint("chk_pier_status", "status IN (1, 2, 3)");
 
             entity.HasIndex(x => x.IncidentId).HasDatabaseName("idx_pier_incident");
+        });
+    }
+
+    private static void ConfigureReporting(ModelBuilder builder)
+    {
+        builder.Entity<NdtpReport>(entity =>
+        {
+            entity.ToTable("ndtp_reports");
+            ConfigureAggregateAudit(entity, "pk_ndtp_reports");
+
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+            entity.Property(x => x.PeriodYear).HasColumnName("period_year").IsRequired();
+            entity.Property(x => x.PeriodMonth).HasColumnName("period_month").IsRequired();
+
+            entity.Property(x => x.CaseCount).HasColumnName("case_count");
+            entity.Property(x => x.CaseAffected).HasColumnName("case_affected");
+            entity.Property(x => x.CaseHospitalized).HasColumnName("case_hospitalized");
+            entity.Property(x => x.CaseDeaths).HasColumnName("case_deaths");
+            entity.Property(x => x.IncidentCount).HasColumnName("incident_count");
+            entity.Property(x => x.IncidentAffected).HasColumnName("incident_affected");
+            entity.Property(x => x.IncidentHospitalized).HasColumnName("incident_hospitalized");
+            entity.Property(x => x.IncidentDeaths).HasColumnName("incident_deaths");
+
+            entity.Property(x => x.PreventionActivities).HasColumnName("prevention_activities");
+            entity.Property(x => x.RiskFactors).HasColumnName("risk_factors");
+            entity.Property(x => x.Recommendations).HasColumnName("recommendations");
+
+            entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.SubmissionVersion).HasColumnName("submission_version");
+            entity.Property(x => x.SubmittedById).HasColumnName("submitted_by_id");
+            entity.Property(x => x.SubmittedAt).HasColumnName("submitted_at");
+            entity.Property(x => x.VerifiedById).HasColumnName("verified_by_id");
+            entity.Property(x => x.VerifiedAt).HasColumnName("verified_at");
+            entity.Property(x => x.ReturnedById).HasColumnName("returned_by_id");
+            entity.Property(x => x.ReturnedAt).HasColumnName("returned_at");
+            entity.Property(x => x.ReturnReason).HasColumnName("return_reason");
+            entity.Property(x => x.CompletedById).HasColumnName("completed_by_id");
+            entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+
+            entity.HasCheckConstraint("chk_ndtp_status", "status IN (1, 2, 3, 4, 5)");
+            entity.HasCheckConstraint("chk_ndtp_month", "period_month >= 1 AND period_month <= 12");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_ndtp_reports_organization")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.PeriodYear, x.PeriodMonth })
+                .HasDatabaseName("idx_ndtp_org_period")
+                .HasFilter("is_deleted = false")
+                .IsUnique();
+            entity.HasIndex(x => new { x.OrganizationId, x.Status })
+                .HasDatabaseName("idx_ndtp_org_status");
+
+            entity.HasMany(x => x.ErrorNotifications)
+                .WithOne()
+                .HasForeignKey(x => x.ReportId)
+                .HasConstraintName("fk_ndtp_error_notifications_report")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<NdtpReportErrorNotification>(entity =>
+        {
+            entity.ToTable("ndtp_report_error_notifications");
+
+            entity.HasKey(x => x.Id).HasName("pk_ndtp_ren");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.ReportId).HasColumnName("report_id").IsRequired();
+            entity.Property(x => x.FromOrganizationId).HasColumnName("from_organization_id").IsRequired();
+            entity.Property(x => x.ErrorFields).HasColumnName("error_fields").IsRequired();
+            entity.Property(x => x.CorrectionDetails).HasColumnName("correction_details").IsRequired();
+            entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.Response).HasColumnName("response");
+            entity.Property(x => x.RespondedById).HasColumnName("responded_by_id");
+            entity.Property(x => x.RespondedAt).HasColumnName("responded_at");
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+
+            entity.HasCheckConstraint("chk_ndtp_ren_status", "status IN (1, 2, 3)");
+            entity.HasIndex(x => x.ReportId).HasDatabaseName("idx_ndtp_ren_report");
+        });
+
+        builder.Entity<AtpWorkReport>(entity =>
+        {
+            entity.ToTable("atp_work_reports");
+            ConfigureAggregateAudit(entity, "pk_atp_work_reports");
+
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+            entity.Property(x => x.PeriodType).HasColumnName("period_type").IsRequired();
+            entity.Property(x => x.PeriodYear).HasColumnName("period_year").IsRequired();
+            entity.Property(x => x.PeriodHalf).HasColumnName("period_half");
+
+            entity.Property(x => x.TotalBusinesses).HasColumnName("total_businesses");
+            entity.Property(x => x.NewBusinesses).HasColumnName("new_businesses");
+            entity.Property(x => x.InactiveBusinesses).HasColumnName("inactive_businesses");
+            entity.Property(x => x.BusinessesWithCertificate).HasColumnName("businesses_with_certificate");
+
+            entity.Property(x => x.DkcbIssued).HasColumnName("dkcb_issued");
+            entity.Property(x => x.SelfDeclarationsReceived).HasColumnName("self_declarations_received");
+            entity.Property(x => x.AdRegistrationsIssued).HasColumnName("ad_registrations_issued");
+            entity.Property(x => x.EligibilityCertificatesIssued).HasColumnName("eligibility_certificates_issued");
+            entity.Property(x => x.CfsIssued).HasColumnName("cfs_issued");
+            entity.Property(x => x.ExportCertificatesIssued).HasColumnName("export_certificates_issued");
+
+            entity.Property(x => x.TotalInspectionPlans).HasColumnName("total_inspection_plans");
+            entity.Property(x => x.BusinessesInspected).HasColumnName("businesses_inspected");
+            entity.Property(x => x.ViolationsFound).HasColumnName("violations_found");
+            entity.Property(x => x.FinesIssued).HasColumnName("fines_issued");
+            entity.Property(x => x.FineTotalAmount).HasColumnName("fine_total_amount").HasColumnType("numeric(18,2)");
+
+            entity.Property(x => x.PoisoningCaseCount).HasColumnName("poisoning_case_count");
+            entity.Property(x => x.PoisoningIncidentCount).HasColumnName("poisoning_incident_count");
+            entity.Property(x => x.TotalAffected).HasColumnName("total_affected");
+            entity.Property(x => x.TotalDeaths).HasColumnName("total_deaths");
+
+            entity.Property(x => x.TrainingSessions).HasColumnName("training_sessions");
+            entity.Property(x => x.TrainingParticipants).HasColumnName("training_participants");
+            entity.Property(x => x.MediaAppearances).HasColumnName("media_appearances");
+            entity.Property(x => x.DocumentsIssued).HasColumnName("documents_issued");
+
+            entity.Property(x => x.Overview).HasColumnName("overview");
+            entity.Property(x => x.Achievements).HasColumnName("achievements");
+            entity.Property(x => x.Limitations).HasColumnName("limitations");
+            entity.Property(x => x.Solutions).HasColumnName("solutions");
+            entity.Property(x => x.NextPeriodPlan).HasColumnName("next_period_plan");
+
+            entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.SubmissionVersion).HasColumnName("submission_version");
+            entity.Property(x => x.SubmittedById).HasColumnName("submitted_by_id");
+            entity.Property(x => x.SubmittedAt).HasColumnName("submitted_at");
+            entity.Property(x => x.VerifiedById).HasColumnName("verified_by_id");
+            entity.Property(x => x.VerifiedAt).HasColumnName("verified_at");
+            entity.Property(x => x.ReturnedById).HasColumnName("returned_by_id");
+            entity.Property(x => x.ReturnedAt).HasColumnName("returned_at");
+            entity.Property(x => x.ReturnReason).HasColumnName("return_reason");
+            entity.Property(x => x.CompletedById).HasColumnName("completed_by_id");
+            entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+
+            entity.HasCheckConstraint("chk_atp_status", "status IN (1, 2, 3, 4, 5)");
+            entity.HasCheckConstraint("chk_atp_period_type", "period_type IN (1, 2)");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_atp_work_reports_organization")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.PeriodType, x.PeriodYear, x.PeriodHalf })
+                .HasDatabaseName("idx_atp_org_period")
+                .HasFilter("is_deleted = false")
+                .IsUnique();
+            entity.HasIndex(x => new { x.OrganizationId, x.Status })
+                .HasDatabaseName("idx_atp_org_status");
+
+            entity.HasMany(x => x.ErrorNotifications)
+                .WithOne()
+                .HasForeignKey(x => x.ReportId)
+                .HasConstraintName("fk_atp_error_notifications_report")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AtpWorkReportErrorNotification>(entity =>
+        {
+            entity.ToTable("atp_work_report_error_notifications");
+
+            entity.HasKey(x => x.Id).HasName("pk_atp_ren");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.ReportId).HasColumnName("report_id").IsRequired();
+            entity.Property(x => x.FromOrganizationId).HasColumnName("from_organization_id").IsRequired();
+            entity.Property(x => x.ErrorFields).HasColumnName("error_fields").IsRequired();
+            entity.Property(x => x.CorrectionDetails).HasColumnName("correction_details").IsRequired();
+            entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.Response).HasColumnName("response");
+            entity.Property(x => x.RespondedById).HasColumnName("responded_by_id");
+            entity.Property(x => x.RespondedAt).HasColumnName("responded_at");
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+
+            entity.HasCheckConstraint("chk_atp_ren_status", "status IN (1, 2, 3)");
+            entity.HasIndex(x => x.ReportId).HasDatabaseName("idx_atp_ren_report");
+        });
+
+        builder.Entity<ActionMonthReport>(entity =>
+        {
+            entity.ToTable("action_month_reports");
+            ConfigureAggregateAudit(entity, "pk_action_month_reports");
+
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+            entity.Property(x => x.PeriodYear).HasColumnName("period_year").IsRequired();
+            entity.Property(x => x.ActionMonthTheme).HasColumnName("action_month_theme");
+            entity.Property(x => x.ActionMonthDates).HasColumnName("action_month_dates").HasMaxLength(100);
+
+            entity.Property(x => x.MediaArticles).HasColumnName("media_articles");
+            entity.Property(x => x.BroadcastPrograms).HasColumnName("broadcast_programs");
+            entity.Property(x => x.PropagandaSessions).HasColumnName("propaganda_sessions");
+            entity.Property(x => x.Participants).HasColumnName("participants");
+            entity.Property(x => x.PostersDistributed).HasColumnName("posters_distributed");
+            entity.Property(x => x.LeafletsDistributed).HasColumnName("leaflets_distributed");
+
+            entity.Property(x => x.BusinessesInspected).HasColumnName("businesses_inspected");
+            entity.Property(x => x.ViolationsFound).HasColumnName("violations_found");
+            entity.Property(x => x.FinesIssued).HasColumnName("fines_issued");
+            entity.Property(x => x.FineAmount).HasColumnName("fine_amount").HasColumnType("numeric(18,2)");
+
+            entity.Property(x => x.NewSelfDeclarations).HasColumnName("new_self_declarations");
+
+            entity.Property(x => x.Achievements).HasColumnName("achievements");
+            entity.Property(x => x.Limitations).HasColumnName("limitations");
+            entity.Property(x => x.LessonsLearned).HasColumnName("lessons_learned");
+            entity.Property(x => x.NextSteps).HasColumnName("next_steps");
+
+            entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.SubmissionVersion).HasColumnName("submission_version");
+            entity.Property(x => x.SubmittedById).HasColumnName("submitted_by_id");
+            entity.Property(x => x.SubmittedAt).HasColumnName("submitted_at");
+            entity.Property(x => x.VerifiedById).HasColumnName("verified_by_id");
+            entity.Property(x => x.VerifiedAt).HasColumnName("verified_at");
+            entity.Property(x => x.ReturnedById).HasColumnName("returned_by_id");
+            entity.Property(x => x.ReturnedAt).HasColumnName("returned_at");
+            entity.Property(x => x.ReturnReason).HasColumnName("return_reason");
+            entity.Property(x => x.CompletedById).HasColumnName("completed_by_id");
+            entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+
+            entity.HasCheckConstraint("chk_amr_status", "status IN (1, 2, 3, 4, 5)");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_action_month_reports_organization")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.PeriodYear })
+                .HasDatabaseName("idx_amr_org_period")
+                .HasFilter("is_deleted = false")
+                .IsUnique();
+            entity.HasIndex(x => new { x.OrganizationId, x.Status })
+                .HasDatabaseName("idx_amr_org_status");
+
+            entity.HasMany(x => x.ErrorNotifications)
+                .WithOne()
+                .HasForeignKey(x => x.ReportId)
+                .HasConstraintName("fk_amr_error_notifications_report")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ActionMonthReportErrorNotification>(entity =>
+        {
+            entity.ToTable("action_month_report_error_notifications");
+
+            entity.HasKey(x => x.Id).HasName("pk_amr_ren");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.ReportId).HasColumnName("report_id").IsRequired();
+            entity.Property(x => x.FromOrganizationId).HasColumnName("from_organization_id").IsRequired();
+            entity.Property(x => x.ErrorFields).HasColumnName("error_fields").IsRequired();
+            entity.Property(x => x.CorrectionDetails).HasColumnName("correction_details").IsRequired();
+            entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.Response).HasColumnName("response");
+            entity.Property(x => x.RespondedById).HasColumnName("responded_by_id");
+            entity.Property(x => x.RespondedAt).HasColumnName("responded_at");
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+
+            entity.HasCheckConstraint("chk_amr_ren_status", "status IN (1, 2, 3)");
+            entity.HasIndex(x => x.ReportId).HasDatabaseName("idx_amr_ren_report");
         });
     }
 }

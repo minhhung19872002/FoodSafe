@@ -194,6 +194,50 @@ public static class FoodSafePermissions
         }
     }
 
+    public static class Reporting
+    {
+        public const string Default = GroupName + ".Reporting";
+
+        public static class NdtpReports
+        {
+            public const string Default = Reporting.Default + ".NdtpReports";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string Submit = Default + ".Submit";
+            public const string Verify = Default + ".Verify";
+            public const string Return = Default + ".Return";
+            public const string Complete = Default + ".Complete";
+        }
+
+        public static class AtpWorkReports
+        {
+            public const string Default = Reporting.Default + ".AtpWorkReports";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string Submit = Default + ".Submit";
+            public const string Verify = Default + ".Verify";
+            public const string Return = Default + ".Return";
+            public const string Complete = Default + ".Complete";
+        }
+
+        public static class ActionMonthReports
+        {
+            public const string Default = Reporting.Default + ".ActionMonthReports";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string Submit = Default + ".Submit";
+            public const string Verify = Default + ".Verify";
+            public const string Return = Default + ".Return";
+            public const string Complete = Default + ".Complete";
+        }
+    }
+
     public static class SystemAdministration
     {
         public const string Default = GroupName + ".SystemAdmin";

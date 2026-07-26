@@ -177,7 +177,12 @@ public static class FoodSafeDomainErrorCodes
         public const string NotFound = "FoodSafe:Report:0001";
         public const string CannotSubmitNonDraft = "FoodSafe:Report:0002";
         public const string CannotVerifyNonSubmitted = "FoodSafe:Report:0003";
-        public const string CannotReturnNonSubmitted = "FoodSafe:Report:0004";
+        public const string CannotReturnNonSubmittedOrVerified = "FoodSafe:Report:0004";
+        public const string CannotCompleteNonVerified = "FoodSafe:Report:0005";
+        public const string CannotModifyNonDraft = "FoodSafe:Report:0006";
+        public const string ReturnReasonRequired = "FoodSafe:Report:0007";
+        public const string CanOnlyNotifyErrorOnVerified = "FoodSafe:Report:0008";
+        public const string InvalidPeriod = "FoodSafe:Report:0009";
     }
 
     public static class Catalog

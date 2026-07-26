@@ -181,6 +181,34 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.FoodPoisoning.Incidents.Delete,
         FoodSafePermissions.FoodPoisoning.Incidents.Verify,
         FoodSafePermissions.FoodPoisoning.Incidents.Conclude,
+        FoodSafePermissions.Reporting.Default,
+        FoodSafePermissions.Reporting.NdtpReports.Default,
+        FoodSafePermissions.Reporting.NdtpReports.View,
+        FoodSafePermissions.Reporting.NdtpReports.Create,
+        FoodSafePermissions.Reporting.NdtpReports.Edit,
+        FoodSafePermissions.Reporting.NdtpReports.Delete,
+        FoodSafePermissions.Reporting.NdtpReports.Submit,
+        FoodSafePermissions.Reporting.NdtpReports.Verify,
+        FoodSafePermissions.Reporting.NdtpReports.Return,
+        FoodSafePermissions.Reporting.NdtpReports.Complete,
+        FoodSafePermissions.Reporting.AtpWorkReports.Default,
+        FoodSafePermissions.Reporting.AtpWorkReports.View,
+        FoodSafePermissions.Reporting.AtpWorkReports.Create,
+        FoodSafePermissions.Reporting.AtpWorkReports.Edit,
+        FoodSafePermissions.Reporting.AtpWorkReports.Delete,
+        FoodSafePermissions.Reporting.AtpWorkReports.Submit,
+        FoodSafePermissions.Reporting.AtpWorkReports.Verify,
+        FoodSafePermissions.Reporting.AtpWorkReports.Return,
+        FoodSafePermissions.Reporting.AtpWorkReports.Complete,
+        FoodSafePermissions.Reporting.ActionMonthReports.Default,
+        FoodSafePermissions.Reporting.ActionMonthReports.View,
+        FoodSafePermissions.Reporting.ActionMonthReports.Create,
+        FoodSafePermissions.Reporting.ActionMonthReports.Edit,
+        FoodSafePermissions.Reporting.ActionMonthReports.Delete,
+        FoodSafePermissions.Reporting.ActionMonthReports.Submit,
+        FoodSafePermissions.Reporting.ActionMonthReports.Verify,
+        FoodSafePermissions.Reporting.ActionMonthReports.Return,
+        FoodSafePermissions.Reporting.ActionMonthReports.Complete,
         FoodSafePermissions.DataScope.All
     ];
 
@@ -313,7 +341,35 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.FoodPoisoning.Incidents.Create,
                 FoodSafePermissions.FoodPoisoning.Incidents.Edit,
                 FoodSafePermissions.FoodPoisoning.Incidents.Verify,
-                FoodSafePermissions.FoodPoisoning.Incidents.Conclude
+                FoodSafePermissions.FoodPoisoning.Incidents.Conclude,
+                FoodSafePermissions.Reporting.Default,
+                FoodSafePermissions.Reporting.NdtpReports.Default,
+                FoodSafePermissions.Reporting.NdtpReports.View,
+                FoodSafePermissions.Reporting.NdtpReports.Create,
+                FoodSafePermissions.Reporting.NdtpReports.Edit,
+                FoodSafePermissions.Reporting.NdtpReports.Delete,
+                FoodSafePermissions.Reporting.NdtpReports.Submit,
+                FoodSafePermissions.Reporting.NdtpReports.Verify,
+                FoodSafePermissions.Reporting.NdtpReports.Return,
+                FoodSafePermissions.Reporting.NdtpReports.Complete,
+                FoodSafePermissions.Reporting.AtpWorkReports.Default,
+                FoodSafePermissions.Reporting.AtpWorkReports.View,
+                FoodSafePermissions.Reporting.AtpWorkReports.Create,
+                FoodSafePermissions.Reporting.AtpWorkReports.Edit,
+                FoodSafePermissions.Reporting.AtpWorkReports.Delete,
+                FoodSafePermissions.Reporting.AtpWorkReports.Submit,
+                FoodSafePermissions.Reporting.AtpWorkReports.Verify,
+                FoodSafePermissions.Reporting.AtpWorkReports.Return,
+                FoodSafePermissions.Reporting.AtpWorkReports.Complete,
+                FoodSafePermissions.Reporting.ActionMonthReports.Default,
+                FoodSafePermissions.Reporting.ActionMonthReports.View,
+                FoodSafePermissions.Reporting.ActionMonthReports.Create,
+                FoodSafePermissions.Reporting.ActionMonthReports.Edit,
+                FoodSafePermissions.Reporting.ActionMonthReports.Delete,
+                FoodSafePermissions.Reporting.ActionMonthReports.Submit,
+                FoodSafePermissions.Reporting.ActionMonthReports.Verify,
+                FoodSafePermissions.Reporting.ActionMonthReports.Return,
+                FoodSafePermissions.Reporting.ActionMonthReports.Complete
             ]),
         new(
             "DistrictAdmin",
@@ -366,6 +422,31 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.FoodPoisoning.Incidents.Create)
                 .Append(FoodSafePermissions.FoodPoisoning.Incidents.Edit)
                 .Append(FoodSafePermissions.FoodPoisoning.Incidents.Verify)
+                .Append(FoodSafePermissions.Reporting.Default)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.Default)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.View)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.Create)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.Edit)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.Delete)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.Verify)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.Return)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.Complete)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.Default)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.View)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.Create)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.Edit)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.Delete)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.Verify)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.Return)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.Complete)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.Default)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.View)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.Create)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.Edit)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.Delete)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.Verify)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.Return)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.Complete)
                 .ToArray()),
         new(
             "DistrictStaff",
@@ -435,7 +516,35 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.FoodPoisoning.Incidents.View,
                 FoodSafePermissions.FoodPoisoning.Incidents.Create,
                 FoodSafePermissions.FoodPoisoning.Incidents.Edit,
-                FoodSafePermissions.FoodPoisoning.Incidents.Verify
+                FoodSafePermissions.FoodPoisoning.Incidents.Verify,
+                FoodSafePermissions.Reporting.Default,
+                FoodSafePermissions.Reporting.NdtpReports.Default,
+                FoodSafePermissions.Reporting.NdtpReports.View,
+                FoodSafePermissions.Reporting.NdtpReports.Create,
+                FoodSafePermissions.Reporting.NdtpReports.Edit,
+                FoodSafePermissions.Reporting.NdtpReports.Delete,
+                FoodSafePermissions.Reporting.NdtpReports.Submit,
+                FoodSafePermissions.Reporting.NdtpReports.Verify,
+                FoodSafePermissions.Reporting.NdtpReports.Return,
+                FoodSafePermissions.Reporting.NdtpReports.Complete,
+                FoodSafePermissions.Reporting.AtpWorkReports.Default,
+                FoodSafePermissions.Reporting.AtpWorkReports.View,
+                FoodSafePermissions.Reporting.AtpWorkReports.Create,
+                FoodSafePermissions.Reporting.AtpWorkReports.Edit,
+                FoodSafePermissions.Reporting.AtpWorkReports.Delete,
+                FoodSafePermissions.Reporting.AtpWorkReports.Submit,
+                FoodSafePermissions.Reporting.AtpWorkReports.Verify,
+                FoodSafePermissions.Reporting.AtpWorkReports.Return,
+                FoodSafePermissions.Reporting.AtpWorkReports.Complete,
+                FoodSafePermissions.Reporting.ActionMonthReports.Default,
+                FoodSafePermissions.Reporting.ActionMonthReports.View,
+                FoodSafePermissions.Reporting.ActionMonthReports.Create,
+                FoodSafePermissions.Reporting.ActionMonthReports.Edit,
+                FoodSafePermissions.Reporting.ActionMonthReports.Delete,
+                FoodSafePermissions.Reporting.ActionMonthReports.Submit,
+                FoodSafePermissions.Reporting.ActionMonthReports.Verify,
+                FoodSafePermissions.Reporting.ActionMonthReports.Return,
+                FoodSafePermissions.Reporting.ActionMonthReports.Complete
             ]),
         new(
             "CommuneAdmin",
@@ -471,6 +580,22 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.FoodPoisoning.Incidents.View)
                 .Append(FoodSafePermissions.FoodPoisoning.Incidents.Create)
                 .Append(FoodSafePermissions.FoodPoisoning.Incidents.Edit)
+                .Append(FoodSafePermissions.Reporting.Default)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.Default)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.View)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.Create)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.Edit)
+                .Append(FoodSafePermissions.Reporting.NdtpReports.Submit)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.Default)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.View)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.Create)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.Edit)
+                .Append(FoodSafePermissions.Reporting.AtpWorkReports.Submit)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.Default)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.View)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.Create)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.Edit)
+                .Append(FoodSafePermissions.Reporting.ActionMonthReports.Submit)
                 .ToArray()),
         new(
             "CommuneStaff",
@@ -523,7 +648,23 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.FoodPoisoning.Incidents.Default,
                 FoodSafePermissions.FoodPoisoning.Incidents.View,
                 FoodSafePermissions.FoodPoisoning.Incidents.Create,
-                FoodSafePermissions.FoodPoisoning.Incidents.Edit
+                FoodSafePermissions.FoodPoisoning.Incidents.Edit,
+                FoodSafePermissions.Reporting.Default,
+                FoodSafePermissions.Reporting.NdtpReports.Default,
+                FoodSafePermissions.Reporting.NdtpReports.View,
+                FoodSafePermissions.Reporting.NdtpReports.Create,
+                FoodSafePermissions.Reporting.NdtpReports.Edit,
+                FoodSafePermissions.Reporting.NdtpReports.Submit,
+                FoodSafePermissions.Reporting.AtpWorkReports.Default,
+                FoodSafePermissions.Reporting.AtpWorkReports.View,
+                FoodSafePermissions.Reporting.AtpWorkReports.Create,
+                FoodSafePermissions.Reporting.AtpWorkReports.Edit,
+                FoodSafePermissions.Reporting.AtpWorkReports.Submit,
+                FoodSafePermissions.Reporting.ActionMonthReports.Default,
+                FoodSafePermissions.Reporting.ActionMonthReports.View,
+                FoodSafePermissions.Reporting.ActionMonthReports.Create,
+                FoodSafePermissions.Reporting.ActionMonthReports.Edit,
+                FoodSafePermissions.Reporting.ActionMonthReports.Submit
             ])
     ];
 

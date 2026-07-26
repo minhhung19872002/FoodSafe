@@ -350,6 +350,91 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             FoodSafePermissions.FoodPoisoning.Incidents.Conclude,
             LocalizableString.Create<FoodSafeResource>("Permission:PoisoningIncidents.Conclude"));
 
+        var reporting = group.AddPermission(
+            FoodSafePermissions.Reporting.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:Reporting"));
+        var ndtpReports = reporting.AddChild(
+            FoodSafePermissions.Reporting.NdtpReports.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:NdtpReports"));
+        ndtpReports.AddChild(
+            FoodSafePermissions.Reporting.NdtpReports.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:NdtpReports.View"));
+        ndtpReports.AddChild(
+            FoodSafePermissions.Reporting.NdtpReports.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:NdtpReports.Create"));
+        ndtpReports.AddChild(
+            FoodSafePermissions.Reporting.NdtpReports.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:NdtpReports.Edit"));
+        ndtpReports.AddChild(
+            FoodSafePermissions.Reporting.NdtpReports.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:NdtpReports.Delete"));
+        ndtpReports.AddChild(
+            FoodSafePermissions.Reporting.NdtpReports.Submit,
+            LocalizableString.Create<FoodSafeResource>("Permission:NdtpReports.Submit"));
+        ndtpReports.AddChild(
+            FoodSafePermissions.Reporting.NdtpReports.Verify,
+            LocalizableString.Create<FoodSafeResource>("Permission:NdtpReports.Verify"));
+        ndtpReports.AddChild(
+            FoodSafePermissions.Reporting.NdtpReports.Return,
+            LocalizableString.Create<FoodSafeResource>("Permission:NdtpReports.Return"));
+        ndtpReports.AddChild(
+            FoodSafePermissions.Reporting.NdtpReports.Complete,
+            LocalizableString.Create<FoodSafeResource>("Permission:NdtpReports.Complete"));
+        var atpWorkReports = reporting.AddChild(
+            FoodSafePermissions.Reporting.AtpWorkReports.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports"));
+        atpWorkReports.AddChild(
+            FoodSafePermissions.Reporting.AtpWorkReports.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports.View"));
+        atpWorkReports.AddChild(
+            FoodSafePermissions.Reporting.AtpWorkReports.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports.Create"));
+        atpWorkReports.AddChild(
+            FoodSafePermissions.Reporting.AtpWorkReports.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports.Edit"));
+        atpWorkReports.AddChild(
+            FoodSafePermissions.Reporting.AtpWorkReports.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports.Delete"));
+        atpWorkReports.AddChild(
+            FoodSafePermissions.Reporting.AtpWorkReports.Submit,
+            LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports.Submit"));
+        atpWorkReports.AddChild(
+            FoodSafePermissions.Reporting.AtpWorkReports.Verify,
+            LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports.Verify"));
+        atpWorkReports.AddChild(
+            FoodSafePermissions.Reporting.AtpWorkReports.Return,
+            LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports.Return"));
+        atpWorkReports.AddChild(
+            FoodSafePermissions.Reporting.AtpWorkReports.Complete,
+            LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports.Complete"));
+        var actionMonthReports = reporting.AddChild(
+            FoodSafePermissions.Reporting.ActionMonthReports.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports"));
+        actionMonthReports.AddChild(
+            FoodSafePermissions.Reporting.ActionMonthReports.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports.View"));
+        actionMonthReports.AddChild(
+            FoodSafePermissions.Reporting.ActionMonthReports.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports.Create"));
+        actionMonthReports.AddChild(
+            FoodSafePermissions.Reporting.ActionMonthReports.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports.Edit"));
+        actionMonthReports.AddChild(
+            FoodSafePermissions.Reporting.ActionMonthReports.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports.Delete"));
+        actionMonthReports.AddChild(
+            FoodSafePermissions.Reporting.ActionMonthReports.Submit,
+            LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports.Submit"));
+        actionMonthReports.AddChild(
+            FoodSafePermissions.Reporting.ActionMonthReports.Verify,
+            LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports.Verify"));
+        actionMonthReports.AddChild(
+            FoodSafePermissions.Reporting.ActionMonthReports.Return,
+            LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports.Return"));
+        actionMonthReports.AddChild(
+            FoodSafePermissions.Reporting.ActionMonthReports.Complete,
+            LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports.Complete"));
+
         var systemAdministration = group.AddPermission(
             FoodSafePermissions.SystemAdministration.Default,
             LocalizableString.Create<FoodSafeResource>("Permission:SystemAdmin"));

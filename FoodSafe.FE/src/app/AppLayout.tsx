@@ -31,6 +31,7 @@ import {
   AuditOutlined,
   AlertOutlined,
   MedicineBoxOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -56,6 +57,7 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   inspection: "Thanh tra - Kiểm tra ATTP",
   "alerts-news": "Cảnh báo và Tin tức",
   "food-poisoning": "Ngộ độc thực phẩm",
+  reporting: "Báo cáo",
   administration: "Quản trị hệ thống",
   identity: "Tài khoản và quyền",
   account: "Tài khoản",
@@ -181,6 +183,12 @@ const NAV_CONFIG: NavEntry[] = [
     icon: <MedicineBoxOutlined />,
     label: "Ngộ độc thực phẩm",
     permission: "FoodSafe.FoodPoisoning.Cases.View",
+  },
+  {
+    key: "/reporting",
+    icon: <BarChartOutlined />,
+    label: "Báo cáo",
+    permission: "FoodSafe.Reporting.NdtpReports.View",
   },
 ];
 
