@@ -1,5 +1,10 @@
 import type { AlertCategory } from "@/features/alerts-news/types/alertsNews.types";
 
+export interface FileDownload {
+  blob: Blob;
+  fileName: string;
+}
+
 export const RISK_LEVEL = {
   Low: 1,
   Medium: 2,

@@ -1,3 +1,8 @@
+export interface FileDownload {
+  blob: Blob;
+  fileName: string;
+}
+
 export const ALERT_CATEGORY = {
   FoodSafety: 1,
   Contamination: 2,

@@ -1,7 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { riskAnalysisApi } from "./riskAnalysisApi";
 import { raKeys } from "./riskAnalysisQueries";
-import type { CreateUpdateRiskAnalysisInput } from "../types/riskAnalysis.types";
+import type {
+  CreateUpdateRiskAnalysisInput,
+  RiskAnalysisFilter,
+} from "../types/riskAnalysis.types";
 
 function useRefresh() {
   const qc = useQueryClient();
@@ -44,5 +47,12 @@ export function usePublishRiskAnalysis() {
   return useMutation({
     mutationFn: (id: string) => riskAnalysisApi.publish(id),
     onSuccess: refresh,
+  });
+}
+
+export function useExportRiskAnalyses() {
+  return useMutation({
+    mutationFn: (filter: RiskAnalysisFilter) =>
+      riskAnalysisApi.exportExcel(filter),
   });
 }

@@ -6,8 +6,19 @@ import type {
   ApiCallLog,
   ApiCallLogDetail,
   ApiCallLogFilter,
+  FileDownload,
   PagedResult,
 } from "../types/dataIntegration.types";
+
+function download(data: Blob, contentDisposition?: string): FileDownload {
+  const encoded =
+    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
+  return {
+    blob: data,
+    fileName: decodeURIComponent(encoded ?? plain ?? "download"),
+  };
+}
 
 export const dataIntegrationApi = {
   getEndpoints: (params: ApiEndpointFilter) =>
@@ -41,4 +52,20 @@ export const dataIntegrationApi = {
     api
       .get<ApiCallLogDetail>(`/api/app/api-call-log/${id}`)
       .then((r) => r.data),
+
+  exportEndpoints: async (filter: ApiEndpointFilter): Promise<FileDownload> => {
+    const response = await api.get<Blob>("/v1/app/api-endpoint/excel/export", {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
+  },
+
+  exportCallLogs: async (filter: ApiCallLogFilter): Promise<FileDownload> => {
+    const response = await api.get<Blob>("/v1/app/api-call-log/excel/export", {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
+  },
 };

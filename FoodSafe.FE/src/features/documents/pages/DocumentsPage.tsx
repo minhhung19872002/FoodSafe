@@ -15,14 +15,21 @@ import {
   Tag,
   type TableColumnsType,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  ExportOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { saveDownload } from "@/utils/download";
 import { useDocuments } from "../api/documentQueries";
 import {
   useCreateDocument,
   useUpdateDocument,
   useDeleteDocument,
+  useExportDocuments,
 } from "../api/documentMutations";
 import {
   DOCUMENT_STATUS,
@@ -44,6 +51,7 @@ export default function DocumentsPage() {
   const createMut = useCreateDocument();
   const updateMut = useUpdateDocument();
   const deleteMut = useDeleteDocument();
+  const exportMut = useExportDocuments();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<AdministrativeDocument | null>(null);
@@ -168,6 +176,18 @@ export default function DocumentsPage() {
             setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
           }
         />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => void message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {hasPermission("FoodSafe.AlertsAndTesting.Documents.Create") && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Thêm văn bản

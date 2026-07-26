@@ -2,8 +2,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { alertApi, newsApi } from "./alertsNewsApi";
 import { alertKeys, newsKeys } from "./alertsNewsQueries";
 import type {
+  AlertFilter,
   CreateUpdateAlertInput,
   CreateUpdateNewsInput,
+  NewsFilter,
 } from "../types/alertsNews.types";
 
 function useAlertRefresh() {
@@ -100,5 +102,17 @@ export function useRecallNews() {
   return useMutation({
     mutationFn: (id: string) => newsApi.recall(id),
     onSuccess: refresh,
+  });
+}
+
+export function useExportAlerts() {
+  return useMutation({
+    mutationFn: (filter: AlertFilter) => alertApi.exportExcel(filter),
+  });
+}
+
+export function useExportNews() {
+  return useMutation({
+    mutationFn: (filter: NewsFilter) => newsApi.exportExcel(filter),
   });
 }

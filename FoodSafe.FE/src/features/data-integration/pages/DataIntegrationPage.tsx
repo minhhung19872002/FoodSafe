@@ -22,15 +22,19 @@ import {
   DeleteOutlined,
   SwapOutlined,
   EyeOutlined,
+  ExportOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { saveDownload } from "@/utils/download";
 import { useApiEndpoints, useApiCallLogs, useApiCallLogDetail } from "../api/dataIntegrationQueries";
 import {
   useCreateEndpoint,
   useUpdateEndpoint,
   useToggleEndpointStatus,
   useDeleteEndpoint,
+  useExportEndpoints,
+  useExportCallLogs,
 } from "../api/dataIntegrationMutations";
 import {
   API_ENDPOINT_STATUS,
@@ -62,6 +66,7 @@ function EndpointsTab() {
   const updateMut = useUpdateEndpoint();
   const toggleMut = useToggleEndpointStatus();
   const deleteMut = useDeleteEndpoint();
+  const exportMut = useExportEndpoints();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<ApiEndpoint | null>(null);
@@ -186,6 +191,18 @@ function EndpointsTab() {
             setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
           }
         />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => void message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {canCreate && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Thêm endpoint
@@ -304,6 +321,7 @@ function CallHistoryTab() {
     maxResultCount: PAGE_SIZE,
   });
   const { data, isLoading } = useApiCallLogs(filter);
+  const exportMut = useExportCallLogs();
   const [detailId, setDetailId] = useState<string>();
   const detail = useApiCallLogDetail(detailId);
 
@@ -409,6 +427,18 @@ function CallHistoryTab() {
             }))
           }
         />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => void message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
       </Space>
       <Table
         rowKey="id"

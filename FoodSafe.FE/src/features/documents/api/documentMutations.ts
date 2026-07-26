@@ -1,7 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { documentApi } from "./documentApi";
 import { docKeys } from "./documentQueries";
-import type { CreateUpdateDocumentInput } from "../types/document.types";
+import type {
+  CreateUpdateDocumentInput,
+  DocumentFilter,
+} from "../types/document.types";
 
 function useRefresh() {
   const qc = useQueryClient();
@@ -36,5 +39,11 @@ export function useDeleteDocument() {
   return useMutation({
     mutationFn: (id: string) => documentApi.delete(id),
     onSuccess: refresh,
+  });
+}
+
+export function useExportDocuments() {
+  return useMutation({
+    mutationFn: (filter: DocumentFilter) => documentApi.exportExcel(filter),
   });
 }

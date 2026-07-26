@@ -6,12 +6,23 @@ import type {
   AtpNews,
   CreateUpdateAlertInput,
   CreateUpdateNewsInput,
+  FileDownload,
   NewsFilter,
   PagedResult,
 } from "../types/alertsNews.types";
 
 const alertEndpoint = "/v1/app/atp-alert";
 const newsEndpoint = "/v1/app/atp-news";
+
+function download(data: Blob, contentDisposition?: string): FileDownload {
+  const encoded =
+    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
+  return {
+    blob: data,
+    fileName: decodeURIComponent(encoded ?? plain ?? "download"),
+  };
+}
 
 export const alertApi = {
   async list(filter: AlertFilter): Promise<PagedResult<AtpAlert>> {
@@ -40,6 +51,13 @@ export const alertApi = {
     return (
       await api.post<AtpAlert>(`${alertEndpoint}/${id}/recall`, { reason })
     ).data;
+  },
+  async exportExcel(filter: AlertFilter): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${alertEndpoint}/excel/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
   },
 };
 
@@ -75,5 +93,12 @@ export const newsApi = {
         params: { filter },
       })
     ).data;
+  },
+  async exportExcel(filter: NewsFilter): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${newsEndpoint}/excel/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
   },
 };

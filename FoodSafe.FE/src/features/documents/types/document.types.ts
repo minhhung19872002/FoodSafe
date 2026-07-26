@@ -1,3 +1,8 @@
+export interface FileDownload {
+  blob: Blob;
+  fileName: string;
+}
+
 export const DOCUMENT_STATUS = {
   Active: 1,
   Expired: 2,

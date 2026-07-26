@@ -1,3 +1,8 @@
+export interface FileDownload {
+  blob: Blob;
+  fileName: string;
+}
+
 export const API_CALL_DIRECTION = {
   Inbound: 1,
   Outbound: 2,

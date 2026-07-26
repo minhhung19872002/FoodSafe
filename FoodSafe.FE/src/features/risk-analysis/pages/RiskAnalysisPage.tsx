@@ -18,9 +18,11 @@ import {
   EditOutlined,
   DeleteOutlined,
   SendOutlined,
+  ExportOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { saveDownload } from "@/utils/download";
 import {
   ALERT_CATEGORY,
   ALERT_CATEGORY_LABELS,
@@ -31,6 +33,7 @@ import {
   useUpdateRiskAnalysis,
   useDeleteRiskAnalysis,
   usePublishRiskAnalysis,
+  useExportRiskAnalyses,
 } from "../api/riskAnalysisMutations";
 import {
   RISK_LEVEL,
@@ -57,6 +60,7 @@ export default function RiskAnalysisPage() {
   const updateMut = useUpdateRiskAnalysis();
   const deleteMut = useDeleteRiskAnalysis();
   const publishMut = usePublishRiskAnalysis();
+  const exportMut = useExportRiskAnalyses();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<RiskAnalysis | null>(null);
@@ -202,6 +206,18 @@ export default function RiskAnalysisPage() {
             setFilter((f) => ({ ...f, riskLevel: v, skipCount: 0 }))
           }
         />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => void message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {hasPermission(
           "FoodSafe.AlertsAndTesting.RiskAnalyses.Create",
         ) && (

@@ -3,10 +3,21 @@ import type {
   AdministrativeDocument,
   DocumentFilter,
   CreateUpdateDocumentInput,
+  FileDownload,
   PagedResult,
 } from "../types/document.types";
 
 const endpoint = "/v1/app/administrative-document";
+
+function download(data: Blob, contentDisposition?: string): FileDownload {
+  const encoded =
+    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
+  return {
+    blob: data,
+    fileName: decodeURIComponent(encoded ?? plain ?? "download"),
+  };
+}
 
 export const documentApi = {
   async list(
@@ -35,5 +46,12 @@ export const documentApi = {
   },
   async delete(id: string): Promise<void> {
     await api.delete(`${endpoint}/${id}`);
+  },
+  async exportExcel(filter: DocumentFilter): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${endpoint}/excel/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
   },
 };

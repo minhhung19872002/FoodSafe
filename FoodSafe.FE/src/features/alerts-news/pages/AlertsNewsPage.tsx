@@ -19,10 +19,12 @@ import {
   SendOutlined,
   UndoOutlined,
   EyeOutlined,
+  ExportOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { RevokeModal } from "@/components/RevokeModal";
+import { saveDownload } from "@/utils/download";
 import { useAlerts, useNews } from "../api/alertsNewsQueries";
 import {
   useCreateAlert,
@@ -35,6 +37,8 @@ import {
   useDeleteNews,
   usePublishNews,
   useRecallNews,
+  useExportAlerts,
+  useExportNews,
 } from "../api/alertsNewsMutations";
 import { AlertEditorModal } from "../components/AlertEditorModal";
 import { NewsEditorModal } from "../components/NewsEditorModal";
@@ -73,6 +77,7 @@ function AlertsTab() {
   const deleteMut = useDeleteAlert();
   const publishMut = usePublishAlert();
   const recallMut = useRecallAlert();
+  const exportMut = useExportAlerts();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<AtpAlert | undefined>();
@@ -258,6 +263,18 @@ function AlertsTab() {
           )}
         />
         <div style={{ flex: 1 }} />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => void message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {canCreate && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Tạo cảnh báo
@@ -324,6 +341,7 @@ function NewsTab() {
   const deleteMut = useDeleteNews();
   const publishMut = usePublishNews();
   const recallMut = useRecallNews();
+  const exportMut = useExportNews();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<AtpNews | undefined>();
@@ -494,6 +512,18 @@ function NewsTab() {
           }))}
         />
         <div style={{ flex: 1 }} />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => void message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {canCreate && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Tạo tin tức
