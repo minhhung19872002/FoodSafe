@@ -77,6 +77,9 @@ export const InspectionPage = lazy(
 export const AlertsNewsPage = lazy(
   () => import("@/features/alerts-news/pages/AlertsNewsPage"),
 );
+export const FoodPoisoningPage = lazy(
+  () => import("@/features/food-poisoning/pages/FoodPoisoningPage"),
+);
 
 export function RouteLoading() {
   return (

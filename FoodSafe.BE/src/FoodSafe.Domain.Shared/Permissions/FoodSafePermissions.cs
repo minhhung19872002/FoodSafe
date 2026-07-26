@@ -168,6 +168,32 @@ public static class FoodSafePermissions
         }
     }
 
+    public static class FoodPoisoning
+    {
+        public const string Default = GroupName + ".FoodPoisoning";
+
+        public static class Cases
+        {
+            public const string Default = FoodPoisoning.Default + ".Cases";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string Verify = Default + ".Verify";
+        }
+
+        public static class Incidents
+        {
+            public const string Default = FoodPoisoning.Default + ".Incidents";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string Verify = Default + ".Verify";
+            public const string Conclude = Default + ".Conclude";
+        }
+    }
+
     public static class SystemAdministration
     {
         public const string Default = GroupName + ".SystemAdmin";

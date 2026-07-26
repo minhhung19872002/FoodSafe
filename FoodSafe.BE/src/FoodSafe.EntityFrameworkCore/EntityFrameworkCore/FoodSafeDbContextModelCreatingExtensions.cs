@@ -10,6 +10,7 @@ using FoodSafe.FileManagement;
 using FoodSafe.Licensing;
 using FoodSafe.Inspection;
 using FoodSafe.AlertsAndTesting;
+using FoodSafe.FoodPoisoning;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -26,6 +27,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
         ConfigureFileManagement(builder);
         ConfigureInspection(builder);
         ConfigureAlertsAndTesting(builder);
+        ConfigureFoodPoisoning(builder);
 
         builder.Entity<Organization>(entity =>
         {
@@ -1663,6 +1665,209 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.HasIndex(x => new { x.NewsId, x.AlertId })
                 .IsUnique()
                 .HasDatabaseName("uq_nla_news_alert");
+        });
+    }
+
+    private static void ConfigureFoodPoisoning(ModelBuilder builder)
+    {
+        builder.Entity<FoodPoisoningIncident>(entity =>
+        {
+            entity.ToTable("food_poisoning_incidents");
+            entity.ConfigureByConvention();
+
+            entity.HasKey(x => x.Id).HasName("pk_fpi");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+            entity.Property(x => x.IncidentCode).HasColumnName("incident_code").HasMaxLength(50).IsRequired();
+            entity.Property(x => x.OccurrenceDate).HasColumnName("occurrence_date");
+            entity.Property(x => x.EndDate).HasColumnName("end_date");
+
+            entity.Property(x => x.LocationDescription).HasColumnName("location_description");
+            entity.Property(x => x.LocationCommuneId).HasColumnName("location_commune_id");
+            entity.Property(x => x.LocationDistrictId).HasColumnName("location_district_id");
+            entity.Property(x => x.LocationProvinceId).HasColumnName("location_province_id");
+            entity.Property(x => x.LocationLatitude).HasColumnName("location_latitude");
+            entity.Property(x => x.LocationLongitude).HasColumnName("location_longitude");
+
+            entity.Property(x => x.ExposedCount).HasColumnName("exposed_count").HasDefaultValue(0);
+            entity.Property(x => x.AffectedCount).HasColumnName("affected_count").HasDefaultValue(0);
+            entity.Property(x => x.HospitalizedCount).HasColumnName("hospitalized_count").HasDefaultValue(0);
+            entity.Property(x => x.DeathCount).HasColumnName("death_count").HasDefaultValue(0);
+
+            entity.Property(x => x.SuspectedFood).HasColumnName("suspected_food");
+            entity.Property(x => x.FoodSource).HasColumnName("food_source").HasMaxLength(200);
+            entity.Property(x => x.FoodServiceType).HasColumnName("food_service_type").HasMaxLength(200);
+
+            entity.Property(x => x.CauseAssessmentValue).HasColumnName("cause_assessment");
+            entity.Property(x => x.CausativeAgent).HasColumnName("causative_agent");
+            entity.Property(x => x.Pathogen).HasColumnName("pathogen");
+
+            entity.Property(x => x.InvestigationTeam).HasColumnName("investigation_team");
+            entity.Property(x => x.ControlMeasures).HasColumnName("control_measures");
+            entity.Property(x => x.PreventionMeasures).HasColumnName("prevention_measures");
+            entity.Property(x => x.Conclusion).HasColumnName("conclusion");
+
+            entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.ReportedById).HasColumnName("reported_by_id");
+            entity.Property(x => x.ReportedAt).HasColumnName("reported_at");
+            entity.Property(x => x.VerifiedById).HasColumnName("verified_by_id");
+            entity.Property(x => x.VerifiedAt).HasColumnName("verified_at");
+            entity.Property(x => x.ConcludedById).HasColumnName("concluded_by_id");
+            entity.Property(x => x.ConcludedAt).HasColumnName("concluded_at");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+
+            ConfigureAggregateAudit(entity, "pk_fpi");
+
+            entity.HasCheckConstraint("chk_fpi_status", "status IN (1, 2, 3, 4)");
+            entity.HasCheckConstraint("chk_fpi_report_evidence",
+                "status = 1 OR (reported_by_id IS NOT NULL AND reported_at IS NOT NULL)");
+            entity.HasCheckConstraint("chk_fpi_verify_evidence",
+                "status NOT IN (3, 4) OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)");
+            entity.HasCheckConstraint("chk_fpi_conclude_evidence",
+                "status <> 4 OR (concluded_by_id IS NOT NULL AND concluded_at IS NOT NULL)");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_fpi_organization")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.Status })
+                .HasDatabaseName("idx_fpi_org_status");
+            entity.HasIndex(x => x.OccurrenceDate)
+                .HasDatabaseName("idx_fpi_occurrence_date");
+
+            entity.HasMany(x => x.ErrorReports)
+                .WithOne()
+                .HasForeignKey(x => x.IncidentId)
+                .HasConstraintName("fk_pier_incident")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<FoodPoisoningCase>(entity =>
+        {
+            entity.ToTable("food_poisoning_cases");
+            entity.ConfigureByConvention();
+
+            entity.HasKey(x => x.Id).HasName("pk_fpc");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+            entity.Property(x => x.IncidentId).HasColumnName("incident_id");
+            entity.Property(x => x.CaseCode).HasColumnName("case_code").HasMaxLength(50).IsRequired();
+            entity.Property(x => x.ReportDate).HasColumnName("report_date").IsRequired();
+            entity.Property(x => x.OccurrenceDate).HasColumnName("occurrence_date");
+
+            entity.Property(x => x.LocationDescription).HasColumnName("location_description");
+            entity.Property(x => x.LocationCommuneId).HasColumnName("location_commune_id");
+            entity.Property(x => x.LocationDistrictId).HasColumnName("location_district_id");
+            entity.Property(x => x.LocationProvinceId).HasColumnName("location_province_id");
+            entity.Property(x => x.LocationLatitude).HasColumnName("location_latitude");
+            entity.Property(x => x.LocationLongitude).HasColumnName("location_longitude");
+
+            entity.Property(x => x.VictimName).HasColumnName("victim_name").HasMaxLength(200);
+            entity.Property(x => x.VictimAge).HasColumnName("victim_age");
+            entity.Property(x => x.VictimGender).HasColumnName("victim_gender");
+            entity.Property(x => x.VictimPhone).HasColumnName("victim_phone").HasMaxLength(50);
+            entity.Property(x => x.VictimAddress).HasColumnName("victim_address");
+
+            entity.Property(x => x.SuspectedFood).HasColumnName("suspected_food");
+            entity.Property(x => x.FoodSource).HasColumnName("food_source").HasMaxLength(200);
+            entity.Property(x => x.FoodPreparationDate).HasColumnName("food_preparation_date");
+            entity.Property(x => x.Symptoms).HasColumnName("symptoms");
+            entity.Property(x => x.OnsetTime).HasColumnName("onset_time");
+
+            entity.Property(x => x.MedicalFacility).HasColumnName("medical_facility").HasMaxLength(300);
+            entity.Property(x => x.TreatmentStartDate).HasColumnName("treatment_start_date");
+            entity.Property(x => x.TreatmentResult).HasColumnName("treatment_result");
+
+            entity.Property(x => x.ReporterName).HasColumnName("reporter_name").HasMaxLength(200);
+            entity.Property(x => x.ReporterPhone).HasColumnName("reporter_phone").HasMaxLength(50);
+            entity.Property(x => x.ReporterOrganization).HasColumnName("reporter_organization").HasMaxLength(300);
+            entity.Property(x => x.ReporterRelation).HasColumnName("reporter_relation").HasMaxLength(100);
+
+            entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.ReportedById).HasColumnName("reported_by_id");
+            entity.Property(x => x.ReportedAt).HasColumnName("reported_at");
+            entity.Property(x => x.VerifiedById).HasColumnName("verified_by_id");
+            entity.Property(x => x.VerifiedAt).HasColumnName("verified_at");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+
+            ConfigureAggregateAudit(entity, "pk_fpc");
+
+            entity.HasCheckConstraint("chk_fpc_status", "status IN (1, 2, 3)");
+            entity.HasCheckConstraint("chk_fpc_report_evidence",
+                "status = 1 OR (reported_by_id IS NOT NULL AND reported_at IS NOT NULL)");
+            entity.HasCheckConstraint("chk_fpc_verify_evidence",
+                "status <> 3 OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_fpc_organization")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<FoodPoisoningIncident>()
+                .WithMany()
+                .HasForeignKey(x => x.IncidentId)
+                .HasConstraintName("fk_fpc_incident")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.Status })
+                .HasDatabaseName("idx_fpc_org_status");
+            entity.HasIndex(x => x.IncidentId)
+                .HasDatabaseName("idx_fpc_incident");
+            entity.HasIndex(x => x.ReportDate)
+                .HasDatabaseName("idx_fpc_report_date");
+
+            entity.HasMany(x => x.ErrorReports)
+                .WithOne()
+                .HasForeignKey(x => x.CaseId)
+                .HasConstraintName("fk_pcer_case")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PoisoningCaseErrorReport>(entity =>
+        {
+            entity.ToTable("poisoning_case_error_reports");
+
+            entity.HasKey(x => x.Id).HasName("pk_pcer");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.CaseId).HasColumnName("case_id").IsRequired();
+            entity.Property(x => x.FromOrganizationId).HasColumnName("from_organization_id").IsRequired();
+            entity.Property(x => x.ErrorDescription).HasColumnName("error_description").IsRequired();
+            entity.Property(x => x.CorrectionRequest).HasColumnName("correction_request").IsRequired();
+            entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.Response).HasColumnName("response");
+            entity.Property(x => x.RespondedAt).HasColumnName("responded_at");
+            entity.Property(x => x.RespondedById).HasColumnName("responded_by_id");
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+
+            entity.HasCheckConstraint("chk_pcer_status", "status IN (1, 2, 3)");
+
+            entity.HasIndex(x => x.CaseId).HasDatabaseName("idx_pcer_case");
+        });
+
+        builder.Entity<PoisoningIncidentErrorReport>(entity =>
+        {
+            entity.ToTable("poisoning_incident_error_reports");
+
+            entity.HasKey(x => x.Id).HasName("pk_pier");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.IncidentId).HasColumnName("incident_id").IsRequired();
+            entity.Property(x => x.FromOrganizationId).HasColumnName("from_organization_id").IsRequired();
+            entity.Property(x => x.ErrorDescription).HasColumnName("error_description").IsRequired();
+            entity.Property(x => x.CorrectionRequest).HasColumnName("correction_request").IsRequired();
+            entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.Response).HasColumnName("response");
+            entity.Property(x => x.RespondedAt).HasColumnName("responded_at");
+            entity.Property(x => x.RespondedById).HasColumnName("responded_by_id");
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+
+            entity.HasCheckConstraint("chk_pier_status", "status IN (1, 2, 3)");
+
+            entity.HasIndex(x => x.IncidentId).HasDatabaseName("idx_pier_incident");
         });
     }
 }

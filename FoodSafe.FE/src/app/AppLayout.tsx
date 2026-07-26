@@ -30,6 +30,7 @@ import {
   ExportOutlined,
   AuditOutlined,
   AlertOutlined,
+  MedicineBoxOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -54,6 +55,7 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   "export-food-certificates": "GCN Xuất khẩu thực phẩm",
   inspection: "Thanh tra - Kiểm tra ATTP",
   "alerts-news": "Cảnh báo và Tin tức",
+  "food-poisoning": "Ngộ độc thực phẩm",
   administration: "Quản trị hệ thống",
   identity: "Tài khoản và quyền",
   account: "Tài khoản",
@@ -173,6 +175,12 @@ const NAV_CONFIG: NavEntry[] = [
     icon: <AlertOutlined />,
     label: "Cảnh báo và Tin tức",
     permission: "FoodSafe.AlertsAndTesting.Alerts.View",
+  },
+  {
+    key: "/food-poisoning",
+    icon: <MedicineBoxOutlined />,
+    label: "Ngộ độc thực phẩm",
+    permission: "FoodSafe.FoodPoisoning.Cases.View",
   },
 ];
 

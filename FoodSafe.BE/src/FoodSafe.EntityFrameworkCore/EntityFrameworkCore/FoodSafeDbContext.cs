@@ -18,6 +18,7 @@ using FoodSafe.FileManagement;
 using FoodSafe.Licensing;
 using FoodSafe.Inspection;
 using FoodSafe.AlertsAndTesting;
+using FoodSafe.FoodPoisoning;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -76,6 +77,10 @@ public class FoodSafeDbContext :
     public DbSet<AtpAlert> AtpAlerts { get; set; }
     public DbSet<AtpNews> AtpNewsArticles { get; set; }
     public DbSet<NewsLinkedAlert> NewsLinkedAlerts { get; set; }
+    public DbSet<FoodPoisoningCase> FoodPoisoningCases { get; set; }
+    public DbSet<FoodPoisoningIncident> FoodPoisoningIncidents { get; set; }
+    public DbSet<PoisoningCaseErrorReport> PoisoningCaseErrorReports { get; set; }
+    public DbSet<PoisoningIncidentErrorReport> PoisoningIncidentErrorReports { get; set; }
     public DbSet<DocumentOwner> DocumentOwners { get; set; }
     public DbSet<FileAttachment> FileAttachments { get; set; }
 

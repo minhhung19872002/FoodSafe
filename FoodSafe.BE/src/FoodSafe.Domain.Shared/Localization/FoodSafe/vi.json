@@ -144,6 +144,10 @@
     "FoodSafe:Catalog:0002": "Danh mục đang được sử dụng, không thể xóa.",
     "FoodSafe:FoodPoisoning:0001": "Không tìm thấy ca ngộ độc.",
     "FoodSafe:FoodPoisoning:0002": "Không tìm thấy vụ ngộ độc.",
+    "FoodSafe:FoodPoisoning:0003": "Chuyển trạng thái không hợp lệ.",
+    "FoodSafe:FoodPoisoning:0004": "Chỉ được báo sai sót khi ở trạng thái Đã xác minh.",
+    "FoodSafe:FoodPoisoning:0005": "Vui lòng nhập kết luận.",
+    "FoodSafe:FoodPoisoning:0006": "Chỉ được sửa khi ở trạng thái Nháp.",
     "FoodSafe:Account:0001": "Mật khẩu hiện tại không đúng.",
     "FoodSafe:Account:0002": "Mật khẩu mới không được trùng với 5 mật khẩu gần nhất.",
     "FoodSafe:Account:0003": "Không thể đổi mật khẩu. Vui lòng kiểm tra các yêu cầu về độ mạnh mật khẩu.",
@@ -188,6 +192,20 @@
     "FoodSafe:News:0003": "Chỉ tin tức đã xuất bản mới được thu hồi.",
     "FoodSafe:News:0004": "Không thể sửa tin tức khi không ở trạng thái Nháp.",
     "FoodSafe:News:0005": "Cảnh báo đã được liên kết.",
-    "FoodSafe:News:0006": "Không tìm thấy liên kết cảnh báo."
+    "FoodSafe:News:0006": "Không tìm thấy liên kết cảnh báo.",
+    "Permission:FoodPoisoning": "Ngộ độc thực phẩm",
+    "Permission:PoisoningCases": "Ca ngộ độc nhỏ lẻ",
+    "Permission:PoisoningCases.View": "Xem ca ngộ độc",
+    "Permission:PoisoningCases.Create": "Tạo ca ngộ độc",
+    "Permission:PoisoningCases.Edit": "Sửa ca ngộ độc",
+    "Permission:PoisoningCases.Delete": "Xóa ca ngộ độc",
+    "Permission:PoisoningCases.Verify": "Xác minh ca ngộ độc",
+    "Permission:PoisoningIncidents": "Vụ ngộ độc tập thể",
+    "Permission:PoisoningIncidents.View": "Xem vụ ngộ độc",
+    "Permission:PoisoningIncidents.Create": "Tạo vụ ngộ độc",
+    "Permission:PoisoningIncidents.Edit": "Sửa vụ ngộ độc",
+    "Permission:PoisoningIncidents.Delete": "Xóa vụ ngộ độc",
+    "Permission:PoisoningIncidents.Verify": "Xác minh vụ ngộ độc",
+    "Permission:PoisoningIncidents.Conclude": "Kết luận vụ ngộ độc"
   }
 }

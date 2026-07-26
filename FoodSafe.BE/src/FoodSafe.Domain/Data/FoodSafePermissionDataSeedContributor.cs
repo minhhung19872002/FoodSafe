@@ -167,6 +167,20 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.AlertsAndTesting.News.Edit,
         FoodSafePermissions.AlertsAndTesting.News.Delete,
         FoodSafePermissions.AlertsAndTesting.News.Publish,
+        FoodSafePermissions.FoodPoisoning.Default,
+        FoodSafePermissions.FoodPoisoning.Cases.Default,
+        FoodSafePermissions.FoodPoisoning.Cases.View,
+        FoodSafePermissions.FoodPoisoning.Cases.Create,
+        FoodSafePermissions.FoodPoisoning.Cases.Edit,
+        FoodSafePermissions.FoodPoisoning.Cases.Delete,
+        FoodSafePermissions.FoodPoisoning.Cases.Verify,
+        FoodSafePermissions.FoodPoisoning.Incidents.Default,
+        FoodSafePermissions.FoodPoisoning.Incidents.View,
+        FoodSafePermissions.FoodPoisoning.Incidents.Create,
+        FoodSafePermissions.FoodPoisoning.Incidents.Edit,
+        FoodSafePermissions.FoodPoisoning.Incidents.Delete,
+        FoodSafePermissions.FoodPoisoning.Incidents.Verify,
+        FoodSafePermissions.FoodPoisoning.Incidents.Conclude,
         FoodSafePermissions.DataScope.All
     ];
 
@@ -287,7 +301,19 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.AlertsAndTesting.News.View,
                 FoodSafePermissions.AlertsAndTesting.News.Create,
                 FoodSafePermissions.AlertsAndTesting.News.Edit,
-                FoodSafePermissions.AlertsAndTesting.News.Publish
+                FoodSafePermissions.AlertsAndTesting.News.Publish,
+                FoodSafePermissions.FoodPoisoning.Default,
+                FoodSafePermissions.FoodPoisoning.Cases.Default,
+                FoodSafePermissions.FoodPoisoning.Cases.View,
+                FoodSafePermissions.FoodPoisoning.Cases.Create,
+                FoodSafePermissions.FoodPoisoning.Cases.Edit,
+                FoodSafePermissions.FoodPoisoning.Cases.Verify,
+                FoodSafePermissions.FoodPoisoning.Incidents.Default,
+                FoodSafePermissions.FoodPoisoning.Incidents.View,
+                FoodSafePermissions.FoodPoisoning.Incidents.Create,
+                FoodSafePermissions.FoodPoisoning.Incidents.Edit,
+                FoodSafePermissions.FoodPoisoning.Incidents.Verify,
+                FoodSafePermissions.FoodPoisoning.Incidents.Conclude
             ]),
         new(
             "DistrictAdmin",
@@ -329,6 +355,17 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.AlertsAndTesting.News.View)
                 .Append(FoodSafePermissions.AlertsAndTesting.News.Create)
                 .Append(FoodSafePermissions.AlertsAndTesting.News.Edit)
+                .Append(FoodSafePermissions.FoodPoisoning.Default)
+                .Append(FoodSafePermissions.FoodPoisoning.Cases.Default)
+                .Append(FoodSafePermissions.FoodPoisoning.Cases.View)
+                .Append(FoodSafePermissions.FoodPoisoning.Cases.Create)
+                .Append(FoodSafePermissions.FoodPoisoning.Cases.Edit)
+                .Append(FoodSafePermissions.FoodPoisoning.Cases.Verify)
+                .Append(FoodSafePermissions.FoodPoisoning.Incidents.Default)
+                .Append(FoodSafePermissions.FoodPoisoning.Incidents.View)
+                .Append(FoodSafePermissions.FoodPoisoning.Incidents.Create)
+                .Append(FoodSafePermissions.FoodPoisoning.Incidents.Edit)
+                .Append(FoodSafePermissions.FoodPoisoning.Incidents.Verify)
                 .ToArray()),
         new(
             "DistrictStaff",
@@ -387,7 +424,18 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.AlertsAndTesting.News.Default,
                 FoodSafePermissions.AlertsAndTesting.News.View,
                 FoodSafePermissions.AlertsAndTesting.News.Create,
-                FoodSafePermissions.AlertsAndTesting.News.Edit
+                FoodSafePermissions.AlertsAndTesting.News.Edit,
+                FoodSafePermissions.FoodPoisoning.Default,
+                FoodSafePermissions.FoodPoisoning.Cases.Default,
+                FoodSafePermissions.FoodPoisoning.Cases.View,
+                FoodSafePermissions.FoodPoisoning.Cases.Create,
+                FoodSafePermissions.FoodPoisoning.Cases.Edit,
+                FoodSafePermissions.FoodPoisoning.Cases.Verify,
+                FoodSafePermissions.FoodPoisoning.Incidents.Default,
+                FoodSafePermissions.FoodPoisoning.Incidents.View,
+                FoodSafePermissions.FoodPoisoning.Incidents.Create,
+                FoodSafePermissions.FoodPoisoning.Incidents.Edit,
+                FoodSafePermissions.FoodPoisoning.Incidents.Verify
             ]),
         new(
             "CommuneAdmin",
@@ -414,6 +462,15 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.AlertsAndTesting.Alerts.View)
                 .Append(FoodSafePermissions.AlertsAndTesting.News.Default)
                 .Append(FoodSafePermissions.AlertsAndTesting.News.View)
+                .Append(FoodSafePermissions.FoodPoisoning.Default)
+                .Append(FoodSafePermissions.FoodPoisoning.Cases.Default)
+                .Append(FoodSafePermissions.FoodPoisoning.Cases.View)
+                .Append(FoodSafePermissions.FoodPoisoning.Cases.Create)
+                .Append(FoodSafePermissions.FoodPoisoning.Cases.Edit)
+                .Append(FoodSafePermissions.FoodPoisoning.Incidents.Default)
+                .Append(FoodSafePermissions.FoodPoisoning.Incidents.View)
+                .Append(FoodSafePermissions.FoodPoisoning.Incidents.Create)
+                .Append(FoodSafePermissions.FoodPoisoning.Incidents.Edit)
                 .ToArray()),
         new(
             "CommuneStaff",
@@ -457,7 +514,16 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.AlertsAndTesting.Alerts.Default,
                 FoodSafePermissions.AlertsAndTesting.Alerts.View,
                 FoodSafePermissions.AlertsAndTesting.News.Default,
-                FoodSafePermissions.AlertsAndTesting.News.View
+                FoodSafePermissions.AlertsAndTesting.News.View,
+                FoodSafePermissions.FoodPoisoning.Default,
+                FoodSafePermissions.FoodPoisoning.Cases.Default,
+                FoodSafePermissions.FoodPoisoning.Cases.View,
+                FoodSafePermissions.FoodPoisoning.Cases.Create,
+                FoodSafePermissions.FoodPoisoning.Cases.Edit,
+                FoodSafePermissions.FoodPoisoning.Incidents.Default,
+                FoodSafePermissions.FoodPoisoning.Incidents.View,
+                FoodSafePermissions.FoodPoisoning.Incidents.Create,
+                FoodSafePermissions.FoodPoisoning.Incidents.Edit
             ])
     ];
 

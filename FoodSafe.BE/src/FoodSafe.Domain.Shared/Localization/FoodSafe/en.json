@@ -167,6 +167,26 @@
     "FoodSafe:News:0003": "Can only recall published news.",
     "FoodSafe:News:0004": "Cannot modify news that is not in Draft status.",
     "FoodSafe:News:0005": "Alert is already linked.",
-    "FoodSafe:News:0006": "Linked alert not found."
+    "FoodSafe:News:0006": "Linked alert not found.",
+    "FoodSafe:FoodPoisoning:0001": "Poisoning case not found.",
+    "FoodSafe:FoodPoisoning:0002": "Poisoning incident not found.",
+    "FoodSafe:FoodPoisoning:0003": "Invalid status transition.",
+    "FoodSafe:FoodPoisoning:0004": "Can only report errors on verified records.",
+    "FoodSafe:FoodPoisoning:0005": "Conclusion is required.",
+    "FoodSafe:FoodPoisoning:0006": "Can only modify records in Draft status.",
+    "Permission:FoodPoisoning": "Food Poisoning",
+    "Permission:PoisoningCases": "Poisoning Cases",
+    "Permission:PoisoningCases.View": "View poisoning cases",
+    "Permission:PoisoningCases.Create": "Create poisoning cases",
+    "Permission:PoisoningCases.Edit": "Edit poisoning cases",
+    "Permission:PoisoningCases.Delete": "Delete poisoning cases",
+    "Permission:PoisoningCases.Verify": "Verify poisoning cases",
+    "Permission:PoisoningIncidents": "Poisoning Incidents",
+    "Permission:PoisoningIncidents.View": "View poisoning incidents",
+    "Permission:PoisoningIncidents.Create": "Create poisoning incidents",
+    "Permission:PoisoningIncidents.Edit": "Edit poisoning incidents",
+    "Permission:PoisoningIncidents.Delete": "Delete poisoning incidents",
+    "Permission:PoisoningIncidents.Verify": "Verify poisoning incidents",
+    "Permission:PoisoningIncidents.Conclude": "Conclude poisoning incidents"
   }
 }

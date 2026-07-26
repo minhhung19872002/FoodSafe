@@ -307,6 +307,49 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             FoodSafePermissions.AlertsAndTesting.News.Publish,
             LocalizableString.Create<FoodSafeResource>("Permission:News.Publish"));
 
+        var foodPoisoning = group.AddPermission(
+            FoodSafePermissions.FoodPoisoning.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:FoodPoisoning"));
+        var poisoningCases = foodPoisoning.AddChild(
+            FoodSafePermissions.FoodPoisoning.Cases.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningCases"));
+        poisoningCases.AddChild(
+            FoodSafePermissions.FoodPoisoning.Cases.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningCases.View"));
+        poisoningCases.AddChild(
+            FoodSafePermissions.FoodPoisoning.Cases.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningCases.Create"));
+        poisoningCases.AddChild(
+            FoodSafePermissions.FoodPoisoning.Cases.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningCases.Edit"));
+        poisoningCases.AddChild(
+            FoodSafePermissions.FoodPoisoning.Cases.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningCases.Delete"));
+        poisoningCases.AddChild(
+            FoodSafePermissions.FoodPoisoning.Cases.Verify,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningCases.Verify"));
+        var poisoningIncidents = foodPoisoning.AddChild(
+            FoodSafePermissions.FoodPoisoning.Incidents.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningIncidents"));
+        poisoningIncidents.AddChild(
+            FoodSafePermissions.FoodPoisoning.Incidents.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningIncidents.View"));
+        poisoningIncidents.AddChild(
+            FoodSafePermissions.FoodPoisoning.Incidents.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningIncidents.Create"));
+        poisoningIncidents.AddChild(
+            FoodSafePermissions.FoodPoisoning.Incidents.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningIncidents.Edit"));
+        poisoningIncidents.AddChild(
+            FoodSafePermissions.FoodPoisoning.Incidents.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningIncidents.Delete"));
+        poisoningIncidents.AddChild(
+            FoodSafePermissions.FoodPoisoning.Incidents.Verify,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningIncidents.Verify"));
+        poisoningIncidents.AddChild(
+            FoodSafePermissions.FoodPoisoning.Incidents.Conclude,
+            LocalizableString.Create<FoodSafeResource>("Permission:PoisoningIncidents.Conclude"));
+
         var systemAdministration = group.AddPermission(
             FoodSafePermissions.SystemAdministration.Default,
             LocalizableString.Create<FoodSafeResource>("Permission:SystemAdmin"));

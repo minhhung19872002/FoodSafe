@@ -18,6 +18,7 @@ import {
   PublicExportFoodCertificateLookupPage,
   InspectionPage,
   AlertsNewsPage,
+  FoodPoisoningPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -228,6 +229,16 @@ export const router = createBrowserRouter([
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.AlertsAndTesting.Alerts.View">
               <AlertsNewsPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "food-poisoning",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.FoodPoisoning.Cases.View">
+              <FoodPoisoningPage />
             </PermissionRoute>
           </Suspense>
         ),

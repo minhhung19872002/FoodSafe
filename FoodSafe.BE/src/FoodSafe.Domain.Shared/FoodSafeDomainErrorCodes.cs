@@ -196,6 +196,10 @@ public static class FoodSafeDomainErrorCodes
     {
         public const string CaseNotFound = "FoodSafe:FoodPoisoning:0001";
         public const string IncidentNotFound = "FoodSafe:FoodPoisoning:0002";
+        public const string InvalidStatusTransition = "FoodSafe:FoodPoisoning:0003";
+        public const string CanOnlyReportErrorOnVerified = "FoodSafe:FoodPoisoning:0004";
+        public const string ConclusionRequired = "FoodSafe:FoodPoisoning:0005";
+        public const string CannotModifyNonDraft = "FoodSafe:FoodPoisoning:0006";
     }
 
     public static class Alert

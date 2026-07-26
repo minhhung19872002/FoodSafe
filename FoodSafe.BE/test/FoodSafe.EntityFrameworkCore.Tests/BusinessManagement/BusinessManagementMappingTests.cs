@@ -1,5 +1,6 @@
 using FoodSafe.EntityFrameworkCore;
 using FoodSafe.AlertsAndTesting;
+using FoodSafe.FoodPoisoning;
 using FoodSafe.Inspection;
 using FoodSafe.Licensing;
 using FoodSafe.Security;
@@ -65,6 +66,14 @@ public sealed class BusinessManagementMappingTests
             .GetTableName().ShouldBe("atp_news");
         context.Model.FindEntityType(typeof(NewsLinkedAlert))!
             .GetTableName().ShouldBe("news_linked_alerts");
+        context.Model.FindEntityType(typeof(FoodPoisoningCase))!
+            .GetTableName().ShouldBe("food_poisoning_cases");
+        context.Model.FindEntityType(typeof(FoodPoisoningIncident))!
+            .GetTableName().ShouldBe("food_poisoning_incidents");
+        context.Model.FindEntityType(typeof(PoisoningCaseErrorReport))!
+            .GetTableName().ShouldBe("poisoning_case_error_reports");
+        context.Model.FindEntityType(typeof(PoisoningIncidentErrorReport))!
+            .GetTableName().ShouldBe("poisoning_incident_error_reports");
     }
 
     [Fact]
