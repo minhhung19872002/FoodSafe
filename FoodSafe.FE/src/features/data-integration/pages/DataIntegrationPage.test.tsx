@@ -1,0 +1,101 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { App } from "antd";
+import { HttpResponse, http } from "msw";
+import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { server } from "@/test/server";
+import DataIntegrationPage from "./DataIntegrationPage";
+
+function renderPage() {
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  return render(
+    <QueryClientProvider client={client}>
+      <App>
+        <DataIntegrationPage />
+      </App>
+    </QueryClientProvider>,
+  );
+}
+
+function mockData() {
+  server.use(
+    http.get("*/api/app/api-endpoint", () =>
+      HttpResponse.json({
+        totalCount: 1,
+        items: [
+          {
+            id: "ep-1",
+            name: "Sync Bộ Y tế",
+            url: "https://external.example.com/api/v1/sync",
+            httpMethod: "POST",
+            externalSystem: "Bộ Y tế",
+            authType: 1,
+            status: 1,
+          },
+        ],
+      }),
+    ),
+    http.get("*/api/app/api-call-log", () =>
+      HttpResponse.json({ totalCount: 0, items: [] }),
+    ),
+  );
+}
+
+describe("DataIntegrationPage", () => {
+  afterEach(() => useAuthStore.getState().clearAuth());
+
+  it("renders endpoints tab with create button for full-permission user", { timeout: 15000 }, async () => {
+    mockData();
+    useAuthStore.getState().setAuth({
+      id: "user-1",
+      name: "Test User",
+      email: "test@foodsafe.local",
+      organizationId: null,
+      organizationName: null,
+      roles: ["ProvinceStaff"],
+      permissions: [
+        "FoodSafe.DataIntegration.ApiEndpoints.View",
+        "FoodSafe.DataIntegration.ApiEndpoints.Create",
+        "FoodSafe.DataIntegration.ApiEndpoints.Edit",
+        "FoodSafe.DataIntegration.ApiEndpoints.Delete",
+      ],
+    });
+
+    renderPage();
+
+    expect(
+      await screen.findByText("Sync Bộ Y tế"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Thêm endpoint/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides mutation controls for read-only user", async () => {
+    mockData();
+    useAuthStore.getState().setAuth({
+      id: "viewer",
+      name: "Viewer",
+      email: "viewer@foodsafe.local",
+      organizationId: null,
+      organizationName: null,
+      roles: ["Viewer"],
+      permissions: ["FoodSafe.DataIntegration.ApiEndpoints.View"],
+    });
+
+    renderPage();
+
+    expect(
+      await screen.findByText("Sync Bộ Y tế"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Thêm endpoint/ }),
+    ).not.toBeInTheDocument();
+  });
+});
