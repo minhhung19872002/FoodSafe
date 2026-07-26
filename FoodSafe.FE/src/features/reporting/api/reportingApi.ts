@@ -7,6 +7,7 @@ import type {
   CreateActionMonthReportInput,
   CreateAtpWorkReportInput,
   CreateNdtpReportInput,
+  FileDownload,
   NdtpReport,
   NdtpReportFilter,
   PagedResult,
@@ -22,6 +23,16 @@ import type {
 const ndtpEndpoint = "/v1/app/ndtp-report";
 const atpEndpoint = "/v1/app/atp-work-report";
 const amrEndpoint = "/v1/app/action-month-report";
+
+function download(data: Blob, contentDisposition?: string): FileDownload {
+  const encoded =
+    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
+  return {
+    blob: data,
+    fileName: decodeURIComponent(encoded ?? plain ?? "download"),
+  };
+}
 
 export const ndtpReportApi = {
   async list(filter: NdtpReportFilter): Promise<PagedResult<NdtpReport>> {
@@ -70,6 +81,13 @@ export const ndtpReportApi = {
   },
   async returnToDraft(id: string): Promise<void> {
     await api.post(`${ndtpEndpoint}/${id}/return-to-draft`);
+  },
+  async exportExcel(filter: NdtpReportFilter): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${ndtpEndpoint}/excel/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
   },
 };
 
@@ -128,6 +146,13 @@ export const atpWorkReportApi = {
   },
   async returnToDraft(id: string): Promise<void> {
     await api.post(`${atpEndpoint}/${id}/return-to-draft`);
+  },
+  async exportExcel(filter: AtpWorkReportFilter): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${atpEndpoint}/excel/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
   },
 };
 
@@ -191,5 +216,12 @@ export const actionMonthReportApi = {
   },
   async returnToDraft(id: string): Promise<void> {
     await api.post(`${amrEndpoint}/${id}/return-to-draft`);
+  },
+  async exportExcel(filter: ActionMonthReportFilter): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${amrEndpoint}/excel/export`, {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
   },
 };

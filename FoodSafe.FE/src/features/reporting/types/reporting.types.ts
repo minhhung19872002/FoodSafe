@@ -257,3 +257,8 @@ export interface ActionMonthReportFilter {
   maxResultCount?: number;
   sorting?: string;
 }
+
+export interface FileDownload {
+  blob: Blob;
+  fileName: string;
+}

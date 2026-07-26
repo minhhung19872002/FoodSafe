@@ -23,9 +23,11 @@ import {
   CheckCircleOutlined,
   RollbackOutlined,
   FileDoneOutlined,
+  ExportOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { saveDownload } from "@/utils/download";
 import { NdtpReportEditorModal } from "../components/NdtpReportEditorModal";
 import { AtpWorkReportEditorModal } from "../components/AtpWorkReportEditorModal";
 import { ActionMonthReportEditorModal } from "../components/ActionMonthReportEditorModal";
@@ -56,6 +58,9 @@ import {
   useReturnActionMonthReport,
   useCompleteActionMonthReport,
   useReturnAmrToDraft,
+  useExportNdtpReports,
+  useExportAtpWorkReports,
+  useExportActionMonthReports,
 } from "../api/reportingMutations";
 import {
   REPORT_STATUS,
@@ -98,6 +103,7 @@ function NdtpTab() {
   const returnMut = useReturnNdtpReport();
   const completeMut = useCompleteNdtpReport();
   const returnToDraftMut = useReturnNdtpToDraft();
+  const exportMut = useExportNdtpReports();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editReport, setEditReport] = useState<NdtpReport | null>(null);
@@ -265,6 +271,18 @@ function NdtpTab() {
             }))
           }
         />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {hasPermission("FoodSafe.Reporting.NdtpReports.Create") && (
           <Button
             type="primary"
@@ -391,6 +409,7 @@ function AtpWorkTab() {
   const returnMut = useReturnAtpWorkReport();
   const completeMut = useCompleteAtpWorkReport();
   const returnToDraftMut = useReturnAtpToDraft();
+  const exportMut = useExportAtpWorkReports();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editReport, setEditReport] = useState<AtpWorkReport | null>(null);
@@ -563,6 +582,18 @@ function AtpWorkTab() {
             setFilter((f) => ({ ...f, periodType: v, skipCount: 0 }))
           }
         />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {hasPermission("FoodSafe.Reporting.AtpWorkReports.Create") && (
           <Button
             type="primary"
@@ -718,6 +749,7 @@ function ActionMonthTab() {
   const returnMut = useReturnActionMonthReport();
   const completeMut = useCompleteActionMonthReport();
   const returnToDraftMut = useReturnAmrToDraft();
+  const exportMut = useExportActionMonthReports();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editReport, setEditReport] = useState<ActionMonthReport | null>(null);
@@ -903,6 +935,18 @@ function ActionMonthTab() {
             }))
           }
         />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {hasPermission(
           "FoodSafe.Reporting.ActionMonthReports.Create",
         ) && (

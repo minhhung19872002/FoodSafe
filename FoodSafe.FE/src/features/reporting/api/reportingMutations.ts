@@ -6,7 +6,10 @@ import {
 } from "./reportingApi";
 import { ndtpKeys, atpKeys, amrKeys } from "./reportingQueries";
 import type {
+  ActionMonthReportFilter,
+  AtpWorkReportFilter,
   CreateNdtpReportInput,
+  NdtpReportFilter,
   UpdateNdtpReportStatsInput,
   UpdateNdtpReportNarrativeInput,
   CreateAtpWorkReportInput,
@@ -288,5 +291,26 @@ export function useReturnAmrToDraft() {
   return useMutation({
     mutationFn: (id: string) => actionMonthReportApi.returnToDraft(id),
     onSuccess: refresh,
+  });
+}
+
+export function useExportNdtpReports() {
+  return useMutation({
+    mutationFn: (filter: NdtpReportFilter) =>
+      ndtpReportApi.exportExcel(filter),
+  });
+}
+
+export function useExportAtpWorkReports() {
+  return useMutation({
+    mutationFn: (filter: AtpWorkReportFilter) =>
+      atpWorkReportApi.exportExcel(filter),
+  });
+}
+
+export function useExportActionMonthReports() {
+  return useMutation({
+    mutationFn: (filter: ActionMonthReportFilter) =>
+      actionMonthReportApi.exportExcel(filter),
   });
 }
