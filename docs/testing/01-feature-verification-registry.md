@@ -10,11 +10,11 @@
 
 | ID    | Feature                        | Status         | E2E Spec                           | Verified Commit | Date       |
 |-------|--------------------------------|----------------|------------------------------------|-----------------|------------|
-| F-001 | Authentication (Login)         | READY_FOR_TEST | —                                  | —               | —          |
-| F-002 | Password Management            | READY_FOR_TEST | —                                  | —               | —          |
-| F-003 | Organizations                  | READY_FOR_TEST | —                                  | —               | —          |
+| F-001 | Authentication (Login)         | READY_FOR_TEST | `e2e/auth.spec.ts`                 | —               | —          |
+| F-002 | Password Management            | READY_FOR_TEST | `e2e/auth.spec.ts`                 | —               | —          |
+| F-003 | Organizations                  | READY_FOR_TEST | `e2e/organizations.spec.ts`        | —               | —          |
 | F-004 | Master Catalogs                | READY_FOR_TEST | `e2e/catalogs.spec.ts`             | —               | —          |
-| F-005 | Geographic Catalogs            | READY_FOR_TEST | —                                  | —               | —          |
+| F-005 | Geographic Catalogs            | READY_FOR_TEST | `e2e/geography.spec.ts`            | —               | —          |
 | F-006 | Businesses & Products          | READY_FOR_TEST | `e2e/businesses.spec.ts`           | —               | —          |
 | F-007 | Self Declarations              | READY_FOR_TEST | `e2e/self-declarations.spec.ts`    | —               | —          |
 | F-008 | Product Registrations          | READY_FOR_TEST | `e2e/product-registrations.spec.ts`| —               | —          |
@@ -49,7 +49,7 @@
 - VERIFIED: 0
 - READY_FOR_TEST: 32
 - NOT_STARTED: 0
-- Features with E2E specs: 29 (F-004, F-006–F-032 except F-001–F-003, F-005)
+- Features with E2E specs: 32 (all features covered)
 
 ## Notes
 
