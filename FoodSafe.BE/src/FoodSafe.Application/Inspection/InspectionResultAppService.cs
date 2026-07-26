@@ -92,8 +92,8 @@ public class InspectionResultAppService : ApplicationService
 
         if (input.PlanId.HasValue)
         {
-            await EnsurePlanApprovedAsync(input.PlanId.Value);
-            await AutoTransitionPlanToInProgress(input.PlanId.Value);
+            await EnsurePlanApprovedAsync(input.PlanId.Value, scope);
+            await AutoTransitionPlanToInProgress(input.PlanId.Value, scope);
         }
 
         var result = InspectionResult.Create(
@@ -138,7 +138,7 @@ public class InspectionResultAppService : ApplicationService
         await _results.InsertAsync(result, autoSave: true, cancellationToken: _cancellationTokens.Token);
 
         if (input.PlanItemId.HasValue)
-            await MarkPlanItemCompleted(input.PlanId!.Value, input.PlanItemId.Value);
+            await MarkPlanItemCompleted(input.PlanId!.Value, input.PlanItemId.Value, scope);
 
         return (await ToDtosAsync([result]))[0];
     }
@@ -255,9 +255,11 @@ public class InspectionResultAppService : ApplicationService
             throw new AbpAuthorizationException("Business is outside the current user's data scope.");
     }
 
-    private async Task EnsurePlanApprovedAsync(Guid planId)
+    private async Task EnsurePlanApprovedAsync(Guid planId, CurrentDataScope scope)
     {
         var query = await _plans.GetQueryableAsync();
+        if (!scope.HasGlobalAccess)
+            query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
         var plan = await AsyncExecuter.FirstOrDefaultAsync(
             query.Where(x => x.Id == planId),
             _cancellationTokens.Token);
@@ -267,9 +269,11 @@ public class InspectionResultAppService : ApplicationService
             throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.PlanNotApproved);
     }
 
-    private async Task AutoTransitionPlanToInProgress(Guid planId)
+    private async Task AutoTransitionPlanToInProgress(Guid planId, CurrentDataScope scope)
     {
         var query = await _plans.GetQueryableAsync();
+        if (!scope.HasGlobalAccess)
+            query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
         var plan = await AsyncExecuter.FirstOrDefaultAsync(
             query.Where(x => x.Id == planId && x.Status == InspectionPlanStatus.Approved),
             _cancellationTokens.Token);
@@ -280,9 +284,11 @@ public class InspectionResultAppService : ApplicationService
         }
     }
 
-    private async Task MarkPlanItemCompleted(Guid planId, Guid planItemId)
+    private async Task MarkPlanItemCompleted(Guid planId, Guid planItemId, CurrentDataScope scope)
     {
         var planQuery = await _plans.WithDetailsAsync(x => x.Items);
+        if (!scope.HasGlobalAccess)
+            planQuery = planQuery.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
         var plan = await AsyncExecuter.FirstOrDefaultAsync(
             planQuery.Where(x => x.Id == planId),
             _cancellationTokens.Token);
