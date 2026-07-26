@@ -22,17 +22,17 @@
 | F-010 | Eligibility Certificates       | READY_FOR_TEST | `e2e/eligibility-certificates.spec.ts` | —           | —          |
 | F-011 | CFS Certificates               | READY_FOR_TEST | `e2e/cfs-certificates.spec.ts`     | —               | —          |
 | F-012 | Export Food Certificates       | READY_FOR_TEST | `e2e/export-food-certificates.spec.ts` | —           | —          |
-| F-013 | Inspection Plans & Results     | READY_FOR_TEST | —                                  | —               | —          |
-| F-014 | Food Poisoning Cases           | READY_FOR_TEST | —                                  | —               | —          |
-| F-015 | Reporting (NDTP/ATP/Action)    | READY_FOR_TEST | —                                  | —               | —          |
-| F-016 | Alerts & News                  | READY_FOR_TEST | —                                  | —               | —          |
-| F-017 | Testing Results                | READY_FOR_TEST | —                                  | —               | —          |
-| F-018 | Risk Analysis                  | READY_FOR_TEST | —                                  | —               | —          |
-| F-019 | Data Integration               | READY_FOR_TEST | —                                  | —               | —          |
+| F-013 | Inspection Plans & Results     | READY_FOR_TEST | `e2e/inspection.spec.ts`           | —               | —          |
+| F-014 | Food Poisoning Cases           | READY_FOR_TEST | `e2e/food-poisoning.spec.ts`       | —               | —          |
+| F-015 | Reporting (NDTP/ATP/Action)    | READY_FOR_TEST | `e2e/reporting.spec.ts`            | —               | —          |
+| F-016 | Alerts & News                  | READY_FOR_TEST | `e2e/alerts-news.spec.ts`          | —               | —          |
+| F-017 | Testing Results                | READY_FOR_TEST | `e2e/testing-results.spec.ts`      | —               | —          |
+| F-018 | Risk Analysis                  | READY_FOR_TEST | `e2e/risk-analysis.spec.ts`        | —               | —          |
+| F-019 | Data Integration               | READY_FOR_TEST | `e2e/data-integration.spec.ts`     | —               | —          |
 | F-020 | Identity Administration        | READY_FOR_TEST | `e2e/identity-administration.spec.ts` | —            | —          |
 | F-021 | Audit Logs                     | READY_FOR_TEST | `e2e/audit-logs.spec.ts`           | —               | —          |
-| F-022 | Dashboard                      | READY_FOR_TEST | —                                  | —               | —          |
-| F-023 | Statistics                     | READY_FOR_TEST | —                                  | —               | —          |
+| F-022 | Dashboard                      | READY_FOR_TEST | `e2e/dashboard.spec.ts`            | —               | —          |
+| F-023 | Statistics                     | READY_FOR_TEST | `e2e/statistics.spec.ts`           | —               | —          |
 | F-024 | Public Lookup — Business       | READY_FOR_TEST | `e2e/public-lookups.spec.ts`       | —               | —          |
 | F-025 | Public Lookup — Self Declaration| READY_FOR_TEST| `e2e/public-lookups.spec.ts`       | —               | —          |
 | F-026 | Public Lookup — Product Reg.   | READY_FOR_TEST | `e2e/public-lookups.spec.ts`       | —               | —          |
@@ -40,8 +40,8 @@
 | F-028 | Public Lookup — CFS            | READY_FOR_TEST | `e2e/public-lookups.spec.ts`       | —               | —          |
 | F-029 | Public Lookup — Export Food     | READY_FOR_TEST | `e2e/public-lookups.spec.ts`       | —               | —          |
 | F-030 | Public Lookup — Ad Registration| READY_FOR_TEST | `e2e/public-lookups.spec.ts`       | —               | —          |
-| F-031 | Documents                      | READY_FOR_TEST | —                                  | —               | —          |
-| F-032 | System Settings                | READY_FOR_TEST | —                                  | —               | —          |
+| F-031 | Documents                      | READY_FOR_TEST | `e2e/documents.spec.ts`            | —               | —          |
+| F-032 | System Settings                | READY_FOR_TEST | `e2e/system-settings.spec.ts`      | —               | —          |
 
 ## Summary
 
@@ -49,7 +49,7 @@
 - VERIFIED: 0
 - READY_FOR_TEST: 32
 - NOT_STARTED: 0
-- Features with E2E specs: 17 (F-004, F-006–F-012, F-020, F-021, F-024–F-030)
+- Features with E2E specs: 29 (F-004, F-006–F-032 except F-001–F-003, F-005)
 
 ## Notes
 
