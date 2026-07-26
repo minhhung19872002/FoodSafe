@@ -69,10 +69,10 @@ export default function StatisticsPage() {
   }
 
   return (
-    <div>
+    <div className="page-container">
       <PageHeader
         title="Thống kê tổng hợp"
-        extra={
+        actions={
           <Select
             value={year}
             onChange={setYear}

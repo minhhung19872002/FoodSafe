@@ -129,6 +129,7 @@ export default function DocumentsPage() {
               onConfirm={() =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa"),
+                  onError: () => message.error("Xóa thất bại"),
                 })
               }
             >
@@ -217,6 +218,7 @@ export default function DocumentsPage() {
                     message.success("Đã cập nhật");
                     setEditorOpen(false);
                   },
+                  onError: () => message.error("Cập nhật thất bại"),
                 },
               );
             } else {
@@ -225,6 +227,7 @@ export default function DocumentsPage() {
                   message.success("Đã tạo");
                   setEditorOpen(false);
                 },
+                onError: () => message.error("Tạo thất bại"),
               });
             }
           }}

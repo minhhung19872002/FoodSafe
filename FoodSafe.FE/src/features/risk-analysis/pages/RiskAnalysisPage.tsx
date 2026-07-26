@@ -139,6 +139,7 @@ export default function RiskAnalysisPage() {
                   onConfirm={() =>
                     publishMut.mutate(record.id, {
                       onSuccess: () => message.success("Đã xuất bản"),
+                      onError: () => message.error("Xuất bản thất bại"),
                     })
                   }
                 >
@@ -153,6 +154,7 @@ export default function RiskAnalysisPage() {
                   onConfirm={() =>
                     deleteMut.mutate(record.id, {
                       onSuccess: () => message.success("Đã xóa"),
+                      onError: () => message.error("Xóa thất bại"),
                     })
                   }
                 >
@@ -246,6 +248,7 @@ export default function RiskAnalysisPage() {
                     message.success("Đã cập nhật");
                     setEditorOpen(false);
                   },
+                  onError: () => message.error("Cập nhật thất bại"),
                 },
               );
             } else {
@@ -254,6 +257,7 @@ export default function RiskAnalysisPage() {
                   message.success("Đã tạo");
                   setEditorOpen(false);
                 },
+                onError: () => message.error("Tạo thất bại"),
               });
             }
           }}

@@ -94,14 +94,18 @@ function AlertsTab() {
   }
 
   async function handleSubmit(input: CreateUpdateAlertInput) {
-    if (editing) {
-      await updateMut.mutateAsync({ id: editing.id, input });
-      message.success("Cập nhật cảnh báo thành công.");
-    } else {
-      await createMut.mutateAsync(input);
-      message.success("Tạo cảnh báo thành công.");
+    try {
+      if (editing) {
+        await updateMut.mutateAsync({ id: editing.id, input });
+        message.success("Cập nhật cảnh báo thành công.");
+      } else {
+        await createMut.mutateAsync(input);
+        message.success("Tạo cảnh báo thành công.");
+      }
+      setEditorOpen(false);
+    } catch {
+      message.error("Thao tác thất bại. Vui lòng thử lại.");
     }
-    setEditorOpen(false);
   }
 
   const columns: TableColumnsType<AtpAlert> = [
@@ -339,14 +343,18 @@ function NewsTab() {
   }
 
   async function handleSubmit(input: CreateUpdateNewsInput) {
-    if (editing) {
-      await updateMut.mutateAsync({ id: editing.id, input });
-      message.success("Cập nhật tin tức thành công.");
-    } else {
-      await createMut.mutateAsync(input);
-      message.success("Tạo tin tức thành công.");
+    try {
+      if (editing) {
+        await updateMut.mutateAsync({ id: editing.id, input });
+        message.success("Cập nhật tin tức thành công.");
+      } else {
+        await createMut.mutateAsync(input);
+        message.success("Tạo tin tức thành công.");
+      }
+      setEditorOpen(false);
+    } catch {
+      message.error("Thao tác thất bại. Vui lòng thử lại.");
     }
-    setEditorOpen(false);
   }
 
   const columns: TableColumnsType<AtpNews> = [
@@ -374,7 +382,9 @@ function NewsTab() {
       title: "Lượt xem",
       dataIndex: "viewCount",
       width: 90,
-      render: (v: number) => <EyeOutlined /> && `${v}`,
+      render: (v: number) => (
+        <span><EyeOutlined style={{ marginRight: 4 }} />{v}</span>
+      ),
     },
     {
       title: "Ngày tạo",

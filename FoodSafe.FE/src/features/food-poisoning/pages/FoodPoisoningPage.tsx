@@ -94,14 +94,18 @@ function CasesTab() {
   }
 
   async function handleSubmit(input: CreateUpdateCaseInput) {
-    if (editing) {
-      await updateMut.mutateAsync({ id: editing.id, input });
-      message.success("Cập nhật ca ngộ độc thành công.");
-    } else {
-      await createMut.mutateAsync(input);
-      message.success("Tạo ca ngộ độc thành công.");
+    try {
+      if (editing) {
+        await updateMut.mutateAsync({ id: editing.id, input });
+        message.success("Cập nhật ca ngộ độc thành công.");
+      } else {
+        await createMut.mutateAsync(input);
+        message.success("Tạo ca ngộ độc thành công.");
+      }
+      setEditorOpen(false);
+    } catch {
+      message.error("Thao tác thất bại. Vui lòng thử lại.");
     }
-    setEditorOpen(false);
   }
 
   const columns: TableColumnsType<FoodPoisoningCase> = [
@@ -333,14 +337,18 @@ function IncidentsTab() {
   }
 
   async function handleSubmit(input: CreateUpdateIncidentInput) {
-    if (editing) {
-      await updateMut.mutateAsync({ id: editing.id, input });
-      message.success("Cập nhật vụ ngộ độc thành công.");
-    } else {
-      await createMut.mutateAsync(input);
-      message.success("Tạo vụ ngộ độc thành công.");
+    try {
+      if (editing) {
+        await updateMut.mutateAsync({ id: editing.id, input });
+        message.success("Cập nhật vụ ngộ độc thành công.");
+      } else {
+        await createMut.mutateAsync(input);
+        message.success("Tạo vụ ngộ độc thành công.");
+      }
+      setEditorOpen(false);
+    } catch {
+      message.error("Thao tác thất bại. Vui lòng thử lại.");
     }
-    setEditorOpen(false);
   }
 
   const columns: TableColumnsType<FoodPoisoningIncident> = [
