@@ -1,4 +1,4 @@
-import { Col, Row, Card, Spin, Progress, Table, type TableColumnsType } from "antd";
+import { Col, Row, Card, Spin, Progress, Table, Button, type TableColumnsType } from "antd";
 import {
   ShopOutlined,
   FileProtectOutlined,
@@ -8,7 +8,12 @@ import {
   AlertOutlined,
   ExperimentOutlined,
   MedicineBoxOutlined,
+  PlusOutlined,
+  PieChartOutlined,
+  BarChartOutlined,
+  SolutionOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useDashboardStats } from "../api/dashboardQueries";
@@ -68,8 +73,47 @@ const breakdownColumns: TableColumnsType<LicenseBreakdownItem> = [
   },
 ];
 
+const QUICK_ACTIONS = [
+  {
+    key: "/businesses",
+    icon: <PlusOutlined />,
+    label: "Thêm cơ sở mới",
+    permission: "FoodSafe.BusinessManagement.Businesses.Create",
+    color: "#00796B",
+  },
+  {
+    key: "/self-declarations",
+    icon: <SolutionOutlined />,
+    label: "Tự công bố SP",
+    permission: "FoodSafe.BusinessManagement.SelfDeclarations.Create",
+    color: "#0958D9",
+  },
+  {
+    key: "/inspection",
+    icon: <AuditOutlined />,
+    label: "Kế hoạch thanh tra",
+    permission: "FoodSafe.Inspection.Plans.View",
+    color: "#722ED1",
+  },
+  {
+    key: "/reporting",
+    icon: <BarChartOutlined />,
+    label: "Báo cáo",
+    permission: "FoodSafe.Reporting.NdtpReports.View",
+    color: "#D48806",
+  },
+  {
+    key: "/statistics",
+    icon: <PieChartOutlined />,
+    label: "Thống kê tổng hợp",
+    color: "#389E0D",
+  },
+] as const;
+
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const navigate = useNavigate();
   const { data: stats, isLoading } = useDashboardStats();
 
   if (isLoading) {
@@ -101,6 +145,21 @@ export default function DashboardPage() {
         title={`Xin chào, ${user?.name ?? "Người dùng"}`}
         subtitle={user?.organizationName ?? "Phạm vi toàn hệ thống"}
       />
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {QUICK_ACTIONS.filter(
+          (a) => !("permission" in a && a.permission) || hasPermission(a.permission),
+        ).map((action) => (
+          <Button
+            key={action.key}
+            icon={action.icon}
+            onClick={() => navigate(action.key)}
+            style={{ borderColor: action.color, color: action.color }}
+          >
+            {action.label}
+          </Button>
+        ))}
+      </div>
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>

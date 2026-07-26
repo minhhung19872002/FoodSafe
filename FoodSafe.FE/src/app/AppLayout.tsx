@@ -449,6 +449,10 @@ export function AppLayout() {
         <Content style={{ margin: 16, minHeight: 280 }}>
           <Outlet />
         </Content>
+
+        <footer className="app-footer">
+          FoodSafe v1.0 — Phần mềm quản lý An toàn thực phẩm tỉnh Quảng Ninh
+        </footer>
       </Layout>
     </Layout>
   );
