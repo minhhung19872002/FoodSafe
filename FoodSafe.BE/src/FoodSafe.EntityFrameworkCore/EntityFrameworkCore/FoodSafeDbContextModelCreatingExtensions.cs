@@ -9,6 +9,7 @@ using FoodSafe.BusinessManagement;
 using FoodSafe.FileManagement;
 using FoodSafe.Licensing;
 using FoodSafe.Inspection;
+using FoodSafe.AlertsAndTesting;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -24,6 +25,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
         ConfigureBusinessManagement(builder);
         ConfigureFileManagement(builder);
         ConfigureInspection(builder);
+        ConfigureAlertsAndTesting(builder);
 
         builder.Entity<Organization>(entity =>
         {
@@ -1538,5 +1540,129 @@ public static class FoodSafeDbContextModelCreatingExtensions
         entity.Property<bool>("IsDeleted").HasColumnName("is_deleted");
         entity.Property<DateTime?>("DeletionTime").HasColumnName("deletion_time");
         entity.Property<Guid?>("DeleterId").HasColumnName("deleter_id");
+    }
+
+    private static void ConfigureAlertsAndTesting(ModelBuilder builder)
+    {
+        builder.Entity<AtpAlert>(entity =>
+        {
+            entity.ToTable("atp_alerts", table =>
+            {
+                table.HasCheckConstraint("chk_alerts_category", "category IN (1, 2, 3, 4, 5, 6)");
+                table.HasCheckConstraint("chk_alerts_severity", "severity IN (1, 2, 3, 4)");
+                table.HasCheckConstraint("chk_alerts_source", "source IN (1, 2, 3)");
+                table.HasCheckConstraint("chk_alerts_status", "status IN (1, 2, 3)");
+                table.HasCheckConstraint("chk_alerts_publish",
+                    "status = 1 OR (published_by_id IS NOT NULL AND published_at IS NOT NULL)");
+                table.HasCheckConstraint("chk_alerts_recall",
+                    "status <> 3 OR (recalled_by_id IS NOT NULL AND recalled_at IS NOT NULL AND recall_reason IS NOT NULL)");
+            });
+            ConfigureAggregateAudit(entity, "pk_atp_alerts");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
+            entity.Property(x => x.AlertNumber).HasColumnName("alert_number").HasMaxLength(100);
+            entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.Content).HasColumnName("content").IsRequired();
+            entity.Property(x => x.Category).HasColumnName("category").HasConversion<short>();
+            entity.Property(x => x.Severity).HasColumnName("severity").HasConversion<short>();
+            entity.Property(x => x.AffectedArea).HasColumnName("affected_area");
+            entity.Property(x => x.AffectedProducts).HasColumnName("affected_products");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.Source).HasColumnName("source").HasConversion<short>();
+            entity.Property(x => x.ReporterName).HasColumnName("reporter_name").HasMaxLength(200);
+            entity.Property(x => x.ReporterPhone).HasColumnName("reporter_phone").HasMaxLength(20);
+            entity.Property(x => x.ReporterEmail).HasColumnName("reporter_email").HasMaxLength(200);
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<short>();
+            entity.Property(x => x.PublishedById).HasColumnName("published_by_id");
+            entity.Property(x => x.PublishedAt).HasColumnName("published_at");
+            entity.Property(x => x.RecalledById).HasColumnName("recalled_by_id");
+            entity.Property(x => x.RecalledAt).HasColumnName("recalled_at");
+            entity.Property(x => x.RecallReason).HasColumnName("recall_reason");
+            entity.Property(x => x.IsPublic).HasColumnName("is_public");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_alerts_org")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.Status })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_alerts_org_status");
+            entity.HasIndex(x => x.Category)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_alerts_category");
+            entity.HasIndex(x => x.Severity)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_alerts_severity");
+            entity.HasIndex(x => x.IsPublic)
+                .HasFilter("is_deleted = FALSE AND is_public = TRUE")
+                .HasDatabaseName("idx_alerts_public");
+        });
+
+        builder.Entity<AtpNews>(entity =>
+        {
+            entity.ToTable("atp_news", table =>
+            {
+                table.HasCheckConstraint("chk_news_status", "status IN (1, 2, 3)");
+                table.HasCheckConstraint("chk_news_publish",
+                    "status = 1 OR (published_by_id IS NOT NULL AND published_at IS NOT NULL)");
+                table.HasCheckConstraint("chk_news_view_count", "view_count >= 0");
+            });
+            ConfigureAggregateAudit(entity, "pk_atp_news");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
+            entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.Summary).HasColumnName("summary").HasMaxLength(1000);
+            entity.Property(x => x.Content).HasColumnName("content").IsRequired();
+            entity.Property(x => x.ThumbnailStoragePath).HasColumnName("thumbnail_storage_path").HasMaxLength(500);
+            entity.Property(x => x.Category).HasColumnName("category").HasMaxLength(100);
+            entity.Property(x => x.Tags).HasColumnName("tags").HasMaxLength(500);
+            entity.Property(x => x.ViewCount).HasColumnName("view_count");
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<short>();
+            entity.Property(x => x.PublishedAt).HasColumnName("published_at");
+            entity.Property(x => x.PublishedById).HasColumnName("published_by_id");
+            entity.Property(x => x.IsPublic).HasColumnName("is_public");
+            entity.Property(x => x.IsFeatured).HasColumnName("is_featured");
+
+            entity.HasMany(x => x.LinkedAlerts)
+                .WithOne()
+                .HasForeignKey(x => x.NewsId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_news_org")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.Status })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_news_org_status");
+            entity.HasIndex(x => x.Category)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_news_category");
+            entity.HasIndex(x => x.IsPublic)
+                .HasFilter("is_deleted = FALSE AND is_public = TRUE")
+                .HasDatabaseName("idx_news_public");
+        });
+
+        builder.Entity<NewsLinkedAlert>(entity =>
+        {
+            entity.ToTable("news_linked_alerts");
+            entity.HasKey(x => x.Id).HasName("pk_news_linked_alerts");
+            entity.ConfigureByConvention();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.NewsId).HasColumnName("news_id");
+            entity.Property(x => x.AlertId).HasColumnName("alert_id");
+
+            entity.HasOne<AtpAlert>()
+                .WithMany()
+                .HasForeignKey(x => x.AlertId)
+                .HasConstraintName("fk_nla_alert")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.NewsId, x.AlertId })
+                .IsUnique()
+                .HasDatabaseName("uq_nla_news_alert");
+        });
     }
 }

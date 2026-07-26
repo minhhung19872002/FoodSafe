@@ -143,6 +143,31 @@ public static class FoodSafePermissions
         }
     }
 
+    public static class AlertsAndTesting
+    {
+        public const string Default = GroupName + ".AlertsAndTesting";
+
+        public static class Alerts
+        {
+            public const string Default = AlertsAndTesting.Default + ".Alerts";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string Publish = Default + ".Publish";
+        }
+
+        public static class News
+        {
+            public const string Default = AlertsAndTesting.Default + ".News";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string Publish = Default + ".Publish";
+        }
+    }
+
     public static class SystemAdministration
     {
         public const string Default = GroupName + ".SystemAdmin";

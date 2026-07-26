@@ -154,6 +154,19 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.Inspection.Results.Create,
         FoodSafePermissions.Inspection.Results.Edit,
         FoodSafePermissions.Inspection.Results.Delete,
+        FoodSafePermissions.AlertsAndTesting.Default,
+        FoodSafePermissions.AlertsAndTesting.Alerts.Default,
+        FoodSafePermissions.AlertsAndTesting.Alerts.View,
+        FoodSafePermissions.AlertsAndTesting.Alerts.Create,
+        FoodSafePermissions.AlertsAndTesting.Alerts.Edit,
+        FoodSafePermissions.AlertsAndTesting.Alerts.Delete,
+        FoodSafePermissions.AlertsAndTesting.Alerts.Publish,
+        FoodSafePermissions.AlertsAndTesting.News.Default,
+        FoodSafePermissions.AlertsAndTesting.News.View,
+        FoodSafePermissions.AlertsAndTesting.News.Create,
+        FoodSafePermissions.AlertsAndTesting.News.Edit,
+        FoodSafePermissions.AlertsAndTesting.News.Delete,
+        FoodSafePermissions.AlertsAndTesting.News.Publish,
         FoodSafePermissions.DataScope.All
     ];
 
@@ -263,7 +276,18 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Inspection.Results.Default,
                 FoodSafePermissions.Inspection.Results.View,
                 FoodSafePermissions.Inspection.Results.Create,
-                FoodSafePermissions.Inspection.Results.Edit
+                FoodSafePermissions.Inspection.Results.Edit,
+                FoodSafePermissions.AlertsAndTesting.Default,
+                FoodSafePermissions.AlertsAndTesting.Alerts.Default,
+                FoodSafePermissions.AlertsAndTesting.Alerts.View,
+                FoodSafePermissions.AlertsAndTesting.Alerts.Create,
+                FoodSafePermissions.AlertsAndTesting.Alerts.Edit,
+                FoodSafePermissions.AlertsAndTesting.Alerts.Publish,
+                FoodSafePermissions.AlertsAndTesting.News.Default,
+                FoodSafePermissions.AlertsAndTesting.News.View,
+                FoodSafePermissions.AlertsAndTesting.News.Create,
+                FoodSafePermissions.AlertsAndTesting.News.Edit,
+                FoodSafePermissions.AlertsAndTesting.News.Publish
             ]),
         new(
             "DistrictAdmin",
@@ -296,6 +320,15 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.Inspection.Results.View)
                 .Append(FoodSafePermissions.Inspection.Results.Create)
                 .Append(FoodSafePermissions.Inspection.Results.Edit)
+                .Append(FoodSafePermissions.AlertsAndTesting.Default)
+                .Append(FoodSafePermissions.AlertsAndTesting.Alerts.Default)
+                .Append(FoodSafePermissions.AlertsAndTesting.Alerts.View)
+                .Append(FoodSafePermissions.AlertsAndTesting.Alerts.Create)
+                .Append(FoodSafePermissions.AlertsAndTesting.Alerts.Edit)
+                .Append(FoodSafePermissions.AlertsAndTesting.News.Default)
+                .Append(FoodSafePermissions.AlertsAndTesting.News.View)
+                .Append(FoodSafePermissions.AlertsAndTesting.News.Create)
+                .Append(FoodSafePermissions.AlertsAndTesting.News.Edit)
                 .ToArray()),
         new(
             "DistrictStaff",
@@ -345,7 +378,16 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Inspection.Results.Default,
                 FoodSafePermissions.Inspection.Results.View,
                 FoodSafePermissions.Inspection.Results.Create,
-                FoodSafePermissions.Inspection.Results.Edit
+                FoodSafePermissions.Inspection.Results.Edit,
+                FoodSafePermissions.AlertsAndTesting.Default,
+                FoodSafePermissions.AlertsAndTesting.Alerts.Default,
+                FoodSafePermissions.AlertsAndTesting.Alerts.View,
+                FoodSafePermissions.AlertsAndTesting.Alerts.Create,
+                FoodSafePermissions.AlertsAndTesting.Alerts.Edit,
+                FoodSafePermissions.AlertsAndTesting.News.Default,
+                FoodSafePermissions.AlertsAndTesting.News.View,
+                FoodSafePermissions.AlertsAndTesting.News.Create,
+                FoodSafePermissions.AlertsAndTesting.News.Edit
             ]),
         new(
             "CommuneAdmin",
@@ -367,6 +409,11 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.Inspection.Plans.View)
                 .Append(FoodSafePermissions.Inspection.Results.Default)
                 .Append(FoodSafePermissions.Inspection.Results.View)
+                .Append(FoodSafePermissions.AlertsAndTesting.Default)
+                .Append(FoodSafePermissions.AlertsAndTesting.Alerts.Default)
+                .Append(FoodSafePermissions.AlertsAndTesting.Alerts.View)
+                .Append(FoodSafePermissions.AlertsAndTesting.News.Default)
+                .Append(FoodSafePermissions.AlertsAndTesting.News.View)
                 .ToArray()),
         new(
             "CommuneStaff",
@@ -405,7 +452,12 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Inspection.Plans.Default,
                 FoodSafePermissions.Inspection.Plans.View,
                 FoodSafePermissions.Inspection.Results.Default,
-                FoodSafePermissions.Inspection.Results.View
+                FoodSafePermissions.Inspection.Results.View,
+                FoodSafePermissions.AlertsAndTesting.Default,
+                FoodSafePermissions.AlertsAndTesting.Alerts.Default,
+                FoodSafePermissions.AlertsAndTesting.Alerts.View,
+                FoodSafePermissions.AlertsAndTesting.News.Default,
+                FoodSafePermissions.AlertsAndTesting.News.View
             ])
     ];
 

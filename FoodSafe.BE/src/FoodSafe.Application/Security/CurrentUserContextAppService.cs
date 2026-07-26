@@ -71,6 +71,16 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.Inspection.Results.Create,
         FoodSafePermissions.Inspection.Results.Edit,
         FoodSafePermissions.Inspection.Results.Delete,
+        FoodSafePermissions.AlertsAndTesting.Alerts.View,
+        FoodSafePermissions.AlertsAndTesting.Alerts.Create,
+        FoodSafePermissions.AlertsAndTesting.Alerts.Edit,
+        FoodSafePermissions.AlertsAndTesting.Alerts.Delete,
+        FoodSafePermissions.AlertsAndTesting.Alerts.Publish,
+        FoodSafePermissions.AlertsAndTesting.News.View,
+        FoodSafePermissions.AlertsAndTesting.News.Create,
+        FoodSafePermissions.AlertsAndTesting.News.Edit,
+        FoodSafePermissions.AlertsAndTesting.News.Delete,
+        FoodSafePermissions.AlertsAndTesting.News.Publish,
         FoodSafePermissions.SystemAdministration.Default,
         FoodSafePermissions.DataScope.All
     ];

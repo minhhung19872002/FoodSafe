@@ -197,4 +197,22 @@ public static class FoodSafeDomainErrorCodes
         public const string CaseNotFound = "FoodSafe:FoodPoisoning:0001";
         public const string IncidentNotFound = "FoodSafe:FoodPoisoning:0002";
     }
+
+    public static class Alert
+    {
+        public const string NotFound = "FoodSafe:Alert:0001";
+        public const string InvalidStatusTransition = "FoodSafe:Alert:0002";
+        public const string CanOnlyRecallPublished = "FoodSafe:Alert:0003";
+        public const string CannotModifyNonDraft = "FoodSafe:Alert:0004";
+    }
+
+    public static class News
+    {
+        public const string NotFound = "FoodSafe:News:0001";
+        public const string InvalidStatusTransition = "FoodSafe:News:0002";
+        public const string CanOnlyRecallPublished = "FoodSafe:News:0003";
+        public const string CannotModifyNonDraft = "FoodSafe:News:0004";
+        public const string DuplicateLinkedAlert = "FoodSafe:News:0005";
+        public const string LinkedAlertNotFound = "FoodSafe:News:0006";
+    }
 }

@@ -266,6 +266,47 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             LocalizableString.Create<FoodSafeResource>(
                 "Permission:InspectionResults.Delete"));
 
+        var alertsAndTesting = group.AddPermission(
+            FoodSafePermissions.AlertsAndTesting.Default,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:AlertsAndTesting"));
+        var alerts = alertsAndTesting.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Alerts.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:Alerts"));
+        alerts.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Alerts.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:Alerts.View"));
+        alerts.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Alerts.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:Alerts.Create"));
+        alerts.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Alerts.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:Alerts.Edit"));
+        alerts.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Alerts.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:Alerts.Delete"));
+        alerts.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Alerts.Publish,
+            LocalizableString.Create<FoodSafeResource>("Permission:Alerts.Publish"));
+        var news = alertsAndTesting.AddChild(
+            FoodSafePermissions.AlertsAndTesting.News.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:News"));
+        news.AddChild(
+            FoodSafePermissions.AlertsAndTesting.News.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:News.View"));
+        news.AddChild(
+            FoodSafePermissions.AlertsAndTesting.News.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:News.Create"));
+        news.AddChild(
+            FoodSafePermissions.AlertsAndTesting.News.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:News.Edit"));
+        news.AddChild(
+            FoodSafePermissions.AlertsAndTesting.News.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:News.Delete"));
+        news.AddChild(
+            FoodSafePermissions.AlertsAndTesting.News.Publish,
+            LocalizableString.Create<FoodSafeResource>("Permission:News.Publish"));
+
         var systemAdministration = group.AddPermission(
             FoodSafePermissions.SystemAdministration.Default,
             LocalizableString.Create<FoodSafeResource>("Permission:SystemAdmin"));

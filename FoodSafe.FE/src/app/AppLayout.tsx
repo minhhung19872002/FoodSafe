@@ -29,6 +29,7 @@ import {
   FileProtectOutlined,
   ExportOutlined,
   AuditOutlined,
+  AlertOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -52,6 +53,7 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   "cfs-certificates": "Chứng nhận CFS",
   "export-food-certificates": "GCN Xuất khẩu thực phẩm",
   inspection: "Thanh tra - Kiểm tra ATTP",
+  "alerts-news": "Cảnh báo và Tin tức",
   administration: "Quản trị hệ thống",
   identity: "Tài khoản và quyền",
   account: "Tài khoản",
@@ -165,6 +167,12 @@ const NAV_CONFIG: NavEntry[] = [
     icon: <AuditOutlined />,
     label: "Thanh tra - Kiểm tra",
     permission: "FoodSafe.Inspection.Plans.View",
+  },
+  {
+    key: "/alerts-news",
+    icon: <AlertOutlined />,
+    label: "Cảnh báo và Tin tức",
+    permission: "FoodSafe.AlertsAndTesting.Alerts.View",
   },
 ];
 

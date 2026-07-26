@@ -142,5 +142,35 @@ public sealed class CurrentUserContextPermissionContractTests
         Assert.Contains(
             FoodSafePermissions.Inspection.Results.Delete,
             permissions);
+        Assert.Contains(
+            FoodSafePermissions.AlertsAndTesting.Alerts.View,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.AlertsAndTesting.Alerts.Create,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.AlertsAndTesting.Alerts.Edit,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.AlertsAndTesting.Alerts.Delete,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.AlertsAndTesting.Alerts.Publish,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.AlertsAndTesting.News.View,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.AlertsAndTesting.News.Create,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.AlertsAndTesting.News.Edit,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.AlertsAndTesting.News.Delete,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.AlertsAndTesting.News.Publish,
+            permissions);
     }
 }
