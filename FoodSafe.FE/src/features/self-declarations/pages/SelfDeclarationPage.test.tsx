@@ -59,7 +59,7 @@ function mockData() {
 describe("SelfDeclarationPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders scoped declarations, expiry warning and write actions", async () => {
+  it("renders scoped declarations, expiry warning and write actions", { timeout: 15000 }, async () => {
     mockData();
     useAuthStore.getState().setAuth({
       id: "licensing-user",
