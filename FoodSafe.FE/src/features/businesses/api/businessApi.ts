@@ -15,6 +15,8 @@ import type {
   ProductBusinessOption,
   ProductFilter,
   ProductInput,
+  PublicBusiness,
+  PublicSelfDeclaration,
   UpdateBusinessInput,
   UpdateProductInput,
 } from "../types/business.types";
@@ -32,6 +34,26 @@ function excelDownload(data: Blob, contentDisposition?: string): ExcelDownload {
     fileName: decodeURIComponent(encoded ?? plain ?? "export.xlsx"),
   };
 }
+
+export const publicBusinessApi = {
+  async lookup(keyword: string): Promise<PublicBusiness> {
+    const response = await api.get<PublicBusiness>(
+      "/v1/public/businesses",
+      { params: { keyword } },
+    );
+    return response.data;
+  },
+};
+
+export const publicSelfDeclarationApi = {
+  async lookup(number: string): Promise<PublicSelfDeclaration> {
+    const response = await api.get<PublicSelfDeclaration>(
+      "/v1/public/self-declarations",
+      { params: { number } },
+    );
+    return response.data;
+  },
+};
 
 export const businessApi = {
   async list(filter: BusinessFilter): Promise<PagedResult<Business>> {

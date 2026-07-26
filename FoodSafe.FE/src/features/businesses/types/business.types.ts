@@ -218,3 +218,33 @@ export interface FileAttachment {
   uploadTime: string;
   description?: string;
 }
+
+export const BUSINESS_STATUS_CONFIG: Record<
+  BusinessStatus,
+  { color: string; label: string }
+> = {
+  [BUSINESS_STATUS.Active]: { color: "green", label: "Đang hoạt động" },
+  [BUSINESS_STATUS.Inactive]: { color: "default", label: "Ngừng hoạt động" },
+  [BUSINESS_STATUS.Suspended]: { color: "red", label: "Đình chỉ" },
+};
+
+export interface PublicBusiness {
+  name: string;
+  code?: string;
+  taxCode?: string;
+  representativeName?: string;
+  contactPhone?: string;
+  addressStreet?: string;
+  status: BusinessStatus;
+  hasEligibilityCertificate: boolean;
+  hasVsattpCommitment: boolean;
+}
+
+export interface PublicSelfDeclaration {
+  declarationNumber: string;
+  declarationDate: string;
+  productName: string;
+  productStandard?: string;
+  businessName: string;
+  status: number;
+}

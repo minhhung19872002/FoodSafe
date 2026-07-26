@@ -23,6 +23,8 @@ import {
   RiskAnalysisPage,
   TestingResultsPage,
   DocumentsPage,
+  PublicBusinessLookupPage,
+  PublicSelfDeclarationLookupPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -65,6 +67,22 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<RouteLoading />}>
         <PublicProductRegistrationLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-co-so",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicBusinessLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-tu-cong-bo",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicSelfDeclarationLookupPage />
       </Suspense>
     ),
   },

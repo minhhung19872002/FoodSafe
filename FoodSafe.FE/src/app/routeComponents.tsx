@@ -92,6 +92,13 @@ export const TestingResultsPage = lazy(
 export const DocumentsPage = lazy(
   () => import("@/features/documents/pages/DocumentsPage"),
 );
+export const PublicBusinessLookupPage = lazy(
+  () => import("@/features/businesses/pages/PublicBusinessLookupPage"),
+);
+export const PublicSelfDeclarationLookupPage = lazy(
+  () =>
+    import("@/features/businesses/pages/PublicSelfDeclarationLookupPage"),
+);
 
 export function RouteLoading() {
   return (
