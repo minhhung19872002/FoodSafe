@@ -112,6 +112,9 @@ export const AuditLogPage = lazy(
 export const SystemSettingsPage = lazy(
   () => import("@/features/settings/pages/SystemSettingsPage"),
 );
+export const DataIntegrationPage = lazy(
+  () => import("@/features/data-integration/pages/DataIntegrationPage"),
+);
 
 export function RouteLoading() {
   return (

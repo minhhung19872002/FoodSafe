@@ -263,6 +263,19 @@
     "FoodSafe:Report:0006": "Chỉ được sửa báo cáo ở trạng thái Nháp.",
     "FoodSafe:Report:0007": "Lý do trả lại là bắt buộc.",
     "FoodSafe:Report:0008": "Chỉ được thông báo sai sót trên báo cáo đã xác minh.",
-    "FoodSafe:Report:0009": "Kỳ báo cáo không hợp lệ."
+    "FoodSafe:Report:0009": "Kỳ báo cáo không hợp lệ.",
+
+    "Permission:DataIntegration": "Tích hợp dữ liệu",
+    "Permission:DataIntegration.ApiEndpoints": "Cấu hình API",
+    "Permission:DataIntegration.ApiEndpoints.View": "Xem cấu hình API",
+    "Permission:DataIntegration.ApiEndpoints.Create": "Tạo cấu hình API",
+    "Permission:DataIntegration.ApiEndpoints.Edit": "Sửa cấu hình API",
+    "Permission:DataIntegration.ApiEndpoints.Delete": "Xóa cấu hình API",
+    "Permission:DataIntegration.CallHistory": "Lịch sử API",
+    "Permission:DataIntegration.CallHistory.View": "Xem lịch sử API",
+    "Permission:DataScope.All": "Truy cập dữ liệu tất cả đơn vị",
+
+    "FoodSafe:DataIntegration:0001": "Không tìm thấy cấu hình API.",
+    "FoodSafe:DataIntegration:0002": "Không tìm thấy lịch sử gọi API."
   }
 }

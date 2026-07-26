@@ -225,6 +225,14 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.Reporting.ActionMonthReports.Verify,
         FoodSafePermissions.Reporting.ActionMonthReports.Return,
         FoodSafePermissions.Reporting.ActionMonthReports.Complete,
+        FoodSafePermissions.DataIntegration.Default,
+        FoodSafePermissions.DataIntegration.ApiEndpoints.Default,
+        FoodSafePermissions.DataIntegration.ApiEndpoints.View,
+        FoodSafePermissions.DataIntegration.ApiEndpoints.Create,
+        FoodSafePermissions.DataIntegration.ApiEndpoints.Edit,
+        FoodSafePermissions.DataIntegration.ApiEndpoints.Delete,
+        FoodSafePermissions.DataIntegration.CallHistory.Default,
+        FoodSafePermissions.DataIntegration.CallHistory.View,
         FoodSafePermissions.DataScope.All
     ];
 

@@ -240,4 +240,10 @@ public static class FoodSafeDomainErrorCodes
     {
         public const string NotFound = "FoodSafe:Document:0001";
     }
+
+    public static class DataIntegration
+    {
+        public const string EndpointNotFound = "FoodSafe:DataIntegration:0001";
+        public const string CallLogNotFound = "FoodSafe:DataIntegration:0002";
+    }
 }

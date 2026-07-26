@@ -12,6 +12,7 @@ using FoodSafe.Inspection;
 using FoodSafe.AlertsAndTesting;
 using FoodSafe.FoodPoisoning;
 using FoodSafe.Reporting;
+using FoodSafe.DataIntegration;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -30,6 +31,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
         ConfigureAlertsAndTesting(builder);
         ConfigureFoodPoisoning(builder);
         ConfigureReporting(builder);
+        ConfigureDataIntegration(builder);
 
         builder.Entity<Organization>(entity =>
         {
@@ -2251,6 +2253,91 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             entity.HasCheckConstraint("chk_amr_ren_status", "status IN (1, 2, 3)");
             entity.HasIndex(x => x.ReportId).HasDatabaseName("idx_amr_ren_report");
+        });
+    }
+
+    private static void ConfigureDataIntegration(ModelBuilder builder)
+    {
+        builder.Entity<ApiEndpoint>(entity =>
+        {
+            entity.ToTable("di_api_endpoints");
+            entity.ConfigureByConvention();
+
+            entity.HasKey(x => x.Id).HasName("pk_di_endpoints");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Url).HasColumnName("url").HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.HttpMethod).HasColumnName("http_method").HasMaxLength(10).IsRequired();
+            entity.Property(x => x.ExternalSystem).HasColumnName("external_system").HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasColumnName("description").HasMaxLength(1024);
+            entity.Property(x => x.AuthType).HasColumnName("auth_type").IsRequired();
+            entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+            entity.Property(x => x.LastModificationTime).HasColumnName("last_modification_time");
+            entity.Property(x => x.LastModifierId).HasColumnName("last_modifier_id");
+            entity.Property(x => x.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
+            entity.Property(x => x.DeletionTime).HasColumnName("deletion_time");
+            entity.Property(x => x.DeleterId).HasColumnName("deleter_id");
+            entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");
+
+            entity.HasCheckConstraint("chk_di_ep_status", "status IN (1, 2)");
+            entity.HasCheckConstraint("chk_di_ep_auth_type", "auth_type IN (1, 2, 3, 4)");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_di_ep_organization")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.Status })
+                .HasDatabaseName("idx_di_ep_org_status");
+            entity.HasIndex(x => x.ExternalSystem)
+                .HasDatabaseName("idx_di_ep_ext_system");
+
+            entity.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        builder.Entity<ApiCallLog>(entity =>
+        {
+            entity.ToTable("di_api_call_logs");
+            entity.ConfigureByConvention();
+
+            entity.HasKey(x => x.Id).HasName("pk_di_call_logs");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id").IsRequired();
+            entity.Property(x => x.Direction).HasColumnName("direction").IsRequired();
+            entity.Property(x => x.ExternalSystemName).HasColumnName("external_system_name").HasMaxLength(256).IsRequired();
+            entity.Property(x => x.EndpointUrl).HasColumnName("endpoint_url").HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.HttpMethod).HasColumnName("http_method").HasMaxLength(10).IsRequired();
+            entity.Property(x => x.RequestHeaders).HasColumnName("request_headers");
+            entity.Property(x => x.RequestBody).HasColumnName("request_body");
+            entity.Property(x => x.ResponseStatusCode).HasColumnName("response_status_code");
+            entity.Property(x => x.ResponseBody).HasColumnName("response_body");
+            entity.Property(x => x.CalledAt).HasColumnName("called_at").IsRequired();
+            entity.Property(x => x.DurationMs).HasColumnName("duration_ms").IsRequired();
+            entity.Property(x => x.IsSuccess).HasColumnName("is_success").IsRequired();
+            entity.Property(x => x.ErrorMessage).HasColumnName("error_message").HasMaxLength(4000);
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+            entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");
+
+            entity.HasCheckConstraint("chk_di_cl_direction", "direction IN (1, 2)");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_di_cl_organization")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new { x.OrganizationId, x.CalledAt })
+                .HasDatabaseName("idx_di_cl_org_called");
+            entity.HasIndex(x => x.ExternalSystemName)
+                .HasDatabaseName("idx_di_cl_ext_system");
+            entity.HasIndex(x => x.IsSuccess)
+                .HasDatabaseName("idx_di_cl_success");
         });
     }
 }

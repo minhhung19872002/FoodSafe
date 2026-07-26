@@ -38,6 +38,7 @@ import {
   StatisticsPage,
   AuditLogPage,
   SystemSettingsPage,
+  DataIntegrationPage,
   RouteLoading,
 } from "./routeComponents";
 
@@ -313,6 +314,16 @@ export const router = createBrowserRouter([
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.AlertsAndTesting.Documents.View">
               <DocumentsPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "data-integration",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.DataIntegration.ApiEndpoints.View">
+              <DataIntegrationPage />
             </PermissionRoute>
           </Suspense>
         ),

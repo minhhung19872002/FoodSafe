@@ -38,6 +38,7 @@ import {
   PieChartOutlined,
   FileSearchOutlined,
   ToolOutlined,
+  ApiOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -70,6 +71,7 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   "risk-analysis": "Phân tích nguy cơ",
   "testing-results": "Kết quả kiểm nghiệm",
   documents: "Văn bản pháp quy",
+  "data-integration": "Tích hợp dữ liệu",
   administration: "Quản trị hệ thống",
   identity: "Tài khoản và quyền",
   account: "Tài khoản",
@@ -237,6 +239,12 @@ const NAV_CONFIG: NavEntry[] = [
     icon: <BarChartOutlined />,
     label: "Báo cáo",
     permission: "FoodSafe.Reporting.NdtpReports.View",
+  },
+  {
+    key: "/data-integration",
+    icon: <ApiOutlined />,
+    label: "Tích hợp dữ liệu",
+    permission: "FoodSafe.DataIntegration.ApiEndpoints.View",
   },
   {
     key: "/statistics",

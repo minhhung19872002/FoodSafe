@@ -299,6 +299,28 @@ public static class FoodSafePermissions
         public const string Settings = Default + ".Settings";
     }
 
+    public static class DataIntegration
+    {
+        public const string Default = GroupName + ".DataIntegration";
+
+        public static class ApiEndpoints
+        {
+            public const string Default =
+                DataIntegration.Default + ".ApiEndpoints";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+        }
+
+        public static class CallHistory
+        {
+            public const string Default =
+                DataIntegration.Default + ".CallHistory";
+            public const string View = Default + ".View";
+        }
+    }
+
     public static class DataScope
     {
         public const string All = GroupName + ".DataScope.All";

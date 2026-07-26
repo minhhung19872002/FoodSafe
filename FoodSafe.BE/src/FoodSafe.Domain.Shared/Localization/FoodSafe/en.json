@@ -244,6 +244,19 @@
     "FoodSafe:Report:0006": "Can only modify reports in Draft status.",
     "FoodSafe:Report:0007": "Return reason is required.",
     "FoodSafe:Report:0008": "Can only notify errors on verified reports.",
-    "FoodSafe:Report:0009": "Invalid report period."
+    "FoodSafe:Report:0009": "Invalid report period.",
+
+    "Permission:DataIntegration": "Data integration",
+    "Permission:DataIntegration.ApiEndpoints": "API endpoints",
+    "Permission:DataIntegration.ApiEndpoints.View": "View API endpoints",
+    "Permission:DataIntegration.ApiEndpoints.Create": "Create API endpoints",
+    "Permission:DataIntegration.ApiEndpoints.Edit": "Edit API endpoints",
+    "Permission:DataIntegration.ApiEndpoints.Delete": "Delete API endpoints",
+    "Permission:DataIntegration.CallHistory": "API call history",
+    "Permission:DataIntegration.CallHistory.View": "View API call history",
+    "Permission:DataScope.All": "Access all organization data",
+
+    "FoodSafe:DataIntegration:0001": "API endpoint not found.",
+    "FoodSafe:DataIntegration:0002": "API call log not found."
   }
 }

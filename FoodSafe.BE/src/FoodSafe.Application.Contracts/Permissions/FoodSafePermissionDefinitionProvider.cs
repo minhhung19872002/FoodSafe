@@ -536,6 +536,31 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             FoodSafePermissions.SystemAdministration.Settings,
             LocalizableString.Create<FoodSafeResource>("Permission:SystemAdmin.Settings"));
 
+        var dataIntegration = group.AddPermission(
+            FoodSafePermissions.DataIntegration.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration"));
+        var apiEndpoints = dataIntegration.AddChild(
+            FoodSafePermissions.DataIntegration.ApiEndpoints.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiEndpoints"));
+        apiEndpoints.AddChild(
+            FoodSafePermissions.DataIntegration.ApiEndpoints.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiEndpoints.View"));
+        apiEndpoints.AddChild(
+            FoodSafePermissions.DataIntegration.ApiEndpoints.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiEndpoints.Create"));
+        apiEndpoints.AddChild(
+            FoodSafePermissions.DataIntegration.ApiEndpoints.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiEndpoints.Edit"));
+        apiEndpoints.AddChild(
+            FoodSafePermissions.DataIntegration.ApiEndpoints.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiEndpoints.Delete"));
+        var callHistory = dataIntegration.AddChild(
+            FoodSafePermissions.DataIntegration.CallHistory.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.CallHistory"));
+        callHistory.AddChild(
+            FoodSafePermissions.DataIntegration.CallHistory.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.CallHistory.View"));
+
         group.AddPermission(
             FoodSafePermissions.DataScope.All,
             LocalizableString.Create<FoodSafeResource>("Permission:DataScope.All"));

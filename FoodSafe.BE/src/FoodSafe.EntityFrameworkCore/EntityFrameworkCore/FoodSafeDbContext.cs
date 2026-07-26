@@ -20,6 +20,7 @@ using FoodSafe.Inspection;
 using FoodSafe.AlertsAndTesting;
 using FoodSafe.FoodPoisoning;
 using FoodSafe.Reporting;
+using FoodSafe.DataIntegration;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -93,6 +94,8 @@ public class FoodSafeDbContext :
     public DbSet<AtpWorkReportErrorNotification> AtpWorkReportErrorNotifications { get; set; }
     public DbSet<ActionMonthReport> ActionMonthReports { get; set; }
     public DbSet<ActionMonthReportErrorNotification> ActionMonthReportErrorNotifications { get; set; }
+    public DbSet<ApiEndpoint> ApiEndpoints { get; set; }
+    public DbSet<ApiCallLog> ApiCallLogs { get; set; }
 
     public FoodSafeDbContext(DbContextOptions<FoodSafeDbContext> options)
         : base(options)
