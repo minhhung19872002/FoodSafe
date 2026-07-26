@@ -1895,6 +1895,150 @@ namespace FoodSafe.Migrations
                     b.ToTable("advertisement_registration_products", (string)null);
                 });
 
+            modelBuilder.Entity("FoodSafe.Licensing.CfsCertificate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CertificateNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("certificate_number");
+
+                    b.Property<string>("CertifyingAuthority")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("certifying_authority");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creation_time");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("creator_id");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleter_id");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletion_time");
+
+                    b.Property<Guid>("DestinationCountryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("destination_country_id");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("date")
+                        .HasColumnName("expiry_date");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("extra_properties");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
+
+                    b.Property<DateTime>("IssueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("issue_date");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modification_time");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_modifier_id");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("RevokeReason")
+                        .HasColumnType("text")
+                        .HasColumnName("revoke_reason");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<Guid?>("RevokedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("revoked_by_id");
+
+                    b.Property<short>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cfs_certificates");
+
+                    b.HasIndex("BusinessId")
+                        .HasDatabaseName("idx_cfs_business")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("CertificateNumber")
+                        .IsUnique()
+                        .HasDatabaseName("uq_cfs_certificates_number");
+
+                    b.HasIndex("DestinationCountryId")
+                        .HasDatabaseName("idx_cfs_destination_country")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("idx_cfs_org")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("idx_cfs_product")
+                        .HasFilter("product_id IS NOT NULL AND is_deleted = FALSE");
+
+                    b.HasIndex("BusinessId", "OrganizationId");
+
+                    b.HasIndex("ExpiryDate", "Status")
+                        .HasDatabaseName("idx_cfs_expiry")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("ProductId", "BusinessId", "OrganizationId");
+
+                    b.ToTable("cfs_certificates", null, t =>
+                        {
+                            t.HasCheckConstraint("chk_cfs_dates", "expiry_date IS NULL OR issue_date <= expiry_date");
+
+                            t.HasCheckConstraint("chk_cfs_revoke", "(status != 3 AND revoke_reason IS NULL AND revoked_at IS NULL AND revoked_by_id IS NULL) OR (status = 3 AND revoke_reason IS NOT NULL AND revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)");
+
+                            t.HasCheckConstraint("chk_cfs_status", "status IN (1, 2, 3)");
+                        });
+                });
+
             modelBuilder.Entity("FoodSafe.Licensing.EligibilityCertificate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2022,6 +2166,159 @@ namespace FoodSafe.Migrations
                             t.HasCheckConstraint("chk_elic_revoke", "(status != 3 AND revoke_reason IS NULL AND revoked_at IS NULL AND revoked_by_id IS NULL) OR (status = 3 AND revoke_reason IS NOT NULL AND revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)");
 
                             t.HasCheckConstraint("chk_elic_status", "status IN (1, 2, 3)");
+                        });
+                });
+
+            modelBuilder.Entity("FoodSafe.Licensing.ExportFoodCertificate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CertificateNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("certificate_number");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creation_time");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("creator_id");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleter_id");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletion_time");
+
+                    b.Property<Guid?>("DestinationCountryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("destination_country_id");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("date")
+                        .HasColumnName("expiry_date");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("extra_properties");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
+
+                    b.Property<DateTime>("IssueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("issue_date");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modification_time");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_modifier_id");
+
+                    b.Property<string>("LotNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("lot_number");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("numeric(18,3)")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("QuantityUnit")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("quantity_unit");
+
+                    b.Property<string>("RevokeReason")
+                        .HasColumnType("text")
+                        .HasColumnName("revoke_reason");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<Guid?>("RevokedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("revoked_by_id");
+
+                    b.Property<short>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_export_food_certificates");
+
+                    b.HasIndex("BusinessId")
+                        .HasDatabaseName("idx_export_cert_business")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("CertificateNumber")
+                        .IsUnique()
+                        .HasDatabaseName("uq_export_food_certificates_number");
+
+                    b.HasIndex("DestinationCountryId")
+                        .HasDatabaseName("idx_export_cert_destination_country")
+                        .HasFilter("destination_country_id IS NOT NULL AND is_deleted = FALSE");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("idx_export_cert_org")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("idx_export_cert_product")
+                        .HasFilter("product_id IS NOT NULL AND is_deleted = FALSE");
+
+                    b.HasIndex("BusinessId", "OrganizationId");
+
+                    b.HasIndex("ExpiryDate", "Status")
+                        .HasDatabaseName("idx_export_cert_expiry")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("ProductId", "BusinessId", "OrganizationId");
+
+                    b.ToTable("export_food_certificates", null, t =>
+                        {
+                            t.HasCheckConstraint("chk_export_cert_dates", "expiry_date IS NULL OR issue_date <= expiry_date");
+
+                            t.HasCheckConstraint("chk_export_cert_revoke", "(status != 3 AND revoke_reason IS NULL AND revoked_at IS NULL AND revoked_by_id IS NULL) OR (status = 3 AND revoke_reason IS NOT NULL AND revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)");
+
+                            t.HasCheckConstraint("chk_export_cert_status", "status IN (1, 2, 3)");
                         });
                 });
 
@@ -4455,6 +4752,38 @@ namespace FoodSafe.Migrations
                         .HasConstraintName("fk_arp_product_owner");
                 });
 
+            modelBuilder.Entity("FoodSafe.Licensing.CfsCertificate", b =>
+                {
+                    b.HasOne("FoodSafe.Catalogs.Country", null)
+                        .WithMany()
+                        .HasForeignKey("DestinationCountryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_cfs_destination_country");
+
+                    b.HasOne("FoodSafe.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_cfs_org");
+
+                    b.HasOne("FoodSafe.BusinessManagement.Business", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_cfs_business_org");
+
+                    b.HasOne("FoodSafe.BusinessManagement.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId", "BusinessId", "OrganizationId")
+                        .HasPrincipalKey("Id", "BusinessId", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_cfs_product_owner");
+                });
+
             modelBuilder.Entity("FoodSafe.Licensing.EligibilityCertificate", b =>
                 {
                     b.HasOne("FoodSafe.Organizations.Organization", null)
@@ -4471,6 +4800,37 @@ namespace FoodSafe.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_elic_business_org");
+                });
+
+            modelBuilder.Entity("FoodSafe.Licensing.ExportFoodCertificate", b =>
+                {
+                    b.HasOne("FoodSafe.Catalogs.Country", null)
+                        .WithMany()
+                        .HasForeignKey("DestinationCountryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_export_cert_destination_country");
+
+                    b.HasOne("FoodSafe.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_export_cert_org");
+
+                    b.HasOne("FoodSafe.BusinessManagement.Business", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_export_cert_business_org");
+
+                    b.HasOne("FoodSafe.BusinessManagement.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId", "BusinessId", "OrganizationId")
+                        .HasPrincipalKey("Id", "BusinessId", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_export_cert_product_owner");
                 });
 
             modelBuilder.Entity("FoodSafe.Licensing.ProductRegistration", b =>

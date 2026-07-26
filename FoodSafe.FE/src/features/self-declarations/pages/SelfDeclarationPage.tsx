@@ -11,16 +11,18 @@ import {
   App,
   Button,
   Input,
-  Modal,
   Popconfirm,
   Select,
   Space,
   Table,
-  Tag,
-  Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { PageHeader } from "@/components/PageHeader";
+import { StatusBadge } from "@/components/StatusBadge";
+import { ExpiryTag } from "@/components/ExpiryTag";
+import { RevokeModal } from "@/components/RevokeModal";
+import { saveDownload } from "@/utils/download";
 import {
   useCreateSelfDeclaration,
   useDeleteSelfDeclaration,
@@ -47,43 +49,7 @@ import {
   type SelfDeclarationInput,
 } from "../types/selfDeclaration.types";
 
-const pageSize = 20;
-
-function saveDownload(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = fileName;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
-function statusTag(status: LicenseStatus) {
-  if (status === LICENSE_STATUS.Active)
-    return <Tag color="green">Còn hiệu lực</Tag>;
-  if (status === LICENSE_STATUS.Expired)
-    return <Tag color="orange">Hết hạn</Tag>;
-  return <Tag color="red">Đã thu hồi</Tag>;
-}
-
-function expiryText(item: SelfDeclaration) {
-  if (!item.expiryDate) return "Không thời hạn";
-  const date = new Date(item.expiryDate).toLocaleDateString("vi-VN");
-  if (
-    item.status === LICENSE_STATUS.Active &&
-    item.daysUntilExpiry !== undefined &&
-    item.daysUntilExpiry <= 90
-  )
-    return (
-      <Space orientation="vertical" size={0}>
-        <span>{date}</span>
-        <Tag color={item.daysUntilExpiry <= 30 ? "red" : "gold"}>
-          Còn {item.daysUntilExpiry} ngày
-        </Tag>
-      </Space>
-    );
-  return date;
-}
+const PAGE_SIZE = 20;
 
 export default function SelfDeclarationPage() {
   const { message } = App.useApp();
@@ -107,15 +73,14 @@ export default function SelfDeclarationPage() {
   const [editorBusinessId, setEditorBusinessId] = useState<string>();
   const [attachmentsFor, setAttachmentsFor] = useState<SelfDeclaration>();
   const [revoking, setRevoking] = useState<SelfDeclaration>();
-  const [revokeReason, setRevokeReason] = useState("");
 
   const queryFilter = {
     filter: filter || undefined,
     businessId,
     status,
     expiringWithinDays,
-    skipCount: (page - 1) * pageSize,
-    maxResultCount: pageSize,
+    skipCount: (page - 1) * PAGE_SIZE,
+    maxResultCount: PAGE_SIZE,
   };
   const declarations = useSelfDeclarations(queryFilter);
   const businesses = useSelfDeclarationBusinesses();
@@ -170,29 +135,36 @@ export default function SelfDeclarationPage() {
     {
       title: "Ngày công bố",
       dataIndex: "declarationDate",
-      width: 125,
+      width: 120,
       render: (value: string) => new Date(value).toLocaleDateString("vi-VN"),
     },
     {
       title: "Hết hạn",
-      width: 145,
-      render: (_, item) => expiryText(item),
+      width: 140,
+      render: (_, item) => (
+        <ExpiryTag
+          expiryDate={item.expiryDate}
+          status={item.status}
+          daysUntilExpiry={item.daysUntilExpiry}
+        />
+      ),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       width: 125,
-      render: statusTag,
+      render: (s: number) => <StatusBadge status={s} />,
     },
     {
       title: "Thao tác",
       fixed: "right",
-      width: 180,
+      width: 160,
       render: (_, item) => (
         <Space size={2}>
           <Button
             type="text"
-            aria-label={`Tệp ${item.declarationNumber}`}
+            size="small"
+            aria-label={`Tệp đính kèm ${item.declarationNumber}`}
             icon={<FileTextOutlined />}
             onClick={() => setAttachmentsFor(item)}
           />
@@ -200,6 +172,7 @@ export default function SelfDeclarationPage() {
             <>
               <Button
                 type="text"
+                size="small"
                 aria-label={`Sửa ${item.declarationNumber}`}
                 icon={<EditOutlined />}
                 onClick={() => {
@@ -210,13 +183,11 @@ export default function SelfDeclarationPage() {
               />
               <Button
                 type="text"
+                size="small"
                 danger
                 aria-label={`Thu hồi ${item.declarationNumber}`}
                 icon={<StopOutlined />}
-                onClick={() => {
-                  setRevoking(item);
-                  setRevokeReason("");
-                }}
+                onClick={() => setRevoking(item)}
               />
             </>
           )}
@@ -235,6 +206,7 @@ export default function SelfDeclarationPage() {
             >
               <Button
                 type="text"
+                size="small"
                 danger
                 aria-label={`Xóa ${item.declarationNumber}`}
                 icon={<DeleteOutlined />}
@@ -247,121 +219,115 @@ export default function SelfDeclarationPage() {
   ];
 
   return (
-    <>
-      <Space
-        align="center"
-        style={{
-          width: "100%",
-          justifyContent: "space-between",
-          marginBottom: 16,
-        }}
-      >
-        <div>
-          <Typography.Title level={2} style={{ margin: 0 }}>
-            Hồ sơ tự công bố
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Quản lý công bố sản phẩm và cảnh báo hết hạn 30/60/90 ngày
-          </Typography.Text>
-        </div>
-        <Space>
-          <Button
-            icon={<ExportOutlined />}
-            loading={exportMutation.isPending}
-            onClick={() =>
-              exportMutation.mutate(queryFilter, {
-                onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                onError: () => void message.error("Không thể xuất danh sách."),
-              })
-            }
-          >
-            Xuất Excel
-          </Button>
-          {canCreate && (
+    <div className="page-container">
+      <PageHeader
+        title="Hồ sơ tự công bố"
+        subtitle="Quản lý công bố sản phẩm và cảnh báo hết hạn 30/60/90 ngày"
+        actions={
+          <>
             <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                setEditing(undefined);
-                setEditorOpen(true);
-              }}
+              icon={<ExportOutlined />}
+              loading={exportMutation.isPending}
+              onClick={() =>
+                exportMutation.mutate(queryFilter, {
+                  onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                  onError: () =>
+                    void message.error("Không thể xuất danh sách."),
+                })
+              }
             >
-              Thêm hồ sơ
+              Xuất Excel
             </Button>
-          )}
-        </Space>
-      </Space>
-
-      <Space wrap style={{ marginBottom: 16 }}>
-        <Input.Search
-          allowClear
-          placeholder="Số hồ sơ, sản phẩm, nhà sản xuất"
-          style={{ width: 310 }}
-          onSearch={(value) => {
-            setFilter(value.trim());
-            setPage(1);
-          }}
-        />
-        <Select
-          allowClear
-          showSearch
-          optionFilterProp="label"
-          placeholder="Tất cả cơ sở"
-          style={{ width: 260 }}
-          loading={businesses.isLoading}
-          options={(businesses.data ?? []).map((item) => ({
-            value: item.id,
-            label: item.code ? `${item.code} — ${item.name}` : item.name,
-          }))}
-          onChange={(value) => {
-            setBusinessId(value);
-            setPage(1);
-          }}
-        />
-        <Select
-          allowClear
-          placeholder="Tất cả trạng thái"
-          style={{ width: 170 }}
-          options={[
-            { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
-            { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
-            { value: LICENSE_STATUS.Revoked, label: "Đã thu hồi" },
-          ]}
-          onChange={(value) => {
-            setStatus(value);
-            setPage(1);
-          }}
-        />
-        <Select
-          allowClear
-          placeholder="Cảnh báo hết hạn"
-          style={{ width: 180 }}
-          options={[
-            { value: 30, label: "Trong 30 ngày" },
-            { value: 60, label: "Trong 60 ngày" },
-            { value: 90, label: "Trong 90 ngày" },
-          ]}
-          onChange={(value) => {
-            setExpiringWithinDays(value);
-            setPage(1);
-          }}
-        />
-      </Space>
-
-      <Table
-        rowKey="id"
-        scroll={{ x: 1100 }}
-        loading={declarations.isLoading}
-        columns={columns}
-        dataSource={declarations.data?.items ?? []}
-        pagination={{
-          current: page,
-          pageSize,
-          total: declarations.data?.totalCount ?? 0,
-          showSizeChanger: false,
-          onChange: setPage,
-        }}
+            {canCreate && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => {
+                  setEditing(undefined);
+                  setEditorOpen(true);
+                }}
+              >
+                Thêm hồ sơ
+              </Button>
+            )}
+          </>
+        }
       />
+
+      <div className="page-card">
+        <div className="filter-toolbar" style={{ marginBottom: 16 }}>
+          <Input.Search
+            allowClear
+            placeholder="Số hồ sơ, sản phẩm, nhà sản xuất"
+            style={{ width: 280 }}
+            onSearch={(value) => {
+              setFilter(value.trim());
+              setPage(1);
+            }}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Tất cả cơ sở"
+            style={{ width: 240 }}
+            loading={businesses.isLoading}
+            options={(businesses.data ?? []).map((item) => ({
+              value: item.id,
+              label: item.code ? `${item.code} — ${item.name}` : item.name,
+            }))}
+            onChange={(value) => {
+              setBusinessId(value);
+              setPage(1);
+            }}
+          />
+          <Select
+            allowClear
+            placeholder="Trạng thái"
+            style={{ width: 160 }}
+            options={[
+              { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
+              { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
+              { value: LICENSE_STATUS.Revoked, label: "Đã thu hồi" },
+            ]}
+            onChange={(value) => {
+              setStatus(value);
+              setPage(1);
+            }}
+          />
+          <Select
+            allowClear
+            placeholder="Cảnh báo hết hạn"
+            style={{ width: 170 }}
+            options={[
+              { value: 30, label: "Trong 30 ngày" },
+              { value: 60, label: "Trong 60 ngày" },
+              { value: 90, label: "Trong 90 ngày" },
+            ]}
+            onChange={(value) => {
+              setExpiringWithinDays(value);
+              setPage(1);
+            }}
+          />
+        </div>
+
+        <Table
+          rowKey="id"
+          size="middle"
+          scroll={{ x: 1000 }}
+          loading={declarations.isLoading}
+          columns={columns}
+          dataSource={declarations.data?.items ?? []}
+          pagination={{
+            current: page,
+            pageSize: PAGE_SIZE,
+            total: declarations.data?.totalCount ?? 0,
+            showSizeChanger: false,
+            showTotal: (total) => `${total} bản ghi`,
+            onChange: setPage,
+          }}
+        />
+      </div>
 
       <SelfDeclarationEditorModal
         open={editorOpen}
@@ -420,18 +386,15 @@ export default function SelfDeclarationPage() {
         }}
       />
 
-      <Modal
+      <RevokeModal
         open={Boolean(revoking)}
         title={`Thu hồi hồ sơ ${revoking?.declarationNumber ?? ""}`}
-        okText="Thu hồi"
-        okButtonProps={{ danger: true, disabled: !revokeReason.trim() }}
-        cancelText="Hủy"
         confirmLoading={revokeMutation.isPending}
         onCancel={() => setRevoking(undefined)}
-        onOk={() => {
-          if (!revoking || !revokeReason.trim()) return;
+        onConfirm={(reason) => {
+          if (!revoking) return;
           revokeMutation.mutate(
-            { id: revoking.id, reason: revokeReason.trim() },
+            { id: revoking.id, reason },
             {
               onSuccess: () => {
                 void message.success("Đã thu hồi hồ sơ.");
@@ -441,19 +404,7 @@ export default function SelfDeclarationPage() {
             },
           );
         }}
-      >
-        <Typography.Paragraph>
-          Hồ sơ đã thu hồi không thể chỉnh sửa lại. Vui lòng ghi rõ lý do.
-        </Typography.Paragraph>
-        <Input.TextArea
-          rows={4}
-          maxLength={2000}
-          showCount
-          value={revokeReason}
-          placeholder="Lý do thu hồi"
-          onChange={(event) => setRevokeReason(event.target.value)}
-        />
-      </Modal>
-    </>
+      />
+    </div>
   );
 }

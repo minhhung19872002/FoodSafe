@@ -12,6 +12,10 @@ import {
   AdvertisementRegistrationPage,
   EligibilityCertificatePage,
   PublicEligibilityCertificateLookupPage,
+  CfsCertificatePage,
+  PublicCfsCertificateLookupPage,
+  ExportFoodCertificatePage,
+  PublicExportFoodCertificateLookupPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -30,6 +34,22 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<RouteLoading />}>
         <PublicEligibilityCertificateLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-cfs",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicCfsCertificateLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-gcn-xuat-khau",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicExportFoodCertificateLookupPage />
       </Suspense>
     ),
   },
@@ -166,6 +186,26 @@ export const router = createBrowserRouter([
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.Licensing.EligibilityCertificates.View">
               <EligibilityCertificatePage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "cfs-certificates",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Licensing.CfsCertificates.View">
+              <CfsCertificatePage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "export-food-certificates",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Licensing.ExportCertificates.View">
+              <ExportFoodCertificatePage />
             </PermissionRoute>
           </Suspense>
         ),

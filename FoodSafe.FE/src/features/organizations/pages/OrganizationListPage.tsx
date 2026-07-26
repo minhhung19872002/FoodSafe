@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { App, Typography } from "antd";
+import { App } from "antd";
+import { PageHeader } from "@/components/PageHeader";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import {
   useCreateOrganization,
@@ -94,13 +95,11 @@ export default function OrganizationListPage() {
   };
 
   return (
-    <>
-      <Typography.Title level={2}>Quản lý đơn vị</Typography.Title>
-      <Typography.Paragraph type="secondary">
-        Cây đơn vị hành chính Tỉnh → Huyện/Thành phố → Xã/Phường.
-      </Typography.Paragraph>
+    <div className="page-container">
+      <PageHeader title="Quản lý đơn vị" subtitle="Cơ cấu tổ chức và phân cấp đơn vị hành chính" />
 
-      <OrganizationListView
+      <div className="page-card">
+        <OrganizationListView
         items={listQuery.data?.items ?? []}
         treeItems={treeQuery.data?.items ?? []}
         totalCount={listQuery.data?.totalCount ?? 0}
@@ -142,7 +141,8 @@ export default function OrganizationListPage() {
             },
           });
         }}
-      />
+        />
+      </div>
 
       <OrganizationCreateModal
         open={createOpen || Boolean(editing)}
@@ -184,6 +184,6 @@ export default function OrganizationListPage() {
           });
         }}
       />
-    </>
+    </div>
   );
 }

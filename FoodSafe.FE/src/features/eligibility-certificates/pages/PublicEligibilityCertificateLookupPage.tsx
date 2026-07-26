@@ -5,14 +5,11 @@ import {
   Descriptions,
   Input,
   Space,
-  Tag,
   Typography,
 } from "antd";
+import { StatusBadge } from "@/components/StatusBadge";
 import { eligibilityCertificateApi } from "../api/eligibilityCertificateApi";
-import {
-  LICENSE_STATUS,
-  type PublicEligibilityCertificate,
-} from "../types/eligibilityCertificate.types";
+import type { PublicEligibilityCertificate } from "../types/eligibilityCertificate.types";
 
 export default function PublicEligibilityCertificateLookupPage() {
   const [number, setNumber] = useState("");
@@ -70,21 +67,7 @@ export default function PublicEligibilityCertificateLookupPage() {
               {result.certificateNumber}
             </Descriptions.Item>
             <Descriptions.Item label="Trạng thái">
-              <Tag
-                color={
-                  result.status === LICENSE_STATUS.Active
-                    ? "green"
-                    : result.status === LICENSE_STATUS.Expired
-                      ? "orange"
-                      : "red"
-                }
-              >
-                {result.status === LICENSE_STATUS.Active
-                  ? "Còn hiệu lực"
-                  : result.status === LICENSE_STATUS.Expired
-                    ? "Hết hạn"
-                    : "Đã thu hồi"}
-              </Tag>
+              <StatusBadge status={result.status} />
             </Descriptions.Item>
             <Descriptions.Item label="Cơ sở SXKD">
               {result.businessName}

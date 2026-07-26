@@ -7,6 +7,8 @@ public sealed class LicensingAutoMapperProfile : Profile
     public LicensingAutoMapperProfile()
     {
         CreateMap<ProductRegistration, ProductRegistrationDto>();
+        CreateMap<CfsCertificate, CfsCertificateDto>();
+        CreateMap<ExportFoodCertificate, ExportFoodCertificateDto>();
         CreateMap<AdvertisementRegistration,
                 AdvertisementRegistrationDto>()
             .ForMember(x => x.Products, options => options.Ignore())

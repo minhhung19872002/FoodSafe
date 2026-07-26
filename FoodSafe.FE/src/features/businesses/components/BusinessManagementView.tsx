@@ -85,12 +85,12 @@ const businessStatusLabels: Record<BusinessStatus, string> = {
 export function BusinessManagementView(props: BusinessManagementViewProps) {
   const businessColumns: ColumnsType<Business> = [
     { title: "Mã", dataIndex: "code", width: 120 },
-    { title: "Tên cơ sở", dataIndex: "name" },
-    { title: "Địa chỉ", dataIndex: "addressStreet" },
+    { title: "Tên cơ sở", dataIndex: "name", ellipsis: true },
+    { title: "Địa chỉ", dataIndex: "addressStreet", ellipsis: true },
     {
       title: "Trạng thái",
       dataIndex: "status",
-      width: 150,
+      width: 140,
       render: (status: BusinessStatus) => (
         <Tag
           color={
@@ -118,10 +118,12 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     {
       title: "Thao tác",
       width: 150,
+      fixed: "right",
       render: (_: unknown, business) => (
-        <Space>
+        <Space size={2}>
           <Button
             type="text"
+            size="small"
             aria-label={`Người phụ trách ${business.name}`}
             icon={<TeamOutlined />}
             onClick={() => props.onManageHandlers(business)}
@@ -129,6 +131,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
           {business.addressLatitude !== undefined && (
             <Button
               type="text"
+              size="small"
               aria-label={`Bản đồ ${business.name}`}
               icon={<EnvironmentOutlined />}
               onClick={() => props.onShowMap(business)}
@@ -137,6 +140,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
           {props.permissions.editBusiness && (
             <Button
               type="text"
+              size="small"
               aria-label={`Sửa ${business.name}`}
               icon={<EditOutlined />}
               onClick={() => props.onEditBusiness(business)}
@@ -151,6 +155,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
             >
               <Button
                 type="text"
+                size="small"
                 danger
                 aria-label={`Xóa ${business.name}`}
                 icon={<DeleteOutlined />}
@@ -164,13 +169,13 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
 
   const productColumns: ColumnsType<Product> = [
     { title: "Mã", dataIndex: "code", width: 120 },
-    { title: "Tên sản phẩm", dataIndex: "name" },
-    { title: "Thương hiệu", dataIndex: "brandName" },
-    { title: "Nhà sản xuất", dataIndex: "manufacturer" },
+    { title: "Tên sản phẩm", dataIndex: "name", ellipsis: true },
+    { title: "Thương hiệu", dataIndex: "brandName", ellipsis: true },
+    { title: "Nhà sản xuất", dataIndex: "manufacturer", ellipsis: true },
     {
       title: "Trạng thái",
       dataIndex: "status",
-      width: 150,
+      width: 140,
       render: (status: ProductStatus) => (
         <Tag color={status === PRODUCT_STATUS.Active ? "success" : "default"}>
           {status === PRODUCT_STATUS.Active ? "Đang kinh doanh" : "Ngừng"}
@@ -180,10 +185,12 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     {
       title: "Thao tác",
       width: 110,
+      fixed: "right",
       render: (_: unknown, product) => (
-        <Space>
+        <Space size={2}>
           <Button
             type="text"
+            size="small"
             aria-label={`Tệp đính kèm ${product.name}`}
             icon={<PaperClipOutlined />}
             onClick={() => props.onManageProductAttachments(product)}
@@ -191,6 +198,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
           {props.permissions.editProduct && (
             <Button
               type="text"
+              size="small"
               aria-label={`Sửa ${product.name}`}
               icon={<EditOutlined />}
               onClick={() => props.onEditProduct(product)}
@@ -205,6 +213,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
             >
               <Button
                 type="text"
+                size="small"
                 danger
                 aria-label={`Xóa ${product.name}`}
                 icon={<DeleteOutlined />}
@@ -217,7 +226,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
   ];
 
   return (
-    <>
+    <div className="page-card">
       <Tabs
         activeKey={props.activeTab}
         onChange={(key) => props.onTabChange(key as "businesses" | "products")}
@@ -232,7 +241,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
       />
       {props.activeTab === "businesses" ? (
         <>
-          <Space wrap style={{ marginBottom: 16 }}>
+          <div className="filter-toolbar" style={{ marginBottom: 16 }}>
             <Input.Search
               allowClear
               value={props.businessFilter}
@@ -240,14 +249,14 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               onChange={(event) =>
                 props.onBusinessFilterChange(event.target.value)
               }
-              style={{ width: 320 }}
+              style={{ width: 280 }}
             />
             <Select
               allowClear
               placeholder="Trạng thái"
               value={props.businessStatus}
               onChange={props.onBusinessStatusChange}
-              style={{ width: 180 }}
+              style={{ width: 160 }}
               options={Object.entries(businessStatusLabels).map(
                 ([value, label]) => ({ value: Number(value), label }),
               )}
@@ -266,15 +275,17 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
                 icon={<ImportOutlined />}
                 onClick={props.onImportBusiness}
               >
-                Import Excel
+                Import
               </Button>
             )}
             <Button icon={<ExportOutlined />} onClick={props.onExportBusiness}>
-              Export Excel
+              Xuất Excel
             </Button>
-          </Space>
+          </div>
           <Table
             rowKey="id"
+            size="middle"
+            scroll={{ x: 900 }}
             loading={props.loading}
             dataSource={props.businesses}
             columns={businessColumns}
@@ -282,13 +293,14 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               current: props.businessPage,
               pageSize: props.pageSize,
               total: props.businessTotal,
+              showTotal: (total) => `${total} bản ghi`,
               onChange: props.onBusinessPageChange,
             }}
           />
         </>
       ) : (
         <>
-          <Space wrap style={{ marginBottom: 16 }}>
+          <div className="filter-toolbar" style={{ marginBottom: 16 }}>
             <Input.Search
               allowClear
               value={props.productFilter}
@@ -296,14 +308,14 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               onChange={(event) =>
                 props.onProductFilterChange(event.target.value)
               }
-              style={{ width: 340 }}
+              style={{ width: 280 }}
             />
             <Select
               allowClear
               placeholder="Trạng thái"
               value={props.productStatus}
               onChange={props.onProductStatusChange}
-              style={{ width: 180 }}
+              style={{ width: 160 }}
               options={[
                 { value: PRODUCT_STATUS.Active, label: "Đang kinh doanh" },
                 { value: PRODUCT_STATUS.Inactive, label: "Ngừng kinh doanh" },
@@ -320,15 +332,17 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
             )}
             {props.permissions.importProduct && (
               <Button icon={<ImportOutlined />} onClick={props.onImportProduct}>
-                Import Excel
+                Import
               </Button>
             )}
             <Button icon={<ExportOutlined />} onClick={props.onExportProduct}>
-              Export Excel
+              Xuất Excel
             </Button>
-          </Space>
+          </div>
           <Table
             rowKey="id"
+            size="middle"
+            scroll={{ x: 800 }}
             loading={props.loading}
             dataSource={props.products}
             columns={productColumns}
@@ -336,11 +350,12 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               current: props.productPage,
               pageSize: props.pageSize,
               total: props.productTotal,
+              showTotal: (total) => `${total} bản ghi`,
               onChange: props.onProductPageChange,
             }}
           />
         </>
       )}
-    </>
+    </div>
   );
 }

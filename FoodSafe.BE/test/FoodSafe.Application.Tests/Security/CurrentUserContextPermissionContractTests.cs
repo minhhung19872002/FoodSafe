@@ -91,5 +91,29 @@ public sealed class CurrentUserContextPermissionContractTests
         Assert.Contains(
             FoodSafePermissions.Licensing.EligibilityCertificates.Delete,
             permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.CfsCertificates.View,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.CfsCertificates.Create,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.CfsCertificates.Edit,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.CfsCertificates.Delete,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.ExportCertificates.View,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.ExportCertificates.Create,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.ExportCertificates.Edit,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.Licensing.ExportCertificates.Delete,
+            permissions);
     }
 }

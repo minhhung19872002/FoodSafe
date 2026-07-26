@@ -5,14 +5,11 @@ import {
   Descriptions,
   Input,
   Space,
-  Tag,
   Typography,
 } from "antd";
+import { StatusBadge } from "@/components/StatusBadge";
 import { productRegistrationApi } from "../api/productRegistrationApi";
-import {
-  LICENSE_STATUS,
-  type PublicProductRegistration,
-} from "../types/productRegistration.types";
+import type { PublicProductRegistration } from "../types/productRegistration.types";
 
 export default function PublicProductRegistrationLookupPage() {
   const [number, setNumber] = useState("");
@@ -76,21 +73,7 @@ export default function PublicProductRegistrationLookupPage() {
               {result.registrationNumber}
             </Descriptions.Item>
             <Descriptions.Item label="Trạng thái">
-              <Tag
-                color={
-                  result.status === LICENSE_STATUS.Active
-                    ? "green"
-                    : result.status === LICENSE_STATUS.Expired
-                      ? "orange"
-                      : "red"
-                }
-              >
-                {result.status === LICENSE_STATUS.Active
-                  ? "Còn hiệu lực"
-                  : result.status === LICENSE_STATUS.Expired
-                    ? "Hết hạn"
-                    : "Đã thu hồi"}
-              </Tag>
+              <StatusBadge status={result.status} />
             </Descriptions.Item>
             <Descriptions.Item label="Sản phẩm">
               {result.productName}

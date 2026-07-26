@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { App, Modal, Typography } from "antd";
+import { App, Modal } from "antd";
+import { PageHeader } from "@/components/PageHeader";
+import { saveDownload } from "@/utils/download";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCatalogOptions } from "@/features/catalogs/api/catalogQueries";
 import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
@@ -55,16 +57,7 @@ import type {
   UpdateProductInput,
 } from "../types/business.types";
 
-const pageSize = 20;
-
-function saveDownload(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = fileName;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
+const PAGE_SIZE = 20;
 
 function flattenOrganizations(
   nodes: OrganizationTreeNode[],
@@ -118,8 +111,8 @@ export default function BusinessManagementPage() {
     {
       filter: businessFilter || undefined,
       status: businessStatus,
-      skipCount: (businessPage - 1) * pageSize,
-      maxResultCount: pageSize,
+      skipCount: (businessPage - 1) * PAGE_SIZE,
+      maxResultCount: PAGE_SIZE,
     },
     canViewBusinesses,
   );
@@ -128,8 +121,8 @@ export default function BusinessManagementPage() {
     {
       filter: productFilter || undefined,
       status: productStatus,
-      skipCount: (productPage - 1) * pageSize,
-      maxResultCount: pageSize,
+      skipCount: (productPage - 1) * PAGE_SIZE,
+      maxResultCount: PAGE_SIZE,
     },
     canViewProducts,
   );
@@ -219,12 +212,11 @@ export default function BusinessManagementPage() {
   };
 
   return (
-    <>
-      <Typography.Title level={2}>Cơ sở và sản phẩm</Typography.Title>
-      <Typography.Paragraph type="secondary">
-        Quản lý cơ sở sản xuất kinh doanh theo phạm vi dữ liệu và sản phẩm trực
-        thuộc từng cơ sở.
-      </Typography.Paragraph>
+    <div className="page-container">
+      <PageHeader
+        title="Cơ sở và sản phẩm"
+        subtitle="Quản lý cơ sở sản xuất kinh doanh theo phạm vi dữ liệu và sản phẩm trực thuộc từng cơ sở"
+      />
       <BusinessManagementView
         activeTab={activeTab}
         businesses={businessList.data?.items ?? []}
@@ -237,7 +229,7 @@ export default function BusinessManagementPage() {
         productTotal={productList.data?.totalCount ?? 0}
         businessPage={businessPage}
         productPage={productPage}
-        pageSize={pageSize}
+        pageSize={PAGE_SIZE}
         loading={businessList.isLoading || productList.isLoading}
         canViewBusinesses={canViewBusinesses}
         canViewProducts={canViewProducts}
@@ -294,7 +286,7 @@ export default function BusinessManagementPage() {
               filter: businessFilter || undefined,
               status: businessStatus,
               skipCount: 0,
-              maxResultCount: pageSize,
+              maxResultCount: PAGE_SIZE,
             },
             {
               onSuccess: ({ blob, fileName }) => {
@@ -313,7 +305,7 @@ export default function BusinessManagementPage() {
               filter: productFilter || undefined,
               status: productStatus,
               skipCount: 0,
-              maxResultCount: pageSize,
+              maxResultCount: PAGE_SIZE,
             },
             {
               onSuccess: ({ blob, fileName }) => {
@@ -542,6 +534,6 @@ export default function BusinessManagementPage() {
           />
         )}
       </Modal>
-    </>
+    </div>
   );
 }

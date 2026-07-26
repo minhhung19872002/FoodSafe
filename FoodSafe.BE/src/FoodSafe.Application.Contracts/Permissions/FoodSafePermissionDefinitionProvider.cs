@@ -177,6 +177,46 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             FoodSafePermissions.Licensing.EligibilityCertificates.Delete,
             LocalizableString.Create<FoodSafeResource>(
                 "Permission:EligibilityCertificates.Delete"));
+        var cfsCertificates = licensing.AddChild(
+            FoodSafePermissions.Licensing.CfsCertificates.Default,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:CfsCertificates"));
+        cfsCertificates.AddChild(
+            FoodSafePermissions.Licensing.CfsCertificates.View,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:CfsCertificates.View"));
+        cfsCertificates.AddChild(
+            FoodSafePermissions.Licensing.CfsCertificates.Create,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:CfsCertificates.Create"));
+        cfsCertificates.AddChild(
+            FoodSafePermissions.Licensing.CfsCertificates.Edit,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:CfsCertificates.Edit"));
+        cfsCertificates.AddChild(
+            FoodSafePermissions.Licensing.CfsCertificates.Delete,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:CfsCertificates.Delete"));
+        var exportCertificates = licensing.AddChild(
+            FoodSafePermissions.Licensing.ExportCertificates.Default,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:ExportCertificates"));
+        exportCertificates.AddChild(
+            FoodSafePermissions.Licensing.ExportCertificates.View,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:ExportCertificates.View"));
+        exportCertificates.AddChild(
+            FoodSafePermissions.Licensing.ExportCertificates.Create,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:ExportCertificates.Create"));
+        exportCertificates.AddChild(
+            FoodSafePermissions.Licensing.ExportCertificates.Edit,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:ExportCertificates.Edit"));
+        exportCertificates.AddChild(
+            FoodSafePermissions.Licensing.ExportCertificates.Delete,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:ExportCertificates.Delete"));
 
         var systemAdministration = group.AddPermission(
             FoodSafePermissions.SystemAdministration.Default,

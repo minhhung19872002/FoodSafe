@@ -572,6 +572,28 @@ public class FoodSafeHttpApiHostModule : AbpModule
                         ? "SE Asia Standard Time"
                         : "Asia/Bangkok")
             });
+        recurringJobs.AddOrUpdate<ICfsCertificateExpiryJob>(
+            "cfs-certificate-expiry",
+            job => job.ExecuteAsync(),
+            Cron.Daily,
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.FindSystemTimeZoneById(
+                    OperatingSystem.IsWindows()
+                        ? "SE Asia Standard Time"
+                        : "Asia/Bangkok")
+            });
+        recurringJobs.AddOrUpdate<IExportFoodCertificateExpiryJob>(
+            "export-food-certificate-expiry",
+            job => job.ExecuteAsync(),
+            Cron.Daily,
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.FindSystemTimeZoneById(
+                    OperatingSystem.IsWindows()
+                        ? "SE Asia Standard Time"
+                        : "Asia/Bangkok")
+            });
 
         app.UseForwardedHeaders();
 

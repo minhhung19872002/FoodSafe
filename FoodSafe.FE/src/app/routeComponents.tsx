@@ -55,6 +55,22 @@ export const PublicEligibilityCertificateLookupPage = lazy(
   () =>
     import("@/features/eligibility-certificates/pages/PublicEligibilityCertificateLookupPage"),
 );
+export const CfsCertificatePage = lazy(
+  () =>
+    import("@/features/cfs-certificates/pages/CfsCertificatePage"),
+);
+export const PublicCfsCertificateLookupPage = lazy(
+  () =>
+    import("@/features/cfs-certificates/pages/PublicCfsCertificateLookupPage"),
+);
+export const ExportFoodCertificatePage = lazy(
+  () =>
+    import("@/features/export-food-certificates/pages/ExportFoodCertificatePage"),
+);
+export const PublicExportFoodCertificateLookupPage = lazy(
+  () =>
+    import("@/features/export-food-certificates/pages/PublicExportFoodCertificateLookupPage"),
+);
 
 export function RouteLoading() {
   return (
@@ -63,7 +79,8 @@ export function RouteLoading() {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        height: "100vh",
+        minHeight: 320,
+        padding: 48,
       }}
     >
       <Spin size="large" />

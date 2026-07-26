@@ -121,6 +121,38 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:EligibilityCertificate:0004";
     }
 
+    public static class CfsCertificate
+    {
+        public const string DuplicateNumber =
+            "FoodSafe:CfsCertificate:0001";
+        public const string InvalidDateRange =
+            "FoodSafe:CfsCertificate:0002";
+        public const string ProductMismatch =
+            "FoodSafe:CfsCertificate:0003";
+        public const string AlreadyRevoked =
+            "FoodSafe:CfsCertificate:0004";
+        public const string CannotModifyRevoked =
+            "FoodSafe:CfsCertificate:0005";
+        public const string CountryNotFound =
+            "FoodSafe:CfsCertificate:0006";
+    }
+
+    public static class ExportFoodCertificate
+    {
+        public const string DuplicateNumber =
+            "FoodSafe:ExportFoodCertificate:0001";
+        public const string InvalidDateRange =
+            "FoodSafe:ExportFoodCertificate:0002";
+        public const string ProductMismatch =
+            "FoodSafe:ExportFoodCertificate:0003";
+        public const string AlreadyRevoked =
+            "FoodSafe:ExportFoodCertificate:0004";
+        public const string CannotModifyRevoked =
+            "FoodSafe:ExportFoodCertificate:0005";
+        public const string CountryNotFound =
+            "FoodSafe:ExportFoodCertificate:0006";
+    }
+
     public static class Inspection
     {
         public const string PlanNotFound = "FoodSafe:Inspection:0001";

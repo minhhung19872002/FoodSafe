@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 import {
+  App,
   Button,
-  Card,
   Input,
-  message,
   Popconfirm,
   Select,
   Space,
@@ -13,6 +12,7 @@ import {
   Tooltip,
   Typography,
 } from "antd";
+import { PageHeader } from "@/components/PageHeader";
 import {
   AuditOutlined,
   DeleteOutlined,
@@ -89,6 +89,7 @@ function organizationOptions(
 }
 
 export default function IdentityAdministrationPage() {
+  const { message } = App.useApp();
   const currentUser = useAuthStore((state) => state.user);
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canViewUsers = hasPermission(permission.users);
@@ -135,7 +136,9 @@ export default function IdentityAdministrationPage() {
 
   const showSuccess = (content: string) => void message.success(content);
   const showError = () =>
-    void message.error("Không thể thực hiện thao tác. Vui lòng kiểm tra lại.");
+    void message.error(
+      "Không thể thực hiện thao tác. Vui lòng kiểm tra lại.",
+    );
 
   const roleSelectOptions = useMemo(
     () =>
@@ -155,7 +158,7 @@ export default function IdentityAdministrationPage() {
     label: "Tài khoản",
     children: (
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-        <Space wrap>
+        <div className="filter-toolbar" style={{ marginBottom: 16 }}>
           <Input.Search
             aria-label="Tìm tài khoản"
             allowClear
@@ -235,9 +238,10 @@ export default function IdentityAdministrationPage() {
               Tạo tài khoản
             </Button>
           )}
-        </Space>
+        </div>
         <Table<AdminUser>
           rowKey="id"
+          size="middle"
           loading={users.isLoading}
           dataSource={users.data?.items}
           scroll={{ x: 1100 }}
@@ -246,6 +250,7 @@ export default function IdentityAdministrationPage() {
             current: userFilter.skipCount / pageSize + 1,
             pageSize,
             showSizeChanger: false,
+            showTotal: (total) => `${total} bản ghi`,
             onChange: (page) =>
               setUserFilter((current) => ({
                 ...current,
@@ -306,6 +311,7 @@ export default function IdentityAdministrationPage() {
                     {hasPermission(permission.editUser) && (
                       <Tooltip title="Cập nhật">
                         <Button
+                          size="small"
                           aria-label={`Sửa ${user.fullName}`}
                           icon={<EditOutlined />}
                           onClick={() => {
@@ -320,6 +326,7 @@ export default function IdentityAdministrationPage() {
                         title={user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
                       >
                         <Button
+                          size="small"
                           aria-label={`${user.isActive ? "Vô hiệu hóa" : "Kích hoạt"} ${user.fullName}`}
                           disabled={isSelf}
                           danger={user.isActive}
@@ -344,6 +351,7 @@ export default function IdentityAdministrationPage() {
                     {hasPermission(permission.lockUser) && (
                       <Tooltip title={user.isLocked ? "Mở khóa" : "Khóa"}>
                         <Button
+                          size="small"
                           aria-label={`${user.isLocked ? "Mở khóa" : "Khóa"} ${user.fullName}`}
                           disabled={isSelf}
                           icon={
@@ -379,6 +387,7 @@ export default function IdentityAdministrationPage() {
                       >
                         <Tooltip title="Đặt lại mật khẩu">
                           <Button
+                            size="small"
                             aria-label={`Đặt lại mật khẩu ${user.fullName}`}
                             icon={<KeyOutlined />}
                           />
@@ -388,6 +397,7 @@ export default function IdentityAdministrationPage() {
                     {hasPermission(permission.activity) && (
                       <Tooltip title="Nhật ký hoạt động">
                         <Button
+                          size="small"
                           aria-label={`Hoạt động ${user.fullName}`}
                           icon={<AuditOutlined />}
                           onClick={() => setActivityUser(user)}
@@ -409,7 +419,7 @@ export default function IdentityAdministrationPage() {
     label: "Vai trò và quyền",
     children: (
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-        <Space wrap>
+        <div className="filter-toolbar" style={{ marginBottom: 16 }}>
           <Input.Search
             aria-label="Tìm vai trò"
             allowClear
@@ -452,16 +462,19 @@ export default function IdentityAdministrationPage() {
               Tạo vai trò
             </Button>
           )}
-        </Space>
+        </div>
         <Table<AdminRole>
           rowKey="id"
+          size="middle"
           loading={roles.isLoading}
           dataSource={roles.data?.items}
+          scroll={{ x: 900 }}
           pagination={{
             total: roles.data?.totalCount,
             current: roleFilter.skipCount / pageSize + 1,
             pageSize,
             showSizeChanger: false,
+            showTotal: (total) => `${total} bản ghi`,
             onChange: (page) =>
               setRoleFilter((current) => ({
                 ...current,
@@ -505,6 +518,7 @@ export default function IdentityAdministrationPage() {
                   {hasPermission(permission.editRole) && (
                     <Tooltip title="Cập nhật">
                       <Button
+                        size="small"
                         aria-label={`Sửa vai trò ${role.name}`}
                         icon={<EditOutlined />}
                         onClick={() => {
@@ -517,6 +531,7 @@ export default function IdentityAdministrationPage() {
                   {hasPermission(permission.permissions) && (
                     <Tooltip title="Phân quyền">
                       <Button
+                        size="small"
                         aria-label={`Phân quyền ${role.name}`}
                         icon={<SafetyCertificateOutlined />}
                         onClick={() => setPermissionRole(role)}
@@ -526,6 +541,7 @@ export default function IdentityAdministrationPage() {
                   {canViewUsers && (
                     <Tooltip title="Xem người dùng được gán">
                       <Button
+                        size="small"
                         aria-label={`Người dùng vai trò ${role.name}`}
                         icon={<TeamOutlined />}
                         onClick={() => {
@@ -541,7 +557,7 @@ export default function IdentityAdministrationPage() {
                   )}
                   {hasPermission(permission.deleteRole) && !role.isStatic && (
                     <Popconfirm
-                      title={`Xóa vai trò “${role.name}”?`}
+                      title={`Xóa vai trò "${role.name}"?`}
                       description={
                         role.userCount > 0
                           ? "Vai trò đang được sử dụng và không thể xóa."
@@ -556,6 +572,7 @@ export default function IdentityAdministrationPage() {
                       }
                     >
                       <Button
+                        size="small"
                         aria-label={`Xóa vai trò ${role.name}`}
                         danger
                         disabled={role.userCount > 0}
@@ -574,23 +591,22 @@ export default function IdentityAdministrationPage() {
 
   return (
     <>
-      <Card>
-        <Typography.Title level={3} style={{ marginTop: 0 }}>
-          Quản trị tài khoản và phân quyền
-        </Typography.Title>
-        <Typography.Paragraph type="secondary">
-          Dữ liệu và thao tác được giới hạn theo đơn vị, địa bàn và quyền của
-          tài khoản đang đăng nhập.
-        </Typography.Paragraph>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            ...(canViewUsers ? [userTab] : []),
-            ...(canViewRoles ? [roleTab] : []),
-          ]}
+      <div className="page-container">
+        <PageHeader
+          title="Tài khoản và quyền"
+          subtitle="Quản lý người dùng, vai trò và phân quyền hệ thống"
         />
-      </Card>
+        <div className="page-card">
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            items={[
+              ...(canViewUsers ? [userTab] : []),
+              ...(canViewRoles ? [roleTab] : []),
+            ]}
+          />
+        </div>
+      </div>
 
       <UserEditorModal
         open={userModalOpen}

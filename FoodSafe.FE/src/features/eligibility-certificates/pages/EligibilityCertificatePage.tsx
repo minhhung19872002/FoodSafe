@@ -11,17 +11,19 @@ import {
   App,
   Button,
   Input,
-  Modal,
   Popconfirm,
   Select,
   Space,
   Table,
-  Tag,
-  Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ProductRegistrationAttachmentsModal } from "@/features/product-registrations/components/ProductRegistrationAttachmentsModal";
+import { ExpiryTag } from "@/components/ExpiryTag";
+import { PageHeader } from "@/components/PageHeader";
+import { RevokeModal } from "@/components/RevokeModal";
+import { StatusBadge } from "@/components/StatusBadge";
+import { saveDownload } from "@/utils/download";
 import {
   useCreateEligibilityCertificate,
   useDeleteEligibilityAttachment,
@@ -46,24 +48,7 @@ import {
   type LicenseStatus,
 } from "../types/eligibilityCertificate.types";
 
-const pageSize = 20;
-
-function saveDownload(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = fileName;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
-function statusTag(status: LicenseStatus) {
-  if (status === LICENSE_STATUS.Active)
-    return <Tag color="green">Còn hiệu lực</Tag>;
-  if (status === LICENSE_STATUS.Expired)
-    return <Tag color="orange">Hết hạn</Tag>;
-  return <Tag color="red">Đã thu hồi</Tag>;
-}
+const PAGE_SIZE = 20;
 
 export default function EligibilityCertificatePage() {
   const { message } = App.useApp();
@@ -87,14 +72,13 @@ export default function EligibilityCertificatePage() {
   const [attachmentsFor, setAttachmentsFor] =
     useState<EligibilityCertificate>();
   const [revoking, setRevoking] = useState<EligibilityCertificate>();
-  const [revokeReason, setRevokeReason] = useState("");
   const queryFilter = {
     filter: filter || undefined,
     businessId,
     status,
     expiringWithinDays,
-    skipCount: (page - 1) * pageSize,
-    maxResultCount: pageSize,
+    skipCount: (page - 1) * PAGE_SIZE,
+    maxResultCount: PAGE_SIZE,
   };
   const certificates = useEligibilityCertificates(queryFilter);
   const businesses = useEligibilityBusinesses();
@@ -112,6 +96,7 @@ export default function EligibilityCertificatePage() {
     setEditorOpen(false);
     setEditing(undefined);
   };
+
   const save = (input: EligibilityCertificateInput) => {
     const options = {
       onSuccess: () => {
@@ -137,22 +122,13 @@ export default function EligibilityCertificatePage() {
     {
       title: "Hết hạn",
       width: 145,
-      render: (_, item) => {
-        if (!item.expiryDate) return "Không thời hạn";
-        const date = new Date(item.expiryDate).toLocaleDateString("vi-VN");
-        return item.status === LICENSE_STATUS.Active &&
-          item.daysUntilExpiry !== undefined &&
-          item.daysUntilExpiry <= 90 ? (
-          <Space orientation="vertical" size={0}>
-            <span>{date}</span>
-            <Tag color={item.daysUntilExpiry <= 30 ? "red" : "gold"}>
-              Còn {item.daysUntilExpiry} ngày
-            </Tag>
-          </Space>
-        ) : (
-          date
-        );
-      },
+      render: (_, item) => (
+        <ExpiryTag
+          expiryDate={item.expiryDate}
+          status={item.status}
+          daysUntilExpiry={item.daysUntilExpiry}
+        />
+      ),
     },
     {
       title: "Cơ quan cấp",
@@ -164,7 +140,7 @@ export default function EligibilityCertificatePage() {
       title: "Trạng thái",
       dataIndex: "status",
       width: 125,
-      render: statusTag,
+      render: (value: LicenseStatus) => <StatusBadge status={value} />,
     },
     {
       title: "Thao tác",
@@ -173,6 +149,7 @@ export default function EligibilityCertificatePage() {
       render: (_, item) => (
         <Space size={2}>
           <Button
+            size="small"
             type="text"
             aria-label={`Tệp ${item.certificateNumber}`}
             icon={<FileTextOutlined />}
@@ -181,6 +158,7 @@ export default function EligibilityCertificatePage() {
           {canEdit && item.status !== LICENSE_STATUS.Revoked && (
             <>
               <Button
+                size="small"
                 type="text"
                 aria-label={`Sửa ${item.certificateNumber}`}
                 icon={<EditOutlined />}
@@ -190,14 +168,12 @@ export default function EligibilityCertificatePage() {
                 }}
               />
               <Button
+                size="small"
                 type="text"
                 danger
                 aria-label={`Thu hồi ${item.certificateNumber}`}
                 icon={<StopOutlined />}
-                onClick={() => {
-                  setRevoking(item);
-                  setRevokeReason("");
-                }}
+                onClick={() => setRevoking(item)}
               />
             </>
           )}
@@ -217,6 +193,7 @@ export default function EligibilityCertificatePage() {
               }
             >
               <Button
+                size="small"
                 type="text"
                 danger
                 aria-label={`Xóa ${item.certificateNumber}`}
@@ -230,114 +207,108 @@ export default function EligibilityCertificatePage() {
   ];
 
   return (
-    <>
-      <Space
-        align="center"
-        style={{
-          width: "100%",
-          justifyContent: "space-between",
-          marginBottom: 16,
-        }}
-      >
-        <div>
-          <Typography.Title level={2} style={{ margin: 0 }}>
-            Giấy chứng nhận đủ điều kiện ATTP
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Quản lý hiệu lực và cảnh báo hết hạn 30/60/90 ngày
-          </Typography.Text>
-        </div>
-        <Space>
-          <Button
-            icon={<ExportOutlined />}
-            loading={exportMutation.isPending}
-            onClick={() =>
-              exportMutation.mutate(queryFilter, {
-                onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                onError: () => void message.error("Không thể xuất danh sách."),
-              })
-            }
-          >
-            Xuất Excel
-          </Button>
-          {canCreate && (
+    <div className="page-container">
+      <PageHeader
+        title="Giấy đủ điều kiện ATTP"
+        subtitle="Quản lý giấy chứng nhận đủ điều kiện an toàn thực phẩm"
+        actions={
+          <Space>
             <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setEditorOpen(true)}
+              icon={<ExportOutlined />}
+              loading={exportMutation.isPending}
+              onClick={() =>
+                exportMutation.mutate(queryFilter, {
+                  onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                  onError: () =>
+                    void message.error("Không thể xuất danh sách."),
+                })
+              }
             >
-              Cấp giấy
+              Xuất Excel
             </Button>
-          )}
-        </Space>
-      </Space>
-      <Space wrap style={{ marginBottom: 16 }}>
-        <Input.Search
-          allowClear
-          placeholder="Số giấy, cơ quan cấp, phạm vi"
-          style={{ width: 300 }}
-          onSearch={(value) => {
-            setFilter(value.trim());
-            setPage(1);
-          }}
-        />
-        <Select
-          allowClear
-          showSearch
-          optionFilterProp="label"
-          placeholder="Tất cả cơ sở"
-          style={{ width: 260 }}
-          options={(businesses.data ?? []).map((x) => ({
-            value: x.id,
-            label: x.code ? `${x.code} — ${x.name}` : x.name,
-          }))}
-          onChange={(value) => {
-            setBusinessId(value);
-            setPage(1);
-          }}
-        />
-        <Select
-          allowClear
-          placeholder="Trạng thái"
-          style={{ width: 160 }}
-          options={[
-            { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
-            { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
-            { value: LICENSE_STATUS.Revoked, label: "Đã thu hồi" },
-          ]}
-          onChange={(value) => {
-            setStatus(value);
-            setPage(1);
-          }}
-        />
-        <Select
-          allowClear
-          placeholder="Cảnh báo hết hạn"
-          style={{ width: 180 }}
-          options={[30, 60, 90].map((value) => ({
-            value,
-            label: `Trong ${value} ngày`,
-          }))}
-          onChange={(value) => {
-            setExpiringWithinDays(value);
-            setPage(1);
-          }}
-        />
-      </Space>
-      <Table
-        rowKey="id"
-        scroll={{ x: 1100 }}
-        loading={certificates.isLoading}
-        columns={columns}
-        dataSource={certificates.data?.items ?? []}
-        pagination={{
-          current: page,
-          pageSize,
-          total: certificates.data?.totalCount ?? 0,
-          showSizeChanger: false,
-          onChange: setPage,
-        }}
+            {canCreate && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setEditorOpen(true)}
+              >
+                Cấp giấy
+              </Button>
+            )}
+          </Space>
+        }
       />
+      <div className="page-card">
+        <div className="filter-toolbar" style={{ marginBottom: 16 }}>
+          <Input.Search
+            allowClear
+            placeholder="Số giấy, cơ quan cấp, phạm vi"
+            style={{ width: 300 }}
+            onSearch={(value) => {
+              setFilter(value.trim());
+              setPage(1);
+            }}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Tất cả cơ sở"
+            style={{ width: 260 }}
+            options={(businesses.data ?? []).map((x) => ({
+              value: x.id,
+              label: x.code ? `${x.code} — ${x.name}` : x.name,
+            }))}
+            onChange={(value) => {
+              setBusinessId(value);
+              setPage(1);
+            }}
+          />
+          <Select
+            allowClear
+            placeholder="Trạng thái"
+            style={{ width: 160 }}
+            options={[
+              { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
+              { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
+              { value: LICENSE_STATUS.Revoked, label: "Đã thu hồi" },
+            ]}
+            onChange={(value) => {
+              setStatus(value);
+              setPage(1);
+            }}
+          />
+          <Select
+            allowClear
+            placeholder="Cảnh báo hết hạn"
+            style={{ width: 180 }}
+            options={[30, 60, 90].map((value) => ({
+              value,
+              label: `Trong ${value} ngày`,
+            }))}
+            onChange={(value) => {
+              setExpiringWithinDays(value);
+              setPage(1);
+            }}
+          />
+        </div>
+        <Table
+          size="middle"
+          rowKey="id"
+          scroll={{ x: 1100 }}
+          loading={certificates.isLoading}
+          columns={columns}
+          dataSource={certificates.data?.items ?? []}
+          pagination={{
+            current: page,
+            pageSize: PAGE_SIZE,
+            total: certificates.data?.totalCount ?? 0,
+            showSizeChanger: false,
+            showTotal: (total) => `Tổng ${total} bản ghi`,
+            onChange: setPage,
+          }}
+        />
+      </div>
       <EligibilityCertificateEditorModal
         open={editorOpen}
         item={editing}
@@ -386,18 +357,15 @@ export default function EligibilityCertificatePage() {
           );
         }}
       />
-      <Modal
+      <RevokeModal
         open={Boolean(revoking)}
         title={`Thu hồi giấy ${revoking?.certificateNumber ?? ""}`}
-        okText="Thu hồi"
-        okButtonProps={{ danger: true, disabled: !revokeReason.trim() }}
-        cancelText="Hủy"
         confirmLoading={revokeMutation.isPending}
         onCancel={() => setRevoking(undefined)}
-        onOk={() => {
-          if (!revoking || !revokeReason.trim()) return;
+        onConfirm={(reason) => {
+          if (!revoking) return;
           revokeMutation.mutate(
-            { id: revoking.id, reason: revokeReason.trim() },
+            { id: revoking.id, reason },
             {
               onSuccess: () => {
                 void message.success("Đã thu hồi giấy chứng nhận.");
@@ -407,19 +375,7 @@ export default function EligibilityCertificatePage() {
             },
           );
         }}
-      >
-        <Typography.Paragraph>
-          Giấy đã thu hồi không thể chỉnh sửa. Vui lòng ghi rõ lý do.
-        </Typography.Paragraph>
-        <Input.TextArea
-          rows={4}
-          maxLength={2000}
-          showCount
-          value={revokeReason}
-          placeholder="Lý do thu hồi"
-          onChange={(event) => setRevokeReason(event.target.value)}
-        />
-      </Modal>
-    </>
+      />
+    </div>
   );
 }

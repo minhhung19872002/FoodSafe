@@ -43,6 +43,10 @@ public sealed class BusinessManagementMappingTests
                 "advertisement_registration_products");
         context.Model.FindEntityType(typeof(EligibilityCertificate))!
             .GetTableName().ShouldBe("eligibility_certificates");
+        context.Model.FindEntityType(typeof(CfsCertificate))!
+            .GetTableName().ShouldBe("cfs_certificates");
+        context.Model.FindEntityType(typeof(ExportFoodCertificate))!
+            .GetTableName().ShouldBe("export_food_certificates");
     }
 
     [Fact]

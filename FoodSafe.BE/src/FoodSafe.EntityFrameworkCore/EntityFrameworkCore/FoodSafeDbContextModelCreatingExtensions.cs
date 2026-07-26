@@ -495,6 +495,223 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasDatabaseName("idx_product_registrations_org");
         });
 
+        builder.Entity<CfsCertificate>(entity =>
+        {
+            entity.ToTable("cfs_certificates", table =>
+            {
+                table.HasCheckConstraint(
+                    "chk_cfs_status",
+                    "status IN (1, 2, 3)");
+                table.HasCheckConstraint(
+                    "chk_cfs_dates",
+                    "expiry_date IS NULL OR issue_date <= expiry_date");
+                table.HasCheckConstraint(
+                    "chk_cfs_revoke",
+                    "(status != 3 AND revoke_reason IS NULL AND " +
+                    "revoked_at IS NULL AND revoked_by_id IS NULL) OR " +
+                    "(status = 3 AND revoke_reason IS NOT NULL AND " +
+                    "revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)");
+            });
+            ConfigureAggregateAudit(entity, "pk_cfs_certificates");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.ProductId).HasColumnName("product_id");
+            entity.Property(x => x.DestinationCountryId)
+                .HasColumnName("destination_country_id");
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id");
+            entity.Property(x => x.CertificateNumber)
+                .HasColumnName("certificate_number")
+                .HasMaxLength(100)
+                .IsRequired();
+            entity.Property(x => x.IssueDate)
+                .HasColumnName("issue_date")
+                .HasColumnType("date");
+            entity.Property(x => x.ExpiryDate)
+                .HasColumnName("expiry_date")
+                .HasColumnType("date");
+            entity.Property(x => x.CertifyingAuthority)
+                .HasColumnName("certifying_authority")
+                .HasMaxLength(200);
+            entity.Property(x => x.Status)
+                .HasColumnName("status")
+                .HasConversion<short>();
+            entity.Property(x => x.RevokeReason)
+                .HasColumnName("revoke_reason");
+            entity.Property(x => x.RevokedAt)
+                .HasColumnName("revoked_at");
+            entity.Property(x => x.RevokedById)
+                .HasColumnName("revoked_by_id");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+
+            entity.HasOne<Business>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    x.Id,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_cfs_business_org");
+            entity.HasOne<Product>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.ProductId,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    ProductId = x.Id,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_cfs_product_owner");
+            entity.HasOne<Country>().WithMany()
+                .HasForeignKey(x => x.DestinationCountryId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_cfs_destination_country");
+            entity.HasOne<Organization>().WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_cfs_org");
+
+            entity.HasIndex(x => x.CertificateNumber)
+                .IsUnique()
+                .HasDatabaseName("uq_cfs_certificates_number");
+            entity.HasIndex(x => x.BusinessId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_cfs_business");
+            entity.HasIndex(x => x.ProductId)
+                .HasFilter("product_id IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("idx_cfs_product");
+            entity.HasIndex(x => x.DestinationCountryId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_cfs_destination_country");
+            entity.HasIndex(x => new { x.ExpiryDate, x.Status })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_cfs_expiry");
+            entity.HasIndex(x => x.OrganizationId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_cfs_org");
+        });
+
+        builder.Entity<ExportFoodCertificate>(entity =>
+        {
+            entity.ToTable("export_food_certificates", table =>
+            {
+                table.HasCheckConstraint(
+                    "chk_export_cert_status",
+                    "status IN (1, 2, 3)");
+                table.HasCheckConstraint(
+                    "chk_export_cert_dates",
+                    "expiry_date IS NULL OR issue_date <= expiry_date");
+                table.HasCheckConstraint(
+                    "chk_export_cert_revoke",
+                    "(status != 3 AND revoke_reason IS NULL AND " +
+                    "revoked_at IS NULL AND revoked_by_id IS NULL) OR " +
+                    "(status = 3 AND revoke_reason IS NOT NULL AND " +
+                    "revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)");
+            });
+            ConfigureAggregateAudit(entity, "pk_export_food_certificates");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.ProductId).HasColumnName("product_id");
+            entity.Property(x => x.DestinationCountryId)
+                .HasColumnName("destination_country_id");
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id");
+            entity.Property(x => x.CertificateNumber)
+                .HasColumnName("certificate_number")
+                .HasMaxLength(100)
+                .IsRequired();
+            entity.Property(x => x.IssueDate)
+                .HasColumnName("issue_date")
+                .HasColumnType("date");
+            entity.Property(x => x.ExpiryDate)
+                .HasColumnName("expiry_date")
+                .HasColumnType("date");
+            entity.Property(x => x.LotNumber)
+                .HasColumnName("lot_number")
+                .HasMaxLength(100);
+            entity.Property(x => x.Quantity)
+                .HasColumnName("quantity")
+                .HasColumnType("numeric(18,3)");
+            entity.Property(x => x.QuantityUnit)
+                .HasColumnName("quantity_unit")
+                .HasMaxLength(50);
+            entity.Property(x => x.Status)
+                .HasColumnName("status")
+                .HasConversion<short>();
+            entity.Property(x => x.RevokeReason)
+                .HasColumnName("revoke_reason");
+            entity.Property(x => x.RevokedAt)
+                .HasColumnName("revoked_at");
+            entity.Property(x => x.RevokedById)
+                .HasColumnName("revoked_by_id");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+
+            entity.HasOne<Business>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    x.Id,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_export_cert_business_org");
+            entity.HasOne<Product>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.ProductId,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    ProductId = x.Id,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_export_cert_product_owner");
+            entity.HasOne<Country>().WithMany()
+                .HasForeignKey(x => x.DestinationCountryId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_export_cert_destination_country");
+            entity.HasOne<Organization>().WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_export_cert_org");
+
+            entity.HasIndex(x => x.CertificateNumber)
+                .IsUnique()
+                .HasDatabaseName("uq_export_food_certificates_number");
+            entity.HasIndex(x => x.BusinessId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_export_cert_business");
+            entity.HasIndex(x => x.ProductId)
+                .HasFilter("product_id IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("idx_export_cert_product");
+            entity.HasIndex(x => x.DestinationCountryId)
+                .HasFilter(
+                    "destination_country_id IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("idx_export_cert_destination_country");
+            entity.HasIndex(x => new { x.ExpiryDate, x.Status })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_export_cert_expiry");
+            entity.HasIndex(x => x.OrganizationId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_export_cert_org");
+        });
+
         builder.Entity<AdvertisementRegistration>(entity =>
         {
             entity.ToTable("advertisement_registrations", table =>

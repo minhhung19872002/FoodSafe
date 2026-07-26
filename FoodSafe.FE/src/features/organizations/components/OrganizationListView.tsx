@@ -82,8 +82,8 @@ export function OrganizationListView({
   onDelete,
 }: Props) {
   return (
-    <Space orientation="vertical" size="large" style={{ width: "100%" }}>
-      <Space wrap>
+    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <div className="filter-toolbar" style={{ marginBottom: 16 }}>
         <Input
           allowClear
           prefix={<SearchOutlined />}
@@ -113,23 +113,25 @@ export function OrganizationListView({
             Thêm đơn vị
           </Button>
         )}
-      </Space>
+      </div>
 
       <Table<OrganizationDto>
         rowKey="id"
         loading={loading}
         dataSource={items}
+        size="middle"
+        scroll={{ x: 800 }}
         pagination={{
           current: page,
           pageSize,
           total: totalCount,
           showSizeChanger: true,
-          showTotal: (total) => `${total} đơn vị`,
+          showTotal: (total) => `${total} bản ghi`,
           onChange: onPageChange,
         }}
         columns={[
-          { title: "Mã", dataIndex: "code", width: 130 },
-          { title: "Tên đơn vị", dataIndex: "name" },
+          { title: "Mã", dataIndex: "code", width: 130, ellipsis: true },
+          { title: "Tên đơn vị", dataIndex: "name", ellipsis: true },
           {
             title: "Cấp",
             dataIndex: "level",
@@ -139,7 +141,7 @@ export function OrganizationListView({
               return <Tag color={config.color}>{config.label}</Tag>;
             },
           },
-          { title: "Điện thoại", dataIndex: "phone", width: 150 },
+          { title: "Điện thoại", dataIndex: "phone", width: 150, ellipsis: true },
           {
             title: "Trạng thái",
             dataIndex: "isActive",
@@ -161,6 +163,7 @@ export function OrganizationListView({
                       {canEdit && (
                         <Button
                           type="text"
+                          size="small"
                           aria-label={`Sửa ${organization.name}`}
                           icon={<EditOutlined />}
                           onClick={() => onEdit(organization)}
@@ -169,7 +172,7 @@ export function OrganizationListView({
                       {canDelete && (
                         <Popconfirm
                           title="Xóa đơn vị?"
-                          description={`Bạn chắc chắn muốn xóa “${organization.name}”?`}
+                          description={`Bạn chắc chắn muốn xóa "${organization.name}"?`}
                           okText="Xóa"
                           cancelText="Hủy"
                           okButtonProps={{ danger: true }}
@@ -178,6 +181,7 @@ export function OrganizationListView({
                           <Button
                             type="text"
                             danger
+                            size="small"
                             loading={deletingId === organization.id}
                             aria-label={`Xóa ${organization.name}`}
                             icon={<DeleteOutlined />}

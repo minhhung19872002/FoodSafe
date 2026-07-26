@@ -109,3 +109,35 @@ public interface IEligibilityCertificateAttachmentAppService :
         Guid attachmentId);
     Task DeleteAsync(Guid certificateId, Guid attachmentId);
 }
+
+public interface ICfsCertificateAttachmentAppService :
+    IApplicationService
+{
+    Task<IReadOnlyList<FileAttachmentDto>> GetListAsync(Guid certificateId);
+    Task<FileAttachmentDto> UploadAsync(
+        Guid certificateId,
+        byte[] content,
+        string originalName,
+        string contentType,
+        string? description);
+    Task<FileAttachmentDownloadDto> DownloadAsync(
+        Guid certificateId,
+        Guid attachmentId);
+    Task DeleteAsync(Guid certificateId, Guid attachmentId);
+}
+
+public interface IExportFoodCertificateAttachmentAppService :
+    IApplicationService
+{
+    Task<IReadOnlyList<FileAttachmentDto>> GetListAsync(Guid certificateId);
+    Task<FileAttachmentDto> UploadAsync(
+        Guid certificateId,
+        byte[] content,
+        string originalName,
+        string contentType,
+        string? description);
+    Task<FileAttachmentDownloadDto> DownloadAsync(
+        Guid certificateId,
+        Guid attachmentId);
+    Task DeleteAsync(Guid certificateId, Guid attachmentId);
+}

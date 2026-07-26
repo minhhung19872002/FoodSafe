@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { App } from "antd";
+import { PageHeader } from "@/components/PageHeader";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useDeleteCatalog, useSaveCatalog } from "../api/catalogMutations";
 import { useCatalog, useCatalogOptions } from "../api/catalogQueries";
@@ -57,26 +58,32 @@ export default function MasterCatalogPage() {
   };
 
   return (
-    <>
-      <MasterCatalogView
-        kind={kind}
-        filter={filter}
-        items={catalog.data?.items ?? []}
-        totalCount={catalog.data?.totalCount ?? 0}
-        loading={catalog.isLoading}
-        deleting={deleteCatalog.isPending}
-        canCreate={canCreate}
-        canEdit={canEdit}
-        canDelete={canDelete}
-        onKindChange={(nextKind) => {
-          setKind(nextKind);
-          setFilter("");
-        }}
-        onFilterChange={setFilter}
-        onCreate={() => setEditing(null)}
-        onEdit={setEditing}
-        onDelete={handleDelete}
+    <div className="page-container">
+      <PageHeader
+        title="Danh mục dùng chung"
+        subtitle="Quản lý các danh mục hệ thống: loại hình, nhóm sản phẩm, trung tâm kiểm nghiệm"
       />
+      <div className="page-card">
+        <MasterCatalogView
+          kind={kind}
+          filter={filter}
+          items={catalog.data?.items ?? []}
+          totalCount={catalog.data?.totalCount ?? 0}
+          loading={catalog.isLoading}
+          deleting={deleteCatalog.isPending}
+          canCreate={canCreate}
+          canEdit={canEdit}
+          canDelete={canDelete}
+          onKindChange={(nextKind) => {
+            setKind(nextKind);
+            setFilter("");
+          }}
+          onFilterChange={setFilter}
+          onCreate={() => setEditing(null)}
+          onEdit={setEditing}
+          onDelete={handleDelete}
+        />
+      </div>
       <CatalogEditorModal
         kind={kind}
         item={editing ?? undefined}
@@ -87,6 +94,6 @@ export default function MasterCatalogPage() {
         onCancel={() => setEditing(undefined)}
         onSave={handleSave}
       />
-    </>
+    </div>
   );
 }

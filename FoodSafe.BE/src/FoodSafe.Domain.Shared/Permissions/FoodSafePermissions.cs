@@ -97,6 +97,26 @@ public static class FoodSafePermissions
             public const string Edit = Default + ".Edit";
             public const string Delete = Default + ".Delete";
         }
+
+        public static class CfsCertificates
+        {
+            public const string Default =
+                Licensing.Default + ".CfsCertificates";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+        }
+
+        public static class ExportCertificates
+        {
+            public const string Default =
+                Licensing.Default + ".ExportCertificates";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+        }
     }
 
     public static class SystemAdministration

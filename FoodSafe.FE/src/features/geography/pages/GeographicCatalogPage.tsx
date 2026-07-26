@@ -10,7 +10,6 @@ import {
   Table,
   Tabs,
   Tag,
-  Typography,
 } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { useCommunes, useDistricts, useProvinces } from "@/hooks/useGeography";
@@ -24,6 +23,7 @@ import {
   type GeographicItem,
   type GeographicUpsert,
 } from "@/lib/geographyApi";
+import { PageHeader } from "@/components/PageHeader";
 import {
   GeographicCatalogModal,
   type GeographicKind,
@@ -161,13 +161,14 @@ export default function GeographicCatalogPage() {
                   <Space>
                     <Button
                       type="text"
+                      size="small"
                       icon={<EditOutlined />}
                       aria-label={`Sửa ${item.name}`}
                       onClick={() => setModal({ kind, item })}
                     />
                     <Popconfirm
                       title="Xóa địa bàn?"
-                      description={`Bạn chắc chắn muốn xóa “${item.name}”?`}
+                      description={`Bạn chắc chắn muốn xóa "${item.name}"?`}
                       okText="Xóa"
                       cancelText="Hủy"
                       okButtonProps={{ danger: true }}
@@ -177,6 +178,7 @@ export default function GeographicCatalogPage() {
                     >
                       <Button
                         type="text"
+                        size="small"
                         danger
                         icon={<DeleteOutlined />}
                         aria-label={`Xóa ${item.name}`}
@@ -196,12 +198,9 @@ export default function GeographicCatalogPage() {
   );
 
   return (
-    <>
-      <Typography.Title level={2}>Địa bàn hành chính</Typography.Title>
-      <Typography.Paragraph type="secondary">
-        Quản lý danh mục Tỉnh/Thành phố → Huyện/Quận → Xã/Phường.
-      </Typography.Paragraph>
-
+    <div className="page-container">
+      <PageHeader title="Địa bàn hành chính" subtitle="Quản lý danh mục tỉnh/thành, quận/huyện, xã/phường" />
+      <div className="page-card">
       <Tabs
         items={[
           {
@@ -209,7 +208,7 @@ export default function GeographicCatalogPage() {
             label: "Tỉnh/Thành phố",
             children: (
               <Space
-                orientation="vertical"
+                direction="vertical"
                 size="middle"
                 style={{ width: "100%" }}
               >
@@ -235,7 +234,7 @@ export default function GeographicCatalogPage() {
             label: "Huyện/Quận",
             children: (
               <Space
-                orientation="vertical"
+                direction="vertical"
                 size="middle"
                 style={{ width: "100%" }}
               >
@@ -279,7 +278,7 @@ export default function GeographicCatalogPage() {
             label: "Xã/Phường",
             children: (
               <Space
-                orientation="vertical"
+                direction="vertical"
                 size="middle"
                 style={{ width: "100%" }}
               >
@@ -333,6 +332,7 @@ export default function GeographicCatalogPage() {
           },
         ]}
       />
+      </div>
 
       {modal && (
         <GeographicCatalogModal
@@ -348,6 +348,6 @@ export default function GeographicCatalogPage() {
           onSubmit={(input) => saveMutation.mutate(input)}
         />
       )}
-    </>
+    </div>
   );
 }

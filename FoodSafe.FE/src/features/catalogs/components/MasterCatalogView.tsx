@@ -7,7 +7,6 @@ import {
   Table,
   Tabs,
   Tag,
-  Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { catalogDefinitions } from "../types/catalog.types";
@@ -42,8 +41,8 @@ function buildColumns({
   "kind" | "canEdit" | "canDelete" | "deleting" | "onEdit" | "onDelete"
 >): ColumnsType<CatalogItem> {
   return [
-    { title: "Mã", dataIndex: "code", width: 140 },
-    { title: "Tên", dataIndex: "name" },
+    { title: "Mã", dataIndex: "code", width: 140, ellipsis: true },
+    { title: "Tên", dataIndex: "name", ellipsis: true },
     ...(kind === "business-classification"
       ? [
           {
@@ -89,6 +88,7 @@ function buildColumns({
                 {canEdit && (
                   <Button
                     type="text"
+                    size="small"
                     aria-label={`Sửa ${item.name}`}
                     icon={<EditOutlined />}
                     onClick={() => onEdit(item)}
@@ -104,6 +104,7 @@ function buildColumns({
                     <Button
                       type="text"
                       danger
+                      size="small"
                       loading={deleting}
                       aria-label={`Xóa ${item.name}`}
                       icon={<DeleteOutlined />}
@@ -123,10 +124,6 @@ export function MasterCatalogView(props: MasterCatalogViewProps) {
 
   return (
     <>
-      <Typography.Title level={2}>Danh mục dùng chung</Typography.Title>
-      <Typography.Paragraph type="secondary">
-        Quản lý dữ liệu chuẩn dùng xuyên suốt các nghiệp vụ an toàn thực phẩm.
-      </Typography.Paragraph>
       <Tabs
         activeKey={props.kind}
         onChange={(key) => props.onKindChange(key as CatalogKind)}
@@ -135,7 +132,7 @@ export function MasterCatalogView(props: MasterCatalogViewProps) {
           label: catalog.label,
         }))}
       />
-      <Space style={{ marginBottom: 16 }}>
+      <div className="filter-toolbar" style={{ marginBottom: 16 }}>
         <Input.Search
           allowClear
           placeholder="Tìm theo mã hoặc tên"
@@ -152,13 +149,18 @@ export function MasterCatalogView(props: MasterCatalogViewProps) {
             Thêm mới
           </Button>
         )}
-      </Space>
+      </div>
       <Table<CatalogItem>
         rowKey="id"
+        size="middle"
         loading={props.loading}
         dataSource={props.items}
         columns={columns}
-        pagination={{ total: props.totalCount, pageSize: 100 }}
+        pagination={{
+          total: props.totalCount,
+          pageSize: 100,
+          showTotal: (total) => `${total} bản ghi`,
+        }}
       />
     </>
   );

@@ -54,6 +54,14 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.Licensing.EligibilityCertificates.Create,
         FoodSafePermissions.Licensing.EligibilityCertificates.Edit,
         FoodSafePermissions.Licensing.EligibilityCertificates.Delete,
+        FoodSafePermissions.Licensing.CfsCertificates.View,
+        FoodSafePermissions.Licensing.CfsCertificates.Create,
+        FoodSafePermissions.Licensing.CfsCertificates.Edit,
+        FoodSafePermissions.Licensing.CfsCertificates.Delete,
+        FoodSafePermissions.Licensing.ExportCertificates.View,
+        FoodSafePermissions.Licensing.ExportCertificates.Create,
+        FoodSafePermissions.Licensing.ExportCertificates.Edit,
+        FoodSafePermissions.Licensing.ExportCertificates.Delete,
         FoodSafePermissions.SystemAdministration.Default,
         FoodSafePermissions.DataScope.All
     ];
