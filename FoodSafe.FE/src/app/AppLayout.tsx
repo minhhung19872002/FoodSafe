@@ -35,6 +35,9 @@ import {
   ExperimentOutlined,
   FundOutlined,
   BookOutlined,
+  PieChartOutlined,
+  FileSearchOutlined,
+  ToolOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -61,6 +64,9 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   "alerts-news": "Cảnh báo và Tin tức",
   "food-poisoning": "Ngộ độc thực phẩm",
   reporting: "Báo cáo",
+  statistics: "Thống kê tổng hợp",
+  "audit-logs": "Nhật ký hoạt động",
+  settings: "Cấu hình hệ thống",
   "risk-analysis": "Phân tích nguy cơ",
   "testing-results": "Kết quả kiểm nghiệm",
   documents: "Văn bản pháp quy",
@@ -118,6 +124,18 @@ const NAV_CONFIG: NavEntry[] = [
         icon: <DatabaseOutlined />,
         label: "Danh mục dùng chung",
         permission: "FoodSafe.Catalogs.View",
+      },
+      {
+        key: "/administration/audit-logs",
+        icon: <FileSearchOutlined />,
+        label: "Nhật ký hoạt động",
+        permission: "FoodSafe.SystemAdministration.AuditLogs",
+      },
+      {
+        key: "/administration/settings",
+        icon: <ToolOutlined />,
+        label: "Cấu hình hệ thống",
+        permission: "FoodSafe.SystemAdministration.Settings",
       },
     ],
   },
@@ -219,6 +237,11 @@ const NAV_CONFIG: NavEntry[] = [
     icon: <BarChartOutlined />,
     label: "Báo cáo",
     permission: "FoodSafe.Reporting.NdtpReports.View",
+  },
+  {
+    key: "/statistics",
+    icon: <PieChartOutlined />,
+    label: "Thống kê tổng hợp",
   },
 ];
 

@@ -103,6 +103,15 @@ export const PublicAdRegistrationLookupPage = lazy(
   () =>
     import("@/features/advertisement-registrations/pages/PublicAdRegistrationLookupPage"),
 );
+export const StatisticsPage = lazy(
+  () => import("@/features/statistics/pages/StatisticsPage"),
+);
+export const AuditLogPage = lazy(
+  () => import("@/features/audit-logs/pages/AuditLogPage"),
+);
+export const SystemSettingsPage = lazy(
+  () => import("@/features/settings/pages/SystemSettingsPage"),
+);
 
 export function RouteLoading() {
   return (

@@ -35,6 +35,9 @@ import {
   MasterCatalogPage,
   OrganizationListPage,
   ResetPasswordPage,
+  StatisticsPage,
+  AuditLogPage,
+  SystemSettingsPage,
   RouteLoading,
 } from "./routeComponents";
 
@@ -315,11 +318,39 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "statistics",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <StatisticsPage />
+          </Suspense>
+        ),
+      },
+      {
         path: "catalogs",
         element: (
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission="FoodSafe.Catalogs.View">
               <MasterCatalogPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "administration/audit-logs",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.SystemAdministration.AuditLogs">
+              <AuditLogPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "administration/settings",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.SystemAdministration.Settings">
+              <SystemSettingsPage />
             </PermissionRoute>
           </Suspense>
         ),
