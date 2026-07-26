@@ -9,6 +9,7 @@ import type {
   FileDownload,
   PagedResult,
   ProductOption,
+  PublicAdRegistration,
 } from "../types/advertisementRegistration.types";
 
 const endpoint = "/v1/app/advertisement-registration";
@@ -21,6 +22,16 @@ function download(data: Blob, disposition?: string): FileDownload {
     fileName: decodeURIComponent(encoded ?? plain ?? "download"),
   };
 }
+
+export const publicAdRegistrationApi = {
+  async lookup(number: string): Promise<PublicAdRegistration> {
+    const response = await api.get<PublicAdRegistration>(
+      "/v1/public/advertisement-registrations",
+      { params: { number } },
+    );
+    return response.data;
+  },
+};
 
 export const advertisementRegistrationApi = {
   async list(

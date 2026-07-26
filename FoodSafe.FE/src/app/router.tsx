@@ -25,6 +25,7 @@ import {
   DocumentsPage,
   PublicBusinessLookupPage,
   PublicSelfDeclarationLookupPage,
+  PublicAdRegistrationLookupPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -83,6 +84,14 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<RouteLoading />}>
         <PublicSelfDeclarationLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-quang-cao",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicAdRegistrationLookupPage />
       </Suspense>
     ),
   },

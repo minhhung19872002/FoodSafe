@@ -69,3 +69,13 @@ export type AdvertisementPagedResult = PagedResult<AdvertisementRegistration>;
 export type AdvertisementAttachment = FileAttachment;
 export type AdvertisementDownload = FileDownload;
 export type AdvertisementBusinessOption = BusinessOption;
+
+export interface PublicAdRegistration {
+  registrationNumber: string;
+  registrationDate: string;
+  expiryDate?: string;
+  contentDescription?: string;
+  medium?: string;
+  businessName: string;
+  status: LicenseStatus;
+}

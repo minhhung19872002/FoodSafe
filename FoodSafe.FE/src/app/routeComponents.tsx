@@ -99,6 +99,10 @@ export const PublicSelfDeclarationLookupPage = lazy(
   () =>
     import("@/features/businesses/pages/PublicSelfDeclarationLookupPage"),
 );
+export const PublicAdRegistrationLookupPage = lazy(
+  () =>
+    import("@/features/advertisement-registrations/pages/PublicAdRegistrationLookupPage"),
+);
 
 export function RouteLoading() {
   return (
