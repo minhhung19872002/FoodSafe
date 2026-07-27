@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — P1-1a: Excel-export browser evidence for uncovered admin/catalog/statistics modules (FR-02-13, FR-03-03, FR-06-06, FR-17-05, FR-40-02/04/06)
+
+- **Cause**: Evidence-only sweep (no product code change). doc 73 listed these five exports as `IMPLEMENTED_NOT_VERIFIED` — the export UIs existed but no executed spec exercised the real download. Added `e2e/excel-exports.spec.ts` to drive each real "Xuất Excel" button and assert the browser receives a genuine, non-empty OpenXML workbook.
+- **Commit**: `<this commit>` (files: `e2e/excel-exports.spec.ts`, docs 73/03)
+- **Affected features**: F-001 identity admin, F-003 audit logs, F-006 organizations, F-catalogs, F-statistics — export path only. No shared capability touched (test-only addition) → no invalidation of other features.
+- **Retest level**: 2 (per-feature runtime evidence, export sub-flow)
+- **Result**: PASSED
+- **Details**: `e2e/excel-exports.spec.ts` **5/5** (7.2 s). Each test: real admin login → real route → click "Xuất Excel" → `page.waitForEvent("download")` → read bytes → assert `.xlsx` filename **and** ZIP magic `PK` (proves a real ClosedXML/MiniExcel stream reached the browser, not an empty/error blob). Statistics test covers all 3 report tabs (licenses / poisoning / inspection). No API interception. Still `IMPLEMENTED_NOT_VERIFIED`: FR-03-02 (audit detail view), FR-40-07/08 (further breakdown exports).
+
 ### 2026-07-28 — P1-3: data-sharing Share permission missing from current-user-context allowlist (FR-51)
 
 - **Cause**: Driving the outbound share through the real UI (P1-3) surfaced a functional defect. The "Chia sẻ dữ liệu" button is gated on `hasPermission("FoodSafe.DataIntegration.Share")`; the FE permission list is built by `CurrentUserContextAppService.FoodSafePermissionNames`, a hard-coded allowlist that **omitted `DataIntegration.Share`**. The permission was granted server-side (API authorized) but never reported to the FE → the button never rendered for any user, incl. admin → the share action was UI-unreachable. Fix: added `FoodSafePermissions.DataIntegration.Share` to the allowlist (one line, purely additive).

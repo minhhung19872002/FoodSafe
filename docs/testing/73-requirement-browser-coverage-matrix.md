@@ -66,9 +66,10 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | FR-02-02 | Search by individual permission | — | none | IMPLEMENTED_NOT_VERIFIED |
 | FR-02-05 | FE delete user | — | none | IMPLEMENTED_NOT_VERIFIED |
 | FR-02-07 | Random password generation | — | none | IMPLEMENTED_NOT_VERIFIED |
-| FR-02-13 | Export user list to Excel | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-02-13 | Export user list to Excel | `excel-exports` ✓ (P1-1a) | pass | PASS_WITH_BROWSER_EVIDENCE — real UI "Xuất Excel" → download is a non-empty OpenXML (PK) workbook |
 | FR-03-01 | Audit log search | `audit-logs-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
-| FR-03-02/03 | Audit log detail view + Excel export | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-03-03 | Audit log Excel export | `excel-exports` ✓ (P1-1a) | pass | PASS_WITH_BROWSER_EVIDENCE — real UI download is a non-empty OpenXML (PK) workbook |
+| FR-03-02 | Audit log detail view | — | none | IMPLEMENTED_NOT_VERIFIED |
 | FR-04-01..06 | System settings (logo, login, pw policy, lockout, SMTP, homepage) | `system-settings-verification` ✓ (no mutation), `system-settings` ✓ (heading only) | pass | PASS_WITH_BACKEND_ONLY |
 | FR-05-01/02/03 | Login, logout, change password | `auth-verification` ✓, `password-management-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-05-04/05 | Profile self-edit, avatar | — | none | IMPLEMENTED_NOT_VERIFIED |
@@ -78,13 +79,13 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | Req | Requirement | Spec (executed) | Result | Status |
 |---|---|---|---|---|
 | FR-06-01..05 | Organization CRUD + search | `organizations-verification` ✓, `organizations` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
-| FR-06-06 | Organization Excel export | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-06-06 | Organization Excel export | `excel-exports` ✓ (P1-1a) | pass | PASS_WITH_BROWSER_EVIDENCE — real UI download is a non-empty OpenXML (PK) workbook |
 | FR-07-01/02/04..06 | Unit account management | `identity-administration-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-07-03 | FE delete unit account | — | none | IMPLEMENTED_NOT_VERIFIED |
 | FR-08..09-04 | Countries / Regions CRUD | `catalogs-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-10..11-04 | Provinces / Districts / Communes CRUD | `geography-verification` ✓, `geography` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-12..17-04 | Business class / product groups / biz types / ad types / testing centers / services CRUD | `catalogs-verification` ✓, `catalogs` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
-| FR-17-05 | Testing services Excel export | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-17-05 | Testing services Excel export | `excel-exports` ✓ (P1-1a) | pass | PASS_WITH_BROWSER_EVIDENCE — real UI (kind "Dịch vụ kiểm nghiệm") download is a non-empty OpenXML (PK) workbook |
 | FR-18-01..04 | Document types CRUD | `catalogs-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 
 ### Group C — Quản lý ATTP (STT 19–40)
@@ -128,7 +129,8 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | FR-39-01/05..08 | Dashboard stats/charts/map | `dashboard-verification` ✓, `dashboard` ✓ (heading only) | pass | PASS_WITH_BACKEND_ONLY |
 | FR-39-02/03/04/09 | Dashboard filters, compliance widgets, chart download | — | none | IMPLEMENTED_NOT_VERIFIED |
 | FR-40-01/03/05 | Statistics: licenses / NDTP / inspection | `statistics-verification` ✓, `statistics` ✓ (heading only) | pass | PASS_WITH_BACKEND_ONLY |
-| FR-40-02/04/06/07/08 | Statistics Excel exports + breakdown | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-40-02/04/06 | Statistics Excel exports (licenses-by-type / poisoning-by-area / inspection-summary) | `excel-exports` ✓ (P1-1a) | pass | PASS_WITH_BROWSER_EVIDENCE — all 3 report tabs export a non-empty OpenXML (PK) workbook via the real UI |
+| FR-40-07/08 | Statistics further breakdown exports | — | none | IMPLEMENTED_NOT_VERIFIED |
 
 ### Group E — Cổng thông tin công khai (STT 41–49)
 
