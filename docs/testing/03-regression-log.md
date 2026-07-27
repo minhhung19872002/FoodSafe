@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — P1-1g concrete-artifact exports: documents Excel+print (FR-38-07), statistics business-breakdown Excel (FR-40-07)
 
 - **Cause**: Added browser-acceptance coverage for the remaining concrete-artifact export/print gaps in doc 73 (test-only; no product code changed).
-- **Commit**: `<pending>`
+- **Commit**: `f3b6920`
 - **Affected features**: FR-38-07 (administrative-document list Excel export + per-document print), FR-40-07 (statistics "Cơ sở SXKD" business-breakdown Excel export).
 - **Retest level**: 2 (feature runtime, new specs only)
 - **Result**: PASSED — 3/3 green (5.1s), real backend, no interception.
