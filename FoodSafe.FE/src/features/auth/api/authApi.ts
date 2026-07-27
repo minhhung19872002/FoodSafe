@@ -26,8 +26,7 @@ export const authApi = {
   },
 
   logout: async (): Promise<void> => {
-    await authApi.initializeCsrf();
-    return api.post<void>("/account/logout").then(() => undefined);
+    return api.get<void>("/account/logout").then(() => undefined);
   },
 
   getCurrentUser: (): Promise<CurrentUserDto> =>

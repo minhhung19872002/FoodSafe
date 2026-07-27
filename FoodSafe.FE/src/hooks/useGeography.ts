@@ -25,8 +25,9 @@ export function useProvinces(activeOnly = true) {
 export function useDistricts(provinceId: string, activeOnly = true) {
   return useQuery({
     queryKey: keys.districts(provinceId, activeOnly),
+    // provinceId is a route segment per ABP convention: GET /districts/{provinceId}
     queryFn: () =>
-      getGeographicItems<DistrictItem>("districts", { provinceId, activeOnly }),
+      getGeographicItems<DistrictItem>(`districts/${provinceId}`, { activeOnly }),
     enabled: provinceId.length > 0,
   });
 }
@@ -34,8 +35,9 @@ export function useDistricts(provinceId: string, activeOnly = true) {
 export function useCommunes(districtId: string, activeOnly = true) {
   return useQuery({
     queryKey: keys.communes(districtId, activeOnly),
+    // districtId is a route segment per ABP convention: GET /communes/{districtId}
     queryFn: () =>
-      getGeographicItems<CommuneItem>("communes", { districtId, activeOnly }),
+      getGeographicItems<CommuneItem>(`communes/${districtId}`, { activeOnly }),
     enabled: districtId.length > 0,
   });
 }

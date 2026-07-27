@@ -10,11 +10,11 @@
 
 | ID    | Feature                         | Status         | E2E Spec                                      | Verified Commit | Date       |
 |-------|---------------------------------|----------------|-----------------------------------------------|-----------------|------------|
-| F-001 | Authentication (Login)          | READY_FOR_TEST | `e2e/auth.spec.ts`                            | —               | 2026-07-26 |
+| F-001 | Authentication (Login)          | VERIFIED       | `e2e/auth.spec.ts`, `e2e/auth-verification.spec.ts` | pending | 2026-07-27 |
 | F-002 | Password Management             | VERIFIED       | `e2e/password-management-verification.spec.ts` | `b2f13fb` | 2026-07-27 |
-| F-003 | Organizations                   | READY_FOR_TEST | `e2e/organizations.spec.ts`                   | —               | 2026-07-26 |
-| F-004 | Master Catalogs                 | READY_FOR_TEST | `e2e/catalogs.spec.ts`                        | —               | 2026-07-26 |
-| F-005 | Geographic Catalogs             | READY_FOR_TEST | `e2e/geography.spec.ts`                       | —               | 2026-07-26 |
+| F-003 | Organizations                   | VERIFIED       | `e2e/organizations.spec.ts`, `e2e/organizations-verification.spec.ts` | pending | 2026-07-27 |
+| F-004 | Master Catalogs                 | VERIFIED       | `e2e/catalogs.spec.ts`, `e2e/catalogs-verification.spec.ts` | pending | 2026-07-27 |
+| F-005 | Geographic Catalogs             | VERIFIED       | `e2e/geography.spec.ts`, `e2e/geography-verification.spec.ts` | pending | 2026-07-27 |
 | F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts` | `87cb7f6` | 2026-07-27 |
 | F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts` | `232c814` | 2026-07-27 |
 | F-008 | Product Registrations           | VERIFIED       | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `df7823c` | 2026-07-27 |
@@ -40,17 +40,27 @@
 | F-028 | Public Lookup — CFS             | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
 | F-029 | Public Lookup — Export Food     | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
 | F-030 | Public Lookup — Ad Registration | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
-| F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `5444001` | 2026-07-27 |
-| F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `5444001` | 2026-07-27 |
+| F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `d855990` | 2026-07-27 |
+| F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `d855990` | 2026-07-27 |
 
 ## Summary
 
 - Total features: 32
-- VERIFIED: **22** (F-002, F-006..F-023, F-031, F-032 — see `features/*.md`)
-- READY_FOR_TEST: **10** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
+- VERIFIED: **26** (F-001..F-023, F-031, F-032 — see `features/*.md`)
+- READY_FOR_TEST: **6** (F-024..F-030, full verification checklist not yet executed)
 - FAILED: 0
-- BLOCKED: 0 (F-002 unblocked — implementation existed; spec added and verified)
+- BLOCKED: 0
 - NOT_STARTED: 0
+
+## Test Run (2026-07-27, fourth) — F-001, F-003, F-004, F-005 verified
+
+- **27 test cases** across 4 new verification specs — **27 passed, 0 failed** (16.8s)
+- Features verified: F-001 (Authentication), F-003 (Organizations), F-004 (Master Catalogs), F-005 (Geographic Catalogs)
+- Product defects found and fixed:
+  1. `authApi.ts` logout used POST — fixed to GET (`/api/account/logout` is a GET endpoint)
+  2. `useGeography.ts` districts/communes sent IDs as query params — fixed to route segments (`/districts/{provinceId}`, `/communes/{districtId}`)
+- Docker frontend image rebuilt to pick up fixes
+- Commit SHA: pending (recorded after commit)
 
 ## Test Run (2026-07-27, third) — commit `a54889f` (Statistics DI fix)
 
