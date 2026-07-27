@@ -109,6 +109,13 @@ export interface ShareDataInput {
   note?: string;
 }
 
+export interface TestConnectionResult {
+  isSuccess: boolean;
+  statusCode?: number;
+  durationMs: number;
+  errorMessage?: string;
+}
+
 export interface ShareDataResult {
   logId: string;
   isSuccess: boolean;

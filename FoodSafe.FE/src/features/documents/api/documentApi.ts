@@ -62,3 +62,42 @@ export const documentApi = {
     return download(response.data, response.headers["content-disposition"]);
   },
 };
+
+export interface DocumentAttachment {
+  id: string;
+  originalName: string;
+  sizeBytes: number;
+  mimeType?: string;
+  description?: string;
+  creationTime: string;
+}
+
+export const documentAttachmentApi = {
+  async list(documentId: string): Promise<DocumentAttachment[]> {
+    return (
+      await api.get<DocumentAttachment[]>(
+        `${endpoint}/${documentId}/attachments`,
+      )
+    ).data;
+  },
+  async upload(documentId: string, file: File): Promise<void> {
+    const form = new FormData();
+    form.append("file", file);
+    await api.post(`${endpoint}/${documentId}/attachments`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+  async download(
+    documentId: string,
+    attachmentId: string,
+  ): Promise<FileDownload> {
+    const response = await api.get<Blob>(
+      `${endpoint}/${documentId}/attachments/${attachmentId}/download`,
+      { responseType: "blob" },
+    );
+    return download(response.data, response.headers["content-disposition"]);
+  },
+  async remove(documentId: string, attachmentId: string): Promise<void> {
+    await api.delete(`${endpoint}/${documentId}/attachments/${attachmentId}`);
+  },
+};

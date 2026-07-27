@@ -10,6 +10,7 @@ import type {
   PagedResult,
   ShareDataInput,
   ShareDataResult,
+  TestConnectionResult,
 } from "../types/dataIntegration.types";
 
 function download(data: Blob, contentDisposition?: string): FileDownload {
@@ -58,6 +59,13 @@ export const dataIntegrationApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+
+  testConnection: (id: string) =>
+    api
+      .post<TestConnectionResult>(
+        `/v1/app/api-endpoint/${id}/test-connection`,
+      )
+      .then((r) => r.data),
 
   shareData: (input: ShareDataInput) =>
     api

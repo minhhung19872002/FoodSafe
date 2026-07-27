@@ -129,6 +129,67 @@ public class InspectionPlanAttachmentAppService :
 }
 
 [RemoteService(false)]
+[Authorize(FoodSafePermissions.AlertsAndTesting.Documents.View)]
+public class AdministrativeDocumentAttachmentAppService :
+    InspectionAttachmentAppServiceBase<FoodSafe.AlertsAndTesting.AdministrativeDocument>,
+    IAdministrativeDocumentAttachmentAppService
+{
+    public AdministrativeDocumentAttachmentAppService(
+        IRepository<FoodSafe.AlertsAndTesting.AdministrativeDocument, Guid> entities,
+        IRepository<DocumentOwner, Guid> documentOwners,
+        IDocumentAttachmentStore store,
+        ICurrentDataScopeProvider dataScopeProvider,
+        ICancellationTokenProvider cancellationTokens)
+        : base(entities, documentOwners, store, dataScopeProvider,
+            cancellationTokens)
+    {
+    }
+
+    protected override string OwnerFolder => "administrative-documents";
+
+    protected override Guid GetOrganizationId(
+        FoodSafe.AlertsAndTesting.AdministrativeDocument entity) =>
+        entity.OrganizationId;
+
+    public async Task<IReadOnlyList<FileAttachmentDto>> GetListAsync(
+        Guid documentId)
+    {
+        await GetScopedAsync(documentId, DataScopeOperation.View);
+        return await Store.GetListAsync(documentId);
+    }
+
+    [Authorize(FoodSafePermissions.AlertsAndTesting.Documents.Edit)]
+    public async Task<FileAttachmentDto> UploadAsync(
+        Guid documentId,
+        byte[] content,
+        string originalName,
+        string contentType,
+        string? description)
+    {
+        var document = await GetScopedAsync(
+            documentId, DataScopeOperation.Edit);
+        await EnsureDocumentOwnerAsync(documentId, document.OrganizationId);
+        return await Store.UploadAsync(
+            documentId, OwnerFolder, content, originalName, contentType,
+            description);
+    }
+
+    public async Task<FileAttachmentDownloadDto> DownloadAsync(
+        Guid documentId, Guid attachmentId)
+    {
+        await GetScopedAsync(documentId, DataScopeOperation.View);
+        return await Store.DownloadAsync(documentId, attachmentId);
+    }
+
+    [Authorize(FoodSafePermissions.AlertsAndTesting.Documents.Edit)]
+    public async Task DeleteAsync(Guid documentId, Guid attachmentId)
+    {
+        await GetScopedAsync(documentId, DataScopeOperation.Edit);
+        await Store.DeleteAsync(documentId, attachmentId);
+    }
+}
+
+[RemoteService(false)]
 [Authorize(FoodSafePermissions.Inspection.Results.View)]
 public class InspectionResultAttachmentAppService :
     InspectionAttachmentAppServiceBase<InspectionResult>,

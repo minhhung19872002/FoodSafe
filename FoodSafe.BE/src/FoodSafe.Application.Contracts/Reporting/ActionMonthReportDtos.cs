@@ -47,9 +47,21 @@ public class ActionMonthReportDto : EntityDto<Guid>
 public class CreateActionMonthReportDto
 {
     [Required]
+    [Range(2020, 2100)]
     public int PeriodYear { get; set; }
+
+    [StringLength(500)]
     public string? ActionMonthTheme { get; set; }
+
+    /// <summary>Khoảng thời gian triển khai, định dạng dd/MM/yyyy - dd/MM/yyyy.</summary>
+    [StringLength(50)]
+    [RegularExpression(
+        @"^\s*\d{1,2}/\d{1,2}/\d{4}\s*[-–]\s*\d{1,2}/\d{1,2}/\d{4}\s*$",
+        ErrorMessage =
+            "Thời gian triển khai phải theo định dạng dd/MM/yyyy - dd/MM/yyyy.")]
     public string? ActionMonthDates { get; set; }
+
+    [StringLength(2000)]
     public string? Notes { get; set; }
 }
 
@@ -72,7 +84,15 @@ public class UpdateActionMonthReportStatsDto
 
 public class UpdateActionMonthReportNarrativeDto
 {
+    [StringLength(500)]
     public string? ActionMonthTheme { get; set; }
+
+    /// <summary>Khoảng thời gian triển khai, định dạng dd/MM/yyyy - dd/MM/yyyy.</summary>
+    [StringLength(50)]
+    [RegularExpression(
+        @"^\s*\d{1,2}/\d{1,2}/\d{4}\s*[-–]\s*\d{1,2}/\d{1,2}/\d{4}\s*$",
+        ErrorMessage =
+            "Thời gian triển khai phải theo định dạng dd/MM/yyyy - dd/MM/yyyy.")]
     public string? ActionMonthDates { get; set; }
     public string? Achievements { get; set; }
     public string? Limitations { get; set; }

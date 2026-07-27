@@ -54,6 +54,50 @@ public sealed class InspectionPlanAttachmentController(
 [RemoteService]
 [ApiVersion(ApiContract.Version)]
 [Authorize]
+[Route("api/v1/app/administrative-document/{documentId:guid}/attachments")]
+public sealed class AdministrativeDocumentAttachmentController(
+    IAdministrativeDocumentAttachmentAppService service) : AbpControllerBase
+{
+    private const long MaximumRequestBytes = 20L * 1024 * 1024 + 64 * 1024;
+
+    [HttpGet]
+    public Task<IReadOnlyList<FileAttachmentDto>> GetListAsync(
+        Guid documentId) =>
+        service.GetListAsync(documentId);
+
+    [HttpPost]
+    [RequestSizeLimit(MaximumRequestBytes)]
+    [Consumes("multipart/form-data")]
+    public async Task<FileAttachmentDto> UploadAsync(
+        Guid documentId,
+        IFormFile file,
+        [FromForm] string? description)
+    {
+        if (file is null)
+            throw new UserFriendlyException("Vui lòng chọn file đính kèm.");
+        await using var stream = new MemoryStream();
+        await file.CopyToAsync(stream, HttpContext.RequestAborted);
+        return await service.UploadAsync(
+            documentId, stream.ToArray(), file.FileName, file.ContentType,
+            description);
+    }
+
+    [HttpGet("{attachmentId:guid}/download")]
+    public async Task<IActionResult> DownloadAsync(
+        Guid documentId, Guid attachmentId)
+    {
+        var file = await service.DownloadAsync(documentId, attachmentId);
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
+    [HttpDelete("{attachmentId:guid}")]
+    public Task DeleteAsync(Guid documentId, Guid attachmentId) =>
+        service.DeleteAsync(documentId, attachmentId);
+}
+
+[RemoteService]
+[ApiVersion(ApiContract.Version)]
+[Authorize]
 [Route("api/v1/app/inspection-result/{resultId:guid}/attachments")]
 public sealed class InspectionResultAttachmentController(
     IInspectionResultAttachmentAppService service) : AbpControllerBase

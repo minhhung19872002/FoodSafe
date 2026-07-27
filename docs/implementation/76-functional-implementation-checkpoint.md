@@ -89,3 +89,23 @@ FE TypeScript:           0 errors
 1. Statistics Excel exports aggregate data from the existing `StatisticsAppService.GetAsync()` — granularity matches the chart data on the Statistics page.
 2. Business search filters for administrative area (district/commune) are NOT yet exposed in the FE toolbar — the BE `BusinessListInput` supports `OrganizationId?` but no geographic area filter. This can be added when the geographic catalog integration is completed.
 3. All P2 and P3 batches remain as documented in doc 74.
+
+---
+
+# Checkpoint 2 — 2026-07-27 (branch `feature/close-remaining-gaps`)
+
+After merging the audit-65/66 backlog into `main`, docs 73/74 were re-reconciled against the
+actual codebase; most rows were already closed by that merge. The truly-remaining gaps were
+implemented in this session:
+
+| Gap | Req ID | Delivered |
+|-----|--------|-----------|
+| 1 | FR-50-05 | `POST /api/v1/app/api-endpoint/{id}/test-connection` (HEAD probe, logs to ApiCallLog) + "Test" button in Data Integration → Endpoints tab |
+| 2 | FR-38-07 | Administrative document attachments (upload/download/delete via `api/v1/app/administrative-document/{id}/attachments`) + print view on DocumentsPage |
+| 3 | FR-36-08 | Risk analysis print view (`printHtml` util, Times New Roman print window) |
+| 4 | FR-39-08 | Poisoning map (Leaflet `PoisoningMap`) embedded on the Statistics page |
+| 5 | DT-08, L1 | `ActionMonthDates` format validation (`dd/MM/yyyy - dd/MM/yyyy`, StringLength + RegularExpression on Create/Narrative DTOs, mirrored antd form rules) + removed 6 `Class1.cs` scaffold stubs |
+| 6 | NFR-01..06 | k6 load test `scripts/load-test.k6.js` — 30 VUs held 2 minutes: 3,270 requests, 0% failed, avg 31ms, max 418ms, API CPU avg ~54%, PostgreSQL avg ~20%. Full results: `docs/testing/05-load-test-results.md` |
+
+Test baseline after this checkpoint: BE 519/519, FE Vitest 112/112, FE build + oxlint clean.
+Playwright full E2E run recorded in `docs/testing/03-regression-log.md`.

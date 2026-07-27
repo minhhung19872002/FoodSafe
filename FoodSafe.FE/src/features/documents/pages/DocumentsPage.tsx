@@ -20,10 +20,14 @@ import {
   EditOutlined,
   DeleteOutlined,
   ExportOutlined,
+  PaperClipOutlined,
+  PrinterOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { saveDownload } from "@/utils/download";
+import { escapeHtml, printHtml } from "@/utils/printHtml";
+import { DocumentAttachmentsModal } from "../components/DocumentAttachmentsModal";
 import { useDocuments, useDocumentTypes } from "../api/documentQueries";
 import {
   useCreateDocument,
@@ -57,7 +61,23 @@ export default function DocumentsPage() {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<AdministrativeDocument | null>(null);
+  const [attachmentsDoc, setAttachmentsDoc] =
+    useState<AdministrativeDocument | null>(null);
   const [form] = Form.useForm();
+
+  const printDocument = (record: AdministrativeDocument) =>
+    printHtml(
+      record.documentNumber,
+      `<h3>${escapeHtml(record.issuingAuthority) || "CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH"}</h3>
+       <h2>${escapeHtml(record.title)}</h2>
+       <p><strong>Số văn bản:</strong> ${escapeHtml(record.documentNumber)}</p>
+       <p><strong>Loại văn bản:</strong> ${escapeHtml(record.documentTypeName)}</p>
+       <p><strong>Ngày ban hành:</strong> ${dayjs(record.issuedDate).format("DD/MM/YYYY")}</p>
+       ${record.effectiveDate ? `<p><strong>Ngày hiệu lực:</strong> ${dayjs(record.effectiveDate).format("DD/MM/YYYY")}</p>` : ""}
+       ${record.expiryDate ? `<p><strong>Ngày hết hiệu lực:</strong> ${dayjs(record.expiryDate).format("DD/MM/YYYY")}</p>` : ""}
+       <p><strong>Tóm tắt nội dung:</strong></p>
+       <p>${escapeHtml(record.summary) || "—"}</p>`,
+    );
 
   const openCreate = () => {
     setEditing(null);
@@ -121,9 +141,21 @@ export default function DocumentsPage() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 100,
+      width: 190,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            aria-label={`In ${record.documentNumber}`}
+            icon={<PrinterOutlined />}
+            onClick={() => printDocument(record)}
+          />
+          <Button
+            size="small"
+            aria-label={`Tệp ${record.documentNumber}`}
+            icon={<PaperClipOutlined />}
+            onClick={() => setAttachmentsDoc(record)}
+          />
           {hasPermission("FoodSafe.AlertsAndTesting.Documents.Edit") && (
             <Button
               size="small"
@@ -326,6 +358,12 @@ export default function DocumentsPage() {
           </Space>
         </Form>
       </Modal>
+      <DocumentAttachmentsModal
+        documentId={attachmentsDoc?.id}
+        title={`Tài liệu đính kèm — ${attachmentsDoc?.documentNumber ?? ""}`}
+        canEdit={hasPermission("FoodSafe.AlertsAndTesting.Documents.Edit")}
+        onClose={() => setAttachmentsDoc(null)}
+      />
     </Card>
   );
 }

@@ -172,8 +172,18 @@ export function ActionMonthReportEditorModal({ report, onClose }: Props) {
         <Form.Item name="actionMonthTheme" label="Chủ đề">
           <Input />
         </Form.Item>
-        <Form.Item name="actionMonthDates" label="Thời gian">
-          <Input placeholder="VD: 15/4 - 15/5/2026" />
+        <Form.Item
+          name="actionMonthDates"
+          label="Thời gian"
+          rules={[
+            {
+              pattern:
+                /^\s*\d{1,2}\/\d{1,2}\/\d{4}\s*[-–]\s*\d{1,2}\/\d{1,2}\/\d{4}\s*$/,
+              message: "Định dạng dd/MM/yyyy - dd/MM/yyyy",
+            },
+          ]}
+        >
+          <Input placeholder="VD: 15/04/2026 - 15/05/2026" />
         </Form.Item>
         <Form.Item name="achievements" label="Kết quả đạt được">
           <Input.TextArea rows={3} />

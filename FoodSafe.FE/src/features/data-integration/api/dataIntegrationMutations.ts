@@ -53,6 +53,14 @@ export function useExportEndpoints() {
   });
 }
 
+export function useTestConnection() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => dataIntegrationApi.testConnection(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-call-logs"] }),
+  });
+}
+
 export function useShareData() {
   const qc = useQueryClient();
   return useMutation({

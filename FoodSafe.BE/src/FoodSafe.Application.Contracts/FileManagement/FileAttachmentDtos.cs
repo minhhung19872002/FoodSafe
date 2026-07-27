@@ -173,3 +173,19 @@ public interface IInspectionResultAttachmentAppService :
         Guid attachmentId);
     Task DeleteAsync(Guid resultId, Guid attachmentId);
 }
+
+public interface IAdministrativeDocumentAttachmentAppService :
+    IApplicationService
+{
+    Task<IReadOnlyList<FileAttachmentDto>> GetListAsync(Guid documentId);
+    Task<FileAttachmentDto> UploadAsync(
+        Guid documentId,
+        byte[] content,
+        string originalName,
+        string contentType,
+        string? description);
+    Task<FileAttachmentDownloadDto> DownloadAsync(
+        Guid documentId,
+        Guid attachmentId);
+    Task DeleteAsync(Guid documentId, Guid attachmentId);
+}
