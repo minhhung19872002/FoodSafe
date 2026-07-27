@@ -22,9 +22,9 @@
 | F-010 | Eligibility Certificates        | VERIFIED       | `e2e/eligibility-certificates.spec.ts`, `e2e/eligibility-certificates-verification.spec.ts` | `df7823c` | 2026-07-27 |
 | F-011 | CFS Certificates                | VERIFIED       | `e2e/cfs-certificates.spec.ts`, `e2e/cfs-certificates-verification.spec.ts` | `df7823c` | 2026-07-27 |
 | F-012 | Export Food Certificates        | VERIFIED       | `e2e/export-food-certificates.spec.ts`, `e2e/export-food-certificates-verification.spec.ts` | `df7823c` | 2026-07-27 |
-| F-013 | Inspection Plans & Results      | DIRTY          | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `c8f9537` | 2026-07-27 |
+| F-013 | Inspection Plans & Results      | VERIFIED       | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `07476e3` | 2026-07-27 |
 | F-014 | Food Poisoning Cases            | VERIFIED       | `e2e/food-poisoning.spec.ts`, `e2e/food-poisoning-verification.spec.ts` | `3c12156` | 2026-07-27 |
-| F-015 | Reporting (NDTP/ATP/Action)     | DIRTY          | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts` | `df7823c` | 2026-07-27 |
+| F-015 | Reporting (NDTP/ATP/Action)     | VERIFIED       | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `07476e3` | 2026-07-27 |
 | F-016 | Alerts & News                   | READY_FOR_TEST | `e2e/alerts-news.spec.ts`                     | —               | 2026-07-26 |
 | F-017 | Testing Results                 | READY_FOR_TEST | `e2e/testing-results.spec.ts`                 | —               | 2026-07-26 |
 | F-018 | Risk Analysis                   | READY_FOR_TEST | `e2e/risk-analysis.spec.ts`                   | —               | 2026-07-26 |

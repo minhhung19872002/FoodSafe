@@ -36,9 +36,9 @@ Columns: Sub = extracted sub-requirements; C = complete (not runtime verified, 0
 | 30 | Tin tức ATTP | 9 | 7 | 1 | 1 | 71% | Citizen-news approval missing; publish doesn't reach a public page |
 | 31 | Ca ngộ độc nhỏ lẻ | 11 | 11 | 0 | 0 | 85% | Full workflow + error reports + map |
 | 32 | Vụ ngộ độc | 10 | 10 | 0 | 0 | 85% | Conclude (phiếu kết thúc) permission-gated |
-| 33 | Báo cáo NĐTP | 11 | 9 | 2¹ | 0 | 77% | No commune→city roll-up; **error-notification (báo sai sót) has DB+domain only — no endpoint/UI** |
-| 34 | Báo cáo công tác ATTP | 11 | 8 | 2¹ | 1 | 68% | **"Tự tính số liệu" (auto-aggregation) missing — all stats manual**; error-notification unreachable; document view partial |
-| 35 | BC Tháng hành động | 10 | 8 | 2¹ | 0 | 75% | Error-notification unreachable; document view partial; free-text date defect |
+| 33 | Báo cáo NĐTP | 11 | 9+1rv | 1 | 0 | 84% | No commune→city roll-up; **error-notification (báo sai sót) has DB+domain only — no endpoint/UI** |
+| 34 | Báo cáo công tác ATTP | 11 | 8+1rv | 1 | 1 | 75% | **"Tự tính số liệu" (auto-aggregation) missing — all stats manual**; error-notification unreachable; document view partial |
+| 35 | BC Tháng hành động | 10 | 8+1rv | 1 | 0 | 82% | Error-notification unreachable; document view partial; free-text date defect |
 | 36 | Phân tích mối nguy cơ | 8 | 6 | 2 | 0 | 76% | Publication doesn't reach public portal; no print |
 | 37 | Kết quả kiểm nghiệm | 6 | 6 | 0 | 0 | 85% | Testing center free-text (catalog unused) |
 | 38 | Văn bản chỉ đạo | 7 | 4 | 3 | 0 | 77% | Hard-coded type list; no print; no attachment of document file |

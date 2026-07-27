@@ -76,3 +76,10 @@
 - Any change under the related source paths (Level 2)
 - Auth/data-scope/axios/router changes (Level 3)
 - Registry entry invalid for commits after `e141203` touching the above paths
+
+## 2026-07-27 — Error notifications (FR-33-05, FR-34-05, FR-35-05)
+
+- Endpoints: `GET/POST /api/v1/app/{ndtp-report|atp-work-report|action-month-report}/{id}/error-notification(s)`, `POST .../{id}/acknowledge-error-notification/{nid}`, `POST .../{id}/respond-error-notification/{nid}`
+- Permissions: add = `Reporting.*.Submit`; acknowledge/respond = `Reporting.*.Verify`; org scope enforced server-side; `FromOrganizationId` server-derived
+- Domain rule: allowed when Submitted or Verified (YCKT "sau khi gửi"); Draft rejected
+- Spec: `e2e/reporting-error-notifications.spec.ts` (real stack, no interception) — verified commit `07476e3`

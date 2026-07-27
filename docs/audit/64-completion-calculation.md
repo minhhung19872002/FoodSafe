@@ -107,3 +107,7 @@ Non-software deliverables (n = 17): SUP 4, TRN 1, OWN 4, HND 2, ACC 6. Evidence 
 4. Share-history viewers over never-populated tables score 0.20 (SHALLOW) — structure without behavior.
 5. Deployment-environment obligations (DBS, IPV, NFR) are scored for what the delivered software/config prepares, not for the un-provisioned production environment.
 6. Weights are the default weights mandated by the audit instructions; the PDF does not imply an alternative weighting.
+
+## Changelog (running, full recalculation deferred to next milestone)
+
+- **2026-07-27 `07476e3`**: FR-33-05, FR-34-05, FR-35-05 DATABASE_ONLY(0.20) → COMPLETE_RUNTIME_VERIFIED(1.00) (+2.40 functional points → 249.30/372 = 67.02%). First runtime-verified requirement items. M2/M6 fixes improve no scored item directly (defect notes only). Registry runtime coverage now 13/32 features VERIFIED (F-002, F-006..F-015 per registry at `07476e3`).
