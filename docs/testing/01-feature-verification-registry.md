@@ -30,7 +30,7 @@
 | F-018 | Risk Analysis                   | VERIFIED       | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts` | `de02e52` | 2026-07-27 |
 | F-019 | Data Integration                | VERIFIED       | `e2e/data-integration.spec.ts`, `e2e/data-integration-verification.spec.ts` | `11a6537` | 2026-07-27 |
 | F-020 | Identity Administration         | VERIFIED       | `e2e/identity-administration.spec.ts`, `e2e/identity-administration-verification.spec.ts` | `d56eb2c` | 2026-07-27 |
-| F-021 | Audit Logs                      | READY_FOR_TEST | `e2e/audit-logs.spec.ts`                      | —               | 2026-07-26 |
+| F-021 | Audit Logs                      | VERIFIED       | `e2e/audit-logs.spec.ts`, `e2e/audit-logs-verification.spec.ts` | `3bb49ec` | 2026-07-27 |
 | F-022 | Dashboard                       | READY_FOR_TEST | `e2e/dashboard.spec.ts`                       | —               | 2026-07-26 |
 | F-023 | Statistics                      | READY_FOR_TEST | `e2e/statistics.spec.ts`                      | —               | 2026-07-26 |
 | F-024 | Public Lookup — Business        | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
@@ -46,8 +46,8 @@
 ## Summary
 
 - Total features: 32
-- VERIFIED: **17** (F-002, F-006..F-020 — see `features/*.md`)
-- READY_FOR_TEST: **15** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
+- VERIFIED: **18** (F-002, F-006..F-021 — see `features/*.md`)
+- READY_FOR_TEST: **14** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
 - FAILED: 0
 - BLOCKED: 0 (F-002 unblocked — implementation existed; spec added and verified)
 - NOT_STARTED: 0
