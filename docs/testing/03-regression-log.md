@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — FR-39-09 statistics chart PNG download (P1-1m) — real defect fix
+
+- **Cause**: New browser-acceptance evidence for the statistics chart PNG download buttons (doc 77 P1-1m; doc 73 was IMPLEMENTED_NOT_VERIFIED) — **and a real production defect fix**. `downloadChartAsPng` rasterized the chart SVG by assigning a `blob:` object URL to an `<img>`, but the app's Content Security Policy allows `img-src 'self' data: https://*.tile.openstreetmap.org` and **not** `blob:`; the browser rejected the image before load (`image.onerror`), the export promise rejected, and no PNG was ever produced — both chart download buttons silently failed in the real app (only an error toast). Fix: use a CSP-allowed `data:` URI for the intermediate SVG (`encodeURIComponent` keeps the Vietnamese labels intact); no CSP change. Changed files: `FoodSafe.FE/src/utils/chartExport.ts` (fix) + new `FoodSafe.FE/e2e/statistics-chart-download.spec.ts`.
+- **Commit**: `de06374`
+- **Affected features**: F-018 statistics (chart image export only). `chartExport.ts` is imported solely by `StatisticsPage.tsx`, so no other feature is invalidated.
+- **Retest level**: 2 (single-feature runtime retest)
+- **Result**: PASSED — 1/1 green (1.7s), real backend, no interception.
+- **Details**: Root cause found via an in-browser diagnostic that replicated the rasterization and reported the exact failure point (`image.onload` never fired; console showed the CSP `img-src` violation on the `blob:` URL). After switching to a `data:` URI, the same in-page replication produced a real 62,961-byte PNG (chart 982×300) with **zero CSP console errors**. `statistics-chart-download.spec.ts` then logs in through the real login screen, opens `/statistics` served by the real backend, clicks both time-series download buttons ("Thanh kiểm tra theo tháng" + "Ngộ độc thực phẩm theo tháng") and asserts real browser downloads whose bytes begin with the 8-byte PNG signature and whose suggested filenames are the year-stamped `thanh-kiem-tra-<year>.png` / `ngo-doc-thuc-pham-<year>.png`. FE image rebuilt for this fix; no BE rebuild. Log: `fr39-09b.log`.
+
 ### 2026-07-28 — FR-38 administrative-document attachments (P1-1b remainder)
 
 - **Cause**: New browser-acceptance evidence for the `/documents` attachment modal (last untested piece of the P1-1b attachment batch) — **and a real FE defect fix**. The modal read `sizeBytes`/`creationTime` from the attachment DTO, but the backend `FileAttachmentDto` serializes `fileSize`/`uploadTime`, so the "Kích thước" and "Ngày tải" columns rendered `NaN KB` / `Invalid Date`. Changed files: `documentApi.ts`, `DocumentAttachmentsModal.tsx` (FE fix) + new `documents-attachments.spec.ts`. No backend change — the attachment endpoint already existed via the shared `InspectionAttachmentAppServiceBase` / `DocumentAttachmentStore`.
