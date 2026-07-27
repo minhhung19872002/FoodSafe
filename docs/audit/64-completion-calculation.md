@@ -12,9 +12,9 @@ Scores per sub-item are taken from doc 63 (one score per row). Scoring scale fol
 | 4 | 0.30 | 6 | 5% | 30 | 6.35 | 9 | 71% |
 | 5 | 2.80 | 5 | 56% | 31 | 9.35 | 11 | 85% |
 | 6 | 4.25 | 6 | 71% | 32 | 8.50 | 10 | 85% |
-| 7 | 4.75 | 6 | 79% | 33 | 9.10 | 11 | 83% |
-| 8–16 | 30.60 | 36 | 85% | 34 | 8.15 | 11 | 74% |
-| 17 | 3.40 | 5 | 68% | 35 | 8.15 | 10 | 82% |
+| 7 | 4.75 | 6 | 79% | 33 | 8.45 | 11 | 77% |
+| 8–16 | 30.60 | 36 | 85% | 34 | 7.50 | 11 | 68% |
+| 17 | 3.40 | 5 | 68% | 35 | 7.50 | 10 | 75% |
 | 18 | 3.40 | 4 | 85% | 36 | 6.10 | 8 | 76% |
 | 19 | 14.35 | 18 | 80% | 37 | 5.10 | 6 | 85% |
 | 20 | 6.80 | 8 | 85% | 38 | 5.40 | 7 | 77% |
@@ -32,10 +32,12 @@ Scores per sub-item are taken from doc 63 (one score per row). Scoring scale fol
 | — | — | — | — | 50 | 4.75 | 6 | 79% |
 | — | — | — | — | 51–57 | 4.20 | 28 | 15% |
 
-Group sums: A = 18.90/33 (57.3%) · B = 46.40/57 (81.4%) · C = 167.75/216 (77.7%) · E = 6.85/32 (21.4%) · F = 8.95/34 (26.3%).
+Group sums: A = 18.90/33 (57.3%) · B = 46.40/57 (81.4%) · C = 165.80/216 (76.8%) · E = 6.85/32 (21.4%) · F = 8.95/34 (26.3%).
 
-**Functional implementation = 248.85 / 372 = 66.90%.**
+**Functional implementation = 246.90 / 372 = 66.37%.**
 **Functional runtime-verified = 0 / 372 = 0.00%.**
+
+> Adversarial-pass adjustment applied: FR-33-05/34-05/35-05 (report error notifications) downgraded CNRV → DATABASE_ONLY (0.20) — domain/DB structures exist but no endpoint or UI (−1.95 points vs the pre-check draft).
 
 ## 2. Non-functional category scores
 
@@ -51,14 +53,14 @@ Group sums: A = 18.90/33 (57.3%) · B = 46.40/57 (81.4%) · C = 167.75/216 (77.7
 | TECH | 3.95 | 5 | 79.0% |
 | L2 | 0.40 | 1 | 40.0% |
 
-Software unweighted total: **292.65 / 452 = 64.75%**.
+Software unweighted total: **290.70 / 452 = 64.31%**.
 
 ## 3. Weighted-category calculations
 
 - **Security & data scope** = (SEC 18.55 + DBS 2.30 + L2 0.40) / 36 = **59.03%** (data-scope FR sub-items stay in the functional bucket to avoid double counting).
-- **Workflow correctness** = PDF workflow sub-items only (FR-33-04..07, 34-04..06, 35-04..06, 31-06/08, 32-05/07, 29-06/07, 30-07/08/09, 36-07, 28-03 = 21 items) = 15.10/21 = **71.90%**.
-- **Frontend completeness** = FE-side attainment weighted by group size: A 0.68, B 0.85, C 0.82, E 0.25, F 0.55 → (0.68·33 + 0.85·57 + 0.82·216 + 0.25·32 + 0.55·34)/372 = **73.85%**.
-- **Backend completeness** = A 0.75, B 0.85, C 0.85, E 0.30, F 0.30 → (24.75 + 48.45 + 183.60 + 9.60 + 10.20)/372 = **74.35%**.
+- **Workflow correctness** = PDF workflow sub-items only (FR-33-04..07, 34-04..06, 35-04..06, 31-06/08, 32-05/07, 29-06/07, 30-07/08/09, 36-07, 28-03 = 21 items) = 13.15/21 = **62.62%** (after error-notification downgrade).
+- **Frontend completeness** = FE-side attainment weighted by group size: A 0.68, B 0.85, C 0.815, E 0.25, F 0.55 → (22.44 + 48.45 + 176.04 + 8.00 + 18.70)/372 = **73.56%**.
+- **Backend completeness** = A 0.75, B 0.85, C 0.845, E 0.30, F 0.30 → (24.75 + 48.45 + 182.52 + 9.60 + 10.20)/372 = **74.06%**.
 - **Database integrity** = **90%** (full schema for all 8 modules incl. integration tables, FK/CHECK/unique-partial/evidence-column coverage; deductions: Address not a value object per architecture doc, Hangfire tables unmanaged, no history tables beyond error-notification/ABP audit).
 - **Runtime testing & acceptance** = **15%** (real-full-stack e2e suite of 25 specs exists and is correctly designed (no interception) = partial credit; but 0/32 VERIFIED, last run 25 failures, no BE API integration tests, e2e absent from CI, several specs assert headings only).
 - **Infrastructure & operations** = **55%** (compose stack with health checks + migrator + ClamAV + MinIO + CI with security scanning = strong; missing: backup/restore scripts, deploy pipeline, monitoring, IPv6, TLS provisioning, committed dev secrets).
@@ -68,26 +70,27 @@ Software unweighted total: **292.65 / 452 = 64.75%**.
 
 | Category | Weight | % | Contribution |
 |---|---|---|---|
-| Functional implementation | 40% | 66.90 | 26.76 |
+| Functional implementation | 40% | 66.37 | 26.55 |
 | Security & data scope | 15% | 59.03 | 8.85 |
-| Workflow correctness | 10% | 71.90 | 7.19 |
-| Frontend completeness | 10% | 73.85 | 7.39 |
-| Backend completeness | 10% | 74.35 | 7.44 |
+| Workflow correctness | 10% | 62.62 | 6.26 |
+| Frontend completeness | 10% | 73.56 | 7.36 |
+| Backend completeness | 10% | 74.06 | 7.41 |
 | Database integrity | 5% | 90.00 | 4.50 |
 | Runtime testing & acceptance | 5% | 15.00 | 0.75 |
 | Infrastructure & operations | 3% | 55.00 | 1.65 |
 | Documentation | 2% | 60.00 | 1.20 |
-| **Overall** | 100% | — | **65.72%** |
+| **Overall** | 100% | — | **64.53%** |
 
 ## 5. Status distribution (software items, n = 452)
 
 | Status | Count |
 |---|---|
 | COMPLETE_RUNTIME_VERIFIED | 0 |
-| COMPLETE_NOT_RUNTIME_VERIFIED | 287 (FR 268 + NFR-side 19) |
+| COMPLETE_NOT_RUNTIME_VERIFIED | 284 (FR 265 + NFR-side 19) |
 | PARTIALLY_IMPLEMENTED | 85 (FR 33 + NFR-side 52) |
 | BACKEND_ONLY | 1 (FR-02-05 user delete) |
 | FRONTEND_ONLY | 0 |
+| DATABASE_ONLY | 3 (report error notifications FR-33/34/35-05) |
 | PLACEHOLDER_OR_SHALLOW | 26 (settings ×3, share-history ×21, INT-04, DBS-06) |
 | MOCK_OR_HARDCODED | 0 (hard-coded items classified under SHALLOW/PART with noted defects) |
 | NOT_IMPLEMENTED | 53 |

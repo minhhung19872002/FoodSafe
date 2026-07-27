@@ -218,7 +218,7 @@ FR-32-01..10: all **CNRV** (incl. Conclude = phiếu kết thúc with `Incidents
 | FR-33-02 create (xã lập; TP tổng hợp) | PART(0.60) | Per-org creation ✓; **no roll-up/aggregation of commune reports at city/province level** |
 | FR-33-03 edit draft | CNRV | EnsureDraft |
 | FR-33-04 submit + immutable | CNRV | guards + SubmissionVersion |
-| FR-33-05 error notification upward | CNRV | AddErrorNotification (Verified-only) |
+| FR-33-05 error notification upward | DATABASE_ONLY (0.20) | **Adversarial-pass downgrade**: `BaseReport.AddErrorNotification` + DTOs + `ndtp_report_error_notifications` table exist, but NO AppService method, NO endpoint, NO FE UI (verified: NdtpReportAppService method list; grep of reporting FE) |
 | FR-33-06 return to lower level | CNRV | Return + ReturnToDraft |
 | FR-33-07 verify | CNRV | |
 | FR-33-08 view detail | CNRV | |
@@ -229,12 +229,13 @@ FR-32-01..10: all **CNRV** (incl. Conclude = phiếu kết thúc with `Incidents
 ### STT 34 — ATTP work reports
 | ID | Status | Notes |
 |---|---|---|
-| FR-34-01..07,09,11 | CNRV ×9 | Same machine as STT 33 |
+| FR-34-01..04,06,07,09,11 | CNRV ×8 | Same machine as STT 33 |
+| FR-34-05 error notification | DATABASE_ONLY (0.20) | Same gap as FR-33-05 |
 | FR-34-08 view as document | PART(0.50) | Narrative fields render in modal; no formatted document view |
 | FR-34-10 auto-calculate figures | MISS | All 20+ statistic fields are manual inputs (`UpdateStats`); no aggregation from system data (verified: no calculation service exists) |
 
 ### STT 35 — Action-month reports
-FR-35-01..07,09,10: **CNRV** ×9. FR-35-08 view as document: **PART(0.50)**. (Defect: action-month date range is free-text without validation.)
+FR-35-01..04,06,07,09,10: **CNRV** ×8. FR-35-05 error notification: **DATABASE_ONLY (0.20)** (same gap as FR-33-05). FR-35-08 view as document: **PART(0.50)**. (Defect: action-month date range is free-text without validation.)
 
 ### STT 36 — Risk analysis
 | ID | Status | Notes |

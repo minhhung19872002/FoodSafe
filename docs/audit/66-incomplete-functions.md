@@ -52,6 +52,9 @@ Effort: **M** (after C1). Blocks staging: Yes.
 ### H7 — Report roll-up aggregation (FR-33-02 tổng hợp; also affects 34/35)
 City/province consolidation of lower-level reports. Effort: **M**. Blocks staging: Yes (workflow requirement).
 
+### H7b — Report error-notification (báo cáo sai sót) unreachable (FR-33-05, 34-05, 35-05)
+Domain method `BaseReport.AddErrorNotification`, DTOs and 3 DB tables exist, but no AppService method, endpoint, or FE UI for any report type (adversarial-pass finding). Add Get/Add error-notification endpoints + resolve action + FE modal per report tab. Effort: **S–M**. Blocks staging: Yes (explicit PDF workflow requirement).
+
 ### H8 — Missing excel exports: users (FR-02-13), audit log (FR-03-03), organizations (FR-06-06), testing services (FR-17-05)
 Effort: **S–M** total (export infra exists). Blocks staging: Yes (explicit sub-functions).
 

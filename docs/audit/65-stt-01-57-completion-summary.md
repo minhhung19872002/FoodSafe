@@ -36,9 +36,9 @@ Columns: Sub = extracted sub-requirements; C = complete (not runtime verified, 0
 | 30 | Tin tức ATTP | 9 | 7 | 1 | 1 | 71% | Citizen-news approval missing; publish doesn't reach a public page |
 | 31 | Ca ngộ độc nhỏ lẻ | 11 | 11 | 0 | 0 | 85% | Full workflow + error reports + map |
 | 32 | Vụ ngộ độc | 10 | 10 | 0 | 0 | 85% | Conclude (phiếu kết thúc) permission-gated |
-| 33 | Báo cáo NĐTP | 11 | 10 | 1 | 0 | 83% | No commune→city roll-up aggregation |
-| 34 | Báo cáo công tác ATTP | 11 | 9 | 1 | 1 | 74% | **"Tự tính số liệu" (auto-aggregation) missing — all stats manual**; document view partial |
-| 35 | BC Tháng hành động | 10 | 9 | 1 | 0 | 82% | Document view partial; free-text date defect |
+| 33 | Báo cáo NĐTP | 11 | 9 | 2¹ | 0 | 77% | No commune→city roll-up; **error-notification (báo sai sót) has DB+domain only — no endpoint/UI** |
+| 34 | Báo cáo công tác ATTP | 11 | 8 | 2¹ | 1 | 68% | **"Tự tính số liệu" (auto-aggregation) missing — all stats manual**; error-notification unreachable; document view partial |
+| 35 | BC Tháng hành động | 10 | 8 | 2¹ | 0 | 75% | Error-notification unreachable; document view partial; free-text date defect |
 | 36 | Phân tích mối nguy cơ | 8 | 6 | 2 | 0 | 76% | Publication doesn't reach public portal; no print |
 | 37 | Kết quả kiểm nghiệm | 6 | 6 | 0 | 0 | 85% | Testing center free-text (catalog unused) |
 | 38 | Văn bản chỉ đạo | 7 | 4 | 3 | 0 | 77% | Hard-coded type list; no print; no attachment of document file |
@@ -62,6 +62,6 @@ Columns: Sub = extracted sub-requirements; C = complete (not runtime verified, 0
 | 56 | LS chia sẻ tin tức | 4 | 0 | 3³ | 1 | 15% | Same |
 | 57 | LS chia sẻ cơ sở | 4 | 0 | 3³ | 1 | 15% | Same |
 
-¹ includes 1 BACKEND_ONLY. ² PLACEHOLDER_OR_SHALLOW. ³ PLACEHOLDER_OR_SHALLOW (0.20).
+¹ "P" columns include non-CNRV statuses: STT 2 includes 1 BACKEND_ONLY; STT 33/34/35 each include 1 DATABASE_ONLY (report error notifications). ² PLACEHOLDER_OR_SHALLOW. ³ PLACEHOLDER_OR_SHALLOW (0.20).
 
-Totals over STT 1–57 (+2 LIC cross-cut items): 372 sub-requirements — 268 complete-unverified · 33 partial · 1 backend-only · 24 placeholder/shallow · 46 missing · **0 runtime verified**.
+Totals over STT 1–57 (+2 LIC cross-cut items): 372 sub-requirements — 265 complete-unverified · 33 partial · 1 backend-only · 3 database-only · 24 placeholder/shallow · 46 missing · **0 runtime verified**.
