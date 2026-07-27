@@ -60,6 +60,7 @@ Effort: **S–M** total (export infra exists). Blocks staging: Yes (explicit sub
 
 ### H9 — Committed dev secrets + DBS-06 (encrypted DB credentials)
 `appsettings.json` carries `FoodSafe@Dev2026!` + `change-this-in-production`; rotate, purge, move to env/secret store; implement credential encryption per §3.2. Effort: **S**. Blocks production: Yes.
+> **2026-07-27 partial fix (`06656c8`)**: tracked appsettings now carry no credentials (blank + fail-fast startup validation; local dev via gitignored appsettings.secrets.json). Remaining: rotate the exposed dev password and purge git history before production; §3.2 credential-encryption-at-rest still open.
 
 ### H10 — IPv6 + TLS provisioning (IPV-01..06)
 nginx `listen [::]`, compose IPv6 subnet, TLS termination, AAAA/DNS at deploy. Effort: **S** (software side) + ops. Blocks production: Yes.
@@ -67,11 +68,11 @@ nginx `listen [::]`, compose IPv6 subnet, TLS termination, AAAA/DNS at deploy. E
 ## MEDIUM
 
 - M1 — Documents feature bypasses document-type catalog (STT 38, hard-coded 8-value list); testing-center free-text in Testing Results (STT 37). Effort: XS each.
-- M2 — Data-integration FE toggle-status URL bug (`/api/api/app/...`) — endpoint enable/disable broken. Effort: XS.
+- M2 — ~~Data-integration FE toggle-status URL bug~~ **FIXED `06656c8`** (runtime confirmation pending F-019 verification sweep).
 - M3 — Audit-log detail view (FR-03-02). Effort: S.
 - M4 — Profile self-service editing + avatar (FR-05-04/05). Effort: S–M.
 - M5 — User delete FE action (FR-02-05, BE exists); permission-based user search (FR-02-02). Effort: XS–S.
-- M6 — AtpNews.Recall drops RecalledById/At (audit-trail inconsistency vs alerts). Effort: XS.
+- M6 — ~~AtpNews.Recall drops RecalledById/At~~ **FIXED `06656c8`** (migration `AddNewsRecallAudit` with backfill; DTO exposes fields).
 - M7 — Action-month date range free-text without validation (DT-08 defect). Effort: XS.
 - M8 — Advanced business filters (FR-19-02): classification/type/area. Effort: S.
 - M9 — Statistics breakdowns by region/area/managing unit (FR-40-07). Effort: M.
