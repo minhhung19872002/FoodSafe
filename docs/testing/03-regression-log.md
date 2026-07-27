@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — FR-34-10 ATTP work-report auto-aggregation ("Tự tính số liệu từ hệ thống")
+
+- **Cause**: New browser-acceptance evidence for the ATTP work-report auto-aggregation button (doc 77 P1-1 batch; doc 73 was IMPLEMENTED_NOT_VERIFIED). New spec only (`FoodSafe.FE/e2e/atp-work-auto-aggregation.spec.ts`) — no product code changed.
+- **Commit**: `7d38721`
+- **Affected features**: F-022 reporting (ATTP work-report auto-aggregation, FR-34-10). No product/shared code changed → no invalidation of other features.
+- **Retest level**: 2 (single-feature runtime retest)
+- **Result**: PASSED — 1/1 green (4.2s), real backend, no interception.
+- **Details**: Proves the ATTP report's auto-filled figures are computed from **real live system data**, not hard-coded. (1) A **baseline** is read from the real `GET /api/v1/app/report-calculation/atp-work-stats?PeriodType=2&PeriodYear=2026`. (2) **One** business is seeded over real authenticated HTTP (session cookie + antiforgery → ASP.NET Core → EF Core → PostgreSQL); its CreationTime = now falls inside the 2026 annual period, so re-reading the endpoint shows `totalBusinesses` **and** `newBusinesses` each at exactly **baseline + 1** and non-zero real figures. (3) A Draft ATTP report is seeded and opened in the **real browser** at `/reporting`; clicking **"Tự tính số liệu từ hệ thống"** fires the real `GET …/atp-work-stats` (200), shows the success message `Đã tự tính số liệu từ dữ liệu hệ thống`, and populates `#totalBusinesses`/`#newBusinesses`/`#businessesInspected` with **EXACTLY** the endpoint response. (4) **Save** persists and survives a full `page.reload()`. Teardown deletes the Draft report and the business; the baseline-delta assertion keeps the test re-run-safe regardless of residue. No API interception. Log: `atp-run1.log`. Stack unchanged (no rebuild). Closes the last FR-34 auto-aggregation gap; FR-34-08 (formatted view) remains a low-priority view-only IMPLEMENTED_NOT_VERIFIED item.
+
 ### 2026-07-28 — FR-33-02 NDTP roll-up aggregation ("Tổng hợp từ báo cáo tuyến dưới")
 
 - **Cause**: New browser-acceptance evidence for the NDTP roll-up aggregation button (doc 77 P1-1 batch; doc 73 was IMPLEMENTED_NOT_VERIFIED). New spec only (`FoodSafe.FE/e2e/ndtp-rollup-aggregation.spec.ts`) — no product code changed.
