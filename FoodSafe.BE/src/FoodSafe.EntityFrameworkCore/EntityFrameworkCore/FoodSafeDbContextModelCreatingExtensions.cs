@@ -381,6 +381,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 x.DeclarationNumber
             })
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("uq_self_declarations_business_number");
             entity.HasIndex(x => x.BusinessId)
                 .HasFilter("is_deleted = FALSE")
@@ -490,6 +491,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             entity.HasIndex(x => x.RegistrationNumber)
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("uq_product_registrations_number");
             entity.HasIndex(x => x.BusinessId)
                 .HasFilter("is_deleted = FALSE")
@@ -592,6 +594,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             entity.HasIndex(x => x.CertificateNumber)
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("uq_cfs_certificates_number");
             entity.HasIndex(x => x.BusinessId)
                 .HasFilter("is_deleted = FALSE")
@@ -703,6 +706,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             entity.HasIndex(x => x.CertificateNumber)
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("uq_export_food_certificates_number");
             entity.HasIndex(x => x.BusinessId)
                 .HasFilter("is_deleted = FALSE")
@@ -814,6 +818,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
             entity.HasIndex(x => x.RegistrationNumber)
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName(
                     "uq_advertisement_registrations_number");
             entity.HasIndex(x => x.BusinessId)
@@ -927,6 +932,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasConstraintName("fk_elic_org");
             entity.HasIndex(x => x.CertificateNumber)
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("uq_eligibility_certificates_number");
             entity.HasIndex(x => x.BusinessId)
                 .HasFilter("is_deleted = FALSE")

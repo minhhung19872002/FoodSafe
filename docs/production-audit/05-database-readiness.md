@@ -25,7 +25,7 @@
 1. No automated database backup scripts or backup rehearsal evidence
 2. Destructive orphan-DELETE statements in migration Up() permanently erase data on any non-fresh database
 3. ~~`ExtraProperties` PascalCase column~~ — REFUTED as runtime issue on independent verification (model maps the same PascalCase name; F-019 E2E passes). Cosmetic inconsistency only — see §5.1
-4. Six certificate and registration unique indexes missing a `WHERE is_deleted = FALSE` soft-delete partial filter
+4. ~~Six certificate and registration unique indexes missing a `WHERE is_deleted = FALSE` soft-delete partial filter~~ — RESOLVED (C-4, 2026-07-28): migration `20260727181120_SoftDeleteFilterOnCertificateNumbers` adds the partial filter to all six; verified on real PostgreSQL by `scripts/verify-softdelete-unique-indexes.sh`
 
 ---
 
@@ -88,18 +88,20 @@ ABP `ISoftDelete` entities require soft-delete-aware partial unique indexes (`WH
 - `uq_inspection_plans_code` — filter: `is_deleted = FALSE`
 - `uq_ndtp_reports_*` and `uq_amr_reports_*` — filter: `is_deleted = false`
 
-**Missing soft-delete filter (six indexes — HIGH):**
+**Soft-delete filter added to all six indexes (RESOLVED — C-4):**
 
-All six indexes below are plain `UNIQUE` with no partial filter. A soft-deleted certificate or registration occupies its unique slot permanently, blocking re-issuance of the same number.
+All six indexes below were previously plain `UNIQUE` with no partial filter, so a soft-deleted certificate/registration occupied its unique slot permanently and blocked re-issuance of the same number. Migration `20260727181120_SoftDeleteFilterOnCertificateNumbers` drops and recreates each with the partial predicate `WHERE is_deleted = FALSE`.
 
-| Index name | Table | Column(s) | Config line |
+| Index name | Table | Column(s) | Filter |
 |---|---|---|---|
-| `uq_self_declarations_business_number` | `self_declarations` | `(business_id, declaration_number)` | `Extensions.cs:384` |
-| `uq_product_registrations_number` | `product_registrations` | `registration_number` | `Extensions.cs:493` |
-| `uq_cfs_certificates_number` | `cfs_certificates` | `certificate_number` | `Extensions.cs:595` |
-| `uq_export_food_certificates_number` | `export_food_certificates` | `certificate_number` | `Extensions.cs:706` |
-| `uq_advertisement_registrations_number` | `advertisement_registrations` | `registration_number` | `Extensions.cs:818` |
-| `uq_eligibility_certificates_number` | `eligibility_certificates` | `certificate_number` | `Extensions.cs:930` |
+| `uq_self_declarations_business_number` | `self_declarations` | `(business_id, declaration_number)` | `is_deleted = FALSE` |
+| `uq_product_registrations_number` | `product_registrations` | `registration_number` | `is_deleted = FALSE` |
+| `uq_cfs_certificates_number` | `cfs_certificates` | `certificate_number` | `is_deleted = FALSE` |
+| `uq_export_food_certificates_number` | `export_food_certificates` | `certificate_number` | `is_deleted = FALSE` |
+| `uq_advertisement_registrations_number` | `advertisement_registrations` | `registration_number` | `is_deleted = FALSE` |
+| `uq_eligibility_certificates_number` | `eligibility_certificates` | `certificate_number` | `is_deleted = FALSE` |
+
+Verified against a disposable real PostgreSQL by `scripts/verify-softdelete-unique-indexes.sh`: all six indexes carry the `is_deleted` predicate, and on `product_registrations` a soft-deleted number can be reissued on a new live row while two live rows still cannot share a number.
 
 ### 2.3 Workflow check constraints
 
@@ -290,7 +292,7 @@ An operator following `.env.example` to build a production environment file woul
 | ID | Title | Location | Impact |
 |---|---|---|---|
 | ~~H-1~~ L-4 (downgraded) | `ExtraProperties` PascalCase column naming — cosmetic only; model snapshot maps `HasColumnName("ExtraProperties")`, runtime verified working | `20260726083732_AddRemainingModules.cs` lines 294, 324 | None at runtime; optional cleanup rename |
-| H-2 | Six certificate/registration unique indexes missing soft-delete partial filter | `FoodSafeDbContextModelCreatingExtensions.cs` lines 384, 493, 595, 706, 818, 930 | Soft-deleted records permanently block reuse of their certificate/registration numbers |
+| ~~H-2~~ RESOLVED (C-4, 2026-07-28) | Six certificate/registration unique indexes gained `WHERE is_deleted = FALSE` partial filter via `20260727181120_SoftDeleteFilterOnCertificateNumbers`; regression `scripts/verify-softdelete-unique-indexes.sh` proves reuse-after-soft-delete on real PostgreSQL | `FoodSafeDbContextModelCreatingExtensions.cs`; `20260727181120_SoftDeleteFilterOnCertificateNumbers.cs`; `scripts/verify-softdelete-unique-indexes.sh` | Was: soft-deleted records permanently blocked reuse of their numbers. Now reissuable while live-row uniqueness is preserved |
 | H-3 | Hardcoded test password in source code matches dev SEED_ADMIN_PASSWORD | `E2eTestDataSeedContributor.cs` — `const string TestPassword = "Admin@2026!"` | Credential disclosure in git history |
 
 ### MEDIUM
@@ -333,7 +335,7 @@ An operator following `.env.example` to build a production environment file woul
 | Priority | Action | Owner |
 |---|---|---|
 | P3 (optional) | Rename `ExtraProperties` → `extra_properties` on `di_api_call_logs` / `di_api_endpoints` for naming consistency (no runtime impact) | Backend |
-| P0 | Add `WHERE is_deleted = FALSE` filter to all six certificate/registration unique indexes | Backend |
+| ~~P0~~ DONE (C-4) | ~~Add `WHERE is_deleted = FALSE` filter to all six certificate/registration unique indexes~~ → migration `20260727181120_SoftDeleteFilterOnCertificateNumbers`; regression `scripts/verify-softdelete-unique-indexes.sh` | Backend |
 | ~~P0~~ DONE (B-2) | ~~Create automated PostgreSQL backup script~~ → `scripts/backup-database.sh` (encryption, off-host MinIO mirror, retention, manifest). Remaining: schedule ≤ 24 h + wire staleness alert (operational). | DevOps |
 | ~~P0~~ DONE (B-2) | ~~Rehearse full backup restore; record RTO/RPO~~ → `scripts/rehearse-restore.sh`, CI-gated; evidence recorded in DR guide (RTO ~5–8 s, RPO 0 for snapshot). Remaining: add MinIO object-restore to production rehearsal. | DevOps |
 | ~~P0~~ DONE (B-4) | ~~Audit target database for orphaned rows before running migration `20260727104254_AddMissingForeignKeys`~~ → migration made non-destructive (repairs nullable orphans to NULL, aborts on NOT NULL orphans); CI-gated regression `scripts/verify-migration-nondestructive.sh`. Orphan audit now optional defence-in-depth. | DBA |
