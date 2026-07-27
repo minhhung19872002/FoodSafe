@@ -104,9 +104,9 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | FR-26-01..11 | Export food certificates lifecycle | `export-food-certificates-verification` ✓ · `export-food-certificates` **✗ FAILED (75 s)** | mixed | PASS_WITH_BROWSER_EVIDENCE **/ full-UI lifecycle FAILED** |
 | FR-LIC-01 | NĐ15/2018 certificate PDF (QuestPDF) | `certificate-pdf-verification` ✓ (eligibility/CFS/export/self-decl/prod-reg PDF bytes) | pass | PASS_WITH_BACKEND_ONLY (decree-form template still absent) |
 | FR-27-01..07/10/11 | Inspection plan CRUD + workflow + Excel + scope | `inspection-verification` ✓ · `inspection` **✗ FAILED (90 s)** | mixed | PASS_WITH_BROWSER_EVIDENCE (API/workflow) **/ full-UI plan→approve→result FAILED** |
-| FR-27-08/09 | Inspection plan attachment up/download | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-27-08/09 | Inspection plan attachment up/download | `inspection-attachments` ✓ (plan: upload→reload-persist→download→delete) | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-28-01/02/04/06/07 | Inspection results filter/view/update/scope | `inspection-verification` ✓ | pass | PASS_WITH_BACKEND_ONLY |
-| FR-28-03/05 | Result finalize + document download | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-28-03/05 | Result finalize + document download | `inspection-attachments` ✓ (result: upload→reload-persist→download→delete) | pass | PASS_WITH_BROWSER_EVIDENCE (document up/download); finalize transition still API-only |
 | FR-29-01..05/07..09 | Alert CRUD + recall + export + scope | `alerts-news-verification` ✓, `alerts-news` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-29-06 | Citizen alert moderation queue | — | none | IMPLEMENTED_NOT_VERIFIED |
 | FR-30-01..06/08 | News CRUD + link + recall | `alerts-news-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
