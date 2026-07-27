@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — P1-1j dashboard report-compliance widget (FR-39-03 ATTP work, FR-39-04 Action-Month)
 
 - **Cause**: New browser-acceptance evidence for the dashboard per-unit report-compliance widget (doc 77 P1-1j; doc 73 was IMPLEMENTED_NOT_VERIFIED). New spec only (`FoodSafe.FE/e2e/dashboard-report-compliance.spec.ts`) — no product code changed.
-- **Commit**: `<pending>`
+- **Commit**: `3f0cf1b`
 - **Affected features**: F-022 reporting (dashboard compliance aggregation) + F-021 dashboard. No product/shared code changed → no invalidation of other features.
 - **Retest level**: 2 (single-feature runtime retest)
 - **Result**: PASSED — 1/1 green (2.6s), real backend, no interception.
