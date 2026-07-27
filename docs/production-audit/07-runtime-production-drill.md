@@ -22,7 +22,7 @@ Migrator ran to completion (exit 0) applying all 20 migrations before the API st
 
 ### Issues encountered bringing up a clean stack (documented, non-code)
 
-1. **`REDIS_PASSWORD` missing from `.env.example`.** `docker-compose.yml` requires `${REDIS_PASSWORD:?}` (added at commit `276f5b1`) and the redis healthcheck uses it, but `.env.example` was never updated. A fresh clone following the example file fails to start Redis. **Fix required: add `REDIS_PASSWORD` to `.env.example`.** (Also flagged by DB review as MEDIUM.)
+1. ~~**`REDIS_PASSWORD` missing from `.env.example`.**~~ **RESOLVED (C-6, 2026-07-28).** `docker-compose.yml` requires `${REDIS_PASSWORD:?}` and the redis healthcheck uses it, but `.env.example` was never updated, so a fresh clone following the example failed to start Redis. `REDIS_PASSWORD` (and the production-overlay `SSL_CERT_PATH` / `SSL_KEY_PATH`, also defaultless-required and previously absent) are now in `.env.example`. Recurrence is CI-gated by `scripts/verify-env-example-complete.sh`, which asserts every defaultless `${VAR:?}` / bare `${VAR}` in both compose files has a key in `.env.example` (CI injects these vars, so `docker compose config` alone never caught the drift).
 2. **`POSTGRES_SSL_MODE` missing from the local `.env`** (present in `.env.example`). Interpolation aborts with "Set POSTGRES_SSL_MODE". Local-only; documents that the two env files have drifted.
 3. Host port 6379 was already occupied by another project's Redis; had to move `REDIS_PORT` to 6380. Not a product issue, but confirms compose has no fixed alternative and the example port collides with common local stacks.
 

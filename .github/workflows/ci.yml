@@ -267,6 +267,9 @@ jobs:
       - name: Guard against credentials committed in tracked config (B-3)
         run: bash scripts/scan-committed-secrets.sh
 
+      - name: Guard against .env.example drift (C-6)
+        run: bash scripts/verify-env-example-complete.sh
+
       - name: Scan repository for secrets and insecure configuration
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
