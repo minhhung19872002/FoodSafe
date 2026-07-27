@@ -122,6 +122,7 @@ export interface BusinessFilter {
   provinceId?: string;
   districtId?: string;
   communeId?: string;
+  sorting?: string;
   skipCount: number;
   maxResultCount: number;
 }

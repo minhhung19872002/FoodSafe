@@ -93,7 +93,7 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | Req | Requirement | Spec (executed) | Result | Status |
 |---|---|---|---|---|
 | FR-19-01/03..10/14/17/18 | Business list/create/edit/delete/detail/map/handlers/scope | `businesses-verification` ✓, `businesses` ✓ (EICAR + import validation + CRUD) | pass | PASS_WITH_BROWSER_EVIDENCE |
-| FR-19-02 | Advanced business filters | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-19-02 | Advanced business filters (status filter + multi-column sort + pagination) | `business-list-filters` ✓ (3/3: status filter, column sort asc/desc, pager) | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-19-11..16 | Per-business tabs (self-decl/prod-reg/ad-reg/inspection/eligibility) | — | none | IMPLEMENTED_NOT_VERIFIED (partial/structural per doc 71) |
 | FR-20-01..08 | Product CRUD + Excel import/export | `businesses-verification` ✓, `businesses` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-21-01..09 | Self-declarations lifecycle | `self-declarations-verification` ✓ · `self-declarations` **✗ FAILED (60 s timeout)** | mixed | PASS_WITH_BROWSER_EVIDENCE (API/workflow/persistence) **but full-UI create→upload→revoke lifecycle FAILED** |
