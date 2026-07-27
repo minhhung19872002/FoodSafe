@@ -121,7 +121,8 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | FR-35-01..07/09/10 | Action-month report CRUD + workflow | `reporting-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-35-08 | Action-month formatted view | — | none | IMPLEMENTED_NOT_VERIFIED |
 | FR-36-01..06 | Risk analysis CRUD + publish (internal) | `risk-analysis-verification` ✓, `risk-analysis` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
-| FR-36-07/08 | Risk analysis public publish + PDF | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-36-07 | Risk analysis publish (Draft → Published) | `risk-analysis-publish` ✓ (P1-1h) | pass | PASS_WITH_BROWSER_EVIDENCE — an officer publishes a seeded Draft via the real "Xuất bản" button + Popconfirm; status Tag flips Nháp → Đã xuất bản and survives a reload (`POST /risk-analysis/{id}/publish`) |
+| FR-36-08 | Risk analysis public exposure (+ browser-print PDF) | `risk-analysis-publish` ✓ (P1-1h) | pass | PASS_WITH_BROWSER_EVIDENCE (listing) — the published analysis appears in the anonymous `/tin-tuc` "Phân tích nguy cơ" tab (`GET /api/v1/public/risk-analyses`, verified from a fresh no-session context). Note: the per-row "PDF" is a client-side `window.print()` of the formatted HTML (no server PDF endpoint exists for risk-analysis), so PDF = browser-print, not a server artifact |
 | FR-37-01..06 | Testing results CRUD + scope | `testing-results-verification` ✓, `testing-results` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-38-01/02/05/06 | Documents search/view/delete/scope | `documents-verification` ✓, `documents` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-38-03/04 | Document create/update (hard-coded type list) | `documents` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE (type-catalog integration gap) |

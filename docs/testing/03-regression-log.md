@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — P1-1h risk-analysis publish (FR-36-07) + public portal exposure (FR-36-08)
+
+- **Cause**: New browser-acceptance evidence for two IMPLEMENTED_NOT_VERIFIED risk-analysis requirements (doc 77 P1-1h). New spec only (`FoodSafe.FE/e2e/risk-analysis-publish.spec.ts`) — no product code changed.
+- **Commit**: `<pending>`
+- **Affected features**: F-018 risk-analysis (publish state machine) + public portal `/tin-tuc` risk tab. No product/shared code changed → no invalidation of other features.
+- **Retest level**: 2 (single-feature runtime retest)
+- **Result**: PASSED — 1/1 green (4.1s), real backend, no interception.
+- **Details**: A Draft risk analysis is seeded via the real authenticated admin API (`POST /api/v1/app/risk-analysis`, Status=Draft) after a real UI login. **FR-36-07** — at `/risk-analysis` the officer publishes via the real "Xuất bản" button + Popconfirm → Tag flips Nháp → Đã xuất bản, persists across `page.reload()` (`POST /risk-analysis/{id}/publish` sets Status=Published + IsPublic=true atomically). **FR-36-08** — from a fresh anonymous context (no admin session) `/tin-tuc` → tab "Phân tích nguy cơ" lists the analysis (`GET /api/v1/public/risk-analyses`, `[AllowAnonymous]`). Real React → nginx → ASP.NET Core → EF Core → PostgreSQL. Cleanup: published rows are Draft-only-deletable → E2E-RISK soft-deleted via SQL (0 residual). Note: FR-36-08 "PDF" = client-side `window.print()` (no server PDF endpoint for risk-analysis). Log: `risk-run.log`. Stack unchanged (no rebuild).
+
 ### 2026-07-28 — P1-1g concrete-artifact exports: documents Excel+print (FR-38-07), statistics business-breakdown Excel (FR-40-07)
 
 - **Cause**: Added browser-acceptance coverage for the remaining concrete-artifact export/print gaps in doc 73 (test-only; no product code changed).
