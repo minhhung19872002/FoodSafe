@@ -526,7 +526,15 @@ public class FoodSafeHttpApiHostModule : AbpModule
                         return FixedWindow($"password:{client}", passwordLimit, TimeSpan.FromMinutes(15));
                     }
 
-                    if (path.StartsWith("/api/v1/app/public", StringComparison.Ordinal))
+                    if (path == "/api/v1/public/alert-reports"
+                        && HttpMethods.IsPost(httpContext.Request.Method))
+                    {
+                        var submissionLimit = isDev ? 100 : 5;
+                        return FixedWindow(
+                            $"citizen-report:{client}", submissionLimit, TimeSpan.FromMinutes(15));
+                    }
+
+                    if (path.StartsWith("/api/v1/public", StringComparison.Ordinal))
                     {
                         var publicLimit = isDev ? 600 : 60;
                         return FixedWindow($"public:{client}", publicLimit, TimeSpan.FromMinutes(1));
