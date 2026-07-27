@@ -727,7 +727,15 @@ public class FoodSafeHttpApiHostModule : AbpModule
         app.UseAbpSerilogEnrichers();
         app.UseHangfireDashboard("/hangfire", new DashboardOptions
         {
-            Authorization = [new Hangfire.Dashboard.LocalRequestsOnlyAuthorizationFilter()]
+            // Two independent controls, both must pass (C-8, doc 04 §3.7):
+            // (1) loopback-only (primary vector, B-5); (2) an authenticated principal
+            // holding SystemAdministration. Defence in depth against proxy
+            // misconfiguration or a future decision to expose the dashboard.
+            Authorization =
+            [
+                new Hangfire.Dashboard.LocalRequestsOnlyAuthorizationFilter(),
+                new HangfireAdminAuthorizationFilter()
+            ]
         });
         app.UseConfiguredEndpoints(endpoints =>
         {

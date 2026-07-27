@@ -36,10 +36,10 @@ All findings are verified against source code at HEAD `fe3dbd2`. No speculative 
 | ~~SEC-M-02~~ RESOLVED (B-3) | MEDIUM | Secrets | Git history contains committed dev credentials — only commodity defaults; now rejected at Production startup + recurrence-guarded | See §3.4 / doc 09 | DONE |
 | ~~SEC-M-03~~ RESOLVED (C-2) | MEDIUM | Authentication | Password expiry enforced client-side only — `PasswordExpiryMiddleware` now blocks expired/must-change sessions server-side (403) | See §3.5 | DONE |
 | ~~SEC-M-04~~ RESOLVED (C-3) | MEDIUM | Application | SVG allowed in branding uploads — `image/svg+xml` removed; allow-list now raster-only | See §3.6 | DONE |
-| SEC-M-05 | MEDIUM | Authorization | Hangfire dashboard reachable via SSRF (chains with SEC-H-01) | See §3.7 | YES |
+| ~~SEC-M-05~~ RESOLVED (C-8) | MEDIUM | Authorization | Hangfire dashboard reachable via SSRF (chains with SEC-H-01) — primary vector closed by B-5; `HangfireAdminAuthorizationFilter` now also requires `SystemAdministration` | See §3.7 | DONE |
 | SEC-L-01 | LOW | Secrets | CI ephemeral database password committed in `ci.yml` | See §3.8 | RECOMMENDED |
 | SEC-L-02 | LOW | Infrastructure | No startup validation that `RequireHttpsMetadata=true` in production | See §3.9 | RECOMMENDED |
-| SEC-L-03 | LOW | Authorization | Dashboard/statistics services use only `[Authorize]` without granular permission | See §3.10 | RECOMMENDED |
+| ~~SEC-L-03~~ CONFIRMED INTENTIONAL (C-8) | LOW | Authorization | Dashboard/statistics services use only `[Authorize]` — verified deliberate org-scoped design (`statistics-verification.spec.ts`); no change | See §3.10 | NO CHANGE |
 
 ---
 
@@ -227,19 +227,22 @@ If successful, an attacker with `DataIntegration.ApiEndpoints.Create` permission
 - View all background job queues and history (information disclosure)
 - Potentially trigger or enqueue jobs (job injection)
 
-**Status:** **Primary vector CLOSED by B-5.** The SSRF that made this reachable is fixed — `OutboundUrlValidator`'s connect-time guard refuses any request that resolves to loopback or a container-internal/private address, so `http://api:8080/hangfire` (and any Docker-internal host) can no longer be reached via the data-integration surface. The defense-in-depth role-based authorization below remains RECOMMENDED but is no longer the sole control.
+**Status:** **RESOLVED (C-8, 2026-07-28).** Primary vector was already CLOSED by B-5 — `OutboundUrlValidator`'s connect-time guard refuses any request that resolves to loopback or a container-internal/private address, so `http://api:8080/hangfire` (and any Docker-internal host) can no longer be reached via the data-integration surface. C-8 adds the defense-in-depth control below so that even a request that reaches the dashboard on loopback (e.g. a future reverse-proxy misconfiguration, or a decision to expose `/hangfire`) must be an authenticated `SystemAdministration` principal.
 
-**Fix (defense-in-depth):** add role-based authorization to the Hangfire dashboard:
+**Fix (defense-in-depth, implemented):** `HangfireAdminAuthorizationFilter` (`FoodSafe.BE/src/FoodSafe.HttpApi.Host/Security/HangfireAdminAuthorizationFilter.cs`) resolves `IPermissionChecker` from the request scope and requires `FoodSafePermissions.SystemAdministration.Default`; it runs alongside `LocalRequestsOnlyAuthorizationFilter` and both must pass:
 
 ```csharp
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
-    Authorization = [
-        new LocalRequestsOnlyAuthorizationFilter(),
+    Authorization =
+    [
+        new Hangfire.Dashboard.LocalRequestsOnlyAuthorizationFilter(),
         new HangfireAdminAuthorizationFilter()  // require SystemAdministration permission
     ]
 });
 ```
+
+**Regression (real stack, no mocks):** `scripts/verify-hangfire-authz.sh` drives the running api container. Before C-8, an unauthenticated **loopback** GET `/hangfire` returned **200** (the loopback filter alone served the dashboard); after C-8 the same request returns **401**, while `/health/live` stays 200. Verified PASS against the rebuilt dev stack at the C-8 commit.
 
 ---
 
@@ -298,7 +301,7 @@ All dashboard and statistics services require only `[Authorize]` (any authentica
 
 **Risk:** Low. No data from another organization is exposed. A user without `BusinessManagement.Businesses.View` permission could still view business counts in the dashboard. This contradicts the principle of least privilege but is unlikely to be exploitable for data exfiltration given org-scoping.
 
-**Fix (recommended):** Add a specific dashboard permission (e.g., `Dashboard.View`) and require it on dashboard services. Alternatively, document the intentional design decision that the dashboard is accessible to all authenticated users.
+**Disposition (C-8, 2026-07-28): CONFIRMED intentional design — no code change.** "Any authenticated user may read org-scoped dashboard/statistics" is a **verified, deliberate** product decision, not an oversight. `FoodSafe.FE/e2e/statistics-verification.spec.ts` encodes it as acceptance evidence: line 24, `test("any authenticated user can access statistics (no specific permission required)")`, signs in as `noperm@foodsafe.local` (a principal holding **no** feature permissions) and asserts the statistics response is `res.ok()`; a companion case asserts an **unauthenticated** request is rejected (401/302). Adding a `Dashboard.View` permission gate would break this VERIFIED test and change a business feature against its documented intent — prohibited by the standing "do not modify business features unless required" constraint, and **not required**: the only exposure (cross-org leakage) is already prevented by organization scoping at the AppService layer, and the audit's own recommended resolution explicitly allows "document the intentional design decision that the dashboard is accessible to all authenticated users." The bare `[Authorize]` on `DashboardAppService`/`StatisticsAppService`/`ReportStatisticsAppService`/`StatisticsExcelAppService` and the un-permissioned `/statistics` FE route are therefore **correct as-is**. (Contrast `AuditLogAppService`, which correctly gates on `SystemAdministration.AuditLogs` because audit logs are genuinely admin-only.)
 
 ---
 
@@ -314,7 +317,7 @@ The following findings must be resolved before production deployment:
 | ~~**SEC-M-03**~~ RESOLVED (C-2) | MEDIUM | Password expiry now enforced server-side by `PasswordExpiryMiddleware` (403 `FoodSafe:Account:PasswordExpired`) |
 | ~~**SEC-M-04**~~ RESOLVED (C-3) | MEDIUM | `image/svg+xml` removed from branding allow-list (raster-only); regression-tested |
 
-All three P0 launch-blocking findings (SEC-M-01/03/04) are now RESOLVED. The remaining findings (SEC-M-05, SEC-L-01, SEC-L-02, SEC-L-03) are recommended fixes that do not block deployment but should be addressed in the first post-launch hardening sprint.
+All three P0 launch-blocking findings (SEC-M-01/03/04) are now RESOLVED. Of the remaining recommended findings: **SEC-M-05 is RESOLVED (C-8)** — Hangfire dashboard now requires an authenticated `SystemAdministration` principal in addition to the loopback filter; **SEC-L-03 is CONFIRMED intentional (C-8)** — the org-scoped dashboard/statistics access is a verified product decision (`statistics-verification.spec.ts`) and correctly requires no change. SEC-L-01 (CI ephemeral DB password) and SEC-L-02 (`RequireHttpsMetadata` startup check) remain low-risk hardening items for the first post-launch sprint.
 
 ---
 
@@ -378,8 +381,8 @@ The following areas were explicitly checked and found to be properly implemented
 | ~~P0~~ DONE (C-2, verified 2026-07-28) | SEC-M-03 (password expiry server-side) | `PasswordExpiryMiddleware` already enforcing 403 for expired/must-change sessions |
 | ~~P0~~ DONE (C-3, 2026-07-28) | SEC-M-04 (SVG XSS) | Removed `image/svg+xml` from allow-list; `BrandingImageContentTypeTests` 10/10 green |
 | P1 — Fix before launch or in first patch | SEC-H-02 (react-router-dom CVE) | accepted-risk — RSC-only, N/A to Vite SPA (§3.2.3) |
-| P1 — Fix before launch or in first patch | SEC-M-05 (Hangfire SSRF chain) | resolved by SEC-H-01 fix + 2 hours for auth hardening |
+| ~~P1~~ DONE (C-8, 2026-07-28) | SEC-M-05 (Hangfire SSRF chain) | Primary vector closed by B-5; `HangfireAdminAuthorizationFilter` adds `SystemAdministration` requirement; `scripts/verify-hangfire-authz.sh` real-stack regression (loopback unauth 200→401) |
 | ~~P2~~ DONE (B-3) | SEC-M-02 (git history credentials) | resolved — Production startup guard + recurrence scanner; history rewrite deliberately declined (doc 09) |
 | P2 — First hardening sprint | SEC-L-02 (RequireHttpsMetadata validation) | 30 min |
 | P2 — First hardening sprint | SEC-L-01 (CI DB password) | 1 hour (move to GitHub secret) |
-| P3 — Backlog | SEC-L-03 (dashboard granular permissions) | 2 hours |
+| ~~P3~~ CONFIRMED INTENTIONAL (C-8) | SEC-L-03 (dashboard granular permissions) | No change — org-scoped "any authenticated user" access is verified deliberate design (`statistics-verification.spec.ts` line 24); gating it would break VERIFIED acceptance and modify a business feature |

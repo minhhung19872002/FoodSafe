@@ -33,7 +33,7 @@ Every feature was checked against the real path: real browser → React → ngin
 | F-020 | Identity administration | identity-administration-verification | ✅ PASS |
 | F-021 | Audit logs | audit-logs-verification | ✅ PASS |
 | F-022 | Dashboard | dashboard-verification | ✅ PASS |
-| F-023 | Statistics | statistics-verification | ✅ PASS (route lacks permission guard — see below) |
+| F-023 | Statistics | statistics-verification | ✅ PASS (open to any authenticated user by design — see A-2) |
 | F-024..F-030 | Public lookups (7) | public-lookups-verification | ✅ PASS |
 | F-031 | Documents | documents-verification | ✅ PASS (hard-coded type list — see below) |
 | F-032 | System settings | system-settings-verification | ✅ PASS |
@@ -47,7 +47,7 @@ Every feature was checked against the real path: real browser → React → ngin
 | # | Severity | Feature(s) | Finding | Evidence |
 |---|---|---|---|---|
 | A-1 | LOW (coverage) | F-007/008/009/010/012/013 | The **form-based create UI path** (open modal → pick business from the virtualized combobox → save) has no passing automated test. The verification specs create records via API; the 6 legacy smoke specs that drive the form fail on AntD Select virtualization (`.last()` click without typed filter). Not a product defect — `showSearch` works — but this on-screen path is outside the green evidence. | doc 07 §3 |
-| A-2 | MEDIUM | F-023 Statistics | `/statistics` route has no `PermissionRoute` guard — any authenticated user reaches the statistics page regardless of role (backend AppService authorization still applies to the data calls; verify the API side denies unprivileged callers). | Phase 2 inventory |
+| ~~A-2~~ CONFIRMED INTENTIONAL (C-8, 2026-07-28) | (design decision) | F-023 Statistics | ~~`/statistics` route has no `PermissionRoute` guard.~~ **Verified deliberate design, not a defect.** `statistics-verification.spec.ts` line 24 asserts a *no-permission* user (`noperm@foodsafe.local`) CAN read statistics, and a companion case asserts an unauthenticated request is rejected — i.e. "any authenticated user, org-scoped" is the intended access model. Backend `[Authorize]` on the four Dashboard/Statistics AppServices matches (authentication required; organization scoping prevents cross-org leakage); the missing FE `PermissionRoute` is correct. Gating it would break the VERIFIED spec and modify a business feature against documented intent — no change. | statistics-verification.spec.ts; doc 04 §3.10 |
 | A-3 | MEDIUM | F-031 Documents | Documents module uses a hard-coded 8-value document-type list; the STT 18 "Danh mục loại văn bản" catalog is maintained in the system but never consumed here. Customer requirement FR-38-03/04 expects catalog-driven types. | Phase 1 matrix (gap #8) |
 | ~~A-4~~ RESOLVED (B-5) | (tracked in doc 04) | F-019 Data integration | ~~Server-side `TestConnection`/data-sharing issues HTTP requests to any stored URL with no private-IP/scheme guard (SSRF).~~ **Fixed**: `OutboundUrlValidator` syntactic gate + connect-time pinned-IP guard on both outbound clients. | doc 04 SEC-H-01 (RESOLVED) |
 
