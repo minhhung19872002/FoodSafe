@@ -1,4 +1,4 @@
-﻿# Feature Verification Registry
+# Feature Verification Registry
 
 ## Legend
 
@@ -26,8 +26,8 @@
 | F-014 | Food Poisoning Cases            | VERIFIED       | `e2e/food-poisoning.spec.ts`, `e2e/food-poisoning-verification.spec.ts` | `3c12156` | 2026-07-27 |
 | F-015 | Reporting (NDTP/ATP/Action)     | VERIFIED       | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `07476e3` | 2026-07-27 |
 | F-016 | Alerts & News                   | VERIFIED       | `e2e/alerts-news.spec.ts`, `e2e/alerts-news-verification.spec.ts` | `3e0e904` | 2026-07-27 |
-| F-017 | Testing Results                 | READY_FOR_TEST | `e2e/testing-results.spec.ts`                 | —               | 2026-07-26 |
-| F-018 | Risk Analysis                   | READY_FOR_TEST | `e2e/risk-analysis.spec.ts`                   | —               | 2026-07-26 |
+| F-017 | Testing Results                 | VERIFIED       | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | `e00dfb1` | 2026-07-27 |
+| F-018 | Risk Analysis                   | VERIFIED       | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts` | `de02e52` | 2026-07-27 |
 | F-019 | Data Integration                | READY_FOR_TEST | `e2e/data-integration.spec.ts`                | —               | 2026-07-26 |
 | F-020 | Identity Administration         | READY_FOR_TEST | `e2e/identity-administration.spec.ts`         | —               | 2026-07-26 |
 | F-021 | Audit Logs                      | READY_FOR_TEST | `e2e/audit-logs.spec.ts`                      | —               | 2026-07-26 |
@@ -46,8 +46,8 @@
 ## Summary
 
 - Total features: 32
-- VERIFIED: **13** (F-002, F-006..F-016 — see `features/*.md`)
-- READY_FOR_TEST: **19** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
+- VERIFIED: **15** (F-002, F-006..F-018 — see `features/*.md`)
+- READY_FOR_TEST: **17** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
 - FAILED: 0
 - BLOCKED: 0 (F-002 unblocked — implementation existed; spec added and verified)
 - NOT_STARTED: 0
