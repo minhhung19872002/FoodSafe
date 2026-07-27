@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Button,
   Card,
@@ -15,9 +15,11 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
+import { CaptchaWidget } from "../components/CaptchaWidget";
 
 const schema = z.object({
   email: z.string().email("Vui lòng nhập địa chỉ email hợp lệ"),
+  captchaToken: z.string().min(1, "Vui lòng hoàn thành xác minh CAPTCHA"),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -28,18 +30,27 @@ export default function ForgotPasswordPage() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "" },
+    defaultValues: { email: "", captchaToken: "" },
   });
   const mutation = useMutation({
-    mutationFn: ({ email }: FormData) => authApi.sendPasswordResetCode(email),
+    mutationFn: ({ email, captchaToken }: FormData) =>
+      authApi.sendPasswordResetCode(email, captchaToken),
     onSuccess: () => setSubmitted(true),
     onError: () => {
       message.error("Không thể xử lý yêu cầu lúc này. Vui lòng thử lại sau.");
     },
   });
+
+  const handleCaptchaToken = useCallback(
+    (token: string) => {
+      setValue("captchaToken", token, { shouldValidate: true });
+    },
+    [setValue],
+  );
 
   return (
     <div style={pageStyle}>
@@ -84,6 +95,16 @@ export default function ForgotPasswordPage() {
                       size="large"
                     />
                   )}
+                />
+              </Form.Item>
+              <Form.Item
+                required
+                validateStatus={errors.captchaToken ? "error" : ""}
+                help={errors.captchaToken?.message}
+              >
+                <CaptchaWidget
+                  onTokenChange={handleCaptchaToken}
+                  resetKey={mutation.failureCount}
                 />
               </Form.Item>
               <Button

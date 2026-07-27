@@ -1,0 +1,159 @@
+# Production nginx configuration template for FoodSafe frontend.
+#
+# REQUIREMENTS:
+#   ${SSL_CERT_PATH}  absolute path to the PEM certificate chain (fullchain.pem)
+#   ${SSL_KEY_PATH}   absolute path to the PEM private key (privkey.pem)
+#
+# DEPLOYMENT:
+#   Use envsubst at container start-up to produce the active config:
+#
+#     envsubst '${SSL_CERT_PATH} ${SSL_KEY_PATH}' \
+#       < /etc/nginx/templates/nginx.prod.conf.template \
+#       > /etc/nginx/conf.d/default.conf
+#     nginx -t
+#     nginx -g 'daemon off;'
+#
+#   Or use the standard nginx Docker image template mechanism by placing this
+#   file in /etc/nginx/templates/ (the image processes *.template files on
+#   startup automatically).
+#
+# PORT MAPPING (docker-compose.prod.yml or host reverse proxy):
+#   Host 80  → container 8080  (HTTP — redirect only)
+#   Host 443 → container 8443  (HTTPS — all content)
+#
+# NOTE: This file uses the nginx-unprivileged image default ports (8080/8443)
+#       because binding to 80/443 requires root. Map them at the host level.
+#
+# CERTIFICATE SOURCES:
+#   - Let's Encrypt (certbot): fullchain.pem + privkey.pem
+#   - Commercial CA: certificate chain + private key PEM files
+#   Do NOT commit certificates or private keys to the repository.
+#
+# WHAT THIS CONFIGURATION ENFORCES:
+#   1. HTTP port 8080 listens on IPv4 and IPv6.
+#   2. All HTTP requests redirect permanently to HTTPS.
+#   3. Health endpoint does NOT redirect (load balancer compatibility).
+#   4. HTTPS port 8443 listens on IPv4 and IPv6.
+#   5. Only TLS 1.2 and TLS 1.3 are allowed; TLS 1.0 and 1.1 are disabled.
+#   6. HSTS is emitted only from the HTTPS server block (max-age 1 year).
+#   7. Proxy headers correctly forward scheme, host and client IP.
+#
+# VALIDATION (requires mounted certificate files):
+#   nginx -t -c /etc/nginx/conf.d/default.conf
+#
+# VALIDATION (syntax only, no certificates):
+#   Validate the HTTP redirect block separately; the HTTPS block requires
+#   accessible certificate files for ssl_certificate directives.
+#   See docs/audit/70-acceptance-blocker-remediation-verification.md for the
+#   validation procedure and infrastructure evidence still required.
+
+map $http_x_forwarded_proto $foodsafe_forwarded_proto {
+    default $http_x_forwarded_proto;
+    ""      $scheme;
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HTTP server — permanent redirect to HTTPS
+# ─────────────────────────────────────────────────────────────────────────────
+server {
+    listen 8080;
+    listen [::]:8080;
+    server_name _;
+    server_tokens off;
+
+    # Health probes must succeed over HTTP (load balancer does not follow redirects).
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "healthy\n";
+    }
+
+    # Redirect everything else permanently to HTTPS.
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HTTPS server — production content
+# ─────────────────────────────────────────────────────────────────────────────
+server {
+    listen 8443 ssl;
+    listen [::]:8443 ssl;
+    server_name _;
+    server_tokens off;
+
+    # Certificate and key paths — substituted by envsubst at container start.
+    ssl_certificate     ${SSL_CERT_PATH};
+    ssl_certificate_key ${SSL_KEY_PATH};
+
+    # TLS protocol: allow TLS 1.2 and TLS 1.3 only; disable TLS 1.0 and 1.1.
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256';
+
+    # Session resumption — safe defaults.
+    ssl_session_timeout 1d;
+    ssl_session_cache   shared:SSL:50m;
+    ssl_session_tickets off;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "healthy\n";
+    }
+
+    location = /health {
+        access_log off;
+        proxy_pass http://api:8080/health;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /api/ {
+        proxy_pass http://api:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 120s;
+        client_max_body_size 20m;
+
+        # WebSocket support (Hangfire dashboard, SignalR if used in the future).
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache";
+    }
+
+    # Security headers — HSTS is emitted only here (HTTPS context).
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(self)" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self';" always;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml;
+    gzip_min_length 256;
+    gzip_vary on;
+}

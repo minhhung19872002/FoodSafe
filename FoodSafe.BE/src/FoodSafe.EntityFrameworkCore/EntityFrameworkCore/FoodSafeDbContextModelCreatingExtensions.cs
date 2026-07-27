@@ -1591,6 +1591,12 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasConstraintName("fk_alerts_org")
                 .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne<Business>()
+                .WithMany()
+                .HasForeignKey(x => x.BusinessId)
+                .HasConstraintName("fk_alerts_business")
+                .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasIndex(x => new { x.OrganizationId, x.Status })
                 .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("idx_alerts_org_status");
@@ -1741,6 +1747,36 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasConstraintName("fk_tr_org")
                 .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne<TestingCenter>()
+                .WithMany()
+                .HasForeignKey(x => x.TestingCenterId)
+                .HasConstraintName("fk_tr_testing_center")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<TestingService>()
+                .WithMany()
+                .HasForeignKey(x => x.TestingServiceId)
+                .HasConstraintName("fk_tr_testing_service")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Business>()
+                .WithMany()
+                .HasForeignKey(x => x.BusinessId)
+                .HasConstraintName("fk_tr_business")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Product>()
+                .WithMany()
+                .HasForeignKey(x => x.ProductId)
+                .HasConstraintName("fk_tr_product")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<InspectionResult>()
+                .WithMany()
+                .HasForeignKey(x => x.InspectionResultId)
+                .HasConstraintName("fk_tr_inspection_result")
+                .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasIndex(x => new { x.OrganizationId, x.Outcome })
                 .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("idx_tr_org_outcome");
@@ -1775,6 +1811,12 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .WithMany()
                 .HasForeignKey(x => x.OrganizationId)
                 .HasConstraintName("fk_ad_org")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<DocumentType>()
+                .WithMany()
+                .HasForeignKey(x => x.DocumentTypeId)
+                .HasConstraintName("fk_ad_document_type")
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(x => new { x.OrganizationId, x.DocumentTypeId })
@@ -1851,6 +1893,24 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .WithMany()
                 .HasForeignKey(x => x.OrganizationId)
                 .HasConstraintName("fk_fpi_organization")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Commune>()
+                .WithMany()
+                .HasForeignKey(x => x.LocationCommuneId)
+                .HasConstraintName("fk_fpi_commune")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<District>()
+                .WithMany()
+                .HasForeignKey(x => x.LocationDistrictId)
+                .HasConstraintName("fk_fpi_district")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Province>()
+                .WithMany()
+                .HasForeignKey(x => x.LocationProvinceId)
+                .HasConstraintName("fk_fpi_province")
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(x => new { x.OrganizationId, x.Status })
@@ -1931,6 +1991,24 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .WithMany()
                 .HasForeignKey(x => x.IncidentId)
                 .HasConstraintName("fk_fpc_incident")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Commune>()
+                .WithMany()
+                .HasForeignKey(x => x.LocationCommuneId)
+                .HasConstraintName("fk_fpc_commune")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<District>()
+                .WithMany()
+                .HasForeignKey(x => x.LocationDistrictId)
+                .HasConstraintName("fk_fpc_district")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Province>()
+                .WithMany()
+                .HasForeignKey(x => x.LocationProvinceId)
+                .HasConstraintName("fk_fpc_province")
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(x => new { x.OrganizationId, x.Status })

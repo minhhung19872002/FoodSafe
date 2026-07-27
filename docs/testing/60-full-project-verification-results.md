@@ -39,8 +39,10 @@
 | FoodSafe.Domain.Tests | 197 | 0 | 0 | 197 |
 | FoodSafe.Application.Tests | 251 | 0 | 0 | 251 |
 | FoodSafe.EntityFrameworkCore.Tests | 18 | 0 | 0 | 18 |
-| FoodSafe.HttpApi.Host.Tests | 15 | 0 | 0 | 15 |
-| **Total** | **481** | **0** | **0** | **481** |
+| FoodSafe.HttpApi.Host.Tests | 53 | 0 | 0 | 53 |
+| **Total** | **519** | **0** | **0** | **519** |
+
+*Updated 2026-07-27 after acceptance-blocker remediation (B2/B5/B8): +38 new tests in HttpApi.Host.Tests.*
 
 ### Test Categories
 - Domain unit tests (state machines, guard clauses, value objects): ~197

@@ -121,7 +121,7 @@ describe("SelfDeclarationPage", () => {
       screen.queryByRole("button", { name: "Thu hồi TCB-001" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Tệp đính kèm TCB-001" }),
+      screen.getByRole("button", { name: "Tệp TCB-001" }),
     ).toBeInTheDocument();
   });
 });

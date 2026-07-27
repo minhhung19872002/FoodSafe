@@ -51,12 +51,16 @@ export const authApi = {
       .then(() => undefined);
   },
 
-  sendPasswordResetCode: async (email: string): Promise<void> => {
+  sendPasswordResetCode: async (
+    email: string,
+    captchaToken: string,
+  ): Promise<void> => {
     await authApi.initializeCsrf();
     return api
       .post<void>("/account/send-password-reset-code", {
         email,
         appName: "Angular",
+        captchaToken,
       })
       .then(() => undefined);
   },

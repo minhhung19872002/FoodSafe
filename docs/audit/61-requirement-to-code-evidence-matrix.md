@@ -343,6 +343,45 @@ See [doc 64](64-non-functional-and-security-compliance.md) for per-item scoring.
 
 **Independent review weighted overall: 67.0% strict / 69.5% optimistic** (was 71.4%; see doc 68 §7)
 
+---
+
+### Batch 5 Remediation Corrections Applied (2026-07-27)
+
+Based on `docs/audit/69-implementation-batch-independent-verification.md` and the
+remediation work in `docs/audit/70-acceptance-blocker-remediation-verification.md`.
+
+| Item | Change | Code evidence | Infrastructure still required | Impact |
+|---|---|---|---|---|
+| IPV-03 (IPv6 listen) | 0.00 → 0.85 | `nginx.conf`: `listen [::]:8080;` confirmed by B4 (doc 69) | None — code-complete | +0.85 |
+| IPV-06 (HTTPS/TLS) | 0.50 → 0.65 | `nginx.prod.conf.template`: TLS 1.2/1.3 only, HTTP→HTTPS redirect, HSTS in HTTPS context; `nginx -t` PASS with dummy cert | Production TLS certificate; AAAA DNS record | +0.15 |
+| DBS-09 (PG SSL) | 0.20 → 0.50 | `PostgreSqlSslValidator.cs` startup validation; docker-compose `:?` enforcement; 23 tests | `ssl=on` in `postgresql.conf` on server | +0.30 |
+| SEC-08 (CAPTCHA pwd-reset) | 0.70 → 0.85 | `PasswordResetCaptchaTests.cs` (14 tests); `TurnstileCaptchaVerifierTests.cs` (+1 network-failure test); all 53 Host tests pass | None — code-complete | +0.15 |
+| **Net non-functional** | | | | **+1.45** |
+
+#### Revised Non-Functional Totals
+
+| Category | Previous | New | Items | % |
+|---|---|---|---|---|
+| SEC (application security) | 20.05 | **20.20** | 25 | **80.8%** |
+| DBS (database security) | 5.00 | **5.30** | 10 | **53.0%** |
+| IPV (IPv6/TLS/DNSSEC) | 1.75 | **2.75** | 6 | **45.8%** |
+| NFR, INT, UI, DT, TECH, L2 | 25.85 | 25.85 | 33 | (unchanged) |
+| **Non-functional total** | **52.65** | **54.10** | 80 | **67.6%** |
+
+#### Revised Grand Total (after Batch 5 remediation)
+
+| Category | Score | Items | % |
+|---|---|---|---|
+| Functional (FR) | 258.05 | 372 | 69.4% |
+| Non-functional (NFR) | 54.10 | 80 | 67.6% |
+| **Software total** | **312.15** | **452** | **69.1%** |
+| Non-software | 1.65 | 14 | 11.8% |
+| **Overall (466 assessable)** | **313.80** | **466** | **67.3%** |
+
+**Strict implementation completion: 67.3%** (was 67.0%)
+
+Note: This includes only code-verified changes. External infrastructure (server-side PostgreSQL SSL cert, production TLS cert for nginx, DNS AAAA records) are not counted.
+
 ### Independent Review Corrections Applied (doc 68, 2026-07-27)
 
 | Item | Change | Impact |

@@ -13,6 +13,9 @@ public sealed class LoginCaptchaMiddleware(RequestDelegate next)
                 "/api/account/login",
                 StringComparison.OrdinalIgnoreCase) ||
             context.Request.Path.Equals(
+                "/api/account/send-password-reset-code",
+                StringComparison.OrdinalIgnoreCase) ||
+            context.Request.Path.Equals(
                 "/api/v1/app/account-security/complete-initial-password-change",
                 StringComparison.OrdinalIgnoreCase) ||
             context.Request.Path.Equals(

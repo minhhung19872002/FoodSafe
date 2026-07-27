@@ -7,10 +7,10 @@ describe("PublicSelfDeclarationLookupPage", () => {
     render(<PublicSelfDeclarationLookupPage />);
 
     expect(
-      screen.getByText("Tra cứu hồ sơ tự công bố sản phẩm"),
+      screen.getByText("Tra cứu tự công bố sản phẩm"),
     ).toBeInTheDocument();
     expect(
-      screen.getByPlaceholderText("Số hồ sơ tự công bố"),
+      screen.getByPlaceholderText("Số tự công bố"),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Tra cứu/ }),

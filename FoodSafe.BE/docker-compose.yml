@@ -2,7 +2,7 @@ name: foodsafe
 
 x-backend-environment: &backend-environment
   ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:?Set ASPNETCORE_ENVIRONMENT}
-  ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB:-FoodSafe};Username=${POSTGRES_USER:-foodsafe};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+  ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB:-FoodSafe};Username=${POSTGRES_USER:-foodsafe};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD};SslMode=${POSTGRES_SSL_MODE:?Set POSTGRES_SSL_MODE (Disable for dev, Require for prod)}
   App__SelfUrl: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
   App__ClientUrl: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
   App__CorsOrigins: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
@@ -19,7 +19,7 @@ x-backend-environment: &backend-environment
   BlobStorage__AccessKey: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
   BlobStorage__SecretKey: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
   BlobStorage__BucketName: foodsafe-files
-  BlobStorage__WithSsl: "false"
+  BlobStorage__WithSsl: ${MINIO_WITH_SSL:-false}
   MalwareScan__Host: clamav
   MalwareScan__Port: "3310"
 
@@ -46,13 +46,18 @@ services:
 
   redis:
     image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes"]
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD:?Set REDIS_PASSWORD}
     ports:
       - "${INFRA_BIND_ADDRESS:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a $REDIS_PASSWORD ping"]
       interval: 5s
       timeout: 3s
       retries: 20

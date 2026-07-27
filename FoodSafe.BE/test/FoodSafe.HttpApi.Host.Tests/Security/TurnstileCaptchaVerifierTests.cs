@@ -90,6 +90,31 @@ public sealed class TurnstileCaptchaVerifierTests
         providerCalled.ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task Verification_Should_Fail_Closed_On_Network_Failure()
+    {
+        // TurnstileCaptchaVerifier catches HttpRequestException and returns false.
+        // The middleware then returns 400 rather than propagating a 500.
+        var verifier = new TurnstileCaptchaVerifier(
+            new HttpClient(new ThrowingHandler()),
+            Options.Create(new CaptchaOptions
+            {
+                SiteKey = "k",
+                SecretKey = "s",
+                Action = "login",
+                ExpectedHostname = "localhost"
+            }),
+            new StubHostEnvironment(false),
+            NullLogger<TurnstileCaptchaVerifier>.Instance);
+
+        var result = await verifier.VerifyAsync(
+            "valid-token",
+            "127.0.0.1",
+            CancellationToken.None);
+
+        result.ShouldBeFalse();
+    }
+
     private static TurnstileCaptchaVerifier CreateVerifier(
         string responseBody,
         bool production,
@@ -130,6 +155,14 @@ public sealed class TurnstileCaptchaVerifierTests
         {
             return Task.FromResult(respond(request));
         }
+    }
+
+    private sealed class ThrowingHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+            => throw new HttpRequestException("Simulated network failure");
     }
 
     private sealed class StubHostEnvironment(bool production) : IHostEnvironment

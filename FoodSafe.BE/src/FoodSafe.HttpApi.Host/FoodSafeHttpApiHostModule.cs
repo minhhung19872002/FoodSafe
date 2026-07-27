@@ -95,6 +95,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureCaptcha(context, configuration, hostingEnvironment);
         ValidateEmailDelivery(configuration, hostingEnvironment);
         ValidateCoreSecrets(configuration);
+        ValidatePostgreSqlSsl(configuration, hostingEnvironment);
         ConfigureDataProtection(context, configuration, hostingEnvironment);
         ConfigureUrls(configuration);
         ConfigureProblemDetails(context);
@@ -313,6 +314,15 @@ public class FoodSafeHttpApiHostModule : AbpModule
             client => client.Timeout = TimeSpan.FromSeconds(10));
     }
 
+    private static void ValidatePostgreSqlSsl(
+        IConfiguration configuration,
+        IHostEnvironment hostingEnvironment)
+    {
+        PostgreSqlSslValidator.Validate(
+            configuration.GetConnectionString("Default"),
+            hostingEnvironment.IsProduction());
+    }
+
     private static void ValidateCoreSecrets(IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("Default");
@@ -450,6 +460,11 @@ public class FoodSafeHttpApiHostModule : AbpModule
             options.Password.RequireLowercase = true;
             options.Password.RequireUppercase = true;
             options.Password.RequireNonAlphanumeric = true;
+        });
+
+        context.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+        {
+            options.TokenLifespan = TimeSpan.FromHours(8);
         });
         context.Services.Configure<SecurityStampValidatorOptions>(options =>
         {
@@ -695,14 +710,18 @@ public class FoodSafeHttpApiHostModule : AbpModule
         app.UseUnitOfWork();
         app.UseDynamicClaims();
         app.UseAuthorization();
-        app.UseSwagger();
-        app.UseAbpSwaggerUI(options =>
+        if (env.IsDevelopment())
         {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "FoodSafe API v1");
-            var configuration = context.GetConfiguration();
-            options.OAuthClientId(configuration["AuthServer:SwaggerClientId"]);
-            options.OAuthScopes("FoodSafe");
-        });
+            app.UseSwagger();
+            app.UseAbpSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "FoodSafe API v1");
+                var swaggerConfiguration = context.GetConfiguration();
+                options.OAuthClientId(swaggerConfiguration["AuthServer:SwaggerClientId"]);
+                options.OAuthScopes("FoodSafe");
+            });
+        }
+
         app.UseAuditing();
         app.UseAbpSerilogEnrichers();
         app.UseHangfireDashboard("/hangfire", new DashboardOptions
