@@ -6,6 +6,8 @@ import type {
   BusinessHandler,
   BusinessHandlerInput,
   BusinessInput,
+  BusinessInspectionRecord,
+  BusinessRelatedRecord,
   ExcelDownload,
   ExcelImportPreview,
   ExcelImportResult,
@@ -50,6 +52,102 @@ export const publicSelfDeclarationApi = {
     const response = await api.get<PublicSelfDeclaration>(
       "/v1/public/self-declarations",
       { params: { number } },
+    );
+    return response.data;
+  },
+};
+
+interface RelatedListParams {
+  businessId: string;
+  skipCount: number;
+  maxResultCount: number;
+}
+
+async function fetchRelated<TRaw>(
+  endpoint: string,
+  params: RelatedListParams,
+  adapt: (raw: TRaw) => BusinessRelatedRecord,
+): Promise<PagedResult<BusinessRelatedRecord>> {
+  const response = await api.get<PagedResult<TRaw>>(endpoint, { params });
+  return {
+    totalCount: response.data.totalCount,
+    items: response.data.items.map(adapt),
+  };
+}
+
+export const businessRelatedApi = {
+  selfDeclarations: (params: RelatedListParams) =>
+    fetchRelated<{
+      id: string;
+      declarationNumber: string;
+      declarationDate: string;
+      productName: string;
+      expiryDate?: string;
+      status?: number;
+    }>("/v1/app/self-declaration", params, (raw) => ({
+      id: raw.id,
+      number: raw.declarationNumber,
+      name: raw.productName,
+      status: raw.status,
+      issuedDate: raw.declarationDate,
+      expiryDate: raw.expiryDate,
+    })),
+
+  productRegistrations: (params: RelatedListParams) =>
+    fetchRelated<{
+      id: string;
+      registrationNumber: string;
+      issueDate?: string;
+      expiryDate?: string;
+      productName: string;
+      status?: number;
+    }>("/v1/app/product-registration", params, (raw) => ({
+      id: raw.id,
+      number: raw.registrationNumber,
+      name: raw.productName,
+      status: raw.status,
+      issuedDate: raw.issueDate,
+      expiryDate: raw.expiryDate,
+    })),
+
+  adRegistrations: (params: RelatedListParams) =>
+    fetchRelated<{
+      id: string;
+      registrationNumber: string;
+      issueDate?: string;
+      expiryDate?: string;
+      productName?: string;
+      status?: number;
+    }>("/v1/app/advertisement-registration", params, (raw) => ({
+      id: raw.id,
+      number: raw.registrationNumber,
+      name: raw.productName,
+      status: raw.status,
+      issuedDate: raw.issueDate,
+      expiryDate: raw.expiryDate,
+    })),
+
+  eligibilityCertificates: (params: RelatedListParams) =>
+    fetchRelated<{
+      id: string;
+      certificateNumber: string;
+      issueDate?: string;
+      expiryDate?: string;
+      status?: number;
+    }>("/v1/app/eligibility-certificate", params, (raw) => ({
+      id: raw.id,
+      number: raw.certificateNumber,
+      status: raw.status,
+      issuedDate: raw.issueDate,
+      expiryDate: raw.expiryDate,
+    })),
+
+  async inspectionResults(
+    params: RelatedListParams,
+  ): Promise<PagedResult<BusinessInspectionRecord>> {
+    const response = await api.get<PagedResult<BusinessInspectionRecord>>(
+      "/v1/app/inspection-result",
+      { params },
     );
     return response.data;
   },

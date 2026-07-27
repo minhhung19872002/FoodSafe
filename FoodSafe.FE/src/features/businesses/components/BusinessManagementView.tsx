@@ -4,6 +4,7 @@ import {
   EditOutlined,
   EnvironmentOutlined,
   ExportOutlined,
+  FolderOpenOutlined,
   ImportOutlined,
   PaperClipOutlined,
   PlusOutlined,
@@ -32,6 +33,11 @@ import {
   type ProductStatus,
 } from "../types/business.types";
 
+export interface FilterOption {
+  value: string;
+  label: string;
+}
+
 interface BusinessManagementViewProps {
   activeTab: "businesses" | "products";
   businesses: Business[];
@@ -40,6 +46,19 @@ interface BusinessManagementViewProps {
   productFilter: string;
   businessStatus?: BusinessStatus;
   productStatus?: ProductStatus;
+  businessTypeId?: string;
+  businessClassificationId?: string;
+  provinceId?: string;
+  districtId?: string;
+  businessTypeOptions: FilterOption[];
+  classificationOptions: FilterOption[];
+  provinceOptions: FilterOption[];
+  districtOptions: FilterOption[];
+  onBusinessTypeChange: (value?: string) => void;
+  onClassificationChange: (value?: string) => void;
+  onProvinceChange: (value?: string) => void;
+  onDistrictChange: (value?: string) => void;
+  onShowDetail: (business: Business) => void;
   businessTotal: number;
   productTotal: number;
   businessPage: number;
@@ -127,6 +146,13 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
       fixed: "right",
       render: (_: unknown, business) => (
         <Space size={2}>
+          <Button
+            type="text"
+            size="small"
+            aria-label={`Hồ sơ ${business.name}`}
+            icon={<FolderOpenOutlined />}
+            onClick={() => props.onShowDetail(business)}
+          />
           <Button
             type="text"
             size="small"
@@ -262,10 +288,51 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               placeholder="Trạng thái"
               value={props.businessStatus}
               onChange={props.onBusinessStatusChange}
-              style={{ width: 160 }}
+              style={{ width: 150 }}
               options={Object.entries(businessStatusLabels).map(
                 ([value, label]) => ({ value: Number(value), label }),
               )}
+            />
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="Loại hình"
+              value={props.businessTypeId}
+              onChange={props.onBusinessTypeChange}
+              style={{ width: 170 }}
+              options={props.businessTypeOptions}
+            />
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="Phân loại"
+              value={props.businessClassificationId}
+              onChange={props.onClassificationChange}
+              style={{ width: 160 }}
+              options={props.classificationOptions}
+            />
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="Tỉnh/TP"
+              value={props.provinceId}
+              onChange={props.onProvinceChange}
+              style={{ width: 160 }}
+              options={props.provinceOptions}
+            />
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="Địa bàn"
+              value={props.districtId}
+              onChange={props.onDistrictChange}
+              style={{ width: 160 }}
+              options={props.districtOptions}
+              disabled={!props.provinceId}
             />
             {props.permissions.createBusiness && (
               <Button

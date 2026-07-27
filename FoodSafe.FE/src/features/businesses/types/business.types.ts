@@ -119,8 +119,29 @@ export interface BusinessFilter {
   businessClassificationId?: string;
   status?: BusinessStatus;
   hasEligibilityCertificate?: boolean;
+  provinceId?: string;
+  districtId?: string;
+  communeId?: string;
   skipCount: number;
   maxResultCount: number;
+}
+
+export interface BusinessRelatedRecord {
+  id: string;
+  number?: string;
+  name?: string;
+  status?: number | string;
+  issuedDate?: string;
+  expiryDate?: string;
+}
+
+export interface BusinessInspectionRecord {
+  id: string;
+  inspectionDate: string;
+  overallResult: number;
+  hasViolation: boolean;
+  violationDescription?: string;
+  adminDecisionNumber?: string;
 }
 
 export interface Product {

@@ -62,6 +62,12 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
         if (input.HasEligibilityCertificate.HasValue)
             query = query.Where(x =>
                 x.HasEligibilityCertificate == input.HasEligibilityCertificate);
+        if (input.ProvinceId.HasValue)
+            query = query.Where(x => x.AddressProvinceId == input.ProvinceId);
+        if (input.DistrictId.HasValue)
+            query = query.Where(x => x.AddressDistrictId == input.DistrictId);
+        if (input.CommuneId.HasValue)
+            query = query.Where(x => x.AddressCommuneId == input.CommuneId);
 
         var total = await AsyncExecuter.LongCountAsync(
             query,

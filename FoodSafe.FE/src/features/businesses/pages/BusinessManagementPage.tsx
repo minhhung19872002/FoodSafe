@@ -38,6 +38,8 @@ import {
   useProductList,
   useProductAttachments,
 } from "../api/businessQueries";
+import { useDistricts, useProvinces } from "@/hooks/useGeography";
+import { BusinessDetailDrawer } from "../components/BusinessDetailDrawer";
 import { BusinessEditorModal } from "../components/BusinessEditorModal";
 import { BusinessHandlersModal } from "../components/BusinessHandlersModal";
 import { BusinessImportModal } from "../components/BusinessImportModal";
@@ -93,6 +95,12 @@ export default function BusinessManagementPage() {
   const [businessFilter, setBusinessFilter] = useState("");
   const [productFilter, setProductFilter] = useState("");
   const [businessStatus, setBusinessStatus] = useState<BusinessStatus>();
+  const [businessTypeId, setBusinessTypeId] = useState<string>();
+  const [businessClassificationId, setBusinessClassificationId] =
+    useState<string>();
+  const [provinceId, setProvinceId] = useState<string>();
+  const [districtId, setDistrictId] = useState<string>();
+  const [detailBusiness, setDetailBusiness] = useState<Business>();
   const [productStatus, setProductStatus] = useState<ProductStatus>();
   const [businessPage, setBusinessPage] = useState(1);
   const [productPage, setProductPage] = useState(1);
@@ -111,6 +119,10 @@ export default function BusinessManagementPage() {
     {
       filter: businessFilter || undefined,
       status: businessStatus,
+      businessTypeId,
+      businessClassificationId,
+      provinceId,
+      districtId,
       skipCount: (businessPage - 1) * PAGE_SIZE,
       maxResultCount: PAGE_SIZE,
     },
@@ -159,6 +171,8 @@ export default function BusinessManagementPage() {
     () => flattenOrganizations(organizations.data?.items ?? []),
     [organizations.data?.items],
   );
+  const provinces = useProvinces();
+  const districts = useDistricts(provinceId ?? "");
 
   const closeBusinessEditor = () => {
     setCreatingBusiness(false);
@@ -272,6 +286,43 @@ export default function BusinessManagementPage() {
           setBusinessStatus(value);
           setBusinessPage(1);
         }}
+        businessTypeId={businessTypeId}
+        businessClassificationId={businessClassificationId}
+        provinceId={provinceId}
+        districtId={districtId}
+        businessTypeOptions={(businessTypes.data?.items ?? []).map((item) => ({
+          value: item.id,
+          label: item.name,
+        }))}
+        classificationOptions={(classifications.data?.items ?? []).map(
+          (item) => ({ value: item.id, label: item.name }),
+        )}
+        provinceOptions={(provinces.data?.items ?? []).map((item) => ({
+          value: item.id,
+          label: item.name,
+        }))}
+        districtOptions={(districts.data?.items ?? []).map((item) => ({
+          value: item.id,
+          label: item.name,
+        }))}
+        onBusinessTypeChange={(value) => {
+          setBusinessTypeId(value);
+          setBusinessPage(1);
+        }}
+        onClassificationChange={(value) => {
+          setBusinessClassificationId(value);
+          setBusinessPage(1);
+        }}
+        onProvinceChange={(value) => {
+          setProvinceId(value);
+          setDistrictId(undefined);
+          setBusinessPage(1);
+        }}
+        onDistrictChange={(value) => {
+          setDistrictId(value);
+          setBusinessPage(1);
+        }}
+        onShowDetail={setDetailBusiness}
         onProductStatusChange={(value) => {
           setProductStatus(value);
           setProductPage(1);
@@ -534,6 +585,10 @@ export default function BusinessManagementPage() {
           />
         )}
       </Modal>
+      <BusinessDetailDrawer
+        business={detailBusiness}
+        onClose={() => setDetailBusiness(undefined)}
+      />
     </div>
   );
 }

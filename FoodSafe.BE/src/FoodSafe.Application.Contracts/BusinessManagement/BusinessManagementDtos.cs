@@ -12,6 +12,9 @@ public sealed class BusinessListInput : PagedAndSortedResultRequestDto
     public Guid? BusinessClassificationId { get; set; }
     public BusinessStatus? Status { get; set; }
     public bool? HasEligibilityCertificate { get; set; }
+    public Guid? ProvinceId { get; set; }
+    public Guid? DistrictId { get; set; }
+    public Guid? CommuneId { get; set; }
 
     public BusinessListInput()
     {
