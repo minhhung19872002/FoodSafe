@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — P1-1e (report workflow): Return/ReturnToDraft buttons now UI-driven (FR-33 workflow)
+
+- **Cause**: Evidence-only sweep (no product code change). P1-1e's report-workflow-buttons portion was flagged "still pending" in doc 77. On execution the forward path (Submit→Verify→Complete) was already UI-driven by `reporting.spec.ts`, but the **Return ("Trả lại") and ReturnToDraft ("Về nháp") buttons were only ever exercised at the API level** (`reporting-verification.spec.ts` test 4 posts to `/return` + `/return-to-draft` directly). To close "Submit/Verify/Return/Complete **in-UI**" honestly, added a second test to the non-contested `reporting.spec.ts` that drives the return path through the real DOM.
+- **Commit**: `<pending>` (files: `FoodSafe.FE/e2e/reporting.spec.ts`, docs 73/77/03)
+- **Affected features**: F-015 reporting — NDTP workflow state machine (return path). New Playwright test code only; no product code changed → no invalidation of other features.
+- **Retest level**: 2 (single-feature runtime retest; report workflow)
+- **Result**: PASSED
+- **Details**: `reporting.spec.ts` **2/2** (10.1 s); full reporting subset (`reporting` + `reporting-verification`) re-run **7/7** at HEAD, real React → nginx → ASP.NET Core → EF Core → PostgreSQL, **no interception** (`page.context().request` used only to seed the Draft + clean up via genuine HTTP). New test 2: seed Draft via API → open `/reporting` (NĐTP tab default) → year-filter to isolate the seeded row → **Draft→Submitted** via the "Gửi" button + Popconfirm (assert "Đã gửi" tag) → **Submitted→Returned** via the "Trả lại" button, which opens the "Trả lại báo cáo" modal requiring a "Lý do trả lại" reason (server-enforced `[Required]`) before "Lưu" (assert the orange "Trả lại" status tag) → **Returned→Draft** via the "Về nháp" button + Popconfirm ("Chuyển") (assert the "Nháp" tag). Existing test 1 continues to cover create + Submit/Verify/Complete UI + Excel `waitForEvent("download")` (`PK`). doc 73 FR-33 was already `PASS_WITH_BROWSER_EVIDENCE`; this adds the missing Return/ReturnToDraft **button** evidence. Stack unchanged (no rebuild).
+
 ### 2026-07-28 — P1-1b: inspection plan & result attachment round-trip browser-proven (FR-27-08/09, FR-28-03/05)
 
 - **Cause**: Evidence-only sweep (no product code change). doc 73 had inspection plan attachments (FR-27-08/09) and result document up/download (FR-28-05) as `IMPLEMENTED_NOT_VERIFIED` — the attachment round-trip was proven for products + the licensing modules, but **no executed test ever uploaded a file to an inspection plan or result** (doc 71 §7). The shared DB also has **0 active inspection results**, so the proof must seed its own plan + result. Added `e2e/inspection-attachments.spec.ts`.
