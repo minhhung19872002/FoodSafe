@@ -3,7 +3,7 @@
 ## Status: VERIFIED
 
 - **Feature IDs**: F-024, F-025, F-026, F-027, F-028, F-029, F-030
-- **Verified Git commit**: pending · **Date**: 2026-07-27
+- **Verified Git commit**: `06e4b1c` · **Date**: 2026-07-27
 - **Environment**: Docker Compose full stack at `http://127.0.0.1:8080` · **Database**: real PostgreSQL 15 · **API interception**: **No**
 - **Authentication**: None required (AllowAnonymous endpoints)
 
