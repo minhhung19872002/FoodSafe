@@ -16,6 +16,14 @@ export function useDocuments(filter: DocumentFilter) {
   });
 }
 
+export function useDocumentTypes() {
+  return useQuery({
+    queryKey: ["document-type-options"],
+    queryFn: () => documentApi.documentTypeOptions(),
+    staleTime: 300_000,
+  });
+}
+
 export function useDocument(id: string) {
   return useQuery({
     queryKey: docKeys.detail(id),

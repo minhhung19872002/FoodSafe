@@ -24,7 +24,7 @@ import {
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { saveDownload } from "@/utils/download";
-import { useDocuments } from "../api/documentQueries";
+import { useDocuments, useDocumentTypes } from "../api/documentQueries";
 import {
   useCreateDocument,
   useUpdateDocument,
@@ -48,6 +48,7 @@ export default function DocumentsPage() {
     maxResultCount: PAGE_SIZE,
   });
   const { data, isLoading } = useDocuments(filter);
+  const { data: documentTypes, isLoading: docTypesLoading } = useDocumentTypes();
   const createMut = useCreateDocument();
   const updateMut = useUpdateDocument();
   const deleteMut = useDeleteDocument();
@@ -257,22 +258,19 @@ export default function DocumentsPage() {
           }}
         >
           <Form.Item
-            name="documentTypeName"
+            name="documentTypeId"
             label="Loại văn bản"
             rules={[{ required: true, message: "Vui lòng chọn loại văn bản" }]}
           >
             <Select
               placeholder="Chọn loại văn bản"
-              options={[
-                { value: "Luật", label: "Luật" },
-                { value: "Nghị định", label: "Nghị định" },
-                { value: "Thông tư", label: "Thông tư" },
-                { value: "Quyết định", label: "Quyết định" },
-                { value: "Chỉ thị", label: "Chỉ thị" },
-                { value: "Công văn", label: "Công văn" },
-                { value: "Hướng dẫn", label: "Hướng dẫn" },
-                { value: "Khác", label: "Khác" },
-              ]}
+              showSearch
+              optionFilterProp="label"
+              loading={docTypesLoading}
+              options={(documentTypes ?? []).map((t) => ({
+                value: t.id,
+                label: t.name,
+              }))}
             />
           </Form.Item>
           <Form.Item

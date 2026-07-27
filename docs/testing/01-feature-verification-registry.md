@@ -40,14 +40,14 @@
 | F-028 | Public Lookup — CFS             | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
 | F-029 | Public Lookup — Export Food     | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
 | F-030 | Public Lookup — Ad Registration | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
-| F-031 | Documents                       | READY_FOR_TEST | `e2e/documents.spec.ts`                       | —               | 2026-07-26 |
-| F-032 | System Settings                 | READY_FOR_TEST | `e2e/system-settings.spec.ts`                 | —               | 2026-07-26 |
+| F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `5444001` | 2026-07-27 |
+| F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `5444001` | 2026-07-27 |
 
 ## Summary
 
 - Total features: 32
-- VERIFIED: **20** (F-002, F-006..F-023 — see `features/*.md`)
-- READY_FOR_TEST: **12** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
+- VERIFIED: **22** (F-002, F-006..F-023, F-031, F-032 — see `features/*.md`)
+- READY_FOR_TEST: **10** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
 - FAILED: 0
 - BLOCKED: 0 (F-002 unblocked — implementation existed; spec added and verified)
 - NOT_STARTED: 0

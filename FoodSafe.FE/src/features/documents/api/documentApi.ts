@@ -47,6 +47,14 @@ export const documentApi = {
   async delete(id: string): Promise<void> {
     await api.delete(`${endpoint}/${id}`);
   },
+  async documentTypeOptions(): Promise<{ id: string; name: string }[]> {
+    const res = await api.get<{
+      items: { id: string; name: string }[];
+    }>("/v1/app/master-catalog/document-types", {
+      params: { maxResultCount: 100 },
+    });
+    return res.data.items;
+  },
   async exportExcel(filter: DocumentFilter): Promise<FileDownload> {
     const response = await api.get<Blob>(`${endpoint}/excel/export`, {
       params: filter,
