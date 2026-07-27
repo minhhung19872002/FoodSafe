@@ -116,6 +116,19 @@ public sealed class CitizenAlertReportController(
 [RemoteService]
 [ApiVersion(ApiContract.Version)]
 [AllowAnonymous]
+[Route("api/v1/public/news-reports")]
+public sealed class CitizenNewsReportController(
+    ICitizenNewsReportAppService service) : AbpControllerBase
+{
+    [HttpPost]
+    public Task<CitizenAlertReportResultDto> CreateAsync(
+        [FromBody] CreateCitizenNewsReportDto input) =>
+        service.CreateAsync(input);
+}
+
+[RemoteService]
+[ApiVersion(ApiContract.Version)]
+[AllowAnonymous]
 [Route("api/v1/public")]
 public sealed class CertificatePdfController(
     ICertificatePdfAppService service) : AbpControllerBase

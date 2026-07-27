@@ -170,6 +170,9 @@ public static class FoodSafeDomainErrorCodes
         public const string ViolationAlreadyRemedied = "FoodSafe:Inspection:0013";
         public const string DuplicatePlanCode = "FoodSafe:Inspection:0014";
         public const string PlanNotApproved = "FoodSafe:Inspection:0015";
+        public const string ResultAlreadyFinalized = "FoodSafe:Inspection:0016";
+        public const string CannotModifyFinalizedResult =
+            "FoodSafe:Inspection:0017";
     }
 
     public static class Report

@@ -20,6 +20,9 @@ public sealed class AtpNews : FullAuditedAggregateRoot<Guid>
     public DateTime? RecalledAt { get; private set; }
     public bool IsPublic { get; private set; }
     public bool IsFeatured { get; private set; }
+    public AlertSource Source { get; private set; } = AlertSource.Internal;
+    public string? ReporterName { get; private set; }
+    public string? ReporterContact { get; private set; }
 
     private readonly List<NewsLinkedAlert> _linkedAlerts = new();
     public IReadOnlyList<NewsLinkedAlert> LinkedAlerts => _linkedAlerts.AsReadOnly();
@@ -54,8 +57,25 @@ public sealed class AtpNews : FullAuditedAggregateRoot<Guid>
             IsFeatured = isFeatured,
             Status = NewsStatus.Draft,
             IsPublic = false,
+            Source = AlertSource.Internal,
             ViewCount = 0
         };
+    }
+
+    public static AtpNews CreateCitizenSubmission(
+        Guid id,
+        Guid organizationId,
+        string title,
+        string content,
+        string? reporterName,
+        string? reporterContact)
+    {
+        var news = Create(id, organizationId, title, content,
+            category: "Phản ánh người dân");
+        news.Source = AlertSource.PublicReport;
+        news.ReporterName = Normalize(reporterName);
+        news.ReporterContact = Normalize(reporterContact);
+        return news;
     }
 
     public void Update(

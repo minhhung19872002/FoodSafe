@@ -205,6 +205,8 @@ export interface InspectionResult {
   followUpResultValue?: FollowUpResult;
   recommendations?: string;
   notes?: string;
+  isFinalized: boolean;
+  finalizedAt?: string;
   creationTime: string;
   violations: InspectionViolation[];
   inspectors: InspectionResultInspector[];

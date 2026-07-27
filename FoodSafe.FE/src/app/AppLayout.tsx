@@ -348,6 +348,12 @@ export function AppLayout() {
     },
     { type: "divider" },
     {
+      key: "profile",
+      icon: <UserOutlined />,
+      label: "Thông tin cá nhân",
+      onClick: () => navigate("/account/profile"),
+    },
+    {
       key: "change-password",
       icon: <KeyOutlined />,
       label: "Đổi mật khẩu",

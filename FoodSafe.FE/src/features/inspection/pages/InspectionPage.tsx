@@ -1,10 +1,13 @@
 import { useState } from "react";
 import {
+  AuditOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
+  LockOutlined,
+  PaperClipOutlined,
   PlusOutlined,
   SendOutlined,
   StopOutlined,
@@ -36,6 +39,7 @@ import {
   useDeleteInspectionResult,
   useExportInspectionPlans,
   useExportInspectionResults,
+  useFinalizeInspectionResult,
   useRejectInspectionPlan,
   useSubmitInspectionPlan,
   useUpdateInspectionPlan,
@@ -46,6 +50,8 @@ import {
   useInspectionPlans,
   useInspectionResults,
 } from "../api/inspectionQueries";
+import { InspectionAttachmentsModal } from "../components/InspectionAttachmentsModal";
+import { InspectionFollowUpModal } from "../components/InspectionFollowUpModal";
 import { InspectionPlanEditorModal } from "../components/InspectionPlanEditorModal";
 import { InspectionResultEditorModal } from "../components/InspectionResultEditorModal";
 import {
@@ -103,6 +109,7 @@ function PlansTab() {
   const [editing, setEditing] = useState<InspectionPlan>();
   const [rejecting, setRejecting] = useState<InspectionPlan>();
   const [cancelling, setCancelling] = useState<InspectionPlan>();
+  const [attachmentsPlan, setAttachmentsPlan] = useState<InspectionPlan>();
 
   const queryFilter = {
     filter: filter || undefined,
@@ -175,6 +182,13 @@ function PlansTab() {
       width: 220,
       render: (_, item) => (
         <Space size={2}>
+          <Button
+            size="small"
+            type="text"
+            aria-label={`Tài liệu ${item.planCode}`}
+            icon={<PaperClipOutlined />}
+            onClick={() => setAttachmentsPlan(item)}
+          />
           {canEdit && item.status === INSPECTION_PLAN_STATUS.Draft && (
             <>
               <Button
@@ -421,6 +435,13 @@ function PlansTab() {
           );
         }}
       />
+      <InspectionAttachmentsModal
+        ownerId={attachmentsPlan?.id}
+        ownerKind="plan"
+        title={`Tài liệu kế hoạch ${attachmentsPlan?.planCode ?? ""}`}
+        canEdit={canEdit}
+        onClose={() => setAttachmentsPlan(undefined)}
+      />
       <RevokeModal
         open={Boolean(cancelling)}
         title={`Hủy kế hoạch ${cancelling?.planCode ?? ""}`}
@@ -459,6 +480,9 @@ function ResultsTab() {
     useState<InspectionOverallResult>();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<InspectionResult>();
+  const [attachmentsResult, setAttachmentsResult] =
+    useState<InspectionResult>();
+  const [followUpResult, setFollowUpResultRow] = useState<InspectionResult>();
 
   const queryFilter = {
     filter: filter || undefined,
@@ -474,6 +498,7 @@ function ResultsTab() {
   const updateMutation = useUpdateInspectionResult();
   const deleteMutation = useDeleteInspectionResult();
   const exportMutation = useExportInspectionResults();
+  const finalizeMutation = useFinalizeInspectionResult();
 
   const closeEditor = () => {
     setEditorOpen(false);
@@ -534,10 +559,26 @@ function ResultsTab() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 120,
+      width: 230,
       render: (_, item) => (
         <Space size={2}>
-          {canEdit && (
+          <Button
+            size="small"
+            type="text"
+            aria-label={`Tài liệu kết quả ${item.businessName ?? item.id}`}
+            icon={<PaperClipOutlined />}
+            onClick={() => setAttachmentsResult(item)}
+          />
+          {(item.hasViolation || item.followUpRequired) && (
+            <Button
+              size="small"
+              type="text"
+              aria-label={`Theo dõi khắc phục ${item.businessName ?? item.id}`}
+              icon={<AuditOutlined />}
+              onClick={() => setFollowUpResultRow(item)}
+            >Theo dõi</Button>
+          )}
+          {canEdit && !item.isFinalized && (
             <Button
               size="small"
               type="text"
@@ -548,7 +589,33 @@ function ResultsTab() {
               }}
             >Sửa</Button>
           )}
-          {canDelete && !item.followUpRequired && (
+          {canEdit && !item.isFinalized && (
+            <Popconfirm
+              title="Chốt kết quả? Sau khi chốt sẽ không thể chỉnh sửa."
+              okText="Chốt"
+              cancelText="Hủy"
+              onConfirm={() =>
+                finalizeMutation.mutate(item.id, {
+                  onSuccess: () =>
+                    void message.success("Đã chốt kết quả."),
+                  onError: () =>
+                    void message.error("Không thể chốt kết quả."),
+                })
+              }
+            >
+              <Button
+                size="small"
+                type="text"
+                icon={<LockOutlined />}
+              >Chốt</Button>
+            </Popconfirm>
+          )}
+          {item.isFinalized && (
+            <Tag icon={<LockOutlined />} color="default">
+              Đã chốt
+            </Tag>
+          )}
+          {canDelete && !item.followUpRequired && !item.isFinalized && (
             <Popconfirm
               title="Xóa kết quả này?"
               okText="Xóa"
@@ -667,6 +734,18 @@ function ResultsTab() {
         saving={createMutation.isPending || updateMutation.isPending}
         onCancel={closeEditor}
         onSubmit={save}
+      />
+      <InspectionAttachmentsModal
+        ownerId={attachmentsResult?.id}
+        ownerKind="result"
+        title={`Tài liệu kết quả — ${attachmentsResult?.businessName ?? ""}`}
+        canEdit={canEdit && !attachmentsResult?.isFinalized}
+        onClose={() => setAttachmentsResult(undefined)}
+      />
+      <InspectionFollowUpModal
+        result={followUpResult}
+        canEdit={canEdit}
+        onClose={() => setFollowUpResultRow(undefined)}
       />
     </>
   );

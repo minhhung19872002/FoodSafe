@@ -43,6 +43,8 @@ public class AtpNewsAppService : ApplicationService
             query = query.Where(x => x.Category == input.Category);
         if (input.Status.HasValue)
             query = query.Where(x => x.Status == input.Status.Value);
+        if (input.Source.HasValue)
+            query = query.Where(x => x.Source == input.Source.Value);
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
 
@@ -222,6 +224,9 @@ public class AtpNewsAppService : ApplicationService
             RecalledAt = a.RecalledAt,
             IsPublic = a.IsPublic,
             IsFeatured = a.IsFeatured,
+            Source = a.Source,
+            ReporterName = a.ReporterName,
+            ReporterContact = a.ReporterContact,
             CreationTime = a.CreationTime,
             LinkedAlerts = a.LinkedAlerts.Select(la => new NewsLinkedAlertDto
             {

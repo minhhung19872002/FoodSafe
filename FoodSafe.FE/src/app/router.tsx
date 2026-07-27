@@ -5,6 +5,7 @@ import { PrivateRoute } from "./PrivateRoute";
 import { PermissionRoute } from "./PermissionRoute";
 import {
   ChangePasswordPage,
+  ProfilePage,
   BusinessManagementPage,
   SelfDeclarationPage,
   ProductRegistrationPage,
@@ -47,6 +48,7 @@ import {
   PublicNewsPage,
   PublicDocumentsPage,
   CitizenAlertReportPage,
+  CitizenNewsReportPage,
 } from "./routeComponents";
 
 export const router = createBrowserRouter([
@@ -112,6 +114,14 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<RouteLoading />}>
         <CitizenAlertReportPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/gui-tin",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <CitizenNewsReportPage />
       </Suspense>
     ),
   },
@@ -454,6 +464,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<RouteLoading />}>
             <ChangePasswordPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "account/profile",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <ProfilePage />
           </Suspense>
         ),
       },

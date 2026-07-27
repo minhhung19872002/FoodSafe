@@ -146,6 +146,21 @@ export const publicPortalApi = {
       .then((r) => r.data);
   },
 
+  async submitNewsReport(input: {
+    title: string;
+    content: string;
+    reporterName?: string;
+    reporterContact?: string;
+    captchaToken: string;
+  }): Promise<AlertReportResult> {
+    await api.get("/abp/application-configuration");
+    const response = await api.post<AlertReportResult>(
+      "/v1/public/news-reports",
+      input,
+    );
+    return response.data;
+  },
+
   async submitAlertReport(input: AlertReportInput): Promise<AlertReportResult> {
     // Prime XSRF cookie before the POST
     await api.get("/abp/application-configuration");

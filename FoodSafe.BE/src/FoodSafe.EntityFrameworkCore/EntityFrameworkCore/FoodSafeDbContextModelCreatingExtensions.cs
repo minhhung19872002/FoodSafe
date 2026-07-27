@@ -1072,6 +1072,13 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.FollowUpResultValue).HasColumnName("follow_up_result").HasConversion<short?>();
             entity.Property(x => x.Recommendations).HasColumnName("recommendations");
             entity.Property(x => x.Notes).HasColumnName("notes");
+            entity.Property(x => x.IsFinalized)
+                .HasColumnName("is_finalized")
+                .HasDefaultValue(false);
+            entity.Property(x => x.FinalizedById)
+                .HasColumnName("finalized_by_id");
+            entity.Property(x => x.FinalizedAt)
+                .HasColumnName("finalized_at");
 
             entity.HasMany(x => x.Violations)
                 .WithOne()
@@ -1638,6 +1645,16 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.RecalledAt).HasColumnName("recalled_at");
             entity.Property(x => x.IsPublic).HasColumnName("is_public");
             entity.Property(x => x.IsFeatured).HasColumnName("is_featured");
+            entity.Property(x => x.Source)
+                .HasColumnName("source")
+                .HasConversion<short>()
+                .HasDefaultValue(AlertSource.Internal);
+            entity.Property(x => x.ReporterName)
+                .HasColumnName("reporter_name")
+                .HasMaxLength(200);
+            entity.Property(x => x.ReporterContact)
+                .HasColumnName("reporter_contact")
+                .HasMaxLength(200);
 
             entity.HasMany(x => x.LinkedAlerts)
                 .WithOne()

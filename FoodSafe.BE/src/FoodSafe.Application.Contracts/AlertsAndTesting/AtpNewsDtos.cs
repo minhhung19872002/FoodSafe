@@ -22,6 +22,9 @@ public class AtpNewsDto : EntityDto<Guid>
     public DateTime? RecalledAt { get; set; }
     public bool IsPublic { get; set; }
     public bool IsFeatured { get; set; }
+    public AlertSource Source { get; set; }
+    public string? ReporterName { get; set; }
+    public string? ReporterContact { get; set; }
     public DateTime CreationTime { get; set; }
     public List<NewsLinkedAlertDto> LinkedAlerts { get; set; } = new();
 }
@@ -54,6 +57,7 @@ public class AtpNewsFilterDto : PagedAndSortedResultRequestDto
     public string? Filter { get; set; }
     public string? Category { get; set; }
     public NewsStatus? Status { get; set; }
+    public AlertSource? Source { get; set; }
 }
 
 public class PublishNewsDto

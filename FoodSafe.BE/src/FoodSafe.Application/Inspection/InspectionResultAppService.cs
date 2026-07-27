@@ -8,6 +8,7 @@ using Volo.Abp.Application.Services;
 using Volo.Abp.Authorization;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Threading;
+using Volo.Abp.Users;
 
 namespace FoodSafe.Inspection;
 
@@ -196,7 +197,19 @@ public class InspectionResultAppService : ApplicationService
     public async Task DeleteAsync(Guid id)
     {
         var result = await GetScopedAsync(id, DataScopeOperation.Edit);
+        result.EnsureMutable();
         await _results.DeleteAsync(result, cancellationToken: _cancellationTokens.Token);
+    }
+
+    [Authorize(FoodSafePermissions.Inspection.Results.Edit)]
+    public async Task<InspectionResultDto> FinalizeAsync(Guid id)
+    {
+        var result = await GetScopedAsync(id, DataScopeOperation.Edit);
+        result.Finalize(CurrentUser.GetId(), Clock.Now);
+        await _results.UpdateAsync(
+            result, autoSave: true,
+            cancellationToken: _cancellationTokens.Token);
+        return (await ToDtosAsync([result]))[0];
     }
 
     [Authorize(FoodSafePermissions.Inspection.Results.Edit)]
@@ -333,6 +346,8 @@ public class InspectionResultAppService : ApplicationService
             FollowUpResultValue = r.FollowUpResultValue,
             Recommendations = r.Recommendations,
             Notes = r.Notes,
+            IsFinalized = r.IsFinalized,
+            FinalizedAt = r.FinalizedAt,
             CreationTime = r.CreationTime,
             Violations = r.Violations.Select(v => new InspectionViolationDto
             {

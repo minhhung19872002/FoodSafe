@@ -5,6 +5,9 @@ export const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage"));
 export const ChangePasswordPage = lazy(
   () => import("@/features/auth/pages/ChangePasswordPage"),
 );
+export const ProfilePage = lazy(
+  () => import("@/features/auth/pages/ProfilePage"),
+);
 export const ForgotPasswordPage = lazy(
   () => import("@/features/auth/pages/ForgotPasswordPage"),
 );
@@ -135,6 +138,9 @@ export const PublicDocumentsPage = lazy(
 );
 export const CitizenAlertReportPage = lazy(
   () => import("@/features/public-portal/pages/CitizenAlertReportPage"),
+);
+export const CitizenNewsReportPage = lazy(
+  () => import("@/features/public-portal/pages/CitizenNewsReportPage"),
 );
 
 export function RouteLoading() {

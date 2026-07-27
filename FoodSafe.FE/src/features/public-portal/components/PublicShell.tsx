@@ -51,6 +51,11 @@ const NAV_ITEMS: MenuProps["items"] = [
     icon: <AlertOutlined />,
     label: <Link to="/gui-phan-anh">Gửi phản ánh</Link>,
   },
+  {
+    key: "/gui-tin",
+    icon: <FileTextOutlined />,
+    label: <Link to="/gui-tin">Gửi tin</Link>,
+  },
 ];
 
 interface PublicShellProps {

@@ -28,6 +28,8 @@ public class InspectionResultDto : EntityDto<Guid>
     public FollowUpResult? FollowUpResultValue { get; set; }
     public string? Recommendations { get; set; }
     public string? Notes { get; set; }
+    public bool IsFinalized { get; set; }
+    public DateTime? FinalizedAt { get; set; }
     public DateTime CreationTime { get; set; }
     public List<InspectionViolationDto> Violations { get; set; } = new();
     public List<InspectionResultInspectorDto> Inspectors { get; set; } = new();

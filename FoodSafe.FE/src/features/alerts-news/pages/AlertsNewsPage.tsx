@@ -268,6 +268,17 @@ function AlertsTab() {
             ([value, cfg]) => ({ value: Number(value), label: cfg.label }),
           )}
         />
+        <Select
+          allowClear
+          placeholder="Nguồn"
+          style={{ width: 160 }}
+          onChange={(v) =>
+            setFilter((f) => ({ ...f, source: v, skipCount: 0 }))
+          }
+          options={Object.entries(ALERT_SOURCE_LABELS).map(
+            ([value, label]) => ({ value: Number(value), label }),
+          )}
+        />
         <div style={{ flex: 1 }} />
         <Button
           icon={<ExportOutlined />}
@@ -522,6 +533,17 @@ function NewsTab() {
             value: Number(value),
             label: cfg.label,
           }))}
+        />
+        <Select
+          allowClear
+          placeholder="Nguồn"
+          style={{ width: 160 }}
+          onChange={(v) =>
+            setFilter((f) => ({ ...f, source: v, skipCount: 0 }))
+          }
+          options={Object.entries(ALERT_SOURCE_LABELS).map(
+            ([value, label]) => ({ value: Number(value), label }),
+          )}
         />
         <div style={{ flex: 1 }} />
         <Button

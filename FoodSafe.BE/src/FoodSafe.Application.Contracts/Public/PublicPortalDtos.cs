@@ -153,6 +153,33 @@ public class CitizenAlertReportResultDto
     public string Message { get; set; } = string.Empty;
 }
 
+public class CreateCitizenNewsReportDto
+{
+    [Required]
+    [StringLength(500)]
+    public string Title { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(8000)]
+    public string Content { get; set; } = string.Empty;
+
+    [StringLength(200)]
+    public string? ReporterName { get; set; }
+
+    [StringLength(200)]
+    public string? ReporterContact { get; set; }
+
+    /// <summary>Validated by LoginCaptchaMiddleware before this DTO is handled.</summary>
+    [Required]
+    public string CaptchaToken { get; set; } = string.Empty;
+}
+
+public interface ICitizenNewsReportAppService
+{
+    Task<CitizenAlertReportResultDto> CreateAsync(
+        CreateCitizenNewsReportDto input);
+}
+
 public interface IPublicDirectoryAppService
 {
     Task<PagedResultDto<PublicBusinessSummaryDto>> SearchBusinessesAsync(PublicSearchRequestDto input);

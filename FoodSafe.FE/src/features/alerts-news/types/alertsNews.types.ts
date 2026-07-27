@@ -178,6 +178,7 @@ export interface NewsFilter {
   filter?: string;
   category?: string;
   status?: NewsStatus;
+  source?: AlertSource;
   skipCount: number;
   maxResultCount: number;
 }

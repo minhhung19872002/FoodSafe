@@ -8,3 +8,15 @@ export function useSubmitAlertReport() {
       publicPortalApi.submitAlertReport(input),
   });
 }
+
+export function useSubmitNewsReport() {
+  return useMutation({
+    mutationFn: (input: {
+      title: string;
+      content: string;
+      reporterName?: string;
+      reporterContact?: string;
+      captchaToken: string;
+    }) => publicPortalApi.submitNewsReport(input),
+  });
+}

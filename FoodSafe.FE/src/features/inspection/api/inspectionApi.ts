@@ -91,6 +91,56 @@ export const inspectionPlanApi = {
   },
 };
 
+export interface InspectionAttachment {
+  id: string;
+  originalName: string;
+  sizeBytes: number;
+  mimeType?: string;
+  description?: string;
+  creationTime: string;
+}
+
+function attachmentApi(base: string) {
+  return {
+    async list(ownerId: string): Promise<InspectionAttachment[]> {
+      return (
+        await api.get<InspectionAttachment[]>(`${base}/${ownerId}/attachments`)
+      ).data;
+    },
+    async upload(
+      ownerId: string,
+      file: File,
+      description?: string,
+    ): Promise<void> {
+      const form = new FormData();
+      form.append("file", file);
+      if (description) form.append("description", description);
+      await api.post(`${base}/${ownerId}/attachments`, form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    },
+    async download(
+      ownerId: string,
+      attachmentId: string,
+    ): Promise<FileDownload> {
+      const response = await api.get<Blob>(
+        `${base}/${ownerId}/attachments/${attachmentId}/download`,
+        { responseType: "blob" },
+      );
+      return download(
+        response.data,
+        response.headers["content-disposition"],
+      );
+    },
+    async remove(ownerId: string, attachmentId: string): Promise<void> {
+      await api.delete(`${base}/${ownerId}/attachments/${attachmentId}`);
+    },
+  };
+}
+
+export const inspectionPlanAttachmentApi = attachmentApi(planEndpoint);
+export const inspectionResultAttachmentApi = attachmentApi(resultEndpoint);
+
 export const inspectionResultApi = {
   async list(
     filter: InspectionResultFilter,
@@ -132,6 +182,10 @@ export const inspectionResultApi = {
   },
   async setFollowUpResult(id: string, result: FollowUpResult) {
     await api.post(`${resultEndpoint}/${id}/set-follow-up-result`, { result });
+  },
+  async finalize(id: string): Promise<InspectionResult> {
+    return (await api.post<InspectionResult>(`${resultEndpoint}/${id}/finalize`))
+      .data;
   },
   async exportExcel(
     filter: InspectionResultFilter,

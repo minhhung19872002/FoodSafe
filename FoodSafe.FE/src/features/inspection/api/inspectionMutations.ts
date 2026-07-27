@@ -108,6 +108,36 @@ export function useDeleteInspectionResult() {
   return useResultRefresh(inspectionResultApi.delete);
 }
 
+export function useFinalizeInspectionResult() {
+  return useResultRefresh(inspectionResultApi.finalize);
+}
+
+export function useMarkViolationRemedied() {
+  return useResultRefresh(
+    ({
+      resultId,
+      violationId,
+      notes,
+    }: {
+      resultId: string;
+      violationId: string;
+      notes?: string;
+    }) => inspectionResultApi.markViolationRemedied(resultId, violationId, notes),
+  );
+}
+
+export function useSetFollowUpResult() {
+  return useResultRefresh(
+    ({
+      id,
+      result,
+    }: {
+      id: string;
+      result: Parameters<typeof inspectionResultApi.setFollowUpResult>[1];
+    }) => inspectionResultApi.setFollowUpResult(id, result),
+  );
+}
+
 export function useExportInspectionPlans() {
   return useMutation({
     mutationFn: (filter: InspectionPlanFilter) =>

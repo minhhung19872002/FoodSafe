@@ -20,6 +20,9 @@ public sealed class LoginCaptchaMiddleware(RequestDelegate next)
                 StringComparison.OrdinalIgnoreCase) ||
             context.Request.Path.Equals(
                 "/api/v1/public/alert-reports",
+                StringComparison.OrdinalIgnoreCase) ||
+            context.Request.Path.Equals(
+                "/api/v1/public/news-reports",
                 StringComparison.OrdinalIgnoreCase);
         if (!HttpMethods.IsPost(context.Request.Method) || !isProtectedPath)
         {

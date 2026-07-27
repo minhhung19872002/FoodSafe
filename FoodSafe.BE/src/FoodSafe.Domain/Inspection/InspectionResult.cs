@@ -25,6 +25,9 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
     public FollowUpResult? FollowUpResultValue { get; private set; }
     public string? Recommendations { get; private set; }
     public string? Notes { get; private set; }
+    public bool IsFinalized { get; private set; }
+    public Guid? FinalizedById { get; private set; }
+    public DateTime? FinalizedAt { get; private set; }
 
     private readonly List<InspectionViolation> _violations = new();
     public IReadOnlyList<InspectionViolation> Violations => _violations.AsReadOnly();
@@ -75,6 +78,23 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         return result;
     }
 
+    public void Finalize(Guid finalizedById, DateTime finalizedAt)
+    {
+        if (IsFinalized)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Inspection.ResultAlreadyFinalized);
+        IsFinalized = true;
+        FinalizedById = finalizedById;
+        FinalizedAt = finalizedAt;
+    }
+
+    public void EnsureMutable()
+    {
+        if (IsFinalized)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Inspection.CannotModifyFinalizedResult);
+    }
+
     public void Update(
         DateTime inspectionDate,
         InspectionType inspectionType,
@@ -91,6 +111,7 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         string? recommendations,
         string? notes)
     {
+        EnsureMutable();
         SetCoreFields(
             inspectionDate, inspectionType, teamLeader, teamMembersText,
             overallResult, hasViolation, violationDescription, fineAmount,
@@ -107,6 +128,7 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         string? remedyRequired,
         DateTime? remedyDeadline)
     {
+        EnsureMutable();
         var violation = new InspectionViolation(
             violationId, Id, violationCode, description,
             regulationReference, fineAmount, remedyRequired, remedyDeadline);
@@ -117,6 +139,7 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
 
     public void RemoveViolation(Guid violationId)
     {
+        EnsureMutable();
         var violation = _violations.FirstOrDefault(v => v.Id == violationId)
             ?? throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.ViolationNotFound);
         _violations.Remove(violation);
