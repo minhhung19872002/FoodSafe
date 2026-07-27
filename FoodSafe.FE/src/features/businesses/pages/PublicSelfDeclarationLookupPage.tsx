@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  Button,
-  Card,
-  Descriptions,
-  Input,
-  Space,
-  Typography,
-} from "antd";
+import { Button, Card, Descriptions, Input, Space, Typography } from "antd";
 import { StatusBadge } from "@/components/StatusBadge";
 import { publicSelfDeclarationApi } from "../api/businessApi";
 import type { PublicSelfDeclaration } from "../types/business.types";
@@ -33,9 +26,7 @@ export default function PublicSelfDeclarationLookupPage() {
 
   return (
     <main style={{ maxWidth: 900, margin: "64px auto", padding: "0 24px" }}>
-      <Typography.Title level={2}>
-        Tra cứu tự công bố sản phẩm
-      </Typography.Title>
+      <Typography.Title level={2}>Tra cứu tự công bố sản phẩm</Typography.Title>
       <Typography.Paragraph type="secondary">
         Nhập chính xác số hồ sơ tự công bố để kiểm tra thông tin và hiệu lực.
       </Typography.Paragraph>

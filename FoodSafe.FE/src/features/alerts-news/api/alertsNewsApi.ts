@@ -15,8 +15,7 @@ const alertEndpoint = "/v1/app/atp-alert";
 const newsEndpoint = "/v1/app/atp-news";
 
 function download(data: Blob, contentDisposition?: string): FileDownload {
-  const encoded =
-    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const encoded = contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
   const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
   return {
     blob: data,

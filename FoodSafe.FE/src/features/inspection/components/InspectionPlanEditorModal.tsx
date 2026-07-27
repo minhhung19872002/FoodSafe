@@ -90,12 +90,14 @@ export function InspectionPlanEditorModal(props: Props) {
     form
       .validateFields()
       .then((values) => {
-        const planItems: CreateUpdatePlanItemInput[] = items.map((row, idx) => ({
-          businessId: row.businessId,
-          sequenceNumber: row.sequenceNumber ?? idx + 1,
-          plannedDate: row.plannedDate,
-          notes: row.notes,
-        }));
+        const planItems: CreateUpdatePlanItemInput[] = items.map(
+          (row, idx) => ({
+            businessId: row.businessId,
+            sequenceNumber: row.sequenceNumber ?? idx + 1,
+            plannedDate: row.plannedDate,
+            notes: row.notes,
+          }),
+        );
         props.onSubmit({
           planCode: values.planCode.trim(),
           title: values.title.trim(),
@@ -124,7 +126,9 @@ export function InspectionPlanEditorModal(props: Props) {
       destroyOnHidden
     >
       <Form form={form} layout="vertical" preserve={false}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+        >
           <Form.Item
             name="planCode"
             label="Mã kế hoạch"
@@ -231,9 +235,7 @@ function PlanItemsEditor({
   };
 
   const updateItem = (key: string, field: string, value: unknown) => {
-    onChange(
-      items.map((i) => (i.key === key ? { ...i, [field]: value } : i)),
-    );
+    onChange(items.map((i) => (i.key === key ? { ...i, [field]: value } : i)));
   };
 
   const columns: ColumnsType<ItemRow> = [

@@ -54,36 +54,38 @@ function mockData() {
 describe("ReportingPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders NDTP tab with create button for full-permission user", { timeout: 15000 }, async () => {
-    mockData();
-    useAuthStore.getState().setAuth({
-      id: "user-1",
-      name: "Test User",
-      email: "test@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["ProvinceStaff"],
-      permissions: [
-        "FoodSafe.Reporting.NdtpReports.View",
-        "FoodSafe.Reporting.NdtpReports.Create",
-        "FoodSafe.Reporting.NdtpReports.Edit",
-        "FoodSafe.Reporting.NdtpReports.Delete",
-        "FoodSafe.Reporting.NdtpReports.Submit",
-        "FoodSafe.Reporting.NdtpReports.Verify",
-        "FoodSafe.Reporting.NdtpReports.Return",
-        "FoodSafe.Reporting.NdtpReports.Complete",
-      ],
-    });
+  it(
+    "renders NDTP tab with create button for full-permission user",
+    { timeout: 15000 },
+    async () => {
+      mockData();
+      useAuthStore.getState().setAuth({
+        id: "user-1",
+        name: "Test User",
+        email: "test@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["ProvinceStaff"],
+        permissions: [
+          "FoodSafe.Reporting.NdtpReports.View",
+          "FoodSafe.Reporting.NdtpReports.Create",
+          "FoodSafe.Reporting.NdtpReports.Edit",
+          "FoodSafe.Reporting.NdtpReports.Delete",
+          "FoodSafe.Reporting.NdtpReports.Submit",
+          "FoodSafe.Reporting.NdtpReports.Verify",
+          "FoodSafe.Reporting.NdtpReports.Return",
+          "FoodSafe.Reporting.NdtpReports.Complete",
+        ],
+      });
 
-    renderPage();
+      renderPage();
 
-    expect(
-      await screen.findByText(/Tháng 7\/2026/),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Tạo báo cáo/ }),
-    ).toBeInTheDocument();
-  });
+      expect(await screen.findByText(/Tháng 7\/2026/)).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Tạo báo cáo/ }),
+      ).toBeInTheDocument();
+    },
+  );
 
   it("hides mutation controls for read-only user", async () => {
     mockData();
@@ -99,9 +101,7 @@ describe("ReportingPage", () => {
 
     renderPage();
 
-    expect(
-      await screen.findByText(/Tháng 7\/2026/),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/Tháng 7\/2026/)).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Tạo báo cáo/ }),
     ).not.toBeInTheDocument();

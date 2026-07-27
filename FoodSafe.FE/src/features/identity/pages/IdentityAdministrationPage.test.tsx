@@ -67,34 +67,38 @@ function renderPage() {
 describe("IdentityAdministrationPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders user tab with create button for admin", { timeout: 15000 }, async () => {
-    mockApis();
-    useAuthStore.getState().setAuth({
-      id: "admin-1",
-      name: "Admin",
-      email: "admin@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["Admin"],
-      permissions: [
-        "FoodSafe.SystemAdmin.Users",
-        "FoodSafe.SystemAdmin.Users.Create",
-        "FoodSafe.SystemAdmin.Users.Edit",
-        "FoodSafe.SystemAdmin.Roles",
-        "FoodSafe.SystemAdmin.Roles.Create",
-      ],
-    });
+  it(
+    "renders user tab with create button for admin",
+    { timeout: 15000 },
+    async () => {
+      mockApis();
+      useAuthStore.getState().setAuth({
+        id: "admin-1",
+        name: "Admin",
+        email: "admin@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["Admin"],
+        permissions: [
+          "FoodSafe.SystemAdmin.Users",
+          "FoodSafe.SystemAdmin.Users.Create",
+          "FoodSafe.SystemAdmin.Users.Edit",
+          "FoodSafe.SystemAdmin.Roles",
+          "FoodSafe.SystemAdmin.Roles.Create",
+        ],
+      });
 
-    renderPage();
+      renderPage();
 
-    expect(screen.getByText("Tài khoản và quyền")).toBeInTheDocument();
-    expect(
-      await screen.findByText("Nguyễn Admin", {}, { timeout: 10000 }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Tạo tài khoản/ }),
-    ).toBeInTheDocument();
-  });
+      expect(screen.getByText("Tài khoản và quyền")).toBeInTheDocument();
+      expect(
+        await screen.findByText("Nguyễn Admin", {}, { timeout: 10000 }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Tạo tài khoản/ }),
+      ).toBeInTheDocument();
+    },
+  );
 
   it("hides user tab for user without Users permission", async () => {
     mockApis();

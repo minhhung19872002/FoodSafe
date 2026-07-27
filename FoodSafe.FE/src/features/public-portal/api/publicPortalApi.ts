@@ -16,9 +16,7 @@ import type {
 } from "../types/publicPortal.types";
 
 export const publicPortalApi = {
-  searchBusinesses(
-    filter: PagedFilter,
-  ): Promise<PagedResult<PublicBusiness>> {
+  searchBusinesses(filter: PagedFilter): Promise<PagedResult<PublicBusiness>> {
     return api
       .get<PagedResult<PublicBusiness>>("/v1/public/businesses/search", {
         params: filter,

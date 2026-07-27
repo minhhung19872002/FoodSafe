@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  Alert,
-  Empty,
-  Space,
-  Spin,
-  Table,
-  Tag,
-  Typography,
-} from "antd";
+import { Alert, Empty, Space, Spin, Table, Tag, Typography } from "antd";
 import type { TablePaginationConfig } from "antd";
 import { PublicShell } from "../components/PublicShell";
 import { usePublicWarnedBusinesses } from "../api/publicPortalQueries";
@@ -64,13 +56,22 @@ export default function PublicWarnedBusinessesPage() {
             showSizeChanger: false,
           }}
           onChange={handleTableChange}
-          locale={{ emptyText: <Empty description="Không có cơ sở nào đang bị cảnh báo" /> }}
+          locale={{
+            emptyText: (
+              <Empty description="Không có cơ sở nào đang bị cảnh báo" />
+            ),
+          }}
           size="middle"
           expandable={{
             expandedRowRender: (row) => (
-              <Space direction="vertical" style={{ width: "100%", padding: "12px 0" }}>
+              <Space
+                direction="vertical"
+                style={{ width: "100%", padding: "12px 0" }}
+              >
                 <Typography.Text strong>Nội dung cảnh báo:</Typography.Text>
-                <Typography.Paragraph style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                <Typography.Paragraph
+                  style={{ margin: 0, whiteSpace: "pre-wrap" }}
+                >
                   {row.content || "Không có nội dung chi tiết."}
                 </Typography.Paragraph>
               </Space>
@@ -86,7 +87,11 @@ export default function PublicWarnedBusinessesPage() {
           <Table.Column title="Tên cơ sở" dataIndex="businessName" />
           <Table.Column title="Mã cơ sở" dataIndex="businessCode" width={130} />
           <Table.Column title="Địa chỉ" dataIndex="addressText" />
-          <Table.Column title="Số cảnh báo" dataIndex="alertNumber" width={140} />
+          <Table.Column
+            title="Số cảnh báo"
+            dataIndex="alertNumber"
+            width={140}
+          />
           <Table.Column title="Tiêu đề cảnh báo" dataIndex="alertTitle" />
           <Table.Column
             title="Mức độ"
@@ -105,7 +110,9 @@ export default function PublicWarnedBusinessesPage() {
             title="Ngày đăng"
             dataIndex="publishedAt"
             width={120}
-            render={(v: string) => v ? new Date(v).toLocaleDateString("vi-VN") : "—"}
+            render={(v: string) =>
+              v ? new Date(v).toLocaleDateString("vi-VN") : "—"
+            }
           />
         </Table>
       </Spin>

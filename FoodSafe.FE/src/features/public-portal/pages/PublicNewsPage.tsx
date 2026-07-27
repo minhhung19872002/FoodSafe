@@ -109,16 +109,24 @@ function NewsDetailView({ id }: { id: string }) {
           <Typography.Title level={4}>Cảnh báo liên quan</Typography.Title>
           <Space direction="vertical" style={{ width: "100%" }} size="small">
             {data.linkedAlerts.map((alert) => {
-              const severityCfg = ALERT_SEVERITY_CONFIG[alert.severity as AlertSeverity];
-              const categoryCfg = ALERT_CATEGORY_CONFIG[alert.category as AlertCategory];
+              const severityCfg =
+                ALERT_SEVERITY_CONFIG[alert.severity as AlertSeverity];
+              const categoryCfg =
+                ALERT_CATEGORY_CONFIG[alert.category as AlertCategory];
               return (
                 <Card key={alert.id} size="small">
                   <Space>
-                    {severityCfg && <Tag color={severityCfg.color}>{severityCfg.label}</Tag>}
+                    {severityCfg && (
+                      <Tag color={severityCfg.color}>{severityCfg.label}</Tag>
+                    )}
                     {categoryCfg && <Tag>{categoryCfg.label}</Tag>}
-                    <Typography.Text strong>{alert.alertNumber}</Typography.Text>
+                    <Typography.Text strong>
+                      {alert.alertNumber}
+                    </Typography.Text>
                     <Typography.Text>{alert.title}</Typography.Text>
-                    <Typography.Text type="secondary">{formatDate(alert.publishedAt)}</Typography.Text>
+                    <Typography.Text type="secondary">
+                      {formatDate(alert.publishedAt)}
+                    </Typography.Text>
                   </Space>
                 </Card>
               );
@@ -159,7 +167,11 @@ function NewsListTab() {
           onPressEnter={handleSearch}
           allowClear
         />
-        <Input.Search enterButton="Tìm" loading={isFetching} onSearch={handleSearch} />
+        <Input.Search
+          enterButton="Tìm"
+          loading={isFetching}
+          onSearch={handleSearch}
+        />
       </Space.Compact>
 
       {isError && (
@@ -289,7 +301,11 @@ function AlertsTab() {
             rowExpandable: (row) => Boolean(row.content),
           }}
         >
-          <Table.Column title="Số cảnh báo" dataIndex="alertNumber" width={150} />
+          <Table.Column
+            title="Số cảnh báo"
+            dataIndex="alertNumber"
+            width={150}
+          />
           <Table.Column title="Tiêu đề" dataIndex="title" />
           <Table.Column
             title="Danh mục"
@@ -306,7 +322,11 @@ function AlertsTab() {
             width={110}
             render={(sev: AlertSeverity) => {
               const cfg = ALERT_SEVERITY_CONFIG[sev];
-              return cfg ? <Tag color={cfg.color}>{cfg.label}</Tag> : <Tag>{sev}</Tag>;
+              return cfg ? (
+                <Tag color={cfg.color}>{cfg.label}</Tag>
+              ) : (
+                <Tag>{sev}</Tag>
+              );
             }}
           />
           <Table.Column title="Địa bàn" dataIndex="affectedArea" width={160} />
@@ -358,15 +378,23 @@ function RiskAnalysisTab() {
           size="middle"
           expandable={{
             expandedRowRender: (row) => (
-              <Space direction="vertical" style={{ width: "100%", padding: "12px 0" }} size="small">
+              <Space
+                direction="vertical"
+                style={{ width: "100%", padding: "12px 0" }}
+                size="small"
+              >
                 <Typography.Text strong>Nội dung phân tích:</Typography.Text>
-                <Typography.Paragraph style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                <Typography.Paragraph
+                  style={{ margin: 0, whiteSpace: "pre-wrap" }}
+                >
                   {row.content}
                 </Typography.Paragraph>
                 {row.recommendations && (
                   <>
                     <Typography.Text strong>Khuyến nghị:</Typography.Text>
-                    <Typography.Paragraph style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                    <Typography.Paragraph
+                      style={{ margin: 0, whiteSpace: "pre-wrap" }}
+                    >
                       {row.recommendations}
                     </Typography.Paragraph>
                   </>
@@ -384,10 +412,18 @@ function RiskAnalysisTab() {
             width={120}
             render={(lvl: RiskLevel) => {
               const cfg = RISK_LEVEL_CONFIG[lvl];
-              return cfg ? <Tag color={cfg.color}>{cfg.label}</Tag> : <Tag>{lvl}</Tag>;
+              return cfg ? (
+                <Tag color={cfg.color}>{cfg.label}</Tag>
+              ) : (
+                <Tag>{lvl}</Tag>
+              );
             }}
           />
-          <Table.Column title="Sản phẩm liên quan" dataIndex="relatedProducts" width={200} />
+          <Table.Column
+            title="Sản phẩm liên quan"
+            dataIndex="relatedProducts"
+            width={200}
+          />
           <Table.Column
             title="Ngày đăng"
             dataIndex="publishedAt"

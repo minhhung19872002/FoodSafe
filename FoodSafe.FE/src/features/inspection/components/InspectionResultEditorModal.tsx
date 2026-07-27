@@ -70,9 +70,7 @@ export function InspectionResultEditorModal(props: Props) {
           ? dayjs(item.adminDecisionDate)
           : undefined,
         followUpRequired: item.followUpRequired,
-        followUpDate: item.followUpDate
-          ? dayjs(item.followUpDate)
-          : undefined,
+        followUpDate: item.followUpDate ? dayjs(item.followUpDate) : undefined,
         recommendations: item.recommendations,
         notes: item.notes,
       });
@@ -90,11 +88,7 @@ export function InspectionResultEditorModal(props: Props) {
   return (
     <Modal
       open={open}
-      title={
-        item
-          ? "Cập nhật kết quả kiểm tra"
-          : "Ghi nhận kết quả kiểm tra"
-      }
+      title={item ? "Cập nhật kết quả kiểm tra" : "Ghi nhận kết quả kiểm tra"}
       width={860}
       okText="Lưu"
       cancelText="Hủy"
@@ -147,7 +141,9 @@ export function InspectionResultEditorModal(props: Props) {
           />
         </Form.Item>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+        >
           <Form.Item
             name="inspectionDate"
             label="Ngày kiểm tra"
@@ -186,7 +182,9 @@ export function InspectionResultEditorModal(props: Props) {
           <Input.TextArea rows={2} />
         </Form.Item>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+        >
           <Form.Item name="hasViolation" valuePropName="checked">
             <Checkbox>Có vi phạm</Checkbox>
           </Form.Item>
@@ -194,9 +192,7 @@ export function InspectionResultEditorModal(props: Props) {
             <InputNumber
               min={0}
               style={{ width: "100%" }}
-              formatter={(v) =>
-                `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-              }
+              formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
             />
           </Form.Item>
         </div>
@@ -205,7 +201,9 @@ export function InspectionResultEditorModal(props: Props) {
           <Input.TextArea rows={2} />
         </Form.Item>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+        >
           <Form.Item name="adminDecisionNumber" label="Số QĐ xử phạt">
             <Input maxLength={100} />
           </Form.Item>
@@ -214,7 +212,9 @@ export function InspectionResultEditorModal(props: Props) {
           </Form.Item>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+        >
           <Form.Item name="followUpRequired" valuePropName="checked">
             <Checkbox>Yêu cầu tái kiểm tra</Checkbox>
           </Form.Item>

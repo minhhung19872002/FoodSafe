@@ -62,17 +62,13 @@ export function BusinessLocationMap({
             fillColor: STATUS_COLORS[b.status] ?? "#1890ff",
             fillOpacity: 0.7,
           }}
-          eventHandlers={
-            onSelect ? { click: () => onSelect(b) } : undefined
-          }
+          eventHandlers={onSelect ? { click: () => onSelect(b) } : undefined}
         >
           <Popup>
             <div style={{ minWidth: 180 }}>
               <strong>{b.name}</strong>
               {b.code && (
-                <div style={{ fontSize: 12, color: "#888" }}>
-                  {b.code}
-                </div>
+                <div style={{ fontSize: 12, color: "#888" }}>{b.code}</div>
               )}
               {b.addressStreet && <div>{b.addressStreet}</div>}
               {b.contactPhone && <div>SĐT: {b.contactPhone}</div>}
@@ -83,8 +79,7 @@ export function BusinessLocationMap({
                     padding: "1px 6px",
                     borderRadius: 4,
                     fontSize: 12,
-                    background:
-                      STATUS_COLORS[b.status] ?? "#1890ff",
+                    background: STATUS_COLORS[b.status] ?? "#1890ff",
                     color: "#fff",
                   }}
                 >

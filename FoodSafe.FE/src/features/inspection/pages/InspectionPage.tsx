@@ -150,15 +150,13 @@ function PlansTab() {
       title: "Loại",
       dataIndex: "planType",
       width: 120,
-      render: (v: InspectionPlanType) =>
-        INSPECTION_PLAN_TYPE_LABELS[v] ?? v,
+      render: (v: InspectionPlanType) => INSPECTION_PLAN_TYPE_LABELS[v] ?? v,
     },
     { title: "Năm", dataIndex: "year", width: 70 },
     {
       title: "Tiến độ",
       width: 100,
-      render: (_, item) =>
-        `${item.completedItems}/${item.totalItems}`,
+      render: (_, item) => `${item.completedItems}/${item.totalItems}`,
     },
     {
       title: "Trạng thái",
@@ -185,25 +183,23 @@ function PlansTab() {
                   setEditing(item);
                   setEditorOpen(true);
                 }}
-              >Sửa</Button>
+              >
+                Sửa
+              </Button>
               <Popconfirm
                 title="Gửi duyệt kế hoạch này?"
                 okText="Gửi"
                 cancelText="Hủy"
                 onConfirm={() =>
                   submitMutation.mutate(item.id, {
-                    onSuccess: () =>
-                      void message.success("Đã gửi duyệt."),
-                    onError: () =>
-                      void message.error("Không thể gửi duyệt."),
+                    onSuccess: () => void message.success("Đã gửi duyệt."),
+                    onError: () => void message.error("Không thể gửi duyệt."),
                   })
                 }
               >
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<SendOutlined />}
-                >Gửi</Button>
+                <Button size="small" type="text" icon={<SendOutlined />}>
+                  Gửi
+                </Button>
               </Popconfirm>
             </>
           )}
@@ -215,10 +211,8 @@ function PlansTab() {
                 cancelText="Hủy"
                 onConfirm={() =>
                   approveMutation.mutate(item.id, {
-                    onSuccess: () =>
-                      void message.success("Đã phê duyệt."),
-                    onError: () =>
-                      void message.error("Không thể phê duyệt."),
+                    onSuccess: () => void message.success("Đã phê duyệt."),
+                    onError: () => void message.error("Không thể phê duyệt."),
                   })
                 }
               >
@@ -227,7 +221,9 @@ function PlansTab() {
                   type="text"
                   icon={<CheckCircleOutlined />}
                   style={{ color: "#52c41a" }}
-                >Duyệt</Button>
+                >
+                  Duyệt
+                </Button>
               </Popconfirm>
               <Button
                 size="small"
@@ -235,7 +231,9 @@ function PlansTab() {
                 danger
                 icon={<CloseCircleOutlined />}
                 onClick={() => setRejecting(item)}
-              >Từ chối</Button>
+              >
+                Từ chối
+              </Button>
             </>
           )}
           {canEdit &&
@@ -247,21 +245,18 @@ function PlansTab() {
                 cancelText="Hủy"
                 onConfirm={() =>
                   completeMutation.mutate(item.id, {
-                    onSuccess: () =>
-                      void message.success("Đã hoàn thành."),
-                    onError: () =>
-                      void message.error("Không thể hoàn thành."),
+                    onSuccess: () => void message.success("Đã hoàn thành."),
+                    onError: () => void message.error("Không thể hoàn thành."),
                   })
                 }
               >
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<CheckCircleOutlined />}
-                >Hoàn thành</Button>
+                <Button size="small" type="text" icon={<CheckCircleOutlined />}>
+                  Hoàn thành
+                </Button>
               </Popconfirm>
             )}
-          {canEdit && item.status !== INSPECTION_PLAN_STATUS.Completed &&
+          {canEdit &&
+            item.status !== INSPECTION_PLAN_STATUS.Completed &&
             item.status !== INSPECTION_PLAN_STATUS.Cancelled && (
               <Button
                 size="small"
@@ -269,7 +264,9 @@ function PlansTab() {
                 danger
                 icon={<StopOutlined />}
                 onClick={() => setCancelling(item)}
-              >Hủy</Button>
+              >
+                Hủy
+              </Button>
             )}
           {canDelete && item.status === INSPECTION_PLAN_STATUS.Draft && (
             <Popconfirm
@@ -278,19 +275,14 @@ function PlansTab() {
               cancelText="Hủy"
               onConfirm={() =>
                 deleteMutation.mutate(item.id, {
-                  onSuccess: () =>
-                    void message.success("Đã xóa kế hoạch."),
-                  onError: () =>
-                    void message.error("Không thể xóa kế hoạch."),
+                  onSuccess: () => void message.success("Đã xóa kế hoạch."),
+                  onError: () => void message.error("Không thể xóa kế hoạch."),
                 })
               }
             >
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-              >Xóa</Button>
+              <Button size="small" type="text" danger icon={<DeleteOutlined />}>
+                Xóa
+              </Button>
             </Popconfirm>
           )}
         </Space>
@@ -360,8 +352,7 @@ function PlansTab() {
           onClick={() =>
             exportMutation.mutate(queryFilter, {
               onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () =>
-                void message.error("Không thể xuất danh sách."),
+              onError: () => void message.error("Không thể xuất danh sách."),
             })
           }
         >
@@ -415,8 +406,7 @@ function PlansTab() {
                 void message.success("Đã từ chối kế hoạch.");
                 setRejecting(undefined);
               },
-              onError: () =>
-                void message.error("Không thể từ chối."),
+              onError: () => void message.error("Không thể từ chối."),
             },
           );
         }}
@@ -435,8 +425,7 @@ function PlansTab() {
                 void message.success("Đã hủy kế hoạch.");
                 setCancelling(undefined);
               },
-              onError: () =>
-                void message.error("Không thể hủy."),
+              onError: () => void message.error("Không thể hủy."),
             },
           );
         }}
@@ -455,8 +444,7 @@ function ResultsTab() {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("");
   const [inspectionType, setInspectionType] = useState<InspectionType>();
-  const [overallResult, setOverallResult] =
-    useState<InspectionOverallResult>();
+  const [overallResult, setOverallResult] = useState<InspectionOverallResult>();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<InspectionResult>();
 
@@ -507,7 +495,12 @@ function ResultsTab() {
       width: 130,
       render: (v: InspectionType) => INSPECTION_TYPE_LABELS[v] ?? v,
     },
-    { title: "Trưởng đoàn", dataIndex: "teamLeader", width: 160, ellipsis: true },
+    {
+      title: "Trưởng đoàn",
+      dataIndex: "teamLeader",
+      width: 160,
+      ellipsis: true,
+    },
     {
       title: "Kết quả",
       dataIndex: "overallResult",
@@ -528,8 +521,7 @@ function ResultsTab() {
       title: "Phạt (VND)",
       dataIndex: "fineAmount",
       width: 120,
-      render: (v?: number) =>
-        v ? v.toLocaleString("vi-VN") : "—",
+      render: (v?: number) => (v ? v.toLocaleString("vi-VN") : "—"),
     },
     {
       title: "Thao tác",
@@ -546,7 +538,9 @@ function ResultsTab() {
                 setEditing(item);
                 setEditorOpen(true);
               }}
-            >Sửa</Button>
+            >
+              Sửa
+            </Button>
           )}
           {canDelete && !item.followUpRequired && (
             <Popconfirm
@@ -555,19 +549,14 @@ function ResultsTab() {
               cancelText="Hủy"
               onConfirm={() =>
                 deleteMutation.mutate(item.id, {
-                  onSuccess: () =>
-                    void message.success("Đã xóa kết quả."),
-                  onError: () =>
-                    void message.error("Không thể xóa kết quả."),
+                  onSuccess: () => void message.success("Đã xóa kết quả."),
+                  onError: () => void message.error("Không thể xóa kết quả."),
                 })
               }
             >
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-              >Xóa</Button>
+              <Button size="small" type="text" danger icon={<DeleteOutlined />}>
+                Xóa
+              </Button>
             </Popconfirm>
           )}
         </Space>
@@ -627,8 +616,7 @@ function ResultsTab() {
           onClick={() =>
             exportMutation.mutate(queryFilter, {
               onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () =>
-                void message.error("Không thể xuất danh sách."),
+              onError: () => void message.error("Không thể xuất danh sách."),
             })
           }
         >

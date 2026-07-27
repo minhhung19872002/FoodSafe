@@ -7,15 +7,7 @@ import {
   PlusOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import {
-  App,
-  Button,
-  Input,
-  Popconfirm,
-  Select,
-  Space,
-  Table,
-} from "antd";
+import { App, Button, Input, Popconfirm, Select, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ExpiryTag } from "@/components/ExpiryTag";
@@ -227,7 +219,8 @@ export default function ProductRegistrationPage() {
               onClick={() =>
                 exportMutation.mutate(queryFilter, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () => void message.error("Không thể xuất danh sách."),
+                  onError: () =>
+                    void message.error("Không thể xuất danh sách."),
                 })
               }
             >

@@ -21,13 +21,8 @@ export function useCreateCfsCertificate() {
 
 export function useUpdateCfsCertificate() {
   return useMutation({
-    mutationFn: ({
-      id,
-      input,
-    }: {
-      id: string;
-      input: CfsCertificateInput;
-    }) => cfsCertificateApi.update(id, input),
+    mutationFn: ({ id, input }: { id: string; input: CfsCertificateInput }) =>
+      cfsCertificateApi.update(id, input),
     onSuccess: useInvalidate(),
   });
 }

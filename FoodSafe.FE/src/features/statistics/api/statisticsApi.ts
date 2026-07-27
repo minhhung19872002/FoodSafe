@@ -1,5 +1,8 @@
 import { api } from "@/lib/axios";
-import type { StatisticsDto, StatisticsFilter } from "../types/statistics.types";
+import type {
+  StatisticsDto,
+  StatisticsFilter,
+} from "../types/statistics.types";
 
 export const statisticsApi = {
   async get(filter: StatisticsFilter): Promise<StatisticsDto> {

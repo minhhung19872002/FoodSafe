@@ -282,6 +282,7 @@ public static class FoodSafePermissions
             public const string Lock = Default + ".Lock";
             public const string ResetPassword = Default + ".ResetPassword";
             public const string ViewActivity = Default + ".ViewActivity";
+            public const string Delete = Default + ".Delete";
         }
 
         public static class Roles

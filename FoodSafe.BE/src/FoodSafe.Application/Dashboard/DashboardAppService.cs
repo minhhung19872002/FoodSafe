@@ -1,5 +1,6 @@
 using FoodSafe.AlertsAndTesting;
 using FoodSafe.Application.Contracts.Dashboard;
+using System.Collections.Generic;
 using FoodSafe.BusinessManagement;
 using FoodSafe.FoodPoisoning;
 using FoodSafe.Inspection;
@@ -69,42 +70,65 @@ public class DashboardAppService : ApplicationService
         _testingResults = testingResults;
     }
 
-    public async Task<DashboardStatsDto> GetStatsAsync()
+    public async Task<DashboardStatsDto> GetStatsAsync(
+        DashboardStatsFilter? input = null)
     {
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.View, _cancellationTokens.Token);
         var ct = _cancellationTokens.Token;
         var now = _clock.Now;
         var expiry30 = now.AddDays(30);
-        var orgIds = scope.OrganizationIds;
         var global = scope.HasGlobalAccess;
 
+        var orgIds = scope.OrganizationIds;
+        if (input?.OrganizationId.HasValue == true &&
+            (global || orgIds.Contains(input.OrganizationId.Value)))
+        {
+            orgIds = new HashSet<Guid> { input.OrganizationId.Value };
+            global = false;
+        }
+
+        var year = input?.Year;
+
         var businessQ = (await _businesses.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var selfDeclQ = (await _selfDeclarations.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var prodRegQ = (await _productRegistrations.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var eligQ = (await _eligibilityCertificates.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var cfsQ = (await _cfsCertificates.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var exportQ = (await _exportCertificates.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var adRegQ = (await _adRegistrations.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var planQ = (await _inspectionPlans.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var resultQ = (await _inspectionResults.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var caseQ = (await _poisoningCases.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var alertQ = (await _alerts.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var riskQ = (await _riskAnalyses.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var testQ = (await _testingResults.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
 
         var totalBusinesses = await AsyncExecuter.CountAsync(businessQ, ct);
         var activeBusinesses = await AsyncExecuter.CountAsync(

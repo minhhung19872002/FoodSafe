@@ -1,4 +1,16 @@
-import { Col, Row, Card, Spin, Progress, Table, Button, type TableColumnsType } from "antd";
+import { useState } from "react";
+import {
+  Col,
+  Row,
+  Card,
+  Spin,
+  Progress,
+  Select,
+  Space,
+  Table,
+  Button,
+  type TableColumnsType,
+} from "antd";
 import {
   ShopOutlined,
   FileProtectOutlined,
@@ -16,8 +28,28 @@ import {
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
+import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
 import { useDashboardStats } from "../api/dashboardQueries";
-import type { LicenseBreakdownItem } from "../types/dashboard.types";
+import type {
+  DashboardStatsFilter,
+  LicenseBreakdownItem,
+} from "../types/dashboard.types";
+
+const currentYear = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) => currentYear - i).map(
+  (y) => ({ value: y, label: String(y) }),
+);
+
+function flattenOrgTree(
+  items: OrganizationTreeNode[],
+  depth = 0,
+): Array<{ value: string; label: string }> {
+  return items.flatMap((item) => [
+    { value: item.id, label: `${" ".repeat(depth * 2)}${item.name}` },
+    ...flattenOrgTree(item.children, depth + 1),
+  ]);
+}
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -114,7 +146,10 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const navigate = useNavigate();
-  const { data: stats, isLoading } = useDashboardStats();
+  const [statsFilter, setStatsFilter] = useState<DashboardStatsFilter>({});
+  const { data: stats, isLoading } = useDashboardStats(statsFilter);
+  const orgTree = useOrganizationTree();
+  const orgOptions = flattenOrgTree(orgTree.data?.items ?? []);
 
   if (isLoading) {
     return (
@@ -144,11 +179,41 @@ export default function DashboardPage() {
       <PageHeader
         title={`Xin chào, ${user?.name ?? "Người dùng"}`}
         subtitle={user?.organizationName ?? "Phạm vi toàn hệ thống"}
+        actions={
+          <Space wrap>
+            <Select
+              allowClear
+              placeholder="Năm"
+              style={{ width: 100 }}
+              options={YEAR_OPTIONS}
+              onChange={(year) =>
+                setStatsFilter((f) => ({ ...f, year: year ?? undefined }))
+              }
+            />
+            {orgOptions.length > 1 && (
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                placeholder="Đơn vị"
+                style={{ width: 200 }}
+                options={orgOptions}
+                onChange={(organizationId) =>
+                  setStatsFilter((f) => ({
+                    ...f,
+                    organizationId: organizationId ?? undefined,
+                  }))
+                }
+              />
+            )}
+          </Space>
+        }
       />
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {QUICK_ACTIONS.filter(
-          (a) => !("permission" in a && a.permission) || hasPermission(a.permission),
+          (a) =>
+            !("permission" in a && a.permission) || hasPermission(a.permission),
         ).map((action) => (
           <Button
             key={action.key}
@@ -275,7 +340,9 @@ export default function DashboardPage() {
                           ? Math.round((item.count / totalLicenses) * 100)
                           : 0
                       }
-                      strokeColor={BREAKDOWN_COLORS[idx % BREAKDOWN_COLORS.length]}
+                      strokeColor={
+                        BREAKDOWN_COLORS[idx % BREAKDOWN_COLORS.length]
+                      }
                       size="small"
                       style={{ flex: 1, marginBottom: 0 }}
                     />

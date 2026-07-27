@@ -63,8 +63,6 @@ describe("StatisticsPage", () => {
 
     renderPage();
 
-    expect(
-      await screen.findByText("Thống kê tổng hợp"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Thống kê tổng hợp")).toBeInTheDocument();
   });
 });

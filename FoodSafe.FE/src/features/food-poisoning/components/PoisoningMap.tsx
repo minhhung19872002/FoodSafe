@@ -2,7 +2,10 @@ import { useMemo } from "react";
 import { CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
 import { Empty, Tag } from "antd";
 import dayjs from "dayjs";
-import type { FoodPoisoningCase, FoodPoisoningIncident } from "../types/foodPoisoning.types";
+import type {
+  FoodPoisoningCase,
+  FoodPoisoningIncident,
+} from "../types/foodPoisoning.types";
 import {
   POISONING_CASE_STATUS_CONFIG,
   POISONING_INCIDENT_STATUS_CONFIG,
@@ -22,9 +25,7 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
   const mappedCases = useMemo(
     () =>
       cases.filter(
-        (c) =>
-          c.locationLatitude != null &&
-          c.locationLongitude != null,
+        (c) => c.locationLatitude != null && c.locationLongitude != null,
       ),
     [cases],
   );
@@ -32,9 +33,7 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
   const mappedIncidents = useMemo(
     () =>
       incidents.filter(
-        (i) =>
-          i.locationLatitude != null &&
-          i.locationLongitude != null,
+        (i) => i.locationLatitude != null && i.locationLongitude != null,
       ),
     [incidents],
   );
@@ -117,9 +116,7 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
                   <div>
                     Kết quả:{" "}
                     <Tag
-                      color={
-                        TREATMENT_RESULT_CONFIG[c.treatmentResult]?.color
-                      }
+                      color={TREATMENT_RESULT_CONFIG[c.treatmentResult]?.color}
                     >
                       {TREATMENT_RESULT_CONFIG[c.treatmentResult]?.label}
                     </Tag>

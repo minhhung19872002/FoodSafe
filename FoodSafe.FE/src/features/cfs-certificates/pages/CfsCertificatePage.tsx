@@ -7,15 +7,7 @@ import {
   PlusOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import {
-  App,
-  Button,
-  Input,
-  Popconfirm,
-  Select,
-  Space,
-  Table,
-} from "antd";
+import { App, Button, Input, Popconfirm, Select, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import {
@@ -55,18 +47,13 @@ const PAGE_SIZE = 20;
 export default function CfsCertificatePage() {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const canCreate = hasPermission(
-    "FoodSafe.Licensing.CfsCertificates.Create",
-  );
+  const canCreate = hasPermission("FoodSafe.Licensing.CfsCertificates.Create");
   const canEdit = hasPermission("FoodSafe.Licensing.CfsCertificates.Edit");
-  const canDelete = hasPermission(
-    "FoodSafe.Licensing.CfsCertificates.Delete",
-  );
+  const canDelete = hasPermission("FoodSafe.Licensing.CfsCertificates.Delete");
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("");
   const [businessId, setBusinessId] = useState<string>();
-  const [destinationCountryId, setDestinationCountryId] =
-    useState<string>();
+  const [destinationCountryId, setDestinationCountryId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
   const [expiringWithinDays, setExpiringWithinDays] = useState<number>();
   const [editorOpen, setEditorOpen] = useState(false);
@@ -204,8 +191,10 @@ export default function CfsCertificatePage() {
               cancelText="Hủy"
               onConfirm={() =>
                 deleteMutation.mutate(item.id, {
-                  onSuccess: () => void message.success("Đã xóa chứng nhận CFS."),
-                  onError: () => void message.error("Không thể xóa chứng nhận CFS."),
+                  onSuccess: () =>
+                    void message.success("Đã xóa chứng nhận CFS."),
+                  onError: () =>
+                    void message.error("Không thể xóa chứng nhận CFS."),
                 })
               }
             >
@@ -236,7 +225,8 @@ export default function CfsCertificatePage() {
               onClick={() =>
                 exportMutation.mutate(queryFilter, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () => void message.error("Không thể xuất danh sách."),
+                  onError: () =>
+                    void message.error("Không thể xuất danh sách."),
                 })
               }
             >
@@ -421,7 +411,8 @@ export default function CfsCertificatePage() {
                 void message.success("Đã thu hồi chứng nhận CFS.");
                 setRevoking(undefined);
               },
-              onError: () => void message.error("Không thể thu hồi chứng nhận CFS."),
+              onError: () =>
+                void message.error("Không thể thu hồi chứng nhận CFS."),
             },
           );
         }}

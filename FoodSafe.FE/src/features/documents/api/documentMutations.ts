@@ -14,8 +14,7 @@ function useRefresh() {
 export function useCreateDocument() {
   const refresh = useRefresh();
   return useMutation({
-    mutationFn: (input: CreateUpdateDocumentInput) =>
-      documentApi.create(input),
+    mutationFn: (input: CreateUpdateDocumentInput) => documentApi.create(input),
     onSuccess: refresh,
   });
 }

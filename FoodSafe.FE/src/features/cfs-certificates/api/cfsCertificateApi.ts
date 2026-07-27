@@ -70,10 +70,7 @@ export const cfsCertificateApi = {
     id: string,
     input: CfsCertificateInput,
   ): Promise<CfsCertificate> {
-    const response = await api.put<CfsCertificate>(
-      `${endpoint}/${id}`,
-      input,
-    );
+    const response = await api.put<CfsCertificate>(`${endpoint}/${id}`, input);
     return response.data;
   },
 

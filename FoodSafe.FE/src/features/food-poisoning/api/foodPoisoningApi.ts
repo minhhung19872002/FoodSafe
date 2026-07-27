@@ -19,8 +19,7 @@ const incidentEndpoint = "/v1/app/food-poisoning-incident";
 const incidentExcelEndpoint = `${incidentEndpoint}/excel`;
 
 function download(data: Blob, contentDisposition?: string): FileDownload {
-  const encoded =
-    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const encoded = contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
   const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
   return {
     blob: data,
@@ -29,9 +28,7 @@ function download(data: Blob, contentDisposition?: string): FileDownload {
 }
 
 export const poisoningCaseApi = {
-  async list(
-    filter: CaseFilter,
-  ): Promise<PagedResult<FoodPoisoningCase>> {
+  async list(filter: CaseFilter): Promise<PagedResult<FoodPoisoningCase>> {
     return (
       await api.get<PagedResult<FoodPoisoningCase>>(caseEndpoint, {
         params: filter,
@@ -55,14 +52,12 @@ export const poisoningCaseApi = {
     await api.delete(`${caseEndpoint}/${id}`);
   },
   async submit(id: string): Promise<FoodPoisoningCase> {
-    return (
-      await api.post<FoodPoisoningCase>(`${caseEndpoint}/${id}/submit`)
-    ).data;
+    return (await api.post<FoodPoisoningCase>(`${caseEndpoint}/${id}/submit`))
+      .data;
   },
   async verify(id: string): Promise<FoodPoisoningCase> {
-    return (
-      await api.post<FoodPoisoningCase>(`${caseEndpoint}/${id}/verify`)
-    ).data;
+    return (await api.post<FoodPoisoningCase>(`${caseEndpoint}/${id}/verify`))
+      .data;
   },
   async getErrorReports(id: string): Promise<PoisoningErrorReport[]> {
     return (
@@ -97,26 +92,21 @@ export const poisoningIncidentApi = {
     ).data;
   },
   async get(id: string): Promise<FoodPoisoningIncident> {
-    return (
-      await api.get<FoodPoisoningIncident>(`${incidentEndpoint}/${id}`)
-    ).data;
+    return (await api.get<FoodPoisoningIncident>(`${incidentEndpoint}/${id}`))
+      .data;
   },
   async create(
     input: CreateUpdateIncidentInput,
   ): Promise<FoodPoisoningIncident> {
-    return (
-      await api.post<FoodPoisoningIncident>(incidentEndpoint, input)
-    ).data;
+    return (await api.post<FoodPoisoningIncident>(incidentEndpoint, input))
+      .data;
   },
   async update(
     id: string,
     input: CreateUpdateIncidentInput,
   ): Promise<FoodPoisoningIncident> {
     return (
-      await api.put<FoodPoisoningIncident>(
-        `${incidentEndpoint}/${id}`,
-        input,
-      )
+      await api.put<FoodPoisoningIncident>(`${incidentEndpoint}/${id}`, input)
     ).data;
   },
   async delete(id: string): Promise<void> {
@@ -124,16 +114,12 @@ export const poisoningIncidentApi = {
   },
   async submit(id: string): Promise<FoodPoisoningIncident> {
     return (
-      await api.post<FoodPoisoningIncident>(
-        `${incidentEndpoint}/${id}/submit`,
-      )
+      await api.post<FoodPoisoningIncident>(`${incidentEndpoint}/${id}/submit`)
     ).data;
   },
   async verify(id: string): Promise<FoodPoisoningIncident> {
     return (
-      await api.post<FoodPoisoningIncident>(
-        `${incidentEndpoint}/${id}/verify`,
-      )
+      await api.post<FoodPoisoningIncident>(`${incidentEndpoint}/${id}/verify`)
     ).data;
   },
   async conclude(
@@ -161,10 +147,10 @@ export const poisoningIncidentApi = {
     await api.post(`${incidentEndpoint}/${id}/error-report`, input);
   },
   async exportExcel(filter: IncidentFilter): Promise<FileDownload> {
-    const response = await api.get<Blob>(
-      `${incidentExcelEndpoint}/export`,
-      { params: filter, responseType: "blob" },
-    );
+    const response = await api.get<Blob>(`${incidentExcelEndpoint}/export`, {
+      params: filter,
+      responseType: "blob",
+    });
     return download(response.data, response.headers["content-disposition"]);
   },
 };

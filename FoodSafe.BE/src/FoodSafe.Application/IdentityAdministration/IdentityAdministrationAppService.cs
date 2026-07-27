@@ -321,6 +321,36 @@ public class IdentityAdministrationAppService :
         await SendPasswordResetEmailAsync(existing.User.Email);
     }
 
+    [Authorize(FoodSafePermissions.SystemAdministration.Users.Delete)]
+    public async Task DeleteUserAsync(Guid id)
+    {
+        IdentityAdministrationRules.EnsureNotSelf(CurrentUser.GetId(), id);
+        var existing = await GetScopedUserAsync(id, DataScopeOperation.Edit);
+        var roles = (await _identityUsers.GetRoleNamesAsync(id, Token)).ToArray();
+        IdentityAdministrationRules.EnsureAdministratorRemains(
+            roles,
+            [],
+            await GetAdministratorCountAsync());
+
+        var scopeQuery = await _scopeAssignments.GetQueryableAsync();
+        var assignments = await AsyncExecuter.ToListAsync(
+            scopeQuery.Where(a => a.GranteeUserId == id),
+            Token);
+        if (assignments.Count > 0)
+        {
+            await _scopeAssignments.DeleteManyAsync(assignments, cancellationToken: Token);
+        }
+
+        var profile = await _profiles.FindAsync(p => p.UserId == id, cancellationToken: Token);
+        if (profile is not null)
+        {
+            await _profiles.DeleteAsync(profile, cancellationToken: Token);
+        }
+
+        (await _userManager.DeleteAsync(existing.User)).CheckErrors();
+        await CurrentUnitOfWork!.SaveChangesAsync(Token);
+    }
+
     [Authorize(FoodSafePermissions.SystemAdministration.Users.ViewActivity)]
     public async Task<PagedResultDto<UserActivityDto>> GetUserActivityAsync(
         Guid id,

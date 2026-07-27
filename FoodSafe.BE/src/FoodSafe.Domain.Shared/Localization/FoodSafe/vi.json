@@ -89,6 +89,7 @@
     "Permission:SystemAdmin.Users.Lock": "Khóa hoặc mở khóa tài khoản",
     "Permission:SystemAdmin.Users.ResetPassword": "Gửi liên kết thiết lập/đặt lại mật khẩu",
     "Permission:SystemAdmin.Users.ViewActivity": "Xem lịch sử hoạt động người dùng",
+    "Permission:SystemAdmin.Users.Delete": "Xóa tài khoản người dùng",
     "Permission:SystemAdmin.Roles": "Xem vai trò",
     "Permission:SystemAdmin.Roles.Create": "Tạo vai trò",
     "Permission:SystemAdmin.Roles.Edit": "Chỉnh sửa vai trò",

@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Alert, Button, Empty, Input, Space, Spin, Table, Tabs, Typography } from "antd";
+import {
+  Alert,
+  Button,
+  Empty,
+  Input,
+  Space,
+  Spin,
+  Table,
+  Tabs,
+  Typography,
+} from "antd";
 import { FilePdfOutlined } from "@ant-design/icons";
 import type { TablePaginationConfig } from "antd";
 import { PublicShell } from "../components/PublicShell";
@@ -11,7 +21,10 @@ import {
   usePublicProductRegistrations,
   usePublicSelfDeclarations,
 } from "../api/publicPortalQueries";
-import type { PagedFilter, PublicCertificate } from "../types/publicPortal.types";
+import type {
+  PagedFilter,
+  PublicCertificate,
+} from "../types/publicPortal.types";
 
 const PAGE_SIZE = 20;
 
@@ -26,7 +39,12 @@ interface CertSearchPanelProps {
   pdfPath?: string;
 }
 
-function CertSearchPanel({ useHook, placeholder, totalLabel, pdfPath }: CertSearchPanelProps) {
+function CertSearchPanel({
+  useHook,
+  placeholder,
+  totalLabel,
+  pdfPath,
+}: CertSearchPanelProps) {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
   const [page, setPage] = useState(1);
@@ -98,13 +116,21 @@ function CertSearchPanel({ useHook, placeholder, totalLabel, pdfPath }: CertSear
           <Table.Column title="Cơ sở" dataIndex="businessName" />
           <Table.Column title="Sản phẩm / Nội dung" dataIndex="productName" />
           <Table.Column title="Ngày cấp" dataIndex="issueDate" width={120} />
-          <Table.Column title="Ngày hết hạn" dataIndex="expiryDate" width={120} />
+          <Table.Column
+            title="Ngày hết hạn"
+            dataIndex="expiryDate"
+            width={120}
+          />
           <Table.Column
             title="Cơ quan cấp"
             dataIndex="certifyingAuthority"
             width={180}
           />
-          <Table.Column title="Trạng thái" dataIndex="statusLabel" width={120} />
+          <Table.Column
+            title="Trạng thái"
+            dataIndex="statusLabel"
+            width={120}
+          />
           {pdfPath && (
             <Table.Column<PublicCertificate>
               title=""

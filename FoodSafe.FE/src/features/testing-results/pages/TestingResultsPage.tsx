@@ -130,18 +130,16 @@ export default function TestingResultsPage() {
       width: 100,
       render: (_, record) => (
         <Space size="small">
-          {hasPermission(
-            "FoodSafe.AlertsAndTesting.TestingResults.Edit",
-          ) && (
+          {hasPermission("FoodSafe.AlertsAndTesting.TestingResults.Edit") && (
             <Button
               size="small"
               icon={<EditOutlined />}
               onClick={() => openEdit(record)}
-            >Sửa</Button>
+            >
+              Sửa
+            </Button>
           )}
-          {hasPermission(
-            "FoodSafe.AlertsAndTesting.TestingResults.Delete",
-          ) && (
+          {hasPermission("FoodSafe.AlertsAndTesting.TestingResults.Delete") && (
             <Popconfirm
               title="Xóa kết quả kiểm nghiệm?"
               okText="Xóa"
@@ -153,7 +151,9 @@ export default function TestingResultsPage() {
                 })
               }
             >
-              <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
+              <Button size="small" danger icon={<DeleteOutlined />}>
+                Xóa
+              </Button>
             </Popconfirm>
           )}
         </Space>
@@ -200,9 +200,7 @@ export default function TestingResultsPage() {
         >
           Xuất Excel
         </Button>
-        {hasPermission(
-          "FoodSafe.AlertsAndTesting.TestingResults.Create",
-        ) && (
+        {hasPermission("FoodSafe.AlertsAndTesting.TestingResults.Create") && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Nhập kết quả
           </Button>
@@ -342,9 +340,10 @@ export default function TestingResultsPage() {
           >
             <Select
               style={{ width: 200 }}
-              options={Object.entries(TESTING_OUTCOME_CONFIG).map(
-                ([k, v]) => ({ value: Number(k), label: v.label }),
-              )}
+              options={Object.entries(TESTING_OUTCOME_CONFIG).map(([k, v]) => ({
+                value: Number(k),
+                label: v.label,
+              }))}
             />
           </Form.Item>
           <Form.Item name="failedCriteria" label="Chỉ tiêu không đạt">
@@ -353,11 +352,7 @@ export default function TestingResultsPage() {
           <Form.Item name="certificateNumber" label="Số phiếu kiểm nghiệm">
             <Input />
           </Form.Item>
-          <Form.Item
-            name="isPublic"
-            label="Công khai"
-            valuePropName="checked"
-          >
+          <Form.Item name="isPublic" label="Công khai" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>

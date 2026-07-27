@@ -15,8 +15,6 @@ describe("PublicBusinessLookupPage", () => {
     expect(
       screen.getByPlaceholderText("Tên cơ sở hoặc mã số"),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Tra cứu/ }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Tra cứu/ })).toBeInTheDocument();
   });
 });

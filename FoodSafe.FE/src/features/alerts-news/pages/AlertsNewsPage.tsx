@@ -405,7 +405,10 @@ function NewsTab() {
       dataIndex: "viewCount",
       width: 90,
       render: (v: number) => (
-        <span><EyeOutlined style={{ marginRight: 4 }} />{v}</span>
+        <span>
+          <EyeOutlined style={{ marginRight: 4 }} />
+          {v}
+        </span>
       ),
     },
     {

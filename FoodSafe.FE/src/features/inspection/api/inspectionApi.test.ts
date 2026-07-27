@@ -35,9 +35,7 @@ describe("inspectionApi", () => {
 
     const result = await inspectionPlanApi.businessOptions();
 
-    expect(requestedPath).toBe(
-      "/api/v1/app/inspection-plan/business-options",
-    );
+    expect(requestedPath).toBe("/api/v1/app/inspection-plan/business-options");
     expect(result).toEqual([
       { id: "business-1", code: "CS-01", name: "Cơ sở 01" },
     ]);

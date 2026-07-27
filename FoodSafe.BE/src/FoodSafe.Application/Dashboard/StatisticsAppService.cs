@@ -215,14 +215,18 @@ public class StatisticsAppService : ApplicationService
         dto.InspectionsByMonth = Enumerable.Range(1, 12)
             .Select(m => new MonthlyCount
             {
-                Year = year, Month = m, Label = monthNames[m],
+                Year = year,
+                Month = m,
+                Label = monthNames[m],
                 Count = monthly.FirstOrDefault(x => x.Month == m)?.Count ?? 0,
             }).ToList();
 
         dto.ViolationsByMonth = Enumerable.Range(1, 12)
             .Select(m => new MonthlyCount
             {
-                Year = year, Month = m, Label = monthNames[m],
+                Year = year,
+                Month = m,
+                Label = monthNames[m],
                 Count = violations.FirstOrDefault(x => x.Month == m)?.Count ?? 0,
             }).ToList();
 
@@ -251,7 +255,9 @@ public class StatisticsAppService : ApplicationService
         dto.PoisoningCasesByMonth = Enumerable.Range(1, 12)
             .Select(m => new MonthlyCount
             {
-                Year = year, Month = m, Label = monthNames[m],
+                Year = year,
+                Month = m,
+                Label = monthNames[m],
                 Count = monthly.FirstOrDefault(x => x.Month == m)?.Count ?? 0,
             }).ToList();
     }

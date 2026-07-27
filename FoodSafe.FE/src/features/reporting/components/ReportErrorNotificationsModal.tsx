@@ -137,9 +137,7 @@ export default function ReportErrorNotificationsModal({
         <List<ReportErrorNotification>
           dataSource={data ?? []}
           locale={{
-            emptyText: (
-              <Empty description="Chưa có báo cáo sai sót nào." />
-            ),
+            emptyText: <Empty description="Chưa có báo cáo sai sót nào." />,
           }}
           renderItem={(item) => {
             const statusCfg =

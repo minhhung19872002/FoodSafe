@@ -1,18 +1,29 @@
 import { useState } from "react";
 import {
-  Table,
-  Tag,
+  Button,
+  Descriptions,
+  Drawer,
   Input,
+  message,
   Select,
-  DatePicker,
   Space,
   Switch,
+  Table,
+  Tag,
   Tooltip,
+  Typography,
+  DatePicker,
 } from "antd";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
+import { ExportOutlined, EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { PageHeader } from "@/components/PageHeader";
-import { useAuditLogs } from "../api/auditLogQueries";
+import { saveDownload } from "@/utils/download";
+import {
+  useAuditLogs,
+  useAuditLogDetail,
+  useExportAuditLogs,
+} from "../api/auditLogQueries";
 import type { AuditLog, AuditLogFilter } from "../types/auditLog.types";
 
 const { RangePicker } = DatePicker;
@@ -37,8 +48,12 @@ export default function AuditLogPage() {
     skipCount: 0,
     maxResultCount: 20,
   });
+  const [detailId, setDetailId] = useState<string>();
 
   const { data, isLoading } = useAuditLogs(filter);
+  const { data: detail, isLoading: detailLoading } =
+    useAuditLogDetail(detailId);
+  const exportMut = useExportAuditLogs();
 
   const columns: ColumnsType<AuditLog> = [
     {
@@ -77,8 +92,7 @@ export default function AuditLogPage() {
       dataIndex: "httpStatusCode",
       width: 110,
       align: "center",
-      render: (v?: number) =>
-        v ? <Tag color={statusColor(v)}>{v}</Tag> : "—",
+      render: (v?: number) => (v ? <Tag color={statusColor(v)}>{v}</Tag> : "—"),
     },
     {
       title: "Thời gian (ms)",
@@ -106,8 +120,19 @@ export default function AuditLogPage() {
       dataIndex: "hasException",
       width: 60,
       align: "center",
-      render: (v: boolean) =>
-        v ? <Tag color="error">Có</Tag> : null,
+      render: (v: boolean) => (v ? <Tag color="error">Có</Tag> : null),
+    },
+    {
+      title: "",
+      key: "detail",
+      width: 50,
+      render: (_, record) => (
+        <Button
+          size="small"
+          icon={<EyeOutlined />}
+          onClick={() => setDetailId(record.id)}
+        />
+      ),
     },
   ];
 
@@ -121,7 +146,23 @@ export default function AuditLogPage() {
 
   return (
     <div>
-      <PageHeader title="Nhật ký hoạt động" />
+      <PageHeader
+        title="Nhật ký hoạt động"
+        actions={
+          <Button
+            icon={<ExportOutlined />}
+            loading={exportMut.isPending}
+            onClick={() =>
+              exportMut.mutate(filter, {
+                onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                onError: () => void message.error("Không thể xuất nhật ký."),
+              })
+            }
+          >
+            Xuất Excel
+          </Button>
+        }
+      />
 
       <Space wrap style={{ marginBottom: 16 }}>
         <Input.Search
@@ -181,17 +222,185 @@ export default function AuditLogPage() {
         dataSource={data?.items}
         loading={isLoading}
         size="small"
-        scroll={{ x: 1100 }}
+        scroll={{ x: 1150 }}
         onChange={handleTableChange}
         pagination={{
           total: data?.totalCount ?? 0,
-          current:
-            Math.floor(filter.skipCount / filter.maxResultCount) + 1,
+          current: Math.floor(filter.skipCount / filter.maxResultCount) + 1,
           pageSize: filter.maxResultCount,
           showSizeChanger: true,
           showTotal: (total) => `Tổng: ${total} bản ghi`,
         }}
       />
+
+      <Drawer
+        title="Chi tiết nhật ký"
+        open={Boolean(detailId)}
+        onClose={() => setDetailId(undefined)}
+        width={720}
+        loading={detailLoading}
+      >
+        {detail && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <Descriptions column={2} size="small" bordered>
+              <Descriptions.Item label="Thời gian">
+                {dayjs(detail.executionTime).format("DD/MM/YYYY HH:mm:ss")}
+              </Descriptions.Item>
+              <Descriptions.Item label="Người dùng">
+                {detail.userName ?? "—"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Phương thức">
+                {detail.httpMethod ? (
+                  <Tag
+                    color={HTTP_METHOD_COLORS[detail.httpMethod] ?? "default"}
+                  >
+                    {detail.httpMethod}
+                  </Tag>
+                ) : (
+                  "—"
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="Trạng thái HTTP">
+                {detail.httpStatusCode ? (
+                  <Tag color={statusColor(detail.httpStatusCode)}>
+                    {detail.httpStatusCode}
+                  </Tag>
+                ) : (
+                  "—"
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="URL" span={2}>
+                <Typography.Text
+                  code
+                  style={{ fontSize: 12, wordBreak: "break-all" }}
+                >
+                  {detail.url ?? "—"}
+                </Typography.Text>
+              </Descriptions.Item>
+              <Descriptions.Item label="Thời gian xử lý">
+                {detail.executionDuration.toLocaleString("vi-VN")} ms
+              </Descriptions.Item>
+              <Descriptions.Item label="Địa chỉ IP">
+                {detail.clientIpAddress ?? "—"}
+              </Descriptions.Item>
+              {detail.correlationId && (
+                <Descriptions.Item label="Correlation ID" span={2}>
+                  <Typography.Text code style={{ fontSize: 11 }}>
+                    {detail.correlationId}
+                  </Typography.Text>
+                </Descriptions.Item>
+              )}
+            </Descriptions>
+
+            {detail.exceptions && (
+              <div>
+                <Typography.Text strong style={{ color: "#CF1322" }}>
+                  Thông tin lỗi
+                </Typography.Text>
+                <pre
+                  style={{
+                    marginTop: 4,
+                    padding: 8,
+                    background: "#fff2f0",
+                    border: "1px solid #ffccc7",
+                    borderRadius: 4,
+                    maxHeight: 200,
+                    overflow: "auto",
+                    fontSize: 12,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-all",
+                  }}
+                >
+                  {detail.exceptions}
+                </pre>
+              </div>
+            )}
+
+            {detail.actions.length > 0 && (
+              <div>
+                <Typography.Text strong>Các thao tác</Typography.Text>
+                <Table
+                  size="small"
+                  style={{ marginTop: 4 }}
+                  dataSource={detail.actions}
+                  rowKey={(r, i) => `${r.methodName}-${i}`}
+                  pagination={false}
+                  columns={[
+                    {
+                      title: "Service",
+                      dataIndex: "serviceName",
+                      ellipsis: true,
+                    },
+                    {
+                      title: "Method",
+                      dataIndex: "methodName",
+                      ellipsis: true,
+                    },
+                    {
+                      title: "ms",
+                      dataIndex: "executionDuration",
+                      width: 70,
+                      align: "right",
+                    },
+                  ]}
+                />
+              </div>
+            )}
+
+            {detail.entityChanges.length > 0 && (
+              <div>
+                <Typography.Text strong>Thay đổi dữ liệu</Typography.Text>
+                {detail.entityChanges.map((ec, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      marginTop: 8,
+                      padding: 8,
+                      border: "1px solid #d9d9d9",
+                      borderRadius: 4,
+                    }}
+                  >
+                    <div style={{ marginBottom: 4, fontSize: 12 }}>
+                      <Tag color="blue">{ec.changeType}</Tag>
+                      <Typography.Text code style={{ fontSize: 11 }}>
+                        {ec.entityTypeFullName.split(".").pop()}
+                        {ec.entityId ? ` #${ec.entityId.slice(0, 8)}` : ""}
+                      </Typography.Text>
+                    </div>
+                    {ec.propertyChanges.length > 0 && (
+                      <Table
+                        size="small"
+                        dataSource={ec.propertyChanges}
+                        rowKey="propertyName"
+                        pagination={false}
+                        columns={[
+                          {
+                            title: "Thuộc tính",
+                            dataIndex: "propertyName",
+                            width: 160,
+                          },
+                          {
+                            title: "Giá trị cũ",
+                            dataIndex: "originalValue",
+                            render: (v?: string) => v ?? <em>—</em>,
+                            ellipsis: true,
+                          },
+                          {
+                            title: "Giá trị mới",
+                            dataIndex: "newValue",
+                            render: (v?: string) => v ?? <em>—</em>,
+                            ellipsis: true,
+                          },
+                        ]}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 }

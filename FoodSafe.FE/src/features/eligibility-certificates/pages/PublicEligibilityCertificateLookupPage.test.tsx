@@ -12,8 +12,6 @@ describe("PublicEligibilityCertificateLookupPage", () => {
     expect(
       screen.getByPlaceholderText("Số giấy chứng nhận"),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Tra cứu/ }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Tra cứu/ })).toBeInTheDocument();
   });
 });

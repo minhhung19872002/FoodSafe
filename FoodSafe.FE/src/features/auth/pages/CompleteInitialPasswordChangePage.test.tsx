@@ -57,21 +57,25 @@ describe("CompleteInitialPasswordChangePage", () => {
     delete window.turnstile;
   });
 
-  it("renders initial password change form with prefilled username", { timeout: 15000 }, async () => {
-    renderPage();
+  it(
+    "renders initial password change form with prefilled username",
+    { timeout: 15000 },
+    async () => {
+      renderPage();
 
-    expect(
-      await screen.findByText("Thiết lập mật khẩu mới"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Tài khoản này phải đổi mật khẩu trước lần đăng nhập đầu tiên.",
-      ),
-    ).toBeInTheDocument();
-    const usernameInput = screen.getByDisplayValue("testuser");
-    expect(usernameInput).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Đổi mật khẩu/ }),
-    ).toBeInTheDocument();
-  });
+      expect(
+        await screen.findByText("Thiết lập mật khẩu mới"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Tài khoản này phải đổi mật khẩu trước lần đăng nhập đầu tiên.",
+        ),
+      ).toBeInTheDocument();
+      const usernameInput = screen.getByDisplayValue("testuser");
+      expect(usernameInput).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Đổi mật khẩu/ }),
+      ).toBeInTheDocument();
+    },
+  );
 });

@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  Button,
-  Card,
-  Descriptions,
-  Input,
-  Space,
-  Typography,
-} from "antd";
+import { Button, Card, Descriptions, Input, Space, Typography } from "antd";
 import { StatusBadge } from "@/components/StatusBadge";
 import { exportFoodCertificateApi } from "../api/exportFoodCertificateApi";
 import type { PublicExportFoodCertificate } from "../types/exportFoodCertificate.types";
@@ -23,22 +16,15 @@ export default function PublicExportFoodCertificateLookupPage() {
     setError("");
     setResult(undefined);
     try {
-      setResult(
-        await exportFoodCertificateApi.publicLookup(number.trim()),
-      );
+      setResult(await exportFoodCertificateApi.publicLookup(number.trim()));
     } catch {
-      setError(
-        "Không tìm thấy giấy chứng nhận xuất khẩu thực phẩm.",
-      );
+      setError("Không tìm thấy giấy chứng nhận xuất khẩu thực phẩm.");
     } finally {
       setLoading(false);
     }
   };
 
-  const formatQuantity = (
-    quantity?: number,
-    unit?: string,
-  ): string => {
+  const formatQuantity = (quantity?: number, unit?: string): string => {
     if (quantity == null) return "—";
     return unit
       ? `${quantity.toLocaleString("vi-VN")} ${unit}`

@@ -46,6 +46,25 @@ export const identityApi = {
   sendPasswordReset: (id: string): Promise<void> =>
     api.post(`${endpoint}/users/${id}/password-reset`).then(() => undefined),
 
+  deleteUser: (id: string): Promise<void> =>
+    api.delete(`${endpoint}/users/${id}`).then(() => undefined),
+
+  exportUsers: async (
+    filter: UserFilter,
+  ): Promise<{ blob: Blob; fileName: string }> => {
+    const response = await api.get(`${endpoint}/users/excel`, {
+      params: filter,
+      responseType: "blob",
+    });
+    const disposition = response.headers["content-disposition"] as
+      string | undefined;
+    const match = disposition?.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    const fileName = match
+      ? match[1].replace(/['"]/g, "")
+      : "danh-sach-tai-khoan.xlsx";
+    return { blob: response.data as Blob, fileName };
+  },
+
   getUserActivity: (
     id: string,
     skipCount = 0,
