@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Security.Encryption;
 using Volo.Abp.Threading;
 
 namespace FoodSafe.DataIntegration;
@@ -32,17 +33,20 @@ public class DataSharingAppService :
     private readonly IRepository<ApiCallLog, Guid> _logs;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
+    private readonly IStringEncryptionService _encryption;
 
     public DataSharingAppService(
         IRepository<ApiEndpoint, Guid> endpoints,
         IRepository<ApiCallLog, Guid> logs,
         ICurrentDataScopeProvider dataScopeProvider,
-        ICancellationTokenProvider cancellationTokens)
+        ICancellationTokenProvider cancellationTokens,
+        IStringEncryptionService encryption)
     {
         _endpoints = endpoints;
         _logs = logs;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
+        _encryption = encryption;
     }
 
     public async Task<ShareDataResultDto> ShareAsync(ShareDataInput input)
@@ -90,6 +94,7 @@ public class DataSharingAppService :
                 Content = new StringContent(
                     payload, Encoding.UTF8, "application/json")
             };
+            ApplyAuthHeader(request, endpoint);
             using var response = await SharedClient.SendAsync(request, ct);
             statusCode = (int)response.StatusCode;
             responseBody = Truncate(
@@ -131,6 +136,39 @@ public class DataSharingAppService :
             StatusCode = statusCode,
             ErrorMessage = errorMessage
         };
+    }
+
+    /// <summary>
+    /// Injects the endpoint's outbound-auth header onto the outgoing request,
+    /// decrypting the credential stored at rest just before send. The secret
+    /// only ever lives on the in-flight <see cref="HttpRequestMessage"/>; it is
+    /// never persisted to the call log (which records the request body, not the
+    /// auth header).
+    /// </summary>
+    private void ApplyAuthHeader(HttpRequestMessage request, ApiEndpoint endpoint)
+    {
+        if (!endpoint.HasCredential || endpoint.AuthType == ApiAuthType.None)
+            return;
+
+        var credential = _encryption.Decrypt(endpoint.EncryptedCredential);
+        if (string.IsNullOrEmpty(credential))
+            return;
+
+        switch (endpoint.AuthType)
+        {
+            case ApiAuthType.ApiKey:
+                request.Headers.TryAddWithoutValidation("X-Api-Key", credential);
+                break;
+            case ApiAuthType.BearerToken:
+                request.Headers.TryAddWithoutValidation(
+                    "Authorization", $"Bearer {credential}");
+                break;
+            case ApiAuthType.BasicAuth:
+                var basic = Convert.ToBase64String(Encoding.UTF8.GetBytes(credential));
+                request.Headers.TryAddWithoutValidation(
+                    "Authorization", $"Basic {basic}");
+                break;
+        }
     }
 
     private static string? Truncate(string? value, int maximumLength) =>

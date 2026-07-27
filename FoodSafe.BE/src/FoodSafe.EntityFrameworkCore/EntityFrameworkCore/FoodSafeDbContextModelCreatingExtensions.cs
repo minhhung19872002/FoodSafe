@@ -2391,6 +2391,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.Description).HasColumnName("description").HasMaxLength(1024);
             entity.Property(x => x.AuthType).HasColumnName("auth_type").IsRequired();
             entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.EncryptedCredential).HasColumnName("credential_value");
 
             entity.Property(x => x.CreationTime).HasColumnName("creation_time");
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");

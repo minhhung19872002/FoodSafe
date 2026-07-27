@@ -5,6 +5,7 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Security.Encryption;
 using Volo.Abp.Threading;
 
 namespace FoodSafe.DataIntegration;
@@ -16,17 +17,20 @@ public class ApiEndpointAppService : ApplicationService
     private readonly IRepository<ApiCallLog, Guid> _callLogs;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
+    private readonly IStringEncryptionService _encryption;
 
     public ApiEndpointAppService(
         IRepository<ApiEndpoint, Guid> endpoints,
         IRepository<ApiCallLog, Guid> callLogs,
         ICurrentDataScopeProvider dataScopeProvider,
-        ICancellationTokenProvider cancellationTokens)
+        ICancellationTokenProvider cancellationTokens,
+        IStringEncryptionService encryption)
     {
         _endpoints = endpoints;
         _callLogs = callLogs;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
+        _encryption = encryption;
     }
 
     public async Task<PagedResultDto<ApiEndpointDto>> GetListAsync(
@@ -84,6 +88,9 @@ public class ApiEndpointAppService : ApplicationService
             input.AuthType,
             input.Description);
 
+        if (!input.Credential.IsNullOrWhiteSpace())
+            entity.SetEncryptedCredential(_encryption.Encrypt(input.Credential));
+
         await _endpoints.InsertAsync(entity, autoSave: true,
             cancellationToken: _cancellationTokens.Token);
 
@@ -105,6 +112,13 @@ public class ApiEndpointAppService : ApplicationService
             input.ExternalSystem,
             input.AuthType,
             input.Description);
+
+        // Write-only rotation: a supplied value replaces the stored secret; an
+        // explicit ClearCredential removes it; otherwise the stored value stays.
+        if (!input.Credential.IsNullOrWhiteSpace())
+            entity.SetEncryptedCredential(_encryption.Encrypt(input.Credential));
+        else if (input.ClearCredential)
+            entity.SetEncryptedCredential(null);
 
         await _endpoints.UpdateAsync(entity, autoSave: true,
             cancellationToken: _cancellationTokens.Token);
@@ -237,6 +251,7 @@ public class ApiEndpointAppService : ApplicationService
         Description = e.Description,
         AuthType = e.AuthType,
         Status = e.Status,
+        HasCredential = e.HasCredential,
         CreationTime = e.CreationTime,
     };
 }

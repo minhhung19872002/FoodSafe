@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Button,
   Card,
+  Checkbox,
   Form,
   Input,
   message,
@@ -288,6 +289,17 @@ function EndpointsTab() {
             render: (r) => API_AUTH_TYPE_LABELS[r.authType],
           },
           {
+            label: "Thông tin xác thực",
+            render: (r) =>
+              r.hasCredential ? (
+                <Tag color="green">Đã cấu hình</Tag>
+              ) : r.authType === API_AUTH_TYPE.None ? (
+                "—"
+              ) : (
+                <Tag color="orange">Chưa cấu hình</Tag>
+              ),
+          },
+          {
             label: "Trạng thái",
             render: (r) => {
               const cfg = API_ENDPOINT_STATUS_CONFIG[r.status];
@@ -384,6 +396,54 @@ function EndpointsTab() {
               />
             </Form.Item>
           </Space>
+          <Form.Item
+            noStyle
+            shouldUpdate={(prev, cur) => prev.authType !== cur.authType}
+          >
+            {({ getFieldValue }) => {
+              const authType = getFieldValue("authType") as ApiAuthType;
+              if (authType === API_AUTH_TYPE.None) return null;
+              const isBasic = authType === API_AUTH_TYPE.BasicAuth;
+              const editingWithCredential = editing?.hasCredential ?? false;
+              return (
+                <>
+                  <Form.Item
+                    name="credential"
+                    label="Thông tin xác thực"
+                    rules={
+                      editing
+                        ? []
+                        : [
+                            {
+                              required: true,
+                              message: "Vui lòng nhập thông tin xác thực",
+                            },
+                          ]
+                    }
+                    extra={
+                      editingWithCredential
+                        ? "Đã lưu và mã hóa. Để trống nếu giữ nguyên."
+                        : undefined
+                    }
+                  >
+                    <Input.Password
+                      autoComplete="new-password"
+                      placeholder={
+                        isBasic
+                          ? "vd: doi_tac:M@tKhau"
+                          : "Dán khóa API hoặc token"
+                      }
+                    />
+                  </Form.Item>
+                  {editingWithCredential && (
+                    <Form.Item name="clearCredential" valuePropName="checked">
+                      <Checkbox>Xóa thông tin xác thực đã lưu</Checkbox>
+                    </Form.Item>
+                  )}
+                </>
+              );
+            }}
+          </Form.Item>
           <Form.Item name="description" label="Mô tả">
             <Input.TextArea rows={2} />
           </Form.Item>

@@ -58,6 +58,7 @@ export interface ApiEndpoint {
   description?: string;
   authType: ApiAuthType;
   status: ApiEndpointStatus;
+  hasCredential: boolean;
   creationTime: string;
 }
 
@@ -68,6 +69,10 @@ export interface CreateUpdateApiEndpoint {
   externalSystem: string;
   description?: string;
   authType: ApiAuthType;
+  /** Write-only outbound-auth secret; leave undefined to keep the stored value. */
+  credential?: string;
+  /** Set true on update to remove the stored credential. */
+  clearCredential?: boolean;
 }
 
 export interface ApiEndpointFilter {

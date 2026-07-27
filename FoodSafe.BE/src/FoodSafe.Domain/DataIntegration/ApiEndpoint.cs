@@ -14,6 +14,17 @@ public class ApiEndpoint : FullAuditedAggregateRoot<Guid>
     public ApiAuthType AuthType { get; private set; }
     public ApiEndpointStatus Status { get; private set; }
 
+    /// <summary>
+    /// Outbound-auth credential, ENCRYPTED AT REST (ciphertext produced by the
+    /// application layer via <c>IStringEncryptionService</c>). It is never
+    /// exposed through a DTO; only <see cref="HasCredential"/> is surfaced.
+    /// Null when the endpoint needs no credential (e.g. <see cref="ApiAuthType.None"/>).
+    /// </summary>
+    public string? EncryptedCredential { get; private set; }
+
+    /// <summary>True when a credential is stored, without revealing its value.</summary>
+    public bool HasCredential => !string.IsNullOrWhiteSpace(EncryptedCredential);
+
     private ApiEndpoint() { }
 
     public static ApiEndpoint Create(
@@ -65,6 +76,14 @@ public class ApiEndpoint : FullAuditedAggregateRoot<Guid>
         AuthType = authType;
         Description = description;
     }
+
+    /// <summary>
+    /// Stores an already-encrypted credential (or clears it when the value is
+    /// blank). Encryption is an application-layer concern; the domain only
+    /// persists the opaque ciphertext.
+    /// </summary>
+    public void SetEncryptedCredential(string? encryptedValue)
+        => EncryptedCredential = string.IsNullOrWhiteSpace(encryptedValue) ? null : encryptedValue;
 
     public void Activate() => Status = ApiEndpointStatus.Active;
 
