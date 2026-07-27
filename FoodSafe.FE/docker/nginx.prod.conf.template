@@ -132,19 +132,39 @@ server {
         proxy_set_header Connection "upgrade";
     }
 
+    # NOTE ON add_header INHERITANCE:
+    #   nginx inherits add_header from a parent level ONLY when the current
+    #   level declares no add_header of its own. Because both /assets/ and /
+    #   set their own Cache-Control, they MUST re-declare every security header
+    #   (including HSTS) or those responses — the SPA document being the most
+    #   important — would ship with no HSTS/CSP. The full set is therefore
+    #   repeated in each location that overrides caching.
+
     location /assets/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy "camera=(), microphone=(), geolocation=(self)" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self';" always;
     }
 
     location / {
         try_files $uri $uri/ /index.html;
         add_header Cache-Control "no-cache";
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy "camera=(), microphone=(), geolocation=(self)" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self';" always;
     }
 
-    # Security headers — HSTS is emitted only here (HTTPS context).
+    # Server-level security headers — apply to responses NOT served by a
+    # location that overrides add_header (e.g. the proxied /api/ and /health).
+    # HSTS is emitted only in this HTTPS server block.
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;

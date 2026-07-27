@@ -265,6 +265,25 @@ jobs:
         working-directory: FoodSafe.BE
         run: docker compose build api migrator frontend
 
+      - name: Validate production Compose overlay rendering
+        working-directory: FoodSafe.BE
+        env:
+          # Placeholder paths — overlay uses ${SSL_CERT_PATH:?}/${SSL_KEY_PATH:?}
+          # only for read-only volume mounts; config rendering just needs them set.
+          SSL_CERT_PATH: /tmp/ci-placeholder-tls.crt
+          SSL_KEY_PATH: /tmp/ci-placeholder-tls.key
+        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet
+
+      - name: Build production frontend image (Dockerfile.prod)
+        working-directory: FoodSafe.BE
+        env:
+          SSL_CERT_PATH: /tmp/ci-placeholder-tls.crt
+          SSL_KEY_PATH: /tmp/ci-placeholder-tls.key
+        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml build frontend
+
+      - name: Verify production frontend HTTPS/TLS/HSTS/IPv6 at runtime
+        run: bash scripts/verify-prod-frontend.sh
+
       - name: Scan API image
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:

@@ -19,6 +19,13 @@
 #     - /etc/letsencrypt/live/foodsafe.example.gov.vn/fullchain.pem:/run/secrets/tls.crt:ro
 #     - /etc/letsencrypt/live/foodsafe.example.gov.vn/privkey.pem:/run/secrets/tls.key:ro
 #
+#   IMPORTANT (unprivileged image): the frontend runs nginx as a non-root user
+#   (uid 101). The mounted private key MUST be readable by that user. A default
+#   Let's Encrypt privkey.pem is 0600 root and will fail with
+#   "cannot load certificate key ... Permission denied". Copy the key with
+#   appropriate ownership/mode before mounting, e.g.:
+#     install -o 101 -g 101 -m 0640 privkey.pem /srv/foodsafe/tls/tls.key
+#
 # nginx configuration:
 #   The production nginx image must process nginx.prod.conf.template at startup.
 #   The frontend Dockerfile (or a production variant) should:
