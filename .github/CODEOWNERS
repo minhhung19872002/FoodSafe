@@ -1,0 +1,29 @@
+# CODEOWNERS — required-review routing for FoodSafe (production condition C-7 / H-03)
+#
+# Every merge into a protected branch requires review from the owner(s) listed
+# for the changed paths, once "Require review from Code Owners" is enabled in the
+# branch-protection rule. Ownership is set to the repository owner today; replace
+# the single owner with a team handle (e.g. @minhhung19872002/backend) as the team
+# grows so review load is shared. Later, more specific rules win over earlier ones.
+
+# Default owner for everything not matched by a more specific rule below.
+*                                       @minhhung19872002
+
+# --- Security-, auth-, and secret-sensitive backend --------------------------
+/FoodSafe.BE/src/FoodSafe.HttpApi.Host/Security/          @minhhung19872002
+/FoodSafe.BE/src/FoodSafe.HttpApi.Host/HealthChecks/      @minhhung19872002
+/FoodSafe.BE/src/FoodSafe.HttpApi.Host/FoodSafeHttpApiHostModule.cs  @minhhung19872002
+/FoodSafe.BE/src/FoodSafe.Domain/Data/                    @minhhung19872002
+
+# --- Database migrations (destructive-change risk) ---------------------------
+/FoodSafe.BE/src/FoodSafe.EntityFrameworkCore/Migrations/ @minhhung19872002
+
+# --- CI/CD, deployment, and operational scripts ------------------------------
+/.github/                                @minhhung19872002
+/FoodSafe.BE/docker-compose.yml          @minhhung19872002
+/FoodSafe.BE/docker-compose.prod.yml     @minhhung19872002
+/FoodSafe.BE/.env.example                @minhhung19872002
+/scripts/                                @minhhung19872002
+
+# --- Production audit trail ---------------------------------------------------
+/docs/production-audit/                  @minhhung19872002

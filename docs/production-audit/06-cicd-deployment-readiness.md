@@ -125,11 +125,11 @@ The PR limit is 5 per ecosystem, which is reasonable. This keeps transitive vuln
 
 `docs/37-ci-cd-guide.md` documents the requirement to protect `main`, require all three CI jobs before merge, and require code-owner review. However:
 
-- No `CODEOWNERS` file exists in the repository.
+- ~~No `CODEOWNERS` file exists in the repository.~~ **RESOLVED (C-7, 2026-07-28 / H-03):** `.github/CODEOWNERS` now routes required review, with default ownership plus specific rules for the security/auth-sensitive backend (`Security/`, `HealthChecks/`, `FoodSafeHttpApiHostModule.cs`, `Domain/Data/`), EF migrations, CI/CD + Compose + `.env.example` + `scripts/`, and the production-audit trail.
 - GitHub branch protection rules are server-side configuration and cannot be audited from the repository contents.
 - There is no enforcement artifact (e.g., a required-status-check list committed to the repository).
 
-This is a documentation claim with no verifiable implementation artifact. It is a prerequisite before allowing any contributor to merge to `main` without human review.
+The repository now ships a `CODEOWNERS` artifact. **Remaining (operational, cannot be done from repo contents):** the maintainer must enable branch protection on `main` with "Require review from Code Owners" and the three required CI status checks — CODEOWNERS only takes effect once that server-side rule is switched on.
 
 ### 2.7 Deployment (CD) pipeline — assessment: NOT IMPLEMENTED
 
@@ -323,15 +323,22 @@ The CI `database` job verifies migrations apply cleanly to a fresh database on e
 
 **Gap (MEDIUM):** There is no scripted rollback procedure. `docs/40-disaster-recovery-guide.md` documents that rollback means restoring from a PostgreSQL backup, not reversing EF migrations. This is the correct approach for a production relational database (EF `MigrationBuilder.Down()` methods are fragile and rarely complete). However, the backup that would be used for rollback depends on automated backups that do not currently exist (see §8).
 
-**Gap (LOW):** The `/health` endpoint is registered with `endpoints.MapHealthChecks("/health")` and `context.Services.AddHealthChecks()`, but no downstream health check providers are registered. The endpoint returns `200 Healthy` regardless of whether PostgreSQL, Redis, or MinIO are reachable. The Compose `api` healthcheck depends on this endpoint (`curl --fail http://127.0.0.1:8080/health`), which means a degraded API (e.g., database connection pool exhausted) would still report healthy.
+**~~Gap (LOW)~~ [H-01] — RESOLVED (C-7, 2026-07-28).** The `/health` endpoint previously registered no downstream probes and returned `200 Healthy` regardless of PostgreSQL / MinIO connectivity, so the Compose `api` healthcheck (which curls it) reported a degraded API as healthy.
 
-The fix is to add:
-```csharp
-context.Services.AddHealthChecks()
-    .AddNpgsql(configuration.GetConnectionString("Default")!)
-    .AddRedis(redisConnectionString)
-    .AddUrlGroup(new Uri("http://minio:9000/minio/health/live"), "minio");
-```
+Fixed by splitting liveness from readiness in `FoodSafeHttpApiHostModule.cs`:
+
+- `/health/live` — process-only liveness; returns 200 whenever the process is serving, with **no** dependency checks (a transient DB/MinIO blip never makes the process look dead and trigger a needless restart).
+- `/health/ready` — readiness; runs two custom `IHealthCheck`s tagged `"ready"`:
+  - `PostgreSqlReadinessHealthCheck` — opens a real Npgsql connection on the `Default` connection string and runs `SELECT 1` (no ABP unit of work required, so it is safe from the health-check pipeline).
+  - `MinioReadinessHealthCheck` — HTTP GET to `{BlobStorage:Endpoint}/minio/health/live`, honouring `BlobStorage:WithSsl`.
+  Returns 503 when either dependency is down, with a component-level JSON body naming the failing check.
+- `/health` — kept as a backward-compatible alias of `/health/ready`.
+
+Redis was intentionally **not** added: it is not wired into application code (no `IConnectionMultiplexer`, no cache config) — it exists only as a Compose container gated by `depends_on`, so an app-level Redis probe would check a dependency the app never uses.
+
+The Compose `api` healthcheck was repointed from `/health` to `/health/ready` (`docker-compose.yml`), so container health now reflects real downstream connectivity.
+
+Regression: `scripts/verify-health-endpoints.sh` drives the **real running stack** (no mocks) — asserts liveness=200 and readiness=200 (reporting `postgresql` + `minio`) with all deps up; pauses the MinIO container and asserts readiness flips to **503/Unhealthy while liveness stays 200**; then asserts readiness recovers on unpause. Verified PASS against the live dev stack at this commit. (It requires a running api+postgres+minio stack, so it runs as part of the runtime production drill rather than a standalone CI job — see doc 07 §2.)
 
 ---
 
@@ -364,6 +371,10 @@ There is no metrics infrastructure. No Prometheus endpoint, no Grafana dashboard
 > "Monitor at minimum: ingress availability and latency; API 5xx, 401/403 anomalies, 429 volume..."
 
 These cannot be measured without instrumentation.
+
+**Partially addressed (C-7, 2026-07-28 / H-02):** the application now exposes a machine-readable readiness signal — `GET /health/ready` returns a component-level JSON body (`postgresql`, `minio`) and a 503 status when a dependency is down (see §7). Combined with the already-present Serilog structured logs and ABP audit records, an external monitor now has a real endpoint to poll and alert on ("health check fails for five minutes" is now measurable by polling `/health/ready`).
+
+**Remaining (operational, not application code):** provisioning the monitoring/alerting *stack* — a scraper/uptime monitor polling `/health/ready`, log aggregation (Seq/Loki/ELK), a metrics pipeline (Prometheus/Grafana/OTel), and alert routing — is host/infrastructure deployment that cannot be delivered as committed application code. H-02 is therefore reduced from "no signal exists" to "signal exists; external collection/alerting must be deployed on the production host." This remains a GO-condition, documented honestly rather than claimed resolved.
 
 The `scripts/load-test.k6.js` file provides an NFR validation tool (30 VU, p95 < 5s threshold), but it is a one-shot manual test, not continuous monitoring.
 
@@ -415,9 +426,9 @@ Still outstanding as **operational** tasks (not code blockers): a scheduled back
 
 | ID | Finding |
 |---|---|
-| H-01 | `/health` endpoint registers no downstream probes. PostgreSQL, Redis, and MinIO connectivity is not checked. A degraded API incorrectly reports healthy, masking dependency failures from the Compose healthcheck and any load balancer. |
-| H-02 | No centralized monitoring or alerting infrastructure (no Prometheus, Grafana, Seq, OTel, or APM). Operators have no visibility into production health beyond raw `docker compose logs`. |
-| H-03 | Branch protection rules are documented as requirements but cannot be verified from repository contents. No `CODEOWNERS` file exists. Without enforcement, unreviewed commits can reach `main`. |
+| ~~H-01~~ **RESOLVED (C-7)** | ~~`/health` endpoint registers no downstream probes.~~ Split into `/health/live` (process) and `/health/ready` (real PostgreSQL + MinIO probes, 503 on failure); `/health` aliases readiness; Compose api healthcheck repointed to `/health/ready`. Real-stack regression `scripts/verify-health-endpoints.sh`. |
+| H-02 **PARTIAL (C-7)** | Application now emits a pollable readiness signal (`/health/ready`, component JSON + 503) plus existing structured Serilog/audit logs. **Remaining (operational):** deploy the external scraper/log-aggregation/metrics/alerting stack on the production host. Still a GO-condition. |
+| ~~H-03~~ **RESOLVED (C-7)** | ~~No `CODEOWNERS` file exists.~~ `.github/CODEOWNERS` added routing required review across security backend, migrations, CI/CD, and audit docs. **Remaining (operational):** enable branch protection with "Require review from Code Owners" server-side. |
 | H-04 | Git history contains credentials committed before `06656c8`. If the repository was ever pushed to a shared remote with those credentials present, they are compromised and must be rotated before production use. |
 
 ### MEDIUM (Should be resolved before production or in the first maintenance window)
@@ -479,7 +490,7 @@ The following items must be resolved before any production deployment:
 | `supply-chain` job — Trivy secret/misconfig scan | PASS | Trivy action pinned to commit SHA |
 | `supply-chain` job — image build and scan | PARTIAL FAIL | Builds dev images only; prod overlay with `Dockerfile.prod` never tested |
 | Dependabot configuration | PASS | Three ecosystems covered weekly |
-| Branch protection enforcement | UNVERIFIED | No CODEOWNERS; server-side configuration not auditable |
+| Branch protection enforcement | PARTIAL (C-7) | `CODEOWNERS` now committed; server-side "Require Code Owner review" still to be enabled |
 | CD / deployment automation | NOT IMPLEMENTED | Acknowledged in docs; fully manual |
 | `docker-compose.yml` (dev) | PASS | Compose syntax valid; ordering correct |
 | `docker-compose.prod.yml` (prod overlay) | CRITICAL FAIL | `Dockerfile.prod` missing; HTTPS deployment broken |
@@ -490,8 +501,8 @@ The following items must be resolved before any production deployment:
 | nginx prod config template | GOOD (undeployable) | Complete TLS config; blocked by missing Dockerfile.prod |
 | Secrets flow and startup validation | PASS | Fail-fast guards present; `.env` git-ignored |
 | Migration strategy and ordering | PASS | One-shot migrator, `AutoMigrate=false` on API |
-| `/health` endpoint | PARTIAL FAIL | No downstream probes; masks dependency failures |
-| Monitoring and alerting | FAIL | No tooling implemented |
+| `/health` endpoint | PASS (C-7) | Split live/ready; readiness probes PostgreSQL + MinIO (503 on failure); real-stack regression |
+| Monitoring and alerting | PARTIAL (C-7) | App emits pollable `/health/ready` signal; external collection/alerting stack still to be provisioned |
 | Log management | PARTIAL | File + console; no aggregation |
 | Automated backups | FAIL | No scripts, no scheduling, no rehearsal evidence |
 

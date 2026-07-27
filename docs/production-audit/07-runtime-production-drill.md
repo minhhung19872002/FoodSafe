@@ -30,11 +30,16 @@ Migrator ran to completion (exit 0) applying all 20 migrations before the API st
 
 | Probe | Result | Verdict |
 |---|---|---|
-| `GET /health` | 200, 4.8 ms | ✅ liveness OK |
+| `GET /health/live` | 200 (process liveness, no dep checks) | ✅ liveness OK |
+| `GET /health/ready` | 200, JSON reports `postgresql` + `minio` Healthy | ✅ readiness reflects real deps (C-7) |
+| `GET /health` (alias of ready) | 200 | ✅ backward-compatible |
+| MinIO paused → `GET /health/ready` | 503 Unhealthy, `/health/live` stays 200 | ✅ readiness detects outage (C-7) |
 | `GET /` (SPA) | 200, HTML served by nginx | ✅ |
 | `GET /api/abp/application-configuration` (anon) | 200 | ✅ anon config allowed |
 | `GET /api/v1/app/business` (unauthenticated) | **401** | ✅ auth gate enforced (not a 302 HTML redirect) |
 | `GET /api/v1/public/businesses` (no keyword) | 400 with Vietnamese validation error | ✅ server-side validation |
+
+The readiness behavior is captured as an automated real-stack regression: `scripts/verify-health-endpoints.sh` drives the running api container (no mocks), asserts the healthy baseline, **pauses the MinIO container to prove `/health/ready` flips to 503 while `/health/live` stays 200**, then asserts recovery on unpause. It requires a running api+postgres+minio stack, so it runs as part of this drill rather than a standalone CI job. Verified PASS at the C-7 commit.
 
 ### Security headers (verified live)
 

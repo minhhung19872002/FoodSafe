@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Asp.Versioning.ApplicationModels;
 using FoodSafe.EntityFrameworkCore;
+using FoodSafe.HealthChecks;
 using FoodSafe.Security;
 using FoodSafe.TextTemplating;
 using Hangfire;
@@ -9,6 +10,7 @@ using FoodSafe.Licensing;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -110,7 +112,14 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureAntiForgery(hostingEnvironment);
         ConfigureIdentity(context, hostingEnvironment);
         ConfigureRateLimiting(context, hostingEnvironment);
-        context.Services.AddHealthChecks();
+        // IHttpClientFactory is needed by MinioReadinessHealthCheck; register it
+        // explicitly rather than relying on another feature's typed client.
+        context.Services.AddHttpClient();
+        context.Services.AddHealthChecks()
+            .AddCheck<PostgreSqlReadinessHealthCheck>(
+                "postgresql", tags: ["ready"])
+            .AddCheck<MinioReadinessHealthCheck>(
+                "minio", tags: ["ready"]);
         context.Services.AddHsts(options =>
         {
             options.MaxAge = TimeSpan.FromDays(365);
@@ -722,7 +731,30 @@ public class FoodSafeHttpApiHostModule : AbpModule
         });
         app.UseConfiguredEndpoints(endpoints =>
         {
-            endpoints.MapHealthChecks("/health");
+            // Liveness: is the process up and serving? No dependency checks, so a
+            // transient database/MinIO outage never makes the process look dead
+            // (which would trigger a needless restart under an orchestrator).
+            endpoints.MapHealthChecks("/health/live", new HealthCheckOptions
+            {
+                Predicate = _ => false,
+                ResponseWriter = HealthCheckResponseWriter.WriteJsonAsync,
+            });
+
+            // Readiness: can the app actually serve traffic? Exercises the real
+            // downstream dependencies (PostgreSQL, MinIO). Returns 503 when any
+            // "ready"-tagged check is Unhealthy.
+            var readinessOptions = new HealthCheckOptions
+            {
+                Predicate = registration => registration.Tags.Contains("ready"),
+                ResponseWriter = HealthCheckResponseWriter.WriteJsonAsync,
+            };
+            endpoints.MapHealthChecks("/health/ready", readinessOptions);
+
+            // Backward-compatible alias. Previously `/health` registered no probes
+            // and returned 200 regardless of dependency state (H-01); it now maps
+            // to the readiness set so the existing Compose api healthcheck actually
+            // reflects downstream connectivity.
+            endpoints.MapHealthChecks("/health", readinessOptions);
         });
     }
 }
