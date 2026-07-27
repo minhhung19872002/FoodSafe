@@ -42,7 +42,7 @@
 | F-030 | Public Lookup — Ad Registration | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `06e4b1c` | 2026-07-27 |
 | F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `d855990` | 2026-07-27 |
 | F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `d855990` | 2026-07-27 |
-| F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | _(pending)_ | 2026-07-27 |
+| F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | `5aff855` | 2026-07-27 |
 
 ## Summary
 

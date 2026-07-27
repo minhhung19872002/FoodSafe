@@ -1,7 +1,7 @@
 # Feature Test Coverage Matrix
 
 **Last updated:** 2026-07-27
-**Git commit:** _(pending commit)_ (branch: `codex/production-readiness`)
+**Git commit:** `5aff855` (branch: `codex/production-readiness`)
 **Stack:** Docker Compose — PostgreSQL 15, Redis 7, MinIO, ClamAV, ASP.NET Core API, nginx+React frontend
 **API interception:** None — all tests hit the real stack
 
@@ -74,7 +74,7 @@
 | F-030 | Public Lookup — Ad Registration | **VERIFIED** | `06e4b1c` | `e2e/public-lookups-verification.spec.ts` |
 | F-031 | Documents | **VERIFIED** | `d855990` | `e2e/documents-verification.spec.ts` |
 | F-032 | System Settings | **VERIFIED** | `d855990` | `e2e/system-settings-verification.spec.ts` |
-| F-033 | Public Portal (FR-41..FR-49) | **VERIFIED** | _(pending)_ | `e2e/public-portal-verification.spec.ts` |
+| F-033 | Public Portal (FR-41..FR-49) | **VERIFIED** | `5aff855` | `e2e/public-portal-verification.spec.ts` |
 
 ---
 

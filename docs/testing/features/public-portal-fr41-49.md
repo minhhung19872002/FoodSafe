@@ -3,7 +3,7 @@
 ## Status: VERIFIED
 
 - **Feature IDs**: F-033
-- **Verified Git commit**: _(pending commit)_ · **Date**: 2026-07-27
+- **Verified Git commit**: `5aff855` · **Date**: 2026-07-27
 - **Environment**: Docker Compose full stack at `http://127.0.0.1:8080` · **Database**: real PostgreSQL 15 · **API interception**: **No**
 - **Authentication**: None required (AllowAnonymous endpoints); admin used only to seed test data
 
