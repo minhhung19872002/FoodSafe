@@ -1,7 +1,10 @@
 import { Suspense } from "react";
+import type { RouteObject } from "react-router-dom";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "./AppLayout";
+import { NotFoundPage } from "./NotFoundPage";
 import { PrivateRoute } from "./PrivateRoute";
+import { RouteErrorBoundary } from "./RouteErrorBoundary";
 import { PermissionRoute } from "./PermissionRoute";
 import {
   ChangePasswordPage,
@@ -51,7 +54,7 @@ import {
   CitizenNewsReportPage,
 } from "./routeComponents";
 
-export const router = createBrowserRouter([
+const appRoutes: RouteObject[] = [
   // ── Public portal routes ─────────────────────────────────────────────────
   {
     path: "/cong-thong-tin",
@@ -335,7 +338,12 @@ export const router = createBrowserRouter([
         path: "inspection",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.Inspection.Plans.View">
+            <PermissionRoute
+              permission={[
+                "FoodSafe.Inspection.Plans.View",
+                "FoodSafe.Inspection.Results.View",
+              ]}
+            >
               <InspectionPage />
             </PermissionRoute>
           </Suspense>
@@ -345,7 +353,12 @@ export const router = createBrowserRouter([
         path: "alerts-news",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.AlertsAndTesting.Alerts.View">
+            <PermissionRoute
+              permission={[
+                "FoodSafe.AlertsAndTesting.Alerts.View",
+                "FoodSafe.AlertsAndTesting.News.View",
+              ]}
+            >
               <AlertsNewsPage />
             </PermissionRoute>
           </Suspense>
@@ -405,7 +418,12 @@ export const router = createBrowserRouter([
         path: "data-integration",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.DataIntegration.ApiEndpoints.View">
+            <PermissionRoute
+              permission={[
+                "FoodSafe.DataIntegration.ApiEndpoints.View",
+                "FoodSafe.DataIntegration.CallHistory.View",
+              ]}
+            >
               <DataIntegrationPage />
             </PermissionRoute>
           </Suspense>
@@ -475,6 +493,26 @@ export const router = createBrowserRouter([
           </Suspense>
         ),
       },
+      {
+        // Bắt mọi đường dẫn không khớp. Đặt BÊN TRONG layout đã đăng nhập để
+        // người dùng đang làm việc gõ nhầm URL vẫn còn menu và header mà quay
+        // lại — không bị ném ra một trang trắng mất phương hướng.
+        // Khách chưa đăng nhập gõ nhầm URL sẽ được `PrivateRoute` đưa về trang
+        // đăng nhập; đó là đích đúng cho một hệ thống nội bộ và cũng không để
+        // lộ danh sách đường dẫn bên trong.
+        path: "*",
+        element: <NotFoundPage />,
+      },
     ],
+  },
+];
+
+export const router = createBrowserRouter([
+  {
+    // Route gốc không có `path`, chỉ tồn tại để gắn `errorElement` cho toàn bộ
+    // cây route: lỗi render hoặc lỗi tải lazy chunk ở bất kỳ route con nào cũng
+    // nổi lên đây thay vì rơi vào màn hình lỗi tiếng Anh mặc định của React Router.
+    errorElement: <RouteErrorBoundary />,
+    children: appRoutes,
   },
 ]);

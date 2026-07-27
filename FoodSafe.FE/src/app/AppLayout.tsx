@@ -43,10 +43,7 @@ import {
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
 import { brandingLogoUrl, useBranding } from "@/hooks/useBranding";
-import {
-  SIDEBAR_WIDTH,
-  SIDEBAR_COLLAPSED_WIDTH,
-} from "@/theme/themeConfig";
+import { SIDEBAR_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from "@/theme/themeConfig";
 
 const { Sider, Content } = Layout;
 
@@ -197,7 +194,10 @@ const NAV_CONFIG: NavEntry[] = [
     key: "/inspection",
     icon: <AuditOutlined />,
     label: "Thanh tra - Kiểm tra",
-    permission: "FoodSafe.Inspection.Plans.View",
+    permission: [
+      "FoodSafe.Inspection.Plans.View",
+      "FoodSafe.Inspection.Results.View",
+    ],
   },
   {
     key: "alerts-testing",
@@ -207,7 +207,10 @@ const NAV_CONFIG: NavEntry[] = [
         key: "/alerts-news",
         icon: <AlertOutlined />,
         label: "Cảnh báo và Tin tức",
-        permission: "FoodSafe.AlertsAndTesting.Alerts.View",
+        permission: [
+          "FoodSafe.AlertsAndTesting.Alerts.View",
+          "FoodSafe.AlertsAndTesting.News.View",
+        ],
       },
       {
         key: "/risk-analysis",
@@ -233,19 +236,29 @@ const NAV_CONFIG: NavEntry[] = [
     key: "/food-poisoning",
     icon: <MedicineBoxOutlined />,
     label: "Ngộ độc thực phẩm",
-    permission: "FoodSafe.FoodPoisoning.Cases.View",
+    permission: [
+      "FoodSafe.FoodPoisoning.Cases.View",
+      "FoodSafe.FoodPoisoning.Incidents.View",
+    ],
   },
   {
     key: "/reporting",
     icon: <BarChartOutlined />,
     label: "Báo cáo",
-    permission: "FoodSafe.Reporting.NdtpReports.View",
+    permission: [
+      "FoodSafe.Reporting.NdtpReports.View",
+      "FoodSafe.Reporting.AtpWorkReports.View",
+      "FoodSafe.Reporting.ActionMonthReports.View",
+    ],
   },
   {
     key: "/data-integration",
     icon: <ApiOutlined />,
     label: "Tích hợp dữ liệu",
-    permission: "FoodSafe.DataIntegration.ApiEndpoints.View",
+    permission: [
+      "FoodSafe.DataIntegration.ApiEndpoints.View",
+      "FoodSafe.DataIntegration.CallHistory.View",
+    ],
   },
   {
     key: "/statistics",
@@ -304,9 +317,7 @@ function buildMenuItems(
 
 function buildBreadcrumbs(pathname: string) {
   const segments = pathname.split("/").filter(Boolean);
-  const items = [
-    { title: BREADCRUMB_LABELS[segments[0]] ?? "Trang chủ" },
-  ];
+  const items = [{ title: BREADCRUMB_LABELS[segments[0]] ?? "Trang chủ" }];
   if (segments.length > 1) {
     items.push({
       title: BREADCRUMB_LABELS[segments[1]] ?? segments[1],
@@ -463,9 +474,7 @@ export function AppLayout() {
                 icon={<UserOutlined />}
                 style={{ backgroundColor: "#00796B" }}
               />
-              <span style={{ fontSize: 13 }}>
-                {user?.name ?? "Người dùng"}
-              </span>
+              <span style={{ fontSize: 13 }}>{user?.name ?? "Người dùng"}</span>
             </div>
           </Dropdown>
         </header>

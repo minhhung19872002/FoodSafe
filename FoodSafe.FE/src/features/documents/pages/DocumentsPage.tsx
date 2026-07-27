@@ -20,6 +20,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   ExportOutlined,
+  EyeOutlined,
   PaperClipOutlined,
   PrinterOutlined,
 } from "@ant-design/icons";
@@ -28,6 +29,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { saveDownload } from "@/utils/download";
 import { escapeHtml, printHtml } from "@/utils/printHtml";
 import { DocumentAttachmentsModal } from "../components/DocumentAttachmentsModal";
+import { DocumentDetailDrawer } from "../components/DocumentDetailDrawer";
 import { useDocuments, useDocumentTypes } from "../api/documentQueries";
 import {
   useCreateDocument,
@@ -63,6 +65,7 @@ export default function DocumentsPage() {
   const [editing, setEditing] = useState<AdministrativeDocument | null>(null);
   const [attachmentsDoc, setAttachmentsDoc] =
     useState<AdministrativeDocument | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [form] = Form.useForm();
 
   const printDocument = (record: AdministrativeDocument) =>
@@ -141,9 +144,15 @@ export default function DocumentsPage() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 190,
+      width: 230,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            aria-label="Xem chi tiết"
+            icon={<EyeOutlined />}
+            onClick={() => setDetailId(record.id)}
+          />
           <Button
             size="small"
             aria-label={`In ${record.documentNumber}`}
@@ -363,6 +372,10 @@ export default function DocumentsPage() {
         title={`Tài liệu đính kèm — ${attachmentsDoc?.documentNumber ?? ""}`}
         canEdit={hasPermission("FoodSafe.AlertsAndTesting.Documents.Edit")}
         onClose={() => setAttachmentsDoc(null)}
+      />
+      <DocumentDetailDrawer
+        documentId={detailId}
+        onClose={() => setDetailId(null)}
       />
     </Card>
   );

@@ -34,6 +34,7 @@ import {
   useDashboardStats,
   useReportCompliance,
 } from "../api/dashboardQueries";
+import { RecentActivityPanel } from "../components/RecentActivityPanel";
 import type {
   LicenseBreakdownItem,
   ReportComplianceRow,
@@ -154,9 +155,7 @@ const complianceColumns: TableColumnsType<ReportComplianceRow> = [
           (row.ndtpSubmittedMonths / row.ndtpExpectedMonths) * 100,
         )}
         size="small"
-        format={() =>
-          `${row.ndtpSubmittedMonths}/${row.ndtpExpectedMonths}`
-        }
+        format={() => `${row.ndtpSubmittedMonths}/${row.ndtpExpectedMonths}`}
       />
     ),
   },
@@ -165,9 +164,7 @@ const complianceColumns: TableColumnsType<ReportComplianceRow> = [
     width: 150,
     render: (_, row) => (
       <Progress
-        percent={Math.round(
-          (row.atpWorkSubmitted / row.atpWorkExpected) * 100,
-        )}
+        percent={Math.round((row.atpWorkSubmitted / row.atpWorkExpected) * 100)}
         size="small"
         format={() => `${row.atpWorkSubmitted}/${row.atpWorkExpected}`}
       />
@@ -182,9 +179,7 @@ const complianceColumns: TableColumnsType<ReportComplianceRow> = [
           (row.actionMonthSubmitted / row.actionMonthExpected) * 100,
         )}
         size="small"
-        format={() =>
-          `${row.actionMonthSubmitted}/${row.actionMonthExpected}`
-        }
+        format={() => `${row.actionMonthSubmitted}/${row.actionMonthExpected}`}
       />
     ),
   },
@@ -268,7 +263,8 @@ export default function DashboardPage() {
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {QUICK_ACTIONS.filter(
-          (a) => !("permission" in a && a.permission) || hasPermission(a.permission),
+          (a) =>
+            !("permission" in a && a.permission) || hasPermission(a.permission),
         ).map((action) => (
           <Button
             key={action.key}
@@ -395,7 +391,9 @@ export default function DashboardPage() {
                           ? Math.round((item.count / totalLicenses) * 100)
                           : 0
                       }
-                      strokeColor={BREAKDOWN_COLORS[idx % BREAKDOWN_COLORS.length]}
+                      strokeColor={
+                        BREAKDOWN_COLORS[idx % BREAKDOWN_COLORS.length]
+                      }
                       size="small"
                       style={{ flex: 1, marginBottom: 0 }}
                     />
@@ -451,7 +449,7 @@ export default function DashboardPage() {
       </Row>
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24}>
+        <Col xs={24} xl={16}>
           <Card
             title={`Tình hình nộp báo cáo của các đơn vị — Năm ${year ?? currentYear}`}
             size="small"
@@ -466,6 +464,9 @@ export default function DashboardPage() {
               scroll={{ x: 700 }}
             />
           </Card>
+        </Col>
+        <Col xs={24} xl={8}>
+          <RecentActivityPanel items={stats?.recentActivities ?? []} />
         </Col>
       </Row>
     </div>

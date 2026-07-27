@@ -3,6 +3,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
+  FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
   StopOutlined,
@@ -21,6 +22,7 @@ import {
   useDeleteEligibilityAttachment,
   useDeleteEligibilityCertificate,
   useDownloadEligibilityAttachment,
+  useDownloadEligibilityCertificatePdf,
   useExportEligibilityCertificates,
   useRevokeEligibilityCertificate,
   useUpdateEligibilityCertificate,
@@ -80,6 +82,7 @@ export default function EligibilityCertificatePage() {
   const deleteMutation = useDeleteEligibilityCertificate();
   const revokeMutation = useRevokeEligibilityCertificate();
   const exportMutation = useExportEligibilityCertificates();
+  const pdfMutation = useDownloadEligibilityCertificatePdf();
   const uploadMutation = useUploadEligibilityAttachment();
   const downloadMutation = useDownloadEligibilityAttachment();
   const deleteAttachmentMutation = useDeleteEligibilityAttachment();
@@ -146,6 +149,20 @@ export default function EligibilityCertificatePage() {
             aria-label={`Tệp ${item.certificateNumber}`}
             icon={<FileTextOutlined />}
             onClick={() => setAttachmentsFor(item)}
+          />
+          <Button
+            size="small"
+            type="text"
+            aria-label={`Tải PDF ${item.certificateNumber}`}
+            icon={<FilePdfOutlined />}
+            loading={pdfMutation.isPending && pdfMutation.variables === item.id}
+            onClick={() =>
+              pdfMutation.mutate(item.id, {
+                onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                onError: () =>
+                  void message.error("Không thể tải bản PDF giấy chứng nhận."),
+              })
+            }
           />
           {canEdit && item.status !== LICENSE_STATUS.Revoked && (
             <>

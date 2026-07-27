@@ -73,6 +73,19 @@ import {
 const PAGE_SIZE = 20;
 
 export default function InspectionPage() {
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const canViewPlans = hasPermission("FoodSafe.Inspection.Plans.View");
+  const canViewResults = hasPermission("FoodSafe.Inspection.Results.View");
+
+  const tabItems = [
+    ...(canViewPlans
+      ? [{ key: "plans", label: "Kế hoạch", children: <PlansTab /> }]
+      : []),
+    ...(canViewResults
+      ? [{ key: "results", label: "Kết quả", children: <ResultsTab /> }]
+      : []),
+  ];
+
   return (
     <div className="page-container">
       <PageHeader
@@ -80,13 +93,7 @@ export default function InspectionPage() {
         subtitle="Kế hoạch và kết quả kiểm tra an toàn thực phẩm"
       />
       <div className="page-card">
-        <Tabs
-          defaultActiveKey="plans"
-          items={[
-            { key: "plans", label: "Kế hoạch", children: <PlansTab /> },
-            { key: "results", label: "Kết quả", children: <ResultsTab /> },
-          ]}
-        />
+        <Tabs defaultActiveKey={tabItems[0]?.key} items={tabItems} />
       </div>
     </div>
   );
@@ -481,6 +488,19 @@ function ResultsTab() {
   };
   const results = useInspectionResults(queryFilter);
   const businesses = useInspectionBusinesses();
+  // Results may be attached to an approved plan; the server then advances the
+  // plan to InProgress and marks the matching plan item completed. Only plans
+  // the server will accept are offered.
+  const linkablePlans = useInspectionPlans({
+    status: INSPECTION_PLAN_STATUS.Approved,
+    skipCount: 0,
+    maxResultCount: 200,
+  });
+  const inProgressPlans = useInspectionPlans({
+    status: INSPECTION_PLAN_STATUS.InProgress,
+    skipCount: 0,
+    maxResultCount: 200,
+  });
 
   const createMutation = useCreateInspectionResult();
   const updateMutation = useUpdateInspectionResult();
@@ -568,7 +588,9 @@ function ResultsTab() {
               aria-label={`Theo dõi khắc phục ${item.businessName ?? item.id}`}
               icon={<AuditOutlined />}
               onClick={() => setFollowUpResultRow(item)}
-            >Theo dõi</Button>
+            >
+              Theo dõi
+            </Button>
           )}
           {canEdit && !item.isFinalized && (
             <Button
@@ -590,18 +612,14 @@ function ResultsTab() {
               cancelText="Hủy"
               onConfirm={() =>
                 finalizeMutation.mutate(item.id, {
-                  onSuccess: () =>
-                    void message.success("Đã chốt kết quả."),
-                  onError: () =>
-                    void message.error("Không thể chốt kết quả."),
+                  onSuccess: () => void message.success("Đã chốt kết quả."),
+                  onError: () => void message.error("Không thể chốt kết quả."),
                 })
               }
             >
-              <Button
-                size="small"
-                type="text"
-                icon={<LockOutlined />}
-              >Chốt</Button>
+              <Button size="small" type="text" icon={<LockOutlined />}>
+                Chốt
+              </Button>
             </Popconfirm>
           )}
           {item.isFinalized && (
@@ -719,6 +737,10 @@ function ResultsTab() {
         open={editorOpen}
         item={editing}
         businesses={businesses.data ?? []}
+        plans={[
+          ...(linkablePlans.data?.items ?? []),
+          ...(inProgressPlans.data?.items ?? []),
+        ]}
         saving={createMutation.isPending || updateMutation.isPending}
         onCancel={closeEditor}
         onSubmit={save}

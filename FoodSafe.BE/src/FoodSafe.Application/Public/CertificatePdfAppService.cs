@@ -65,7 +65,6 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
             ExpiryDate = cert.ExpiryDate,
             IssuingAuthority = cert.CertifyingAuthority ?? IssuingAgency,
             StatusLabel = StatusLabel(cert.EffectiveStatus(Clock.Now.Date)),
-            Notes = cert.Notes,
             ExtraRows = [],
         };
 
@@ -94,7 +93,6 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
             ExpiryDate = decl.ExpiryDate,
             IssuingAuthority = IssuingAgency,
             StatusLabel = StatusLabel(decl.EffectiveStatus(Clock.Now.Date)),
-            Notes = decl.Notes,
             ExtraRows =
             [
                 ("Tên sản phẩm", decl.ProductName),
@@ -125,7 +123,6 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
             ExpiryDate = reg.ExpiryDate,
             IssuingAuthority = reg.CertifyingAuthority ?? IssuingAgency,
             StatusLabel = StatusLabel(reg.EffectiveStatus(Clock.Now.Date)),
-            Notes = reg.Notes,
             ExtraRows =
             [
                 ("Tên sản phẩm", reg.ProductName),
@@ -159,7 +156,6 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
             ExpiryDate = cert.ExpiryDate,
             IssuingAuthority = cert.CertifyingAuthority ?? IssuingAgency,
             StatusLabel = StatusLabel(cert.EffectiveStatus(Clock.Now.Date)),
-            Notes = cert.Notes,
             ExtraRows = [],
         };
 
@@ -188,7 +184,6 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
             ExpiryDate = cert.ExpiryDate,
             IssuingAuthority = IssuingAgency,
             StatusLabel = StatusLabel(cert.EffectiveStatus(Clock.Now.Date)),
-            Notes = cert.Notes,
             ExtraRows =
             [
                 ("Số lô hàng", cert.LotNumber ?? "—"),
@@ -221,7 +216,6 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
         public DateTime? ExpiryDate { get; init; }
         public required string IssuingAuthority { get; init; }
         public required string StatusLabel { get; init; }
-        public string? Notes { get; init; }
         public required IReadOnlyList<(string Label, string Value)> ExtraRows { get; init; }
     }
 
@@ -287,12 +281,6 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
                     LabelValue(col, "Ngày hết hạn:",
                         f.ExpiryDate.HasValue ? f.ExpiryDate.Value.ToString("dd/MM/yyyy") : "Không xác định");
                     LabelValue(col, "Trạng thái:", f.StatusLabel);
-
-                    if (!string.IsNullOrWhiteSpace(f.Notes))
-                    {
-                        col.Item().PaddingTop(8).Text("Ghi chú:").Bold();
-                        col.Item().Text(f.Notes).FontSize(10);
-                    }
 
                     col.Item().PaddingTop(16).LineHorizontal(0.5f).LineColor("#cccccc");
                     col.Item().PaddingTop(8).Text(

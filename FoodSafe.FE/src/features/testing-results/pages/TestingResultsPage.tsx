@@ -2,15 +2,11 @@ import { useState } from "react";
 import {
   Button,
   Card,
-  DatePicker,
-  Form,
   Input,
   message,
-  Modal,
   Popconfirm,
   Select,
   Space,
-  Switch,
   Table,
   Tag,
   type TableColumnsType,
@@ -20,11 +16,17 @@ import {
   EditOutlined,
   DeleteOutlined,
   ExportOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { saveDownload } from "@/utils/download";
+import { TestingResultDetailDrawer } from "../components/TestingResultDetailDrawer";
+import { TestingResultEditorModal } from "../components/TestingResultEditorModal";
 import {
+  useRelatedInspectionResultOptions,
+  useSampledBusinessOptions,
+  useSampledProductOptions,
   useTestingCenterOptions,
   useTestingResults,
   useTestingServiceOptions,
@@ -36,17 +38,23 @@ import {
   useExportTestingResults,
 } from "../api/testingResultMutations";
 import {
-  TESTING_OUTCOME,
   TESTING_OUTCOME_CONFIG,
+  type CreateUpdateTestingResultInput,
   type TestingResult,
   type TestingResultFilter,
   type TestingOutcome,
 } from "../types/testingResult.types";
 
 const PAGE_SIZE = 15;
+const INSPECTION_RESULTS_VIEW = "FoodSafe.Inspection.Results.View";
+
+const OUTCOME_OPTIONS = Object.entries(TESTING_OUTCOME_CONFIG).map(
+  ([value, config]) => ({ value: Number(value), label: config.label }),
+);
 
 export default function TestingResultsPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
+  const canPickInspectionResult = hasPermission(INSPECTION_RESULTS_VIEW);
   const [filter, setFilter] = useState<TestingResultFilter>({
     skipCount: 0,
     maxResultCount: PAGE_SIZE,
@@ -54,6 +62,7 @@ export default function TestingResultsPage() {
   const { data, isLoading } = useTestingResults(filter);
   const testingCenters = useTestingCenterOptions();
   const testingServices = useTestingServiceOptions();
+  const businesses = useSampledBusinessOptions();
   const createMut = useCreateTestingResult();
   const updateMut = useUpdateTestingResult();
   const deleteMut = useDeleteTestingResult();
@@ -61,29 +70,50 @@ export default function TestingResultsPage() {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<TestingResult | null>(null);
-  const [form] = Form.useForm();
+  const [detailId, setDetailId] = useState<string | null>(null);
+  // Facility currently driving the cascading product / inspection lookups.
+  const [editorBusinessId, setEditorBusinessId] = useState<
+    string | undefined
+  >();
+  const products = useSampledProductOptions(editorBusinessId);
+  const inspectionResults = useRelatedInspectionResultOptions(
+    editorBusinessId,
+    canPickInspectionResult,
+  );
 
   const openCreate = () => {
     setEditing(null);
-    form.resetFields();
-    form.setFieldsValue({
-      outcome: TESTING_OUTCOME.Pass,
-      isPublic: false,
-    });
+    setEditorBusinessId(undefined);
     setEditorOpen(true);
   };
 
   const openEdit = (record: TestingResult) => {
     setEditing(record);
-    form.setFieldsValue({
-      ...record,
-      sampleDate: dayjs(record.sampleDate),
-      submissionDate: record.submissionDate
-        ? dayjs(record.submissionDate)
-        : null,
-      resultDate: record.resultDate ? dayjs(record.resultDate) : null,
-    });
+    setEditorBusinessId(record.businessId ?? undefined);
     setEditorOpen(true);
+  };
+
+  const submitEditor = (input: CreateUpdateTestingResultInput) => {
+    if (editing) {
+      updateMut.mutate(
+        { id: editing.id, input },
+        {
+          onSuccess: () => {
+            message.success("Đã cập nhật");
+            setEditorOpen(false);
+          },
+          onError: () => message.error("Cập nhật thất bại"),
+        },
+      );
+      return;
+    }
+    createMut.mutate(input, {
+      onSuccess: () => {
+        message.success("Đã tạo");
+        setEditorOpen(false);
+      },
+      onError: () => message.error("Tạo thất bại"),
+    });
   };
 
   const columns: TableColumnsType<TestingResult> = [
@@ -108,6 +138,7 @@ export default function TestingResultsPage() {
       dataIndex: "businessName",
       width: 150,
       ellipsis: true,
+      render: (value: string | null) => value ?? "—",
     },
     {
       title: "Kết quả",
@@ -127,9 +158,15 @@ export default function TestingResultsPage() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 100,
+      width: 140,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            aria-label="Xem chi tiết"
+            icon={<EyeOutlined />}
+            onClick={() => setDetailId(record.id)}
+          />
           {hasPermission("FoodSafe.AlertsAndTesting.TestingResults.Edit") && (
             <Button
               size="small"
@@ -177,14 +214,38 @@ export default function TestingResultsPage() {
           }
         />
         <Select
+          placeholder="Cơ sở lấy mẫu"
+          aria-label="Lọc theo cơ sở lấy mẫu"
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          style={{ width: 220 }}
+          loading={businesses.isLoading}
+          options={businesses.data ?? []}
+          onChange={(v?: string) =>
+            setFilter((f) => ({ ...f, businessId: v, skipCount: 0 }))
+          }
+        />
+        <Select
+          placeholder="Trung tâm kiểm nghiệm"
+          aria-label="Lọc theo trung tâm kiểm nghiệm"
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          style={{ width: 220 }}
+          loading={testingCenters.isLoading}
+          options={testingCenters.data ?? []}
+          onChange={(v?: string) =>
+            setFilter((f) => ({ ...f, testingCenterId: v, skipCount: 0 }))
+          }
+        />
+        <Select
           placeholder="Kết quả"
+          aria-label="Lọc theo kết quả"
           allowClear
           style={{ width: 140 }}
-          options={Object.entries(TESTING_OUTCOME_CONFIG).map(([k, v]) => ({
-            value: Number(k),
-            label: v.label,
-          }))}
-          onChange={(v) =>
+          options={OUTCOME_OPTIONS}
+          onChange={(v?: TestingOutcome) =>
             setFilter((f) => ({ ...f, outcome: v, skipCount: 0 }))
           }
         />
@@ -222,141 +283,42 @@ export default function TestingResultsPage() {
           showSizeChanger: false,
         }}
       />
-      <Modal
-        title={editing ? "Sửa kết quả" : "Nhập kết quả kiểm nghiệm"}
+      <TestingResultEditorModal
         open={editorOpen}
+        item={editing}
+        saving={createMut.isPending || updateMut.isPending}
+        testingCenters={{
+          items: testingCenters.data ?? [],
+          loading: testingCenters.isLoading,
+        }}
+        testingServices={{
+          items: testingServices.data ?? [],
+          loading: testingServices.isLoading,
+        }}
+        businesses={{
+          items: businesses.data ?? [],
+          loading: businesses.isLoading,
+        }}
+        products={{
+          items: products.data ?? [],
+          loading: products.isFetching,
+        }}
+        inspectionResults={
+          canPickInspectionResult
+            ? {
+                items: inspectionResults.data ?? [],
+                loading: inspectionResults.isFetching,
+              }
+            : null
+        }
+        onBusinessChange={setEditorBusinessId}
         onCancel={() => setEditorOpen(false)}
-        destroyOnHidden
-        width={640}
-        onOk={() => form.submit()}
-        okText="Lưu"
-        cancelText="Hủy"
-        confirmLoading={createMut.isPending || updateMut.isPending}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          preserve={false}
-          onFinish={(values) => {
-            const payload = {
-              ...values,
-              sampleDate: values.sampleDate?.toISOString(),
-              submissionDate: values.submissionDate?.toISOString(),
-              resultDate: values.resultDate?.toISOString(),
-            };
-            if (editing) {
-              updateMut.mutate(
-                { id: editing.id, input: payload },
-                {
-                  onSuccess: () => {
-                    message.success("Đã cập nhật");
-                    setEditorOpen(false);
-                  },
-                  onError: () => message.error("Cập nhật thất bại"),
-                },
-              );
-            } else {
-              createMut.mutate(payload, {
-                onSuccess: () => {
-                  message.success("Đã tạo");
-                  setEditorOpen(false);
-                },
-                onError: () => message.error("Tạo thất bại"),
-              });
-            }
-          }}
-        >
-          <Space style={{ width: "100%" }}>
-            <Form.Item
-              name="sampleCode"
-              label="Mã mẫu"
-              rules={[{ required: true }]}
-            >
-              <Input style={{ width: 200 }} />
-            </Form.Item>
-            <Form.Item
-              name="sampleName"
-              label="Tên mẫu"
-              rules={[{ required: true }]}
-            >
-              <Input style={{ width: 380 }} />
-            </Form.Item>
-          </Space>
-          <Form.Item name="description" label="Mô tả">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-          <Space style={{ width: "100%" }}>
-            <Form.Item
-              name="testingCenterId"
-              label="Cơ sở kiểm nghiệm"
-              rules={[{ required: true, message: "Vui lòng chọn cơ sở KN" }]}
-            >
-              <Select
-                style={{ width: 290 }}
-                placeholder="Chọn cơ sở kiểm nghiệm"
-                showSearch
-                optionFilterProp="label"
-                loading={testingCenters.isLoading}
-                options={(testingCenters.data ?? []).map((x) => ({
-                  value: x.id,
-                  label: x.name,
-                }))}
-              />
-            </Form.Item>
-            <Form.Item name="testingServiceId" label="Dịch vụ KN">
-              <Select
-                style={{ width: 290 }}
-                placeholder="Chọn dịch vụ kiểm nghiệm"
-                allowClear
-                showSearch
-                optionFilterProp="label"
-                loading={testingServices.isLoading}
-                options={(testingServices.data ?? []).map((x) => ({
-                  value: x.id,
-                  label: x.name,
-                }))}
-              />
-            </Form.Item>
-          </Space>
-          <Space style={{ width: "100%" }}>
-            <Form.Item
-              name="sampleDate"
-              label="Ngày lấy mẫu"
-              rules={[{ required: true }]}
-            >
-              <DatePicker format="DD/MM/YYYY" />
-            </Form.Item>
-            <Form.Item name="submissionDate" label="Ngày nộp">
-              <DatePicker format="DD/MM/YYYY" />
-            </Form.Item>
-            <Form.Item name="resultDate" label="Ngày kết quả">
-              <DatePicker format="DD/MM/YYYY" />
-            </Form.Item>
-          </Space>
-          <Form.Item
-            name="outcome"
-            label="Kết quả"
-            rules={[{ required: true }]}
-          >
-            <Select
-              style={{ width: 200 }}
-              options={Object.entries(TESTING_OUTCOME_CONFIG).map(([k, v]) => ({
-                value: Number(k),
-                label: v.label,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item name="failedCriteria" label="Chỉ tiêu không đạt">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-          <Form.Item name="certificateNumber" label="Số phiếu kiểm nghiệm">
-            <Input />
-          </Form.Item>
-          <Form.Item name="isPublic" label="Công khai" valuePropName="checked">
-            <Switch />
-          </Form.Item>
-        </Form>
-      </Modal>
+        onSubmit={submitEditor}
+      />
+      <TestingResultDetailDrawer
+        testingResultId={detailId}
+        onClose={() => setDetailId(null)}
+      />
     </Card>
   );
 }

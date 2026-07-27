@@ -17,6 +17,109 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — Defect-fix batch on top of `fe3dbd2` (working tree, uncommitted)
+
+- **Cause**: An audit sweep found defects that the green 235/235 suite did not cover. Fixed in
+  this batch:
+  1. **Data loss (critical)** — `InspectionResultEditorModal` submitted `violations: []` on every
+     save while `InspectionResultAppService.UpdateAsync` replaces the whole collection, so editing
+     any field of an inspection result permanently deleted every itemised violation (code, legal
+     reference, fine, remedy deadline, remediation state). No UI existed to create a violation at
+     all, which is why `InspectionFollowUpModal` always showed "Không có vi phạm chi tiết".
+  2. **Dead plan workflow** — the same modal never sent `planId`/`planItemId`, so approved plans
+     never advanced to InProgress and plan progress stayed `0/N` forever.
+  3. **Security: SPA served with no security headers** — `location /` and `location /assets/` each
+     declared `add_header`, which under nginx rules cancels inheritance of every server-level
+     header. Verified live: `GET /` returned only `Cache-Control`. CSP was therefore inert (a CSP
+     on a `.js` response is meaningless) and the admin app was frameable. Fixed with a shared
+     `security-headers.conf` snippet included in each block, plus `frame-ancestors 'none'` and
+     forwarded-proto-conditional HSTS.
+  4. **Security: internal notes leaked publicly** — the anonymous certificate PDF endpoints
+     rendered `Notes` (officer free text) into the document, bypassing the curated public DTOs
+     which deliberately omit it.
+  5. **Security: password-reuse oracle** — `ResetPasswordAsync` evaluated the password-history
+     rule before validating the reset token, letting an anonymous caller confirm a guessed
+     password without a valid token. Token validation now runs first.
+  6. Functional gaps closed: food-poisoning error-report UI, identity `ManageRoles`/`ManageScope`
+     gating, sub-tab and sidebar permission gating, master-catalog server-side pagination
+     (records past row 100 were unreachable), four read-only detail drawers, certificate PDF
+     download on four admin pages, testing-result facility/product linkage, dashboard recent
+     activity (frontend panel + backend projection), statistics organisation filter, real server
+     error surfacing, and backup/restore scripts.
+- **Commit**: working tree on top of `fe3dbd2` (not yet committed)
+- **Affected features**: F-001, F-002, F-004, F-006, F-008, F-010..F-023, F-031, F-034 and the
+  shared `src/lib`, `src/app` and nginx layers → treat as Level 3/4.
+- **Retest level**: 4 (full regression)
+- **Result**: **PASSED** — Playwright **236/236 (7.6m)** against images rebuilt from this working
+  tree, migrator exit 0, all seven containers healthy, no API interception, real login.
+- **First run found 4 failures, all fixed before the green run**:
+  1–2. `dashboard.spec.ts` and `dashboard-verification.spec.ts` asserted
+  `getByText("Cơ sở SXKD")`, which became ambiguous once the new recent-activity panel began
+  labelling `Business` rows with the same words. 3. `statistics.spec.ts` asserted a bare
+  `getByRole("combobox")`, now two elements after the organisation filter landed.
+  4. The new violations spec used `getByDisplayValue`, which is a Testing Library API and does not
+  exist in Playwright — replaced with an `input[value="…"]` locator.
+  Three of the four were pre-existing under-specified selectors that passed only because exactly
+  one element happened to match; adding legitimate UI broke them. Worth noting alongside the
+  violation defect: a 100 % green suite is only as strong as what its assertions actually pin down.
+- **Runtime evidence captured for the security and data fixes** (not just test counts):
+  - `GET /` now returns X-Content-Type-Options, X-Frame-Options, Referrer-Policy,
+    Permissions-Policy and CSP with `frame-ancestors 'none'`; before the fix it returned only
+    `Cache-Control`.
+  - HSTS is absent over plain HTTP (so local development never pins 127.0.0.1) and present as
+    `max-age=31536000; includeSubDomains` when the request arrives with
+    `X-Forwarded-Proto: https`.
+  - `GET /api/v1/app/dashboard/stats` now returns 12 populated `recentActivities` entries; the
+    field was previously always `[]`.
+  - Seeded reference catalogs survive an image rebuild (12 business types, 37 product groups,
+    13 Quảng Ninh districts).
+- **Static gates already passed**: backend Release build 0 errors (1 pre-existing `CS8714`
+  warning in `ReportStatisticsAppService.cs`), backend **519/519**, frontend `tsc -b --noEmit`
+  clean, `oxlint src` clean.
+- **New regression cover**: `e2e/inspection-violations-verification.spec.ts` asserts that editing
+  a result through the real UI preserves its violations, with the fine, legal reference and
+  remedy text intact after a reload. The previous suite contained **zero** assertions touching
+  inspection violations, which is exactly why a data-loss defect survived a 235/235 green run.
+- **Frontend unit-test finding (pre-existing, not caused by this batch)**: a full `vitest run`
+  reports 9 failures. Isolated against a pristine `fe3dbd2` worktree: `businessApi.test.ts` fails
+  3/7 deterministically at HEAD, and the certificate/business page tests fail on *timeout* with a
+  count that varies between runs at HEAD (3 then 4 in two consecutive runs). Root cause is
+  testing-library role queries in jsdom on these pages — measured at 48.8 s for
+  `getByRole("button", {name})` and 100.4 s for `getAllByRole("button")` against 7 ms for
+  `getByLabelText`, versus a 15–30 s test timeout. The documented "FE Vitest 112/112" baseline no
+  longer holds at HEAD. This makes the CI frontend test gate unreliable and should be fixed
+  independently of this batch.
+
+### 2026-07-27 — Level 4 re-certification of merge `fe3dbd2` on a clean-volume stack
+
+- **Cause**: The registry still cited per-feature commits from `86b793a` and earlier, while
+  `0eba6b6` / merge `fe3dbd2` had since changed Level 3 shared dependencies:
+  `FoodSafePermissions.cs`, `FoodSafeHttpApiHostModule.cs`,
+  `FoodSafeDbContextModelCreatingExtensions.cs`, three EF migrations
+  (`AddMissingForeignKeys`, `AddResultFinalizeAndCitizenNews`, `AddApiCallLogDataType`),
+  `authApi.ts`, `router.tsx` and `AppLayout.tsx`. Per the Git-aware verification rule no
+  feature could stay VERIFIED on the older evidence.
+- **Commit**: `fe3dbd2`
+- **Affected features**: All (F-001..F-034)
+- **Retest level**: 4 (full regression)
+- **Result**: PASSED
+- **Details**: Stack rebuilt from HEAD on a **fresh PostgreSQL volume** — 20 migrations applied,
+  migrator exited 0, all seven containers healthy. Playwright full suite **235/235 passed
+  (8.0m)**, no API interception, real `/api/account/login` with CSRF. Backend
+  **519/519** (Domain 197, Application 251, HttpApi.Host 53, EFCore 18); Release build 0
+  warnings; `dotnet format --verify-no-changes` clean.
+- **Environment caveat**: this workstation has no .NET 9 SDK/runtime installed (only 5.0, 8.0
+  preview and 10.0). The solution builds through SDK 10 targeting packs, and the Docker images
+  carry their own .NET 9 runtime, but the **native** `dotnet test` run required
+  `DOTNET_ROLL_FORWARD=Major` and therefore executed on runtime 10.0.7 rather than the
+  production 9.x runtime. The Playwright evidence above is unaffected because it exercises the
+  containers. Install the .NET 9 runtime before treating a native test run as release evidence.
+- **Infrastructure defect found and fixed**: Playwright browser binaries were absent
+  (`chromium_headless_shell-1228`), which failed every browser-backed test in 1–4 ms while
+  API-only tests still passed. This is an environment gap, not a product defect; recorded here
+  because the failure signature (mass instant failures with `signInAsAdmin` in the stack) can
+  easily be misread as an authentication regression.
+
 ### 2026-07-27 — Functional-gap completion batch (STT 2-5, 19, 27-35, 39-40, 48, 51-57) + merge with parallel main batch
 
 - **Cause**: Feature branch `feature/complete-remaining-functions` implemented the audit-65/66 backlog (Excel exports, audit-log detail, user delete/random password/permission search, full Settings module, business filters + per-business tabs, dashboard filters + report-compliance widgets + chart download, profile/avatar, inspection attachments + finalize, citizen alert/news moderation + citizen news channel, report auto-calc/roll-up/document view, typed data-sharing engine) and merged `origin/main`'s parallel batch, keeping the feature-branch implementations and de-duplicating merge artifacts. Fresh-database seeding gaps fixed (region/role ordering, document-type catalog seed).

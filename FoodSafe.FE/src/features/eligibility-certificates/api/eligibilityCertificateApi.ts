@@ -64,6 +64,13 @@ export const eligibilityCertificateApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+  async downloadPdf(id: string): Promise<FileDownload> {
+    const response = await api.get<Blob>(
+      `/v1/public/eligibility-certificates/${id}/pdf`,
+      { responseType: "blob" },
+    );
+    return download(response.data, response.headers["content-disposition"]);
+  },
   async attachments(id: string): Promise<FileAttachment[]> {
     return (await api.get<FileAttachment[]>(`${endpoint}/${id}/attachments`))
       .data;

@@ -11,10 +11,11 @@ const keys = {
   callLog: (id: string) => ["api-call-log", id] as const,
 };
 
-export function useApiEndpoints(filter: ApiEndpointFilter) {
+export function useApiEndpoints(filter: ApiEndpointFilter, enabled = true) {
   return useQuery({
     queryKey: keys.endpoints(filter),
     queryFn: () => dataIntegrationApi.getEndpoints(filter),
+    enabled,
   });
 }
 

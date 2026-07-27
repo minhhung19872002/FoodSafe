@@ -49,6 +49,12 @@ export function useExportCfsCertificates() {
   });
 }
 
+export function useDownloadCfsCertificatePdf() {
+  return useMutation({
+    mutationFn: (id: string) => cfsCertificateApi.downloadPdf(id),
+  });
+}
+
 export function useUploadCfsCertificateAttachment() {
   return useMutation({
     mutationFn: ({ id, file }: { id: string; file: File }) =>

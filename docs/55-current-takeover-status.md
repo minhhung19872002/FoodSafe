@@ -1,6 +1,15 @@
 # Takeover Status — FoodSafe
 
-Last updated: 2026-07-26
+Last updated: 2026-07-26 — **superseded 2026-07-27**
+
+> **Superseded.** This snapshot was written mid-takeover, when STT 25 was in progress and
+> STT 26–57 were unimplemented. All of them have since been built and verified; the
+> "Missing Modules" table below is historical, not a backlog. The "Recommended Execution
+> Order" at the end has been fully worked through except for the infrastructure items
+> (production TLS, backup/restore rehearsal) and the final security review.
+>
+> Current state: 34/34 features VERIFIED at merge `fe3dbd2` —
+> see `docs/testing/01-feature-verification-registry.md`.
 
 ## Build Status
 

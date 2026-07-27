@@ -27,7 +27,13 @@ function Line({ label, value }: { label: string; value?: string | number }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div style={{ marginTop: 16 }}>
       <Typography.Title level={5} style={{ marginBottom: 8 }}>
@@ -58,7 +64,8 @@ export function ReportDocumentViewModal({ document: doc, onClose }: Props) {
     if (!contentRef.current) return;
     const printWindow = window.open("", "_blank", "width=900,height=700");
     if (!printWindow) return;
-    printWindow.document.write(`<!doctype html><html><head><title>Báo cáo</title>
+    printWindow.document
+      .write(`<!doctype html><html><head><title>Báo cáo</title>
       <style>body{font-family:'Times New Roman',serif;padding:32px;line-height:1.5}</style>
       </head><body>${contentRef.current.innerHTML}</body></html>`);
     printWindow.document.close();
@@ -194,10 +201,7 @@ export function ReportDocumentViewModal({ document: doc, onClose }: Props) {
               </Section>
               <Section title="IV. Ngộ độc thực phẩm">
                 <Line label="Số ca" value={doc.report.poisoningCaseCount} />
-                <Line
-                  label="Số vụ"
-                  value={doc.report.poisoningIncidentCount}
-                />
+                <Line label="Số vụ" value={doc.report.poisoningIncidentCount} />
                 <Line label="Số mắc" value={doc.report.totalAffected} />
                 <Line label="Tử vong" value={doc.report.totalDeaths} />
               </Section>

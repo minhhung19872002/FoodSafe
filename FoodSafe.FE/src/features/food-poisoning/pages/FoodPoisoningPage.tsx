@@ -22,6 +22,7 @@ import {
   CheckCircleOutlined,
   SolutionOutlined,
   EnvironmentOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -48,6 +49,7 @@ import {
 import { CaseEditorModal } from "../components/CaseEditorModal";
 import { IncidentEditorModal } from "../components/IncidentEditorModal";
 import { PoisoningMap } from "../components/PoisoningMap";
+import { PoisoningErrorReportsModal } from "../components/PoisoningErrorReportsModal";
 import {
   POISONING_CASE_STATUS,
   POISONING_CASE_STATUS_CONFIG,
@@ -85,6 +87,8 @@ function CasesTab() {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<FoodPoisoningCase | undefined>();
+  const [errorReportItem, setErrorReportItem] =
+    useState<FoodPoisoningCase | null>(null);
 
   const canCreate = hasPermission("FoodSafe.FoodPoisoning.Cases.Create");
   const canEdit = hasPermission("FoodSafe.FoodPoisoning.Cases.Edit");
@@ -173,7 +177,7 @@ function CasesTab() {
     {
       title: "",
       key: "actions",
-      width: 240,
+      width: 320,
       render: (_: unknown, record: FoodPoisoningCase) => (
         <Space size="small">
           {record.status === POISONING_CASE_STATUS.Draft && canEdit && (
@@ -233,6 +237,15 @@ function CasesTab() {
                 Xóa
               </Button>
             </Popconfirm>
+          )}
+          {record.status !== POISONING_CASE_STATUS.Draft && (
+            <Button
+              size="small"
+              icon={<WarningOutlined />}
+              onClick={() => setErrorReportItem(record)}
+            >
+              Sai sót
+            </Button>
           )}
         </Space>
       ),
@@ -322,6 +335,16 @@ function CasesTab() {
         onCancel={() => setEditorOpen(false)}
         onSubmit={handleSubmit}
       />
+
+      <PoisoningErrorReportsModal
+        kind="case"
+        entityId={errorReportItem?.id ?? null}
+        entityCode={errorReportItem?.caseCode}
+        entityStatus={errorReportItem?.status ?? null}
+        open={errorReportItem !== null}
+        canReport={canEdit}
+        onClose={() => setErrorReportItem(null)}
+      />
     </>
   );
 }
@@ -345,6 +368,8 @@ function IncidentsTab() {
   const [editing, setEditing] = useState<FoodPoisoningIncident | undefined>();
   const [concludeOpen, setConcludeOpen] = useState(false);
   const [concludingId, setConcludingId] = useState<string | null>(null);
+  const [errorReportItem, setErrorReportItem] =
+    useState<FoodPoisoningIncident | null>(null);
 
   const canCreate = hasPermission("FoodSafe.FoodPoisoning.Incidents.Create");
   const canEdit = hasPermission("FoodSafe.FoodPoisoning.Incidents.Edit");
@@ -433,7 +458,7 @@ function IncidentsTab() {
     {
       title: "",
       key: "actions",
-      width: 280,
+      width: 360,
       render: (_: unknown, record: FoodPoisoningIncident) => (
         <Space size="small">
           {record.status === POISONING_INCIDENT_STATUS.Draft && canEdit && (
@@ -508,6 +533,15 @@ function IncidentsTab() {
                 Xóa
               </Button>
             </Popconfirm>
+          )}
+          {record.status !== POISONING_INCIDENT_STATUS.Draft && (
+            <Button
+              size="small"
+              icon={<WarningOutlined />}
+              onClick={() => setErrorReportItem(record)}
+            >
+              Sai sót
+            </Button>
           )}
         </Space>
       ),
@@ -613,6 +647,16 @@ function IncidentsTab() {
           setConcludeOpen(false);
           setConcludingId(null);
         }}
+      />
+
+      <PoisoningErrorReportsModal
+        kind="incident"
+        entityId={errorReportItem?.id ?? null}
+        entityCode={errorReportItem?.incidentCode}
+        entityStatus={errorReportItem?.status ?? null}
+        open={errorReportItem !== null}
+        canReport={canEdit}
+        onClose={() => setErrorReportItem(null)}
       />
     </>
   );

@@ -599,18 +599,34 @@ function NewsTab() {
 }
 
 export default function AlertsNewsPage() {
-  return (
-    <Card>
-      <Tabs
-        items={[
-          { key: "alerts", label: "Cảnh báo VSATTP", children: <AlertsTab /> },
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const canViewAlerts = hasPermission("FoodSafe.AlertsAndTesting.Alerts.View");
+  const canViewNews = hasPermission("FoodSafe.AlertsAndTesting.News.View");
+
+  const tabItems = [
+    ...(canViewAlerts
+      ? [
+          {
+            key: "alerts",
+            label: "Cảnh báo VSATTP",
+            children: <AlertsTab />,
+          },
+        ]
+      : []),
+    ...(canViewNews
+      ? [
           {
             key: "news",
             label: "Tin tức ATTP",
             children: <NewsTab />,
           },
-        ]}
-      />
+        ]
+      : []),
+  ];
+
+  return (
+    <Card>
+      <Tabs defaultActiveKey={tabItems[0]?.key} items={tabItems} />
     </Card>
   );
 }

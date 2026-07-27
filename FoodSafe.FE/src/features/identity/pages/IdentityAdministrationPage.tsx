@@ -70,6 +70,8 @@ const permission = {
   createUser: "FoodSafe.SystemAdmin.Users.Create",
   editUser: "FoodSafe.SystemAdmin.Users.Edit",
   deleteUser: "FoodSafe.SystemAdmin.Users.Delete",
+  manageUserRoles: "FoodSafe.SystemAdmin.Users.ManageRoles",
+  manageUserScope: "FoodSafe.SystemAdmin.Users.ManageScope",
   activateUser: "FoodSafe.SystemAdmin.Users.Activate",
   lockUser: "FoodSafe.SystemAdmin.Users.Lock",
   resetPassword: "FoodSafe.SystemAdmin.Users.ResetPassword",
@@ -80,6 +82,13 @@ const permission = {
   deleteRole: "FoodSafe.SystemAdmin.Roles.Delete",
   permissions: "FoodSafe.SystemAdmin.Roles.ManagePermissions",
 } as const;
+
+// Backend kiểm tra thêm ManageRoles + ManageScope khi tạo/cập nhật tài khoản
+// (form luôn gửi kèm vai trò và phạm vi địa bàn), ngoài Users.Create / Users.Edit.
+const userFormPermissions = [
+  { name: permission.manageUserRoles, label: "Gán vai trò người dùng" },
+  { name: permission.manageUserScope, label: "Gán phạm vi dữ liệu" },
+] as const;
 
 const pageSize = 10;
 
@@ -102,6 +111,14 @@ export default function IdentityAdministrationPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canViewUsers = hasPermission(permission.users);
   const canViewRoles = hasPermission(permission.roles);
+  const missingUserFormPermissions = userFormPermissions
+    .filter((item) => !hasPermission(item.name))
+    .map((item) => item.label);
+  // Thiếu quyền phụ thì vô hiệu hóa nút (kèm lý do) thay vì ẩn đi,
+  // để quản trị viên biết cần xin cấp thêm quyền nào.
+  const userFormBlockedReason = missingUserFormPermissions.length
+    ? `Bạn chưa có quyền ${missingUserFormPermissions.join(" và ")}. Liên hệ quản trị viên hệ thống để được cấp quyền.`
+    : undefined;
   const [userFilter, setUserFilter] = useState<UserFilter>({
     skipCount: 0,
     maxResultCount: pageSize,
@@ -157,9 +174,7 @@ export default function IdentityAdministrationPage() {
 
   const showSuccess = (content: string) => void message.success(content);
   const showError = () =>
-    void message.error(
-      "Không thể thực hiện thao tác. Vui lòng kiểm tra lại.",
-    );
+    void message.error("Không thể thực hiện thao tác. Vui lòng kiểm tra lại.");
 
   const permissionSelectOptions = useMemo(
     () =>
@@ -287,16 +302,20 @@ export default function IdentityAdministrationPage() {
             Xuất Excel
           </Button>
           {hasPermission(permission.createUser) && (
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                setEditingUser(undefined);
-                setUserModalOpen(true);
-              }}
-            >
-              Tạo tài khoản
-            </Button>
+            <Tooltip title={userFormBlockedReason}>
+              <Button
+                type="primary"
+                aria-label="Tạo tài khoản"
+                icon={<PlusOutlined />}
+                disabled={Boolean(userFormBlockedReason)}
+                onClick={() => {
+                  setEditingUser(undefined);
+                  setUserModalOpen(true);
+                }}
+              >
+                Tạo tài khoản
+              </Button>
+            </Tooltip>
           )}
         </div>
         <Table<AdminUser>
@@ -369,11 +388,12 @@ export default function IdentityAdministrationPage() {
                 return (
                   <Space wrap>
                     {hasPermission(permission.editUser) && (
-                      <Tooltip title="Cập nhật">
+                      <Tooltip title={userFormBlockedReason ?? "Cập nhật"}>
                         <Button
                           size="small"
                           aria-label={`Sửa ${user.fullName}`}
                           icon={<EditOutlined />}
+                          disabled={Boolean(userFormBlockedReason)}
                           onClick={() => {
                             setEditingUser(user);
                             setUserModalOpen(true);
@@ -504,8 +524,7 @@ export default function IdentityAdministrationPage() {
                         cancelText="Hủy"
                         onConfirm={() =>
                           deleteUser.mutate(user.id, {
-                            onSuccess: () =>
-                              showSuccess("Đã xóa tài khoản"),
+                            onSuccess: () => showSuccess("Đã xóa tài khoản"),
                             onError: showError,
                           })
                         }

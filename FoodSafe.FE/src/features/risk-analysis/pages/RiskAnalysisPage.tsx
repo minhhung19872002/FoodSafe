@@ -19,6 +19,7 @@ import {
   DeleteOutlined,
   SendOutlined,
   ExportOutlined,
+  EyeOutlined,
   PrinterOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -29,6 +30,7 @@ import {
   ALERT_CATEGORY,
   ALERT_CATEGORY_LABELS,
 } from "@/features/alerts-news/types/alertsNews.types";
+import { RiskAnalysisDetailDrawer } from "../components/RiskAnalysisDetailDrawer";
 import { useRiskAnalyses } from "../api/riskAnalysisQueries";
 import {
   useCreateRiskAnalysis,
@@ -66,6 +68,7 @@ export default function RiskAnalysisPage() {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<RiskAnalysis | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [form] = Form.useForm();
 
   const openCreate = () => {
@@ -123,9 +126,15 @@ export default function RiskAnalysisPage() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 160,
+      width: 200,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            aria-label="Xem chi tiết"
+            icon={<EyeOutlined />}
+            onClick={() => setDetailId(record.id)}
+          />
           <Button
             size="small"
             aria-label={`In ${record.title}`}
@@ -357,6 +366,10 @@ export default function RiskAnalysisPage() {
           </Form.Item>
         </Form>
       </Modal>
+      <RiskAnalysisDetailDrawer
+        riskAnalysisId={detailId}
+        onClose={() => setDetailId(null)}
+      />
     </Card>
   );
 }

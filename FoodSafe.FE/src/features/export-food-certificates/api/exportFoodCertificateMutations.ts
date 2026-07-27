@@ -56,6 +56,12 @@ export function useExportExportFoodCertificates() {
   });
 }
 
+export function useDownloadExportFoodCertificatePdf() {
+  return useMutation({
+    mutationFn: (id: string) => exportFoodCertificateApi.downloadPdf(id),
+  });
+}
+
 export function useUploadExportFoodCertificateAttachment() {
   return useMutation({
     mutationFn: ({ id, file }: { id: string; file: File }) =>

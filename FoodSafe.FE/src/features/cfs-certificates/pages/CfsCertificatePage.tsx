@@ -3,6 +3,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
+  FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
   StopOutlined,
@@ -15,6 +16,7 @@ import {
   useDeleteCfsCertificate,
   useDeleteCfsCertificateAttachment,
   useDownloadCfsCertificateAttachment,
+  useDownloadCfsCertificatePdf,
   useExportCfsCertificates,
   useRevokeCfsCertificate,
   useUpdateCfsCertificate,
@@ -81,6 +83,7 @@ export default function CfsCertificatePage() {
   const deleteMutation = useDeleteCfsCertificate();
   const revokeMutation = useRevokeCfsCertificate();
   const exportMutation = useExportCfsCertificates();
+  const pdfMutation = useDownloadCfsCertificatePdf();
   const uploadMutation = useUploadCfsCertificateAttachment();
   const downloadMutation = useDownloadCfsCertificateAttachment();
   const deleteAttachmentMutation = useDeleteCfsCertificateAttachment();
@@ -159,6 +162,20 @@ export default function CfsCertificatePage() {
             aria-label={`Tệp ${item.certificateNumber}`}
             icon={<FileTextOutlined />}
             onClick={() => setAttachmentsFor(item)}
+          />
+          <Button
+            type="text"
+            size="small"
+            aria-label={`Tải PDF ${item.certificateNumber}`}
+            icon={<FilePdfOutlined />}
+            loading={pdfMutation.isPending && pdfMutation.variables === item.id}
+            onClick={() =>
+              pdfMutation.mutate(item.id, {
+                onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                onError: () =>
+                  void message.error("Không thể tải bản PDF chứng nhận CFS."),
+              })
+            }
           />
           {canEdit && item.status !== LICENSE_STATUS.Revoked && (
             <>

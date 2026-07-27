@@ -45,6 +45,10 @@ export function useExportEligibilityCertificates() {
   return useMutation({ mutationFn: eligibilityCertificateApi.exportExcel });
 }
 
+export function useDownloadEligibilityCertificatePdf() {
+  return useMutation({ mutationFn: eligibilityCertificateApi.downloadPdf });
+}
+
 export function useUploadEligibilityAttachment() {
   return useRefreshMutation(({ id, file }: { id: string; file: File }) =>
     eligibilityCertificateApi.upload(id, file),

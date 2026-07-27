@@ -3,6 +3,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
+  FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
   StopOutlined,
@@ -20,6 +21,7 @@ import {
   useDeleteProductRegistration,
   useDeleteProductRegistrationAttachment,
   useDownloadProductRegistrationAttachment,
+  useDownloadProductRegistrationPdf,
   useExportProductRegistrations,
   useRevokeProductRegistration,
   useUpdateProductRegistration,
@@ -81,6 +83,7 @@ export default function ProductRegistrationPage() {
   const deleteMutation = useDeleteProductRegistration();
   const revokeMutation = useRevokeProductRegistration();
   const exportMutation = useExportProductRegistrations();
+  const pdfMutation = useDownloadProductRegistrationPdf();
   const uploadMutation = useUploadProductRegistrationAttachment();
   const downloadMutation = useDownloadProductRegistrationAttachment();
   const deleteAttachmentMutation = useDeleteProductRegistrationAttachment();
@@ -155,6 +158,20 @@ export default function ProductRegistrationPage() {
             aria-label={`Tệp ${item.registrationNumber}`}
             icon={<FileTextOutlined />}
             onClick={() => setAttachmentsFor(item)}
+          />
+          <Button
+            size="small"
+            type="text"
+            aria-label={`Tải PDF ${item.registrationNumber}`}
+            icon={<FilePdfOutlined />}
+            loading={pdfMutation.isPending && pdfMutation.variables === item.id}
+            onClick={() =>
+              pdfMutation.mutate(item.id, {
+                onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                onError: () =>
+                  void message.error("Không thể tải bản PDF đăng ký công bố."),
+              })
+            }
           />
           {canEdit && item.status !== LICENSE_STATUS.Revoked && (
             <>

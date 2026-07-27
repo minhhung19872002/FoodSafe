@@ -7,6 +7,9 @@ COPY . .
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine
+# The snippet must NOT live in conf.d/ — everything matching conf.d/*.conf is
+# auto-included into the http{} block, and these are server/location directives.
+COPY docker/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 USER nginx
