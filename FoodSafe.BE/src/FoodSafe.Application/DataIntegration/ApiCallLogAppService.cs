@@ -44,6 +44,8 @@ public class ApiCallLogAppService : ApplicationService
             query = query.Where(x => x.ExternalSystemName == input.ExternalSystem);
         if (input.IsSuccess.HasValue)
             query = query.Where(x => x.IsSuccess == input.IsSuccess.Value);
+        if (input.DataType.HasValue)
+            query = query.Where(x => x.DataType == input.DataType.Value);
         if (input.FromDate.HasValue)
             query = query.Where(x => x.CalledAt >= input.FromDate.Value.Date);
         if (input.ToDate.HasValue)
@@ -74,6 +76,7 @@ public class ApiCallLogAppService : ApplicationService
         {
             Id = entity.Id,
             OrganizationId = entity.OrganizationId,
+            DataType = entity.DataType,
             Direction = entity.Direction,
             ExternalSystemName = entity.ExternalSystemName,
             EndpointUrl = entity.EndpointUrl,
@@ -114,6 +117,7 @@ public class ApiCallLogAppService : ApplicationService
         DurationMs = e.DurationMs,
         IsSuccess = e.IsSuccess,
         ErrorMessage = e.ErrorMessage,
+        DataType = e.DataType,
         CreationTime = e.CreationTime,
     };
 }

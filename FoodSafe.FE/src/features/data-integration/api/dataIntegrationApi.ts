@@ -8,6 +8,8 @@ import type {
   ApiCallLogFilter,
   FileDownload,
   PagedResult,
+  ShareDataInput,
+  ShareDataResult,
 } from "../types/dataIntegration.types";
 
 function download(data: Blob, contentDisposition?: string): FileDownload {
@@ -60,6 +62,11 @@ export const dataIntegrationApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+
+  shareData: (input: ShareDataInput) =>
+    api
+      .post<ShareDataResult>("/v1/app/data-sharing/share", input)
+      .then((r) => r.data),
 
   exportCallLogs: async (filter: ApiCallLogFilter): Promise<FileDownload> => {
     const response = await api.get<Blob>("/v1/app/api-call-log/excel/export", {

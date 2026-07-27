@@ -22,6 +22,7 @@ import {
   SwapOutlined,
   EyeOutlined,
   ExportOutlined,
+  ShareAltOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -34,6 +35,7 @@ import {
   useDeleteEndpoint,
   useExportEndpoints,
   useExportCallLogs,
+  useShareData,
 } from "../api/dataIntegrationMutations";
 import {
   API_ENDPOINT_STATUS,
@@ -41,6 +43,8 @@ import {
   API_AUTH_TYPE,
   API_AUTH_TYPE_LABELS,
   API_CALL_DIRECTION_CONFIG,
+  SHARED_DATA_TYPE,
+  SHARED_DATA_TYPE_LABELS,
   type ApiEndpoint,
   type ApiEndpointFilter,
   type ApiEndpointStatus,
@@ -48,6 +52,7 @@ import {
   type ApiCallLog,
   type ApiCallLogFilter,
   type ApiCallDirection,
+  type SharedDataType,
 } from "../types/dataIntegration.types";
 
 const PAGE_SIZE = 15;
@@ -321,16 +326,32 @@ function EndpointsTab() {
 }
 
 function CallHistoryTab() {
+  const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<ApiCallLogFilter>({
     skipCount: 0,
     maxResultCount: PAGE_SIZE,
   });
   const { data, isLoading } = useApiCallLogs(filter);
   const exportMut = useExportCallLogs();
+  const shareMut = useShareData();
   const [detailId, setDetailId] = useState<string>();
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareForm] = Form.useForm();
   const detail = useApiCallLogDetail(detailId);
+  const endpoints = useApiEndpoints({
+    skipCount: 0,
+    maxResultCount: 100,
+    status: API_ENDPOINT_STATUS.Active,
+  });
+  const canShare = hasPermission("FoodSafe.DataIntegration.Share");
 
   const columns: TableColumnsType<ApiCallLog> = [
+    {
+      title: "Loại dữ liệu",
+      dataIndex: "dataType",
+      width: 150,
+      render: (v: SharedDataType) => SHARED_DATA_TYPE_LABELS[v] ?? "Khác",
+    },
     {
       title: "Hướng",
       dataIndex: "direction",
@@ -395,6 +416,24 @@ function CallHistoryTab() {
 
   return (
     <>
+      <Tabs
+        size="small"
+        activeKey={String(filter.dataType ?? "all")}
+        onChange={(key) =>
+          setFilter((f) => ({
+            ...f,
+            dataType:
+              key === "all" ? undefined : (Number(key) as SharedDataType),
+            skipCount: 0,
+          }))
+        }
+        items={[
+          { key: "all", label: "Tất cả" },
+          ...Object.entries(SHARED_DATA_TYPE_LABELS)
+            .filter(([value]) => Number(value) !== SHARED_DATA_TYPE.Other)
+            .map(([value, label]) => ({ key: value, label })),
+        ]}
+      />
       <Space style={{ marginBottom: 16 }} wrap>
         <Input.Search
           placeholder="URL, hệ thống"
@@ -444,6 +483,20 @@ function CallHistoryTab() {
         >
           Xuất Excel
         </Button>
+        {canShare && (
+          <Button
+            type="primary"
+            icon={<ShareAltOutlined />}
+            onClick={() => {
+              shareForm.setFieldsValue({
+                dataType: filter.dataType ?? SHARED_DATA_TYPE.Alert,
+              });
+              setShareOpen(true);
+            }}
+          >
+            Chia sẻ dữ liệu
+          </Button>
+        )}
       </Space>
       <Table
         rowKey="id"
@@ -461,6 +514,69 @@ function CallHistoryTab() {
           showSizeChanger: false,
         }}
       />
+      <Modal
+        title="Chia sẻ dữ liệu đến hệ thống bên ngoài"
+        open={shareOpen}
+        onCancel={() => setShareOpen(false)}
+        onOk={() => shareForm.submit()}
+        okText="Gửi"
+        cancelText="Hủy"
+        confirmLoading={shareMut.isPending}
+        destroyOnHidden
+      >
+        <Form
+          form={shareForm}
+          layout="vertical"
+          preserve={false}
+          onFinish={(values) =>
+            shareMut.mutate(values, {
+              onSuccess: (result) => {
+                setShareOpen(false);
+                if (result.isSuccess) {
+                  message.success("Đã chia sẻ dữ liệu thành công.");
+                } else {
+                  message.warning(
+                    `Đã ghi nhận lần gửi nhưng hệ thống nhận trả lỗi: ${result.errorMessage ?? "không xác định"}`,
+                  );
+                }
+              },
+              onError: () => message.error("Không thể chia sẻ dữ liệu."),
+            })
+          }
+        >
+          <Form.Item
+            name="endpointId"
+            label="Điểm kết nối"
+            rules={[{ required: true, message: "Chọn điểm kết nối" }]}
+          >
+            <Select
+              placeholder="Chọn API endpoint"
+              options={(endpoints.data?.items ?? []).map((endpoint) => ({
+                value: endpoint.id,
+                label: `${endpoint.externalSystem} — ${endpoint.name}`,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item
+            name="dataType"
+            label="Loại dữ liệu"
+            rules={[{ required: true, message: "Chọn loại dữ liệu" }]}
+          >
+            <Select
+              options={Object.entries(SHARED_DATA_TYPE_LABELS).map(
+                ([value, label]) => ({ value: Number(value), label }),
+              )}
+            />
+          </Form.Item>
+          <Form.Item name="note" label="Ghi chú / mô tả dữ liệu">
+            <Input.TextArea
+              rows={3}
+              maxLength={2000}
+              placeholder="Mô tả nội dung dữ liệu được chia sẻ"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
       <Modal
         title="Chi tiết lịch sử gọi API"
         open={Boolean(detailId)}

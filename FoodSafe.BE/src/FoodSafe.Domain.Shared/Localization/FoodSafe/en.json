@@ -255,6 +255,7 @@
     "Permission:DataIntegration.ApiEndpoints.Delete": "Delete API endpoints",
     "Permission:DataIntegration.CallHistory": "API call history",
     "Permission:DataIntegration.CallHistory.View": "View API call history",
+    "Permission:DataIntegration.Share": "Share integration data",
     "Permission:DataScope.All": "Access all organization data",
 
     "FoodSafe:DataIntegration:0001": "API endpoint not found.",

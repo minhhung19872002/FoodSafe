@@ -563,6 +563,9 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
         callHistory.AddChild(
             FoodSafePermissions.DataIntegration.CallHistory.View,
             LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.CallHistory.View"));
+        dataIntegration.AddChild(
+            FoodSafePermissions.DataIntegration.Share,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.Share"));
 
         group.AddPermission(
             FoodSafePermissions.DataScope.All,

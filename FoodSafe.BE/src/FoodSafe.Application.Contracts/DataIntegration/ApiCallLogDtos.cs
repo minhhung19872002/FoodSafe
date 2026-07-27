@@ -14,6 +14,7 @@ public class ApiCallLogDto : EntityDto<Guid>
     public long DurationMs { get; set; }
     public bool IsSuccess { get; set; }
     public string? ErrorMessage { get; set; }
+    public SharedDataType DataType { get; set; }
     public DateTime CreationTime { get; set; }
 }
 
@@ -32,4 +33,5 @@ public class ApiCallLogFilterDto : PagedAndSortedResultRequestDto
     public bool? IsSuccess { get; set; }
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
+    public SharedDataType? DataType { get; set; }
 }

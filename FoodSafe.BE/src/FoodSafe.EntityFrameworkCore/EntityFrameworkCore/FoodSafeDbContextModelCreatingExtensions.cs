@@ -2419,6 +2419,10 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.DurationMs).HasColumnName("duration_ms").IsRequired();
             entity.Property(x => x.IsSuccess).HasColumnName("is_success").IsRequired();
             entity.Property(x => x.ErrorMessage).HasColumnName("error_message").HasMaxLength(4000);
+            entity.Property(x => x.DataType)
+                .HasColumnName("data_type")
+                .HasConversion<short>()
+                .HasDefaultValue(SharedDataType.Other);
             entity.Property(x => x.CreationTime).HasColumnName("creation_time");
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");
             entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");

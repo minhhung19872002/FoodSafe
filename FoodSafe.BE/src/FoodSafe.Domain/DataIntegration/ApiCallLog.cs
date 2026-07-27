@@ -18,6 +18,7 @@ public class ApiCallLog : CreationAuditedAggregateRoot<Guid>
     public long DurationMs { get; private set; }
     public bool IsSuccess { get; private set; }
     public string? ErrorMessage { get; private set; }
+    public SharedDataType DataType { get; private set; } = SharedDataType.Other;
 
     private ApiCallLog() { }
 
@@ -35,7 +36,8 @@ public class ApiCallLog : CreationAuditedAggregateRoot<Guid>
         string? requestBody = null,
         int? responseStatusCode = null,
         string? responseBody = null,
-        string? errorMessage = null)
+        string? errorMessage = null,
+        SharedDataType dataType = SharedDataType.Other)
     {
         Check.NotNullOrWhiteSpace(externalSystemName, nameof(externalSystemName));
         Check.NotNullOrWhiteSpace(endpointUrl, nameof(endpointUrl));
@@ -57,6 +59,7 @@ public class ApiCallLog : CreationAuditedAggregateRoot<Guid>
             ResponseStatusCode = responseStatusCode,
             ResponseBody = responseBody,
             ErrorMessage = errorMessage,
+            DataType = dataType,
         };
     }
 }

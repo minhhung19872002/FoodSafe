@@ -79,6 +79,44 @@ export interface ApiEndpointFilter {
   maxResultCount: number;
 }
 
+export const SHARED_DATA_TYPE = {
+  Other: 0,
+  Alert: 1,
+  InspectionResult: 2,
+  FoodPoisoning: 3,
+  License: 4,
+  Product: 5,
+  News: 6,
+  Business: 7,
+} as const;
+export type SharedDataType =
+  (typeof SHARED_DATA_TYPE)[keyof typeof SHARED_DATA_TYPE];
+
+export const SHARED_DATA_TYPE_LABELS: Record<SharedDataType, string> = {
+  [SHARED_DATA_TYPE.Other]: "Khác",
+  [SHARED_DATA_TYPE.Alert]: "Cảnh báo ATTP",
+  [SHARED_DATA_TYPE.InspectionResult]: "Kết quả thanh kiểm tra",
+  [SHARED_DATA_TYPE.FoodPoisoning]: "Ngộ độc thực phẩm",
+  [SHARED_DATA_TYPE.License]: "Giấy phép",
+  [SHARED_DATA_TYPE.Product]: "Sản phẩm, thực phẩm",
+  [SHARED_DATA_TYPE.News]: "Tin tức, hoạt động",
+  [SHARED_DATA_TYPE.Business]: "Cơ sở SXKD",
+};
+
+export interface ShareDataInput {
+  endpointId: string;
+  dataType: SharedDataType;
+  entityId?: string;
+  note?: string;
+}
+
+export interface ShareDataResult {
+  logId: string;
+  isSuccess: boolean;
+  statusCode?: number;
+  errorMessage?: string;
+}
+
 export interface ApiCallLog {
   id: string;
   organizationId: string;
@@ -91,6 +129,7 @@ export interface ApiCallLog {
   durationMs: number;
   isSuccess: boolean;
   errorMessage?: string;
+  dataType: SharedDataType;
   creationTime: string;
 }
 
@@ -107,6 +146,7 @@ export interface ApiCallLogFilter {
   isSuccess?: boolean;
   fromDate?: string;
   toDate?: string;
+  dataType?: SharedDataType;
   skipCount: number;
   maxResultCount: number;
 }

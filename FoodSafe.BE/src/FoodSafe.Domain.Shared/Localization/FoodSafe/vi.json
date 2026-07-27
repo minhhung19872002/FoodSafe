@@ -274,6 +274,7 @@
     "Permission:DataIntegration.ApiEndpoints.Delete": "Xóa cấu hình API",
     "Permission:DataIntegration.CallHistory": "Lịch sử API",
     "Permission:DataIntegration.CallHistory.View": "Xem lịch sử API",
+    "Permission:DataIntegration.Share": "Chia sẻ dữ liệu liên thông",
     "Permission:DataScope.All": "Truy cập dữ liệu tất cả đơn vị",
 
     "FoodSafe:DataIntegration:0001": "Không tìm thấy cấu hình API.",

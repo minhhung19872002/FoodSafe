@@ -320,6 +320,8 @@ public static class FoodSafePermissions
                 DataIntegration.Default + ".CallHistory";
             public const string View = Default + ".View";
         }
+
+        public const string Share = Default + ".Share";
     }
 
     public static class DataScope

@@ -4,6 +4,7 @@ import type {
   ApiCallLogFilter,
   ApiEndpointFilter,
   CreateUpdateApiEndpoint,
+  ShareDataInput,
 } from "../types/dataIntegration.types";
 
 export function useCreateEndpoint() {
@@ -50,6 +51,15 @@ export function useExportEndpoints() {
   return useMutation({
     mutationFn: (filter: ApiEndpointFilter) =>
       dataIntegrationApi.exportEndpoints(filter),
+  });
+}
+
+export function useShareData() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ShareDataInput) =>
+      dataIntegrationApi.shareData(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-call-logs"] }),
   });
 }
 
