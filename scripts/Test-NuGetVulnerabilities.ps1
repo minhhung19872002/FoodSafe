@@ -9,11 +9,13 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $audit = $auditJson | ConvertFrom-Json
+# AutoMapper GHSA-rvv3-g6hj-g44x (CVE-2026-32933) is FIXED, not allow-listed:
+# common.props pins AutoMapper 15.1.3 (>= 15.1.1), so it no longer appears in
+# the audit. Deliberately NOT in the allow-list so any future AutoMapper
+# advisory fails the gate instead of being silently ignored.
 $allowList = @{
     'Volo.Abp.Account.Web|https://github.com/advisories/GHSA-vfm5-cr22-jg3m' =
-        'Self-registration is disabled and both register routes are rejected with 404.'
-    'AutoMapper|https://github.com/advisories/GHSA-rvv3-g6hj-g44x' =
-        'ABP 9.3 requires AutoMapper 14; JSON depth is bounded and application maps are flat with MaxDepth(8).'
+        'Open redirect in Account registration returnUrl; no fix in ABP 9.3.x (first fixed 10.0.0-rc.2). Not exploitable: self-registration disabled (IsSelfRegistrationEnabled=false) + AppUrlOptions.RedirectAllowedUrls bounds redirects. Tracked: ABP 10 upgrade (doc 04 §3.2.2).'
 }
 
 $unexpected = [System.Collections.Generic.List[object]]::new()

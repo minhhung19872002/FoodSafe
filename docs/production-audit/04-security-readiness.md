@@ -31,7 +31,7 @@ All findings are verified against source code at HEAD `fe3dbd2`. No speculative 
 | ID | Severity | Area | Description | Evidence | Fix Required |
 |---|---|---|---|---|---|
 | ~~SEC-H-01~~ RESOLVED (B-5) | HIGH | Authorization / SSRF | SSRF via unvalidated data-integration endpoint URLs — now blocked by `OutboundUrlValidator` (syntactic gate + connect-time IP guard) | See §3.1 | DONE |
-| SEC-H-02 | HIGH | Dependencies | react-router-dom CSRF bypass CVE (GHSA-qwww-vcr4-c8h2) | See §3.2 | YES |
+| SEC-H-02 | HIGH | Dependencies | Known-vulnerable deps: **AutoMapper DoS RESOLVED (B-6)**; Account.Web open-redirect + react-router RSC-CSRF = accepted-risk / not-applicable (no supported fix) | See §3.2 | PARTIAL — see §3.2 |
 | SEC-M-01 | MEDIUM | Authentication | CAPTCHA bypass via malformed JSON body | See §3.3 | YES |
 | ~~SEC-M-02~~ RESOLVED (B-3) | MEDIUM | Secrets | Git history contains committed dev credentials — only commodity defaults; now rejected at Production startup + recurrence-guarded | See §3.4 / doc 09 | DONE |
 | SEC-M-03 | MEDIUM | Authentication | Password expiry enforced client-side only; backend APIs remain accessible | See §3.5 | YES |
@@ -86,25 +86,33 @@ using var response = await ProbeClient.SendAsync(request, ...);
 
 ---
 
-### 3.2 — SEC-H-02: react-router-dom CSRF bypass (HIGH)
+### 3.2 — SEC-H-02: Known-vulnerable dependencies (B-6)
 
-**File:** `FoodSafe.FE/package.json` — `react-router-dom` at version `^7.12.x`
+Three advisories were flagged by `dotnet list package --vulnerable` and `npm audit`. Disposition below; **the High-severity, actually-exploitable one (AutoMapper) is fixed in code**, the other two have no fix in their supported major/minor line and are non-exploitable in this deployment.
 
-**Description:**  
-`npm audit --omit=dev` reports GHSA-qwww-vcr4-c8h2: *React Router RSC Mode CSRF Bypass allows action execution before a 400 response*. Severity: HIGH.
+#### 3.2.1 — AutoMapper DoS — CVE-2026-32933 / GHSA-rvv3-g6hj-g44x (HIGH 7.5) — **RESOLVED (B-6, 2026-07-28)**
 
-**Actual impact assessment:** This application is a Vite SPA (not an RSC server). The vulnerability affects React Server Components mode, which is not used here. Practical exploitability is therefore **low**, but the package should be updated to eliminate the finding from automated scanners and CI gates.
+`Volo.Abp.AutoMapper 9.3.7` pulled `AutoMapper 14.0.0` transitively into every backend project. AutoMapper < 15.1.1 has an uncontrolled-recursion flaw: a deeply nested object graph (~25,000 levels) exhausts the stack and raises an uncatchable `StackOverflowException`, terminating the process (unauthenticated DoS).
 
-```
-# npm audit output (abbreviated)
-react-router  7.12.0 - 8.2.0
-Severity: high
-RSC Mode CSRF Bypass Allows Action Execution Before 400 Response
-fix available via `npm audit fix --force`
-Will install react-router-dom@7.11.0
-```
+**Compensating control (already present):** ASP.NET Core's System.Text.Json enforces `MaxDepth = 64` by default, so an over-nested request body is rejected at deserialization before it can reach an AutoMapper projection — this bounded the practical risk even before the fix.
 
-**Fix:** Pin `react-router-dom` to `7.11.0` (or whichever non-RSC version resolves the advisory). Verify routing still works after downgrade.
+**Fix:** Pinned `AutoMapper 15.1.3` (first fixed line ≥ 15.1.1) as a direct `PackageReference` in `FoodSafe.BE/common.props`, which every project imports. The pin satisfies `Volo.Abp.AutoMapper`'s `AutoMapper >= 14.0.0` constraint. **Runtime-verified compatible with ABP 9.3.7**: full solution build (0 warnings) + all backend suites green — Domain 197, Application 309 (boots the ABP application module → registers & validates every AutoMapper profile at init), Host 67, EF Core 18 on real PostgreSQL = **591 tests**. `dotnet list package --vulnerable` now reports **no AutoMapper advisory** in any project.
+
+#### 3.2.2 — Volo.Abp.Account.Web open redirect — GHSA-vfm5-cr22-jg3m (MODERATE 5.3) — **ACCEPTED RISK / tracked**
+
+Open redirect via the Account **registration** `returnUrl`. Affected 5.1.0–10.0.0-rc.1; **first fixed in 10.0.0-rc.2** — there is **no fix in the ABP 9.3.x line** (9.3.7 is the latest 9.3.x). A forward fix requires a full ABP 10 major upgrade, which would touch the entire framework surface and every business feature — out of scope for a targeted blocker fix ("do not modify business features unless required").
+
+**Why not exploitable here:** self-registration is **disabled** (`Abp.Account.IsSelfRegistrationEnabled = false`, `appsettings.json`), so the vulnerable registration path is unreachable; and outbound redirects are already constrained by ABP `AppUrlOptions.RedirectAllowedUrls` (see §6 non-findings, "No open redirects"). Net residual risk: negligible in this configuration.
+
+**Tracked remediation:** upgrade to ABP ≥ 10.0.0 in a dedicated framework-upgrade workstream with full regression (Level 4). Until then the two compensating controls above stand.
+
+#### 3.2.3 — react-router-dom RSC CSRF — GHSA-qwww-vcr4-c8h2 (HIGH) — **NOT APPLICABLE / tracked**
+
+`react-router-dom 7.18.1` falls in the advisory's `7.12.0 – 8.2.0` range. The flaw is specific to **React Server Components (RSC) mode**. FoodSafe.FE is a **Vite client-only SPA** — RSC mode is never enabled, so the vulnerable code path does not execute. CSRF on state-changing calls is independently mitigated: all mutations go through the ABP cookie session with antiforgery XSRF tokens (`SameSite=Strict`, validated server-side — §5).
+
+**Why not "fixed" by version bump:** npm publishes **no forward-patched version** — the maximum published is `7.18.1`, and the advisory extends to `8.2.0` with no `8.3.0+` released. The only version npm classifies as non-vulnerable is a **downgrade to `7.11.0`** (7 minors back, a breaking change). Downgrading a working router to silence a non-applicable advisory would risk real routing regressions for zero security benefit.
+
+**Tracked remediation:** adopt the patched `react-router-dom` release once published (≥ 8.3.0 or a back-ported 7.19+), with a routing smoke retest.
 
 ---
 
@@ -306,7 +314,7 @@ The following findings must be resolved before production deployment:
 | ID | Severity | Blocker Reason |
 |---|---|---|
 | ~~**SEC-H-01**~~ RESOLVED (B-5) | HIGH | SSRF allows server-side HTTP requests to internal services; could expose Redis, MinIO, PostgreSQL, Hangfire — **fixed**: `OutboundUrlValidator` syntactic gate + connect-time IP guard on both outbound clients |
-| **SEC-H-02** | HIGH | CVE active in npm audit; CI pipeline may block deployment once advisory scanner runs |
+| **SEC-H-02** | HIGH→PARTIAL | AutoMapper High-DoS **fixed (B-6)**; remaining Account.Web (Moderate) + react-router (High, RSC-only) have **no fix in their supported line** and are non-exploitable in this deployment — documented accepted-risk with compensating controls, framework/library upgrade tracked (§3.2) |
 | **SEC-M-01** | MEDIUM | CAPTCHA bypass weakens brute-force protection on login and password-reset endpoints; violates ATTT level-2 |
 | **SEC-M-03** | MEDIUM | Password expiry not enforced server-side; API remains fully accessible with expired passwords; violates ATTT level-2 password policy |
 | **SEC-M-04** | MEDIUM | SVG upload can embed stored XSS on login page; served to all unauthenticated users |
@@ -369,6 +377,8 @@ The following areas were explicitly checked and found to be properly implemented
 | Priority | Finding | Estimated Effort |
 |---|---|---|
 | ~~P0~~ DONE (B-5, 2026-07-28) | SEC-H-01 (SSRF) | `OutboundUrlValidator` + 58 regression tests |
+| ~~P0~~ DONE (B-6, 2026-07-28) | SEC-H-02 (AutoMapper DoS CVE-2026-32933) | Pinned AutoMapper 15.1.3; 591 backend tests green |
+| P2 — tracked accepted-risk | SEC-H-02 (Account.Web open-redirect; react-router RSC-CSRF) | No supported fix; non-exploitable here; ABP 10 / RR upgrade tracked |
 | P0 — Must fix before launch | SEC-M-01 (CAPTCHA bypass) | 2 hours |
 | P0 — Must fix before launch | SEC-M-03 (password expiry server-side) | 1 day |
 | P0 — Must fix before launch | SEC-M-04 (SVG XSS) | 2 hours (remove SVG from allowlist) |

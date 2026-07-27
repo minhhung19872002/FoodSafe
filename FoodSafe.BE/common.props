@@ -23,4 +23,16 @@
   <ItemGroup>
     <Content Remove="$(UserProfile)\.nuget\packages\*\*\contentFiles\any\*\*.abppkg*" />
   </ItemGroup>
+
+  <!--
+    Security pin (B-6 / CVE-2026-32933, GHSA-rvv3-g6hj-g44x): ABP 9.3.7 pulls
+    AutoMapper 14.0.0 transitively, which has an uncontrolled-recursion DoS
+    (StackOverflow on deeply nested graphs). First fixed in 15.1.1. We pin the
+    latest 15.1.x directly so every project resolves the patched assembly.
+    Compatible with Volo.Abp.AutoMapper 9.3.7 (dependency constraint is
+    AutoMapper >= 14.0.0). Verified by full solution build + test suite.
+  -->
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="15.1.3" />
+  </ItemGroup>
 </Project>
