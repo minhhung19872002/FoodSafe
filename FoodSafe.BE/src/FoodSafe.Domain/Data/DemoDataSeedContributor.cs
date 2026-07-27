@@ -154,6 +154,23 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "VILAS 675", "Kiểm nghiệm vi sinh, hóa lý thực phẩm và nước",
             now.AddYears(2), null, 1, true));
 
+        await InsertIfMissingAsync(DemoId(0x8005, 2), () => TestingService.Create(
+            DemoId(0x8005, 2), DemoTestingCenterId, "KN-VS",
+            "Kiểm nghiệm vi sinh vật (Coliforms, E.coli, Salmonella)",
+            "Mẫu", "TCVN 4884-1:2015 / ISO 4833-1", 850_000m, 5, null, 1, true));
+        await InsertIfMissingAsync(DemoId(0x8005, 3), () => TestingService.Create(
+            DemoId(0x8005, 3), DemoTestingCenterId, "KN-HL",
+            "Kiểm nghiệm hóa lý (pH, độ ẩm, hàm lượng protein)",
+            "Mẫu", "TCVN 4594:1988", 620_000m, 4, null, 2, true));
+        await InsertIfMissingAsync(DemoId(0x8005, 4), () => TestingService.Create(
+            DemoId(0x8005, 4), DemoTestingCenterId, "KN-KLN",
+            "Kiểm nghiệm kim loại nặng (Pb, Cd, Hg, As)",
+            "Chỉ tiêu", "AOAC 999.10 / ICP-MS", 480_000m, 7, null, 3, true));
+        await InsertIfMissingAsync(DemoId(0x8005, 5), () => TestingService.Create(
+            DemoId(0x8005, 5), DemoTestingCenterId, "KN-BVTV",
+            "Kiểm nghiệm dư lượng thuốc bảo vệ thực vật",
+            "Mẫu", "EN 15662:2018 (QuEChERS)", 1_950_000m, 10, null, 4, true));
+
         // Countries and document types referenced below; ensured here so this
         // contributor does not depend on MasterCatalogDataSeedContributor order.
         await InsertIfMissingAsync(CountryVietnamId, () => Country.Create(
