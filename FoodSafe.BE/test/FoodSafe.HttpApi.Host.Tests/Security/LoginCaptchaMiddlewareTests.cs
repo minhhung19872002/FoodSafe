@@ -48,6 +48,29 @@ public sealed class LoginCaptchaMiddlewareTests
         context.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
     }
 
+    [Theory]
+    [InlineData("not json at all")]
+    [InlineData("")]
+    [InlineData("{ broken json")]
+    [InlineData("[]")] // valid JSON but not an object with captchaToken
+    public async Task Login_Should_Reject_Unparseable_Or_Tokenless_Body(string body)
+    {
+        // Regression for SEC-M-01: a malformed/non-JSON body previously fell
+        // through to next() and skipped CAPTCHA entirely. It must now be rejected.
+        var nextCalled = false;
+        var middleware = new LoginCaptchaMiddleware(_ =>
+        {
+            nextCalled = true;
+            return Task.CompletedTask;
+        });
+        var context = CreateLoginContext(body);
+
+        await middleware.InvokeAsync(context, new StubVerifier(false));
+
+        context.Response.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
+        nextCalled.ShouldBeFalse("a body with no verifiable CAPTCHA token must never reach the login handler");
+    }
+
     [Fact]
     public async Task Initial_password_change_should_require_captcha()
     {

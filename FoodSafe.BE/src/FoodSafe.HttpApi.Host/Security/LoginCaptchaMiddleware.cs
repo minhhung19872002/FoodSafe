@@ -44,21 +44,32 @@ public sealed class LoginCaptchaMiddleware(RequestDelegate next)
         try
         {
             using var document = JsonDocument.Parse(body);
-            foreach (var property in document.RootElement.EnumerateObject())
+            // Only an object body can carry a captchaToken. A non-object root
+            // (array, string, number, ...) has no token — and calling
+            // EnumerateObject() on it throws InvalidOperationException, so guard
+            // the kind explicitly rather than let that escape the middleware.
+            if (document.RootElement.ValueKind == JsonValueKind.Object)
             {
-                if (property.Name.Equals(
-                        "captchaToken",
-                        StringComparison.OrdinalIgnoreCase)
-                    && property.Value.ValueKind == JsonValueKind.String)
+                foreach (var property in document.RootElement.EnumerateObject())
                 {
-                    token = property.Value.GetString();
-                    break;
+                    if (property.Name.Equals(
+                            "captchaToken",
+                            StringComparison.OrdinalIgnoreCase)
+                        && property.Value.ValueKind == JsonValueKind.String)
+                    {
+                        token = property.Value.GetString();
+                        break;
+                    }
                 }
             }
         }
         catch (JsonException)
         {
-            await next(context);
+            // A protected endpoint received a body that is not valid JSON, so no
+            // CAPTCHA token could be present. Reject instead of calling next() —
+            // previously this branch bypassed CAPTCHA entirely (SEC-M-01), letting
+            // an attacker skip the check by sending a malformed body.
+            await RejectAsync(context);
             return;
         }
 
@@ -72,6 +83,11 @@ public sealed class LoginCaptchaMiddleware(RequestDelegate next)
             return;
         }
 
+        await RejectAsync(context);
+    }
+
+    private static async Task RejectAsync(HttpContext context)
+    {
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
         context.Response.ContentType = "application/json; charset=utf-8";
         await context.Response.WriteAsJsonAsync(
