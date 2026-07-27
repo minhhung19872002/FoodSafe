@@ -121,13 +121,13 @@ security/functional builds** (P0), plus **integration/hardening** that is partly
 
 **P1-1 execution batches** (each is one Level-2 retest / PR):
 
-| Batch | Areas | New helper leaned on |
-|---|---|---|
-| P1-1a | Excel export downloads — all ~20 modules | `expectExcelDownload` |
-| P1-1b | Attachment upload/download — inspection + 6 licensing + products | `attachmentRoundTrip` |
-| P1-1c | Identity admin (user create/edit/reset), system-settings save + uploads, profile + avatar, change-password | — |
-| P1-1d | List filter + sort + page-size — businesses, inspection, food-poisoning, reporting, alerts, testing, risk-analysis | — |
-| P1-1e | Report workflow buttons in-UI (Submit/Verify/Return/Complete); dashboard filter + drill-down; statistics year change | role-seeded verifier |
+| Batch | Areas | New helper leaned on | Status |
+|---|---|---|---|
+| P1-1a | Excel export downloads — all ~20 modules | `expectExcelDownload` | ✅ DONE (`2adc785`) — `excel-exports.spec.ts` 5/5 |
+| P1-1b | Attachment upload/download — inspection + 6 licensing + products | `attachmentRoundTrip` | pending |
+| P1-1c | Identity admin user lifecycle — delete (FR-02-05), random password (FR-02-07), permission filter (FR-02-02) | — | ✅ DONE — `identity-user-lifecycle.spec.ts` 2/2 + BE contract 2/2. **Fixed 2 real defects**: `Users.Delete` not surfaced to FE (button never rendered) + `DeleteUserAsync` NRE/HTTP 500 on projected user |
+| P1-1d | List filter + sort + page-size — businesses, inspection, food-poisoning, reporting, alerts, testing, risk-analysis | — | pending |
+| P1-1e | Report workflow buttons in-UI (Submit/Verify/Return/Complete); dashboard filter + drill-down; statistics year change | role-seeded verifier | ✅ DONE (`e2665e4`) — `dashboard-statistics-filters.spec.ts` 3/3 (report workflow buttons still pending) |
 
 ### P1-2 — Anonymous public certificate document download — browser evidence (FR-4x-03/04)
 

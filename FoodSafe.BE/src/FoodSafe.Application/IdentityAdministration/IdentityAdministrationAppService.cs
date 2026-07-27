@@ -294,7 +294,12 @@ public class IdentityAdministrationAppService :
                 existing.Profile,
                 cancellationToken: Token);
         }
-        (await _userManager.DeleteAsync(existing.User)).CheckErrors();
+        // Re-fetch a fully-loaded, tracked user: the scoped projection above does
+        // not include the navigation collections (Roles, Claims, Logins, Tokens,
+        // OrganizationUnits) that IdentityUserManager.DeleteAsync dereferences, so
+        // deleting the projected instance throws NullReferenceException.
+        var user = await _userManager.GetByIdAsync(existing.Id);
+        (await _userManager.DeleteAsync(user)).CheckErrors();
         await CurrentUnitOfWork!.SaveChangesAsync(Token);
     }
 

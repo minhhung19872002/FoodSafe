@@ -133,6 +133,7 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.SystemAdministration.Users.Default,
         FoodSafePermissions.SystemAdministration.Users.Create,
         FoodSafePermissions.SystemAdministration.Users.Edit,
+        FoodSafePermissions.SystemAdministration.Users.Delete,
         FoodSafePermissions.SystemAdministration.Users.ManageRoles,
         FoodSafePermissions.SystemAdministration.Users.ManageScope,
         FoodSafePermissions.SystemAdministration.Users.Activate,

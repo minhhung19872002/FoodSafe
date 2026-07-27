@@ -63,9 +63,9 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 |---|---|---|---|---|
 | FR-01-01..06 | Role management CRUD + permissions | `identity-administration-verification` ✓, `identity-administration` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-02-01/03/04/06/08..12 | User CRUD + activation + lockout | `identity-administration-verification` ✓, `password-management-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
-| FR-02-02 | Search by individual permission | — | none | IMPLEMENTED_NOT_VERIFIED |
-| FR-02-05 | FE delete user | — | none | IMPLEMENTED_NOT_VERIFIED |
-| FR-02-07 | Random password generation | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-02-02 | Search by individual permission | `identity-user-lifecycle` ✓ (P1-1c) | pass | PASS_WITH_BROWSER_EVIDENCE — real UI filter issues `GET .../users?permissionName=…` (observed, not intercepted) and the filtered list renders |
+| FR-02-05 | FE delete user | `identity-user-lifecycle` ✓ (P1-1c) | pass | PASS_WITH_BROWSER_EVIDENCE — real UI delete → 204; account gone after re-search. Fixed 2 defects: `Users.Delete` not surfaced to FE (button never rendered) + `DeleteUserAsync` NRE on projected user (HTTP 500) |
+| FR-02-07 | Random password generation | `identity-user-lifecycle` ✓ (P1-1c) | pass | PASS_WITH_BROWSER_EVIDENCE — real UI regenerates a ≥8-char password returned by `POST .../random-password` |
 | FR-02-13 | Export user list to Excel | `excel-exports` ✓ (P1-1a) | pass | PASS_WITH_BROWSER_EVIDENCE — real UI "Xuất Excel" → download is a non-empty OpenXML (PK) workbook |
 | FR-03-01 | Audit log search | `audit-logs-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-03-03 | Audit log Excel export | `excel-exports` ✓ (P1-1a) | pass | PASS_WITH_BROWSER_EVIDENCE — real UI download is a non-empty OpenXML (PK) workbook |
