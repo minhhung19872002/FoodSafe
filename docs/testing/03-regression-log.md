@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — FR-38 administrative-document attachments (P1-1b remainder)
+
+- **Cause**: New browser-acceptance evidence for the `/documents` attachment modal (last untested piece of the P1-1b attachment batch) — **and a real FE defect fix**. The modal read `sizeBytes`/`creationTime` from the attachment DTO, but the backend `FileAttachmentDto` serializes `fileSize`/`uploadTime`, so the "Kích thước" and "Ngày tải" columns rendered `NaN KB` / `Invalid Date`. Changed files: `documentApi.ts`, `DocumentAttachmentsModal.tsx` (FE fix) + new `documents-attachments.spec.ts`. No backend change — the attachment endpoint already existed via the shared `InspectionAttachmentAppServiceBase` / `DocumentAttachmentStore`.
+- **Commit**: `9ca9a7b`
+- **Affected features**: F-020 administrative documents (attachment display only). The fix is isolated to the documents feature's attachment modal; no shared component/API-client changed → no other feature invalidated.
+- **Retest level**: 2 (single-feature runtime retest)
+- **Result**: PASSED — 1/1 green (4.0s), real backend, no interception.
+- **Details**: `documents-attachments.spec.ts` drives the real `/documents` attachment modal end-to-end. A document is seeded over real authenticated HTTP (session cookie + antiforgery → ASP.NET Core → EF Core → PostgreSQL); then in the real browser the officer opens the paper-clip **"Tệp …"** modal and uploads a real PDF through the real `<Upload>` control. The upload is a **real multipart POST** → ASP.NET Core → **ClamAV** malware scan → **MinIO** blob store → PostgreSQL `file_attachments` row. Assertions: success toast `Đã tải lên tài liệu.`; the row shows the real file name, a real **"N KB"** size and a **valid date** (regression guard — asserts no `NaN`, no `Invalid Date`); the attachment **persists across a full `page.reload()`** (served by the backend); **download** yields bytes starting with the `%PDF` magic; **delete** (`Đã xóa tài liệu.`) removes the row. Teardown deletes the seeded document; the attachment left by the UI delete is soft-deleted (`is_deleted=true`), consistent with the soft-delete pattern, and the per-run stamp keeps the test re-run-safe. FE image rebuilt for this fix; no BE rebuild. Log: `docs-attach1.log`. Closes P1-1b in full.
+
 ### 2026-07-28 — FR-34-10 ATTP work-report auto-aggregation ("Tự tính số liệu từ hệ thống")
 
 - **Cause**: New browser-acceptance evidence for the ATTP work-report auto-aggregation button (doc 77 P1-1 batch; doc 73 was IMPLEMENTED_NOT_VERIFIED). New spec only (`FoodSafe.FE/e2e/atp-work-auto-aggregation.spec.ts`) — no product code changed.
