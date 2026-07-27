@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — P1-1e (report workflow): Return/ReturnToDraft buttons now UI-driven (FR-33 workflow)
 
 - **Cause**: Evidence-only sweep (no product code change). P1-1e's report-workflow-buttons portion was flagged "still pending" in doc 77. On execution the forward path (Submit→Verify→Complete) was already UI-driven by `reporting.spec.ts`, but the **Return ("Trả lại") and ReturnToDraft ("Về nháp") buttons were only ever exercised at the API level** (`reporting-verification.spec.ts` test 4 posts to `/return` + `/return-to-draft` directly). To close "Submit/Verify/Return/Complete **in-UI**" honestly, added a second test to the non-contested `reporting.spec.ts` that drives the return path through the real DOM.
-- **Commit**: `<pending>` (files: `FoodSafe.FE/e2e/reporting.spec.ts`, docs 73/77/03)
+- **Commit**: `2eca557` (files: `FoodSafe.FE/e2e/reporting.spec.ts`, docs 73/77/03)
 - **Affected features**: F-015 reporting — NDTP workflow state machine (return path). New Playwright test code only; no product code changed → no invalidation of other features.
 - **Retest level**: 2 (single-feature runtime retest; report workflow)
 - **Result**: PASSED
