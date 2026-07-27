@@ -1,4 +1,4 @@
-# Feature Verification Registry
+﻿# Feature Verification Registry
 
 ## Legend
 
@@ -15,7 +15,7 @@
 | F-003 | Organizations                   | READY_FOR_TEST | `e2e/organizations.spec.ts`                   | —               | 2026-07-26 |
 | F-004 | Master Catalogs                 | READY_FOR_TEST | `e2e/catalogs.spec.ts`                        | —               | 2026-07-26 |
 | F-005 | Geographic Catalogs             | READY_FOR_TEST | `e2e/geography.spec.ts`                       | —               | 2026-07-26 |
-| F-006 | Businesses & Products           | READY_FOR_TEST | `e2e/businesses.spec.ts`                      | —               | 2026-07-26 |
+| F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts` | `87cb7f6` | 2026-07-27 |
 | F-007 | Self Declarations               | READY_FOR_TEST | `e2e/self-declarations.spec.ts`               | —               | 2026-07-26 |
 | F-008 | Product Registrations           | READY_FOR_TEST | `e2e/product-registrations.spec.ts`           | —               | 2026-07-26 |
 | F-009 | Advertisement Registrations     | READY_FOR_TEST | `e2e/advertisement-registrations.spec.ts`     | —               | 2026-07-26 |
@@ -46,8 +46,8 @@
 ## Summary
 
 - Total features: 32
-- VERIFIED: **3** (F-013 `features/inspection.md`, F-014 `features/food-poisoning.md`, F-015 `features/reporting.md`)
-- READY_FOR_TEST: **28** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
+- VERIFIED: **4** (F-006 `features/businesses.md`, F-013 `features/inspection.md`, F-014 `features/food-poisoning.md`, F-015 `features/reporting.md`)
+- READY_FOR_TEST: **27** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
 - FAILED: 0
 - BLOCKED: **1** (F-002 — no Playwright spec exists)
 - NOT_STARTED: 0
@@ -120,3 +120,4 @@ Even the 8 passing tests do not qualify for VERIFIED status because:
 - `FAILED` means tests exist but did not pass against the real stack (root causes now verified via screenshots)
 - `BLOCKED` means no test exists and cannot proceed without writing one
 - Previous `READY_FOR_TEST` status for all 32 features was incorrect — tests had never been run against the real stack
+
