@@ -2,7 +2,7 @@
 
 ## Status: VERIFIED
 
-- **Feature ID**: F-001 · **Verified Git commit**: (see commit after this file) · **Date**: 2026-07-27
+- **Feature ID**: F-001 · **Verified Git commit**: `94f1f57` · **Date**: 2026-07-27
 - **Environment**: Docker Compose full stack at `http://127.0.0.1:8080` · **Database**: real PostgreSQL 15 · **API interception**: **No**
 - **Accounts**: `admin`, `district.staff@foodsafe.local`, `noperm@foodsafe.local`
 - **Frontend route**: `/login`

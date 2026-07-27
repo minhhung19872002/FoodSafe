@@ -10,11 +10,11 @@
 
 | ID    | Feature                         | Status         | E2E Spec                                      | Verified Commit | Date       |
 |-------|---------------------------------|----------------|-----------------------------------------------|-----------------|------------|
-| F-001 | Authentication (Login)          | VERIFIED       | `e2e/auth.spec.ts`, `e2e/auth-verification.spec.ts` | pending | 2026-07-27 |
+| F-001 | Authentication (Login)          | VERIFIED       | `e2e/auth.spec.ts`, `e2e/auth-verification.spec.ts` | `94f1f57` | 2026-07-27 |
 | F-002 | Password Management             | VERIFIED       | `e2e/password-management-verification.spec.ts` | `b2f13fb` | 2026-07-27 |
-| F-003 | Organizations                   | VERIFIED       | `e2e/organizations.spec.ts`, `e2e/organizations-verification.spec.ts` | pending | 2026-07-27 |
-| F-004 | Master Catalogs                 | VERIFIED       | `e2e/catalogs.spec.ts`, `e2e/catalogs-verification.spec.ts` | pending | 2026-07-27 |
-| F-005 | Geographic Catalogs             | VERIFIED       | `e2e/geography.spec.ts`, `e2e/geography-verification.spec.ts` | pending | 2026-07-27 |
+| F-003 | Organizations                   | VERIFIED       | `e2e/organizations.spec.ts`, `e2e/organizations-verification.spec.ts` | `94f1f57` | 2026-07-27 |
+| F-004 | Master Catalogs                 | VERIFIED       | `e2e/catalogs.spec.ts`, `e2e/catalogs-verification.spec.ts` | `94f1f57` | 2026-07-27 |
+| F-005 | Geographic Catalogs             | VERIFIED       | `e2e/geography.spec.ts`, `e2e/geography-verification.spec.ts` | `94f1f57` | 2026-07-27 |
 | F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts` | `87cb7f6` | 2026-07-27 |
 | F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts` | `232c814` | 2026-07-27 |
 | F-008 | Product Registrations           | VERIFIED       | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `df7823c` | 2026-07-27 |
@@ -60,7 +60,7 @@
   1. `authApi.ts` logout used POST — fixed to GET (`/api/account/logout` is a GET endpoint)
   2. `useGeography.ts` districts/communes sent IDs as query params — fixed to route segments (`/districts/{provinceId}`, `/communes/{districtId}`)
 - Docker frontend image rebuilt to pick up fixes
-- Commit SHA: pending (recorded after commit)
+- Commit SHA: `94f1f57`
 
 ## Test Run (2026-07-27, third) — commit `a54889f` (Statistics DI fix)
 
