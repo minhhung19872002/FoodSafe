@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — P1-1f citizen submission moderation: alert reject + news approval browser-proven (FR-29-06, FR-30-07)
 
 - **Cause**: New evidence for two IMPLEMENTED_NOT_VERIFIED citizen-moderation requirements (doc 77 P1-1f). New spec only (`FoodSafe.FE/e2e/citizen-moderation.spec.ts`) — no product code changed.
-- **Commit**: `<pending>` (files: new `citizen-moderation.spec.ts` + docs 73/77/03 only)
+- **Commit**: `f780fdb` (files: new `citizen-moderation.spec.ts` + docs 73/77/03 only)
 - **Affected features**: F-016 alerts/news (citizen-source moderation queue). No product/shared code changed → no invalidation of other features.
 - **Retest level**: 2 (single-feature runtime retest — officer moderation of citizen submissions)
 - **Result**: PASSED
