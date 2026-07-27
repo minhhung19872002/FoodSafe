@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — P1-1d (list filter/sort sweep): 5 sibling modules verification-only, sort correctly N/A
 
 - **Cause**: Evidence-only sweep (no product code change). P1-1d (doc 77) called for "list filter + sort + page-size" browser evidence across businesses + inspection/food-poisoning/alerts/testing/risk-analysis. **businesses** was already closed with a real fix (FR-19-02, `f29fedc`). This entry resolves the **remaining five modules**. A code survey (`grep sorter` over `FoodSafe.FE/src/features`; `grep OrderBy/input.Sorting` over the list AppServices) found that **only `businesses` declares `sorter` columns** — inspection/food-poisoning/alerts/testing/risk-analysis expose **no sort UI** and each BE list service orders deterministically (`OrderByDescending` on `CreationTime`/`Year`/`SampleDate`/`InspectionDate`) then `PageBy(input)`. So there is **no businesses-style hidden-sort defect** for the five: nothing in their UI requests a sort the server drops. Sort is therefore **N/A**, not a gap.
-- **Commit**: `<pending>` (files: docs 73/77/03 only — no product or test code changed)
+- **Commit**: `a0313c1` (files: docs 73/77/03 only — no product or test code changed)
 - **Affected features**: F-013 inspection (plan list), F-014 food-poisoning (cases list), F-016 alerts/news (alert list), F-017 testing-results, F-018 risk-analysis — list filter/empty-state. No product code changed → no invalidation of other features.
 - **Retest level**: 2 (single-feature runtime retest per module; filter/empty-state)
 - **Result**: PASSED
