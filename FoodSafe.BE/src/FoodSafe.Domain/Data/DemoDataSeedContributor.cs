@@ -9,6 +9,7 @@ using FoodSafe.Licensing;
 using FoodSafe.Reporting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Volo.Abp;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Entities;
@@ -65,6 +66,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
     private readonly IServiceProvider _serviceProvider;
     private readonly IConfiguration _configuration;
     private readonly IClock _clock;
+    private readonly IDataFilter _dataFilter;
 
     // Repositories are resolved lazily via the scoped service provider to
     // keep the constructor manageable — this contributor touches every module.
@@ -72,12 +74,14 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         E2eTestDataSeedContributor e2eSeeder,
         IServiceProvider serviceProvider,
         IConfiguration configuration,
-        IClock clock)
+        IClock clock,
+        IDataFilter dataFilter)
     {
         _e2eSeeder = e2eSeeder;
         _serviceProvider = serviceProvider;
         _configuration = configuration;
         _clock = clock;
+        _dataFilter = dataFilter;
     }
 
     public async Task SeedAsync(DataSeedContext context)
@@ -93,14 +97,20 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
 
         var now = _clock.Now;
 
-        await SeedCatalogsAsync(now);
-        await SeedBusinessesAsync(now);
-        await SeedLicensingAsync(now);
-        await SeedInspectionsAsync(now);
-        await SeedFoodPoisoningAsync(now);
-        await SeedReportsAsync(now);
-        await SeedAlertsAndTestingAsync(now);
-        await SeedDataIntegrationAsync(now);
+        // Existence checks must also see soft-deleted rows: an operator who
+        // deleted a demo record must not get it re-created (and re-inserting
+        // a soft-deleted id violates the primary key).
+        using (_dataFilter.Disable<ISoftDelete>())
+        {
+            await SeedCatalogsAsync(now);
+            await SeedBusinessesAsync(now);
+            await SeedLicensingAsync(now);
+            await SeedInspectionsAsync(now);
+            await SeedFoodPoisoningAsync(now);
+            await SeedReportsAsync(now);
+            await SeedAlertsAndTestingAsync(now);
+            await SeedDataIntegrationAsync(now);
+        }
     }
 
     // ---------------------------------------------------------------
