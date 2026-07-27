@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — P1-1e: dashboard/statistics filter rendered-UI evidence (FR-39-02, FR-40)
 
 - **Cause**: Evidence-only sweep (no product code change). doc 73 had dashboard filters as `IMPLEMENTED_NOT_VERIFIED` and statistics as `PASS_WITH_BACKEND_ONLY` (heading-only browser checks). Added `e2e/dashboard-statistics-filters.spec.ts` to prove the filters drive rendered content, not just the backend.
-- **Commit**: `<this commit>` (files: `e2e/dashboard-statistics-filters.spec.ts`, docs 73/03)
+- **Commit**: `e2665e4` (files: `e2e/dashboard-statistics-filters.spec.ts`, docs 73/03)
 - **Affected features**: F-039 dashboard, F-040 statistics — read-only filter paths. No mutation, no shared capability → no invalidation of other features.
 - **Retest level**: 2 (per-feature runtime evidence, filter sub-flow)
 - **Result**: PASSED
