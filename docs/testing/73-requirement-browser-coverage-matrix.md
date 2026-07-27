@@ -81,7 +81,7 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | FR-06-01..05 | Organization CRUD + search | `organizations-verification` ✓, `organizations` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-06-06 | Organization Excel export | `excel-exports` ✓ (P1-1a) | pass | PASS_WITH_BROWSER_EVIDENCE — real UI download is a non-empty OpenXML (PK) workbook |
 | FR-07-01/02/04..06 | Unit account management | `identity-administration-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
-| FR-07-03 | FE delete unit account | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-07-03 | FE delete unit account | `identity-user-lifecycle` ✓ (P1-1c) | pass | PASS_WITH_BROWSER_EVIDENCE — FR-07 is the org-scoped view of STT 2 (per FR doc §7); `identity-user-lifecycle` deletes a unit account (user bound to an org) through the real UI → 204. Cross-unit delete denial covered by SEC-16/17 org-scope probes (doc 74) |
 | FR-08..09-04 | Countries / Regions CRUD | `catalogs-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-10..11-04 | Provinces / Districts / Communes CRUD | `geography-verification` ✓, `geography` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-12..17-04 | Business class / product groups / biz types / ad types / testing centers / services CRUD | `catalogs-verification` ✓, `catalogs` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
