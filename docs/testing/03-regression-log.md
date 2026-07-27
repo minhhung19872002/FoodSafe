@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — P1-4: login CAPTCHA real-enforcement evidence (SEC-08)
 
 - **Cause**: Evidence-only sweep (no product code change). doc 73 had SEC-08 as `IMPLEMENTED_NOT_VERIFIED` ("bypassed in dev by design") — the audit never observed the CAPTCHA gate actually reject/allow a request. Root of the "bypass": the dev stack is wired with Cloudflare Turnstile **test keys** (site `1x00000000000000000000AA`, always-pass secret `1x0000…AA`); there is **no bypass token** in code — `LoginCaptchaMiddleware` runs on every protected POST and calls real Cloudflare siteverify. So enforcement IS observable here. Added `e2e/login-captcha-enforcement.spec.ts` to prove it against the running full stack.
-- **Commit**: `__PENDING__` (files: `e2e/login-captcha-enforcement.spec.ts`, docs 73/77/03)
+- **Commit**: `ee00412` (files: `e2e/login-captcha-enforcement.spec.ts`, docs 73/77/03)
 - **Affected features**: SEC-08 login/reset/public-report CAPTCHA gate. Read-only probes (one throwaway-username failed-auth attempt; no real account lockout touched). No product code changed → no invalidation of other features.
 - **Retest level**: 2 (security control runtime evidence)
 - **Result**: PASSED
