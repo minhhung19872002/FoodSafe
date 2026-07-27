@@ -54,7 +54,7 @@
 | 15 | `20260726024252_AddInspectionModule` | Inspection plans, results, violations |
 | 16 | `20260726083732_AddRemainingModules` | Reporting, alerts, food poisoning, data integration (ExtraProperties naming inconsistency — cosmetic, see §5.1) |
 | 17 | `20260727021916_AddNewsRecallAudit` | `recalled_at`/`recalled_by_id` on `atp_news`; backfill UPDATE before check constraint |
-| 18 | `20260727104254_AddMissingForeignKeys` | Adds FK constraints; **orphan-DELETE in Up() — see CRITICAL-2** |
+| 18 | `20260727104254_AddMissingForeignKeys` | Adds FK constraints; non-destructive orphan handling — nullable FKs repaired to NULL, NOT NULL orphans abort the migration (B-4 RESOLVED, see §4.2) |
 | 19 | `20260727125207_AddResultFinalizeAndCitizenNews` | `is_finalized` on `inspection_results`; citizen reporter fields on `atp_news` |
 | 20 | `20260727131218_AddApiCallLogDataType` | `data_type smallint` on `di_api_call_logs`, `defaultValue: (short)0` |
 
@@ -173,39 +173,28 @@ All list endpoints use ABP's `PageBy(input)` via `PagedAndSortedResultRequestDto
 
 **Remaining (operational, not a code blocker):** schedule `backup-database.sh` ≤ 24 h in production, wire the >24 h staleness alert, add MinIO object-restore to the production rehearsal, and run the full application-level acceptance checks on production hardware before first release.
 
-### 4.2 CRITICAL: Destructive orphan-DELETE in migration Up()
+### 4.2 RESOLVED (B-4): Destructive orphan-DELETE in migration Up()
 
 **File:** `FoodSafe.BE/src/FoodSafe.EntityFrameworkCore/Migrations/20260727104254_AddMissingForeignKeys.cs`
 
-Migration 18 runs `DELETE` statements before adding FK constraints:
+**Original defect:** Migration 18 ran unconditional `DELETE` statements before adding FK constraints — silently and permanently erasing orphaned rows from 5 entity tables. On any non-fresh database this was irreversible data loss (Down() only drops the constraints).
 
-```sql
--- Lines 79-81
-DELETE FROM administrative_documents
-WHERE document_type_id NOT IN (SELECT id FROM cat_document_types);
+**Fix applied (2026-07-28).** The migration is now non-destructive by construction:
 
--- Lines 93-104
-DELETE FROM atp_alerts WHERE business_id NOT IN (SELECT id FROM businesses);
-DELETE FROM food_poisoning_cases WHERE location_commune_id IS NOT NULL ...
-DELETE FROM food_poisoning_cases WHERE location_district_id IS NOT NULL ...
-DELETE FROM food_poisoning_cases WHERE location_province_id IS NOT NULL ...
-DELETE FROM food_poisoning_incidents WHERE location_commune_id IS NOT NULL ...
-DELETE FROM food_poisoning_incidents WHERE location_district_id IS NOT NULL ...
-DELETE FROM food_poisoning_incidents WHERE location_province_id IS NOT NULL ...
-DELETE FROM testing_results WHERE business_id IS NOT NULL ...
-DELETE FROM testing_results WHERE inspection_result_id IS NOT NULL ...
-DELETE FROM testing_results WHERE product_id IS NOT NULL ...
-DELETE FROM testing_results WHERE testing_center_id IS NOT NULL ...
-DELETE FROM testing_results WHERE testing_service_id IS NOT NULL ...
-```
+- **Nullable dangling FKs** are *repaired to NULL*, never deleted. The 12 `DELETE FROM ...` statements were replaced with `UPDATE ... SET <col> = NULL WHERE <col> IS NOT NULL AND <col> NOT IN (SELECT id FROM <parent>)` for every nullable FK column: `atp_alerts.business_id`; `food_poisoning_cases`/`food_poisoning_incidents` `location_commune_id`/`location_district_id`/`location_province_id`; `testing_results` `business_id`/`inspection_result_id`/`product_id`/`testing_service_id`. The row survives with the invalid reference cleared.
+- **NOT NULL dangling FKs** (`administrative_documents.document_type_id`, `testing_results.testing_center_id`) cannot be safely nulled, so instead of deleting the rows the migration now *aborts*. A `DO $$ ... RAISE EXCEPTION 'AddMissingForeignKeys aborted: ... No data was modified.' ... $$` guard counts both orphan cases up front and, if either is non-zero, raises — rolling back the transactional DDL so **no row is touched**. The operator must resolve those rows manually before re-running.
 
-**Risk:** These DELETE statements are appropriate for a fresh development database where orphaned rows are test artifacts. On any production database that already contains real data, this migration will silently and permanently destroy records from 5 entity tables with no recovery path. The Down() method only drops the FK constraints — it does not restore deleted rows.
+**Regression test:** `scripts/verify-migration-nondestructive.sh` runs the real migration file via `dotnet ef` against two disposable PostgreSQL databases (no mocking, no InMemory):
+1. Seeds an `atp_alerts` row with an orphan `business_id`, applies the migration, asserts it **succeeds**, the row **survives** (`count=1`), and `business_id` is repaired to **NULL**.
+2. Seeds an `administrative_documents` row with an orphan `document_type_id`, applies the migration, asserts it **aborts** via the guard message and the row is **preserved** (`count=1`).
 
-**Required action:** Before running this migration against any database that may contain production data:
-1. Audit each table for orphaned rows
-2. If orphans exist, investigate their origin and either fix the referential integrity or export them for manual review
-3. Perform a verified `pg_dump` backup immediately before running the migration
-4. Document that the DELETE conditions are safe for the target database state
+Both scenarios pass locally against real Postgres. The test is wired into the CI `database` job (step *"Migration non-destructive regression (B-4)"*) so any regression to destructive behavior fails the pipeline. The fix is DML-only inside `migrationBuilder.Sql(...)` — the EF model snapshot is unchanged and the clean-migration + drift gates remain green.
+
+**B-4 is resolved.** The prior "audit for orphans / back up first" procedure below is retained as defence-in-depth operational guidance, but is no longer a blocker: the migration is safe to run against a database containing data — it repairs or aborts, it does not delete.
+
+**Recommended operational procedure (defence-in-depth, no longer mandatory for safety):**
+1. Perform a verified `pg_dump` backup immediately before running the migration.
+2. If the migration aborts, audit the reported NOT NULL orphan rows, resolve their referential integrity, then re-run.
 
 ### 4.3 Docker named volumes
 
@@ -294,7 +283,7 @@ An operator following `.env.example` to build a production environment file woul
 | ID | Title | Location | Impact |
 |---|---|---|---|
 | ~~C-1~~ RESOLVED (B-2, 2026-07-27) | Automated backup/restore scripts + CI-gated rehearsal added (`scripts/backup-database.sh`, `restore-database.sh`, `rehearse-restore.sh`); rehearsal evidence recorded in the DR guide | `scripts/*.sh`; `.github/workflows/ci.yml`; `docs/40-disaster-recovery-guide.md` | Was: data loss on failure. Now mitigated; scheduling/alerting remains an operational task |
-| C-2 | Destructive orphan-DELETE in migration Up() | `20260727104254_AddMissingForeignKeys.cs` lines 79–104 | Silent permanent data loss if run on non-fresh database |
+| ~~C-2~~ RESOLVED (B-4, 2026-07-28) | Destructive orphan-DELETE replaced with non-destructive handling: nullable FKs repaired to NULL, NOT NULL orphans abort the migration; regression `scripts/verify-migration-nondestructive.sh` CI-gated | `20260727104254_AddMissingForeignKeys.cs`; `scripts/verify-migration-nondestructive.sh`; `.github/workflows/ci.yml` | Was: silent permanent data loss on non-fresh database. Now safe — repairs or aborts, never deletes |
 
 ### HIGH
 
@@ -347,7 +336,7 @@ An operator following `.env.example` to build a production environment file woul
 | P0 | Add `WHERE is_deleted = FALSE` filter to all six certificate/registration unique indexes | Backend |
 | ~~P0~~ DONE (B-2) | ~~Create automated PostgreSQL backup script~~ → `scripts/backup-database.sh` (encryption, off-host MinIO mirror, retention, manifest). Remaining: schedule ≤ 24 h + wire staleness alert (operational). | DevOps |
 | ~~P0~~ DONE (B-2) | ~~Rehearse full backup restore; record RTO/RPO~~ → `scripts/rehearse-restore.sh`, CI-gated; evidence recorded in DR guide (RTO ~5–8 s, RPO 0 for snapshot). Remaining: add MinIO object-restore to production rehearsal. | DevOps |
-| P0 | Audit target database for orphaned rows before running migration `20260727104254_AddMissingForeignKeys` | DBA |
+| ~~P0~~ DONE (B-4) | ~~Audit target database for orphaned rows before running migration `20260727104254_AddMissingForeignKeys`~~ → migration made non-destructive (repairs nullable orphans to NULL, aborts on NOT NULL orphans); CI-gated regression `scripts/verify-migration-nondestructive.sh`. Orphan audit now optional defence-in-depth. | DBA |
 | P1 | Replace `const string TestPassword = "Admin@2026!"` with a distinct placeholder; rotate if used in production | Backend / Security |
 | P1 | Add `REDIS_PASSWORD` to `.env.example` | DevOps |
 | P2 | Parallelize `StatisticsAppService` aggregation queries using `Task.WhenAll` | Backend |

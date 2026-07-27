@@ -38,7 +38,7 @@ The gap between "85% code-complete" and "not production-ready" is the point of t
 | **B-1** | **Production stack cannot be built** — `docker-compose.prod.yml` references `FoodSafe.FE/Dockerfile.prod`, which does not exist. HTTPS/TLS, HSTS, and the production nginx template are therefore **entirely unverified in runtime**. | CRITICAL | doc 06; doc 07 §5 | CI/CD / Deploy |
 | **B-2** | **No database backup or restore capability** — no backup scripts, no scheduled dump, no restore rehearsal evidence. A Level-2 government system would launch with zero disaster recovery. | CRITICAL | doc 05 §Summary blocker 1; doc 06 | Database ops |
 | **B-3** | **Credentials committed to git history** (before `06656c8`) have not been rotated. History is immutable — the exposed secrets remain valid until rotated at the source. | CRITICAL | doc 00; doc 04 SEC-M-02 | Security |
-| **B-4** | **Destructive migration** — `20260727104254_AddMissingForeignKeys` runs `DELETE FROM` orphan-cleanup on 5 tables in `Up()`; on any non-fresh database this permanently erases rows. No guard, no backup gate. | HIGH→blocker | doc 05 CRITICAL-2 | Database ops |
+| ~~**B-4**~~ **RESOLVED (2026-07-28)** | ~~Destructive migration~~ — `20260727104254_AddMissingForeignKeys` no longer deletes: nullable dangling FKs are repaired to NULL, NOT NULL orphans abort the migration (transaction rolls back, no row touched). CI-gated regression `scripts/verify-migration-nondestructive.sh` proves both paths on real Postgres. | ~~HIGH→blocker~~ CLOSED | doc 05 §4.2 (RESOLVED) | Database ops |
 | **B-5** | **SSRF (server-side request forgery)** — `ApiEndpointAppService.TestConnectionAsync` and `DataSharingAppService` issue HTTP requests to any stored URL with no scheme or private-IP validation, returning a status oracle. Independently confirmed at source. | HIGH | doc 04 SEC-H-01; ApiEndpointAppService.cs:137-199 | Security |
 | **B-6** | **Known-vulnerable dependencies** — `AutoMapper 14.0.0` (High, GHSA-rvv3-g6hj-g44x) in every backend project; `Volo.Abp.Account.Web 9.3.7` (Moderate, GHSA-vfm5-cr22-jg3m) in the host; `react-router` (High, GHSA-qwww-vcr4-c8h2) on the frontend. | HIGH | `dotnet list package --vulnerable` (2026-07-27); doc 04 SEC-H-02 | Security |
 
@@ -101,7 +101,7 @@ These are verified real at `fe3dbd2` and should be treated as done:
 1. Add `FoodSafe.FE/Dockerfile.prod`; build the prod stack; verify HTTPS/TLS 1.2+, HSTS, IPv6 listen in runtime. (B-1)
 2. Implement automated PostgreSQL backups + a documented, rehearsed restore. (B-2)
 3. Rotate every credential exposed in git history at the source. (B-3)
-4. Gate the orphan-DELETE migration behind a verified backup, or make it non-destructive / idempotent. (B-4)
+4. ~~Gate the orphan-DELETE migration behind a verified backup, or make it non-destructive / idempotent.~~ **DONE (B-4)** — made non-destructive/idempotent (repairs nullable orphans to NULL, aborts on NOT NULL orphans), CI-gated regression.
 
 **Phase B — Close the security blockers**
 5. Add scheme + private-IP/DNS-rebinding validation to all data-integration outbound requests. (B-5)

@@ -75,10 +75,28 @@ namespace FoodSafe.Migrations
                 table: "administrative_documents",
                 column: "document_type_id");
 
-            // Remove orphaned rows that reference non-existent document types before enforcing the FK.
+            // Production-safe orphan handling for NON-NULLABLE FKs.
+            // administrative_documents.document_type_id and testing_results.testing_center_id
+            // are NOT NULL, so a dangling reference cannot be repaired by nulling it.
+            // Rather than silently DELETE real records (irrecoverable), abort the
+            // migration and require a deliberate operator decision. On a clean database
+            // this finds nothing and the migration proceeds; the check modifies no data.
             migrationBuilder.Sql(@"
-                DELETE FROM administrative_documents
-                WHERE document_type_id NOT IN (SELECT id FROM cat_document_types);
+                DO $$
+                DECLARE ad_orphans bigint; tc_orphans bigint;
+                BEGIN
+                    SELECT count(*) INTO ad_orphans
+                    FROM administrative_documents
+                    WHERE document_type_id NOT IN (SELECT id FROM cat_document_types);
+
+                    SELECT count(*) INTO tc_orphans
+                    FROM testing_results
+                    WHERE testing_center_id NOT IN (SELECT id FROM cat_testing_centers);
+
+                    IF ad_orphans > 0 OR tc_orphans > 0 THEN
+                        RAISE EXCEPTION 'AddMissingForeignKeys aborted: % administrative_documents row(s) with an invalid document_type_id and % testing_results row(s) with an invalid testing_center_id (both columns are NOT NULL). Resolve these rows manually (assign a valid reference or archive the records) before applying this migration. No data was modified.', ad_orphans, tc_orphans;
+                    END IF;
+                END $$;
             ");
 
             migrationBuilder.AddForeignKey(
@@ -89,19 +107,24 @@ namespace FoodSafe.Migrations
                 principalColumn: "id",
                 onDelete: ReferentialAction.Restrict);
 
+            // Production-safe orphan handling for NULLABLE FKs.
+            // Every column below is nullable, so a dangling reference is repaired by
+            // clearing it to NULL — preserving the business record (alert, poisoning
+            // case/incident, testing result) — instead of deleting the whole row.
+            // The referenced id was already invalid, so nulling loses no valid data.
+            // On a clean database these UPDATEs affect zero rows.
             migrationBuilder.Sql(@"
-                DELETE FROM atp_alerts WHERE business_id NOT IN (SELECT id FROM businesses);
-                DELETE FROM food_poisoning_cases WHERE location_commune_id IS NOT NULL AND location_commune_id NOT IN (SELECT id FROM cat_communes);
-                DELETE FROM food_poisoning_cases WHERE location_district_id IS NOT NULL AND location_district_id NOT IN (SELECT id FROM cat_districts);
-                DELETE FROM food_poisoning_cases WHERE location_province_id IS NOT NULL AND location_province_id NOT IN (SELECT id FROM cat_provinces);
-                DELETE FROM food_poisoning_incidents WHERE location_commune_id IS NOT NULL AND location_commune_id NOT IN (SELECT id FROM cat_communes);
-                DELETE FROM food_poisoning_incidents WHERE location_district_id IS NOT NULL AND location_district_id NOT IN (SELECT id FROM cat_districts);
-                DELETE FROM food_poisoning_incidents WHERE location_province_id IS NOT NULL AND location_province_id NOT IN (SELECT id FROM cat_provinces);
-                DELETE FROM testing_results WHERE business_id IS NOT NULL AND business_id NOT IN (SELECT id FROM businesses);
-                DELETE FROM testing_results WHERE inspection_result_id IS NOT NULL AND inspection_result_id NOT IN (SELECT id FROM inspection_results);
-                DELETE FROM testing_results WHERE product_id IS NOT NULL AND product_id NOT IN (SELECT id FROM products);
-                DELETE FROM testing_results WHERE testing_center_id IS NOT NULL AND testing_center_id NOT IN (SELECT id FROM cat_testing_centers);
-                DELETE FROM testing_results WHERE testing_service_id IS NOT NULL AND testing_service_id NOT IN (SELECT id FROM cat_testing_services);
+                UPDATE atp_alerts SET business_id = NULL WHERE business_id IS NOT NULL AND business_id NOT IN (SELECT id FROM businesses);
+                UPDATE food_poisoning_cases SET location_commune_id = NULL WHERE location_commune_id IS NOT NULL AND location_commune_id NOT IN (SELECT id FROM cat_communes);
+                UPDATE food_poisoning_cases SET location_district_id = NULL WHERE location_district_id IS NOT NULL AND location_district_id NOT IN (SELECT id FROM cat_districts);
+                UPDATE food_poisoning_cases SET location_province_id = NULL WHERE location_province_id IS NOT NULL AND location_province_id NOT IN (SELECT id FROM cat_provinces);
+                UPDATE food_poisoning_incidents SET location_commune_id = NULL WHERE location_commune_id IS NOT NULL AND location_commune_id NOT IN (SELECT id FROM cat_communes);
+                UPDATE food_poisoning_incidents SET location_district_id = NULL WHERE location_district_id IS NOT NULL AND location_district_id NOT IN (SELECT id FROM cat_districts);
+                UPDATE food_poisoning_incidents SET location_province_id = NULL WHERE location_province_id IS NOT NULL AND location_province_id NOT IN (SELECT id FROM cat_provinces);
+                UPDATE testing_results SET business_id = NULL WHERE business_id IS NOT NULL AND business_id NOT IN (SELECT id FROM businesses);
+                UPDATE testing_results SET inspection_result_id = NULL WHERE inspection_result_id IS NOT NULL AND inspection_result_id NOT IN (SELECT id FROM inspection_results);
+                UPDATE testing_results SET product_id = NULL WHERE product_id IS NOT NULL AND product_id NOT IN (SELECT id FROM products);
+                UPDATE testing_results SET testing_service_id = NULL WHERE testing_service_id IS NOT NULL AND testing_service_id NOT IN (SELECT id FROM cat_testing_services);
             ");
 
             migrationBuilder.AddForeignKey(

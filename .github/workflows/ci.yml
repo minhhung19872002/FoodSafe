@@ -198,6 +198,15 @@ jobs:
           POSTGRES_USER: foodsafe_ci
         run: bash scripts/rehearse-restore.sh
 
+      - name: Migration non-destructive regression (B-4)
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+          PGHOST: 127.0.0.1
+          PGPORT: "5432"
+          PGUSER: foodsafe_ci
+          PGPASSWORD: ci-database-only
+        run: bash scripts/verify-migration-nondestructive.sh
+
   supply-chain:
     name: Dependency and container gates
     runs-on: ubuntu-latest
