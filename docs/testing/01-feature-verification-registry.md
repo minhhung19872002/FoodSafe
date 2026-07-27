@@ -52,6 +52,12 @@
 - BLOCKED: 0 (F-002 unblocked — implementation existed; spec added and verified)
 - NOT_STARTED: 0
 
+## Test Run (2026-07-27, third) — commit `a54889f` (Statistics DI fix)
+
+- **146 test cases** — **145 passed, 1 failed** (3.4m, workers=1) after rebuilding API image with Statistics DI fix
+- Failure: `public-portal.spec.ts` › "citizen alert submission creates a moderation-queue draft" — Turnstile CAPTCHA timeout; this spec is for F-024..F-030 (READY_FOR_TEST, not yet VERIFIED); does not affect any VERIFIED feature
+- All 20 VERIFIED features (F-002, F-006..F-023) maintain their VERIFIED status
+
 ## Test Run (2026-07-27, second) — commit `df7823c` + security pass
 
 - **90 test cases** — **90 passed, 0 failed** (2.7m) after rebuilding both Docker images at HEAD (includes security-pass commit `06656c8`)
