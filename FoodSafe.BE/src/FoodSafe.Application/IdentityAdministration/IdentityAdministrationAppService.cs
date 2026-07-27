@@ -267,6 +267,75 @@ public class IdentityAdministrationAppService :
         return await GetUserAsync(id);
     }
 
+    [Authorize(FoodSafePermissions.SystemAdministration.Users.Delete)]
+    public async Task DeleteUserAsync(Guid id)
+    {
+        IdentityAdministrationRules.EnsureNotSelf(CurrentUser.GetId(), id);
+        var existing = await GetScopedUserAsync(id, DataScopeOperation.Delete);
+        var roles = (await _identityUsers.GetRoleNamesAsync(id, Token)).ToArray();
+        IdentityAdministrationRules.EnsureAdministratorRemains(
+            roles,
+            [],
+            await GetAdministratorCountAsync());
+
+        var assignmentQuery = await _scopeAssignments.GetQueryableAsync();
+        var assignments = await AsyncExecuter.ToListAsync(
+            assignmentQuery.Where(assignment => assignment.GranteeUserId == id),
+            Token);
+        if (assignments.Count > 0)
+        {
+            await _scopeAssignments.DeleteManyAsync(
+                assignments,
+                cancellationToken: Token);
+        }
+        if (existing.Profile is not null)
+        {
+            await _profiles.DeleteAsync(
+                existing.Profile,
+                cancellationToken: Token);
+        }
+        (await _userManager.DeleteAsync(existing.User)).CheckErrors();
+        await CurrentUnitOfWork!.SaveChangesAsync(Token);
+    }
+
+    [Authorize(FoodSafePermissions.SystemAdministration.Users.ResetPassword)]
+    public async Task<GeneratedPasswordDto> GenerateRandomPasswordAsync(Guid id)
+    {
+        var existing = await GetScopedUserAsync(id, DataScopeOperation.Edit);
+        await _identityOptions.SetAsync();
+        var user = await _userManager.GetByIdAsync(existing.Id);
+
+        var password = GenerateCompliantPassword();
+        var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+        (await _userManager.ResetPasswordAsync(user, resetToken, password))
+            .CheckErrors();
+        user.SetShouldChangePasswordOnNextLogin(true);
+        (await _userManager.UpdateSecurityStampAsync(user)).CheckErrors();
+        (await _userManager.UpdateAsync(user)).CheckErrors();
+        await CurrentUnitOfWork!.SaveChangesAsync(Token);
+
+        return new GeneratedPasswordDto { Password = password };
+    }
+
+    [Authorize(FoodSafePermissions.SystemAdministration.Users.Default)]
+    public async Task<ListResultDto<PermissionOptionDto>>
+        GetPermissionOptionsAsync()
+    {
+        var options = (await _permissionDefinitions.GetGroupsAsync())
+            .Where(group => group.Name == FoodSafePermissions.GroupName)
+            .SelectMany(group => group.GetPermissionsWithChildren())
+            .Where(permission => permission.IsEnabled)
+            .Select(permission => new PermissionOptionDto
+            {
+                Name = permission.Name,
+                DisplayName = permission.DisplayName?.Localize(
+                    StringLocalizerFactory) ?? permission.Name,
+                ParentName = permission.Parent?.Name
+            })
+            .ToList();
+        return new ListResultDto<PermissionOptionDto>(options);
+    }
+
     [Authorize(FoodSafePermissions.SystemAdministration.Users.Activate)]
     public async Task SetUserActivationAsync(
         Guid id,
@@ -633,8 +702,69 @@ public class IdentityAdministrationAppService :
                 (row.OrganizationName != null &&
                  row.OrganizationName.ToUpper().Contains(filter)));
         }
+        if (!string.IsNullOrWhiteSpace(input.PermissionName))
+        {
+            var roleIds = await GetRoleIdsGrantedAsync(
+                input.PermissionName.Trim());
+            query = query.Where(row =>
+                row.User.Roles.Any(role => roleIds.Contains(role.RoleId)));
+        }
 
         return query;
+    }
+
+    private async Task<List<Guid>> GetRoleIdsGrantedAsync(string permissionName)
+    {
+        var granted = new List<Guid>();
+        var definition = await _permissionDefinitions.GetOrNullAsync(
+            permissionName);
+        if (definition is null)
+        {
+            return granted;
+        }
+
+        var roles = await _roles.GetListAsync(
+            maxResultCount: MaximumRoleCount,
+            cancellationToken: Token);
+        foreach (var role in roles)
+        {
+            var grant = await _permissionManager.GetAsync(
+                permissionName,
+                RoleProviderName,
+                role.Name);
+            if (grant.IsGranted)
+            {
+                granted.Add(role.Id);
+            }
+        }
+        return granted;
+    }
+
+    private static string GenerateCompliantPassword()
+    {
+        const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+        const string lower = "abcdefghijkmnpqrstuvwxyz";
+        const string digits = "23456789";
+        const string special = "!@#$%^&*";
+        const string all = upper + lower + digits + special;
+
+        var chars = new List<char>
+        {
+            upper[RandomNumberGenerator.GetInt32(upper.Length)],
+            lower[RandomNumberGenerator.GetInt32(lower.Length)],
+            digits[RandomNumberGenerator.GetInt32(digits.Length)],
+            special[RandomNumberGenerator.GetInt32(special.Length)]
+        };
+        while (chars.Count < 12)
+        {
+            chars.Add(all[RandomNumberGenerator.GetInt32(all.Length)]);
+        }
+        for (var index = chars.Count - 1; index > 0; index--)
+        {
+            var swap = RandomNumberGenerator.GetInt32(index + 1);
+            (chars[index], chars[swap]) = (chars[swap], chars[index]);
+        }
+        return new string([.. chars]);
     }
 
     private async Task<AdminUserQueryRow> GetScopedUserAsync(

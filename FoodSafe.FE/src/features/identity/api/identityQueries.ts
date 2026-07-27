@@ -37,6 +37,14 @@ export function useUserActivity(id?: string) {
   });
 }
 
+export function usePermissionOptions() {
+  return useQuery({
+    queryKey: [...identityKeys.all, "permission-options"] as const,
+    queryFn: () => identityApi.getPermissionOptions(),
+    staleTime: 300_000,
+  });
+}
+
 export function useAdminRoles(filter: RoleFilter) {
   return useQuery({
     queryKey: identityKeys.roles(filter),

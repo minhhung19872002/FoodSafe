@@ -2,8 +2,10 @@ import { api } from "@/lib/axios";
 import type {
   AdminRole,
   AdminUser,
+  GeneratedPassword,
   ListResult,
   PagedResult,
+  PermissionOption,
   RoleFilter,
   RolePermissionGroup,
   SaveRoleInput,
@@ -47,6 +49,19 @@ export const identityApi = {
   updateUser: (id: string, input: SaveUserInput): Promise<AdminUser> =>
     api
       .put<AdminUser>(`${endpoint}/users/${id}`, input)
+      .then((response) => response.data),
+
+  deleteUser: (id: string): Promise<void> =>
+    api.delete(`${endpoint}/users/${id}`).then(() => undefined),
+
+  generateRandomPassword: (id: string): Promise<GeneratedPassword> =>
+    api
+      .post<GeneratedPassword>(`${endpoint}/users/${id}/random-password`)
+      .then((response) => response.data),
+
+  getPermissionOptions: (): Promise<ListResult<PermissionOption>> =>
+    api
+      .get<ListResult<PermissionOption>>(`${endpoint}/permission-options`)
       .then((response) => response.data),
 
   setUserActivation: (id: string, isActive: boolean): Promise<void> =>

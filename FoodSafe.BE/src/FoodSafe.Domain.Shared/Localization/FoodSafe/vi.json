@@ -83,6 +83,7 @@
     "Permission:SystemAdmin.Users": "Xem người dùng",
     "Permission:SystemAdmin.Users.Create": "Tạo người dùng",
     "Permission:SystemAdmin.Users.Edit": "Chỉnh sửa người dùng",
+    "Permission:SystemAdmin.Users.Delete": "Xóa người dùng",
     "Permission:SystemAdmin.Users.ManageRoles": "Gán vai trò người dùng",
     "Permission:SystemAdmin.Users.ManageScope": "Gán phạm vi dữ liệu",
     "Permission:SystemAdmin.Users.Activate": "Kích hoạt hoặc vô hiệu hóa tài khoản",

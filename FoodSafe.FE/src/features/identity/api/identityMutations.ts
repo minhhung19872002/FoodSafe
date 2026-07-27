@@ -35,6 +35,18 @@ export const useSetUserLock = () =>
 export const useSendPasswordReset = () =>
   useIdentityMutation(identityApi.sendPasswordReset);
 
+export const useDeleteAdminUser = () =>
+  useIdentityMutation(identityApi.deleteUser);
+
+export const useGenerateRandomPassword = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: identityApi.generateRandomPassword,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: identityKeys.all }),
+  });
+};
+
 export const useCreateAdminRole = () =>
   useIdentityMutation(identityApi.createRole);
 

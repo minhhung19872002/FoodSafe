@@ -83,6 +83,7 @@
     "Permission:SystemAdmin.Users": "View users",
     "Permission:SystemAdmin.Users.Create": "Create users",
     "Permission:SystemAdmin.Users.Edit": "Edit users",
+    "Permission:SystemAdmin.Users.Delete": "Delete users",
     "Permission:SystemAdmin.Users.ManageRoles": "Assign user roles",
     "Permission:SystemAdmin.Users.ManageScope": "Assign user data scopes",
     "Permission:SystemAdmin.Users.Activate": "Activate or deactivate users",

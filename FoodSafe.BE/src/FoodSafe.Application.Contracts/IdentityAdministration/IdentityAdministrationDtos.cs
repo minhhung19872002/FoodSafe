@@ -14,6 +14,9 @@ public sealed class GetAdminUserListInput : PagedAndSortedResultRequestDto
     public Guid? OrganizationId { get; set; }
     public bool? IsActive { get; set; }
     public bool? IsLocked { get; set; }
+
+    [StringLength(200)]
+    public string? PermissionName { get; set; }
 }
 
 public sealed class AdminUserDto : EntityDto<Guid>, IHasConcurrencyStamp
@@ -123,6 +126,18 @@ public sealed class GeographyScopeAssignmentDto : EntityDto<Guid>
     public bool CanDelete { get; set; }
     public DateTime ValidFrom { get; set; }
     public DateTime? ValidTo { get; set; }
+}
+
+public sealed class GeneratedPasswordDto
+{
+    public string Password { get; set; } = string.Empty;
+}
+
+public sealed class PermissionOptionDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string? ParentName { get; set; }
 }
 
 public sealed class SetUserActivationDto

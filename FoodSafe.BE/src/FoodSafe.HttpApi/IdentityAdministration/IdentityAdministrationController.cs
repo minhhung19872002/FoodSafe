@@ -47,6 +47,19 @@ public sealed class IdentityAdministrationController(
         [FromBody] SetUserLockDto input) =>
         service.SetUserLockAsync(id, input);
 
+    [HttpDelete("users/{id:guid}")]
+    public Task DeleteUserAsync(Guid id) =>
+        service.DeleteUserAsync(id);
+
+    [HttpPost("users/{id:guid}/random-password")]
+    public Task<GeneratedPasswordDto> GenerateRandomPasswordAsync(Guid id) =>
+        service.GenerateRandomPasswordAsync(id);
+
+    [HttpGet("permission-options")]
+    public Task<ListResultDto<PermissionOptionDto>>
+        GetPermissionOptionsAsync() =>
+        service.GetPermissionOptionsAsync();
+
     [HttpPost("users/{id:guid}/password-reset")]
     public Task SendPasswordResetAsync(Guid id) =>
         service.SendPasswordResetAsync(id);

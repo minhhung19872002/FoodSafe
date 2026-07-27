@@ -48,9 +48,20 @@ export interface UserFilter {
   organizationId?: string;
   isActive?: boolean;
   isLocked?: boolean;
+  permissionName?: string;
   skipCount: number;
   maxResultCount: number;
   sorting?: string;
+}
+
+export interface PermissionOption {
+  name: string;
+  displayName: string;
+  parentName?: string;
+}
+
+export interface GeneratedPassword {
+  password: string;
 }
 
 export interface SaveUserInput {

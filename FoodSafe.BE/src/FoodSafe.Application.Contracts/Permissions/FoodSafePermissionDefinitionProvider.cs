@@ -496,6 +496,9 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             FoodSafePermissions.SystemAdministration.Users.Edit,
             LocalizableString.Create<FoodSafeResource>("Permission:SystemAdmin.Users.Edit"));
         users.AddChild(
+            FoodSafePermissions.SystemAdministration.Users.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:SystemAdmin.Users.Delete"));
+        users.AddChild(
             FoodSafePermissions.SystemAdministration.Users.ManageRoles,
             LocalizableString.Create<FoodSafeResource>("Permission:SystemAdmin.Users.ManageRoles"));
         users.AddChild(

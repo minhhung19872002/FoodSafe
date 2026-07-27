@@ -36,6 +36,8 @@ import {
   useCreateAdminRole,
   useCreateAdminUser,
   useDeleteAdminRole,
+  useDeleteAdminUser,
+  useGenerateRandomPassword,
   useSendPasswordReset,
   useSetUserActivation,
   useSetUserLock,
@@ -46,6 +48,7 @@ import {
 import {
   useAdminRoles,
   useAdminUsers,
+  usePermissionOptions,
   useRolePermissions,
   useUserActivity,
 } from "../api/identityQueries";
@@ -66,6 +69,7 @@ const permission = {
   users: "FoodSafe.SystemAdmin.Users",
   createUser: "FoodSafe.SystemAdmin.Users.Create",
   editUser: "FoodSafe.SystemAdmin.Users.Edit",
+  deleteUser: "FoodSafe.SystemAdmin.Users.Delete",
   activateUser: "FoodSafe.SystemAdmin.Users.Activate",
   lockUser: "FoodSafe.SystemAdmin.Users.Lock",
   resetPassword: "FoodSafe.SystemAdmin.Users.ResetPassword",
@@ -93,7 +97,7 @@ function organizationOptions(
 }
 
 export default function IdentityAdministrationPage() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const currentUser = useAuthStore((state) => state.user);
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canViewUsers = hasPermission(permission.users);
@@ -130,9 +134,12 @@ export default function IdentityAdministrationPage() {
 
   const createUser = useCreateAdminUser();
   const updateUser = useUpdateAdminUser();
+  const deleteUser = useDeleteAdminUser();
+  const generatePassword = useGenerateRandomPassword();
   const setActivation = useSetUserActivation();
   const setLock = useSetUserLock();
   const sendReset = useSendPasswordReset();
+  const permissionOptions = usePermissionOptions();
   const createRole = useCreateAdminRole();
   const updateRole = useUpdateAdminRole();
   const deleteRole = useDeleteAdminRole();
@@ -153,6 +160,17 @@ export default function IdentityAdministrationPage() {
     void message.error(
       "Không thể thực hiện thao tác. Vui lòng kiểm tra lại.",
     );
+
+  const permissionSelectOptions = useMemo(
+    () =>
+      permissionOptions.data?.items.map((option) => ({
+        value: option.name,
+        label: option.parentName
+          ? `  ${option.displayName}`
+          : option.displayName,
+      })) ?? [],
+    [permissionOptions.data],
+  );
 
   const roleSelectOptions = useMemo(
     () =>
@@ -212,6 +230,22 @@ export default function IdentityAdministrationPage() {
               setUserFilter((current) => ({
                 ...current,
                 organizationId,
+                skipCount: 0,
+              }))
+            }
+          />
+          <Select
+            aria-label="Lọc theo quyền"
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Quyền"
+            options={permissionSelectOptions}
+            style={{ width: 210 }}
+            onChange={(permissionName) =>
+              setUserFilter((current) => ({
+                ...current,
+                permissionName,
                 skipCount: 0,
               }))
             }
@@ -418,6 +452,75 @@ export default function IdentityAdministrationPage() {
                             size="small"
                             aria-label={`Đặt lại mật khẩu ${user.fullName}`}
                             icon={<KeyOutlined />}
+                          />
+                        </Tooltip>
+                      </Popconfirm>
+                    )}
+                    {hasPermission(permission.resetPassword) && (
+                      <Popconfirm
+                        title="Tạo mật khẩu ngẫu nhiên mới cho tài khoản này?"
+                        okText="Tạo"
+                        cancelText="Hủy"
+                        onConfirm={() =>
+                          generatePassword.mutate(user.id, {
+                            onSuccess: (result) =>
+                              modal.success({
+                                title: "Mật khẩu mới đã được tạo",
+                                content: (
+                                  <Space direction="vertical">
+                                    <Typography.Text>
+                                      Mật khẩu chỉ hiển thị một lần. Người dùng
+                                      phải đổi mật khẩu ở lần đăng nhập tiếp
+                                      theo.
+                                    </Typography.Text>
+                                    <Typography.Text code copyable>
+                                      {result.password}
+                                    </Typography.Text>
+                                  </Space>
+                                ),
+                              }),
+                            onError: showError,
+                          })
+                        }
+                      >
+                        <Tooltip title="Tạo mật khẩu ngẫu nhiên">
+                          <Button
+                            size="small"
+                            aria-label={`Tạo mật khẩu ngẫu nhiên ${user.fullName}`}
+                            loading={
+                              generatePassword.isPending &&
+                              generatePassword.variables === user.id
+                            }
+                            icon={<SafetyCertificateOutlined />}
+                          />
+                        </Tooltip>
+                      </Popconfirm>
+                    )}
+                    {hasPermission(permission.deleteUser) && (
+                      <Popconfirm
+                        title="Xóa tài khoản này? Hành động không thể hoàn tác."
+                        okText="Xóa"
+                        okButtonProps={{ danger: true }}
+                        cancelText="Hủy"
+                        onConfirm={() =>
+                          deleteUser.mutate(user.id, {
+                            onSuccess: () =>
+                              showSuccess("Đã xóa tài khoản"),
+                            onError: showError,
+                          })
+                        }
+                      >
+                        <Tooltip title="Xóa tài khoản">
+                          <Button
+                            size="small"
+                            danger
+                            disabled={isSelf}
+                            aria-label={`Xóa ${user.fullName}`}
+                            loading={
+                              deleteUser.isPending &&
+                              deleteUser.variables === user.id
+                            }
+                            icon={<DeleteOutlined />}
                           />
                         </Tooltip>
                       </Popconfirm>

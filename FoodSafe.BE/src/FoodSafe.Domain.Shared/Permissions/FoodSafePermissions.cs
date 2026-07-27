@@ -276,6 +276,7 @@ public static class FoodSafePermissions
                 SystemAdministration.Default + ".Users";
             public const string Create = Default + ".Create";
             public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
             public const string ManageRoles = Default + ".ManageRoles";
             public const string ManageScope = Default + ".ManageScope";
             public const string Activate = Default + ".Activate";
