@@ -72,6 +72,7 @@ jobs:
           dotnet publish src/FoodSafe.DbMigrator/FoodSafe.DbMigrator.csproj --configuration Release --no-build --no-restore --output publish/migrator
 
       - name: Reject pending EF model changes
+        id: ef-drift
         working-directory: FoodSafe.BE
         run: >
           dotnet ef migrations has-pending-model-changes
@@ -79,6 +80,18 @@ jobs:
           --startup-project src/FoodSafe.HttpApi.Host
           --configuration Release
           --no-build
+
+      - name: Show model drift details
+        if: failure() && steps.ef-drift.outcome == 'failure'
+        working-directory: FoodSafe.BE
+        run: |
+          dotnet ef migrations add CiDriftProbe \
+            --project src/FoodSafe.EntityFrameworkCore \
+            --startup-project src/FoodSafe.HttpApi.Host \
+            --configuration Release --no-build || true
+          git diff --stat
+          cat src/FoodSafe.EntityFrameworkCore/Migrations/*CiDriftProbe.cs || true
+          git diff -- src/FoodSafe.EntityFrameworkCore/Migrations/FoodSafeDbContextModelSnapshot.cs | head -200
 
       - name: Restore frontend
         working-directory: FoodSafe.FE
@@ -156,6 +169,7 @@ jobs:
           --configuration Release
 
       - name: Reject model drift after clean migration
+        id: ef-drift-db
         working-directory: FoodSafe.BE
         run: >
           dotnet ef migrations has-pending-model-changes
@@ -163,6 +177,18 @@ jobs:
           --startup-project src/FoodSafe.HttpApi.Host
           --configuration Release
           --no-build
+
+      - name: Show model drift details
+        if: failure() && steps.ef-drift-db.outcome == 'failure'
+        working-directory: FoodSafe.BE
+        run: |
+          dotnet ef migrations add CiDriftProbe \
+            --project src/FoodSafe.EntityFrameworkCore \
+            --startup-project src/FoodSafe.HttpApi.Host \
+            --configuration Release --no-build || true
+          git diff --stat
+          cat src/FoodSafe.EntityFrameworkCore/Migrations/*CiDriftProbe.cs || true
+          git diff -- src/FoodSafe.EntityFrameworkCore/Migrations/FoodSafeDbContextModelSnapshot.cs | head -200
 
   supply-chain:
     name: Dependency and container gates
@@ -243,6 +269,7 @@ jobs:
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
           image-ref: foodsafe-api:latest
+          trivyignores: .trivyignore
           scanners: vuln
           severity: HIGH,CRITICAL
           ignore-unfixed: true
@@ -253,6 +280,7 @@ jobs:
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
           image-ref: foodsafe-migrator:latest
+          trivyignores: .trivyignore
           scanners: vuln
           severity: HIGH,CRITICAL
           ignore-unfixed: true
@@ -263,6 +291,7 @@ jobs:
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
           image-ref: foodsafe-frontend:latest
+          trivyignores: .trivyignore
           scanners: vuln
           severity: HIGH,CRITICAL
           ignore-unfixed: true

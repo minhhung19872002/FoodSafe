@@ -1,0 +1,8 @@
+# CVE-2026-32933 — AutoMapper 14.0.0 DoS via uncontrolled recursion.
+# AutoMapper is a transitive dependency pinned by ABP Framework 9
+# (Volo.Abp.AutoMapper). The fixed versions (15.1.1/16.1.1) are a major
+# upgrade with a new licensing model and are not yet supported by ABP 9.
+# Risk assessment: mapping profiles only map bounded internal DTOs;
+# attacker-controlled object graphs never reach AutoMapper.
+# Remove this entry when ABP ships an AutoMapper >= 15.1.1 dependency.
+CVE-2026-32933
