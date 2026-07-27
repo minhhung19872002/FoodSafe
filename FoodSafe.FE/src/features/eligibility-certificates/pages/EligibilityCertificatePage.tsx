@@ -209,7 +209,7 @@ export default function EligibilityCertificatePage() {
   return (
     <div className="page-container">
       <PageHeader
-        title="Giấy đủ điều kiện ATTP"
+        title="Giấy chứng nhận đủ điều kiện ATTP"
         subtitle="Quản lý giấy chứng nhận đủ điều kiện an toàn thực phẩm"
         actions={
           <Space>

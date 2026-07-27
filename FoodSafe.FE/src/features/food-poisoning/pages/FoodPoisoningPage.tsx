@@ -189,6 +189,8 @@ function CasesTab() {
           {record.status === POISONING_CASE_STATUS.Draft && canEdit && (
             <Popconfirm
               title="Gửi báo cáo ca ngộ độc này?"
+              okText="Gửi"
+              cancelText="Hủy"
               onConfirm={async () => {
                 await submitMut.mutateAsync(record.id);
                 message.success("Đã gửi báo cáo.");
@@ -202,6 +204,8 @@ function CasesTab() {
           {record.status === POISONING_CASE_STATUS.Reported && canVerify && (
             <Popconfirm
               title="Xác minh ca ngộ độc này?"
+              okText="Xác minh"
+              cancelText="Hủy"
               onConfirm={async () => {
                 await verifyMut.mutateAsync(record.id);
                 message.success("Đã xác minh.");
@@ -219,12 +223,14 @@ function CasesTab() {
           {record.status === POISONING_CASE_STATUS.Draft && canDelete && (
             <Popconfirm
               title="Xóa ca ngộ độc này?"
+              okText="Xóa"
+              cancelText="Hủy"
               onConfirm={async () => {
                 await deleteMut.mutateAsync(record.id);
                 message.success("Đã xóa.");
               }}
             >
-              <Button size="small" danger icon={<DeleteOutlined />} />
+              <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
             </Popconfirm>
           )}
         </Space>
@@ -443,6 +449,8 @@ function IncidentsTab() {
           {record.status === POISONING_INCIDENT_STATUS.Draft && canEdit && (
             <Popconfirm
               title="Gửi báo cáo vụ ngộ độc này?"
+              okText="Gửi"
+              cancelText="Hủy"
               onConfirm={async () => {
                 await submitMut.mutateAsync(record.id);
                 message.success("Đã gửi báo cáo.");
@@ -457,6 +465,8 @@ function IncidentsTab() {
             canVerify && (
               <Popconfirm
                 title="Xác minh vụ ngộ độc này?"
+                okText="Xác minh"
+                cancelText="Hủy"
                 onConfirm={async () => {
                   await verifyMut.mutateAsync(record.id);
                   message.success("Đã xác minh.");
@@ -488,12 +498,14 @@ function IncidentsTab() {
           {record.status === POISONING_INCIDENT_STATUS.Draft && canDelete && (
             <Popconfirm
               title="Xóa vụ ngộ độc này?"
+              okText="Xóa"
+              cancelText="Hủy"
               onConfirm={async () => {
                 await deleteMut.mutateAsync(record.id);
                 message.success("Đã xóa.");
               }}
             >
-              <Button size="small" danger icon={<DeleteOutlined />} />
+              <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
             </Popconfirm>
           )}
         </Space>
@@ -664,6 +676,8 @@ function MapTab() {
 
 export default function FoodPoisoningPage() {
   return (
+    <div className="page-container">
+      <h1 className="page-header-title">Ngộ độc thực phẩm</h1>
     <Card>
       <Tabs
         items={[
@@ -690,5 +704,6 @@ export default function FoodPoisoningPage() {
         ]}
       />
     </Card>
+    </div>
   );
 }

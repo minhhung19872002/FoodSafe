@@ -57,6 +57,11 @@ test.describe("data integration management", () => {
       .getByRole("combobox", { name: "Hệ thống" })
       .click();
     await page.getByText("Bộ Y tế", { exact: true }).last().click();
+    await dialog.getByRole("combobox", { name: "Xác thực" }).click();
+    await page
+      .getByText("Không xác thực", { exact: true })
+      .last()
+      .click();
     await dialog
       .getByRole("button", { name: "Lưu", exact: true })
       .click();
@@ -64,8 +69,8 @@ test.describe("data integration management", () => {
 
     let row = page.getByRole("row").filter({ hasText: endpointName });
     await row.getByRole("button", { name: /Xóa/ }).click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
-    await expect(page.getByText(endpointName)).not.toBeVisible();
+    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xóa" }).click();
+    await expect(page.getByText(endpointName)).not.toBeVisible({ timeout: 10_000 });
 
     await page.getByRole("tab", { name: "Lịch sử gọi API" }).click();
     await expect(

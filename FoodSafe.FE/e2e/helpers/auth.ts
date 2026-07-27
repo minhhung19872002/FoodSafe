@@ -1,13 +1,10 @@
 import { expect, type Page } from "@playwright/test";
 
-export async function signInAsAdmin(page: Page) {
-  const password = process.env.E2E_ADMIN_PASSWORD;
-  if (!password) {
-    throw new Error(
-      "E2E_ADMIN_PASSWORD is required for authenticated E2E tests",
-    );
-  }
-
+export async function signIn(
+  page: Page,
+  userNameOrEmailAddress: string,
+  password: string,
+) {
   const request = page.context().request;
   const configuration = await request.get(
     "/api/abp/application-configuration?IncludeLocalizationResources=false",
@@ -24,7 +21,7 @@ export async function signInAsAdmin(page: Page) {
       RequestVerificationToken: decodeURIComponent(xsrfCookie!.value),
     },
     data: {
-      userNameOrEmailAddress: "admin",
+      userNameOrEmailAddress,
       password,
       captchaToken: "XXXX.DUMMY.TOKEN.XXXX",
       rememberMe: false,
@@ -36,6 +33,16 @@ export async function signInAsAdmin(page: Page) {
     "/api/abp/application-configuration?IncludeLocalizationResources=false",
   );
   expect(refresh.ok()).toBeTruthy();
+}
+
+export async function signInAsAdmin(page: Page) {
+  const password = process.env.E2E_ADMIN_PASSWORD;
+  if (!password) {
+    throw new Error(
+      "E2E_ADMIN_PASSWORD is required for authenticated E2E tests",
+    );
+  }
+  await signIn(page, "admin", password);
 }
 
 export async function requestVerificationToken(page: Page) {

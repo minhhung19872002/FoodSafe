@@ -34,6 +34,7 @@ async function removeStaleArtifacts(
     if (item.planCode?.startsWith("E2E-KH")) {
       await request.delete(`/api/v1/app/inspection-plan/${item.id}`, {
         headers,
+        maxRedirects: 0,
       });
     }
   }
@@ -45,6 +46,7 @@ async function removeStaleArtifacts(
       .items) {
       await request.delete(`/api/v1/app/inspection-result/${item.id}`, {
         headers,
+        maxRedirects: 0,
       });
     }
   }
@@ -55,7 +57,10 @@ async function removeStaleArtifacts(
   for (const item of ((await businesses.json()) as { items: ListItem[] })
     .items) {
     if (item.code?.startsWith("E2E-KH")) {
-      await request.delete(`/api/v1/app/business/${item.id}`, { headers });
+      await request.delete(`/api/v1/app/business/${item.id}`, {
+        headers,
+        maxRedirects: 0,
+      });
     }
   }
 }
@@ -127,7 +132,17 @@ test.describe("inspection management", () => {
     await planDialog
       .getByRole("combobox", { name: "Loại kế hoạch" })
       .click();
-    await page.getByText("Đột xuất", { exact: true }).click();
+    await page.getByText("Đột xuất", { exact: true }).last().click();
+    await planDialog
+      .getByRole("spinbutton", { name: "Năm" })
+      .fill(String(new Date().getFullYear()));
+    const addBusinessBtn = planDialog.getByRole("button", { name: /Thêm cơ sở/ });
+    await addBusinessBtn.scrollIntoViewIfNeeded();
+    await addBusinessBtn.click();
+    const businessSelect = planDialog.locator(".ant-select").last();
+    await businessSelect.scrollIntoViewIfNeeded();
+    await businessSelect.click();
+    await page.getByText(businessName, { exact: false }).last().click();
     await planDialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(page.getByText(planCode)).toBeVisible();
 
@@ -135,14 +150,16 @@ test.describe("inspection management", () => {
     await expect(row.getByText("Nháp")).toBeVisible();
 
     await row.getByRole("button", { name: /Gửi/ }).click();
-    await page.getByRole("button", { name: "Gửi", exact: true }).click();
+    await page.locator(".ant-popover:visible").getByRole("button", { name: "Gửi" }).click();
+    await expect(page.getByText("Đã gửi duyệt.")).toBeVisible({ timeout: 10_000 });
     await expect(
       page.getByRole("row").filter({ hasText: planCode }).getByText("Đã gửi"),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 10_000 });
 
     row = page.getByRole("row").filter({ hasText: planCode });
     await row.getByRole("button", { name: /Duyệt/ }).click();
-    await page.getByRole("button", { name: "Duyệt", exact: true }).click();
+    await page.locator(".ant-popover:visible").getByRole("button", { name: "Duyệt" }).click();
+    await expect(page.getByText("Đã phê duyệt.")).toBeVisible({ timeout: 10_000 });
     await expect(
       page
         .getByRole("row")
@@ -175,11 +192,10 @@ test.describe("inspection management", () => {
       page.getByText(`Trưởng đoàn E2E-KH-${suffix}`),
     ).toBeVisible();
 
-    await page.getByRole("tab", { name: "Kế hoạch" }).click();
-    row = page.getByRole("row").filter({ hasText: planCode });
-    await row.getByRole("button", { name: /Xóa/ }).click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
-
-    await request.delete(`/api/v1/app/business/${business.id}`, { headers });
+    await removeStaleArtifacts(request, headers);
+    await request.delete(`/api/v1/app/business/${business.id}`, {
+      headers,
+      maxRedirects: 0,
+    });
   });
 });

@@ -133,13 +133,15 @@ export default function RiskAnalysisPage() {
                   size="small"
                   icon={<EditOutlined />}
                   onClick={() => openEdit(record)}
-                />
+                >Sửa</Button>
               )}
               {hasPermission(
                 "FoodSafe.AlertsAndTesting.RiskAnalyses.Publish",
               ) && (
                 <Popconfirm
                   title="Xuất bản phân tích này?"
+                  okText="Xuất bản"
+                  cancelText="Hủy"
                   onConfirm={() =>
                     publishMut.mutate(record.id, {
                       onSuccess: () => message.success("Đã xuất bản"),
@@ -147,7 +149,7 @@ export default function RiskAnalysisPage() {
                     })
                   }
                 >
-                  <Button size="small" icon={<SendOutlined />} />
+                  <Button size="small" icon={<SendOutlined />}>Xuất bản</Button>
                 </Popconfirm>
               )}
               {hasPermission(
@@ -155,6 +157,8 @@ export default function RiskAnalysisPage() {
               ) && (
                 <Popconfirm
                   title="Xóa phân tích?"
+                  okText="Xóa"
+                  cancelText="Hủy"
                   onConfirm={() =>
                     deleteMut.mutate(record.id, {
                       onSuccess: () => message.success("Đã xóa"),
@@ -162,7 +166,7 @@ export default function RiskAnalysisPage() {
                     })
                   }
                 >
-                  <Button size="small" danger icon={<DeleteOutlined />} />
+                  <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
                 </Popconfirm>
               )}
             </>
@@ -249,6 +253,8 @@ export default function RiskAnalysisPage() {
         destroyOnHidden
         width={640}
         onOk={() => form.submit()}
+        okText="Lưu"
+        cancelText="Hủy"
         confirmLoading={createMut.isPending || updateMut.isPending}
       >
         <Form
@@ -300,7 +306,7 @@ export default function RiskAnalysisPage() {
             </Form.Item>
             <Form.Item
               name="riskLevel"
-              label="Mức độ nguy cơ"
+              label="Mức độ"
               rules={[{ required: true }]}
             >
               <Select

@@ -12,10 +12,10 @@ test.describe("system settings page", () => {
       page.getByRole("heading", { name: "Cấu hình hệ thống" }),
     ).toBeVisible();
 
-    await expect(page.getByText("Mật khẩu tối thiểu")).toBeVisible();
-    await expect(page.getByText("Chữ hoa")).toBeVisible();
-    await expect(page.getByText("Chữ thường")).toBeVisible();
-    await expect(page.getByText("Chữ số")).toBeVisible();
-    await expect(page.getByText("Ký tự đặc biệt")).toBeVisible();
+    await expect(page.getByText("Độ dài tối thiểu")).toBeVisible();
+    await expect(page.getByText("Yêu cầu chữ hoa")).toBeVisible();
+    await expect(page.getByText("Yêu cầu chữ thường")).toBeVisible();
+    await expect(page.getByText("Yêu cầu chữ số")).toBeVisible();
+    await expect(page.getByText("Yêu cầu ký tự đặc biệt")).toBeVisible();
   });
 });

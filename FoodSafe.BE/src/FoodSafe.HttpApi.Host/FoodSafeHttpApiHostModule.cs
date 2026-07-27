@@ -107,7 +107,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureResponseCompression(context);
         ConfigureAntiForgery(hostingEnvironment);
         ConfigureIdentity(context, hostingEnvironment);
-        ConfigureRateLimiting(context);
+        ConfigureRateLimiting(context, hostingEnvironment);
         context.Services.AddHealthChecks();
         context.Services.AddHsts(options =>
         {
@@ -446,11 +446,37 @@ public class FoodSafeHttpApiHostModule : AbpModule
                     : CookieSecurePolicy.Always;
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
                 options.SlidingExpiration = true;
+
+                var previousRedirectToLogin = options.Events.OnRedirectToLogin;
+                options.Events.OnRedirectToLogin = redirectContext =>
+                {
+                    if (redirectContext.Request.Path.StartsWithSegments("/api"))
+                    {
+                        redirectContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return Task.CompletedTask;
+                    }
+                    return previousRedirectToLogin(redirectContext);
+                };
+
+                var previousRedirectToAccessDenied = options.Events.OnRedirectToAccessDenied;
+                options.Events.OnRedirectToAccessDenied = redirectContext =>
+                {
+                    if (redirectContext.Request.Path.StartsWithSegments("/api"))
+                    {
+                        redirectContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return Task.CompletedTask;
+                    }
+                    return previousRedirectToAccessDenied(redirectContext);
+                };
             });
     }
 
-    private static void ConfigureRateLimiting(ServiceConfigurationContext context)
+    private static void ConfigureRateLimiting(
+        ServiceConfigurationContext context,
+        IWebHostEnvironment hostingEnvironment)
     {
+        var isDev = hostingEnvironment.IsDevelopment();
+
         context.Services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -465,21 +491,25 @@ public class FoodSafeHttpApiHostModule : AbpModule
 
                     if (path == "/api/account/login")
                     {
-                        return FixedWindow($"login:{client}", 10, TimeSpan.FromMinutes(5));
+                        var loginLimit = isDev ? 1000 : 10;
+                        return FixedWindow($"login:{client}", loginLimit, TimeSpan.FromMinutes(5));
                     }
 
                     if (path.Contains("password-reset", StringComparison.Ordinal)
                         || path.Contains("reset-password", StringComparison.Ordinal))
                     {
-                        return FixedWindow($"password:{client}", 5, TimeSpan.FromMinutes(15));
+                        var passwordLimit = isDev ? 100 : 5;
+                        return FixedWindow($"password:{client}", passwordLimit, TimeSpan.FromMinutes(15));
                     }
 
                     if (path.StartsWith("/api/v1/app/public", StringComparison.Ordinal))
                     {
-                        return FixedWindow($"public:{client}", 60, TimeSpan.FromMinutes(1));
+                        var publicLimit = isDev ? 600 : 60;
+                        return FixedWindow($"public:{client}", publicLimit, TimeSpan.FromMinutes(1));
                     }
 
-                    return FixedWindow($"api:{client}", 300, TimeSpan.FromMinutes(1));
+                    var apiLimit = isDev ? 5000 : 300;
+                    return FixedWindow($"api:{client}", apiLimit, TimeSpan.FromMinutes(1));
                 });
 
             options.OnRejected = async (rejectedContext, cancellationToken) =>

@@ -686,3 +686,433 @@ public class BusinessRepository : EfCoreRepository<FoodSafeDbContext, Business, 
 - KHÔNG tham khảo FE của LMS
 - KHÔNG deploy production khi chưa có `/security-review`
 - KHÔNG mock chức năng — mọi feature phải chạy thật với DB thật
+
+
+# Testing Strategy — Mandatory
+
+FoodSafe uses feature-level verification, real integration testing, and impact-based retesting.
+
+## Core testing path
+
+Acceptance testing must verify the real application path:
+
+React frontend
+→ real HTTP request
+→ ASP.NET Core API
+→ authentication and authorization
+→ application layer
+→ Entity Framework Core
+→ real PostgreSQL database
+→ real HTTP response
+→ rendered frontend result
+
+A passing unit test, mocked API test, isolated component test, or intercepted Playwright test is not sufficient evidence that a feature works.
+
+## Default test types
+
+The default backend test is:
+
+- real API integration test
+- actual ASP.NET Core request pipeline
+- actual authentication and authorization
+- actual dependency injection
+- actual application services
+- actual EF Core mappings
+- disposable real PostgreSQL database
+- real migrations
+- real HTTP requests
+
+The default frontend acceptance test is:
+
+- real React application
+- real ASP.NET Core backend
+- real authentication
+- real PostgreSQL database
+- real persistence
+- Playwright browser testing without FoodSafe API interception
+
+Do not create new unit-test suites unless explicitly requested.
+
+Do not create new mocked frontend tests unless explicitly requested.
+
+Existing unit or mocked tests may remain, but they must not be used as runtime acceptance evidence.
+
+## Prohibited in real frontend acceptance tests
+
+Do not use:
+
+- `page.route()`
+- `route.fulfill()`
+- `route.abort()`
+- FoodSafe API interception
+- MSW for FoodSafe business APIs
+- `vi.mock()` for FoodSafe API clients
+- fake API responses
+- manually injected access tokens
+- manually injected refresh tokens
+- fake localStorage authentication
+- fake permissions
+- fake organization context
+- fake administrative-area context
+- hard-coded successful business responses
+
+A browser test using any of the above must not be classified as real full-stack acceptance testing.
+
+## Backend API test requirements
+
+Backend tests must verify applicable items through real HTTP endpoints:
+
+- HTTP status
+- response contract
+- database persistence
+- validation
+- functional permission
+- organization scope
+- administrative-area scope
+- workflow transition
+- duplicate prevention
+- audit or history side effects
+- concurrency behavior
+- follow-up retrieval using a separate request
+
+Do not mock:
+
+- DbContext
+- repositories
+- application services
+- authorization handlers
+- current-user context
+- organization-scope resolver
+- administrative-area-scope resolver
+- internal FoodSafe business APIs
+
+Use PostgreSQL Testcontainers or a disposable PostgreSQL test database.
+
+Do not use EF Core InMemory as acceptance evidence.
+
+## Frontend acceptance requirements
+
+Frontend acceptance tests should normally:
+
+1. Start or connect to the real database.
+2. Apply real migrations.
+3. Seed deterministic test accounts and reference data.
+4. Start the real backend.
+5. Start the real frontend.
+6. Open the real frontend URL.
+7. Log in through the real login screen.
+8. Navigate through real routes.
+9. Perform real user actions.
+10. Verify real backend responses through visible UI behavior.
+11. Reload the browser.
+12. Verify persisted data.
+13. Verify applicable authorization-denied behavior.
+
+Frontend tests must verify meaningful behavior, not only that a heading or component renders.
+
+## Feature verification registry
+
+Maintain:
+
+- `docs/testing/00-test-policy.md`
+- `docs/testing/01-feature-verification-registry.md`
+- `docs/testing/02-impact-map.md`
+- `docs/testing/03-regression-log.md`
+- `docs/testing/features/<feature>.md`
+
+Allowed feature statuses:
+
+- `NOT_STARTED`
+- `IN_PROGRESS`
+- `READY_FOR_TEST`
+- `FAILED`
+- `VERIFIED`
+- `DIRTY`
+- `BLOCKED`
+
+Only `VERIFIED` means the feature passed real runtime acceptance.
+
+## Required verification evidence
+
+Every verified feature must record:
+
+- Feature ID
+- Feature name
+- Status
+- Verified Git commit
+- Verification date
+- Environment
+- Frontend route
+- Backend endpoints
+- Real database used
+- Test account used
+- API interception used: must be `No`
+- Successful flows tested
+- Negative flows tested
+- Validation result
+- Permission result
+- Organization-isolation result
+- Administrative-area-isolation result
+- Workflow result
+- Persistence-after-reload result
+- Loading-state result
+- Empty-state result
+- Error-state result
+- Related frontend source paths
+- Related backend source paths
+- Shared dependencies
+- Conditions requiring retest
+
+Verification is valid only for the recorded Git commit and unaffected dependencies.
+
+## Feature completion rule
+
+A feature may move to `VERIFIED` only when:
+
+- backend API works against a real database
+- frontend flow works against the real backend
+- no FoodSafe business API is mocked or intercepted
+- create, read, update, and lifecycle behavior work as applicable
+- data remains correct after browser reload
+- validation is verified
+- unauthenticated access is verified
+- permission denial is verified
+- organization scope is verified
+- administrative-area scope is verified
+- workflow rules are verified
+- loading, empty, error, and success states are verified
+- the feature verification document is updated
+- the registry records the verified Git commit
+
+Do not mark a feature complete based only on:
+
+- successful build
+- unit tests
+- component tests
+- mocked Playwright tests
+- page rendering
+- controller or component existence
+- previous AI completion summaries
+
+## Before modifying code
+
+Before any change:
+
+1. Inspect Git status and current diff.
+2. Identify the target feature.
+3. Read its verification document.
+4. Identify directly changed files.
+5. Identify affected shared dependencies.
+6. Read `docs/testing/02-impact-map.md`.
+7. Determine affected verified features.
+8. Mark only affected verified features as `DIRTY`.
+9. Do not invalidate unrelated verified features.
+
+## Impact-based retesting levels
+
+### Level 0 — No retest
+
+Use only for:
+
+- documentation-only changes
+- comments
+- formatting
+- text corrections that cannot affect behavior
+
+### Level 1 — Visual smoke retest
+
+Use for:
+
+- CSS
+- spacing
+- typography
+- icons
+- design tokens
+- layout changes without business behavior changes
+
+Verify:
+
+- route loads
+- key content is visible
+- primary actions remain reachable
+- responsive layout remains acceptable
+- no new browser console error appears
+
+### Level 2 — Full feature runtime retest
+
+Use for changes inside one feature:
+
+- feature frontend code
+- feature API contract
+- feature backend service
+- feature validation
+- feature database mapping
+- feature workflow
+- feature attachment behavior
+
+Run the complete real verification checklist for that feature.
+
+### Level 3 — Dependent feature regression
+
+Use when changing shared dependencies:
+
+- authentication
+- authorization
+- organization scope
+- administrative-area scope
+- API client
+- shared form components
+- shared table components
+- attachment service
+- file authorization
+- transaction behavior
+- DbContext
+- global exception handling
+- serialization
+- routing
+- refresh-token handling
+
+Run:
+
+- full real verification for the changed shared capability
+- targeted regression for every affected feature listed in the impact map
+
+### Level 4 — Full regression
+
+Run only for:
+
+- release candidate
+- final acceptance
+- major architecture changes
+- authentication redesign
+- authorization redesign
+- database-wide migration changes
+- global API contract changes
+- major infrastructure changes
+
+Do not run full regression after every small change.
+
+## Invalidating verified features
+
+When a change affects a verified feature:
+
+1. Change its status from `VERIFIED` to `DIRTY`.
+2. Record the cause.
+3. Record the changed commit or working-tree state.
+4. Run the required retest level.
+5. If tests pass, return it to `VERIFIED`.
+6. Record the new verified commit.
+7. If tests fail, set it to `FAILED`.
+8. Add the result to `docs/testing/03-regression-log.md`.
+
+Never leave an affected feature marked `VERIFIED` using evidence from an older commit.
+
+## Git-aware verification
+
+Before trusting existing verification:
+
+1. Read the feature’s verified commit.
+2. Compare it with the current commit.
+3. Run:
+
+   `git diff --name-only <verified-commit>..HEAD`
+
+4. Match changed files against:
+   - direct feature source paths
+   - shared dependencies
+   - `docs/testing/02-impact-map.md`
+5. Retest only when an affecting path changed.
+6. Do not invalidate verification because of unrelated commits.
+
+## Testing one feature
+
+When implementing or completing a feature:
+
+1. Set status to `IN_PROGRESS`.
+2. Implement backend and frontend.
+3. Set status to `READY_FOR_TEST`.
+4. Run targeted backend real API tests.
+5. Run targeted real frontend-to-backend browser tests.
+6. Test positive flows.
+7. Test validation failures.
+8. Test unauthenticated access.
+9. Test permission denial.
+10. Test cross-organization denial.
+11. Test cross-area denial.
+12. Test workflow restrictions.
+13. Verify persistence after reload.
+14. Verify loading, empty, error, and success states.
+15. Fix every defect found.
+16. Repeat until all checks pass.
+17. Update the feature verification document.
+18. Set status to `VERIFIED`.
+19. Record the current Git commit.
+20. Update the verification registry.
+21. Commit the stable feature.
+22. Continue to the next feature.
+
+Do not retest unrelated `VERIFIED` features unless documented dependencies were affected.
+
+## Runtime defect handling
+
+A runtime defect is not resolved until:
+
+- the real browser workflow reproduces the defect
+- the failed frontend request is identified
+- the backend behavior is identified
+- the root cause is fixed
+- a real regression test passes
+- persistence and authorization remain correct
+- the affected feature returns to `VERIFIED`
+
+Do not hide runtime errors with generic catch blocks or fake successful responses.
+
+## Efficient test execution
+
+Real integration testing is mandatory, but it must be token-efficient.
+
+- Do not print complete successful logs.
+- Redirect verbose output to files.
+- On success, report only command, duration, test count, and exit code.
+- On failure, inspect only relevant failing sections.
+- Do not repeatedly run the full suite after every small edit.
+- Run affected feature tests first.
+- Run dependent regression only when required by the impact map.
+- Run full regression only for release or final acceptance.
+- Do not inspect screenshots, traces, or videos unless a test fails.
+- Reuse a healthy running stack.
+- Do not restart containers unless configuration, migrations, or service health require it.
+- Do not regenerate unchanged long reports.
+
+When a command produces large output:
+
+1. Redirect full output to a log file.
+2. Check the exit code.
+3. On success, read only the final summary.
+4. On failure, search for:
+   - `error`
+   - `failed`
+   - `exception`
+   - failing test name
+5. Read only relevant surrounding lines.
+6. Never paste an entire successful build or test log into the conversation.
+
+## Completion reporting
+
+Before claiming a feature is complete, report:
+
+- Feature ID
+- Current status
+- Verified commit
+- Backend API test result
+- Frontend real-browser test result
+- Database persistence result
+- Permission result
+- Organization-isolation result
+- Administrative-area-isolation result
+- Workflow result
+- Retest level used
+- Affected features
+- Remaining blockers
+
+Never describe mocked tests as runtime verification.

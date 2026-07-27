@@ -9,7 +9,6 @@ import {
   Popconfirm,
   Select,
   Space,
-  Switch,
   Table,
   Tabs,
   Tag,
@@ -132,13 +131,15 @@ function EndpointsTab() {
                 size="small"
                 icon={<EditOutlined />}
                 onClick={() => openEdit(record)}
-              />
+              >Sửa</Button>
               <Popconfirm
                 title={
                   record.status === API_ENDPOINT_STATUS.Active
                     ? "Tắt endpoint?"
                     : "Bật endpoint?"
                 }
+                okText={record.status === API_ENDPOINT_STATUS.Active ? "Tắt" : "Bật"}
+                cancelText="Hủy"
                 onConfirm={() =>
                   toggleMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã cập nhật"),
@@ -146,13 +147,15 @@ function EndpointsTab() {
                   })
                 }
               >
-                <Button size="small" icon={<SwapOutlined />} />
+                <Button size="small" icon={<SwapOutlined />}>Bật/Tắt</Button>
               </Popconfirm>
             </>
           )}
           {canDelete && (
             <Popconfirm
               title="Xóa endpoint?"
+              okText="Xóa"
+              cancelText="Hủy"
               onConfirm={() =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa"),
@@ -160,7 +163,7 @@ function EndpointsTab() {
                 })
               }
             >
-              <Button size="small" danger icon={<DeleteOutlined />} />
+              <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
             </Popconfirm>
           )}
         </Space>
@@ -232,6 +235,8 @@ function EndpointsTab() {
         destroyOnHidden
         width={640}
         onOk={() => form.submit()}
+        okText="Lưu"
+        cancelText="Hủy"
         confirmLoading={createMut.isPending || updateMut.isPending}
       >
         <Form
@@ -261,7 +266,7 @@ function EndpointsTab() {
             }
           }}
         >
-          <Form.Item name="name" label="Tên" rules={[{ required: true }]}>
+          <Form.Item name="name" label="Tên endpoint" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item name="url" label="URL" rules={[{ required: true }]}>
@@ -270,7 +275,7 @@ function EndpointsTab() {
           <Space style={{ width: "100%" }}>
             <Form.Item
               name="httpMethod"
-              label="Method"
+              label="Phương thức"
               rules={[{ required: true }]}
             >
               <Select
@@ -280,7 +285,7 @@ function EndpointsTab() {
             </Form.Item>
             <Form.Item
               name="externalSystem"
-              label="Hệ thống ngoài"
+              label="Hệ thống"
               rules={[{ required: true }]}
             >
               <Select

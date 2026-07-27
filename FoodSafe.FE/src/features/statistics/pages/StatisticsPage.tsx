@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Card, Col, Row, Select, Spin, Empty, Typography } from "antd";
+import { Card, Col, Row, Select, Spin } from "antd";
+import type { StatisticsDto } from "../types/statistics.types";
 import {
   BarChart,
   Bar,
@@ -52,21 +53,21 @@ const yearOptions = Array.from({ length: 5 }, (_, i) => {
   return { value: y, label: `Năm ${y}` };
 });
 
+const EMPTY_STATS: StatisticsDto = {
+  businessByStatus: [],
+  businessByType: [],
+  licenseByCategory: [],
+  licenseByStatus: [],
+  inspectionsByMonth: [],
+  violationsByMonth: [],
+  poisoningCasesByMonth: [],
+  inspectionOutcome: [],
+};
+
 export default function StatisticsPage() {
   const [year, setYear] = useState(currentYear());
   const { data, isLoading } = useStatistics({ year });
-
-  if (isLoading) {
-    return (
-      <div style={{ textAlign: "center", padding: 80 }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (!data) {
-    return <Empty description="Không có dữ liệu thống kê" />;
-  }
+  const stats = data ?? EMPTY_STATS;
 
   return (
     <div className="page-container">
@@ -82,21 +83,26 @@ export default function StatisticsPage() {
         }
       />
 
+      {isLoading ? (
+        <div style={{ textAlign: "center", padding: 80 }}>
+          <Spin size="large" />
+        </div>
+      ) : (
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <Card title="Cơ sở theo trạng thái" size="small">
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
-                  data={data.businessByStatus}
+                  data={stats.businessByStatus}
                   dataKey="count"
                   nameKey="name"
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={({ name, count }) => `${name}: ${count}`}
+                  label={({ name, value }) => `${name}: ${value}`}
                 >
-                  {data.businessByStatus.map((entry) => (
+                  {stats.businessByStatus.map((entry) => (
                     <Cell
                       key={entry.name}
                       fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
@@ -113,7 +119,7 @@ export default function StatisticsPage() {
           <Card title="Top loại hình cơ sở" size="small">
             <ResponsiveContainer width="100%" height={280}>
               <BarChart
-                data={data.businessByType}
+                data={stats.businessByType}
                 layout="vertical"
                 margin={{ left: 80 }}
               >
@@ -135,7 +141,7 @@ export default function StatisticsPage() {
         <Col xs={24} lg={12}>
           <Card title="Giấy phép / Chứng nhận theo loại" size="small">
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={data.licenseByCategory}>
+              <BarChart data={stats.licenseByCategory}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis allowDecimals={false} />
@@ -151,16 +157,16 @@ export default function StatisticsPage() {
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
-                  data={data.licenseByStatus}
+                  data={stats.licenseByStatus}
                   dataKey="count"
                   nameKey="name"
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
                   outerRadius={100}
-                  label={({ name, count }) => `${name}: ${count}`}
+                  label={({ name, value }) => `${name}: ${value}`}
                 >
-                  {data.licenseByStatus.map((entry) => (
+                  {stats.licenseByStatus.map((entry) => (
                     <Cell
                       key={entry.name}
                       fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
@@ -180,7 +186,7 @@ export default function StatisticsPage() {
             size="small"
           >
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data.inspectionsByMonth}>
+              <LineChart data={stats.inspectionsByMonth}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="label" />
                 <YAxis allowDecimals={false} />
@@ -202,7 +208,7 @@ export default function StatisticsPage() {
         <Col xs={24} lg={12}>
           <Card title={`Vi phạm theo tháng — Năm ${year}`} size="small">
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={data.violationsByMonth}>
+              <BarChart data={stats.violationsByMonth}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="label" />
                 <YAxis allowDecimals={false} />
@@ -218,15 +224,15 @@ export default function StatisticsPage() {
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
-                  data={data.inspectionOutcome}
+                  data={stats.inspectionOutcome}
                   dataKey="count"
                   nameKey="name"
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={({ name, count }) => `${name}: ${count}`}
+                  label={({ name, value }) => `${name}: ${value}`}
                 >
-                  {data.inspectionOutcome.map((entry) => (
+                  {stats.inspectionOutcome.map((entry) => (
                     <Cell
                       key={entry.name}
                       fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
@@ -246,7 +252,7 @@ export default function StatisticsPage() {
             size="small"
           >
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data.poisoningCasesByMonth}>
+              <BarChart data={stats.poisoningCasesByMonth}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="label" />
                 <YAxis allowDecimals={false} />
@@ -257,6 +263,7 @@ export default function StatisticsPage() {
           </Card>
         </Col>
       </Row>
+      )}
     </div>
   );
 }

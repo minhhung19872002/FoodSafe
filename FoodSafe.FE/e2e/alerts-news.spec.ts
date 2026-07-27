@@ -11,13 +11,13 @@ async function removeStaleAlerts(
   headers: Record<string, string>,
 ) {
   const response = await request.get(
-    "/api/v1/app/alert?Filter=E2E-ALERT&MaxResultCount=100",
+    "/api/v1/app/atp-alert?Filter=E2E-ALERT&MaxResultCount=100",
   );
   if (!response.ok()) return;
   for (const item of ((await response.json()) as { items: ListItem[] })
     .items) {
     if (item.title?.startsWith("E2E-ALERT")) {
-      await request.delete(`/api/v1/app/alert/${item.id}`, { headers });
+      await request.delete(`/api/v1/app/atp-alert/${item.id}`, { headers });
     }
   }
 }
@@ -35,6 +35,9 @@ test.describe("alerts and news management", () => {
     };
     await removeStaleAlerts(request, headers);
 
+    const suffix = Date.now().toString().slice(-8);
+    const title = `E2E-ALERT Cảnh báo ${suffix}`;
+
     await page.goto("/alerts-news");
     await expect(
       page.getByRole("tab", { name: "Cảnh báo VSATTP" }),
@@ -46,33 +49,30 @@ test.describe("alerts and news management", () => {
     });
     await alertDialog
       .getByRole("textbox", { name: "Tiêu đề" })
-      .fill("E2E-ALERT Cảnh báo test");
+      .fill(title);
     await alertDialog
       .getByRole("combobox", { name: "Loại cảnh báo" })
       .click();
-    await page.getByTitle("Vi sinh vật").click();
+    await page.getByTitle("Sinh học").click();
     await alertDialog
       .getByRole("combobox", { name: "Mức độ" })
       .click();
     await page.getByTitle("Cao").click();
     await alertDialog
+      .getByRole("textbox", { name: "Nội dung" })
+      .fill("Nội dung cảnh báo E2E test");
+    await alertDialog
       .getByRole("button", { name: "Lưu", exact: true })
       .click();
-    await expect(
-      page.getByText("E2E-ALERT Cảnh báo test"),
-    ).toBeVisible();
+    await expect(page.getByText(title)).toBeVisible();
 
-    let row = page
-      .getByRole("row")
-      .filter({ hasText: "E2E-ALERT Cảnh báo test" });
+    let row = page.getByRole("row").filter({ hasText: title });
     await row.getByRole("button", { name: /Xuất bản/ }).click();
     await page
       .getByRole("button", { name: "Xuất bản", exact: true })
       .click();
 
-    row = page
-      .getByRole("row")
-      .filter({ hasText: "E2E-ALERT Cảnh báo test" });
+    row = page.getByRole("row").filter({ hasText: title });
     await row.getByRole("button", { name: /Thu hồi/ }).click();
     const recallDialog = page.getByRole("dialog", {
       name: "Thu hồi cảnh báo",
@@ -84,14 +84,10 @@ test.describe("alerts and news management", () => {
       .getByRole("button", { name: "Thu hồi", exact: true })
       .click();
 
-    row = page
-      .getByRole("row")
-      .filter({ hasText: "E2E-ALERT Cảnh báo test" });
-    await row.getByRole("button", { name: /Xóa/ }).click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
-    await expect(
-      page.getByText("E2E-ALERT Cảnh báo test"),
-    ).not.toBeVisible();
+    row = page.getByRole("row").filter({ hasText: title });
+    await expect(row.getByText("Đã thu hồi")).toBeVisible();
+
+    await removeStaleAlerts(request, headers);
 
     await page.getByRole("tab", { name: "Tin tức ATTP" }).click();
     await expect(

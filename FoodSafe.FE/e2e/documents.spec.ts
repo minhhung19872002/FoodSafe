@@ -57,6 +57,8 @@ test.describe("documents management", () => {
 
     await page.getByRole("button", { name: "Thêm văn bản" }).click();
     const dialog = page.getByRole("dialog", { name: "Thêm văn bản" });
+    await dialog.getByRole("combobox", { name: "Loại văn bản" }).click();
+    await page.getByText("Thông tư", { exact: true }).last().click();
     await dialog
       .getByRole("textbox", { name: "Số văn bản" })
       .fill(docNumber);
@@ -64,13 +66,22 @@ test.describe("documents management", () => {
       .getByRole("textbox", { name: "Tiêu đề" })
       .fill("Văn bản E2E test");
     await dialog
+      .getByRole("textbox", { name: "Ngày ban hành" })
+      .click();
+    await dialog
+      .getByRole("textbox", { name: "Ngày ban hành" })
+      .fill("25/07/2026");
+    await dialog
+      .getByRole("textbox", { name: "Ngày ban hành" })
+      .press("Enter");
+    await dialog
       .getByRole("button", { name: "Lưu", exact: true })
       .click();
     await expect(page.getByText(docNumber)).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: docNumber });
     await row.getByRole("button", { name: /Xóa/ }).click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
-    await expect(page.getByText(docNumber)).not.toBeVisible();
+    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xóa" }).click();
+    await expect(page.getByText(docNumber)).not.toBeVisible({ timeout: 10_000 });
   });
 });

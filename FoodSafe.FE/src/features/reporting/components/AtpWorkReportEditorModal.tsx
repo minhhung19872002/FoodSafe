@@ -106,6 +106,8 @@ export function AtpWorkReportEditorModal({ report, onClose }: Props) {
       open={!!report}
       onCancel={onClose}
       onOk={handleSave}
+      okText="Lưu"
+      cancelText="Hủy"
       width={860}
       confirmLoading={updateStats.isPending || updateNarrative.isPending}
       destroyOnHidden
@@ -116,7 +118,7 @@ export function AtpWorkReportEditorModal({ report, onClose }: Props) {
         preserve={false}
         style={{ maxHeight: "65vh", overflowY: "auto", paddingRight: 8 }}
       >
-        <Divider orientation="left">Quản lý cơ sở</Divider>
+        <Divider titlePlacement="left">Quản lý cơ sở</Divider>
         <Row gutter={16}>
           <Col span={6}>
             <Form.Item name="totalBusinesses" label="Tổng cơ sở">
@@ -140,7 +142,7 @@ export function AtpWorkReportEditorModal({ report, onClose }: Props) {
           </Col>
         </Row>
 
-        <Divider orientation="left">Cấp phép & Công bố</Divider>
+        <Divider titlePlacement="left">Cấp phép & Công bố</Divider>
         <Row gutter={16}>
           <Col span={8}>
             <Form.Item name="dkcbIssued" label="ĐKCB đã cấp">
@@ -176,7 +178,7 @@ export function AtpWorkReportEditorModal({ report, onClose }: Props) {
           </Col>
         </Row>
 
-        <Divider orientation="left">Thanh tra - Kiểm tra</Divider>
+        <Divider titlePlacement="left">Thanh tra - Kiểm tra</Divider>
         <Row gutter={16}>
           <Col span={6}>
             <Form.Item name="totalInspectionPlans" label="Kế hoạch">
@@ -202,19 +204,19 @@ export function AtpWorkReportEditorModal({ report, onClose }: Props) {
         <Row gutter={16}>
           <Col span={8}>
             <Form.Item name="fineTotalAmount" label="Tổng tiền phạt (VNĐ)">
-              <InputNumber
+              <InputNumber<number>
                 min={0}
                 style={{ width: "100%" }}
                 formatter={(v) =>
                   `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
                 }
-                parser={(v) => Number(v?.replace(/\./g, "") ?? 0)}
+                parser={(v) => Number(v?.replace(/\./g, "") || 0)}
               />
             </Form.Item>
           </Col>
         </Row>
 
-        <Divider orientation="left">Ngộ độc thực phẩm</Divider>
+        <Divider titlePlacement="left">Ngộ độc thực phẩm</Divider>
         <Row gutter={16}>
           <Col span={6}>
             <Form.Item name="poisoningCaseCount" label="Số ca">
@@ -238,7 +240,7 @@ export function AtpWorkReportEditorModal({ report, onClose }: Props) {
           </Col>
         </Row>
 
-        <Divider orientation="left">Đào tạo & Truyền thông</Divider>
+        <Divider titlePlacement="left">Đào tạo & Truyền thông</Divider>
         <Row gutter={16}>
           <Col span={6}>
             <Form.Item name="trainingSessions" label="Buổi tập huấn">
@@ -262,7 +264,7 @@ export function AtpWorkReportEditorModal({ report, onClose }: Props) {
           </Col>
         </Row>
 
-        <Divider orientation="left">Nhận xét & Đánh giá</Divider>
+        <Divider titlePlacement="left">Nhận xét & Đánh giá</Divider>
         <Form.Item name="overview" label="Tổng quan">
           <Input.TextArea rows={3} />
         </Form.Item>

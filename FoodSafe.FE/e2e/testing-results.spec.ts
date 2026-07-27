@@ -67,17 +67,26 @@ test.describe("testing results management", () => {
       .getByRole("textbox", { name: "Tên mẫu" })
       .fill("Mẫu thực phẩm E2E");
     await dialog
+      .getByRole("textbox", { name: "Cơ sở kiểm nghiệm" })
+      .fill("Trung tâm KN E2E");
+    const dateInput = dialog.getByRole("textbox", { name: "Ngày lấy mẫu" });
+    await dateInput.click();
+    await dateInput.fill("25/07/2026");
+    await dateInput.press("Enter");
+    await dateInput.press("Escape");
+    await dialog
       .getByRole("combobox", { name: "Kết quả" })
       .click();
     await page.getByText("Đạt", { exact: true }).last().click();
     await dialog
       .getByRole("button", { name: "Lưu", exact: true })
       .click();
+    await expect(dialog).not.toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(sampleCode)).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: sampleCode });
     await row.getByRole("button", { name: /Xóa/ }).click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
-    await expect(page.getByText(sampleCode)).not.toBeVisible();
+    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xóa" }).click();
+    await expect(page.getByText(sampleCode)).not.toBeVisible({ timeout: 10_000 });
   });
 });

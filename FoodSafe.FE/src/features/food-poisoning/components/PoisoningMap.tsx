@@ -23,8 +23,8 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
     () =>
       cases.filter(
         (c) =>
-          c.locationLatitude !== undefined &&
-          c.locationLongitude !== undefined,
+          c.locationLatitude != null &&
+          c.locationLongitude != null,
       ),
     [cases],
   );
@@ -33,8 +33,8 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
     () =>
       incidents.filter(
         (i) =>
-          i.locationLatitude !== undefined &&
-          i.locationLongitude !== undefined,
+          i.locationLatitude != null &&
+          i.locationLongitude != null,
       ),
     [incidents],
   );

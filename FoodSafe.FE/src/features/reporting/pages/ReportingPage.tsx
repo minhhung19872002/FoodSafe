@@ -74,7 +74,6 @@ import {
   type AtpWorkReportFilter,
   type ActionMonthReportFilter,
   type ReportStatus,
-  type ReportPeriodType,
 } from "../types/reporting.types";
 
 const PAGE_SIZE = 15;
@@ -160,32 +159,36 @@ function NdtpTab() {
                 size="small"
                 icon={<EditOutlined />}
                 onClick={() => setEditReport(record)}
-              />
+              >Sửa</Button>
             )}
           {record.status === REPORT_STATUS.Draft &&
             hasPermission("FoodSafe.Reporting.NdtpReports.Submit") && (
               <Popconfirm
                 title="Gửi báo cáo này?"
+                okText="Gửi"
+                cancelText="Hủy"
                 onConfirm={() =>
                   submitMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã gửi"),
                   })
                 }
               >
-                <Button size="small" icon={<SendOutlined />} />
+                <Button size="small" icon={<SendOutlined />}>Gửi</Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Submitted &&
             hasPermission("FoodSafe.Reporting.NdtpReports.Verify") && (
               <Popconfirm
                 title="Xác minh báo cáo này?"
+                okText="Xác minh"
+                cancelText="Hủy"
                 onConfirm={() =>
                   verifyMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã xác minh"),
                   })
                 }
               >
-                <Button size="small" icon={<CheckCircleOutlined />} />
+                <Button size="small" icon={<CheckCircleOutlined />}>Xác minh</Button>
               </Popconfirm>
             )}
           {(record.status === REPORT_STATUS.Submitted ||
@@ -195,45 +198,51 @@ function NdtpTab() {
                 size="small"
                 icon={<RollbackOutlined />}
                 onClick={() => setReturnOpen(record.id)}
-              />
+              >Trả lại</Button>
             )}
           {record.status === REPORT_STATUS.Verified &&
             hasPermission("FoodSafe.Reporting.NdtpReports.Complete") && (
               <Popconfirm
                 title="Hoàn thành báo cáo này?"
+                okText="Hoàn thành"
+                cancelText="Hủy"
                 onConfirm={() =>
                   completeMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã hoàn thành"),
                   })
                 }
               >
-                <Button size="small" icon={<FileDoneOutlined />} />
+                <Button size="small" icon={<FileDoneOutlined />}>Hoàn thành</Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Returned &&
             hasPermission("FoodSafe.Reporting.NdtpReports.Edit") && (
               <Popconfirm
                 title="Chuyển về nháp để sửa?"
+                okText="Chuyển"
+                cancelText="Hủy"
                 onConfirm={() =>
                   returnToDraftMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã chuyển về nháp"),
                   })
                 }
               >
-                <Button size="small" icon={<EditOutlined />} />
+                <Button size="small" icon={<EditOutlined />}>Về nháp</Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Draft &&
             hasPermission("FoodSafe.Reporting.NdtpReports.Delete") && (
               <Popconfirm
                 title="Xóa báo cáo?"
+                okText="Xóa"
+                cancelText="Hủy"
                 onConfirm={() =>
                   deleteMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã xóa"),
                   })
                 }
               >
-                <Button size="small" danger icon={<DeleteOutlined />} />
+                <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
               </Popconfirm>
             )}
         </Space>
@@ -260,7 +269,7 @@ function NdtpTab() {
             setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
           }
         />
-        <InputNumber
+        <InputNumber<number>
           placeholder="Năm"
           style={{ width: 100 }}
           onChange={(v) =>
@@ -322,6 +331,8 @@ function NdtpTab() {
         onCancel={() => setCreateOpen(false)}
         destroyOnHidden
         onOk={() => form.submit()}
+        okText="Lưu"
+        cancelText="Hủy"
         confirmLoading={createMut.isPending}
       >
         <Form
@@ -362,6 +373,8 @@ function NdtpTab() {
         onCancel={() => setReturnOpen(null)}
         destroyOnHidden
         onOk={() => returnForm.submit()}
+        okText="Lưu"
+        cancelText="Hủy"
         confirmLoading={returnMut.isPending}
       >
         <Form
@@ -471,32 +484,36 @@ function AtpWorkTab() {
                 size="small"
                 icon={<EditOutlined />}
                 onClick={() => setEditReport(record)}
-              />
+              >Sửa</Button>
             )}
           {record.status === REPORT_STATUS.Draft &&
             hasPermission("FoodSafe.Reporting.AtpWorkReports.Submit") && (
               <Popconfirm
                 title="Gửi báo cáo này?"
+                okText="Gửi"
+                cancelText="Hủy"
                 onConfirm={() =>
                   submitMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã gửi"),
                   })
                 }
               >
-                <Button size="small" icon={<SendOutlined />} />
+                <Button size="small" icon={<SendOutlined />}>Gửi</Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Submitted &&
             hasPermission("FoodSafe.Reporting.AtpWorkReports.Verify") && (
               <Popconfirm
                 title="Xác minh báo cáo này?"
+                okText="Xác minh"
+                cancelText="Hủy"
                 onConfirm={() =>
                   verifyMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã xác minh"),
                   })
                 }
               >
-                <Button size="small" icon={<CheckCircleOutlined />} />
+                <Button size="small" icon={<CheckCircleOutlined />}>Xác minh</Button>
               </Popconfirm>
             )}
           {(record.status === REPORT_STATUS.Submitted ||
@@ -506,45 +523,51 @@ function AtpWorkTab() {
                 size="small"
                 icon={<RollbackOutlined />}
                 onClick={() => setReturnOpen(record.id)}
-              />
+              >Trả lại</Button>
             )}
           {record.status === REPORT_STATUS.Verified &&
             hasPermission("FoodSafe.Reporting.AtpWorkReports.Complete") && (
               <Popconfirm
                 title="Hoàn thành báo cáo này?"
+                okText="Hoàn thành"
+                cancelText="Hủy"
                 onConfirm={() =>
                   completeMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã hoàn thành"),
                   })
                 }
               >
-                <Button size="small" icon={<FileDoneOutlined />} />
+                <Button size="small" icon={<FileDoneOutlined />}>Hoàn thành</Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Returned &&
             hasPermission("FoodSafe.Reporting.AtpWorkReports.Edit") && (
               <Popconfirm
                 title="Chuyển về nháp để sửa?"
+                okText="Chuyển"
+                cancelText="Hủy"
                 onConfirm={() =>
                   returnToDraftMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã chuyển về nháp"),
                   })
                 }
               >
-                <Button size="small" icon={<EditOutlined />} />
+                <Button size="small" icon={<EditOutlined />}>Về nháp</Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Draft &&
             hasPermission("FoodSafe.Reporting.AtpWorkReports.Delete") && (
               <Popconfirm
                 title="Xóa báo cáo?"
+                okText="Xóa"
+                cancelText="Hủy"
                 onConfirm={() =>
                   deleteMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã xóa"),
                   })
                 }
               >
-                <Button size="small" danger icon={<DeleteOutlined />} />
+                <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
               </Popconfirm>
             )}
         </Space>
@@ -634,6 +657,8 @@ function AtpWorkTab() {
         onCancel={() => setCreateOpen(false)}
         destroyOnHidden
         onOk={() => form.submit()}
+        okText="Lưu"
+        cancelText="Hủy"
         confirmLoading={createMut.isPending}
       >
         <Form
@@ -702,6 +727,8 @@ function AtpWorkTab() {
         onCancel={() => setReturnOpen(null)}
         destroyOnHidden
         onOk={() => returnForm.submit()}
+        okText="Lưu"
+        cancelText="Hủy"
         confirmLoading={returnMut.isPending}
       >
         <Form
@@ -812,7 +839,7 @@ function ActionMonthTab() {
                 size="small"
                 icon={<EditOutlined />}
                 onClick={() => setEditReport(record)}
-              />
+              >Sửa</Button>
             )}
           {record.status === REPORT_STATUS.Draft &&
             hasPermission(
@@ -820,13 +847,15 @@ function ActionMonthTab() {
             ) && (
               <Popconfirm
                 title="Gửi báo cáo này?"
+                okText="Gửi"
+                cancelText="Hủy"
                 onConfirm={() =>
                   submitMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã gửi"),
                   })
                 }
               >
-                <Button size="small" icon={<SendOutlined />} />
+                <Button size="small" icon={<SendOutlined />}>Gửi</Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Submitted &&
@@ -835,13 +864,15 @@ function ActionMonthTab() {
             ) && (
               <Popconfirm
                 title="Xác minh báo cáo này?"
+                okText="Xác minh"
+                cancelText="Hủy"
                 onConfirm={() =>
                   verifyMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã xác minh"),
                   })
                 }
               >
-                <Button size="small" icon={<CheckCircleOutlined />} />
+                <Button size="small" icon={<CheckCircleOutlined />}>Xác minh</Button>
               </Popconfirm>
             )}
           {(record.status === REPORT_STATUS.Submitted ||
@@ -853,7 +884,7 @@ function ActionMonthTab() {
                 size="small"
                 icon={<RollbackOutlined />}
                 onClick={() => setReturnOpen(record.id)}
-              />
+              >Trả lại</Button>
             )}
           {record.status === REPORT_STATUS.Verified &&
             hasPermission(
@@ -861,13 +892,15 @@ function ActionMonthTab() {
             ) && (
               <Popconfirm
                 title="Hoàn thành báo cáo này?"
+                okText="Hoàn thành"
+                cancelText="Hủy"
                 onConfirm={() =>
                   completeMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã hoàn thành"),
                   })
                 }
               >
-                <Button size="small" icon={<FileDoneOutlined />} />
+                <Button size="small" icon={<FileDoneOutlined />}>Hoàn thành</Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Returned &&
@@ -876,13 +909,15 @@ function ActionMonthTab() {
             ) && (
               <Popconfirm
                 title="Chuyển về nháp để sửa?"
+                okText="Chuyển"
+                cancelText="Hủy"
                 onConfirm={() =>
                   returnToDraftMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã chuyển về nháp"),
                   })
                 }
               >
-                <Button size="small" icon={<EditOutlined />} />
+                <Button size="small" icon={<EditOutlined />}>Về nháp</Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Draft &&
@@ -891,13 +926,15 @@ function ActionMonthTab() {
             ) && (
               <Popconfirm
                 title="Xóa báo cáo?"
+                okText="Xóa"
+                cancelText="Hủy"
                 onConfirm={() =>
                   deleteMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã xóa"),
                   })
                 }
               >
-                <Button size="small" danger icon={<DeleteOutlined />} />
+                <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
               </Popconfirm>
             )}
         </Space>
@@ -924,7 +961,7 @@ function ActionMonthTab() {
             setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
           }
         />
-        <InputNumber
+        <InputNumber<number>
           placeholder="Năm"
           style={{ width: 100 }}
           onChange={(v) =>
@@ -985,6 +1022,8 @@ function ActionMonthTab() {
         onCancel={() => setCreateOpen(false)}
         destroyOnHidden
         onOk={() => form.submit()}
+        okText="Lưu"
+        cancelText="Hủy"
         confirmLoading={createMut.isPending}
       >
         <Form
@@ -1024,6 +1063,8 @@ function ActionMonthTab() {
         onCancel={() => setReturnOpen(null)}
         destroyOnHidden
         onOk={() => returnForm.submit()}
+        okText="Lưu"
+        cancelText="Hủy"
         confirmLoading={returnMut.isPending}
       >
         <Form

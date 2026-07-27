@@ -42,7 +42,7 @@ export default function PublicAdRegistrationLookupPage() {
       <Space.Compact style={{ width: "100%", maxWidth: 600 }}>
         <Input
           value={number}
-          placeholder="Số đăng ký quảng cáo"
+          placeholder="Số đăng ký"
           onChange={(e) => setNumber(e.target.value)}
           onPressEnter={() => void lookup()}
         />

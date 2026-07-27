@@ -4,28 +4,34 @@ import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
 
 interface ListItem {
   id: string;
-  code?: string;
+  victimName?: string;
+  location?: string;
 }
 
 async function removeStaleArtifacts(
   request: APIRequestContext,
   headers: Record<string, string>,
 ) {
-  for (const endpoint of [
-    "food-poisoning-case",
-    "food-poisoning-incident",
-  ]) {
-    const response = await request.get(
-      `/api/v1/app/${endpoint}?Filter=E2E-ND&MaxResultCount=100`,
-    );
-    if (!response.ok()) continue;
-    for (const item of ((await response.json()) as { items: ListItem[] })
-      .items) {
-      if (item.code?.startsWith("E2E-ND")) {
-        await request.delete(`/api/v1/app/${endpoint}/${item.id}`, {
-          headers,
-        });
-      }
+  const cases = await request.get(
+    "/api/v1/app/food-poisoning-case?Filter=E2E-NDTP&MaxResultCount=100",
+  );
+  if (cases.ok()) {
+    for (const item of ((await cases.json()) as { items: ListItem[] }).items) {
+      await request.delete(`/api/v1/app/food-poisoning-case/${item.id}`, {
+        headers,
+        maxRedirects: 0,
+      });
+    }
+  }
+  const incidents = await request.get(
+    "/api/v1/app/food-poisoning-incident?Filter=E2E-NDTP&MaxResultCount=100",
+  );
+  if (incidents.ok()) {
+    for (const item of ((await incidents.json()) as { items: ListItem[] }).items) {
+      await request.delete(`/api/v1/app/food-poisoning-incident/${item.id}`, {
+        headers,
+        maxRedirects: 0,
+      });
     }
   }
 }
@@ -42,6 +48,10 @@ test.describe("food poisoning management", () => {
       RequestVerificationToken: await requestVerificationToken(page),
     };
     await removeStaleArtifacts(request, headers);
+
+    const suffix = Date.now().toString().slice(-8);
+    const victimName = `E2E-NDTP Nạn nhân ${suffix}`;
+    const incidentLocation = `E2E-NDTP Nhà hàng ${suffix}`;
 
     await page.goto("/food-poisoning");
     await expect(
@@ -69,7 +79,7 @@ test.describe("food poisoning management", () => {
     await caseDialog
       .getByRole("textbox", { name: "Họ tên" })
       .first()
-      .fill("Nguyễn Văn E2E");
+      .fill(victimName);
     await caseDialog
       .getByRole("textbox", { name: "Địa điểm xảy ra" })
       .fill("Chợ đêm TP Hạ Long");
@@ -86,19 +96,17 @@ test.describe("food poisoning management", () => {
       page.getByText("Tạo ca ngộ độc thành công."),
     ).toBeVisible();
 
-    await expect(
-      page.getByText("Nguyễn Văn E2E"),
-    ).toBeVisible();
+    await expect(page.getByText(victimName)).toBeVisible();
 
-    let row = page.getByRole("row").filter({ hasText: "Nguyễn Văn E2E" });
+    let row = page.getByRole("row").filter({ hasText: victimName });
     await row.getByRole("button", { name: /Gửi/ }).click();
-    await page.getByRole("button", { name: "Gửi", exact: true }).click();
-    await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible();
+    await page.locator(".ant-popover:visible").getByRole("button", { name: "Gửi" }).click();
+    await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible({ timeout: 10_000 });
 
-    row = page.getByRole("row").filter({ hasText: "Nguyễn Văn E2E" });
+    row = page.getByRole("row").filter({ hasText: victimName });
     await row.getByRole("button", { name: /Xác minh/ }).click();
-    await page.getByRole("button", { name: "Xác minh", exact: true }).click();
-    await expect(page.getByText("Đã xác minh.")).toBeVisible();
+    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xác minh" }).click();
+    await expect(page.getByText("Đã xác minh.")).toBeVisible({ timeout: 10_000 });
 
     await page
       .getByRole("tab", { name: "Vụ ngộ độc thực phẩm" })
@@ -109,7 +117,7 @@ test.describe("food poisoning management", () => {
     });
     await incidentDialog
       .getByRole("textbox", { name: "Địa điểm xảy ra" })
-      .fill("Nhà hàng hải sản E2E");
+      .fill(incidentLocation);
     await incidentDialog
       .getByRole("spinbutton", { name: "Số người phơi nhiễm" })
       .fill("20");
@@ -129,23 +137,19 @@ test.describe("food poisoning management", () => {
       page.getByText("Tạo vụ ngộ độc thành công."),
     ).toBeVisible();
 
-    await expect(
-      page.getByText("Nhà hàng hải sản E2E"),
-    ).toBeVisible();
+    await expect(page.getByText(incidentLocation)).toBeVisible();
 
-    row = page.getByRole("row").filter({ hasText: "Nhà hàng hải sản E2E" });
+    row = page.getByRole("row").filter({ hasText: incidentLocation });
     await row.getByRole("button", { name: /Gửi/ }).click();
-    await page.getByRole("button", { name: "Gửi", exact: true }).click();
-    await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible();
+    await page.locator(".ant-popover:visible").getByRole("button", { name: "Gửi" }).click();
+    await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible({ timeout: 10_000 });
 
-    row = page.getByRole("row").filter({ hasText: "Nhà hàng hải sản E2E" });
+    row = page.getByRole("row").filter({ hasText: incidentLocation });
     await row.getByRole("button", { name: /Xác minh/ }).click();
-    await page
-      .getByRole("button", { name: "Xác minh", exact: true })
-      .click();
-    await expect(page.getByText("Đã xác minh.")).toBeVisible();
+    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xác minh" }).click();
+    await expect(page.getByText("Đã xác minh.")).toBeVisible({ timeout: 10_000 });
 
-    row = page.getByRole("row").filter({ hasText: "Nhà hàng hải sản E2E" });
+    row = page.getByRole("row").filter({ hasText: incidentLocation });
     await row.getByRole("button", { name: /Kết luận/ }).click();
     const concludeDialog = page.getByRole("dialog", {
       name: "Kết luận vụ ngộ độc",
@@ -160,9 +164,35 @@ test.describe("food poisoning management", () => {
       page.getByText("Đã kết luận vụ ngộ độc."),
     ).toBeVisible();
 
+    const mappedIncidentResponse = await request.post(
+      "/api/v1/app/food-poisoning-incident",
+      {
+        headers,
+        data: {
+          locationDescription: `E2E-NDTP Bản đồ ${suffix}`,
+          locationLatitude: 21.0064,
+          locationLongitude: 107.2925,
+          exposedCount: 5,
+          affectedCount: 2,
+          hospitalizedCount: 1,
+          deathCount: 0,
+        },
+      },
+    );
+    expect(
+      mappedIncidentResponse.ok(),
+      await mappedIncidentResponse.text(),
+    ).toBeTruthy();
+
+    await page.reload();
     await page.getByRole("tab", { name: "Bản đồ" }).click();
     await expect(
       page.locator(".leaflet-container"),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page.locator(".leaflet-container path.leaflet-interactive").first(),
+    ).toBeVisible({ timeout: 10_000 });
+
+    await removeStaleArtifacts(request, headers);
   });
 });

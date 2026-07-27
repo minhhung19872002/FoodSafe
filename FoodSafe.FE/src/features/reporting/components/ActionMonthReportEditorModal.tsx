@@ -84,6 +84,8 @@ export function ActionMonthReportEditorModal({ report, onClose }: Props) {
       open={!!report}
       onCancel={onClose}
       onOk={handleSave}
+      okText="Lưu"
+      cancelText="Hủy"
       width={780}
       confirmLoading={updateStats.isPending || updateNarrative.isPending}
       destroyOnHidden
@@ -94,7 +96,7 @@ export function ActionMonthReportEditorModal({ report, onClose }: Props) {
         preserve={false}
         style={{ maxHeight: "65vh", overflowY: "auto", paddingRight: 8 }}
       >
-        <Divider orientation="left">Truyền thông</Divider>
+        <Divider titlePlacement="left">Truyền thông</Divider>
         <Row gutter={16}>
           <Col span={8}>
             <Form.Item name="mediaArticles" label="Bài báo">
@@ -130,7 +132,7 @@ export function ActionMonthReportEditorModal({ report, onClose }: Props) {
           </Col>
         </Row>
 
-        <Divider orientation="left">Thanh tra - Kiểm tra</Divider>
+        <Divider titlePlacement="left">Thanh tra - Kiểm tra</Divider>
         <Row gutter={16}>
           <Col span={6}>
             <Form.Item name="businessesInspected" label="Cơ sở TT">
@@ -149,13 +151,13 @@ export function ActionMonthReportEditorModal({ report, onClose }: Props) {
           </Col>
           <Col span={6}>
             <Form.Item name="fineAmount" label="Tiền phạt (VNĐ)">
-              <InputNumber
+              <InputNumber<number>
                 min={0}
                 style={{ width: "100%" }}
                 formatter={(v) =>
                   `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
                 }
-                parser={(v) => Number(v?.replace(/\./g, "") ?? 0)}
+                parser={(v) => Number(v?.replace(/\./g, "") || 0)}
               />
             </Form.Item>
           </Col>
@@ -168,7 +170,7 @@ export function ActionMonthReportEditorModal({ report, onClose }: Props) {
           </Col>
         </Row>
 
-        <Divider orientation="left">Đánh giá</Divider>
+        <Divider titlePlacement="left">Đánh giá</Divider>
         <Form.Item name="actionMonthTheme" label="Chủ đề">
           <Input />
         </Form.Item>

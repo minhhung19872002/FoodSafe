@@ -34,7 +34,7 @@ export default function PublicSelfDeclarationLookupPage() {
   return (
     <main style={{ maxWidth: 900, margin: "64px auto", padding: "0 24px" }}>
       <Typography.Title level={2}>
-        Tra cứu hồ sơ tự công bố sản phẩm
+        Tra cứu tự công bố sản phẩm
       </Typography.Title>
       <Typography.Paragraph type="secondary">
         Nhập chính xác số hồ sơ tự công bố để kiểm tra thông tin và hiệu lực.
@@ -42,7 +42,7 @@ export default function PublicSelfDeclarationLookupPage() {
       <Space.Compact style={{ width: "100%", maxWidth: 600 }}>
         <Input
           value={number}
-          placeholder="Số hồ sơ tự công bố"
+          placeholder="Số tự công bố"
           onChange={(e) => setNumber(e.target.value)}
           onPressEnter={() => void lookup()}
         />

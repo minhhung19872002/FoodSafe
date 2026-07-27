@@ -69,10 +69,10 @@ describe("ExportFoodCertificatePage", () => {
       organizationName: null,
       roles: ["ProvinceStaff"],
       permissions: [
-        "FoodSafe.Licensing.ExportFoodCertificates.View",
-        "FoodSafe.Licensing.ExportFoodCertificates.Create",
-        "FoodSafe.Licensing.ExportFoodCertificates.Edit",
-        "FoodSafe.Licensing.ExportFoodCertificates.Delete",
+        "FoodSafe.Licensing.ExportCertificates.View",
+        "FoodSafe.Licensing.ExportCertificates.Create",
+        "FoodSafe.Licensing.ExportCertificates.Edit",
+        "FoodSafe.Licensing.ExportCertificates.Delete",
       ],
     });
 
@@ -107,7 +107,7 @@ describe("ExportFoodCertificatePage", () => {
       organizationId: null,
       organizationName: null,
       roles: ["CommuneStaff"],
-      permissions: ["FoodSafe.Licensing.ExportFoodCertificates.View"],
+      permissions: ["FoodSafe.Licensing.ExportCertificates.View"],
     });
 
     renderPage();

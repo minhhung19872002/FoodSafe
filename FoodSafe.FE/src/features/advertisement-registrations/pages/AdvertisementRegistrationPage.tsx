@@ -216,7 +216,7 @@ export default function AdvertisementRegistrationPage() {
   return (
     <div className="page-container">
       <PageHeader
-        title="Đăng ký quảng cáo"
+        title="Đăng ký nội dung quảng cáo"
         subtitle="Quản lý đăng ký quảng cáo thực phẩm"
         actions={
           <>

@@ -86,7 +86,10 @@ test.describe("identity administration", () => {
       .getByRole("button", { name: `Xóa vai trò ${roleName}` })
       .click();
     await page.getByRole("button", { name: "Xóa", exact: true }).click();
-    await expect(page.getByText(roleName)).not.toBeVisible();
+    await expect(page.getByText("Đã xóa vai trò")).toBeVisible();
+    await expect(
+      page.getByRole("row").filter({ hasText: roleName }),
+    ).toHaveCount(0);
 
     await page.getByRole("tab", { name: "Tài khoản" }).click();
     await expect(

@@ -129,11 +129,13 @@ export default function DocumentsPage() {
               size="small"
               icon={<EditOutlined />}
               onClick={() => openEdit(record)}
-            />
+            >Sửa</Button>
           )}
           {hasPermission("FoodSafe.AlertsAndTesting.Documents.Delete") && (
             <Popconfirm
               title="Xóa văn bản?"
+              okText="Xóa"
+              cancelText="Hủy"
               onConfirm={() =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa"),
@@ -141,7 +143,7 @@ export default function DocumentsPage() {
                 })
               }
             >
-              <Button size="small" danger icon={<DeleteOutlined />} />
+              <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
             </Popconfirm>
           )}
         </Space>
@@ -217,6 +219,8 @@ export default function DocumentsPage() {
         destroyOnHidden
         width={640}
         onOk={() => form.submit()}
+        okText="Lưu"
+        cancelText="Hủy"
         confirmLoading={createMut.isPending || updateMut.isPending}
       >
         <Form

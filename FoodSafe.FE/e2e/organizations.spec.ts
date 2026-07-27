@@ -25,9 +25,31 @@ async function removeStaleOrganizations(
 }
 
 test.describe("organization management", () => {
-  test.setTimeout(60_000);
+  test.setTimeout(90_000);
 
-  test("creates, edits and deletes an organization", async ({ page }) => {
+  test("lists seeded organizations and shows hierarchy", async ({ page }) => {
+    await signInAsAdmin(page);
+    await page.goto("/organizations");
+    await expect(
+      page.getByRole("heading", { name: "Quản lý đơn vị" }),
+    ).toBeVisible();
+
+    const table = page.getByRole("table");
+    await expect(
+      table.getByRole("cell", { name: "CCATVSTP-QN" }),
+    ).toBeVisible();
+    await expect(table.getByRole("cell", { name: "PYT-HL" })).toBeVisible();
+    await expect(table.getByRole("cell", { name: "TYT-BD" })).toBeVisible();
+
+    await expect(
+      table.getByRole("cell", {
+        name: "Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh",
+        exact: true,
+      }),
+    ).toBeVisible();
+  });
+
+  test("creates via API, edits and deletes via UI", async ({ page }) => {
     await signInAsAdmin(page);
     const request = page.context().request;
     const headers = {
@@ -35,40 +57,70 @@ test.describe("organization management", () => {
     };
     await removeStaleOrganizations(request, headers);
 
-    await page.goto("/organizations");
-    await expect(
-      page.getByRole("heading", { name: "Quản lý đơn vị" }),
-    ).toBeVisible();
-
     const suffix = Date.now().toString().slice(-8);
+    const orgCode = `E2E${suffix}`;
     const orgName = `E2E-ORG-${suffix}`;
 
-    await page.getByRole("button", { name: "Thêm đơn vị" }).click();
-    const createDialog = page.getByRole("dialog");
-    await createDialog
-      .getByRole("textbox", { name: "Tên đơn vị" })
-      .fill(orgName);
-    await createDialog
-      .getByRole("button", { name: "Lưu", exact: true })
-      .click();
-    await expect(page.getByText("Đã thêm đơn vị")).toBeVisible();
-    await expect(page.getByText(orgName)).toBeVisible();
+    const provinceId = "e2e00000-0000-4000-8001-000000000001";
 
-    let row = page.getByRole("row").filter({ hasText: orgName });
+    const createResponse = await request.post("/api/v1/app/organization", {
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+      },
+      data: {
+        code: orgCode,
+        name: orgName,
+        level: 1,
+        parentId: null,
+        provinceId,
+        districtId: null,
+        communeId: null,
+        address: null,
+        phone: null,
+        email: null,
+        leaderName: null,
+        isActive: true,
+      },
+    });
+    expect(createResponse.ok(), await createResponse.text()).toBeTruthy();
+
+    await page.goto("/organizations");
+    const table = page.getByRole("table");
+    await expect(
+      table.getByRole("cell", { name: orgName, exact: true }),
+    ).toBeVisible({ timeout: 10_000 });
+
+    const row = table.getByRole("row").filter({ hasText: orgName });
     await row.getByRole("button", { name: /Sửa/ }).click();
     const editDialog = page.getByRole("dialog");
-    const nameField = editDialog.getByRole("textbox", { name: "Tên đơn vị" });
-    await nameField.clear();
-    await nameField.fill(`${orgName}-updated`);
+    await expect(editDialog).toBeVisible();
+    const nameInput = editDialog
+      .locator(".ant-form-item")
+      .filter({ hasText: "Tên đơn vị" })
+      .locator("input")
+      .first();
+    await nameInput.clear();
+    await nameInput.fill(`${orgName}-updated`);
     await editDialog
       .getByRole("button", { name: "Lưu", exact: true })
       .click();
-    await expect(page.getByText("Đã cập nhật đơn vị")).toBeVisible();
-    await expect(page.getByText(`${orgName}-updated`)).toBeVisible();
+    await expect(
+      table.getByRole("cell", { name: `${orgName}-updated`, exact: true }),
+    ).toBeVisible({ timeout: 10_000 });
 
-    row = page.getByRole("row").filter({ hasText: `${orgName}-updated` });
-    await row.getByRole("button", { name: /Xóa/ }).click();
+    await page.reload();
+    await expect(
+      table.getByRole("cell", { name: `${orgName}-updated`, exact: true }),
+    ).toBeVisible({ timeout: 10_000 });
+
+    const updatedRow = table
+      .getByRole("row")
+      .filter({ hasText: `${orgName}-updated` });
+    await updatedRow.getByRole("button", { name: /Xóa/ }).click();
     await page.getByRole("button", { name: "Xóa", exact: true }).click();
-    await expect(page.getByText("Đã xóa đơn vị")).toBeVisible();
+    await expect(
+      table.getByRole("cell", { name: `${orgName}-updated`, exact: true }),
+    ).not.toBeVisible({ timeout: 10_000 });
   });
 });

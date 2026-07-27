@@ -38,7 +38,7 @@ export default function PublicBusinessLookupPage() {
   return (
     <main style={{ maxWidth: 900, margin: "64px auto", padding: "0 24px" }}>
       <Typography.Title level={2}>
-        Tra cứu cơ sở sản xuất kinh doanh
+        Tra cứu cơ sở sản xuất, kinh doanh thực phẩm
       </Typography.Title>
       <Typography.Paragraph type="secondary">
         Nhập mã cơ sở hoặc mã số thuế để kiểm tra thông tin.
@@ -46,7 +46,7 @@ export default function PublicBusinessLookupPage() {
       <Space.Compact style={{ width: "100%", maxWidth: 600 }}>
         <Input
           value={keyword}
-          placeholder="Mã cơ sở hoặc mã số thuế"
+          placeholder="Tên cơ sở hoặc mã số"
           onChange={(e) => setKeyword(e.target.value)}
           onPressEnter={() => void lookup()}
         />

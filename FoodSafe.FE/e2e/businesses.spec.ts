@@ -81,7 +81,7 @@ test.describe("business and product management", () => {
     ).toBeVisible();
 
     const exportPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: /export excel/i }).click();
+    await page.getByRole("button", { name: /Xuất Excel/ }).click();
     const exportDownload = await exportPromise;
     expect(exportDownload.suggestedFilename()).toMatch(
       /^danh-sach-co-so-\d{8}-\d{6}\.xlsx$/,
@@ -91,7 +91,7 @@ test.describe("business and product management", () => {
     const exportBytes = await readFile(exportPath!);
     expect(exportBytes.subarray(0, 2).toString()).toBe("PK");
 
-    await page.getByRole("button", { name: /import excel/i }).click();
+    await page.getByRole("button", { name: "Import" }).click();
     const importDialog = page.getByRole("dialog", {
       name: "Import cơ sở từ Excel",
     });
@@ -161,7 +161,7 @@ test.describe("business and product management", () => {
 
     await page.getByRole("tab", { name: "Sản phẩm" }).click();
     const productExportPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: /export excel/i }).click();
+    await page.getByRole("button", { name: /Xuất Excel/ }).click();
     const productExport = await productExportPromise;
     expect(productExport.suggestedFilename()).toMatch(
       /^danh-sach-san-pham-\d{8}-\d{6}\.xlsx$/,
@@ -172,7 +172,7 @@ test.describe("business and product management", () => {
       (await readFile(productExportPath!)).subarray(0, 2).toString(),
     ).toBe("PK");
 
-    await page.getByRole("button", { name: /import excel/i }).click();
+    await page.getByRole("button", { name: "Import" }).click();
     const productImportDialog = page.getByRole("dialog", {
       name: "Import sản phẩm từ Excel",
     });

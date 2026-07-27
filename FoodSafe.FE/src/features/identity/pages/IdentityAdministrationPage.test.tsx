@@ -77,11 +77,11 @@ describe("IdentityAdministrationPage", () => {
       organizationName: null,
       roles: ["Admin"],
       permissions: [
-        "FoodSafe.SystemAdministration.Users",
-        "FoodSafe.SystemAdministration.Users.Create",
-        "FoodSafe.SystemAdministration.Users.Edit",
-        "FoodSafe.SystemAdministration.Roles",
-        "FoodSafe.SystemAdministration.Roles.Create",
+        "FoodSafe.SystemAdmin.Users",
+        "FoodSafe.SystemAdmin.Users.Create",
+        "FoodSafe.SystemAdmin.Users.Edit",
+        "FoodSafe.SystemAdmin.Roles",
+        "FoodSafe.SystemAdmin.Roles.Create",
       ],
     });
 
@@ -105,7 +105,7 @@ describe("IdentityAdministrationPage", () => {
       organizationId: null,
       organizationName: null,
       roles: ["Viewer"],
-      permissions: ["FoodSafe.SystemAdministration.Roles"],
+      permissions: ["FoodSafe.SystemAdmin.Roles"],
     });
 
     renderPage();

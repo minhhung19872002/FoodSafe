@@ -59,18 +59,18 @@ import type {
 } from "../types/identity.types";
 
 const permission = {
-  users: "FoodSafe.SystemAdministration.Users",
-  createUser: "FoodSafe.SystemAdministration.Users.Create",
-  editUser: "FoodSafe.SystemAdministration.Users.Edit",
-  activateUser: "FoodSafe.SystemAdministration.Users.Activate",
-  lockUser: "FoodSafe.SystemAdministration.Users.Lock",
-  resetPassword: "FoodSafe.SystemAdministration.Users.ResetPassword",
-  activity: "FoodSafe.SystemAdministration.Users.ViewActivity",
-  roles: "FoodSafe.SystemAdministration.Roles",
-  createRole: "FoodSafe.SystemAdministration.Roles.Create",
-  editRole: "FoodSafe.SystemAdministration.Roles.Edit",
-  deleteRole: "FoodSafe.SystemAdministration.Roles.Delete",
-  permissions: "FoodSafe.SystemAdministration.Roles.ManagePermissions",
+  users: "FoodSafe.SystemAdmin.Users",
+  createUser: "FoodSafe.SystemAdmin.Users.Create",
+  editUser: "FoodSafe.SystemAdmin.Users.Edit",
+  activateUser: "FoodSafe.SystemAdmin.Users.Activate",
+  lockUser: "FoodSafe.SystemAdmin.Users.Lock",
+  resetPassword: "FoodSafe.SystemAdmin.Users.ResetPassword",
+  activity: "FoodSafe.SystemAdmin.Users.ViewActivity",
+  roles: "FoodSafe.SystemAdmin.Roles",
+  createRole: "FoodSafe.SystemAdmin.Roles.Create",
+  editRole: "FoodSafe.SystemAdmin.Roles.Edit",
+  deleteRole: "FoodSafe.SystemAdmin.Roles.Delete",
+  permissions: "FoodSafe.SystemAdmin.Roles.ManagePermissions",
 } as const;
 
 const pageSize = 10;
@@ -377,6 +377,8 @@ export default function IdentityAdministrationPage() {
                     {hasPermission(permission.resetPassword) && (
                       <Popconfirm
                         title="Gửi liên kết đặt lại mật khẩu?"
+                        okText="Gửi"
+                        cancelText="Hủy"
                         onConfirm={() =>
                           sendReset.mutate(user.id, {
                             onSuccess: () =>
@@ -563,6 +565,8 @@ export default function IdentityAdministrationPage() {
                           ? "Vai trò đang được sử dụng và không thể xóa."
                           : undefined
                       }
+                      okText="Xóa"
+                      cancelText="Hủy"
                       disabled={role.userCount > 0}
                       onConfirm={() =>
                         deleteRole.mutate(role.id, {

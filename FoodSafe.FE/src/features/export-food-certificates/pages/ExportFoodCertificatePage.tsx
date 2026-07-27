@@ -56,13 +56,13 @@ export default function ExportFoodCertificatePage() {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canCreate = hasPermission(
-    "FoodSafe.Licensing.ExportFoodCertificates.Create",
+    "FoodSafe.Licensing.ExportCertificates.Create",
   );
   const canEdit = hasPermission(
-    "FoodSafe.Licensing.ExportFoodCertificates.Edit",
+    "FoodSafe.Licensing.ExportCertificates.Edit",
   );
   const canDelete = hasPermission(
-    "FoodSafe.Licensing.ExportFoodCertificates.Delete",
+    "FoodSafe.Licensing.ExportCertificates.Delete",
   );
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("");

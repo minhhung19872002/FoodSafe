@@ -92,7 +92,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/tra-cuu-quang-cao",
+    path: "/tra-cuu-dang-ky-quang-cao",
     element: (
       <Suspense fallback={<RouteLoading />}>
         <PublicAdRegistrationLookupPage />
@@ -350,7 +350,7 @@ export const router = createBrowserRouter([
         path: "administration/audit-logs",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.SystemAdministration.AuditLogs">
+            <PermissionRoute permission="FoodSafe.SystemAdmin.AuditLogs">
               <AuditLogPage />
             </PermissionRoute>
           </Suspense>
@@ -360,7 +360,7 @@ export const router = createBrowserRouter([
         path: "administration/settings",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.SystemAdministration.Settings">
+            <PermissionRoute permission="FoodSafe.SystemAdmin.Settings">
               <SystemSettingsPage />
             </PermissionRoute>
           </Suspense>
@@ -370,7 +370,7 @@ export const router = createBrowserRouter([
         path: "administration/identity",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.SystemAdministration">
+            <PermissionRoute permission="FoodSafe.SystemAdmin">
               <IdentityAdministrationPage />
             </PermissionRoute>
           </Suspense>

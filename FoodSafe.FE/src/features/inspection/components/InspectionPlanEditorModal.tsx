@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   DatePicker,
@@ -7,7 +7,6 @@ import {
   InputNumber,
   Modal,
   Select,
-  Space,
   Table,
 } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
@@ -53,7 +52,7 @@ interface Props {
 
 export function InspectionPlanEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
-  const [itemsForm] = Form.useForm<{ items: ItemRow[] }>();
+  const [items, setItems] = useState<ItemRow[]>([]);
   const { open, item } = props;
 
   useEffect(() => {
@@ -69,29 +68,28 @@ export function InspectionPlanEditorModal(props: Props) {
         description: item.description,
         objectives: item.objectives,
       });
-      itemsForm.setFieldsValue({
-        items: item.items.map((i) => ({
+      setItems(
+        item.items.map((i) => ({
           key: i.id,
           businessId: i.businessId,
           sequenceNumber: i.sequenceNumber,
           plannedDate: i.plannedDate,
           notes: i.notes,
         })),
-      });
+      );
     } else {
       form.setFieldsValue({
         year: new Date().getFullYear(),
         planType: INSPECTION_PLAN_TYPE.Annual,
       });
-      itemsForm.setFieldsValue({ items: [] });
+      setItems([]);
     }
-  }, [form, itemsForm, open, item]);
+  }, [form, open, item]);
 
   const handleSubmit = () => {
     form
       .validateFields()
       .then((values) => {
-        const items: ItemRow[] = itemsForm.getFieldValue("items") ?? [];
         const planItems: CreateUpdatePlanItemInput[] = items.map((row, idx) => ({
           businessId: row.businessId,
           sequenceNumber: row.sequenceNumber ?? idx + 1,
@@ -201,7 +199,8 @@ export function InspectionPlanEditorModal(props: Props) {
 
       <PlanItemsEditor
         businesses={props.businesses}
-        form={itemsForm}
+        items={items}
+        onChange={setItems}
       />
     </Modal>
   );
@@ -209,41 +208,32 @@ export function InspectionPlanEditorModal(props: Props) {
 
 function PlanItemsEditor({
   businesses,
-  form,
+  items,
+  onChange,
 }: {
   businesses: BusinessOption[];
-  form: ReturnType<typeof Form.useForm<{ items: ItemRow[] }>>[0];
+  items: ItemRow[];
+  onChange: (items: ItemRow[]) => void;
 }) {
-  const items: ItemRow[] = Form.useWatch("items", form) ?? [];
-
   const addItem = () => {
-    const current = form.getFieldValue("items") ?? [];
-    form.setFieldsValue({
-      items: [
-        ...current,
-        {
-          key: crypto.randomUUID(),
-          businessId: "",
-          sequenceNumber: current.length + 1,
-        },
-      ],
-    });
+    onChange([
+      ...items,
+      {
+        key: crypto.randomUUID(),
+        businessId: "",
+        sequenceNumber: items.length + 1,
+      },
+    ]);
   };
 
   const removeItem = (key: string) => {
-    const current: ItemRow[] = form.getFieldValue("items") ?? [];
-    form.setFieldsValue({
-      items: current.filter((i) => i.key !== key),
-    });
+    onChange(items.filter((i) => i.key !== key));
   };
 
   const updateItem = (key: string, field: string, value: unknown) => {
-    const current: ItemRow[] = form.getFieldValue("items") ?? [];
-    form.setFieldsValue({
-      items: current.map((i) =>
-        i.key === key ? { ...i, [field]: value } : i,
-      ),
-    });
+    onChange(
+      items.map((i) => (i.key === key ? { ...i, [field]: value } : i)),
+    );
   };
 
   const columns: ColumnsType<ItemRow> = [

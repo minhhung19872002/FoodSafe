@@ -164,7 +164,7 @@ export default function SelfDeclarationPage() {
           <Button
             type="text"
             size="small"
-            aria-label={`Tệp đính kèm ${item.declarationNumber}`}
+            aria-label={`Tệp ${item.declarationNumber}`}
             icon={<FileTextOutlined />}
             onClick={() => setAttachmentsFor(item)}
           />

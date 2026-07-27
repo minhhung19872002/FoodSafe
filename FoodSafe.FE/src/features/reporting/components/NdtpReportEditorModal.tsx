@@ -69,12 +69,14 @@ export function NdtpReportEditorModal({ report, onClose }: Props) {
       open={!!report}
       onCancel={onClose}
       onOk={handleSave}
+      okText="Lưu"
+      cancelText="Hủy"
       width={720}
       confirmLoading={updateStats.isPending || updateNarrative.isPending}
       destroyOnHidden
     >
       <Form form={form} layout="vertical" preserve={false}>
-        <Divider orientation="left">Ca ngộ độc nhỏ lẻ</Divider>
+        <Divider titlePlacement="left">Ca ngộ độc nhỏ lẻ</Divider>
         <Row gutter={16}>
           <Col span={6}>
             <Form.Item name="caseCount" label="Số ca">
@@ -98,7 +100,7 @@ export function NdtpReportEditorModal({ report, onClose }: Props) {
           </Col>
         </Row>
 
-        <Divider orientation="left">Vụ ngộ độc</Divider>
+        <Divider titlePlacement="left">Vụ ngộ độc</Divider>
         <Row gutter={16}>
           <Col span={6}>
             <Form.Item name="incidentCount" label="Số vụ">
@@ -122,7 +124,7 @@ export function NdtpReportEditorModal({ report, onClose }: Props) {
           </Col>
         </Row>
 
-        <Divider orientation="left">Nội dung báo cáo</Divider>
+        <Divider titlePlacement="left">Nội dung báo cáo</Divider>
         <Form.Item name="preventionActivities" label="Hoạt động phòng chống">
           <Input.TextArea rows={3} />
         </Form.Item>

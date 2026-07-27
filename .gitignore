@@ -38,3 +38,7 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Local debugging artifacts - never commit
+cookies.txt
+prompt.txt

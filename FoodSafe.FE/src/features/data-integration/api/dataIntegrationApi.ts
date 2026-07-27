@@ -23,34 +23,34 @@ function download(data: Blob, contentDisposition?: string): FileDownload {
 export const dataIntegrationApi = {
   getEndpoints: (params: ApiEndpointFilter) =>
     api
-      .get<PagedResult<ApiEndpoint>>("/api/app/api-endpoint", { params })
+      .get<PagedResult<ApiEndpoint>>("/v1/app/api-endpoint", { params })
       .then((r) => r.data),
 
   getEndpoint: (id: string) =>
-    api.get<ApiEndpoint>(`/api/app/api-endpoint/${id}`).then((r) => r.data),
+    api.get<ApiEndpoint>(`/v1/app/api-endpoint/${id}`).then((r) => r.data),
 
   createEndpoint: (input: CreateUpdateApiEndpoint) =>
-    api.post<ApiEndpoint>("/api/app/api-endpoint", input).then((r) => r.data),
+    api.post<ApiEndpoint>("/v1/app/api-endpoint", input).then((r) => r.data),
 
   updateEndpoint: (id: string, input: CreateUpdateApiEndpoint) =>
     api
-      .put<ApiEndpoint>(`/api/app/api-endpoint/${id}`, input)
+      .put<ApiEndpoint>(`/v1/app/api-endpoint/${id}`, input)
       .then((r) => r.data),
 
   toggleEndpointStatus: (id: string) =>
     api.post(`/api/app/api-endpoint/${id}/toggle-status`),
 
   deleteEndpoint: (id: string) =>
-    api.delete(`/api/app/api-endpoint/${id}`),
+    api.delete(`/v1/app/api-endpoint/${id}`),
 
   getCallLogs: (params: ApiCallLogFilter) =>
     api
-      .get<PagedResult<ApiCallLog>>("/api/app/api-call-log", { params })
+      .get<PagedResult<ApiCallLog>>("/v1/app/api-call-log", { params })
       .then((r) => r.data),
 
   getCallLog: (id: string) =>
     api
-      .get<ApiCallLogDetail>(`/api/app/api-call-log/${id}`)
+      .get<ApiCallLogDetail>(`/v1/app/api-call-log/${id}`)
       .then((r) => r.data),
 
   exportEndpoints: async (filter: ApiEndpointFilter): Promise<FileDownload> => {

@@ -131,13 +131,15 @@ export default function TestingResultsPage() {
               size="small"
               icon={<EditOutlined />}
               onClick={() => openEdit(record)}
-            />
+            >Sửa</Button>
           )}
           {hasPermission(
             "FoodSafe.AlertsAndTesting.TestingResults.Delete",
           ) && (
             <Popconfirm
               title="Xóa kết quả kiểm nghiệm?"
+              okText="Xóa"
+              cancelText="Hủy"
               onConfirm={() =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa"),
@@ -145,7 +147,7 @@ export default function TestingResultsPage() {
                 })
               }
             >
-              <Button size="small" danger icon={<DeleteOutlined />} />
+              <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
             </Popconfirm>
           )}
         </Space>
@@ -223,6 +225,8 @@ export default function TestingResultsPage() {
         destroyOnHidden
         width={640}
         onOk={() => form.submit()}
+        okText="Lưu"
+        cancelText="Hủy"
         confirmLoading={createMut.isPending || updateMut.isPending}
       >
         <Form

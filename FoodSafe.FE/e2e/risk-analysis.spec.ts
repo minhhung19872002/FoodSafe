@@ -49,9 +49,12 @@ test.describe("risk analysis management", () => {
     });
     await dialog.getByRole("textbox", { name: "Tiêu đề" }).fill(title);
     await dialog.getByRole("combobox", { name: "Chuyên mục" }).click();
-    await page.getByTitle("Vi sinh vật").click();
+    await page.getByTitle("Sinh học").click();
     await dialog.getByRole("combobox", { name: "Mức độ" }).click();
     await page.getByTitle("Cao").click();
+    await dialog
+      .getByRole("textbox", { name: "Nội dung" })
+      .fill("Nội dung phân tích nguy cơ E2E");
     await dialog
       .getByRole("button", { name: "Lưu", exact: true })
       .click();
@@ -59,13 +62,11 @@ test.describe("risk analysis management", () => {
 
     let row = page.getByRole("row").filter({ hasText: title });
     await row.getByRole("button", { name: /Xuất bản/ }).click();
-    await page
-      .getByRole("button", { name: "Xuất bản", exact: true })
-      .click();
+    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xuất bản" }).click();
 
     row = page.getByRole("row").filter({ hasText: title });
-    await row.getByRole("button", { name: /Xóa/ }).click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
-    await expect(page.getByText(title)).not.toBeVisible();
+    await expect(row.getByText("Đã xuất bản")).toBeVisible({ timeout: 10_000 });
+
+    await removeStaleAnalyses(request, headers);
   });
 });

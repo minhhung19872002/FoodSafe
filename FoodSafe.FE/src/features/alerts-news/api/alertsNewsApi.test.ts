@@ -13,7 +13,7 @@ describe("alertsNewsApi", () => {
       }),
     );
 
-    const result = await alertApi.list({});
+    const result = await alertApi.list({ skipCount: 0, maxResultCount: 10 });
 
     expect(requestedPath).toBe("/api/v1/app/atp-alert");
     expect(result.items).toEqual([]);
@@ -47,7 +47,7 @@ describe("alertsNewsApi", () => {
       }),
     );
 
-    const result = await newsApi.list({});
+    const result = await newsApi.list({ skipCount: 0, maxResultCount: 10 });
 
     expect(requestedPath).toBe("/api/v1/app/atp-news");
     expect(result.items).toEqual([]);

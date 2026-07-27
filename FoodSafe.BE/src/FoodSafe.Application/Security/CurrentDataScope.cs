@@ -89,20 +89,27 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
 
         cancellationToken = ResolveToken(cancellationToken);
         var userId = _currentUser.Id.Value;
-        if (await _permissionChecker.IsGrantedAsync(FoodSafePermissions.DataScope.All))
-        {
-            return new(
-                userId, null, true,
-                new HashSet<Guid>(), new HashSet<Guid>(),
-                new HashSet<Guid>(), new HashSet<Guid>(),
-                new HashSet<Guid>(), new HashSet<Guid>(),
-                new HashSet<Guid>());
-        }
 
         var profileQuery = await _profiles.GetQueryableAsync();
         var profile = await AsyncExecuter.FirstOrDefaultAsync(
             profileQuery.Where(x => x.UserId == userId),
             cancellationToken);
+
+        if (await _permissionChecker.IsGrantedAsync(FoodSafePermissions.DataScope.All))
+        {
+            var homeOrgId = profile?.OrganizationId;
+            var orgIds = homeOrgId.HasValue
+                ? new HashSet<Guid> { homeOrgId.Value }
+                : new HashSet<Guid>();
+
+            return new(
+                userId, homeOrgId, true,
+                orgIds, new HashSet<Guid>(),
+                new HashSet<Guid>(), new HashSet<Guid>(),
+                new HashSet<Guid>(), new HashSet<Guid>(),
+                new HashSet<Guid>());
+        }
+
         if (profile is null)
         {
             throw new AbpAuthorizationException("User has no FoodSafe organization assignment.");

@@ -14,7 +14,7 @@ test.describe("audit log viewer", () => {
     ).toBeVisible();
 
     await expect(
-      page.getByRole("columnheader", { name: "Thời gian" }),
+      page.getByRole("columnheader", { name: "Thời gian", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("columnheader", { name: "Người dùng" }),
@@ -26,14 +26,14 @@ test.describe("audit log viewer", () => {
       page.getByRole("columnheader", { name: "URL" }),
     ).toBeVisible();
 
-    const rows = page.getByRole("table").locator("tbody tr");
-    await expect(rows.first()).toBeVisible();
+    const rows = page.locator("table tbody tr.ant-table-row");
+    await expect(rows.first()).toBeVisible({ timeout: 10_000 });
 
     const paginationInfo = page.getByText(/Tổng:?\s*\d+\s*bản ghi/);
     await expect(paginationInfo).toBeVisible();
 
     await page.getByPlaceholder("Tìm theo URL").fill("/api/v1/app");
     await page.getByPlaceholder("Tìm theo URL").press("Enter");
-    await expect(rows.first()).toBeVisible();
+    await expect(rows.first()).toBeVisible({ timeout: 10_000 });
   });
 });

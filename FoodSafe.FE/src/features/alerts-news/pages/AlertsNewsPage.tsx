@@ -174,6 +174,8 @@ function AlertsTab() {
           {record.status === ALERT_STATUS.Draft && canPublish && (
             <Popconfirm
               title="Xuất bản cảnh báo này?"
+              okText="Xuất bản"
+              cancelText="Hủy"
               onConfirm={async () => {
                 await publishMut.mutateAsync({
                   id: record.id,
@@ -203,12 +205,16 @@ function AlertsTab() {
           {record.status === ALERT_STATUS.Draft && canDelete && (
             <Popconfirm
               title="Xóa cảnh báo này?"
+              okText="Xóa"
+              cancelText="Hủy"
               onConfirm={async () => {
                 await deleteMut.mutateAsync(record.id);
                 message.success("Đã xóa.");
               }}
             >
-              <Button size="small" danger icon={<DeleteOutlined />} />
+              <Button size="small" danger icon={<DeleteOutlined />}>
+                Xóa
+              </Button>
             </Popconfirm>
           )}
         </Space>
@@ -312,8 +318,6 @@ function AlertsTab() {
       <RevokeModal
         open={recallOpen}
         title="Thu hồi cảnh báo"
-        reasonLabel="Lý do thu hồi"
-        confirmText="Thu hồi"
         confirmLoading={recallMut.isPending}
         onCancel={() => setRecallOpen(false)}
         onConfirm={async (reason) => {
@@ -434,6 +438,8 @@ function NewsTab() {
           {record.status === NEWS_STATUS.Draft && canPublish && (
             <Popconfirm
               title="Xuất bản tin tức này?"
+              okText="Xuất bản"
+              cancelText="Hủy"
               onConfirm={async () => {
                 await publishMut.mutateAsync({
                   id: record.id,
@@ -450,6 +456,8 @@ function NewsTab() {
           {record.status === NEWS_STATUS.Published && canPublish && (
             <Popconfirm
               title="Thu hồi tin tức này?"
+              okText="Thu hồi"
+              cancelText="Hủy"
               onConfirm={async () => {
                 await recallMut.mutateAsync(record.id);
                 message.success("Đã thu hồi.");
@@ -463,12 +471,16 @@ function NewsTab() {
           {record.status === NEWS_STATUS.Draft && canDelete && (
             <Popconfirm
               title="Xóa tin tức này?"
+              okText="Xóa"
+              cancelText="Hủy"
               onConfirm={async () => {
                 await deleteMut.mutateAsync(record.id);
                 message.success("Đã xóa.");
               }}
             >
-              <Button size="small" danger icon={<DeleteOutlined />} />
+              <Button size="small" danger icon={<DeleteOutlined />}>
+                Xóa
+              </Button>
             </Popconfirm>
           )}
         </Space>

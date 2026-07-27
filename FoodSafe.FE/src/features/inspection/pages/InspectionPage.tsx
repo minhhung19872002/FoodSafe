@@ -49,12 +49,10 @@ import {
 import { InspectionPlanEditorModal } from "../components/InspectionPlanEditorModal";
 import { InspectionResultEditorModal } from "../components/InspectionResultEditorModal";
 import {
-  INSPECTION_OVERALL_RESULT,
   INSPECTION_OVERALL_RESULT_CONFIG,
   INSPECTION_PLAN_STATUS,
   INSPECTION_PLAN_STATUS_CONFIG,
   INSPECTION_PLAN_TYPE_LABELS,
-  INSPECTION_TYPE,
   INSPECTION_TYPE_LABELS,
   type CreateUpdateInspectionPlanInput,
   type CreateUpdateInspectionResultInput,
@@ -187,7 +185,7 @@ function PlansTab() {
                   setEditing(item);
                   setEditorOpen(true);
                 }}
-              />
+              >Sửa</Button>
               <Popconfirm
                 title="Gửi duyệt kế hoạch này?"
                 okText="Gửi"
@@ -205,7 +203,7 @@ function PlansTab() {
                   size="small"
                   type="text"
                   icon={<SendOutlined />}
-                />
+                >Gửi</Button>
               </Popconfirm>
             </>
           )}
@@ -229,7 +227,7 @@ function PlansTab() {
                   type="text"
                   icon={<CheckCircleOutlined />}
                   style={{ color: "#52c41a" }}
-                />
+                >Duyệt</Button>
               </Popconfirm>
               <Button
                 size="small"
@@ -237,7 +235,7 @@ function PlansTab() {
                 danger
                 icon={<CloseCircleOutlined />}
                 onClick={() => setRejecting(item)}
-              />
+              >Từ chối</Button>
             </>
           )}
           {canEdit &&
@@ -260,7 +258,7 @@ function PlansTab() {
                   size="small"
                   type="text"
                   icon={<CheckCircleOutlined />}
-                />
+                >Hoàn thành</Button>
               </Popconfirm>
             )}
           {canEdit && item.status !== INSPECTION_PLAN_STATUS.Completed &&
@@ -271,7 +269,7 @@ function PlansTab() {
                 danger
                 icon={<StopOutlined />}
                 onClick={() => setCancelling(item)}
-              />
+              >Hủy</Button>
             )}
           {canDelete && item.status === INSPECTION_PLAN_STATUS.Draft && (
             <Popconfirm
@@ -292,7 +290,7 @@ function PlansTab() {
                 type="text"
                 danger
                 icon={<DeleteOutlined />}
-              />
+              >Xóa</Button>
             </Popconfirm>
           )}
         </Space>
@@ -548,7 +546,7 @@ function ResultsTab() {
                 setEditing(item);
                 setEditorOpen(true);
               }}
-            />
+            >Sửa</Button>
           )}
           {canDelete && !item.followUpRequired && (
             <Popconfirm
@@ -569,7 +567,7 @@ function ResultsTab() {
                 type="text"
                 danger
                 icon={<DeleteOutlined />}
-              />
+              >Xóa</Button>
             </Popconfirm>
           )}
         </Space>
