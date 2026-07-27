@@ -43,7 +43,7 @@
 | F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `d855990` | 2026-07-27 |
 | F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `d855990` | 2026-07-27 |
 | F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | `5aff855` | 2026-07-27 |
-| F-034 | Certificate PDF Download        | VERIFIED       | `e2e/certificate-pdf-verification.spec.ts` | (pending commit) | 2026-07-27 |
+| F-034 | Certificate PDF Download        | VERIFIED       | `e2e/certificate-pdf-verification.spec.ts` | `86b793a` | 2026-07-27 |
 
 ## Summary
 

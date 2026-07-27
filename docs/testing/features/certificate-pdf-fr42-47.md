@@ -2,7 +2,7 @@
 
 **Feature ID:** F-034
 **Status:** VERIFIED
-**Verified Git commit:** (pending — commit after this document)
+**Verified Git commit:** `86b793a`
 **Verification date:** 2026-07-27
 **Environment:** Docker Compose — PostgreSQL 15, Redis 7, MinIO, ASP.NET Core API, nginx+React frontend
 

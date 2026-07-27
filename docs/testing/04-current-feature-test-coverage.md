@@ -75,7 +75,7 @@
 | F-031 | Documents | **VERIFIED** | `d855990` | `e2e/documents-verification.spec.ts` |
 | F-032 | System Settings | **VERIFIED** | `d855990` | `e2e/system-settings-verification.spec.ts` |
 | F-033 | Public Portal (FR-41..FR-49) | **VERIFIED** | `5aff855` | `e2e/public-portal-verification.spec.ts` |
-| F-034 | Certificate PDF Download | **VERIFIED** | (pending commit) | `e2e/certificate-pdf-verification.spec.ts` |
+| F-034 | Certificate PDF Download | **VERIFIED** | `86b793a` | `e2e/certificate-pdf-verification.spec.ts` |
 
 ---
 
