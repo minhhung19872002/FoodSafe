@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { PageHeader } from "@/components/PageHeader";
 import { useStatistics } from "../api/statisticsQueries";
+import { ReportStatisticsSection } from "../components/ReportStatisticsSection";
 
 const COLORS = [
   "#00796B",
@@ -264,6 +265,8 @@ export default function StatisticsPage() {
         </Col>
       </Row>
       )}
+
+      <ReportStatisticsSection year={year} />
     </div>
   );
 }

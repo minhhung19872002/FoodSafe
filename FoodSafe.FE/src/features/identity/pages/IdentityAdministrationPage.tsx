@@ -17,6 +17,7 @@ import {
   AuditOutlined,
   DeleteOutlined,
   EditOutlined,
+  ExportOutlined,
   KeyOutlined,
   LockOutlined,
   PlusOutlined,
@@ -25,6 +26,9 @@ import {
   TeamOutlined,
   UnlockOutlined,
 } from "@ant-design/icons";
+import { useMutation } from "@tanstack/react-query";
+import { saveDownload } from "@/utils/download";
+import { identityApi } from "../api/identityApi";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
 import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
@@ -133,6 +137,16 @@ export default function IdentityAdministrationPage() {
   const updateRole = useUpdateAdminRole();
   const deleteRole = useDeleteAdminRole();
   const updatePermissions = useUpdateRolePermissions();
+  const exportUsers = useMutation({
+    mutationFn: () =>
+      identityApi.exportUsers({
+        filter: userFilter.filter,
+        roleId: userFilter.roleId,
+        organizationId: userFilter.organizationId,
+        isActive: userFilter.isActive,
+        isLocked: userFilter.isLocked,
+      }),
+  });
 
   const showSuccess = (content: string) => void message.success(content);
   const showError = () =>
@@ -226,6 +240,18 @@ export default function IdentityAdministrationPage() {
               }))
             }
           />
+          <Button
+            icon={<ExportOutlined />}
+            loading={exportUsers.isPending}
+            onClick={() =>
+              exportUsers.mutate(undefined, {
+                onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                onError: showError,
+              })
+            }
+          >
+            Xuất Excel
+          </Button>
           {hasPermission(permission.createUser) && (
             <Button
               type="primary"

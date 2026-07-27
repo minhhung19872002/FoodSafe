@@ -1,4 +1,9 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  ExportOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Input,
@@ -22,11 +27,13 @@ interface MasterCatalogViewProps {
   canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  exporting?: boolean;
   onKindChange: (kind: CatalogKind) => void;
   onFilterChange: (filter: string) => void;
   onCreate: () => void;
   onEdit: (item: CatalogItem) => void;
   onDelete: (id: string) => void;
+  onExport?: () => void;
 }
 
 function buildColumns({
@@ -140,6 +147,15 @@ export function MasterCatalogView(props: MasterCatalogViewProps) {
           onChange={(event) => props.onFilterChange(event.target.value)}
           style={{ width: 320 }}
         />
+        {props.kind === "testing-service" && props.onExport && (
+          <Button
+            icon={<ExportOutlined />}
+            loading={props.exporting}
+            onClick={props.onExport}
+          >
+            Xuất Excel
+          </Button>
+        )}
         {props.canCreate && (
           <Button
             type="primary"

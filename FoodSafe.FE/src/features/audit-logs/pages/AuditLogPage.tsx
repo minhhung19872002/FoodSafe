@@ -1,18 +1,25 @@
 import { useState } from "react";
 import {
+  Button,
   Table,
   Tag,
   Input,
+  message,
   Select,
   DatePicker,
   Space,
   Switch,
   Tooltip,
 } from "antd";
+import { ExportOutlined } from "@ant-design/icons";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
+import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { PageHeader } from "@/components/PageHeader";
+import { saveDownload } from "@/utils/download";
+import { auditLogApi } from "../api/auditLogApi";
 import { useAuditLogs } from "../api/auditLogQueries";
+import { AuditLogDetailDrawer } from "../components/AuditLogDetailDrawer";
 import type { AuditLog, AuditLogFilter } from "../types/auditLog.types";
 
 const { RangePicker } = DatePicker;
@@ -38,7 +45,11 @@ export default function AuditLogPage() {
     maxResultCount: 20,
   });
 
+  const [detailId, setDetailId] = useState<string | null>(null);
   const { data, isLoading } = useAuditLogs(filter);
+  const exportMut = useMutation({
+    mutationFn: (f: AuditLogFilter) => auditLogApi.exportExcel(f),
+  });
 
   const columns: ColumnsType<AuditLog> = [
     {
@@ -173,6 +184,18 @@ export default function AuditLogPage() {
             }
           />
         </Space>
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => message.error("Không thể xuất nhật ký hệ thống."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
       </Space>
 
       <Table
@@ -182,6 +205,10 @@ export default function AuditLogPage() {
         loading={isLoading}
         size="small"
         scroll={{ x: 1100 }}
+        onRow={(record) => ({
+          onClick: () => setDetailId(record.id),
+          style: { cursor: "pointer" },
+        })}
         onChange={handleTableChange}
         pagination={{
           total: data?.totalCount ?? 0,
@@ -191,6 +218,11 @@ export default function AuditLogPage() {
           showSizeChanger: true,
           showTotal: (total) => `Tổng: ${total} bản ghi`,
         }}
+      />
+
+      <AuditLogDetailDrawer
+        auditLogId={detailId}
+        onClose={() => setDetailId(null)}
       />
     </div>
   );

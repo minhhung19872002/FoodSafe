@@ -14,6 +14,20 @@ import type {
 
 const endpoint = "/v1/administration";
 
+export interface FileDownload {
+  blob: Blob;
+  fileName: string;
+}
+
+function toDownload(data: Blob, disposition?: string): FileDownload {
+  const encoded = disposition?.match(/filename\*=UTF-8''([^;]+)/)?.[1];
+  const plain = disposition?.match(/filename="?([^";]+)"?/)?.[1];
+  return {
+    blob: data,
+    fileName: decodeURIComponent(encoded ?? plain ?? "download"),
+  };
+}
+
 export const identityApi = {
   getUsers: (filter: UserFilter): Promise<PagedResult<AdminUser>> =>
     api
@@ -56,6 +70,18 @@ export const identityApi = {
         params: { skipCount, maxResultCount, sorting: "ExecutionTime DESC" },
       })
       .then((response) => response.data),
+
+  exportUsers: (
+    filter: Omit<UserFilter, "skipCount" | "maxResultCount">,
+  ): Promise<FileDownload> =>
+    api
+      .get<Blob>(`${endpoint}/excel/users`, {
+        params: filter,
+        responseType: "blob",
+      })
+      .then((response) =>
+        toDownload(response.data, response.headers["content-disposition"]),
+      ),
 
   getRoles: (filter: RoleFilter): Promise<PagedResult<AdminRole>> =>
     api

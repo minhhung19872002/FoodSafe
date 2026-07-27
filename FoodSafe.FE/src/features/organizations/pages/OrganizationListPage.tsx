@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
 import { App } from "antd";
+import { useMutation } from "@tanstack/react-query";
 import { PageHeader } from "@/components/PageHeader";
+import { saveDownload } from "@/utils/download";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { organizationApi } from "../api/organizationApi";
 import {
   useCreateOrganization,
   useDeleteOrganization,
@@ -81,6 +84,10 @@ export default function OrganizationListPage() {
   const createMutation = useCreateOrganization();
   const updateMutation = useUpdateOrganization();
   const deleteMutation = useDeleteOrganization();
+  const exportMutation = useMutation({
+    mutationFn: () =>
+      organizationApi.exportExcel({ filter: filter || undefined, level }),
+  });
   const organizationOptions = useMemo(() => {
     const tree = treeQuery.data?.items ?? [];
     const excluded = editing
@@ -113,6 +120,15 @@ export default function OrganizationListPage() {
         canDelete={hasPermission("FoodSafe.Organizations.Delete")}
         deletingId={
           deleteMutation.isPending ? deleteMutation.variables : undefined
+        }
+        exporting={exportMutation.isPending}
+        onExport={() =>
+          exportMutation.mutate(undefined, {
+            onSuccess: (file) => saveDownload(file.blob, file.fileName),
+            onError: () => {
+              void message.error("Không thể xuất danh sách đơn vị.");
+            },
+          })
         }
         onFilterChange={(value) => {
           setFilter(value);

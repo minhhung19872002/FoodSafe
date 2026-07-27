@@ -15,3 +15,11 @@ export function useStatistics(filter: StatisticsFilter) {
     staleTime: 60_000,
   });
 }
+
+export function useReportStatistics(filter: StatisticsFilter) {
+  return useQuery({
+    queryKey: [...statisticsKeys.all, "report", filter] as const,
+    queryFn: () => statisticsApi.getReport(filter),
+    staleTime: 60_000,
+  });
+}

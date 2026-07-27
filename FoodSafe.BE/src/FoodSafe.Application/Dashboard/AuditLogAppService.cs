@@ -62,6 +62,47 @@ public class AuditLogAppService : ApplicationService
         return new PagedResultDto<AuditLogDto>(totalCount, items);
     }
 
+    public async Task<AuditLogDetailDto> GetAsync(Guid id)
+    {
+        var log = await _auditLogs.GetAsync(id, includeDetails: true);
+
+        return new AuditLogDetailDto
+        {
+            Id = log.Id,
+            ExecutionTime = log.ExecutionTime,
+            UserName = log.UserName,
+            HttpMethod = log.HttpMethod,
+            Url = log.Url,
+            HttpStatusCode = log.HttpStatusCode,
+            ExecutionDuration = log.ExecutionDuration,
+            ClientIpAddress = log.ClientIpAddress,
+            BrowserInfo = log.BrowserInfo,
+            CorrelationId = log.CorrelationId,
+            ApplicationName = log.ApplicationName,
+            Exceptions = log.Exceptions,
+            Comments = log.Comments,
+            Actions = log.Actions
+                .OrderBy(a => a.ExecutionTime)
+                .Select(a => new AuditLogActionDto
+                {
+                    ServiceName = a.ServiceName,
+                    MethodName = a.MethodName,
+                    Parameters = a.Parameters,
+                    ExecutionTime = a.ExecutionTime,
+                    ExecutionDuration = a.ExecutionDuration
+                }).ToList(),
+            EntityChanges = log.EntityChanges
+                .OrderBy(c => c.ChangeTime)
+                .Select(c => new AuditLogEntityChangeDto
+                {
+                    EntityTypeFullName = c.EntityTypeFullName,
+                    EntityId = c.EntityId,
+                    ChangeType = c.ChangeType.ToString(),
+                    ChangeTime = c.ChangeTime
+                }).ToList()
+        };
+    }
+
     private static string NormalizeSorting(string? sorting)
     {
         if (string.IsNullOrWhiteSpace(sorting))

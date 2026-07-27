@@ -12,6 +12,7 @@ import {
 import {
   DeleteOutlined,
   EditOutlined,
+  ExportOutlined,
   PlusOutlined,
   ReloadOutlined,
   SearchOutlined,
@@ -37,6 +38,8 @@ interface Props {
   canEdit: boolean;
   canDelete: boolean;
   deletingId?: string;
+  exporting: boolean;
+  onExport: () => void;
   onFilterChange: (value: string) => void;
   onLevelChange: (value?: OrganizationLevel) => void;
   onPageChange: (page: number, pageSize: number) => void;
@@ -73,6 +76,8 @@ export function OrganizationListView({
   canEdit,
   canDelete,
   deletingId,
+  exporting,
+  onExport,
   onFilterChange,
   onLevelChange,
   onPageChange,
@@ -107,6 +112,13 @@ export function OrganizationListView({
         />
         <Button icon={<ReloadOutlined />} onClick={onRefresh}>
           Làm mới
+        </Button>
+        <Button
+          icon={<ExportOutlined />}
+          loading={exporting}
+          onClick={onExport}
+        >
+          Xuất Excel
         </Button>
         {canCreate && (
           <Button type="primary" icon={<PlusOutlined />} onClick={onCreate}>

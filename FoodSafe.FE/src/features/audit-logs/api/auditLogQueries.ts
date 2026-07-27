@@ -13,3 +13,11 @@ export function useAuditLogs(filter: AuditLogFilter) {
     queryFn: () => auditLogApi.list(filter),
   });
 }
+
+export function useAuditLogDetail(id: string | null) {
+  return useQuery({
+    queryKey: [...auditLogKeys.all, "detail", id] as const,
+    queryFn: () => auditLogApi.get(id!),
+    enabled: id !== null,
+  });
+}

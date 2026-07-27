@@ -24,3 +24,51 @@ export interface StatisticsDto {
 export interface StatisticsFilter {
   year?: number;
 }
+
+export interface LicensesByBusinessTypeRow {
+  businessTypeName: string;
+  selfDeclarations: number;
+  productRegistrations: number;
+  eligibilityCertificates: number;
+  cfsCertificates: number;
+  exportCertificates: number;
+  adRegistrations: number;
+  total: number;
+}
+
+export interface PoisoningByAreaRow {
+  areaName: string;
+  caseCount: number;
+  hospitalizedCount: number;
+  deceasedCount: number;
+}
+
+export interface InspectionSummaryRow {
+  organizationName: string;
+  planCount: number;
+  inspectionCount: number;
+  violationCount: number;
+  sanctionCount: number;
+}
+
+export interface BusinessBreakdownRow {
+  groupName: string;
+  count: number;
+}
+
+export interface ReportStatisticsDto {
+  licensesByBusinessType: LicensesByBusinessTypeRow[];
+  poisoningByArea: PoisoningByAreaRow[];
+  inspectionByOrganization: InspectionSummaryRow[];
+  businessesByType: BusinessBreakdownRow[];
+  businessesByRegion: BusinessBreakdownRow[];
+  businessesByProvince: BusinessBreakdownRow[];
+  businessesByDistrict: BusinessBreakdownRow[];
+  businessesByOrganization: BusinessBreakdownRow[];
+}
+
+export type ReportExportKind =
+  | "licenses-by-business-type"
+  | "poisoning-by-area"
+  | "inspection-summary"
+  | "business-breakdown";

@@ -37,6 +37,8 @@ describe("OrganizationListView", () => {
         canCreate
         canEdit
         canDelete={false}
+        exporting={false}
+        onExport={vi.fn()}
         onFilterChange={onFilterChange}
         onLevelChange={vi.fn()}
         onPageChange={vi.fn()}

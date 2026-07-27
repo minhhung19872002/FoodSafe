@@ -12,6 +12,29 @@ export interface AuditLog {
   hasException: boolean;
 }
 
+export interface AuditLogAction {
+  serviceName?: string;
+  methodName?: string;
+  parameters?: string;
+  executionTime: string;
+  executionDuration: number;
+}
+
+export interface AuditLogEntityChange {
+  entityTypeFullName?: string;
+  entityId?: string;
+  changeType: string;
+  changeTime: string;
+}
+
+export interface AuditLogDetail extends AuditLog {
+  applicationName?: string;
+  exceptions?: string;
+  comments?: string;
+  actions: AuditLogAction[];
+  entityChanges: AuditLogEntityChange[];
+}
+
 export interface AuditLogFilter {
   filter?: string;
   httpMethod?: string;

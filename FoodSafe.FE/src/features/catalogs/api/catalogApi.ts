@@ -52,3 +52,26 @@ export async function removeCatalog(
 ): Promise<void> {
   await api.delete(`${basePath}/${id}/${kind}`);
 }
+
+export interface FileDownload {
+  blob: Blob;
+  fileName: string;
+}
+
+export async function exportTestingServices(
+  filter?: string,
+): Promise<FileDownload> {
+  const response = await api.get<Blob>(
+    `${basePath}/testing-services/excel/export`,
+    { params: { filter: filter || undefined }, responseType: "blob" },
+  );
+  const disposition = response.headers["content-disposition"] as
+    | string
+    | undefined;
+  const encoded = disposition?.match(/filename\*=UTF-8''([^;]+)/)?.[1];
+  const plain = disposition?.match(/filename="?([^";]+)"?/)?.[1];
+  return {
+    blob: response.data,
+    fileName: decodeURIComponent(encoded ?? plain ?? "download"),
+  };
+}

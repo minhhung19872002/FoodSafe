@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { App } from "antd";
+import { useMutation } from "@tanstack/react-query";
 import { PageHeader } from "@/components/PageHeader";
+import { saveDownload } from "@/utils/download";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { exportTestingServices } from "../api/catalogApi";
 import { useDeleteCatalog, useSaveCatalog } from "../api/catalogMutations";
 import { useCatalog, useCatalogOptions } from "../api/catalogQueries";
 import { CatalogEditorModal } from "../components/CatalogEditorModal";
@@ -32,6 +35,9 @@ export default function MasterCatalogPage() {
   const testingCenters = useCatalogOptions("testing-center");
   const saveCatalog = useSaveCatalog(kind);
   const deleteCatalog = useDeleteCatalog(kind);
+  const exportServices = useMutation({
+    mutationFn: () => exportTestingServices(filter),
+  });
 
   const handleSave = (input: CatalogInput) => {
     saveCatalog.mutate(
@@ -78,10 +84,18 @@ export default function MasterCatalogPage() {
             setKind(nextKind);
             setFilter("");
           }}
+          exporting={exportServices.isPending}
           onFilterChange={setFilter}
           onCreate={() => setEditing(null)}
           onEdit={setEditing}
           onDelete={handleDelete}
+          onExport={() =>
+            exportServices.mutate(undefined, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () =>
+                void message.error("Không thể xuất danh sách dịch vụ."),
+            })
+          }
         />
       </div>
       <CatalogEditorModal

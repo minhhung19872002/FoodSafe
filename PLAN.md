@@ -95,6 +95,45 @@
 - [ ] Application.Tests: Login flow, ChangePassword
 - [ ] Playwright E2E: Login happy path, login fail, logout
 
+### 1.5 Quản trị hệ thống (nhóm A — chức năng 1–5 theo YeuCau.pdf)
+
+**A1 — Quản lý vai trò (Roles):**
+- [ ] `RoleAppService` (dựa trên ABP Identity Role): CRUD + tìm kiếm vai trò
+- [ ] Đặt quyền cho vai trò (permission matrix — ABP PermissionManagement)
+- [ ] FE: Trang quản lý vai trò + modal gán quyền (permission tree)
+
+**A2 — Quản lý người dùng (Users):**
+- [ ] `UserAppService` (dựa trên ABP Identity User): CRUD + tìm kiếm
+- [ ] Tìm kiếm người dùng theo quyền / theo vai trò
+- [ ] Gửi email kích hoạt tài khoản
+- [ ] Buộc thay đổi mật khẩu ở lần đăng nhập tiếp theo
+- [ ] Vô hiệu hóa / kích hoạt tài khoản; mở khóa tài khoản
+- [ ] Tự động vô hiệu hóa tài khoản khi đăng nhập sai nhiều lần (đọc cấu hình từ Settings)
+- [ ] Phân vai trò cho người dùng
+- [ ] Tạo ngẫu nhiên mật khẩu (theo password policy)
+- [ ] Xuất Excel danh sách người dùng
+- [ ] FE: Trang quản lý người dùng (filter, actions, export)
+
+**A3 — Nhật ký hệ thống (Audit Log UI):**
+- [ ] `AuditLogAppService`: tìm kiếm thao tác người dùng (theo user, thời gian, chức năng)
+- [ ] Xem chi tiết thao tác (request/response, entity changes)
+- [ ] Xuất Excel danh sách thao tác
+- [ ] FE: Trang nhật ký hệ thống (chỉ admin)
+
+**A4 — Cài đặt (Settings UI):**
+- [ ] `SystemSettingAppService` (dựa trên ABP SettingManagement)
+- [ ] Thay đổi logo ứng dụng
+- [ ] Thay đổi ảnh nền/màn hình đăng nhập
+- [ ] Thiết lập độ dài mật khẩu lớn nhất/nhỏ nhất + mật khẩu mặc định
+- [ ] Cấu hình số lần đăng nhập sai → vô hiệu hóa tài khoản + thời gian khóa
+- [ ] Cấu hình Email (SMTP) — dùng cho gửi email kích hoạt/reset mật khẩu
+- [ ] Cấu hình thông tin trang chủ (cổng công khai)
+- [ ] FE: Trang cài đặt hệ thống (chỉ admin)
+
+**A5 — Quản lý truy cập (bổ sung ngoài auth flow 1.4):**
+- [ ] API + FE: Chỉnh sửa thông tin tài khoản cá nhân (profile)
+- [ ] API + FE: Thay đổi ảnh đại diện (upload avatar → MinIO)
+
 ---
 
 ## Phase 2 — Organizations & Catalogs (Tuần 2–3)
