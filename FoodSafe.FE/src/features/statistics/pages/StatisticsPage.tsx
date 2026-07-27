@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Card, Col, Row, Select, Spin } from "antd";
+import { Button, Card, Col, Row, Select, Space, Spin } from "antd";
+import { FileExcelOutlined } from "@ant-design/icons";
 import type { StatisticsDto } from "../types/statistics.types";
 import {
   BarChart,
@@ -17,7 +18,10 @@ import {
   Line,
 } from "recharts";
 import { PageHeader } from "@/components/PageHeader";
-import { useStatistics } from "../api/statisticsQueries";
+import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
+import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
+import { saveDownload } from "@/utils/download";
+import { useExportStatistics, useStatistics } from "../api/statisticsQueries";
 
 const COLORS = [
   "#00796B",
@@ -53,6 +57,16 @@ const yearOptions = Array.from({ length: 5 }, (_, i) => {
   return { value: y, label: `Năm ${y}` };
 });
 
+function flattenOrgTree(
+  items: OrganizationTreeNode[],
+  depth = 0,
+): Array<{ value: string; label: string }> {
+  return items.flatMap((item) => [
+    { value: item.id, label: `${"  ".repeat(depth)}${item.name}` },
+    ...flattenOrgTree(item.children, depth + 1),
+  ]);
+}
+
 const EMPTY_STATS: StatisticsDto = {
   businessByStatus: [],
   businessByType: [],
@@ -66,7 +80,13 @@ const EMPTY_STATS: StatisticsDto = {
 
 export default function StatisticsPage() {
   const [year, setYear] = useState(currentYear());
-  const { data, isLoading } = useStatistics({ year });
+  const [organizationId, setOrganizationId] = useState<string | undefined>(
+    undefined,
+  );
+  const { data, isLoading } = useStatistics({ year, organizationId });
+  const exportMutation = useExportStatistics();
+  const orgTree = useOrganizationTree();
+  const orgOptions = flattenOrgTree(orgTree.data?.items ?? []);
   const stats = data ?? EMPTY_STATS;
 
   return (
@@ -74,12 +94,40 @@ export default function StatisticsPage() {
       <PageHeader
         title="Thống kê tổng hợp"
         actions={
-          <Select
-            value={year}
-            onChange={setYear}
-            options={yearOptions}
-            style={{ width: 140 }}
-          />
+          <Space wrap>
+            <Select
+              value={year}
+              onChange={setYear}
+              options={yearOptions}
+              style={{ width: 140 }}
+            />
+            {orgOptions.length > 1 && (
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                placeholder="Đơn vị"
+                style={{ width: 200 }}
+                options={orgOptions}
+                onChange={(v) => setOrganizationId(v ?? undefined)}
+              />
+            )}
+            <Button
+              icon={<FileExcelOutlined />}
+              loading={exportMutation.isPending}
+              onClick={() =>
+                exportMutation.mutate(
+                  { year, organizationId },
+                  {
+                    onSuccess: (blob) =>
+                      saveDownload(blob, `thong-ke-tong-hop-${year}.xlsx`),
+                  },
+                )
+              }
+            >
+              Xuất Excel
+            </Button>
+          </Space>
         }
       />
 

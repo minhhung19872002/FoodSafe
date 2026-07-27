@@ -93,6 +93,9 @@ export default function BusinessManagementPage() {
   const [businessFilter, setBusinessFilter] = useState("");
   const [productFilter, setProductFilter] = useState("");
   const [businessStatus, setBusinessStatus] = useState<BusinessStatus>();
+  const [businessTypeId, setBusinessTypeId] = useState<string>();
+  const [businessClassificationId, setBusinessClassificationId] =
+    useState<string>();
   const [productStatus, setProductStatus] = useState<ProductStatus>();
   const [businessPage, setBusinessPage] = useState(1);
   const [productPage, setProductPage] = useState(1);
@@ -111,6 +114,8 @@ export default function BusinessManagementPage() {
     {
       filter: businessFilter || undefined,
       status: businessStatus,
+      businessTypeId,
+      businessClassificationId,
       skipCount: (businessPage - 1) * PAGE_SIZE,
       maxResultCount: PAGE_SIZE,
     },
@@ -158,6 +163,24 @@ export default function BusinessManagementPage() {
   const organizationOptions = useMemo(
     () => flattenOrganizations(organizations.data?.items ?? []),
     [organizations.data?.items],
+  );
+
+  const businessTypeOptions = useMemo(
+    () =>
+      (businessTypes.data?.items ?? []).map((item) => ({
+        value: item.id,
+        label: item.name,
+      })),
+    [businessTypes.data?.items],
+  );
+
+  const classificationOptions = useMemo(
+    () =>
+      (classifications.data?.items ?? []).map((item) => ({
+        value: item.id,
+        label: item.name,
+      })),
+    [classifications.data?.items],
   );
 
   const closeBusinessEditor = () => {
@@ -224,6 +247,10 @@ export default function BusinessManagementPage() {
         businessFilter={businessFilter}
         productFilter={productFilter}
         businessStatus={businessStatus}
+        businessTypeId={businessTypeId}
+        businessClassificationId={businessClassificationId}
+        businessTypeOptions={businessTypeOptions}
+        businessClassificationOptions={classificationOptions}
         productStatus={productStatus}
         businessTotal={businessList.data?.totalCount ?? 0}
         productTotal={productList.data?.totalCount ?? 0}
@@ -272,6 +299,14 @@ export default function BusinessManagementPage() {
           setBusinessStatus(value);
           setBusinessPage(1);
         }}
+        onBusinessTypeChange={(value) => {
+          setBusinessTypeId(value);
+          setBusinessPage(1);
+        }}
+        onBusinessClassificationChange={(value) => {
+          setBusinessClassificationId(value);
+          setBusinessPage(1);
+        }}
         onProductStatusChange={(value) => {
           setProductStatus(value);
           setProductPage(1);
@@ -285,6 +320,8 @@ export default function BusinessManagementPage() {
             {
               filter: businessFilter || undefined,
               status: businessStatus,
+              businessTypeId,
+              businessClassificationId,
               skipCount: 0,
               maxResultCount: PAGE_SIZE,
             },

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using FoodSafe.Application.Contracts.Dashboard;
 using FoodSafe.BusinessManagement;
 using FoodSafe.Catalogs;
@@ -67,6 +68,14 @@ public class StatisticsAppService : ApplicationService
         var ct = _cancellationTokens.Token;
         var orgIds = scope.OrganizationIds;
         var global = scope.HasGlobalAccess;
+
+        if (input.OrganizationId.HasValue &&
+            (global || orgIds.Contains(input.OrganizationId.Value)))
+        {
+            orgIds = new HashSet<Guid> { input.OrganizationId.Value };
+            global = false;
+        }
+
         var year = input.Year ?? _clock.Now.Year;
 
         var dto = new StatisticsDto();

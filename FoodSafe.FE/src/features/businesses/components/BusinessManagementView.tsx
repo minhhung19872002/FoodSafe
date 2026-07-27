@@ -39,6 +39,10 @@ interface BusinessManagementViewProps {
   businessFilter: string;
   productFilter: string;
   businessStatus?: BusinessStatus;
+  businessTypeId?: string;
+  businessClassificationId?: string;
+  businessTypeOptions: { value: string; label: string }[];
+  businessClassificationOptions: { value: string; label: string }[];
   productStatus?: ProductStatus;
   businessTotal: number;
   productTotal: number;
@@ -62,6 +66,8 @@ interface BusinessManagementViewProps {
   onBusinessFilterChange: (value: string) => void;
   onProductFilterChange: (value: string) => void;
   onBusinessStatusChange: (value?: BusinessStatus) => void;
+  onBusinessTypeChange: (value?: string) => void;
+  onBusinessClassificationChange: (value?: string) => void;
   onProductStatusChange: (value?: ProductStatus) => void;
   onBusinessPageChange: (page: number) => void;
   onProductPageChange: (page: number) => void;
@@ -262,11 +268,35 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               placeholder="Trạng thái"
               value={props.businessStatus}
               onChange={props.onBusinessStatusChange}
-              style={{ width: 160 }}
+              style={{ width: 150 }}
               options={Object.entries(businessStatusLabels).map(
                 ([value, label]) => ({ value: Number(value), label }),
               )}
             />
+            {props.businessTypeOptions.length > 0 && (
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                placeholder="Loại hình"
+                value={props.businessTypeId}
+                onChange={props.onBusinessTypeChange}
+                style={{ width: 160 }}
+                options={props.businessTypeOptions}
+              />
+            )}
+            {props.businessClassificationOptions.length > 0 && (
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                placeholder="Phân loại"
+                value={props.businessClassificationId}
+                onChange={props.onBusinessClassificationChange}
+                style={{ width: 160 }}
+                options={props.businessClassificationOptions}
+              />
+            )}
             {props.permissions.createBusiness && (
               <Button
                 type="primary"

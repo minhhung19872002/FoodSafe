@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { statisticsApi } from "./statisticsApi";
 import type { StatisticsFilter } from "../types/statistics.types";
 
@@ -13,5 +13,11 @@ export function useStatistics(filter: StatisticsFilter) {
     queryKey: statisticsKeys.detail(filter),
     queryFn: () => statisticsApi.get(filter),
     staleTime: 60_000,
+  });
+}
+
+export function useExportStatistics() {
+  return useMutation({
+    mutationFn: (filter: StatisticsFilter) => statisticsApi.exportExcel(filter),
   });
 }

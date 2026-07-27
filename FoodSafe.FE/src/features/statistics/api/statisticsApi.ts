@@ -11,4 +11,12 @@ export const statisticsApi = {
     });
     return response.data;
   },
+
+  async exportExcel(filter: StatisticsFilter): Promise<Blob> {
+    const response = await api.get("/v1/app/statistics/excel", {
+      params: filter,
+      responseType: "blob",
+    });
+    return response.data as Blob;
+  },
 };
