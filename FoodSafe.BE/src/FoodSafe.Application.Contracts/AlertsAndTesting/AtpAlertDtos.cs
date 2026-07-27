@@ -40,12 +40,15 @@ public class CreateUpdateAtpAlertDto
     public string Content { get; set; } = string.Empty;
 
     [Required]
+    [EnumDataType(typeof(AlertCategory))]
     public AlertCategory Category { get; set; }
 
     [Required]
+    [EnumDataType(typeof(AlertSeverity))]
     public AlertSeverity Severity { get; set; }
 
     [Required]
+    [EnumDataType(typeof(AlertSource))]
     public AlertSource Source { get; set; }
 
     [StringLength(100)]
