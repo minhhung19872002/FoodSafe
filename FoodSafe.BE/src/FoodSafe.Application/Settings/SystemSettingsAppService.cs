@@ -21,13 +21,17 @@ public class SystemSettingsAppService :
     private const string LogoBlobName = "branding/logo";
     private const string LoginBackgroundBlobName = "branding/login-background";
 
+    // Raster formats only. SVG is intentionally excluded (SEC-M-04): branding
+    // images are served from public, unauthenticated endpoints with their stored
+    // Content-Type, and an SVG can embed <script>, so a malicious/compromised
+    // admin could plant stored XSS that runs for every visitor of the login page.
+    // ClamAV does not detect XSS payloads, so exclusion at upload is the control.
     private static readonly HashSet<string> AllowedImageContentTypes = new(
         StringComparer.OrdinalIgnoreCase)
     {
         "image/png",
         "image/jpeg",
-        "image/webp",
-        "image/svg+xml"
+        "image/webp"
     };
 
     private readonly ISettingManager _settingManager;
@@ -222,11 +226,7 @@ public class SystemSettingsAppService :
                     "FoodSafe:SystemSettings:InvalidImageSize")
                 .WithData("MaximumBytes", MaximumImageBytes);
         }
-        if (!AllowedImageContentTypes.Contains(contentType))
-        {
-            throw new BusinessException(
-                "FoodSafe:SystemSettings:InvalidImageType");
-        }
+        EnsureAllowedImageContentType(contentType);
         using (var scanStream = new MemoryStream(content))
         {
             if (!await _malwareScanner.IsCleanAsync(scanStream, default))
@@ -238,6 +238,18 @@ public class SystemSettingsAppService :
         await _blobs.SaveAsync(blobName, content, overrideExisting: true);
         await SetGlobalAsync(blobNameSetting, blobName);
         await SetGlobalAsync(contentTypeSetting, contentType);
+    }
+
+    // Exposed for direct regression testing (SEC-M-04): rejects any content
+    // type outside the raster allow-list — notably image/svg+xml, which can
+    // embed <script> and would run as stored XSS on the public login page.
+    public static void EnsureAllowedImageContentType(string contentType)
+    {
+        if (!AllowedImageContentTypes.Contains(contentType))
+        {
+            throw new BusinessException(
+                "FoodSafe:SystemSettings:InvalidImageType");
+        }
     }
 
     private Task SetGlobalAsync(string name, string? value) =>
