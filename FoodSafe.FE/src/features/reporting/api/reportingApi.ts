@@ -278,3 +278,65 @@ export const actionMonthReportApi = {
   },
   ...errorNotificationApi(amrEndpoint),
 };
+
+export interface AtpCalculatedStats {
+  totalBusinesses: number;
+  newBusinesses: number;
+  inactiveBusinesses: number;
+  businessesWithCertificate: number;
+  dkcbIssued: number;
+  selfDeclarationsReceived: number;
+  adRegistrationsIssued: number;
+  eligibilityCertificatesIssued: number;
+  cfsIssued: number;
+  exportCertificatesIssued: number;
+  totalInspectionPlans: number;
+  businessesInspected: number;
+  violationsFound: number;
+  finesIssued: number;
+  fineTotalAmount: number;
+  poisoningCaseCount: number;
+  poisoningIncidentCount: number;
+  totalAffected: number;
+  totalDeaths: number;
+}
+
+export interface NdtpAggregatedStats {
+  reportCount: number;
+  caseCount: number;
+  caseAffected: number;
+  caseHospitalized: number;
+  caseDeaths: number;
+  incidentCount: number;
+  incidentAffected: number;
+  incidentHospitalized: number;
+  incidentDeaths: number;
+}
+
+const calculationEndpoint = "/v1/app/report-calculation";
+
+export const reportCalculationApi = {
+  async atpWorkStats(input: {
+    periodType: number;
+    periodYear: number;
+    periodHalf?: number;
+  }): Promise<AtpCalculatedStats> {
+    return (
+      await api.get<AtpCalculatedStats>(
+        `${calculationEndpoint}/atp-work-stats`,
+        { params: input },
+      )
+    ).data;
+  },
+  async ndtpAggregation(input: {
+    periodYear: number;
+    periodMonth: number;
+  }): Promise<NdtpAggregatedStats> {
+    return (
+      await api.get<NdtpAggregatedStats>(
+        `${calculationEndpoint}/ndtp-aggregation`,
+        { params: input },
+      )
+    ).data;
+  },
+};

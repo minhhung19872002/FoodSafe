@@ -23,6 +23,7 @@ import {
   CheckCircleOutlined,
   RollbackOutlined,
   FileDoneOutlined,
+  FileTextOutlined,
   ExportOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
@@ -33,6 +34,10 @@ import { NdtpReportEditorModal } from "../components/NdtpReportEditorModal";
 import { AtpWorkReportEditorModal } from "../components/AtpWorkReportEditorModal";
 import { ActionMonthReportEditorModal } from "../components/ActionMonthReportEditorModal";
 import ReportErrorNotificationsModal from "../components/ReportErrorNotificationsModal";
+import {
+  ReportDocumentViewModal,
+  type ReportDocument,
+} from "../components/ReportDocumentViewModal";
 import {
   useNdtpReports,
   useAtpWorkReports,
@@ -112,6 +117,7 @@ function NdtpTab() {
   const [errorNotifReport, setErrorNotifReport] = useState<NdtpReport | null>(
     null,
   );
+  const [docView, setDocView] = useState<ReportDocument | null>(null);
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
@@ -158,6 +164,12 @@ function NdtpTab() {
       width: 200,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            icon={<FileTextOutlined />}
+            aria-label="Xem văn bản"
+            onClick={() => setDocView({ kind: "ndtp", report: record })}
+          />
           {record.status === REPORT_STATUS.Draft &&
             hasPermission("FoodSafe.Reporting.NdtpReports.Edit") && (
               <Button
@@ -276,6 +288,10 @@ function NdtpTab() {
         onClose={() => setErrorNotifReport(null)}
         canReport={hasPermission("FoodSafe.Reporting.NdtpReports.Submit")}
         canRespond={hasPermission("FoodSafe.Reporting.NdtpReports.Verify")}
+      />
+      <ReportDocumentViewModal
+        document={docView}
+        onClose={() => setDocView(null)}
       />
       <Space style={{ marginBottom: 16 }} wrap>
         <Select
@@ -450,6 +466,7 @@ function AtpWorkTab() {
   const [returnOpen, setReturnOpen] = useState<string | null>(null);
   const [errorNotifReport, setErrorNotifReport] =
     useState<AtpWorkReport | null>(null);
+  const [docView, setDocView] = useState<ReportDocument | null>(null);
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
@@ -501,6 +518,12 @@ function AtpWorkTab() {
       width: 200,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            icon={<FileTextOutlined />}
+            aria-label="Xem văn bản"
+            onClick={() => setDocView({ kind: "atp", report: record })}
+          />
           {record.status === REPORT_STATUS.Draft &&
             hasPermission("FoodSafe.Reporting.AtpWorkReports.Edit") && (
               <Button
@@ -619,6 +642,10 @@ function AtpWorkTab() {
         onClose={() => setErrorNotifReport(null)}
         canReport={hasPermission("FoodSafe.Reporting.AtpWorkReports.Submit")}
         canRespond={hasPermission("FoodSafe.Reporting.AtpWorkReports.Verify")}
+      />
+      <ReportDocumentViewModal
+        document={docView}
+        onClose={() => setDocView(null)}
       />
       <Space style={{ marginBottom: 16 }} wrap>
         <Select
@@ -822,6 +849,7 @@ function ActionMonthTab() {
   const [returnOpen, setReturnOpen] = useState<string | null>(null);
   const [errorNotifReport, setErrorNotifReport] =
     useState<ActionMonthReport | null>(null);
+  const [docView, setDocView] = useState<ReportDocument | null>(null);
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
@@ -872,6 +900,14 @@ function ActionMonthTab() {
       width: 200,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            icon={<FileTextOutlined />}
+            aria-label="Xem văn bản"
+            onClick={() =>
+              setDocView({ kind: "action-month", report: record })
+            }
+          />
           {record.status === REPORT_STATUS.Draft &&
             hasPermission(
               "FoodSafe.Reporting.ActionMonthReports.Edit",
@@ -1008,6 +1044,10 @@ function ActionMonthTab() {
         canRespond={hasPermission(
           "FoodSafe.Reporting.ActionMonthReports.Verify",
         )}
+      />
+      <ReportDocumentViewModal
+        document={docView}
+        onClose={() => setDocView(null)}
       />
       <Space style={{ marginBottom: 16 }} wrap>
         <Select

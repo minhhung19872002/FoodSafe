@@ -1,5 +1,17 @@
-import { useEffect } from "react";
-import { Modal, Form, InputNumber, Input, Divider, Row, Col } from "antd";
+import { useEffect, useState } from "react";
+import {
+  App,
+  Button,
+  Modal,
+  Form,
+  InputNumber,
+  Input,
+  Divider,
+  Row,
+  Col,
+} from "antd";
+import { CalculatorOutlined } from "@ant-design/icons";
+import { reportCalculationApi } from "../api/reportingApi";
 import {
   useUpdateAtpStats,
   useUpdateAtpNarrative,
@@ -12,9 +24,31 @@ interface Props {
 }
 
 export function AtpWorkReportEditorModal({ report, onClose }: Props) {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
+  const [calculating, setCalculating] = useState(false);
   const updateStats = useUpdateAtpStats();
   const updateNarrative = useUpdateAtpNarrative();
+
+  const autoCalculate = async () => {
+    if (!report) return;
+    setCalculating(true);
+    try {
+      const stats = await reportCalculationApi.atpWorkStats({
+        periodType: report.periodType,
+        periodYear: report.periodYear,
+        periodHalf: report.periodHalf ?? undefined,
+      });
+      form.setFieldsValue(stats);
+      void message.success(
+        "Đã tự tính số liệu từ dữ liệu hệ thống. Kiểm tra lại trước khi lưu.",
+      );
+    } catch {
+      void message.error("Không thể tự tính số liệu.");
+    } finally {
+      setCalculating(false);
+    }
+  };
 
   useEffect(() => {
     if (report) {
@@ -112,6 +146,14 @@ export function AtpWorkReportEditorModal({ report, onClose }: Props) {
       confirmLoading={updateStats.isPending || updateNarrative.isPending}
       destroyOnHidden
     >
+      <Button
+        icon={<CalculatorOutlined />}
+        loading={calculating}
+        onClick={() => void autoCalculate()}
+        style={{ marginBottom: 12 }}
+      >
+        Tự tính số liệu từ hệ thống
+      </Button>
       <Form
         form={form}
         layout="vertical"

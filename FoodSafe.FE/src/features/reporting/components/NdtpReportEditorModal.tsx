@@ -1,5 +1,17 @@
-import { useEffect } from "react";
-import { Modal, Form, InputNumber, Input, Divider, Row, Col } from "antd";
+import { useEffect, useState } from "react";
+import {
+  App,
+  Button,
+  Modal,
+  Form,
+  InputNumber,
+  Input,
+  Divider,
+  Row,
+  Col,
+} from "antd";
+import { CalculatorOutlined } from "@ant-design/icons";
+import { reportCalculationApi } from "../api/reportingApi";
 import { useUpdateNdtpStats, useUpdateNdtpNarrative } from "../api/reportingMutations";
 import type { NdtpReport } from "../types/reporting.types";
 
@@ -9,9 +21,39 @@ interface Props {
 }
 
 export function NdtpReportEditorModal({ report, onClose }: Props) {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
+  const [aggregating, setAggregating] = useState(false);
   const updateStats = useUpdateNdtpStats();
   const updateNarrative = useUpdateNdtpNarrative();
+
+  const aggregateFromLowerLevel = async () => {
+    if (!report) return;
+    setAggregating(true);
+    try {
+      const stats = await reportCalculationApi.ndtpAggregation({
+        periodYear: report.periodYear,
+        periodMonth: report.periodMonth,
+      });
+      form.setFieldsValue({
+        caseCount: stats.caseCount,
+        caseAffected: stats.caseAffected,
+        caseHospitalized: stats.caseHospitalized,
+        caseDeaths: stats.caseDeaths,
+        incidentCount: stats.incidentCount,
+        incidentAffected: stats.incidentAffected,
+        incidentHospitalized: stats.incidentHospitalized,
+        incidentDeaths: stats.incidentDeaths,
+      });
+      void message.success(
+        `Đã tổng hợp từ ${stats.reportCount} báo cáo tuyến dưới. Kiểm tra lại trước khi lưu.`,
+      );
+    } catch {
+      void message.error("Không thể tổng hợp số liệu.");
+    } finally {
+      setAggregating(false);
+    }
+  };
 
   useEffect(() => {
     if (report) {
@@ -75,6 +117,14 @@ export function NdtpReportEditorModal({ report, onClose }: Props) {
       confirmLoading={updateStats.isPending || updateNarrative.isPending}
       destroyOnHidden
     >
+      <Button
+        icon={<CalculatorOutlined />}
+        loading={aggregating}
+        onClick={() => void aggregateFromLowerLevel()}
+        style={{ marginBottom: 12 }}
+      >
+        Tổng hợp từ báo cáo tuyến dưới
+      </Button>
       <Form form={form} layout="vertical" preserve={false}>
         <Divider titlePlacement="left">Ca ngộ độc nhỏ lẻ</Divider>
         <Row gutter={16}>
