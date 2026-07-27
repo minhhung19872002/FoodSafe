@@ -18,6 +18,8 @@ public class AtpNewsDto : EntityDto<Guid>
     public NewsStatus Status { get; set; }
     public DateTime? PublishedAt { get; set; }
     public Guid? PublishedById { get; set; }
+    public Guid? RecalledById { get; set; }
+    public DateTime? RecalledAt { get; set; }
     public bool IsPublic { get; set; }
     public bool IsFeatured { get; set; }
     public DateTime CreationTime { get; set; }

@@ -1612,6 +1612,8 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 table.HasCheckConstraint("chk_news_status", "status IN (1, 2, 3)");
                 table.HasCheckConstraint("chk_news_publish",
                     "status = 1 OR (published_by_id IS NOT NULL AND published_at IS NOT NULL)");
+                table.HasCheckConstraint("chk_news_recall",
+                    "status <> 3 OR (recalled_by_id IS NOT NULL AND recalled_at IS NOT NULL)");
                 table.HasCheckConstraint("chk_news_view_count", "view_count >= 0");
             });
             ConfigureAggregateAudit(entity, "pk_atp_news");
@@ -1626,6 +1628,8 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.Status).HasColumnName("status").HasConversion<short>();
             entity.Property(x => x.PublishedAt).HasColumnName("published_at");
             entity.Property(x => x.PublishedById).HasColumnName("published_by_id");
+            entity.Property(x => x.RecalledById).HasColumnName("recalled_by_id");
+            entity.Property(x => x.RecalledAt).HasColumnName("recalled_at");
             entity.Property(x => x.IsPublic).HasColumnName("is_public");
             entity.Property(x => x.IsFeatured).HasColumnName("is_featured");
 

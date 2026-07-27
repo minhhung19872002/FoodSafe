@@ -38,7 +38,7 @@ export const dataIntegrationApi = {
       .then((r) => r.data),
 
   toggleEndpointStatus: (id: string) =>
-    api.post(`/api/app/api-endpoint/${id}/toggle-status`),
+    api.post(`/v1/app/api-endpoint/${id}/toggle-status`),
 
   deleteEndpoint: (id: string) =>
     api.delete(`/v1/app/api-endpoint/${id}`),

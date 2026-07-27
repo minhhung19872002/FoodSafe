@@ -16,6 +16,8 @@ public sealed class AtpNews : FullAuditedAggregateRoot<Guid>
     public NewsStatus Status { get; private set; }
     public DateTime? PublishedAt { get; private set; }
     public Guid? PublishedById { get; private set; }
+    public Guid? RecalledById { get; private set; }
+    public DateTime? RecalledAt { get; private set; }
     public bool IsPublic { get; private set; }
     public bool IsFeatured { get; private set; }
 
@@ -95,6 +97,8 @@ public sealed class AtpNews : FullAuditedAggregateRoot<Guid>
             throw new BusinessException(FoodSafeDomainErrorCodes.News.CanOnlyRecallPublished);
 
         Status = NewsStatus.Recalled;
+        RecalledById = recallerId;
+        RecalledAt = recalledAt;
     }
 
     public void IncrementViewCount() => ViewCount++;

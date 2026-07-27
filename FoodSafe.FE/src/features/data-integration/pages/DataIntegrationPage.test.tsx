@@ -25,7 +25,7 @@ function renderPage() {
 
 function mockData() {
   server.use(
-    http.get("*/api/app/api-endpoint", () =>
+    http.get("*/v1/app/api-endpoint", () =>
       HttpResponse.json({
         totalCount: 1,
         items: [
@@ -41,7 +41,7 @@ function mockData() {
         ],
       }),
     ),
-    http.get("*/api/app/api-call-log", () =>
+    http.get("*/v1/app/api-call-log", () =>
       HttpResponse.json({ totalCount: 0, items: [] }),
     ),
   );

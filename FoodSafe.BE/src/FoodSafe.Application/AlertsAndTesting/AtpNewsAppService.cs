@@ -218,6 +218,8 @@ public class AtpNewsAppService : ApplicationService
             Status = a.Status,
             PublishedAt = a.PublishedAt,
             PublishedById = a.PublishedById,
+            RecalledById = a.RecalledById,
+            RecalledAt = a.RecalledAt,
             IsPublic = a.IsPublic,
             IsFeatured = a.IsFeatured,
             CreationTime = a.CreationTime,

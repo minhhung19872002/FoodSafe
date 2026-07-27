@@ -94,6 +94,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureSecureTextTemplating();
         ConfigureCaptcha(context, configuration, hostingEnvironment);
         ValidateEmailDelivery(configuration, hostingEnvironment);
+        ValidateCoreSecrets(configuration);
         ConfigureDataProtection(context, configuration, hostingEnvironment);
         ConfigureUrls(configuration);
         ConfigureProblemDetails(context);
@@ -310,6 +311,29 @@ public class FoodSafeHttpApiHostModule : AbpModule
         context.Services.Configure<CaptchaOptions>(section);
         context.Services.AddHttpClient<ICaptchaVerifier, TurnstileCaptchaVerifier>(
             client => client.Timeout = TimeSpan.FromSeconds(10));
+    }
+
+    private static void ValidateCoreSecrets(IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("Default");
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "ConnectionStrings:Default is not configured. Provide it via "
+                + "environment variable ConnectionStrings__Default or "
+                + "appsettings.secrets.json (never commit credentials).");
+        }
+
+        var passPhrase = configuration["StringEncryption:DefaultPassPhrase"];
+        if (string.IsNullOrWhiteSpace(passPhrase)
+            || passPhrase == "change-this-in-production")
+        {
+            throw new InvalidOperationException(
+                "StringEncryption:DefaultPassPhrase is missing or uses the "
+                + "known default. Provide a unique value via environment "
+                + "variable StringEncryption__DefaultPassPhrase or "
+                + "appsettings.secrets.json.");
+        }
     }
 
     private static void ValidateEmailDelivery(
