@@ -1,7 +1,7 @@
 # Feature Test Coverage Matrix
 
 **Last updated:** 2026-07-27
-**Git commit:** `236c782` (branch: `codex/production-readiness`)
+**Git commit:** _(pending commit)_ (branch: `codex/production-readiness`)
 **Stack:** Docker Compose — PostgreSQL 15, Redis 7, MinIO, ClamAV, ASP.NET Core API, nginx+React frontend
 **API interception:** None — all tests hit the real stack
 
@@ -11,8 +11,8 @@
 
 | Metric | Value |
 |--------|-------|
-| Total features | 32 |
-| **VERIFIED** | **32 (100%)** |
+| Total features | 33 |
+| **VERIFIED** | **33 (100%)** |
 | READY_FOR_TEST | 0 |
 | FAILED | 0 |
 | NOT_STARTED | 0 |
@@ -24,8 +24,8 @@
 | Metric | Value |
 |--------|-------|
 | Total Playwright specs | 50+ files |
-| Total test cases (2026-07-27 full run) | 206 |
-| Passed | **204** |
+| Total test cases (2026-07-27 full run) | 227 |
+| Passed | **225** |
 | Failed | **2** (known pre-existing, see below) |
 | API interception | None |
 
@@ -74,6 +74,7 @@
 | F-030 | Public Lookup — Ad Registration | **VERIFIED** | `06e4b1c` | `e2e/public-lookups-verification.spec.ts` |
 | F-031 | Documents | **VERIFIED** | `d855990` | `e2e/documents-verification.spec.ts` |
 | F-032 | System Settings | **VERIFIED** | `d855990` | `e2e/system-settings-verification.spec.ts` |
+| F-033 | Public Portal (FR-41..FR-49) | **VERIFIED** | _(pending)_ | `e2e/public-portal-verification.spec.ts` |
 
 ---
 

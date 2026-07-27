@@ -42,15 +42,26 @@
 | F-030 | Public Lookup — Ad Registration | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `06e4b1c` | 2026-07-27 |
 | F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `d855990` | 2026-07-27 |
 | F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `d855990` | 2026-07-27 |
+| F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | _(pending)_ | 2026-07-27 |
 
 ## Summary
 
-- Total features: 32
-- VERIFIED: **32** (ALL features — see `features/*.md`)
+- Total features: 33
+- VERIFIED: **33** (ALL features — see `features/*.md`)
 - READY_FOR_TEST: 0
 - FAILED: 0
 - BLOCKED: 0
 - NOT_STARTED: 0
+
+## Test Run (2026-07-27, sixth) — F-033 Public Portal FR-41..FR-49 verified
+
+- **21 test cases** in new `public-portal-verification.spec.ts` — **21 passed, 0 failed** (10.4s)
+- Feature verified: F-033 (Public Portal FR-41..FR-49)
+- New spec covers: general business/product search, 5 certificate-type searches (FR-42..FR-44, FR-46..FR-47), warned businesses (FR-45), public news/alerts (FR-48-01/02), citizen alert submission via API (FR-48-03), public documents (FR-49)
+- All endpoints confirmed AllowAnonymous — no 401 on any public endpoint
+- Draft/non-public filter enforced on news, alerts, and documents
+- Citizen captcha bypass: any non-empty token accepted via Cloudflare test secret in non-production
+- Stack: API + FE containers rebuilt from HEAD at this commit
 
 ## Test Run (2026-07-27, fifth) — F-024..F-030 Public Lookups verified
 
