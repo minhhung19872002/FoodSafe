@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Card, Col, Row, Select, Spin } from "antd";
+import { Button, Card, Col, Row, Select, Space, Spin } from "antd";
+import { FileExcelOutlined } from "@ant-design/icons";
 import type { StatisticsDto } from "../types/statistics.types";
 import {
   BarChart,
@@ -17,7 +18,10 @@ import {
   Line,
 } from "recharts";
 import { PageHeader } from "@/components/PageHeader";
-import { useStatistics } from "../api/statisticsQueries";
+import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
+import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
+import { saveDownload } from "@/utils/download";
+import { useExportStatistics, useStatistics } from "../api/statisticsQueries";
 
 const COLORS = [
   "#00796B",
@@ -53,6 +57,16 @@ const yearOptions = Array.from({ length: 5 }, (_, i) => {
   return { value: y, label: `Năm ${y}` };
 });
 
+function flattenOrgTree(
+  items: OrganizationTreeNode[],
+  depth = 0,
+): Array<{ value: string; label: string }> {
+  return items.flatMap((item) => [
+    { value: item.id, label: `${"  ".repeat(depth)}${item.name}` },
+    ...flattenOrgTree(item.children, depth + 1),
+  ]);
+}
+
 const EMPTY_STATS: StatisticsDto = {
   businessByStatus: [],
   businessByType: [],
@@ -66,7 +80,13 @@ const EMPTY_STATS: StatisticsDto = {
 
 export default function StatisticsPage() {
   const [year, setYear] = useState(currentYear());
-  const { data, isLoading } = useStatistics({ year });
+  const [organizationId, setOrganizationId] = useState<string | undefined>(
+    undefined,
+  );
+  const { data, isLoading } = useStatistics({ year, organizationId });
+  const exportMutation = useExportStatistics();
+  const orgTree = useOrganizationTree();
+  const orgOptions = flattenOrgTree(orgTree.data?.items ?? []);
   const stats = data ?? EMPTY_STATS;
 
   return (
@@ -74,12 +94,40 @@ export default function StatisticsPage() {
       <PageHeader
         title="Thống kê tổng hợp"
         actions={
-          <Select
-            value={year}
-            onChange={setYear}
-            options={yearOptions}
-            style={{ width: 140 }}
-          />
+          <Space wrap>
+            <Select
+              value={year}
+              onChange={setYear}
+              options={yearOptions}
+              style={{ width: 140 }}
+            />
+            {orgOptions.length > 1 && (
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                placeholder="Đơn vị"
+                style={{ width: 200 }}
+                options={orgOptions}
+                onChange={(v) => setOrganizationId(v ?? undefined)}
+              />
+            )}
+            <Button
+              icon={<FileExcelOutlined />}
+              loading={exportMutation.isPending}
+              onClick={() =>
+                exportMutation.mutate(
+                  { year, organizationId },
+                  {
+                    onSuccess: (blob) =>
+                      saveDownload(blob, `thong-ke-tong-hop-${year}.xlsx`),
+                  },
+                )
+              }
+            >
+              Xuất Excel
+            </Button>
+          </Space>
         }
       />
 
@@ -88,181 +136,181 @@ export default function StatisticsPage() {
           <Spin size="large" />
         </div>
       ) : (
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
-          <Card title="Cơ sở theo trạng thái" size="small">
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={stats.businessByStatus}
-                  dataKey="count"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label={({ name, value }) => `${name}: ${value}`}
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={12}>
+            <Card title="Cơ sở theo trạng thái" size="small">
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={stats.businessByStatus}
+                    dataKey="count"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {stats.businessByStatus.map((entry) => (
+                      <Cell
+                        key={entry.name}
+                        fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
+
+          <Col xs={24} lg={12}>
+            <Card title="Top loại hình cơ sở" size="small">
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart
+                  data={stats.businessByType}
+                  layout="vertical"
+                  margin={{ left: 80 }}
                 >
-                  {stats.businessByStatus.map((entry) => (
-                    <Cell
-                      key={entry.name}
-                      fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" allowDecimals={false} />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={80}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#00796B" name="Số lượng" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
 
-        <Col xs={24} lg={12}>
-          <Card title="Top loại hình cơ sở" size="small">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
-                data={stats.businessByType}
-                layout="vertical"
-                margin={{ left: 80 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" allowDecimals={false} />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  width={80}
-                  tick={{ fontSize: 12 }}
-                />
-                <Tooltip />
-                <Bar dataKey="count" fill="#00796B" name="Số lượng" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
+          <Col xs={24} lg={12}>
+            <Card title="Giấy phép / Chứng nhận theo loại" size="small">
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={stats.licenseByCategory}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#0958D9" name="Số lượng" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
 
-        <Col xs={24} lg={12}>
-          <Card title="Giấy phép / Chứng nhận theo loại" size="small">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={stats.licenseByCategory}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#0958D9" name="Số lượng" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
+          <Col xs={24} lg={12}>
+            <Card title="Trạng thái giấy phép" size="small">
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={stats.licenseByStatus}
+                    dataKey="count"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {stats.licenseByStatus.map((entry) => (
+                      <Cell
+                        key={entry.name}
+                        fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
 
-        <Col xs={24} lg={12}>
-          <Card title="Trạng thái giấy phép" size="small">
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={stats.licenseByStatus}
-                  dataKey="count"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
-                  {stats.licenseByStatus.map((entry) => (
-                    <Cell
-                      key={entry.name}
-                      fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
+          <Col xs={24}>
+            <Card
+              title={`Thanh kiểm tra theo tháng — Năm ${year}`}
+              size="small"
+            >
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={stats.inspectionsByMonth}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#00796B"
+                    name="Tổng kiểm tra"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
 
-        <Col xs={24}>
-          <Card
-            title={`Thanh kiểm tra theo tháng — Năm ${year}`}
-            size="small"
-          >
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={stats.inspectionsByMonth}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#00796B"
-                  name="Tổng kiểm tra"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
+          <Col xs={24} lg={12}>
+            <Card title={`Vi phạm theo tháng — Năm ${year}`} size="small">
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={stats.violationsByMonth}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#CF1322" name="Vi phạm" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
 
-        <Col xs={24} lg={12}>
-          <Card title={`Vi phạm theo tháng — Năm ${year}`} size="small">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={stats.violationsByMonth}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#CF1322" name="Vi phạm" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
+          <Col xs={24} lg={12}>
+            <Card title="Kết quả kiểm tra" size="small">
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={stats.inspectionOutcome}
+                    dataKey="count"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {stats.inspectionOutcome.map((entry) => (
+                      <Cell
+                        key={entry.name}
+                        fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
 
-        <Col xs={24} lg={12}>
-          <Card title="Kết quả kiểm tra" size="small">
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={stats.inspectionOutcome}
-                  dataKey="count"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
-                  {stats.inspectionOutcome.map((entry) => (
-                    <Cell
-                      key={entry.name}
-                      fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
-
-        <Col xs={24}>
-          <Card
-            title={`Ngộ độc thực phẩm theo tháng — Năm ${year}`}
-            size="small"
-          >
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats.poisoningCasesByMonth}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#D48806" name="Số ca" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
-      </Row>
+          <Col xs={24}>
+            <Card
+              title={`Ngộ độc thực phẩm theo tháng — Năm ${year}`}
+              size="small"
+            >
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.poisoningCasesByMonth}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#D48806" name="Số ca" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
+        </Row>
       )}
     </div>
   );

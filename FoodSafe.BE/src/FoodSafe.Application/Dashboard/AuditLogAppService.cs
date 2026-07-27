@@ -2,6 +2,7 @@ using System.Net;
 using FoodSafe.Application.Contracts.Dashboard;
 using FoodSafe.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.AuditLogging;
@@ -61,6 +62,49 @@ public class AuditLogAppService : ApplicationService
 
         return new PagedResultDto<AuditLogDto>(totalCount, items);
     }
+
+    public async Task<AuditLogDetailDto> GetDetailAsync(Guid id)
+    {
+        var log = await _auditLogs.GetAsync(id, includeDetails: true)
+            ?? throw new BusinessException("FoodSafe:AuditLog:NotFound");
+        return MapDetail(log);
+    }
+
+    private static AuditLogDetailDto MapDetail(AuditLog log) =>
+        new()
+        {
+            Id = log.Id,
+            ExecutionTime = log.ExecutionTime,
+            UserName = log.UserName,
+            UserId = log.UserId?.ToString(),
+            HttpMethod = log.HttpMethod,
+            Url = log.Url,
+            HttpStatusCode = log.HttpStatusCode,
+            ExecutionDuration = log.ExecutionDuration,
+            ClientIpAddress = log.ClientIpAddress,
+            BrowserInfo = log.BrowserInfo,
+            CorrelationId = log.CorrelationId,
+            Exceptions = log.Exceptions,
+            Actions = log.Actions?.Select(a => new AuditLogActionDto
+            {
+                ServiceName = a.ServiceName ?? string.Empty,
+                MethodName = a.MethodName ?? string.Empty,
+                Parameters = a.Parameters,
+                ExecutionDuration = a.ExecutionDuration
+            }).ToList() ?? [],
+            EntityChanges = log.EntityChanges?.Select(ec => new EntityChangeDto
+            {
+                EntityTypeFullName = ec.EntityTypeFullName,
+                EntityId = ec.EntityId,
+                ChangeType = ec.ChangeType.ToString(),
+                PropertyChanges = ec.PropertyChanges?.Select(pc => new EntityPropertyChangeDto
+                {
+                    PropertyName = pc.PropertyName,
+                    OriginalValue = pc.OriginalValue,
+                    NewValue = pc.NewValue
+                }).ToList() ?? []
+            }).ToList() ?? []
+        };
 
     private static string NormalizeSorting(string? sorting)
     {

@@ -1,15 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "./dashboardApi";
+import type { DashboardStatsFilter } from "../types/dashboard.types";
 
 export const dashboardKeys = {
   all: ["dashboard"] as const,
-  stats: () => [...dashboardKeys.all, "stats"] as const,
+  stats: (filter?: DashboardStatsFilter) =>
+    [...dashboardKeys.all, "stats", filter] as const,
 };
 
-export function useDashboardStats() {
+export function useDashboardStats(filter?: DashboardStatsFilter) {
   return useQuery({
-    queryKey: dashboardKeys.stats(),
-    queryFn: dashboardApi.getStats,
+    queryKey: dashboardKeys.stats(filter),
+    queryFn: () => dashboardApi.getStats(filter),
     staleTime: 60_000,
   });
 }

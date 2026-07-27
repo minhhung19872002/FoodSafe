@@ -199,139 +199,142 @@ export default function GeographicCatalogPage() {
 
   return (
     <div className="page-container">
-      <PageHeader title="Địa bàn hành chính" subtitle="Quản lý danh mục tỉnh/thành, quận/huyện, xã/phường" />
-      <div className="page-card">
-      <Tabs
-        items={[
-          {
-            key: "provinces",
-            label: "Tỉnh/Thành phố",
-            children: (
-              <Space
-                direction="vertical"
-                size="middle"
-                style={{ width: "100%" }}
-              >
-                {canManage && (
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => setModal({ kind: "province" })}
-                  >
-                    Thêm tỉnh/thành phố
-                  </Button>
-                )}
-                {table(
-                  "province",
-                  provinces.data?.items ?? [],
-                  provinces.isLoading,
-                )}
-              </Space>
-            ),
-          },
-          {
-            key: "districts",
-            label: "Huyện/Quận",
-            children: (
-              <Space
-                direction="vertical"
-                size="middle"
-                style={{ width: "100%" }}
-              >
-                <Space wrap>
-                  <Select
-                    showSearch
-                    optionFilterProp="label"
-                    placeholder="Chọn tỉnh/thành phố"
-                    value={provinceId || undefined}
-                    onChange={(value) => {
-                      setProvinceId(value);
-                      setDistrictId("");
-                    }}
-                    style={{ width: 320 }}
-                    options={(provinces.data?.items ?? []).map((item) => ({
-                      value: item.id,
-                      label: `${item.code} — ${item.name}`,
-                    }))}
-                  />
-                  {canManage && (
-                    <Button
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      disabled={!provinceId}
-                      onClick={() => setModal({ kind: "district" })}
-                    >
-                      Thêm huyện/quận
-                    </Button>
-                  )}
-                </Space>
-                {table(
-                  "district",
-                  districts.data?.items ?? [],
-                  districts.isLoading,
-                )}
-              </Space>
-            ),
-          },
-          {
-            key: "communes",
-            label: "Xã/Phường",
-            children: (
-              <Space
-                direction="vertical"
-                size="middle"
-                style={{ width: "100%" }}
-              >
-                <Space wrap>
-                  <Select
-                    showSearch
-                    optionFilterProp="label"
-                    placeholder="Chọn tỉnh/thành phố"
-                    value={provinceId || undefined}
-                    onChange={(value) => {
-                      setProvinceId(value);
-                      setDistrictId("");
-                    }}
-                    style={{ width: 280 }}
-                    options={(provinces.data?.items ?? []).map((item) => ({
-                      value: item.id,
-                      label: `${item.code} — ${item.name}`,
-                    }))}
-                  />
-                  <Select
-                    showSearch
-                    optionFilterProp="label"
-                    placeholder="Chọn huyện/quận"
-                    value={districtId || undefined}
-                    disabled={!provinceId}
-                    onChange={setDistrictId}
-                    style={{ width: 280 }}
-                    options={(districts.data?.items ?? []).map((item) => ({
-                      value: item.id,
-                      label: `${item.code} — ${item.name}`,
-                    }))}
-                  />
-                  {canManage && (
-                    <Button
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      disabled={!districtId}
-                      onClick={() => setModal({ kind: "commune" })}
-                    >
-                      Thêm xã/phường
-                    </Button>
-                  )}
-                </Space>
-                {table(
-                  "commune",
-                  communes.data?.items ?? [],
-                  communes.isLoading,
-                )}
-              </Space>
-            ),
-          },
-        ]}
+      <PageHeader
+        title="Địa bàn hành chính"
+        subtitle="Quản lý danh mục tỉnh/thành, quận/huyện, xã/phường"
       />
+      <div className="page-card">
+        <Tabs
+          items={[
+            {
+              key: "provinces",
+              label: "Tỉnh/Thành phố",
+              children: (
+                <Space
+                  direction="vertical"
+                  size="middle"
+                  style={{ width: "100%" }}
+                >
+                  {canManage && (
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => setModal({ kind: "province" })}
+                    >
+                      Thêm tỉnh/thành phố
+                    </Button>
+                  )}
+                  {table(
+                    "province",
+                    provinces.data?.items ?? [],
+                    provinces.isLoading,
+                  )}
+                </Space>
+              ),
+            },
+            {
+              key: "districts",
+              label: "Huyện/Quận",
+              children: (
+                <Space
+                  direction="vertical"
+                  size="middle"
+                  style={{ width: "100%" }}
+                >
+                  <Space wrap>
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder="Chọn tỉnh/thành phố"
+                      value={provinceId || undefined}
+                      onChange={(value) => {
+                        setProvinceId(value);
+                        setDistrictId("");
+                      }}
+                      style={{ width: 320 }}
+                      options={(provinces.data?.items ?? []).map((item) => ({
+                        value: item.id,
+                        label: `${item.code} — ${item.name}`,
+                      }))}
+                    />
+                    {canManage && (
+                      <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        disabled={!provinceId}
+                        onClick={() => setModal({ kind: "district" })}
+                      >
+                        Thêm huyện/quận
+                      </Button>
+                    )}
+                  </Space>
+                  {table(
+                    "district",
+                    districts.data?.items ?? [],
+                    districts.isLoading,
+                  )}
+                </Space>
+              ),
+            },
+            {
+              key: "communes",
+              label: "Xã/Phường",
+              children: (
+                <Space
+                  direction="vertical"
+                  size="middle"
+                  style={{ width: "100%" }}
+                >
+                  <Space wrap>
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder="Chọn tỉnh/thành phố"
+                      value={provinceId || undefined}
+                      onChange={(value) => {
+                        setProvinceId(value);
+                        setDistrictId("");
+                      }}
+                      style={{ width: 280 }}
+                      options={(provinces.data?.items ?? []).map((item) => ({
+                        value: item.id,
+                        label: `${item.code} — ${item.name}`,
+                      }))}
+                    />
+                    <Select
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder="Chọn huyện/quận"
+                      value={districtId || undefined}
+                      disabled={!provinceId}
+                      onChange={setDistrictId}
+                      style={{ width: 280 }}
+                      options={(districts.data?.items ?? []).map((item) => ({
+                        value: item.id,
+                        label: `${item.code} — ${item.name}`,
+                      }))}
+                    />
+                    {canManage && (
+                      <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        disabled={!districtId}
+                        onClick={() => setModal({ kind: "commune" })}
+                      >
+                        Thêm xã/phường
+                      </Button>
+                    )}
+                  </Space>
+                  {table(
+                    "commune",
+                    communes.data?.items ?? [],
+                    communes.isLoading,
+                  )}
+                </Space>
+              ),
+            },
+          ]}
+        />
       </div>
 
       {modal && (

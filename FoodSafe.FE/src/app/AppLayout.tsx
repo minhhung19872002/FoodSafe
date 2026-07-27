@@ -42,10 +42,7 @@ import {
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
-import {
-  SIDEBAR_WIDTH,
-  SIDEBAR_COLLAPSED_WIDTH,
-} from "@/theme/themeConfig";
+import { SIDEBAR_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from "@/theme/themeConfig";
 
 const { Sider, Content } = Layout;
 
@@ -303,9 +300,7 @@ function buildMenuItems(
 
 function buildBreadcrumbs(pathname: string) {
   const segments = pathname.split("/").filter(Boolean);
-  const items = [
-    { title: BREADCRUMB_LABELS[segments[0]] ?? "Trang chủ" },
-  ];
+  const items = [{ title: BREADCRUMB_LABELS[segments[0]] ?? "Trang chủ" }];
   if (segments.length > 1) {
     items.push({
       title: BREADCRUMB_LABELS[segments[1]] ?? segments[1],
@@ -447,9 +442,7 @@ export function AppLayout() {
                 icon={<UserOutlined />}
                 style={{ backgroundColor: "#00796B" }}
               />
-              <span style={{ fontSize: 13 }}>
-                {user?.name ?? "Người dùng"}
-              </span>
+              <span style={{ fontSize: 13 }}>{user?.name ?? "Người dùng"}</span>
             </div>
           </Dropdown>
         </header>

@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { identityApi } from "./identityApi";
 import { identityKeys } from "./identityQueries";
-import type { SaveRoleInput, SaveUserInput } from "../types/identity.types";
+import type {
+  SaveRoleInput,
+  SaveUserInput,
+  UserFilter,
+} from "../types/identity.types";
 
 function useIdentityMutation<TVariables>(
   mutationFn: (variables: TVariables) => Promise<unknown>,
@@ -34,6 +38,14 @@ export const useSetUserLock = () =>
 
 export const useSendPasswordReset = () =>
   useIdentityMutation(identityApi.sendPasswordReset);
+
+export const useDeleteAdminUser = () =>
+  useIdentityMutation(identityApi.deleteUser);
+
+export const useExportUsers = () =>
+  useMutation({
+    mutationFn: (filter: UserFilter) => identityApi.exportUsers(filter),
+  });
 
 export const useCreateAdminRole = () =>
   useIdentityMutation(identityApi.createRole);

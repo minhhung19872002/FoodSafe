@@ -7,15 +7,7 @@ import {
   PlusOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import {
-  App,
-  Button,
-  Input,
-  Popconfirm,
-  Select,
-  Space,
-  Table,
-} from "antd";
+import { App, Button, Input, Popconfirm, Select, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import {
@@ -58,24 +50,20 @@ export default function ExportFoodCertificatePage() {
   const canCreate = hasPermission(
     "FoodSafe.Licensing.ExportCertificates.Create",
   );
-  const canEdit = hasPermission(
-    "FoodSafe.Licensing.ExportCertificates.Edit",
-  );
+  const canEdit = hasPermission("FoodSafe.Licensing.ExportCertificates.Edit");
   const canDelete = hasPermission(
     "FoodSafe.Licensing.ExportCertificates.Delete",
   );
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("");
   const [businessId, setBusinessId] = useState<string>();
-  const [destinationCountryId, setDestinationCountryId] =
-    useState<string>();
+  const [destinationCountryId, setDestinationCountryId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
   const [expiringWithinDays, setExpiringWithinDays] = useState<number>();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<ExportFoodCertificate>();
   const [editorBusinessId, setEditorBusinessId] = useState<string>();
-  const [attachmentsFor, setAttachmentsFor] =
-    useState<ExportFoodCertificate>();
+  const [attachmentsFor, setAttachmentsFor] = useState<ExportFoodCertificate>();
   const [revoking, setRevoking] = useState<ExportFoodCertificate>();
 
   const queryFilter = {
@@ -225,9 +213,7 @@ export default function ExportFoodCertificatePage() {
               onConfirm={() =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () =>
-                    void message.success(
-                      "Đã xóa giấy chứng nhận xuất khẩu.",
-                    ),
+                    void message.success("Đã xóa giấy chứng nhận xuất khẩu."),
                   onError: () =>
                     void message.error(
                       "Không thể xóa giấy chứng nhận xuất khẩu.",
@@ -262,7 +248,8 @@ export default function ExportFoodCertificatePage() {
               onClick={() =>
                 exportMutation.mutate(queryFilter, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () => void message.error("Không thể xuất danh sách."),
+                  onError: () =>
+                    void message.error("Không thể xuất danh sách."),
                 })
               }
             >
@@ -395,9 +382,7 @@ export default function ExportFoodCertificatePage() {
         titlePrefix="Tệp GCN XK"
         attachments={attachments.data ?? []}
         loading={attachments.isLoading}
-        editable={
-          canEdit && attachmentsFor?.status !== LICENSE_STATUS.Revoked
-        }
+        editable={canEdit && attachmentsFor?.status !== LICENSE_STATUS.Revoked}
         uploading={uploadMutation.isPending}
         onCancel={() => setAttachmentsFor(undefined)}
         onUpload={(file) => {
@@ -446,9 +431,7 @@ export default function ExportFoodCertificatePage() {
             { id: revoking.id, reason },
             {
               onSuccess: () => {
-                void message.success(
-                  "Đã thu hồi giấy chứng nhận xuất khẩu.",
-                );
+                void message.success("Đã thu hồi giấy chứng nhận xuất khẩu.");
                 setRevoking(undefined);
               },
               onError: () =>

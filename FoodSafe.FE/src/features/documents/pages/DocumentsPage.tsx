@@ -48,7 +48,8 @@ export default function DocumentsPage() {
     maxResultCount: PAGE_SIZE,
   });
   const { data, isLoading } = useDocuments(filter);
-  const { data: documentTypes, isLoading: docTypesLoading } = useDocumentTypes();
+  const { data: documentTypes, isLoading: docTypesLoading } =
+    useDocumentTypes();
   const createMut = useCreateDocument();
   const updateMut = useUpdateDocument();
   const deleteMut = useDeleteDocument();
@@ -73,9 +74,7 @@ export default function DocumentsPage() {
     form.setFieldsValue({
       ...record,
       issuedDate: dayjs(record.issuedDate),
-      effectiveDate: record.effectiveDate
-        ? dayjs(record.effectiveDate)
-        : null,
+      effectiveDate: record.effectiveDate ? dayjs(record.effectiveDate) : null,
       expiryDate: record.expiryDate ? dayjs(record.expiryDate) : null,
     });
     setEditorOpen(true);
@@ -130,7 +129,9 @@ export default function DocumentsPage() {
               size="small"
               icon={<EditOutlined />}
               onClick={() => openEdit(record)}
-            >Sửa</Button>
+            >
+              Sửa
+            </Button>
           )}
           {hasPermission("FoodSafe.AlertsAndTesting.Documents.Delete") && (
             <Popconfirm
@@ -144,7 +145,9 @@ export default function DocumentsPage() {
                 })
               }
             >
-              <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
+              <Button size="small" danger icon={<DeleteOutlined />}>
+                Xóa
+              </Button>
             </Popconfirm>
           )}
         </Space>
@@ -280,11 +283,7 @@ export default function DocumentsPage() {
           >
             <Input placeholder="VD: 123/QĐ-BYT" />
           </Form.Item>
-          <Form.Item
-            name="title"
-            label="Tiêu đề"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="title" label="Tiêu đề" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item name="issuingAuthority" label="Cơ quan ban hành">

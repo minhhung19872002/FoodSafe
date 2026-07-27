@@ -18,8 +18,7 @@ const resultEndpoint = "/v1/app/inspection-result";
 const resultExcelEndpoint = `${resultEndpoint}/excel`;
 
 function download(data: Blob, contentDisposition?: string): FileDownload {
-  const encoded =
-    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const encoded = contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
   const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
   return {
     blob: data,
@@ -62,7 +61,8 @@ export const inspectionPlanApi = {
     await api.delete(`${planEndpoint}/${id}`);
   },
   async submit(id: string): Promise<InspectionPlan> {
-    return (await api.post<InspectionPlan>(`${planEndpoint}/${id}/submit`)).data;
+    return (await api.post<InspectionPlan>(`${planEndpoint}/${id}/submit`))
+      .data;
   },
   async approve(id: string): Promise<InspectionPlan> {
     return (await api.post<InspectionPlan>(`${planEndpoint}/${id}/approve`))
@@ -133,9 +133,7 @@ export const inspectionResultApi = {
   async setFollowUpResult(id: string, result: FollowUpResult) {
     await api.post(`${resultEndpoint}/${id}/set-follow-up-result`, { result });
   },
-  async exportExcel(
-    filter: InspectionResultFilter,
-  ): Promise<FileDownload> {
+  async exportExcel(filter: InspectionResultFilter): Promise<FileDownload> {
     const response = await api.get<Blob>(`${resultExcelEndpoint}/export`, {
       params: filter,
       responseType: "blob",

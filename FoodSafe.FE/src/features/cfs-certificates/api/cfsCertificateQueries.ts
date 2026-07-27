@@ -6,12 +6,10 @@ export const cfsCertificateKeys = {
   all: ["cfs-certificates"] as const,
   list: (filter: CfsCertificateFilter) =>
     [...cfsCertificateKeys.all, "list", filter] as const,
-  businesses: () =>
-    [...cfsCertificateKeys.all, "business-options"] as const,
+  businesses: () => [...cfsCertificateKeys.all, "business-options"] as const,
   products: (businessId?: string) =>
     [...cfsCertificateKeys.all, "product-options", businessId] as const,
-  countries: () =>
-    [...cfsCertificateKeys.all, "country-options"] as const,
+  countries: () => [...cfsCertificateKeys.all, "country-options"] as const,
   attachments: (id?: string) =>
     [...cfsCertificateKeys.all, "attachments", id] as const,
 };

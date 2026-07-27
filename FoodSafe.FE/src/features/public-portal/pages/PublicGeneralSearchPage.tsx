@@ -63,7 +63,11 @@ function BusinessSearchTab() {
       </Space.Compact>
 
       {isError && (
-        <Alert type="error" message="Không thể tải dữ liệu. Vui lòng thử lại." showIcon />
+        <Alert
+          type="error"
+          message="Không thể tải dữ liệu. Vui lòng thử lại."
+          showIcon
+        />
       )}
 
       <Spin spinning={isFetching}>
@@ -81,10 +85,18 @@ function BusinessSearchTab() {
           locale={{ emptyText: <Empty description="Không có dữ liệu" /> }}
           size="middle"
         >
-          <Table.Column title="STT" render={(_v, _r, i) => (page - 1) * PAGE_SIZE + i + 1} width={60} />
+          <Table.Column
+            title="STT"
+            render={(_v, _r, i) => (page - 1) * PAGE_SIZE + i + 1}
+            width={60}
+          />
           <Table.Column title="Tên cơ sở" dataIndex="name" />
           <Table.Column title="Mã cơ sở" dataIndex="code" width={140} />
-          <Table.Column title="Loại hình" dataIndex="businessTypeName" width={160} />
+          <Table.Column
+            title="Loại hình"
+            dataIndex="businessTypeName"
+            width={160}
+          />
           <Table.Column title="Địa chỉ" dataIndex="addressText" />
           <Table.Column
             title="Trạng thái"
@@ -92,7 +104,11 @@ function BusinessSearchTab() {
             width={140}
             render={(status: BusinessStatus) => {
               const cfg = BUSINESS_STATUS_CONFIG[status];
-              return cfg ? <Tag color={cfg.color}>{cfg.label}</Tag> : <Tag>{status}</Tag>;
+              return cfg ? (
+                <Tag color={cfg.color}>{cfg.label}</Tag>
+              ) : (
+                <Tag>{status}</Tag>
+              );
             }}
           />
           <Table.Column
@@ -157,7 +173,11 @@ function ProductSearchTab() {
       </Space.Compact>
 
       {isError && (
-        <Alert type="error" message="Không thể tải dữ liệu. Vui lòng thử lại." showIcon />
+        <Alert
+          type="error"
+          message="Không thể tải dữ liệu. Vui lòng thử lại."
+          showIcon
+        />
       )}
 
       <Spin spinning={isFetching}>
@@ -175,12 +195,20 @@ function ProductSearchTab() {
           locale={{ emptyText: <Empty description="Không có dữ liệu" /> }}
           size="middle"
         >
-          <Table.Column title="STT" render={(_v, _r, i) => (page - 1) * PAGE_SIZE + i + 1} width={60} />
+          <Table.Column
+            title="STT"
+            render={(_v, _r, i) => (page - 1) * PAGE_SIZE + i + 1}
+            width={60}
+          />
           <Table.Column title="Tên sản phẩm" dataIndex="name" />
           <Table.Column title="Mã sản phẩm" dataIndex="code" width={140} />
           <Table.Column title="Nhãn hiệu" dataIndex="brandName" width={140} />
           <Table.Column title="Cơ sở sản xuất" dataIndex="businessName" />
-          <Table.Column title="Nhóm sản phẩm" dataIndex="productGroupName" width={160} />
+          <Table.Column
+            title="Nhóm sản phẩm"
+            dataIndex="productGroupName"
+            width={160}
+          />
         </Table>
       </Spin>
     </Space>

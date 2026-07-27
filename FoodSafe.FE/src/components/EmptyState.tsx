@@ -14,9 +14,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="empty-state">
-      <div className="empty-state-icon">
-        {icon ?? <InboxOutlined />}
-      </div>
+      <div className="empty-state-icon">{icon ?? <InboxOutlined />}</div>
       <div className="empty-state-title">{title}</div>
       {description && (
         <div className="empty-state-description">{description}</div>

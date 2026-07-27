@@ -17,6 +17,7 @@ import {
   AuditOutlined,
   DeleteOutlined,
   EditOutlined,
+  ExportOutlined,
   KeyOutlined,
   LockOutlined,
   PlusOutlined,
@@ -25,6 +26,7 @@ import {
   TeamOutlined,
   UnlockOutlined,
 } from "@ant-design/icons";
+import { saveDownload } from "@/utils/download";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
 import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
@@ -32,6 +34,8 @@ import {
   useCreateAdminRole,
   useCreateAdminUser,
   useDeleteAdminRole,
+  useDeleteAdminUser,
+  useExportUsers,
   useSendPasswordReset,
   useSetUserActivation,
   useSetUserLock,
@@ -62,6 +66,7 @@ const permission = {
   users: "FoodSafe.SystemAdmin.Users",
   createUser: "FoodSafe.SystemAdmin.Users.Create",
   editUser: "FoodSafe.SystemAdmin.Users.Edit",
+  deleteUser: "FoodSafe.SystemAdmin.Users.Delete",
   activateUser: "FoodSafe.SystemAdmin.Users.Activate",
   lockUser: "FoodSafe.SystemAdmin.Users.Lock",
   resetPassword: "FoodSafe.SystemAdmin.Users.ResetPassword",
@@ -126,6 +131,8 @@ export default function IdentityAdministrationPage() {
 
   const createUser = useCreateAdminUser();
   const updateUser = useUpdateAdminUser();
+  const deleteUser = useDeleteAdminUser();
+  const exportUsers = useExportUsers();
   const setActivation = useSetUserActivation();
   const setLock = useSetUserLock();
   const sendReset = useSendPasswordReset();
@@ -136,9 +143,7 @@ export default function IdentityAdministrationPage() {
 
   const showSuccess = (content: string) => void message.success(content);
   const showError = () =>
-    void message.error(
-      "Không thể thực hiện thao tác. Vui lòng kiểm tra lại.",
-    );
+    void message.error("Không thể thực hiện thao tác. Vui lòng kiểm tra lại.");
 
   const roleSelectOptions = useMemo(
     () =>
@@ -226,6 +231,18 @@ export default function IdentityAdministrationPage() {
               }))
             }
           />
+          <Button
+            icon={<ExportOutlined />}
+            loading={exportUsers.isPending}
+            onClick={() =>
+              exportUsers.mutate(userFilter, {
+                onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                onError: () => void message.error("Không thể xuất danh sách."),
+              })
+            }
+          >
+            Xuất Excel
+          </Button>
           {hasPermission(permission.createUser) && (
             <Button
               type="primary"
@@ -405,6 +422,34 @@ export default function IdentityAdministrationPage() {
                           onClick={() => setActivityUser(user)}
                         />
                       </Tooltip>
+                    )}
+                    {hasPermission(permission.deleteUser) && !isSelf && (
+                      <Popconfirm
+                        title={`Xóa tài khoản "${user.fullName}"?`}
+                        description="Thao tác này không thể hoàn tác."
+                        okText="Xóa"
+                        okButtonProps={{ danger: true }}
+                        cancelText="Hủy"
+                        onConfirm={() =>
+                          deleteUser.mutate(user.id, {
+                            onSuccess: () => showSuccess("Đã xóa tài khoản"),
+                            onError: showError,
+                          })
+                        }
+                      >
+                        <Tooltip title="Xóa tài khoản">
+                          <Button
+                            size="small"
+                            danger
+                            aria-label={`Xóa ${user.fullName}`}
+                            icon={<DeleteOutlined />}
+                            loading={
+                              deleteUser.isPending &&
+                              deleteUser.variables === user.id
+                            }
+                          />
+                        </Tooltip>
+                      </Popconfirm>
                     )}
                   </Space>
                 );

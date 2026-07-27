@@ -11,8 +11,6 @@ describe("SystemSettingsPage", () => {
     expect(screen.getByText("8 ký tự")).toBeInTheDocument();
     expect(screen.getByText("90 ngày")).toBeInTheDocument();
     expect(screen.getByText("Cấp độ 2")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Nghị định 85\/2016\/NĐ-CP/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Nghị định 85\/2016\/NĐ-CP/)).toBeInTheDocument();
   });
 });

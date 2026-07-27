@@ -11,8 +11,7 @@ import type {
 } from "../types/dataIntegration.types";
 
 function download(data: Blob, contentDisposition?: string): FileDownload {
-  const encoded =
-    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const encoded = contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
   const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
   return {
     blob: data,
@@ -40,8 +39,7 @@ export const dataIntegrationApi = {
   toggleEndpointStatus: (id: string) =>
     api.post(`/v1/app/api-endpoint/${id}/toggle-status`),
 
-  deleteEndpoint: (id: string) =>
-    api.delete(`/v1/app/api-endpoint/${id}`),
+  deleteEndpoint: (id: string) => api.delete(`/v1/app/api-endpoint/${id}`),
 
   getCallLogs: (params: ApiCallLogFilter) =>
     api
@@ -49,9 +47,7 @@ export const dataIntegrationApi = {
       .then((r) => r.data),
 
   getCallLog: (id: string) =>
-    api
-      .get<ApiCallLogDetail>(`/v1/app/api-call-log/${id}`)
-      .then((r) => r.data),
+    api.get<ApiCallLogDetail>(`/v1/app/api-call-log/${id}`).then((r) => r.data),
 
   exportEndpoints: async (filter: ApiEndpointFilter): Promise<FileDownload> => {
     const response = await api.get<Blob>("/v1/app/api-endpoint/excel/export", {

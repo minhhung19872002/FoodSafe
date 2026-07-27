@@ -10,8 +10,6 @@ describe("PublicCfsCertificateLookupPage", () => {
       screen.getByText("Tra cứu chứng nhận lưu hành tự do (CFS)"),
     ).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Số CFS")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Tra cứu/ }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Tra cứu/ })).toBeInTheDocument();
   });
 });

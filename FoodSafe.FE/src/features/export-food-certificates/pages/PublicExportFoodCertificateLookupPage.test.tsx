@@ -9,11 +9,7 @@ describe("PublicExportFoodCertificateLookupPage", () => {
     expect(
       screen.getByText("Tra cứu giấy chứng nhận xuất khẩu thực phẩm"),
     ).toBeInTheDocument();
-    expect(
-      screen.getByPlaceholderText("Số GCN xuất khẩu"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Tra cứu/ }),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Số GCN xuất khẩu")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Tra cứu/ })).toBeInTheDocument();
   });
 });

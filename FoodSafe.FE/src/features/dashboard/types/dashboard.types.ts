@@ -1,3 +1,8 @@
+export interface DashboardStatsFilter {
+  year?: number;
+  organizationId?: string;
+}
+
 export interface LicenseBreakdownItem {
   category: string;
   count: number;

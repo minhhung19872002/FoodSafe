@@ -26,7 +26,11 @@ import {
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { saveDownload } from "@/utils/download";
-import { useApiEndpoints, useApiCallLogs, useApiCallLogDetail } from "../api/dataIntegrationQueries";
+import {
+  useApiEndpoints,
+  useApiCallLogs,
+  useApiCallLogDetail,
+} from "../api/dataIntegrationQueries";
 import {
   useCreateEndpoint,
   useUpdateEndpoint,
@@ -131,14 +135,18 @@ function EndpointsTab() {
                 size="small"
                 icon={<EditOutlined />}
                 onClick={() => openEdit(record)}
-              >Sửa</Button>
+              >
+                Sửa
+              </Button>
               <Popconfirm
                 title={
                   record.status === API_ENDPOINT_STATUS.Active
                     ? "Tắt endpoint?"
                     : "Bật endpoint?"
                 }
-                okText={record.status === API_ENDPOINT_STATUS.Active ? "Tắt" : "Bật"}
+                okText={
+                  record.status === API_ENDPOINT_STATUS.Active ? "Tắt" : "Bật"
+                }
                 cancelText="Hủy"
                 onConfirm={() =>
                   toggleMut.mutate(record.id, {
@@ -147,7 +155,9 @@ function EndpointsTab() {
                   })
                 }
               >
-                <Button size="small" icon={<SwapOutlined />}>Bật/Tắt</Button>
+                <Button size="small" icon={<SwapOutlined />}>
+                  Bật/Tắt
+                </Button>
               </Popconfirm>
             </>
           )}
@@ -163,7 +173,9 @@ function EndpointsTab() {
                 })
               }
             >
-              <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
+              <Button size="small" danger icon={<DeleteOutlined />}>
+                Xóa
+              </Button>
             </Popconfirm>
           )}
         </Space>
@@ -266,7 +278,11 @@ function EndpointsTab() {
             }
           }}
         >
-          <Form.Item name="name" label="Tên endpoint" rules={[{ required: true }]}>
+          <Form.Item
+            name="name"
+            label="Tên endpoint"
+            rules={[{ required: true }]}
+          >
             <Input />
           </Form.Item>
           <Form.Item name="url" label="URL" rules={[{ required: true }]}>
@@ -353,11 +369,7 @@ function CallHistoryTab() {
       dataIndex: "responseStatusCode",
       width: 70,
       render: (v?: number) =>
-        v ? (
-          <Tag color={v < 400 ? "green" : "red"}>{v}</Tag>
-        ) : (
-          "—"
-        ),
+        v ? <Tag color={v < 400 ? "green" : "red"}>{v}</Tag> : "—",
     },
     {
       title: "Thời gian",
@@ -473,9 +485,7 @@ function CallHistoryTab() {
           <Descriptions column={2} size="small" bordered>
             <Descriptions.Item label="Hướng">
               <Tag
-                color={
-                  API_CALL_DIRECTION_CONFIG[detail.data.direction]?.color
-                }
+                color={API_CALL_DIRECTION_CONFIG[detail.data.direction]?.color}
               >
                 {API_CALL_DIRECTION_CONFIG[detail.data.direction]?.label}
               </Tag>

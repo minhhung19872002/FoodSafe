@@ -29,4 +29,5 @@ public class MonthlyCount
 public class StatisticsFilterDto
 {
     public int? Year { get; set; }
+    public Guid? OrganizationId { get; set; }
 }

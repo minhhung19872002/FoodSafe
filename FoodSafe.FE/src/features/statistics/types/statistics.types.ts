@@ -23,4 +23,5 @@ export interface StatisticsDto {
 
 export interface StatisticsFilter {
   year?: number;
+  organizationId?: string;
 }

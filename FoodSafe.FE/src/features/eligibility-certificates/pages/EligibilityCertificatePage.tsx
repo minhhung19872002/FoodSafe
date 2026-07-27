@@ -7,15 +7,7 @@ import {
   PlusOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import {
-  App,
-  Button,
-  Input,
-  Popconfirm,
-  Select,
-  Space,
-  Table,
-} from "antd";
+import { App, Button, Input, Popconfirm, Select, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ProductRegistrationAttachmentsModal } from "@/features/product-registrations/components/ProductRegistrationAttachmentsModal";

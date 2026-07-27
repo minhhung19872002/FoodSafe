@@ -1,11 +1,4 @@
-import {
-  Card,
-  Col,
-  Descriptions,
-  Row,
-  Tag,
-  Typography,
-} from "antd";
+import { Card, Col, Descriptions, Row, Tag, Typography } from "antd";
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -32,18 +25,14 @@ export default function SystemSettingsPage() {
             size="small"
           >
             <Descriptions column={1} size="small">
-              <Descriptions.Item label="Phiên bản">
-                1.0.0
-              </Descriptions.Item>
+              <Descriptions.Item label="Phiên bản">1.0.0</Descriptions.Item>
               <Descriptions.Item label="Framework">
                 .NET 9 + ABP Framework 9
               </Descriptions.Item>
               <Descriptions.Item label="Cơ sở dữ liệu">
                 PostgreSQL 15
               </Descriptions.Item>
-              <Descriptions.Item label="Cache">
-                Redis 7
-              </Descriptions.Item>
+              <Descriptions.Item label="Cache">Redis 7</Descriptions.Item>
               <Descriptions.Item label="Lưu trữ file">
                 MinIO (S3 compatible)
               </Descriptions.Item>
@@ -142,9 +131,7 @@ export default function SystemSettingsPage() {
               <Descriptions.Item label="HTTPS">
                 <Tag color="green">Bắt buộc (Production)</Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="TLS">
-                1.2+
-              </Descriptions.Item>
+              <Descriptions.Item label="TLS">1.2+</Descriptions.Item>
             </Descriptions>
           </Card>
         </Col>
@@ -154,8 +141,8 @@ export default function SystemSettingsPage() {
         type="secondary"
         style={{ display: "block", marginTop: 16, fontSize: 12 }}
       >
-        Các cấu hình bảo mật được thiết lập theo Nghị định 85/2016/NĐ-CP.
-        Liên hệ quản trị viên hệ thống để thay đổi cấu hình.
+        Các cấu hình bảo mật được thiết lập theo Nghị định 85/2016/NĐ-CP. Liên
+        hệ quản trị viên hệ thống để thay đổi cấu hình.
       </Typography.Text>
     </div>
   );

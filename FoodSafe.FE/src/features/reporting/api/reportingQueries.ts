@@ -20,8 +20,7 @@ export const ndtpKeys = {
 export const atpKeys = {
   all: ["atp-work-reports"] as const,
   lists: () => [...atpKeys.all, "list"] as const,
-  list: (filter: AtpWorkReportFilter) =>
-    [...atpKeys.lists(), filter] as const,
+  list: (filter: AtpWorkReportFilter) => [...atpKeys.lists(), filter] as const,
   detail: (id: string) => [...atpKeys.all, "detail", id] as const,
 };
 

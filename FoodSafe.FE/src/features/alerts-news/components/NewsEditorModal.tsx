@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { Checkbox, Form, Input, Modal, Select } from "antd";
 import { useAlertOptions } from "../api/alertsNewsQueries";
-import type {
-  AtpNews,
-  CreateUpdateNewsInput,
-} from "../types/alertsNews.types";
+import type { AtpNews, CreateUpdateNewsInput } from "../types/alertsNews.types";
 
 interface FormValues {
   title: string;
@@ -106,7 +103,9 @@ export function NewsEditorModal(props: Props) {
           <Input.TextArea rows={6} />
         </Form.Item>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+        >
           <Form.Item name="category" label="Chuyên mục">
             <Select
               allowClear
@@ -126,9 +125,7 @@ export function NewsEditorModal(props: Props) {
             onSearch={setAlertSearch}
             options={(alertOptions ?? []).map((a) => ({
               value: a.id,
-              label: a.alertNumber
-                ? `${a.alertNumber} — ${a.title}`
-                : a.title,
+              label: a.alertNumber ? `${a.alertNumber} — ${a.title}` : a.title,
             }))}
             placeholder="Tìm và chọn cảnh báo liên quan"
           />

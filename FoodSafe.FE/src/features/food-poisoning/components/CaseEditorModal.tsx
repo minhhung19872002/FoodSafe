@@ -113,15 +113,12 @@ export function CaseEditorModal(props: Props) {
             victimAddress: values.victimAddress?.trim() || undefined,
             suspectedFood: values.suspectedFood?.trim() || undefined,
             foodSource: values.foodSource?.trim() || undefined,
-            foodPreparationDate: values.foodPreparationDate?.format(
-              "YYYY-MM-DD",
-            ),
+            foodPreparationDate:
+              values.foodPreparationDate?.format("YYYY-MM-DD"),
             symptoms: values.symptoms?.trim() || undefined,
             onsetTime: values.onsetTime?.toISOString(),
             medicalFacility: values.medicalFacility?.trim() || undefined,
-            treatmentStartDate: values.treatmentStartDate?.format(
-              "YYYY-MM-DD",
-            ),
+            treatmentStartDate: values.treatmentStartDate?.format("YYYY-MM-DD"),
             treatmentResult: values.treatmentResult,
             reporterName: values.reporterName?.trim() || undefined,
             reporterPhone: values.reporterPhone?.trim() || undefined,

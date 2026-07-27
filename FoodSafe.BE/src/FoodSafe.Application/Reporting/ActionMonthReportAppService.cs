@@ -216,17 +216,17 @@ public class ActionMonthReportAppService : ApplicationService
 
     private static ReportErrorNotificationDto ToNotificationDto(
         ActionMonthReportErrorNotification n) => new()
-    {
-        Id = n.Id,
-        FromOrganizationId = n.FromOrganizationId,
-        ErrorFields = n.ErrorFields,
-        CorrectionDetails = n.CorrectionDetails,
-        Status = n.Status,
-        Response = n.Response,
-        RespondedAt = n.RespondedAt,
-        RespondedById = n.RespondedById,
-        CreationTime = n.CreationTime
-    };
+        {
+            Id = n.Id,
+            FromOrganizationId = n.FromOrganizationId,
+            ErrorFields = n.ErrorFields,
+            CorrectionDetails = n.CorrectionDetails,
+            Status = n.Status,
+            Response = n.Response,
+            RespondedAt = n.RespondedAt,
+            RespondedById = n.RespondedById,
+            CreationTime = n.CreationTime
+        };
 
     private async Task<IQueryable<ActionMonthReport>> ScopedQueryAsync(DataScopeOperation operation)
     {

@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import { Modal, Form, InputNumber, Input, Divider, Row, Col } from "antd";
-import { useUpdateNdtpStats, useUpdateNdtpNarrative } from "../api/reportingMutations";
+import {
+  useUpdateNdtpStats,
+  useUpdateNdtpNarrative,
+} from "../api/reportingMutations";
 import type { NdtpReport } from "../types/reporting.types";
 
 interface Props {

@@ -137,8 +137,7 @@ function CasesTab() {
       title: "Giới tính",
       dataIndex: "victimGender",
       width: 80,
-      render: (v?: VictimGender) =>
-        v ? VICTIM_GENDER_CONFIG[v]?.label : "—",
+      render: (v?: VictimGender) => (v ? VICTIM_GENDER_CONFIG[v]?.label : "—"),
     },
     {
       title: "Tuổi",
@@ -230,7 +229,9 @@ function CasesTab() {
                 message.success("Đã xóa.");
               }}
             >
-              <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
+              <Button size="small" danger icon={<DeleteOutlined />}>
+                Xóa
+              </Button>
             </Popconfirm>
           )}
         </Space>
@@ -387,8 +388,7 @@ function IncidentsTab() {
       title: "Ngày xảy ra",
       dataIndex: "occurrenceDate",
       width: 130,
-      render: (v?: string) =>
-        v ? dayjs(v).format("DD/MM/YYYY HH:mm") : "—",
+      render: (v?: string) => (v ? dayjs(v).format("DD/MM/YYYY HH:mm") : "—"),
     },
     {
       title: "Địa điểm",
@@ -413,8 +413,7 @@ function IncidentsTab() {
       dataIndex: "deathCount",
       width: 80,
       align: "right",
-      render: (v: number) =>
-        v > 0 ? <Tag color="red">{v}</Tag> : v,
+      render: (v: number) => (v > 0 ? <Tag color="red">{v}</Tag> : v),
     },
     {
       title: "Số ca",
@@ -505,7 +504,9 @@ function IncidentsTab() {
                 message.success("Đã xóa.");
               }}
             >
-              <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
+              <Button size="small" danger icon={<DeleteOutlined />}>
+                Xóa
+              </Button>
             </Popconfirm>
           )}
         </Space>
@@ -678,32 +679,32 @@ export default function FoodPoisoningPage() {
   return (
     <div className="page-container">
       <h1 className="page-header-title">Ngộ độc thực phẩm</h1>
-    <Card>
-      <Tabs
-        items={[
-          {
-            key: "cases",
-            label: "Ca ngộ độc nhỏ lẻ",
-            children: <CasesTab />,
-          },
-          {
-            key: "incidents",
-            label: "Vụ ngộ độc thực phẩm",
-            children: <IncidentsTab />,
-          },
-          {
-            key: "map",
-            label: (
-              <span>
-                <EnvironmentOutlined style={{ marginRight: 4 }} />
-                Bản đồ
-              </span>
-            ),
-            children: <MapTab />,
-          },
-        ]}
-      />
-    </Card>
+      <Card>
+        <Tabs
+          items={[
+            {
+              key: "cases",
+              label: "Ca ngộ độc nhỏ lẻ",
+              children: <CasesTab />,
+            },
+            {
+              key: "incidents",
+              label: "Vụ ngộ độc thực phẩm",
+              children: <IncidentsTab />,
+            },
+            {
+              key: "map",
+              label: (
+                <span>
+                  <EnvironmentOutlined style={{ marginRight: 4 }} />
+                  Bản đồ
+                </span>
+              ),
+              children: <MapTab />,
+            },
+          ]}
+        />
+      </Card>
     </div>
   );
 }

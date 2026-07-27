@@ -45,7 +45,10 @@ const alertReportSchema = z.object({
   reporterEmail: z
     .string()
     .optional()
-    .refine((v) => !v || z.string().email().safeParse(v).success, "Email không hợp lệ"),
+    .refine(
+      (v) => !v || z.string().email().safeParse(v).success,
+      "Email không hợp lệ",
+    ),
   captchaToken: z.string().min(1, "Vui lòng hoàn thành xác minh CAPTCHA"),
 });
 
@@ -258,7 +261,10 @@ export default function CitizenAlertReportPage() {
               name="affectedArea"
               control={control}
               render={({ field }) => (
-                <Input {...field} placeholder="Ví dụ: Xã An Sinh, huyện Đông Triều" />
+                <Input
+                  {...field}
+                  placeholder="Ví dụ: Xã An Sinh, huyện Đông Triều"
+                />
               )}
             />
           </Form.Item>
@@ -280,7 +286,10 @@ export default function CitizenAlertReportPage() {
             />
           </Form.Item>
 
-          <Typography.Title level={5} style={{ marginTop: 8, marginBottom: 16 }}>
+          <Typography.Title
+            level={5}
+            style={{ marginTop: 8, marginBottom: 16 }}
+          >
             Thông tin người phản ánh (không bắt buộc)
           </Typography.Title>
 

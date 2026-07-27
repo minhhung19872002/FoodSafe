@@ -32,8 +32,7 @@ export function useUpdateEndpoint() {
 export function useToggleEndpointStatus() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      dataIntegrationApi.toggleEndpointStatus(id),
+    mutationFn: (id: string) => dataIntegrationApi.toggleEndpointStatus(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["api-endpoints"] }),
   });
 }

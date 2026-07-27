@@ -11,9 +11,7 @@ function mockApis() {
   server.use(
     http.get("*/api/v1/app/geographic-catalog/provinces", () =>
       HttpResponse.json({
-        items: [
-          { id: "p-1", code: "22", name: "Quảng Ninh", isActive: true },
-        ],
+        items: [{ id: "p-1", code: "22", name: "Quảng Ninh", isActive: true }],
       }),
     ),
     http.get("*/api/v1/app/geographic-catalog/districts", () =>
@@ -44,48 +42,56 @@ function renderPage() {
 describe("GeographicCatalogPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders geographic catalog with province data", { timeout: 15000 }, async () => {
-    mockApis();
-    useAuthStore.getState().setAuth({
-      id: "user-1",
-      name: "Admin",
-      email: "admin@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["Admin"],
-      permissions: ["FoodSafe.GeographicCatalogs.Manage"],
-    });
+  it(
+    "renders geographic catalog with province data",
+    { timeout: 15000 },
+    async () => {
+      mockApis();
+      useAuthStore.getState().setAuth({
+        id: "user-1",
+        name: "Admin",
+        email: "admin@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["Admin"],
+        permissions: ["FoodSafe.GeographicCatalogs.Manage"],
+      });
 
-    renderPage();
+      renderPage();
 
-    expect(screen.getByText("Địa bàn hành chính")).toBeInTheDocument();
-    expect(
-      await screen.findByText("Quảng Ninh", {}, { timeout: 10000 }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Thêm tỉnh\/thành phố/ }),
-    ).toBeInTheDocument();
-  });
+      expect(screen.getByText("Địa bàn hành chính")).toBeInTheDocument();
+      expect(
+        await screen.findByText("Quảng Ninh", {}, { timeout: 10000 }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Thêm tỉnh\/thành phố/ }),
+      ).toBeInTheDocument();
+    },
+  );
 
-  it("hides manage buttons for read-only user", { timeout: 15000 }, async () => {
-    mockApis();
-    useAuthStore.getState().setAuth({
-      id: "viewer",
-      name: "Viewer",
-      email: "viewer@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["Viewer"],
-      permissions: [],
-    });
+  it(
+    "hides manage buttons for read-only user",
+    { timeout: 15000 },
+    async () => {
+      mockApis();
+      useAuthStore.getState().setAuth({
+        id: "viewer",
+        name: "Viewer",
+        email: "viewer@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["Viewer"],
+        permissions: [],
+      });
 
-    renderPage();
+      renderPage();
 
-    expect(
-      await screen.findByText("Quảng Ninh", {}, { timeout: 10000 }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /Thêm tỉnh\/thành phố/ }),
-    ).not.toBeInTheDocument();
-  });
+      expect(
+        await screen.findByText("Quảng Ninh", {}, { timeout: 10000 }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Thêm tỉnh\/thành phố/ }),
+      ).not.toBeInTheDocument();
+    },
+  );
 });

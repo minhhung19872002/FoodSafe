@@ -81,8 +81,7 @@ export const VICTIM_GENDER = {
   Female: 2,
   Other: 3,
 } as const;
-export type VictimGender =
-  (typeof VICTIM_GENDER)[keyof typeof VICTIM_GENDER];
+export type VictimGender = (typeof VICTIM_GENDER)[keyof typeof VICTIM_GENDER];
 
 export const VICTIM_GENDER_CONFIG: Record<VictimGender, { label: string }> = {
   [VICTIM_GENDER.Male]: { label: "Nam" },

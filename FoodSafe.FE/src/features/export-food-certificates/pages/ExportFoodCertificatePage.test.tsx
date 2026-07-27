@@ -59,44 +59,48 @@ function mockData() {
 describe("ExportFoodCertificatePage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders page heading and write actions for a full-permission user", { timeout: 15000 }, async () => {
-    mockData();
-    useAuthStore.getState().setAuth({
-      id: "user",
-      name: "User",
-      email: "user@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["ProvinceStaff"],
-      permissions: [
-        "FoodSafe.Licensing.ExportCertificates.View",
-        "FoodSafe.Licensing.ExportCertificates.Create",
-        "FoodSafe.Licensing.ExportCertificates.Edit",
-        "FoodSafe.Licensing.ExportCertificates.Delete",
-      ],
-    });
+  it(
+    "renders page heading and write actions for a full-permission user",
+    { timeout: 15000 },
+    async () => {
+      mockData();
+      useAuthStore.getState().setAuth({
+        id: "user",
+        name: "User",
+        email: "user@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["ProvinceStaff"],
+        permissions: [
+          "FoodSafe.Licensing.ExportCertificates.View",
+          "FoodSafe.Licensing.ExportCertificates.Create",
+          "FoodSafe.Licensing.ExportCertificates.Edit",
+          "FoodSafe.Licensing.ExportCertificates.Delete",
+        ],
+      });
 
-    renderPage();
+      renderPage();
 
-    expect(
-      await screen.findByText("Giấy chứng nhận xuất khẩu thực phẩm"),
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("XK-001", {}, { timeout: 5000 }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Thêm GCN XK/ }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Sửa XK-001" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Thu hồi XK-001" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Xóa XK-001" }),
-    ).toBeInTheDocument();
-  });
+      expect(
+        await screen.findByText("Giấy chứng nhận xuất khẩu thực phẩm"),
+      ).toBeInTheDocument();
+      expect(
+        await screen.findByText("XK-001", {}, { timeout: 5000 }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Thêm GCN XK/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Sửa XK-001" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Thu hồi XK-001" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Xóa XK-001" }),
+      ).toBeInTheDocument();
+    },
+  );
 
   it("hides write actions for a read-only user but keeps file attachment button", async () => {
     mockData();

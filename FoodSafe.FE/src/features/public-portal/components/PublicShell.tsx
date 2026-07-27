@@ -80,7 +80,12 @@ export function PublicShell({ children }: PublicShellProps) {
       >
         <Typography.Title
           level={5}
-          style={{ color: "#fff", margin: 0, whiteSpace: "nowrap", flexShrink: 0 }}
+          style={{
+            color: "#fff",
+            margin: 0,
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
         >
           Cổng thông tin An toàn thực phẩm Quảng Ninh
         </Typography.Title>

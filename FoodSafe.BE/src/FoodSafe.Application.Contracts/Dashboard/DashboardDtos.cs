@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace FoodSafe.Application.Contracts.Dashboard;
 
+public sealed class DashboardStatsFilter
+{
+    public int? Year { get; set; }
+    public Guid? OrganizationId { get; set; }
+}
+
 public class DashboardStatsDto
 {
     public int TotalBusinesses { get; set; }

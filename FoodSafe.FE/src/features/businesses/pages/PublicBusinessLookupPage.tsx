@@ -78,7 +78,8 @@ export default function PublicBusinessLookupPage() {
             </Descriptions.Item>
             <Descriptions.Item label="Trạng thái">
               {(() => {
-                const cfg = BUSINESS_STATUS_CONFIG[result.status as BusinessStatus];
+                const cfg =
+                  BUSINESS_STATUS_CONFIG[result.status as BusinessStatus];
                 return cfg ? (
                   <Tag color={cfg.color}>{cfg.label}</Tag>
                 ) : (

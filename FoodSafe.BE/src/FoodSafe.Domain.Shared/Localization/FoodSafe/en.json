@@ -89,6 +89,7 @@
     "Permission:SystemAdmin.Users.Lock": "Lock or unlock users",
     "Permission:SystemAdmin.Users.ResetPassword": "Send password setup/reset links",
     "Permission:SystemAdmin.Users.ViewActivity": "View user activity",
+    "Permission:SystemAdmin.Users.Delete": "Delete users",
     "Permission:SystemAdmin.Roles": "View roles",
     "Permission:SystemAdmin.Roles.Create": "Create roles",
     "Permission:SystemAdmin.Roles.Edit": "Edit roles",

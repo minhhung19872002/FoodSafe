@@ -41,4 +41,20 @@ export const organizationApi = {
   async delete(id: string): Promise<void> {
     await api.delete(`${endpoint}/${id}`);
   },
+
+  async exportExcel(
+    filter: OrganizationFilter,
+  ): Promise<{ blob: Blob; fileName: string }> {
+    const response = await api.get(`${endpoint}/excel`, {
+      params: filter,
+      responseType: "blob",
+    });
+    const disposition = response.headers["content-disposition"] as
+      string | undefined;
+    const match = disposition?.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    const fileName = match
+      ? match[1].replace(/['"]/g, "")
+      : "danh-sach-don-vi.xlsx";
+    return { blob: response.data as Blob, fileName };
+  },
 };

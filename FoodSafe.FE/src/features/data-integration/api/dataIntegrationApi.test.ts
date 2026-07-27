@@ -43,6 +43,8 @@ describe("dataIntegrationApi", () => {
 
     await dataIntegrationApi.toggleEndpointStatus("abc-123");
 
-    expect(requestedPath).toBe("/api/v1/app/api-endpoint/abc-123/toggle-status");
+    expect(requestedPath).toBe(
+      "/api/v1/app/api-endpoint/abc-123/toggle-status",
+    );
   });
 });

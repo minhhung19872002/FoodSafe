@@ -39,8 +39,7 @@ export const API_AUTH_TYPE = {
   BearerToken: 3,
   BasicAuth: 4,
 } as const;
-export type ApiAuthType =
-  (typeof API_AUTH_TYPE)[keyof typeof API_AUTH_TYPE];
+export type ApiAuthType = (typeof API_AUTH_TYPE)[keyof typeof API_AUTH_TYPE];
 
 export const API_AUTH_TYPE_LABELS: Record<ApiAuthType, string> = {
   [API_AUTH_TYPE.None]: "Không xác thực",

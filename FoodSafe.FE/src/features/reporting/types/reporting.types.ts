@@ -5,8 +5,7 @@ export const REPORT_STATUS = {
   Returned: 4,
   Completed: 5,
 } as const;
-export type ReportStatus =
-  (typeof REPORT_STATUS)[keyof typeof REPORT_STATUS];
+export type ReportStatus = (typeof REPORT_STATUS)[keyof typeof REPORT_STATUS];
 
 export const REPORT_STATUS_CONFIG: Record<
   ReportStatus,

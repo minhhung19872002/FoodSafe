@@ -31,8 +31,13 @@ export function useCreateAlert() {
 export function useUpdateAlert() {
   const refresh = useAlertRefresh();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: CreateUpdateAlertInput }) =>
-      alertApi.update(id, input),
+    mutationFn: ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: CreateUpdateAlertInput;
+    }) => alertApi.update(id, input),
     onSuccess: refresh,
   });
 }

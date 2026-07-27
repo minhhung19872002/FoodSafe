@@ -30,7 +30,8 @@ type FormData = z.infer<typeof schema>;
 
 export default function CompleteInitialPasswordChangePage() {
   const location = useLocation();
-  const userName = (location.state as { userName?: string } | null)?.userName ?? "";
+  const userName =
+    (location.state as { userName?: string } | null)?.userName ?? "";
   const mutation = useCompleteInitialPasswordChange();
   const {
     control,

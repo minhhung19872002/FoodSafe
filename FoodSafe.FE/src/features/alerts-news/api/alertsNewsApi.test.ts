@@ -58,9 +58,7 @@ describe("alertsNewsApi", () => {
     server.use(
       http.get("*/api/v1/app/atp-news/alert-options", ({ request }) => {
         requestedPath = new URL(request.url).pathname;
-        return HttpResponse.json([
-          { id: "alert-1", title: "Cảnh báo 01" },
-        ]);
+        return HttpResponse.json([{ id: "alert-1", title: "Cảnh báo 01" }]);
       }),
     );
 

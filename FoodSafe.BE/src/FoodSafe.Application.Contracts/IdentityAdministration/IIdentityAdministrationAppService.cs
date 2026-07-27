@@ -12,6 +12,7 @@ public interface IIdentityAdministrationAppService : IApplicationService
     Task SetUserActivationAsync(Guid id, SetUserActivationDto input);
     Task SetUserLockAsync(Guid id, SetUserLockDto input);
     Task SendPasswordResetAsync(Guid id);
+    Task DeleteUserAsync(Guid id);
     Task<PagedResultDto<UserActivityDto>> GetUserActivityAsync(
         Guid id,
         PagedAndSortedResultRequestDto input);

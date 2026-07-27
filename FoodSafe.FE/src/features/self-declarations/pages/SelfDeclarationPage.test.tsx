@@ -59,42 +59,46 @@ function mockData() {
 describe("SelfDeclarationPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders scoped declarations, expiry warning and write actions", { timeout: 15000 }, async () => {
-    mockData();
-    useAuthStore.getState().setAuth({
-      id: "licensing-user",
-      name: "Licensing user",
-      email: "licensing@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["ProvinceStaff"],
-      permissions: [
-        "FoodSafe.BusinessManagement.SelfDeclarations.View",
-        "FoodSafe.BusinessManagement.SelfDeclarations.Create",
-        "FoodSafe.BusinessManagement.SelfDeclarations.Edit",
-        "FoodSafe.BusinessManagement.SelfDeclarations.Delete",
-      ],
-    });
+  it(
+    "renders scoped declarations, expiry warning and write actions",
+    { timeout: 15000 },
+    async () => {
+      mockData();
+      useAuthStore.getState().setAuth({
+        id: "licensing-user",
+        name: "Licensing user",
+        email: "licensing@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["ProvinceStaff"],
+        permissions: [
+          "FoodSafe.BusinessManagement.SelfDeclarations.View",
+          "FoodSafe.BusinessManagement.SelfDeclarations.Create",
+          "FoodSafe.BusinessManagement.SelfDeclarations.Edit",
+          "FoodSafe.BusinessManagement.SelfDeclarations.Delete",
+        ],
+      });
 
-    renderPage();
+      renderPage();
 
-    expect(
-      await screen.findByRole("heading", {
-        name: "Hồ sơ tự công bố",
-      }),
-    ).toBeInTheDocument();
-    expect(await screen.findByText("TCB-001")).toBeInTheDocument();
-    expect(screen.getByText("Còn 16 ngày")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Thêm hồ sơ/ }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Sửa TCB-001" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Thu hồi TCB-001" }),
-    ).toBeInTheDocument();
-  });
+      expect(
+        await screen.findByRole("heading", {
+          name: "Hồ sơ tự công bố",
+        }),
+      ).toBeInTheDocument();
+      expect(await screen.findByText("TCB-001")).toBeInTheDocument();
+      expect(screen.getByText("Còn 16 ngày")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Thêm hồ sơ/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Sửa TCB-001" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Thu hồi TCB-001" }),
+      ).toBeInTheDocument();
+    },
+  );
 
   it("hides all mutation controls for a read-only user", async () => {
     mockData();
