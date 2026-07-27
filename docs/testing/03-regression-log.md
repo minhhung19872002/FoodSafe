@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — P1-1i business detail drawer related-record tabs (FR-19-11..16)
 
 - **Cause**: New browser-acceptance evidence for the per-business detail tabs (doc 77 P1-1i, doc 73 was IMPLEMENTED_NOT_VERIFIED partial/structural). New spec only (`FoodSafe.FE/e2e/business-detail-tabs.spec.ts`) — no product code changed.
-- **Commit**: `<pending>`
+- **Commit**: `2d010a8`
 - **Affected features**: F-011 business management (detail drawer related-record aggregation). No product/shared code changed → no invalidation of other features.
 - **Retest level**: 2 (single-feature runtime retest)
 - **Result**: PASSED — 1/1 green (2.9s), real backend, no interception.
