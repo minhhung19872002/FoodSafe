@@ -125,12 +125,13 @@ export const inspectionResultApi = {
     notes?: string,
   ) {
     await api.post(
-      `${resultEndpoint}/${resultId}/violations/${violationId}/remedied`,
+      `${resultEndpoint}/mark-violation-remedied`,
       { notes },
+      { params: { resultId, violationId } },
     );
   },
   async setFollowUpResult(id: string, result: FollowUpResult) {
-    await api.post(`${resultEndpoint}/${id}/follow-up-result`, { result });
+    await api.post(`${resultEndpoint}/${id}/set-follow-up-result`, { result });
   },
   async exportExcel(
     filter: InspectionResultFilter,

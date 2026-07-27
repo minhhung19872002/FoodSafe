@@ -11,6 +11,9 @@ import type {
   NdtpReport,
   NdtpReportFilter,
   PagedResult,
+  ReportErrorNotification,
+  CreateReportErrorNotificationInput,
+  RespondReportErrorNotificationInput,
   ReturnReportInput,
   UpdateActionMonthReportNarrativeInput,
   UpdateActionMonthReportStatsInput,
@@ -31,6 +34,56 @@ function download(data: Blob, contentDisposition?: string): FileDownload {
   return {
     blob: data,
     fileName: decodeURIComponent(encoded ?? plain ?? "download"),
+  };
+}
+
+function errorNotificationApi(endpoint: string) {
+  return {
+    async listErrorNotifications(
+      id: string,
+    ): Promise<ReportErrorNotification[]> {
+      return (
+        await api.get<ReportErrorNotification[]>(
+          `${endpoint}/${id}/error-notifications`,
+        )
+      ).data;
+    },
+    async addErrorNotification(
+      id: string,
+      input: CreateReportErrorNotificationInput,
+    ): Promise<ReportErrorNotification> {
+      return (
+        await api.post<ReportErrorNotification>(
+          `${endpoint}/${id}/error-notification`,
+          input,
+        )
+      ).data;
+    },
+    async acknowledgeErrorNotification(
+      id: string,
+      notificationId: string,
+    ): Promise<ReportErrorNotification> {
+      return (
+        await api.post<ReportErrorNotification>(
+          `${endpoint}/${id}/acknowledge-error-notification`,
+          null,
+          { params: { notificationId } },
+        )
+      ).data;
+    },
+    async respondErrorNotification(
+      id: string,
+      notificationId: string,
+      input: RespondReportErrorNotificationInput,
+    ): Promise<ReportErrorNotification> {
+      return (
+        await api.post<ReportErrorNotification>(
+          `${endpoint}/${id}/respond-error-notification`,
+          input,
+          { params: { notificationId } },
+        )
+      ).data;
+    },
   };
 }
 
@@ -89,6 +142,7 @@ export const ndtpReportApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+  ...errorNotificationApi(ndtpEndpoint),
 };
 
 export const atpWorkReportApi = {
@@ -154,6 +208,7 @@ export const atpWorkReportApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+  ...errorNotificationApi(atpEndpoint),
 };
 
 export const actionMonthReportApi = {
@@ -224,4 +279,5 @@ export const actionMonthReportApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+  ...errorNotificationApi(amrEndpoint),
 };

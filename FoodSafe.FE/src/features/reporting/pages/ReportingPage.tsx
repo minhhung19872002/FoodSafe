@@ -24,6 +24,7 @@ import {
   RollbackOutlined,
   FileDoneOutlined,
   ExportOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -31,6 +32,7 @@ import { saveDownload } from "@/utils/download";
 import { NdtpReportEditorModal } from "../components/NdtpReportEditorModal";
 import { AtpWorkReportEditorModal } from "../components/AtpWorkReportEditorModal";
 import { ActionMonthReportEditorModal } from "../components/ActionMonthReportEditorModal";
+import ReportErrorNotificationsModal from "../components/ReportErrorNotificationsModal";
 import {
   useNdtpReports,
   useAtpWorkReports,
@@ -107,6 +109,9 @@ function NdtpTab() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editReport, setEditReport] = useState<NdtpReport | null>(null);
   const [returnOpen, setReturnOpen] = useState<string | null>(null);
+  const [errorNotifReport, setErrorNotifReport] = useState<NdtpReport | null>(
+    null,
+  );
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
@@ -245,6 +250,13 @@ function NdtpTab() {
                 <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
               </Popconfirm>
             )}
+          {record.status !== REPORT_STATUS.Draft && (
+            <Button
+              size="small"
+              icon={<WarningOutlined />}
+              onClick={() => setErrorNotifReport(record)}
+            >Sai sót</Button>
+          )}
         </Space>
       ),
     },
@@ -255,6 +267,15 @@ function NdtpTab() {
       <NdtpReportEditorModal
         report={editReport}
         onClose={() => setEditReport(null)}
+      />
+      <ReportErrorNotificationsModal
+        kind="ndtp"
+        reportId={errorNotifReport?.id ?? null}
+        reportStatus={errorNotifReport?.status ?? null}
+        open={errorNotifReport !== null}
+        onClose={() => setErrorNotifReport(null)}
+        canReport={hasPermission("FoodSafe.Reporting.NdtpReports.Submit")}
+        canRespond={hasPermission("FoodSafe.Reporting.NdtpReports.Verify")}
       />
       <Space style={{ marginBottom: 16 }} wrap>
         <Select
@@ -427,6 +448,8 @@ function AtpWorkTab() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editReport, setEditReport] = useState<AtpWorkReport | null>(null);
   const [returnOpen, setReturnOpen] = useState<string | null>(null);
+  const [errorNotifReport, setErrorNotifReport] =
+    useState<AtpWorkReport | null>(null);
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
@@ -570,6 +593,13 @@ function AtpWorkTab() {
                 <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
               </Popconfirm>
             )}
+          {record.status !== REPORT_STATUS.Draft && (
+            <Button
+              size="small"
+              icon={<WarningOutlined />}
+              onClick={() => setErrorNotifReport(record)}
+            >Sai sót</Button>
+          )}
         </Space>
       ),
     },
@@ -580,6 +610,15 @@ function AtpWorkTab() {
       <AtpWorkReportEditorModal
         report={editReport}
         onClose={() => setEditReport(null)}
+      />
+      <ReportErrorNotificationsModal
+        kind="atp"
+        reportId={errorNotifReport?.id ?? null}
+        reportStatus={errorNotifReport?.status ?? null}
+        open={errorNotifReport !== null}
+        onClose={() => setErrorNotifReport(null)}
+        canReport={hasPermission("FoodSafe.Reporting.AtpWorkReports.Submit")}
+        canRespond={hasPermission("FoodSafe.Reporting.AtpWorkReports.Verify")}
       />
       <Space style={{ marginBottom: 16 }} wrap>
         <Select
@@ -781,6 +820,8 @@ function ActionMonthTab() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editReport, setEditReport] = useState<ActionMonthReport | null>(null);
   const [returnOpen, setReturnOpen] = useState<string | null>(null);
+  const [errorNotifReport, setErrorNotifReport] =
+    useState<ActionMonthReport | null>(null);
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
@@ -937,6 +978,13 @@ function ActionMonthTab() {
                 <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
               </Popconfirm>
             )}
+          {record.status !== REPORT_STATUS.Draft && (
+            <Button
+              size="small"
+              icon={<WarningOutlined />}
+              onClick={() => setErrorNotifReport(record)}
+            >Sai sót</Button>
+          )}
         </Space>
       ),
     },
@@ -947,6 +995,19 @@ function ActionMonthTab() {
       <ActionMonthReportEditorModal
         report={editReport}
         onClose={() => setEditReport(null)}
+      />
+      <ReportErrorNotificationsModal
+        kind="amr"
+        reportId={errorNotifReport?.id ?? null}
+        reportStatus={errorNotifReport?.status ?? null}
+        open={errorNotifReport !== null}
+        onClose={() => setErrorNotifReport(null)}
+        canReport={hasPermission(
+          "FoodSafe.Reporting.ActionMonthReports.Submit",
+        )}
+        canRespond={hasPermission(
+          "FoodSafe.Reporting.ActionMonthReports.Verify",
+        )}
       />
       <Space style={{ marginBottom: 16 }} wrap>
         <Select

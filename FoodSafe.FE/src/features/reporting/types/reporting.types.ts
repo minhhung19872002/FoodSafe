@@ -262,3 +262,50 @@ export interface FileDownload {
   blob: Blob;
   fileName: string;
 }
+
+export const REPORT_ERROR_NOTIFICATION_STATUS = {
+  Pending: 1,
+  Acknowledged: 2,
+  Corrected: 3,
+} as const;
+export type ReportErrorNotificationStatus =
+  (typeof REPORT_ERROR_NOTIFICATION_STATUS)[keyof typeof REPORT_ERROR_NOTIFICATION_STATUS];
+
+export const REPORT_ERROR_NOTIFICATION_STATUS_CONFIG: Record<
+  ReportErrorNotificationStatus,
+  { color: string; label: string }
+> = {
+  [REPORT_ERROR_NOTIFICATION_STATUS.Pending]: {
+    color: "gold",
+    label: "Chờ xử lý",
+  },
+  [REPORT_ERROR_NOTIFICATION_STATUS.Acknowledged]: {
+    color: "blue",
+    label: "Đã tiếp nhận",
+  },
+  [REPORT_ERROR_NOTIFICATION_STATUS.Corrected]: {
+    color: "green",
+    label: "Đã phản hồi",
+  },
+};
+
+export interface ReportErrorNotification {
+  id: string;
+  fromOrganizationId: string;
+  errorFields: string;
+  correctionDetails: string;
+  status: ReportErrorNotificationStatus;
+  response: string | null;
+  respondedAt: string | null;
+  respondedById: string | null;
+  creationTime: string;
+}
+
+export interface CreateReportErrorNotificationInput {
+  errorFields: string;
+  correctionDetails: string;
+}
+
+export interface RespondReportErrorNotificationInput {
+  response: string;
+}

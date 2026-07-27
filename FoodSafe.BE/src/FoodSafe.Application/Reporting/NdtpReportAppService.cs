@@ -143,6 +143,86 @@ public class NdtpReportAppService : ApplicationService
         await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
     }
 
+    public async Task<List<ReportErrorNotificationDto>> GetErrorNotificationsAsync(Guid id)
+    {
+        var entity = await GetScopedWithNotificationsAsync(id, DataScopeOperation.View);
+        return entity.ErrorNotifications
+            .OrderByDescending(n => n.CreationTime)
+            .Select(ToNotificationDto)
+            .ToList();
+    }
+
+    [Authorize(FoodSafePermissions.Reporting.NdtpReports.Submit)]
+    public async Task<ReportErrorNotificationDto> AddErrorNotificationAsync(
+        Guid id, CreateReportErrorNotificationDto input)
+    {
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.Edit, _cancellationTokens.Token);
+        var entity = await GetScopedWithNotificationsAsync(id, DataScopeOperation.Edit);
+
+        var notificationId = GuidGenerator.Create();
+        entity.AddErrorNotification(
+            notificationId,
+            scope.HomeOrganizationId ?? entity.OrganizationId,
+            input.ErrorFields,
+            input.CorrectionDetails,
+            CurrentUser.GetId());
+
+        await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return ToNotificationDto(
+            entity.ErrorNotifications.First(n => n.Id == notificationId));
+    }
+
+    [Authorize(FoodSafePermissions.Reporting.NdtpReports.Verify)]
+    public async Task<ReportErrorNotificationDto> AcknowledgeErrorNotificationAsync(
+        Guid id, Guid notificationId)
+    {
+        var entity = await GetScopedWithNotificationsAsync(id, DataScopeOperation.Edit);
+        var notification = entity.ErrorNotifications.FirstOrDefault(n => n.Id == notificationId)
+            ?? throw new BusinessException(FoodSafeDomainErrorCodes.Report.NotFound);
+        notification.Acknowledge();
+        await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return ToNotificationDto(notification);
+    }
+
+    [Authorize(FoodSafePermissions.Reporting.NdtpReports.Verify)]
+    public async Task<ReportErrorNotificationDto> RespondErrorNotificationAsync(
+        Guid id, Guid notificationId, RespondReportErrorNotificationDto input)
+    {
+        var entity = await GetScopedWithNotificationsAsync(id, DataScopeOperation.Edit);
+        var notification = entity.ErrorNotifications.FirstOrDefault(n => n.Id == notificationId)
+            ?? throw new BusinessException(FoodSafeDomainErrorCodes.Report.NotFound);
+        notification.MarkCorrected(CurrentUser.GetId(), input.Response);
+        await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return ToNotificationDto(notification);
+    }
+
+    private async Task<NdtpReport> GetScopedWithNotificationsAsync(
+        Guid id, DataScopeOperation operation)
+    {
+        var scope = await _dataScopeProvider.GetAsync(operation, _cancellationTokens.Token);
+        var query = (await _reports.WithDetailsAsync(x => x.ErrorNotifications))
+            .Where(x => x.Id == id);
+        if (!scope.HasGlobalAccess)
+            query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
+        return await AsyncExecuter.FirstOrDefaultAsync(query, _cancellationTokens.Token)
+               ?? throw new BusinessException(FoodSafeDomainErrorCodes.Report.NotFound);
+    }
+
+    private static ReportErrorNotificationDto ToNotificationDto(
+        NdtpReportErrorNotification n) => new()
+    {
+        Id = n.Id,
+        FromOrganizationId = n.FromOrganizationId,
+        ErrorFields = n.ErrorFields,
+        CorrectionDetails = n.CorrectionDetails,
+        Status = n.Status,
+        Response = n.Response,
+        RespondedAt = n.RespondedAt,
+        RespondedById = n.RespondedById,
+        CreationTime = n.CreationTime
+    };
+
     private async Task<IQueryable<NdtpReport>> ScopedQueryAsync(DataScopeOperation operation)
     {
         var scope = await _dataScopeProvider.GetAsync(operation, _cancellationTokens.Token);

@@ -71,7 +71,7 @@ public sealed class NdtpReport : BaseReport
         Guid id, Guid fromOrganizationId, string errorFields,
         string correctionDetails, Guid creatorId)
     {
-        if (Status != ReportStatus.Verified)
+        if (Status != ReportStatus.Submitted && Status != ReportStatus.Verified)
             throw new BusinessException(FoodSafeDomainErrorCodes.Report.CanOnlyNotifyErrorOnVerified);
 
         _errorNotifications.Add(new NdtpReportErrorNotification(

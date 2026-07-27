@@ -77,3 +77,26 @@ export function useActionMonthReport(id: string) {
     enabled: !!id,
   });
 }
+
+const reportApis = {
+  ndtp: ndtpReportApi,
+  atp: atpWorkReportApi,
+  amr: actionMonthReportApi,
+} as const;
+export type ReportKind = keyof typeof reportApis;
+
+export const errorNotificationKeys = {
+  list: (kind: ReportKind, id: string) =>
+    [`${kind}-reports`, "error-notifications", id] as const,
+};
+
+export function useReportErrorNotifications(
+  kind: ReportKind,
+  id: string | null,
+) {
+  return useQuery({
+    queryKey: errorNotificationKeys.list(kind, id ?? ""),
+    queryFn: () => reportApis[kind].listErrorNotifications(id as string),
+    enabled: !!id,
+  });
+}

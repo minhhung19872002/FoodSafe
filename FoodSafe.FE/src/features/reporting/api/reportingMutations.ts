@@ -19,6 +19,8 @@ import type {
   UpdateActionMonthReportStatsInput,
   UpdateActionMonthReportNarrativeInput,
   ReturnReportInput,
+  CreateReportErrorNotificationInput,
+  RespondReportErrorNotificationInput,
 } from "../types/reporting.types";
 
 function useNdtpRefresh() {
@@ -312,5 +314,69 @@ export function useExportActionMonthReports() {
   return useMutation({
     mutationFn: (filter: ActionMonthReportFilter) =>
       actionMonthReportApi.exportExcel(filter),
+  });
+}
+
+const reportApis = {
+  ndtp: ndtpReportApi,
+  atp: atpWorkReportApi,
+  amr: actionMonthReportApi,
+} as const;
+type ReportKind = keyof typeof reportApis;
+
+function useErrorNotificationRefresh(kind: ReportKind, id: string | null) {
+  const qc = useQueryClient();
+  return () =>
+    qc.invalidateQueries({
+      queryKey: [`${kind}-reports`, "error-notifications", id ?? ""],
+    });
+}
+
+export function useAddReportErrorNotification(
+  kind: ReportKind,
+  id: string | null,
+) {
+  const refresh = useErrorNotificationRefresh(kind, id);
+  return useMutation({
+    mutationFn: (input: CreateReportErrorNotificationInput) =>
+      reportApis[kind].addErrorNotification(id as string, input),
+    onSuccess: refresh,
+  });
+}
+
+export function useAcknowledgeReportErrorNotification(
+  kind: ReportKind,
+  id: string | null,
+) {
+  const refresh = useErrorNotificationRefresh(kind, id);
+  return useMutation({
+    mutationFn: (notificationId: string) =>
+      reportApis[kind].acknowledgeErrorNotification(
+        id as string,
+        notificationId,
+      ),
+    onSuccess: refresh,
+  });
+}
+
+export function useRespondReportErrorNotification(
+  kind: ReportKind,
+  id: string | null,
+) {
+  const refresh = useErrorNotificationRefresh(kind, id);
+  return useMutation({
+    mutationFn: ({
+      notificationId,
+      input,
+    }: {
+      notificationId: string;
+      input: RespondReportErrorNotificationInput;
+    }) =>
+      reportApis[kind].respondErrorNotification(
+        id as string,
+        notificationId,
+        input,
+      ),
+    onSuccess: refresh,
   });
 }

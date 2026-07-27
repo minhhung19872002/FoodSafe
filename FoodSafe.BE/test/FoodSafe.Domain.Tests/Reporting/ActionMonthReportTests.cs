@@ -111,10 +111,18 @@ public sealed class ActionMonthReportTests
     }
 
     [Fact]
-    public void AddErrorNotification_Rejects_Submitted()
+    public void AddErrorNotification_Works_When_Submitted()
     {
         var r = CreateDraft();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
+        r.AddErrorNotification(Guid.NewGuid(), Guid.NewGuid(), "f", "d", Guid.NewGuid());
+        r.ErrorNotifications.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void AddErrorNotification_Rejects_Draft()
+    {
+        var r = CreateDraft();
         Should.Throw<BusinessException>(() =>
             r.AddErrorNotification(Guid.NewGuid(), Guid.NewGuid(), "f", "d", Guid.NewGuid()));
     }

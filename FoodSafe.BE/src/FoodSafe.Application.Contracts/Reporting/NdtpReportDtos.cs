@@ -97,7 +97,16 @@ public class ReportErrorNotificationDto : EntityDto<Guid>
 public class CreateReportErrorNotificationDto
 {
     [Required]
+    [StringLength(1000)]
     public string ErrorFields { get; set; } = string.Empty;
     [Required]
+    [StringLength(4000)]
     public string CorrectionDetails { get; set; } = string.Empty;
+}
+
+public class RespondReportErrorNotificationDto
+{
+    [Required]
+    [StringLength(4000)]
+    public string Response { get; set; } = string.Empty;
 }
