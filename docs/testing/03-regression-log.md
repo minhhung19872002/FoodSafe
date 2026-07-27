@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — P1-1j dashboard report-compliance widget (FR-39-03 ATTP work, FR-39-04 Action-Month)
+
+- **Cause**: New browser-acceptance evidence for the dashboard per-unit report-compliance widget (doc 77 P1-1j; doc 73 was IMPLEMENTED_NOT_VERIFIED). New spec only (`FoodSafe.FE/e2e/dashboard-report-compliance.spec.ts`) — no product code changed.
+- **Commit**: `<pending>`
+- **Affected features**: F-022 reporting (dashboard compliance aggregation) + F-021 dashboard. No product/shared code changed → no invalidation of other features.
+- **Retest level**: 2 (single-feature runtime retest)
+- **Result**: PASSED — 1/1 green (2.6s), real backend, no interception.
+- **Details**: Proves the widget's per-org counts are driven by **real report state**, not hard-coded. (1) A per-org **baseline** is read from the real `GET /api/v1/app/dashboard/report-compliance?Year=2026`. (2) One **ATTP work report** (`POST /api/v1/app/atp-work-report` → Draft, then `/{id}/submit` → Submitted) and one **Action-Month report** (`/api/v1/app/action-month-report`) are seeded + submitted for the officer's org through the **real workflow** (session cookie + antiforgery → ASP.NET Core → domain state machine → PostgreSQL). (3) Re-reading compliance shows the seeded org at **baseline+1** for both `atpWorkSubmitted` (FR-39-03) and `actionMonthSubmitted` (FR-39-04). (4) The real `/dashboard` widget "Tình hình nộp báo cáo" renders that org's row with **BC công tác ATTP = 1/2** and **BC Tháng hành động = 1/1**, and both **persist across `page.reload()`**. Teardown walks the real workflow back (Return → ReturnToDraft → Delete); DB check confirms 0 live non-draft 2026 residue. The baseline-delta assertion keeps the test re-run-safe regardless of residue. FR-39-09 (chart PNG download) remains open. Log: `compliance-run3.log`. Stack unchanged (no rebuild).
+
 ### 2026-07-28 — P1-1i business detail drawer related-record tabs (FR-19-11..16)
 
 - **Cause**: New browser-acceptance evidence for the per-business detail tabs (doc 77 P1-1i, doc 73 was IMPLEMENTED_NOT_VERIFIED partial/structural). New spec only (`FoodSafe.FE/e2e/business-detail-tabs.spec.ts`) — no product code changed.
