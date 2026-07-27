@@ -462,6 +462,10 @@ public class FoodSafeHttpApiHostModule : AbpModule
             options.Password.RequireNonAlphanumeric = true;
         });
 
+        context.Services.AddScoped<
+            IPasswordValidator<Volo.Abp.Identity.IdentityUser>,
+            Security.MaximumPasswordLengthValidator>();
+
         context.Services.Configure<DataProtectionTokenProviderOptions>(options =>
         {
             options.TokenLifespan = TimeSpan.FromHours(8);

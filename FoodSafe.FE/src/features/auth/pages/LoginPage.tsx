@@ -5,6 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import {
+  brandingLoginBackgroundUrl,
+  brandingLogoUrl,
+  useBranding,
+} from "@/hooks/useBranding";
 import { useLogin } from "../api/authMutations";
 import { CaptchaWidget } from "../components/CaptchaWidget";
 
@@ -19,6 +24,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const loginMutation = useLogin();
   const navigate = useNavigate();
+  const branding = useBranding();
 
   const {
     control,
@@ -52,17 +58,27 @@ export default function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #1677ff 0%, #0958d9 100%)",
+        background: branding.data?.hasLoginBackground
+          ? `url(${brandingLoginBackgroundUrl}) center/cover no-repeat`
+          : "linear-gradient(135deg, #1677ff 0%, #0958d9 100%)",
       }}
     >
       <Card style={{ width: 400, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}>
         <Space direction="vertical" size={24} style={{ width: "100%" }}>
           <div style={{ textAlign: "center" }}>
+            {branding.data?.hasLogo && (
+              <img
+                src={brandingLogoUrl}
+                alt="Logo"
+                style={{ maxHeight: 64, marginBottom: 8 }}
+              />
+            )}
             <Typography.Title level={3} style={{ margin: 0, color: "#1677ff" }}>
               FoodSafe
             </Typography.Title>
             <Typography.Text type="secondary">
-              Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh
+              {branding.data?.homepageDescription ??
+                "Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh"}
             </Typography.Text>
           </div>
 

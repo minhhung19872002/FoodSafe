@@ -42,6 +42,7 @@ import {
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
+import { brandingLogoUrl, useBranding } from "@/hooks/useBranding";
 import {
   SIDEBAR_WIDTH,
   SIDEBAR_COLLAPSED_WIDTH,
@@ -322,6 +323,7 @@ export function AppLayout() {
   const user = useAuthStore((s) => s.user);
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const logoutMutation = useLogout();
+  const branding = useBranding();
 
   const menuItems = useMemo(
     () => buildMenuItems(hasPermission),
@@ -364,9 +366,17 @@ export function AppLayout() {
   const sidebarContent = (
     <>
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">
-          <SettingOutlined />
-        </div>
+        {branding.data?.hasLogo ? (
+          <img
+            src={brandingLogoUrl}
+            alt="Logo"
+            style={{ height: 32, objectFit: "contain" }}
+          />
+        ) : (
+          <div className="sidebar-logo-icon">
+            <SettingOutlined />
+          </div>
+        )}
         <div className="sidebar-logo-text">
           <span className="sidebar-logo-title">FoodSafe</span>
           <span className="sidebar-logo-subtitle">An toàn thực phẩm</span>
