@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — P1-1h risk-analysis publish (FR-36-07) + public portal exposure (FR-36-08)
 
 - **Cause**: New browser-acceptance evidence for two IMPLEMENTED_NOT_VERIFIED risk-analysis requirements (doc 77 P1-1h). New spec only (`FoodSafe.FE/e2e/risk-analysis-publish.spec.ts`) — no product code changed.
-- **Commit**: `<pending>`
+- **Commit**: `720d01a`
 - **Affected features**: F-018 risk-analysis (publish state machine) + public portal `/tin-tuc` risk tab. No product/shared code changed → no invalidation of other features.
 - **Retest level**: 2 (single-feature runtime retest)
 - **Result**: PASSED — 1/1 green (4.1s), real backend, no interception.
