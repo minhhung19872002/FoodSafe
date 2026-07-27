@@ -190,6 +190,14 @@ jobs:
           cat src/FoodSafe.EntityFrameworkCore/Migrations/*CiDriftProbe.cs || true
           git diff -- src/FoodSafe.EntityFrameworkCore/Migrations/FoodSafeDbContextModelSnapshot.cs | head -200
 
+      - name: Backup and restore rehearsal (B-2 disaster-recovery gate)
+        env:
+          # Target the job's PostgreSQL service container directly (no Compose here).
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+          POSTGRES_DB: FoodSafe_CI
+          POSTGRES_USER: foodsafe_ci
+        run: bash scripts/rehearse-restore.sh
+
   supply-chain:
     name: Dependency and container gates
     runs-on: ubuntu-latest

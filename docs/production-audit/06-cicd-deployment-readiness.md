@@ -375,14 +375,13 @@ The `scripts/load-test.k6.js` file provides an NFR validation tool (30 VU, p95 <
 
 > "The repository contains the procedure but not evidence of a completed production-like backup/restore rehearsal. Production readiness therefore remains blocked until that exercise is performed and recorded."
 
-This is an honest self-assessment. The actual state:
+This was an honest self-assessment at audit time. **Updated 2026-07-27 (B-2 RESOLVED):**
 
-- No backup scripts exist in the `scripts/` directory
-- No scheduled backup container or cron job in any Compose file
-- No backup monitoring/alerting configuration
-- Only manual `pg_dump` and `mc mirror` commands documented
+- `scripts/backup-database.sh`, `scripts/restore-database.sh`, and `scripts/rehearse-restore.sh` now provide automated backup, restore, and a verify-by-restore rehearsal.
+- The rehearsal is **gated in CI** — `.github/workflows/ci.yml` → `database` job → "Backup and restore rehearsal (B-2 disaster-recovery gate)" runs a real dump→restore→verify roundtrip against a freshly migrated PostgreSQL on every push/PR, so the scripts cannot silently rot.
+- A production-like rehearsal was performed and recorded (restore point `20260727131218_AddApiCallLogDataType`; migration/table/row-count match; RTO ~5–8 s). See `docs/40-disaster-recovery-guide.md` → "Rehearsal evidence (recorded)".
 
-The documented RTO (4 hours) and RPO (24 hours) have no automation enforcing them. A production incident requiring database restoration would depend entirely on operators following documented procedures and having independently scheduled backups.
+Still outstanding as **operational** tasks (not code blockers): a scheduled backup container/cron, the >24 h staleness alert, and MinIO object-restore in the production rehearsal. The RTO/RPO objectives now have automation proving they are achievable; scheduling/alerting must be provisioned on the production host.
 
 ---
 

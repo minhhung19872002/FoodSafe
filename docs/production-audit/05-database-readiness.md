@@ -159,25 +159,19 @@ All list endpoints use ABP's `PageBy(input)` via `PagedAndSortedResultRequestDto
 
 ## 4. Reliability
 
-### 4.1 CRITICAL: No automated backup scripts
+### 4.1 ~~CRITICAL: No automated backup scripts~~ — RESOLVED (B-2, 2026-07-27)
 
-**Issue:** The disaster recovery guide (`docs/40-disaster-recovery-guide.md`) documents a `pg_dump` procedure, but no automated backup script, cron job, or scheduler configuration exists anywhere in the repository.
+**Original issue:** The disaster recovery guide (`docs/40-disaster-recovery-guide.md`) documented a `pg_dump` procedure, but no automated backup script, cron job, or scheduler configuration existed, and there was no rehearsal evidence.
 
-The `scripts/` directory contains only:
-- `Test-NpmVulnerabilities.ps1`
-- `Test-NuGetVulnerabilities.ps1`
-- `load-test.k6.js`
+**Resolution (commit on `fix/production-blockers`):**
+- `scripts/backup-database.sh` — automated `pg_dump` custom-format backup with SHA-256 checksum, optional GPG encryption (`BACKUP_GPG_RECIPIENT`), retention pruning (`BACKUP_RETENTION_DAYS`, default 30), optional off-host MinIO mirror (`MINIO_MIRROR_TARGET`), and a JSON manifest record per run (start/end, restore point, size, checksum, outcome). Non-zero exit + `outcome=FAILED` on any error so a scheduler can alert on staleness > 24 h.
+- `scripts/restore-database.sh` — restores into a **fresh** database with `pg_restore --exit-on-error --single-transaction --no-owner --no-privileges`; refuses to overwrite the live database unless `FORCE=1`; auto-decrypts `*.gpg`.
+- `scripts/rehearse-restore.sh` — automated backup→restore→verify rehearsal. Uses `pg_export_snapshot()` + `SET TRANSACTION SNAPSHOT` so the dump and the source verification read one consistent point in time (defeats the concurrent-writer race that otherwise makes row-count checks flaky). Verifies EF migration id, `public` table count, and exact business row counts; reports RTO.
+- **CI gate:** `.github/workflows/ci.yml` → `database` job runs the rehearsal against a freshly migrated PostgreSQL on every push/PR (`PG_CONTAINER` mode).
 
-`docker-compose.prod.yml` adds TLS mounts for the nginx frontend but adds no backup automation or WAL archival configuration.
+**Recorded rehearsal (2026-07-27):** restore point `20260727131218_AddApiCallLogDataType`; migration history, table count (86), and business row counts all matched against the consistent snapshot; zero restore errors; RTO ~5–8 s (objective < 4 h). Evidence table in `docs/40-disaster-recovery-guide.md` → "Rehearsal evidence (recorded)".
 
-**The DR guide itself records this as a production blocker** (line 92–94):
-> "The repository contains the procedure but not evidence of a completed production-like backup/restore rehearsal. Production readiness therefore remains blocked until that exercise is performed and recorded."
-
-**Required before production:**
-1. Automated `pg_dump` script with encryption, transfer to off-host storage, and retention enforcement
-2. MinIO `mc mirror` or equivalent replication script
-3. Alert when last verified backup is older than 24 hours
-4. Documented and rehearsed restore procedure with measured RTO/RPO
+**Remaining (operational, not a code blocker):** schedule `backup-database.sh` ≤ 24 h in production, wire the >24 h staleness alert, add MinIO object-restore to the production rehearsal, and run the full application-level acceptance checks on production hardware before first release.
 
 ### 4.2 CRITICAL: Destructive orphan-DELETE in migration Up()
 
@@ -299,7 +293,7 @@ An operator following `.env.example` to build a production environment file woul
 
 | ID | Title | Location | Impact |
 |---|---|---|---|
-| C-1 | No automated backup scripts or backup rehearsal evidence | `docs/40-disaster-recovery-guide.md`; `scripts/`; `docker-compose.prod.yml` | Data loss on failure; production readiness blocked per DR guide |
+| ~~C-1~~ RESOLVED (B-2, 2026-07-27) | Automated backup/restore scripts + CI-gated rehearsal added (`scripts/backup-database.sh`, `restore-database.sh`, `rehearse-restore.sh`); rehearsal evidence recorded in the DR guide | `scripts/*.sh`; `.github/workflows/ci.yml`; `docs/40-disaster-recovery-guide.md` | Was: data loss on failure. Now mitigated; scheduling/alerting remains an operational task |
 | C-2 | Destructive orphan-DELETE in migration Up() | `20260727104254_AddMissingForeignKeys.cs` lines 79–104 | Silent permanent data loss if run on non-fresh database |
 
 ### HIGH
@@ -351,8 +345,8 @@ An operator following `.env.example` to build a production environment file woul
 |---|---|---|
 | P3 (optional) | Rename `ExtraProperties` → `extra_properties` on `di_api_call_logs` / `di_api_endpoints` for naming consistency (no runtime impact) | Backend |
 | P0 | Add `WHERE is_deleted = FALSE` filter to all six certificate/registration unique indexes | Backend |
-| P0 | Create automated PostgreSQL backup script with encryption, off-host transfer, and 24-hour alert | DevOps |
-| P0 | Rehearse full backup restore in an isolated environment; record RTO/RPO measurements | DevOps |
+| ~~P0~~ DONE (B-2) | ~~Create automated PostgreSQL backup script~~ → `scripts/backup-database.sh` (encryption, off-host MinIO mirror, retention, manifest). Remaining: schedule ≤ 24 h + wire staleness alert (operational). | DevOps |
+| ~~P0~~ DONE (B-2) | ~~Rehearse full backup restore; record RTO/RPO~~ → `scripts/rehearse-restore.sh`, CI-gated; evidence recorded in DR guide (RTO ~5–8 s, RPO 0 for snapshot). Remaining: add MinIO object-restore to production rehearsal. | DevOps |
 | P0 | Audit target database for orphaned rows before running migration `20260727104254_AddMissingForeignKeys` | DBA |
 | P1 | Replace `const string TestPassword = "Admin@2026!"` with a distinct placeholder; rotate if used in production | Backend / Security |
 | P1 | Add `REDIS_PASSWORD` to `.env.example` | DevOps |

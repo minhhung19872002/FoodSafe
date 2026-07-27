@@ -46,3 +46,6 @@ prompt.txt
 
 # GCP provisioning state & generated secrets - never commit
 scripts/gcp/.secrets/
+
+# Database backup artifacts produced by scripts/backup-database.sh - never commit
+FoodSafe.BE/backups/
