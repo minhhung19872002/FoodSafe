@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — P1-3: data-sharing Share permission missing from current-user-context allowlist (FR-51)
+
+- **Cause**: Driving the outbound share through the real UI (P1-3) surfaced a functional defect. The "Chia sẻ dữ liệu" button is gated on `hasPermission("FoodSafe.DataIntegration.Share")`; the FE permission list is built by `CurrentUserContextAppService.FoodSafePermissionNames`, a hard-coded allowlist that **omitted `DataIntegration.Share`**. The permission was granted server-side (API authorized) but never reported to the FE → the button never rendered for any user, incl. admin → the share action was UI-unreachable. Fix: added `FoodSafePermissions.DataIntegration.Share` to the allowlist (one line, purely additive).
+- **Commit**: `<this commit>` (files: `CurrentUserContextAppService.cs`, `e2e/data-integration-share.spec.ts`, docs 73/77/03)
+- **Affected features**: F-019 Data Integration (share action). `CurrentUserContextAppService` is a shared authorization capability, but the change is **additive only** (adds one entry to a per-entry `IsGrantedAsync` allowlist) — it cannot remove or alter any other permission, so no other feature's gating changes. Level-3 regression scoped to DataIntegration accordingly.
+- **Retest level**: 3 (shared auth capability; additive → blast radius = DataIntegration)
+- **Result**: PASSED
+- **Details**: `e2e/data-integration-share.spec.ts` **3/3** (UI share → toast → Outbound history row → reload persistence; inactive→VN workflow error; non-admin→403 Result). Full DataIntegration e2e regression **17/17** (`credentials` 6 + `verification` + `data-integration` + `share` 3). No API interception. api image rebuilt + restarted (healthy) before verification.
+
 ### 2026-07-28 — P0-2: outbound API credential encryption + auth-header injection (FR-50/51)
 
 - **Cause**: New capability — partner endpoints store an outbound-auth secret (API key / bearer / Basic), encrypted at rest via ABP `IStringEncryptionService`, injected onto the outgoing share request at send time and never returned to the client or persisted to the call log. Touched `ApiEndpoint` aggregate (+`EncryptedCredential`/`HasCredential`/`SetEncryptedCredential`), EF mapping (`credential_value`), `ApiEndpointDto`/`CreateUpdateApiEndpointDto`, `ApiEndpointAppService`, `DataSharingAppService.ApplyAuthHeader`, FE editor + detail drawer, and migration `20260727183552_AddApiEndpointCredential`.

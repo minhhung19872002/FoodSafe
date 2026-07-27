@@ -156,9 +156,10 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 |---|---|---|---|---|
 | FR-50-01..04/06 | API endpoint CRUD + toggle | `data-integration-verification` ✓, `data-integration` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-50/51 (P0-2) | Outbound-auth credential: encrypted at rest, write-only, header injection | `data-integration-credentials` ✓ (6/6) | pass | PASS_WITH_BROWSER_EVIDENCE (secret never returned; Bearer/X-Api-Key injection observed at real receiver; rotate+clear; noperm→403; UI never shows secret) — commit `3fe7325` |
+| FR-51 (P1-3) | Outbound share **via the real UI** → history row → reload persistence; workflow + permission gates | `data-integration-share` ✓ (3/3) | pass | PASS_WITH_BROWSER_EVIDENCE (UI share → toast → Outbound "Gửi" history row w/ correct DataType+URL+200/OK → persists after full reload; inactive→VN error; non-admin→403 Result). **Fixed defect**: `DataIntegration.Share` was missing from `CurrentUserContextAppService` allowlist → button never rendered for anyone; now added |
 | FR-50-05 | Partner-facing API spec/docs | — | none | IMPLEMENTED_NOT_VERIFIED |
-| FR-51..57 (-01/-03/-04) | Share-history view/detail/search (7 data types) | — | none | IMPLEMENTED_NOT_VERIFIED (viewer tables never populated) |
-| FR-51..57 (-02) | Outbound send/share (7 data types) | `data-integration-credentials` ✓ (Bearer + API-key share reach a real receiver with auth) | partial | PARTIAL — send/auth engine now operational & browser-verified via postman-echo; per-partner TT 31/2026 payload mapping still MISSING (INT-02) |
+| FR-51..57 (-01/-03/-04) | Share-history view/detail/search (7 data types) | `data-integration-share` ✓ (Alert history view browser-verified) | partial | PARTIAL — history table now populated & the Outbound-share view is browser-verified for the Alert type; per-type detail/search across the other 6 types still not exhaustively evidenced |
+| FR-51..57 (-02) | Outbound send/share (7 data types) | `data-integration-credentials` ✓ (Bearer + API-key share reach a real receiver with auth) + `data-integration-share` ✓ (UI-driven share) | partial | PARTIAL — send/auth engine operational & browser-verified (API + UI) via postman-echo; per-partner TT 31/2026 payload mapping still MISSING (INT-02) |
 | INT-01 | Ministry of Health connectivity | — | none | **MISSING** |
 | INT-02 | TT 31/2026 + NĐ 37/2026 protocol compliance | — | none | **MISSING** |
 | INT-03 | Partner accounts + API sessions | — | none | **MISSING** |

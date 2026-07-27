@@ -151,6 +151,7 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.DataIntegration.ApiEndpoints.Edit,
         FoodSafePermissions.DataIntegration.ApiEndpoints.Delete,
         FoodSafePermissions.DataIntegration.CallHistory.View,
+        FoodSafePermissions.DataIntegration.Share,
         FoodSafePermissions.DataScope.All
     ];
 
