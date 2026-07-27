@@ -37,7 +37,7 @@ The gap between "85% code-complete" and "not production-ready" is the point of t
 |---|---|---|---|---|
 | **B-1** | **Production stack cannot be built** — `docker-compose.prod.yml` references `FoodSafe.FE/Dockerfile.prod`, which does not exist. HTTPS/TLS, HSTS, and the production nginx template are therefore **entirely unverified in runtime**. | CRITICAL | doc 06; doc 07 §5 | CI/CD / Deploy |
 | **B-2** | **No database backup or restore capability** — no backup scripts, no scheduled dump, no restore rehearsal evidence. A Level-2 government system would launch with zero disaster recovery. | CRITICAL | doc 05 §Summary blocker 1; doc 06 | Database ops |
-| **B-3** | **Credentials committed to git history** (before `06656c8`) have not been rotated. History is immutable — the exposed secrets remain valid until rotated at the source. | CRITICAL | doc 00; doc 04 SEC-M-02 | Security |
+| ~~**B-3**~~ **RESOLVED (2026-07-28)** | ~~Credentials committed to git history~~ — full-history inventory proves **no real production secret was ever committed**: only commodity dev defaults (`postgres`/`postgres`), the `change-this-in-production` placeholder, a public Turnstile test key, and a Development-only seed password. Real secrets live only in the git-ignored `.env`/`appsettings.secrets.json`. Leaked defaults now **fail-fast at Production startup** (`CoreSecretsValidator`), the seed password is config-overridable, and a CI-gated scanner (`scripts/scan-committed-secrets.sh`) + 13 guard tests prevent recurrence. History rewrite deliberately not performed (nothing live to purge). | ~~CRITICAL~~ CLOSED | doc 09 (rotation & history) | Security |
 | ~~**B-4**~~ **RESOLVED (2026-07-28)** | ~~Destructive migration~~ — `20260727104254_AddMissingForeignKeys` no longer deletes: nullable dangling FKs are repaired to NULL, NOT NULL orphans abort the migration (transaction rolls back, no row touched). CI-gated regression `scripts/verify-migration-nondestructive.sh` proves both paths on real Postgres. | ~~HIGH→blocker~~ CLOSED | doc 05 §4.2 (RESOLVED) | Database ops |
 | **B-5** | **SSRF (server-side request forgery)** — `ApiEndpointAppService.TestConnectionAsync` and `DataSharingAppService` issue HTTP requests to any stored URL with no scheme or private-IP validation, returning a status oracle. Independently confirmed at source. | HIGH | doc 04 SEC-H-01; ApiEndpointAppService.cs:137-199 | Security |
 | **B-6** | **Known-vulnerable dependencies** — `AutoMapper 14.0.0` (High, GHSA-rvv3-g6hj-g44x) in every backend project; `Volo.Abp.Account.Web 9.3.7` (Moderate, GHSA-vfm5-cr22-jg3m) in the host; `react-router` (High, GHSA-qwww-vcr4-c8h2) on the frontend. | HIGH | `dotnet list package --vulnerable` (2026-07-27); doc 04 SEC-H-02 | Security |
@@ -92,6 +92,7 @@ These are verified real at `fe3dbd2` and should be treated as done:
 | Database readiness (backups, destructive migration, indexes) | [05-database-readiness.md](05-database-readiness.md) |
 | CI/CD & deployment (missing Dockerfile.prod, monitoring) | [06-cicd-deployment-readiness.md](06-cicd-deployment-readiness.md) |
 | Live runtime drill (7 services healthy, 229/6 E2E, smoke probes) | [07-runtime-production-drill.md](07-runtime-production-drill.md) |
+| Secret rotation & git-history cleanup (B-3 resolution) | [09-secret-rotation-and-history.md](09-secret-rotation-and-history.md) |
 
 ---
 
@@ -100,7 +101,7 @@ These are verified real at `fe3dbd2` and should be treated as done:
 **Phase A — Make it deployable & recoverable (unblocks GO-WITH-CONDITIONS)**
 1. Add `FoodSafe.FE/Dockerfile.prod`; build the prod stack; verify HTTPS/TLS 1.2+, HSTS, IPv6 listen in runtime. (B-1)
 2. Implement automated PostgreSQL backups + a documented, rehearsed restore. (B-2)
-3. Rotate every credential exposed in git history at the source. (B-3)
+3. ~~Rotate every credential exposed in git history at the source.~~ **DONE (B-3)** — inventory shows no real secret leaked; leaked defaults now rejected at Production startup, config-overridable seed password, CI-gated recurrence scanner. See doc 09.
 4. ~~Gate the orphan-DELETE migration behind a verified backup, or make it non-destructive / idempotent.~~ **DONE (B-4)** — made non-destructive/idempotent (repairs nullable orphans to NULL, aborts on NOT NULL orphans), CI-gated regression.
 
 **Phase B — Close the security blockers**

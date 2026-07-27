@@ -40,7 +40,11 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
     // Region: Đông Bắc Bộ (seeded by MasterCatalogDataSeedContributor)
     static readonly Guid RegionDongBacBoId = Guid.Parse("7e5ccdd0-7eab-4bd4-a10a-e8c39c302002");
 
-    const string TestPassword = "Admin@2026!";
+    // Development-only seed password (SeedAsync returns early outside Development).
+    // Overridable via configuration Seed:TestPassword / env Seed__TestPassword so the
+    // literal is a fallback, not the sole source. Kept in sync with the e2e specs'
+    // E2E_TEST_USER_PASSWORD default so real-browser login stays deterministic.
+    const string DefaultTestPassword = "Admin@2026!";
 
     private readonly IRepository<Region, Guid> _regions;
     private readonly IRepository<Province, Guid> _provinces;
@@ -236,7 +240,8 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
         {
             Name = fullName
         };
-        (await _userManager.CreateAsync(user, TestPassword)).CheckErrors();
+        var password = _configuration["Seed:TestPassword"] ?? DefaultTestPassword;
+        (await _userManager.CreateAsync(user, password)).CheckErrors();
 
         if (roleNames.Length > 0)
         {

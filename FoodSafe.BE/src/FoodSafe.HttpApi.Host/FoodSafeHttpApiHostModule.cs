@@ -94,7 +94,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureSecureTextTemplating();
         ConfigureCaptcha(context, configuration, hostingEnvironment);
         ValidateEmailDelivery(configuration, hostingEnvironment);
-        ValidateCoreSecrets(configuration);
+        ValidateCoreSecrets(configuration, hostingEnvironment);
         ValidatePostgreSqlSsl(configuration, hostingEnvironment);
         ConfigureDataProtection(context, configuration, hostingEnvironment);
         ConfigureUrls(configuration);
@@ -323,27 +323,14 @@ public class FoodSafeHttpApiHostModule : AbpModule
             hostingEnvironment.IsProduction());
     }
 
-    private static void ValidateCoreSecrets(IConfiguration configuration)
+    private static void ValidateCoreSecrets(
+        IConfiguration configuration,
+        IHostEnvironment hostingEnvironment)
     {
-        var connectionString = configuration.GetConnectionString("Default");
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            throw new InvalidOperationException(
-                "ConnectionStrings:Default is not configured. Provide it via "
-                + "environment variable ConnectionStrings__Default or "
-                + "appsettings.secrets.json (never commit credentials).");
-        }
-
-        var passPhrase = configuration["StringEncryption:DefaultPassPhrase"];
-        if (string.IsNullOrWhiteSpace(passPhrase)
-            || passPhrase == "change-this-in-production")
-        {
-            throw new InvalidOperationException(
-                "StringEncryption:DefaultPassPhrase is missing or uses the "
-                + "known default. Provide a unique value via environment "
-                + "variable StringEncryption__DefaultPassPhrase or "
-                + "appsettings.secrets.json.");
-        }
+        CoreSecretsValidator.Validate(
+            configuration.GetConnectionString("Default"),
+            configuration["StringEncryption:DefaultPassPhrase"],
+            hostingEnvironment.IsProduction());
     }
 
     private static void ValidateEmailDelivery(

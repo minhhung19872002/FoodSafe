@@ -15,7 +15,7 @@ Previous independent audit baseline: `154c9d6` (2026-07-27 17:19 +0700, "docs: c
 | Contributors | Danh Van Pham (112+2), Hung Bui (16), dependabot (15) |
 | `.env` handling | `FoodSafe.BE/.env` exists locally, **git-ignored** (verified with `git check-ignore`); tracked file is `.env.example` with placeholder values only |
 | Secrets in tracked files | `appsettings.json` connection strings/passphrase blanked at `06656c8`; local dev uses git-ignored `appsettings.secrets.json`; startup fails fast on missing/default secrets |
-| Residual risk | Credentials that existed before `06656c8` remain in git history. If the repo was ever pushed with them, they must be considered leaked and rotated. `.env` dev passwords (`FoodSafe@Dev2026!`, `Minio@Dev2026!`, `Admin@2026!`) are local-only but weak — must never be reused in production. |
+| Residual risk | **RESOLVED (B-3, 2026-07-28).** Full-history inventory ([doc 09](09-secret-rotation-and-history.md)) confirms only commodity dev defaults / placeholders were ever committed (`postgres`/`postgres`, `change-this-in-production`, a public Turnstile test key, a Development-only seed password) — **no real production secret**. The `.env` dev passwords were never tracked. Leaked defaults now fail-fast at Production startup (`CoreSecretsValidator`); recurrence blocked by `scripts/scan-committed-secrets.sh` (CI-gated). History rewrite deliberately declined — nothing live to purge. |
 
 ## 2. Commit timeline (major arcs)
 

@@ -33,7 +33,7 @@ All findings are verified against source code at HEAD `fe3dbd2`. No speculative 
 | SEC-H-01 | HIGH | Authorization / SSRF | SSRF via unvalidated data-integration endpoint URLs | See §3.1 | YES |
 | SEC-H-02 | HIGH | Dependencies | react-router-dom CSRF bypass CVE (GHSA-qwww-vcr4-c8h2) | See §3.2 | YES |
 | SEC-M-01 | MEDIUM | Authentication | CAPTCHA bypass via malformed JSON body | See §3.3 | YES |
-| SEC-M-02 | MEDIUM | Secrets | Git history contains committed dev credentials | See §3.4 | YES |
+| ~~SEC-M-02~~ RESOLVED (B-3) | MEDIUM | Secrets | Git history contains committed dev credentials — only commodity defaults; now rejected at Production startup + recurrence-guarded | See §3.4 / doc 09 | DONE |
 | SEC-M-03 | MEDIUM | Authentication | Password expiry enforced client-side only; backend APIs remain accessible | See §3.5 | YES |
 | SEC-M-04 | MEDIUM | Application | SVG allowed in branding uploads without script sanitization | See §3.6 | YES |
 | SEC-M-05 | MEDIUM | Authorization | Hangfire dashboard reachable via SSRF (chains with SEC-H-01) | See §3.7 | YES |
@@ -148,10 +148,10 @@ Credentials were committed in `appsettings.json` at commit `abe2e17` and removed
 
 **Risk:** If any production or staging database uses `postgres` as the password for the `postgres` user (a common default), those credentials are now public. CI runners and any developer who cloned the repository before the cleanup has cached copies.
 
-**Fix:**
-1. Confirm that no production or staging PostgreSQL instance uses `postgres:postgres` credentials.
-2. If the repository is on GitHub or another remote, consider using `git filter-repo` to rewrite history and force-push, or accept the credentials as permanently exposed and ensure they are never reused.
-3. The commit message for `06656c8` confirms awareness; the rotation status must be verified and documented.
+**Fix:** **RESOLVED (B-3, 2026-07-28).** A full-history inventory (see [doc 09](09-secret-rotation-and-history.md)) confirms only commodity dev defaults / placeholders were ever committed — no real production secret. Resolution:
+1. `CoreSecretsValidator` now **rejects the `postgres`/`postgres` credential and the `change-this-in-production` passphrase at Production startup** — the leaked defaults can never authenticate.
+2. History rewrite deliberately **not** performed (nothing live to purge; a rewrite would break every recorded verified-commit SHA); `git filter-repo` contingency procedure documented in doc 09.
+3. Recurrence blocked by `scripts/scan-committed-secrets.sh` (CI-gated in the supply-chain job) + 13 `CoreSecretsValidatorTests`. The Development-only seed password is now config-overridable (`Seed:TestPassword`).
 
 ---
 
@@ -369,7 +369,7 @@ The following areas were explicitly checked and found to be properly implemented
 | P0 — Must fix before launch | SEC-M-04 (SVG XSS) | 2 hours (remove SVG from allowlist) |
 | P1 — Fix before launch or in first patch | SEC-H-02 (react-router-dom CVE) | 1 hour (pin version) |
 | P1 — Fix before launch or in first patch | SEC-M-05 (Hangfire SSRF chain) | resolved by SEC-H-01 fix + 2 hours for auth hardening |
-| P2 — First hardening sprint | SEC-M-02 (git history credentials) | verify rotation; optional history rewrite |
+| ~~P2~~ DONE (B-3) | SEC-M-02 (git history credentials) | resolved — Production startup guard + recurrence scanner; history rewrite deliberately declined (doc 09) |
 | P2 — First hardening sprint | SEC-L-02 (RequireHttpsMetadata validation) | 30 min |
 | P2 — First hardening sprint | SEC-L-01 (CI DB password) | 1 hour (move to GitHub secret) |
 | P3 — Backlog | SEC-L-03 (dashboard granular permissions) | 2 hours |
