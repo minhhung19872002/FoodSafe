@@ -127,8 +127,9 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | FR-38-03/04 | Document create/update (hard-coded type list) | `documents` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE (type-catalog integration gap) |
 | FR-38-07 | Per-document print/export | — | none | IMPLEMENTED_NOT_VERIFIED |
 | FR-39-01/05..08 | Dashboard stats/charts/map | `dashboard-verification` ✓, `dashboard` ✓ (heading only) | pass | PASS_WITH_BACKEND_ONLY |
-| FR-39-02/03/04/09 | Dashboard filters, compliance widgets, chart download | — | none | IMPLEMENTED_NOT_VERIFIED |
-| FR-40-01/03/05 | Statistics: licenses / NDTP / inspection | `statistics-verification` ✓, `statistics` ✓ (heading only) | pass | PASS_WITH_BACKEND_ONLY |
+| FR-39-02 | Dashboard year filter + quick-action drill-down | `dashboard-statistics-filters` ✓ (P1-1e) | pass | PASS_WITH_BROWSER_EVIDENCE — selecting a year re-renders the report-submission card title deterministically; a quick-action card navigates to `/inspection` |
+| FR-39-03/04/09 | Dashboard compliance widgets + chart PNG download | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-40-01/03/05 | Statistics: licenses / NDTP / inspection | `statistics-verification` ✓, `statistics` ✓, `dashboard-statistics-filters` ✓ (P1-1e year-change) | pass | PASS_WITH_BROWSER_EVIDENCE — statistics year `Select` re-renders the monthly charts (titles carry the selected year); backend data path verified separately |
 | FR-40-02/04/06 | Statistics Excel exports (licenses-by-type / poisoning-by-area / inspection-summary) | `excel-exports` ✓ (P1-1a) | pass | PASS_WITH_BROWSER_EVIDENCE — all 3 report tabs export a non-empty OpenXML (PK) workbook via the real UI |
 | FR-40-07/08 | Statistics further breakdown exports | — | none | IMPLEMENTED_NOT_VERIFIED |
 

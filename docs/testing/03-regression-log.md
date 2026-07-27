@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — P1-1e: dashboard/statistics filter rendered-UI evidence (FR-39-02, FR-40)
+
+- **Cause**: Evidence-only sweep (no product code change). doc 73 had dashboard filters as `IMPLEMENTED_NOT_VERIFIED` and statistics as `PASS_WITH_BACKEND_ONLY` (heading-only browser checks). Added `e2e/dashboard-statistics-filters.spec.ts` to prove the filters drive rendered content, not just the backend.
+- **Commit**: `<this commit>` (files: `e2e/dashboard-statistics-filters.spec.ts`, docs 73/03)
+- **Affected features**: F-039 dashboard, F-040 statistics — read-only filter paths. No mutation, no shared capability → no invalidation of other features.
+- **Retest level**: 2 (per-feature runtime evidence, filter sub-flow)
+- **Result**: PASSED
+- **Details**: `e2e/dashboard-statistics-filters.spec.ts` **3/3** (5.4 s). (1) Dashboard year `Select` → the "Tình hình nộp báo cáo … — Năm YYYY" card title re-renders to the chosen year (and the old year's title disappears). (2) Quick-action card "Kế hoạch thanh tra" → real React-Router nav to `/inspection` landing on the "Thanh tra - Kiểm tra ATTP" heading. (3) Statistics year `Select` → monthly-chart titles re-render to the chosen year. Read-only, no API interception. Still `IMPLEMENTED_NOT_VERIFIED`: FR-39-03/04/09 (compliance widgets, chart PNG download).
+
 ### 2026-07-28 — P1-1a: Excel-export browser evidence for uncovered admin/catalog/statistics modules (FR-02-13, FR-03-03, FR-06-06, FR-17-05, FR-40-02/04/06)
 
 - **Cause**: Evidence-only sweep (no product code change). doc 73 listed these five exports as `IMPLEMENTED_NOT_VERIFIED` — the export UIs existed but no executed spec exercised the real download. Added `e2e/excel-exports.spec.ts` to drive each real "Xuất Excel" button and assert the browser receives a genuine, non-empty OpenXML workbook.
