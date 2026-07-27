@@ -4,8 +4,11 @@ using FoodSafe.BusinessManagement;
 using FoodSafe.FoodPoisoning;
 using FoodSafe.Inspection;
 using FoodSafe.Licensing;
+using FoodSafe.Organizations;
+using FoodSafe.Reporting;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Threading;
@@ -32,6 +35,10 @@ public class DashboardAppService : ApplicationService
     private readonly IRepository<AtpAlert, Guid> _alerts;
     private readonly IRepository<RiskAnalysis, Guid> _riskAnalyses;
     private readonly IRepository<TestingResult, Guid> _testingResults;
+    private readonly IRepository<Organization, Guid> _organizations;
+    private readonly IRepository<NdtpReport, Guid> _ndtpReports;
+    private readonly IRepository<AtpWorkReport, Guid> _atpWorkReports;
+    private readonly IRepository<ActionMonthReport, Guid> _actionMonthReports;
 
     public DashboardAppService(
         ICurrentDataScopeProvider dataScopeProvider,
@@ -49,7 +56,11 @@ public class DashboardAppService : ApplicationService
         IRepository<FoodPoisoningCase, Guid> poisoningCases,
         IRepository<AtpAlert, Guid> alerts,
         IRepository<RiskAnalysis, Guid> riskAnalyses,
-        IRepository<TestingResult, Guid> testingResults)
+        IRepository<TestingResult, Guid> testingResults,
+        IRepository<Organization, Guid> organizations,
+        IRepository<NdtpReport, Guid> ndtpReports,
+        IRepository<AtpWorkReport, Guid> atpWorkReports,
+        IRepository<ActionMonthReport, Guid> actionMonthReports)
     {
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
@@ -67,17 +78,23 @@ public class DashboardAppService : ApplicationService
         _alerts = alerts;
         _riskAnalyses = riskAnalyses;
         _testingResults = testingResults;
+        _organizations = organizations;
+        _ndtpReports = ndtpReports;
+        _atpWorkReports = atpWorkReports;
+        _actionMonthReports = actionMonthReports;
     }
 
-    public async Task<DashboardStatsDto> GetStatsAsync()
+    public async Task<DashboardStatsDto> GetStatsAsync(DashboardFilterDto input)
     {
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.View, _cancellationTokens.Token);
         var ct = _cancellationTokens.Token;
         var now = _clock.Now;
         var expiry30 = now.AddDays(30);
-        var orgIds = scope.OrganizationIds;
-        var global = scope.HasGlobalAccess;
+        var orgIds = await ResolveOrganizationIdsAsync(
+            scope, input.OrganizationId, ct);
+        var global = scope.HasGlobalAccess && !input.OrganizationId.HasValue;
+        var year = input.Year;
 
         var businessQ = (await _businesses.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
@@ -94,17 +111,21 @@ public class DashboardAppService : ApplicationService
         var adRegQ = (await _adRegistrations.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
         var planQ = (await _inspectionPlans.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.Year == year!.Value);
         var resultQ = (await _inspectionResults.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.InspectionDate.Year == year!.Value);
         var caseQ = (await _poisoningCases.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.ReportDate.Year == year!.Value);
         var alertQ = (await _alerts.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
         var riskQ = (await _riskAnalyses.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
         var testQ = (await _testingResults.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.SampleDate.Year == year!.Value);
 
         var totalBusinesses = await AsyncExecuter.CountAsync(businessQ, ct);
         var activeBusinesses = await AsyncExecuter.CountAsync(
@@ -162,5 +183,120 @@ public class DashboardAppService : ApplicationService
                 new() { Category = "Quảng cáo", Count = totalAdReg },
             ],
         };
+    }
+
+    public async Task<ListResultDto<ReportComplianceRowDto>>
+        GetReportComplianceAsync(DashboardFilterDto input)
+    {
+        var ct = _cancellationTokens.Token;
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.View, ct);
+        var year = input.Year ?? _clock.Now.Year;
+        var orgIds = await ResolveOrganizationIdsAsync(
+            scope, input.OrganizationId, ct);
+        var global = scope.HasGlobalAccess && !input.OrganizationId.HasValue;
+
+        var orgQ = (await _organizations.GetQueryableAsync())
+            .WhereIf(!global, o => orgIds.Contains(o.Id));
+        var organizations = await AsyncExecuter.ToListAsync(
+            orgQ.Where(o => o.IsActive)
+                .OrderBy(o => o.Code)
+                .Select(o => new { o.Id, o.Name }), ct);
+        var organizationIds = organizations.Select(o => o.Id).ToList();
+
+        var ndtpQ = (await _ndtpReports.GetQueryableAsync())
+            .Where(r => r.PeriodYear == year &&
+                        r.Status != ReportStatus.Draft &&
+                        organizationIds.Contains(r.OrganizationId));
+        var ndtp = await AsyncExecuter.ToListAsync(
+            ndtpQ.GroupBy(r => r.OrganizationId)
+                .Select(g => new
+                {
+                    OrganizationId = g.Key,
+                    Months = g.Select(r => r.PeriodMonth).Distinct().Count()
+                }), ct);
+
+        var atpQ = (await _atpWorkReports.GetQueryableAsync())
+            .Where(r => r.PeriodYear == year &&
+                        r.Status != ReportStatus.Draft &&
+                        organizationIds.Contains(r.OrganizationId));
+        var atp = await AsyncExecuter.ToListAsync(
+            atpQ.GroupBy(r => r.OrganizationId)
+                .Select(g => new { OrganizationId = g.Key, Count = g.Count() }),
+            ct);
+
+        var actionQ = (await _actionMonthReports.GetQueryableAsync())
+            .Where(r => r.PeriodYear == year &&
+                        r.Status != ReportStatus.Draft &&
+                        organizationIds.Contains(r.OrganizationId));
+        var action = await AsyncExecuter.ToListAsync(
+            actionQ.GroupBy(r => r.OrganizationId)
+                .Select(g => new { OrganizationId = g.Key, Count = g.Count() }),
+            ct);
+
+        var rows = organizations.Select(o => new ReportComplianceRowDto
+        {
+            OrganizationId = o.Id,
+            OrganizationName = o.Name,
+            NdtpSubmittedMonths =
+                ndtp.FirstOrDefault(x => x.OrganizationId == o.Id)?.Months ?? 0,
+            NdtpExpectedMonths = 12,
+            AtpWorkSubmitted =
+                atp.FirstOrDefault(x => x.OrganizationId == o.Id)?.Count ?? 0,
+            AtpWorkExpected = 2,
+            ActionMonthSubmitted =
+                action.FirstOrDefault(x => x.OrganizationId == o.Id)?.Count ?? 0,
+            ActionMonthExpected = 1
+        }).ToList();
+        return new ListResultDto<ReportComplianceRowDto>(rows);
+    }
+
+    private async Task<IReadOnlySet<Guid>> ResolveOrganizationIdsAsync(
+        CurrentDataScope scope,
+        Guid? organizationId,
+        CancellationToken ct)
+    {
+        if (!organizationId.HasValue)
+        {
+            return scope.OrganizationIds;
+        }
+        if (!scope.HasGlobalAccess &&
+            !scope.IncludesOrganization(organizationId.Value))
+        {
+            throw new Volo.Abp.Authorization.AbpAuthorizationException(
+                "The organization filter is outside the current user's scope.");
+        }
+
+        var orgQ = await _organizations.GetQueryableAsync();
+        var all = await AsyncExecuter.ToListAsync(
+            orgQ.Select(o => new { o.Id, o.ParentId }), ct);
+        var childrenByParent = all
+            .Where(o => o.ParentId.HasValue)
+            .GroupBy(o => o.ParentId!.Value)
+            .ToDictionary(g => g.Key, g => g.Select(o => o.Id).ToList());
+
+        var subtree = new HashSet<Guid>();
+        var queue = new Queue<Guid>();
+        queue.Enqueue(organizationId.Value);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            if (!subtree.Add(current))
+            {
+                continue;
+            }
+            if (childrenByParent.TryGetValue(current, out var children))
+            {
+                foreach (var child in children)
+                {
+                    queue.Enqueue(child);
+                }
+            }
+        }
+        if (!scope.HasGlobalAccess)
+        {
+            subtree.IntersectWith(scope.OrganizationIds);
+        }
+        return subtree;
     }
 }

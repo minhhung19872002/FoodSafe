@@ -10,6 +10,22 @@ export interface RecentActivityItem {
   creatorName?: string;
 }
 
+export interface DashboardFilter {
+  year?: number;
+  organizationId?: string;
+}
+
+export interface ReportComplianceRow {
+  organizationId: string;
+  organizationName: string;
+  ndtpSubmittedMonths: number;
+  ndtpExpectedMonths: number;
+  atpWorkSubmitted: number;
+  atpWorkExpected: number;
+  actionMonthSubmitted: number;
+  actionMonthExpected: number;
+}
+
 export interface DashboardStats {
   totalBusinesses: number;
   activeBusinesses: number;

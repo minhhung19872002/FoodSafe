@@ -38,3 +38,21 @@ public class RecentActivityItem
     public DateTime CreationTime { get; set; }
     public string? CreatorName { get; set; }
 }
+
+public class DashboardFilterDto
+{
+    public int? Year { get; set; }
+    public Guid? OrganizationId { get; set; }
+}
+
+public sealed class ReportComplianceRowDto
+{
+    public Guid OrganizationId { get; set; }
+    public string OrganizationName { get; set; } = string.Empty;
+    public int NdtpSubmittedMonths { get; set; }
+    public int NdtpExpectedMonths { get; set; }
+    public int AtpWorkSubmitted { get; set; }
+    public int AtpWorkExpected { get; set; }
+    public int ActionMonthSubmitted { get; set; }
+    public int ActionMonthExpected { get; set; }
+}

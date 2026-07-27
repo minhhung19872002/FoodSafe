@@ -1,4 +1,16 @@
-import { Col, Row, Card, Spin, Progress, Table, Button, type TableColumnsType } from "antd";
+import { useMemo, useState } from "react";
+import {
+  Col,
+  Row,
+  Card,
+  Select,
+  Space,
+  Spin,
+  Progress,
+  Table,
+  Button,
+  type TableColumnsType,
+} from "antd";
 import {
   ShopOutlined,
   FileProtectOutlined,
@@ -16,8 +28,16 @@ import {
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { useDashboardStats } from "../api/dashboardQueries";
-import type { LicenseBreakdownItem } from "../types/dashboard.types";
+import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
+import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
+import {
+  useDashboardStats,
+  useReportCompliance,
+} from "../api/dashboardQueries";
+import type {
+  LicenseBreakdownItem,
+  ReportComplianceRow,
+} from "../types/dashboard.types";
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -110,11 +130,89 @@ const QUICK_ACTIONS = [
   },
 ] as const;
 
+function flattenOrganizationOptions(
+  nodes: OrganizationTreeNode[],
+  depth = 0,
+): Array<{ value: string; label: string }> {
+  return nodes.flatMap((node) => [
+    {
+      value: node.id,
+      label: `${" ".repeat(depth * 3)}${node.name}`,
+    },
+    ...flattenOrganizationOptions(node.children, depth + 1),
+  ]);
+}
+
+const complianceColumns: TableColumnsType<ReportComplianceRow> = [
+  { title: "Đơn vị", dataIndex: "organizationName", ellipsis: true },
+  {
+    title: "BC NĐTP (tháng)",
+    width: 160,
+    render: (_, row) => (
+      <Progress
+        percent={Math.round(
+          (row.ndtpSubmittedMonths / row.ndtpExpectedMonths) * 100,
+        )}
+        size="small"
+        format={() =>
+          `${row.ndtpSubmittedMonths}/${row.ndtpExpectedMonths}`
+        }
+      />
+    ),
+  },
+  {
+    title: "BC công tác ATTP",
+    width: 150,
+    render: (_, row) => (
+      <Progress
+        percent={Math.round(
+          (row.atpWorkSubmitted / row.atpWorkExpected) * 100,
+        )}
+        size="small"
+        format={() => `${row.atpWorkSubmitted}/${row.atpWorkExpected}`}
+      />
+    ),
+  },
+  {
+    title: "BC Tháng hành động",
+    width: 150,
+    render: (_, row) => (
+      <Progress
+        percent={Math.round(
+          (row.actionMonthSubmitted / row.actionMonthExpected) * 100,
+        )}
+        size="small"
+        format={() =>
+          `${row.actionMonthSubmitted}/${row.actionMonthExpected}`
+        }
+      />
+    ),
+  },
+];
+
+const currentYear = new Date().getFullYear();
+const yearOptions = Array.from({ length: 5 }, (_, index) => ({
+  value: currentYear - index,
+  label: `Năm ${currentYear - index}`,
+}));
+
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const navigate = useNavigate();
-  const { data: stats, isLoading } = useDashboardStats();
+  const [year, setYear] = useState<number>();
+  const [organizationId, setOrganizationId] = useState<string>();
+  const filter = useMemo(
+    () => ({ year, organizationId }),
+    [year, organizationId],
+  );
+  const { data: stats, isLoading } = useDashboardStats(filter);
+  const compliance = useReportCompliance(filter);
+  const organizationTree = useOrganizationTree();
+  const organizationOptions = useMemo(
+    () => flattenOrganizationOptions(organizationTree.data?.items ?? []),
+    [organizationTree.data?.items],
+  );
 
   if (isLoading) {
     return (
@@ -144,6 +242,28 @@ export default function DashboardPage() {
       <PageHeader
         title={`Xin chào, ${user?.name ?? "Người dùng"}`}
         subtitle={user?.organizationName ?? "Phạm vi toàn hệ thống"}
+        actions={
+          <Space>
+            <Select
+              allowClear
+              placeholder="Tất cả các năm"
+              value={year}
+              onChange={setYear}
+              options={yearOptions}
+              style={{ width: 140 }}
+            />
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="Toàn bộ đơn vị"
+              value={organizationId}
+              onChange={setOrganizationId}
+              options={organizationOptions}
+              style={{ width: 220 }}
+            />
+          </Space>
+        }
       />
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -325,6 +445,25 @@ export default function DashboardPage() {
                   </Table.Summary.Row>
                 ) : null
               }
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col xs={24}>
+          <Card
+            title={`Tình hình nộp báo cáo của các đơn vị — Năm ${year ?? currentYear}`}
+            size="small"
+          >
+            <Table
+              rowKey="organizationId"
+              columns={complianceColumns}
+              dataSource={compliance.data?.items ?? []}
+              loading={compliance.isLoading}
+              size="small"
+              pagination={{ pageSize: 10, hideOnSinglePage: true }}
+              scroll={{ x: 700 }}
             />
           </Card>
         </Col>

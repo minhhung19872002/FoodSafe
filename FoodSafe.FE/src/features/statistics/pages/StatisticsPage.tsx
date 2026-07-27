@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { Card, Col, Row, Select, Spin } from "antd";
+import { useRef, useState } from "react";
+import { App, Button, Card, Col, Row, Select, Spin } from "antd";
+import { DownloadOutlined } from "@ant-design/icons";
+import { downloadChartAsPng } from "@/utils/chartExport";
 import type { StatisticsDto } from "../types/statistics.types";
 import {
   BarChart,
@@ -66,9 +68,35 @@ const EMPTY_STATS: StatisticsDto = {
 };
 
 export default function StatisticsPage() {
+  const { message } = App.useApp();
   const [year, setYear] = useState(currentYear());
   const { data, isLoading } = useStatistics({ year });
   const stats = data ?? EMPTY_STATS;
+  const inspectionChartRef = useRef<HTMLDivElement>(null);
+  const poisoningChartRef = useRef<HTMLDivElement>(null);
+
+  const saveChart = (
+    ref: React.RefObject<HTMLDivElement | null>,
+    fileName: string,
+  ) => {
+    if (!ref.current) return;
+    downloadChartAsPng(ref.current, fileName).catch(() =>
+      message.error("Không thể lưu ảnh biểu đồ."),
+    );
+  };
+
+  const chartDownloadButton = (
+    ref: React.RefObject<HTMLDivElement | null>,
+    fileName: string,
+  ) => (
+    <Button
+      type="text"
+      size="small"
+      icon={<DownloadOutlined />}
+      aria-label={`Tải ảnh ${fileName}`}
+      onClick={() => saveChart(ref, fileName)}
+    />
+  );
 
   return (
     <div className="page-container">
@@ -185,7 +213,12 @@ export default function StatisticsPage() {
           <Card
             title={`Thanh kiểm tra theo tháng — Năm ${year}`}
             size="small"
+            extra={chartDownloadButton(
+              inspectionChartRef,
+              `thanh-kiem-tra-${year}.png`,
+            )}
           >
+            <div ref={inspectionChartRef}>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={stats.inspectionsByMonth}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -203,6 +236,7 @@ export default function StatisticsPage() {
                 />
               </LineChart>
             </ResponsiveContainer>
+            </div>
           </Card>
         </Col>
 
@@ -251,16 +285,22 @@ export default function StatisticsPage() {
           <Card
             title={`Ngộ độc thực phẩm theo tháng — Năm ${year}`}
             size="small"
+            extra={chartDownloadButton(
+              poisoningChartRef,
+              `ngo-doc-thuc-pham-${year}.png`,
+            )}
           >
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats.poisoningCasesByMonth}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#D48806" name="Số ca" />
-              </BarChart>
-            </ResponsiveContainer>
+            <div ref={poisoningChartRef}>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.poisoningCasesByMonth}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#D48806" name="Số ca" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </Card>
         </Col>
       </Row>
