@@ -38,6 +38,27 @@ test.describe("testing results management", () => {
     };
     await removeStaleResults(request, headers);
 
+    const suffix = Date.now().toString().slice(-8);
+    const sampleCode = `E2E-KN-${suffix}`;
+    const centerName = `Trung tâm KN E2E ${suffix}`;
+
+    const centerResponse = await request.post(
+      "/api/v1/app/master-catalog/testing-center",
+      {
+        headers,
+        data: {
+          code: `E2E-KN-TT-${suffix}`,
+          name: centerName,
+          address: "Số 1 đường Kiểm Nghiệm, Hạ Long, Quảng Ninh",
+          provinceId: "e2e00000-0000-4000-8001-000000000001",
+          accreditationNumber: `VILAS-E2E-${suffix}`,
+          accreditationScope: "Vi sinh, hóa lý thực phẩm (E2E)",
+        },
+      },
+    );
+    expect(centerResponse.ok(), await centerResponse.text()).toBeTruthy();
+    const center = (await centerResponse.json()) as { id: string };
+
     await page.goto("/testing-results");
     await expect(
       page.getByRole("columnheader", { name: "Mã mẫu" }),
@@ -53,9 +74,6 @@ test.describe("testing results management", () => {
         .toString(),
     ).toBe("PK");
 
-    const suffix = Date.now().toString().slice(-8);
-    const sampleCode = `E2E-KN-${suffix}`;
-
     await page.getByRole("button", { name: "Nhập kết quả" }).click();
     const dialog = page.getByRole("dialog", {
       name: "Nhập kết quả kiểm nghiệm",
@@ -67,8 +85,9 @@ test.describe("testing results management", () => {
       .getByRole("textbox", { name: "Tên mẫu" })
       .fill("Mẫu thực phẩm E2E");
     await dialog
-      .getByRole("textbox", { name: "Cơ sở kiểm nghiệm" })
-      .fill("Trung tâm KN E2E");
+      .getByRole("combobox", { name: "Cơ sở kiểm nghiệm" })
+      .click();
+    await page.getByText(centerName, { exact: true }).last().click();
     const dateInput = dialog.getByRole("textbox", { name: "Ngày lấy mẫu" });
     await dateInput.click();
     await dateInput.fill("25/07/2026");
@@ -88,5 +107,10 @@ test.describe("testing results management", () => {
     await row.getByRole("button", { name: /Xóa/ }).click();
     await page.locator(".ant-popover:visible").getByRole("button", { name: "Xóa" }).click();
     await expect(page.getByText(sampleCode)).not.toBeVisible({ timeout: 10_000 });
+
+    await request.delete(
+      `/api/v1/app/master-catalog/${center.id}/testing-center`,
+      { headers, maxRedirects: 0 },
+    );
   });
 });

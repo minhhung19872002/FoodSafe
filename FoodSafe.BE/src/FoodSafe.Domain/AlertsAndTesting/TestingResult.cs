@@ -46,6 +46,9 @@ public sealed class TestingResult : FullAuditedAggregateRoot<Guid>
     {
         Check.NotNullOrWhiteSpace(sampleCode, nameof(sampleCode), 100);
         Check.NotNullOrWhiteSpace(sampleName, nameof(sampleName), 500);
+        if (testingCenterId == Guid.Empty)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.TestingResult.TestingCenterRequired);
 
         return new TestingResult(id)
         {
@@ -86,6 +89,9 @@ public sealed class TestingResult : FullAuditedAggregateRoot<Guid>
     {
         Check.NotNullOrWhiteSpace(sampleCode, nameof(sampleCode), 100);
         Check.NotNullOrWhiteSpace(sampleName, nameof(sampleName), 500);
+        if (testingCenterId == Guid.Empty)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.TestingResult.TestingCenterRequired);
 
         SampleCode = sampleCode.Trim();
         SampleName = sampleName.Trim();

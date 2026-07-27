@@ -234,6 +234,7 @@ public static class FoodSafeDomainErrorCodes
     public static class TestingResult
     {
         public const string NotFound = "FoodSafe:TestingResult:0001";
+        public const string TestingCenterRequired = "FoodSafe:TestingResult:0002";
     }
 
     public static class Document
