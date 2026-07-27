@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — P1-1b: inspection plan & result attachment round-trip browser-proven (FR-27-08/09, FR-28-03/05)
 
 - **Cause**: Evidence-only sweep (no product code change). doc 73 had inspection plan attachments (FR-27-08/09) and result document up/download (FR-28-05) as `IMPLEMENTED_NOT_VERIFIED` — the attachment round-trip was proven for products + the licensing modules, but **no executed test ever uploaded a file to an inspection plan or result** (doc 71 §7). The shared DB also has **0 active inspection results**, so the proof must seed its own plan + result. Added `e2e/inspection-attachments.spec.ts`.
-- **Commit**: `<pending>` (files: `e2e/inspection-attachments.spec.ts`, docs 73/77/03)
+- **Commit**: `401105a` (files: `e2e/inspection-attachments.spec.ts`, docs 73/77/03)
 - **Affected features**: F-013 inspection — plan attachments + result attachments. No product code changed → no invalidation of other features. New Playwright test code only.
 - **Retest level**: 2 (single-feature runtime retest; attachment capability)
 - **Result**: PASSED
