@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — FR-19-02: business-list advanced filter + multi-column sort implemented & browser-proven
 
 - **Cause**: Product code change (not evidence-only). doc 73 had FR-19-02 (advanced business filters) as `IMPLEMENTED_NOT_VERIFIED`. Driving the real business list surfaced that **multi-column sort was genuinely not implemented** — `BusinessAppService.GetListAsync` hard-coded `query.OrderBy(x => x.Name)` and ignored the client `Sorting` param, and the FE table columns had no `sorter`. Implemented it: BE added a whitelist `ApplySorting(query, input.Sorting)` (Name/Code/Status, asc+desc; falls back to Name-asc; no dynamic-LINQ) and the FE wired AntD server-side sort (`sorter: true` + controlled `sortOrder` + table `onChange` → `sorting` filter param, page reset guarded so pagination `onChange` doesn't clobber page). Status filter + pagination were already implemented; this proves all three against the real stack.
-- **Commit**: `6157f1d` (files: `BusinessAppService.cs`, `business.types.ts`, `BusinessManagementPage.tsx`, `BusinessManagementView.tsx`, `e2e/business-list-filters.spec.ts`, docs 73/77/03)
+- **Commit**: `f29fedc` (files: `BusinessAppService.cs`, `business.types.ts`, `BusinessManagementPage.tsx`, `BusinessManagementView.tsx`, `e2e/business-list-filters.spec.ts`, docs 73/77/03)
 - **Affected features**: F business list/management (FR-19-01/03..). `ApplySorting` only reorders the existing org-scoped `GetListAsync` query — it adds no rows, changes no filter/permission/scope predicate — so blast radius is the business list ordering only.
 - **Retest level**: 2 (single-feature runtime retest)
 - **Result**: PASSED
