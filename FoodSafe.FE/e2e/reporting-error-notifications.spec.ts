@@ -124,14 +124,14 @@ test.describe("report error notifications (FR-33/34/35-05)", () => {
 
     // Acknowledge, then respond
     const ack = await request.post(
-      `/api/v1/app/ndtp-report/${report.id}/acknowledge-error-notification?notificationId=${created.id}`,
+      `/api/v1/app/ndtp-report/${report.id}/acknowledge-error-notification/${created.id}`,
       { headers, maxRedirects: 0 },
     );
     expect(ack.ok(), await ack.text()).toBeTruthy();
     expect(((await ack.json()) as ErrorNotification).status).toBe(2);
 
     const respond = await request.post(
-      `/api/v1/app/ndtp-report/${report.id}/respond-error-notification?notificationId=${created.id}`,
+      `/api/v1/app/ndtp-report/${report.id}/respond-error-notification/${created.id}`,
       {
         headers,
         maxRedirects: 0,

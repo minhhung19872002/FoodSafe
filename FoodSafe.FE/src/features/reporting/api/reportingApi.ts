@@ -65,9 +65,7 @@ function errorNotificationApi(endpoint: string) {
     ): Promise<ReportErrorNotification> {
       return (
         await api.post<ReportErrorNotification>(
-          `${endpoint}/${id}/acknowledge-error-notification`,
-          null,
-          { params: { notificationId } },
+          `${endpoint}/${id}/acknowledge-error-notification/${notificationId}`,
         )
       ).data;
     },
@@ -78,9 +76,8 @@ function errorNotificationApi(endpoint: string) {
     ): Promise<ReportErrorNotification> {
       return (
         await api.post<ReportErrorNotification>(
-          `${endpoint}/${id}/respond-error-notification`,
+          `${endpoint}/${id}/respond-error-notification/${notificationId}`,
           input,
-          { params: { notificationId } },
         )
       ).data;
     },
