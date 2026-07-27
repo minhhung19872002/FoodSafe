@@ -20,7 +20,7 @@ public class StatisticsAppService : ApplicationService
     private readonly ICancellationTokenProvider _cancellationTokens;
     private readonly IClock _clock;
     private readonly IRepository<Business, Guid> _businesses;
-    private readonly IRepository<MasterCatalog, Guid> _catalogs;
+    private readonly IRepository<BusinessType, Guid> _businessTypes;
     private readonly IRepository<SelfDeclaration, Guid> _selfDeclarations;
     private readonly IRepository<ProductRegistration, Guid> _productRegistrations;
     private readonly IRepository<EligibilityCertificate, Guid> _eligibilityCertificates;
@@ -35,7 +35,7 @@ public class StatisticsAppService : ApplicationService
         ICancellationTokenProvider cancellationTokens,
         IClock clock,
         IRepository<Business, Guid> businesses,
-        IRepository<MasterCatalog, Guid> catalogs,
+        IRepository<BusinessType, Guid> businessTypes,
         IRepository<SelfDeclaration, Guid> selfDeclarations,
         IRepository<ProductRegistration, Guid> productRegistrations,
         IRepository<EligibilityCertificate, Guid> eligibilityCertificates,
@@ -49,7 +49,7 @@ public class StatisticsAppService : ApplicationService
         _cancellationTokens = cancellationTokens;
         _clock = clock;
         _businesses = businesses;
-        _catalogs = catalogs;
+        _businessTypes = businessTypes;
         _selfDeclarations = selfDeclarations;
         _productRegistrations = productRegistrations;
         _eligibilityCertificates = eligibilityCertificates;
@@ -96,9 +96,9 @@ public class StatisticsAppService : ApplicationService
                 .Select(g => new { TypeId = g.Key, Count = g.Count() }), ct);
 
         var typeIds = businessByType.Select(b => b.TypeId).ToList();
-        var catalogQ = await _catalogs.GetQueryableAsync();
+        var businessTypeQ = await _businessTypes.GetQueryableAsync();
         var businessTypeNames = await AsyncExecuter.ToListAsync(
-            catalogQ.Where(c => typeIds.Contains(c.Id))
+            businessTypeQ.Where(c => typeIds.Contains(c.Id))
                 .Select(c => new { c.Id, c.Name }), ct);
 
         var statusLabels = new Dictionary<BusinessStatus, string>
