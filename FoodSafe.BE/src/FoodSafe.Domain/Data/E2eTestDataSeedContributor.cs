@@ -42,33 +42,39 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
 
     const string TestPassword = "Admin@2026!";
 
+    private readonly IRepository<Region, Guid> _regions;
     private readonly IRepository<Province, Guid> _provinces;
     private readonly IRepository<District, Guid> _districts;
     private readonly IRepository<Commune, Guid> _communes;
     private readonly IRepository<Organization, Guid> _organizations;
     private readonly IRepository<AppUserProfile, Guid> _profiles;
     private readonly IdentityUserManager _userManager;
+    private readonly IdentityRoleManager _roleManager;
     private readonly IIdentityUserRepository _identityUsers;
     private readonly IConfiguration _configuration;
     private readonly IClock _clock;
 
     public E2eTestDataSeedContributor(
+        IRepository<Region, Guid> regions,
         IRepository<Province, Guid> provinces,
         IRepository<District, Guid> districts,
         IRepository<Commune, Guid> communes,
         IRepository<Organization, Guid> organizations,
         IRepository<AppUserProfile, Guid> profiles,
         IdentityUserManager userManager,
+        IdentityRoleManager roleManager,
         IIdentityUserRepository identityUsers,
         IConfiguration configuration,
         IClock clock)
     {
+        _regions = regions;
         _provinces = provinces;
         _districts = districts;
         _communes = communes;
         _organizations = organizations;
         _profiles = profiles;
         _userManager = userManager;
+        _roleManager = roleManager;
         _identityUsers = identityUsers;
         _configuration = configuration;
         _clock = clock;
@@ -93,6 +99,15 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
 
     private async Task SeedAdministrativeAreasAsync(DateTime now)
     {
+        // Fresh databases may run this contributor before
+        // MasterCatalogDataSeedContributor; the province FK needs the region.
+        if (!await _regions.AnyAsync(x => x.Id == RegionDongBacBoId))
+        {
+            await _regions.InsertAsync(
+                Region.Create(RegionDongBacBoId, "DBB", "Đông Bắc Bộ", null, 2),
+                autoSave: true);
+        }
+
         if (!await _provinces.AnyAsync(x => x.Id == ProvinceQuangNinhId))
         {
             var province = Province.Create(
@@ -225,6 +240,24 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
 
         if (roleNames.Length > 0)
         {
+            // Fresh databases may run this contributor before the role/permission
+            // seeder; create missing roles so assignment succeeds (permissions
+            // are granted by FoodSafePermissionDataSeedContributor afterwards).
+            foreach (var roleName in roleNames)
+            {
+                if (await _roleManager.FindByNameAsync(roleName) is null)
+                {
+                    var role = new IdentityRole(Guid.NewGuid(), roleName)
+                    {
+                        IsStatic = true,
+                        IsPublic = false,
+                        IsDefault = false
+                    };
+                    role.SetProperty("IsActive", true);
+                    (await _roleManager.CreateAsync(role)).CheckErrors();
+                }
+            }
+
             (await _userManager.SetRolesAsync(user, roleNames)).CheckErrors();
         }
 

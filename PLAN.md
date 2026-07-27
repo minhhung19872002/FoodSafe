@@ -5,6 +5,16 @@
 
 ---
 
+> **Tiến độ 2026-07-27 (branch `feature/complete-remaining-functions`)**: đã bổ sung
+> toàn bộ gap theo audit doc 65/66 — Excel exports (users/audit log/orgs/testing
+> services/4 báo cáo thống kê), audit-log detail, user delete + random password +
+> permission search, Settings module (STT 4) đầy đủ, business advanced filters +
+> per-business tabs, dashboard filters + report-compliance widgets + chart download,
+> profile/avatar (STT 5), inspection attachments + finalize (STT 27/28), citizen
+> alert/news moderation + kênh gửi tin công dân (STT 29/30/48), report auto-calc +
+> roll-up + document view (STT 33-35), data-sharing engine + per-type history
+> (STT 51-57). Public portal STT 41-49 đã VERIFIED từ trước (F-033/F-034).
+
 ## Tổng quan chức năng (57 chức năng, 6 nhóm)
 
 | Nhóm | Số chức năng | Mô tả |

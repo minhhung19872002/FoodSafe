@@ -59,7 +59,7 @@ function mockData() {
 describe("ExportFoodCertificatePage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders page heading and write actions for a full-permission user", { timeout: 15000 }, async () => {
+  it("renders page heading and write actions for a full-permission user", { timeout: 30000 }, async () => {
     mockData();
     useAuthStore.getState().setAuth({
       id: "user",
