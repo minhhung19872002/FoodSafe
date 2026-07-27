@@ -17,6 +17,24 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — P0-2: outbound API credential encryption + auth-header injection (FR-50/51)
+
+- **Cause**: New capability — partner endpoints store an outbound-auth secret (API key / bearer / Basic), encrypted at rest via ABP `IStringEncryptionService`, injected onto the outgoing share request at send time and never returned to the client or persisted to the call log. Touched `ApiEndpoint` aggregate (+`EncryptedCredential`/`HasCredential`/`SetEncryptedCredential`), EF mapping (`credential_value`), `ApiEndpointDto`/`CreateUpdateApiEndpointDto`, `ApiEndpointAppService`, `DataSharingAppService.ApplyAuthHeader`, FE editor + detail drawer, and migration `20260727183552_AddApiEndpointCredential`.
+- **Commit**: `3fe7325`
+- **Affected features**: F-019 Data Integration (extended; credential capability). No change to businesses/auth source.
+- **Retest level**: 2 (feature) + targeted Level-3 shared-stack regression (rebuilt api image)
+- **Result**: PASSED — `data-integration-credentials.spec.ts` **6/6** against the real stack, no API interception (write-only secret never returned by create/detail/list; Bearer→`Authorization`/API-key→`X-Api-Key` injection **observed at a real external receiver** postman-echo; rotate + `ClearCredential` stops injection; noperm share → 403; real UI at `/data-integration` renders the write-only field and never shows the secret). Shared-stack regression `businesses-verification` + `auth-verification` **13/13**.
+- **Details**: This work had been silently wiped from the working tree by a parallel-agent git operation on the shared `fix/production-blockers` branch (source clean, migration file + snapshot entry gone) and was re-implemented from current source. Disposable dev DB reconciled before re-migration: dropped the orphaned `credential_value` column (4 leftover dev rows) and deleted the stale `20260727175710_AddApiEndpointCredential` history row so the freshly generated migration applied cleanly (migrator exit 0). `SharedClient` kept SSRF-guarded (B-5); switch to `IHttpClientFactory` deferred (auth rides the per-request `HttpRequestMessage`, so a static client is not a credential-leak vector). Committed selectively (own 11 files only) to survive the volatile shared tree.
+
+### 2026-07-28 — AutoMapper 15.1.3 pin was a runtime-broken "fix"; reverted to 14.0.0 (B-6 corrected)
+
+- **Cause**: Re-verifying P0-2 surfaced an app-wide HTTP 500 `MissingMethodException` on **every** `ObjectMapper` call. Root cause: a prior "B-6 FIXED" commit (`452f666`) pinned `AutoMapper 15.1.3` in `common.props`. AutoMapper 15.x removed the `MapperConfiguration(MapperConfigurationExpression)` constructor that `Volo.Abp.AutoMapper 9.3.7` calls; NuGet unifies the `>=14` request to 15, so it **builds** but throws at runtime. The earlier "591 tests green / --vulnerable clean" evidence was build-/stale-artifact-verified only, never runtime-verified — a concrete instance of "do not trust completion percentages without executable evidence."
+- **Commit**: `9bca58f`
+- **Affected features**: All (every AppService uses `ObjectMapper`). Was masking businesses-verification 5 failures.
+- **Retest level**: 3 (shared dependency — object mapping)
+- **Result**: PASSED after revert — `businesses-verification` + `auth-verification` **13/13**, 0 `MissingMethodException` in api logs.
+- **Details**: Reverted the pin to `AutoMapper 14.0.0` (the only ABP-9.3.7-compatible line; no patched 14.0.x exists). CVE-2026-32933 (GHSA-rvv3-g6hj-g44x) uncontrolled-recursion DoS is **fix-only-in-15.1.1+**, so it is now accepted-risk with compensating controls: `System.Text.Json` default `MaxDepth=64` bounds request-graph depth before mapping, and the two recursive AutoMapper profiles capped at `.MaxDepth(8)`. Re-added to the NuGet-vulnerability allow-list with justification; tracked to the ABP 10 upgrade. Docs 08 (B-6) corrected; 04 §3.2 / 43 pending.
+
 ### 2026-07-27 — Functional-gap completion batch (STT 2-5, 19, 27-35, 39-40, 48, 51-57) + merge with parallel main batch
 
 - **Cause**: Feature branch `feature/complete-remaining-functions` implemented the audit-65/66 backlog (Excel exports, audit-log detail, user delete/random password/permission search, full Settings module, business filters + per-business tabs, dashboard filters + report-compliance widgets + chart download, profile/avatar, inspection attachments + finalize, citizen alert/news moderation + citizen news channel, report auto-calc/roll-up/document view, typed data-sharing engine) and merged `origin/main`'s parallel batch, keeping the feature-branch implementations and de-duplicating merge artifacts. Fresh-database seeding gaps fixed (region/role ordering, document-type catalog seed).

@@ -31,7 +31,7 @@ All findings are verified against source code at HEAD `fe3dbd2`. No speculative 
 | ID | Severity | Area | Description | Evidence | Fix Required |
 |---|---|---|---|---|---|
 | ~~SEC-H-01~~ RESOLVED (B-5) | HIGH | Authorization / SSRF | SSRF via unvalidated data-integration endpoint URLs — now blocked by `OutboundUrlValidator` (syntactic gate + connect-time IP guard) | See §3.1 | DONE |
-| SEC-H-02 | HIGH | Dependencies | Known-vulnerable deps: **AutoMapper DoS RESOLVED (B-6)**; Account.Web open-redirect + react-router RSC-CSRF = accepted-risk / not-applicable (no supported fix) | See §3.2 | PARTIAL — see §3.2 |
+| SEC-H-02 | HIGH | Dependencies | Known-vulnerable deps: **AutoMapper DoS = accepted-risk** (upgrade is ABI-incompatible with ABP 9.3.7 → runtime `MissingMethodException`; pinned 14.0.0 + `MaxDepth` compensating controls); Account.Web open-redirect + react-router RSC-CSRF = accepted-risk / not-applicable (no supported fix) | See §3.2 | ACCEPTED-RISK — 3 items, all tracked to ABP 10 (§3.2) |
 | ~~SEC-M-01~~ RESOLVED (C-1) | MEDIUM | Authentication | CAPTCHA bypass via malformed JSON body — malformed/non-object bodies now rejected with 400 | See §3.3 | DONE |
 | ~~SEC-M-02~~ RESOLVED (B-3) | MEDIUM | Secrets | Git history contains committed dev credentials — only commodity defaults; now rejected at Production startup + recurrence-guarded | See §3.4 / doc 09 | DONE |
 | ~~SEC-M-03~~ RESOLVED (C-2) | MEDIUM | Authentication | Password expiry enforced client-side only — `PasswordExpiryMiddleware` now blocks expired/must-change sessions server-side (403) | See §3.5 | DONE |
@@ -88,15 +88,15 @@ using var response = await ProbeClient.SendAsync(request, ...);
 
 ### 3.2 — SEC-H-02: Known-vulnerable dependencies (B-6)
 
-Three advisories were flagged by `dotnet list package --vulnerable` and `npm audit`. Disposition below; **the High-severity, actually-exploitable one (AutoMapper) is fixed in code**, the other two have no fix in their supported major/minor line and are non-exploitable in this deployment.
+Three advisories were flagged by `dotnet list package --vulnerable` and `npm audit`. Disposition below; **all three are accepted-risk with compensating controls** — none has a fix that is compatible with the current ABP 9.3.7 line, and each is non-exploitable or bounded in this deployment. (An earlier revision of this section claimed AutoMapper was "fixed in code"; that was wrong — see below.)
 
-#### 3.2.1 — AutoMapper DoS — CVE-2026-32933 / GHSA-rvv3-g6hj-g44x (HIGH 7.5) — **RESOLVED (B-6, 2026-07-28)**
+#### 3.2.1 — AutoMapper DoS — CVE-2026-32933 / GHSA-rvv3-g6hj-g44x (HIGH 7.5) — **ACCEPTED RISK / tracked (corrected 2026-07-28)**
 
-`Volo.Abp.AutoMapper 9.3.7` pulled `AutoMapper 14.0.0` transitively into every backend project. AutoMapper < 15.1.1 has an uncontrolled-recursion flaw: a deeply nested object graph (~25,000 levels) exhausts the stack and raises an uncatchable `StackOverflowException`, terminating the process (unauthenticated DoS).
+`Volo.Abp.AutoMapper 9.3.7` pulls `AutoMapper 14.0.0` into every backend project. AutoMapper < 15.1.1 has an uncontrolled-recursion flaw: a deeply nested object graph (~25,000 levels) exhausts the stack and raises an uncatchable `StackOverflowException`, terminating the process (unauthenticated DoS).
 
-**Compensating control (already present):** ASP.NET Core's System.Text.Json enforces `MaxDepth = 64` by default, so an over-nested request body is rejected at deserialization before it can reach an AutoMapper projection — this bounded the practical risk even before the fix.
+**Why it is not simply upgraded (the earlier "fix" was runtime-broken):** AutoMapper 15.x **removed** the `MapperConfiguration(MapperConfigurationExpression)` constructor that `Volo.Abp.AutoMapper 9.3.7` calls (15.x requires an `ILoggerFactory`). A `15.1.3` pin therefore **builds** — NuGet unifies the `>=14` transitive request up to 15 — but throws `MissingMethodException` on **every** `ObjectMapper` call at runtime, i.e. an app-wide HTTP 500. The prior "pinned 15.1.3, runtime-verified, 591 tests green" claim was **build-/stale-artifact-verified only**; the runtime failure surfaced while re-verifying P0-2 and was traced to that pin. The pin has been **reverted to `AutoMapper 14.0.0`** (the only ABP-9.3.7-compatible line; no patched 14.0.x exists). A real fix requires the **ABP 10** upgrade (which moves to AutoMapper 15) — tracked.
 
-**Fix:** Pinned `AutoMapper 15.1.3` (first fixed line ≥ 15.1.1) as a direct `PackageReference` in `FoodSafe.BE/common.props`, which every project imports. The pin satisfies `Volo.Abp.AutoMapper`'s `AutoMapper >= 14.0.0` constraint. **Runtime-verified compatible with ABP 9.3.7**: full solution build (0 warnings) + all backend suites green — Domain 197, Application 309 (boots the ABP application module → registers & validates every AutoMapper profile at init), Host 67, EF Core 18 on real PostgreSQL = **591 tests**. `dotnet list package --vulnerable` now reports **no AutoMapper advisory** in any project.
+**Compensating controls (accepted-risk basis):** (1) ASP.NET Core's System.Text.Json enforces `MaxDepth = 64` by default, so an over-nested request body is rejected at deserialization before it can reach an AutoMapper projection; (2) the two recursive AutoMapper profiles (`GeographicCatalogAutoMapperProfile`, `OrganizationApplicationAutoMapperProfile`) are explicitly capped at `.MaxDepth(8)`. Together these bound recursion depth far below the ~25,000 needed to exhaust the stack. The advisory is re-added to the NuGet-vulnerability allow-list with this justification (see doc 43).
 
 #### 3.2.2 — Volo.Abp.Account.Web open redirect — GHSA-vfm5-cr22-jg3m (MODERATE 5.3) — **ACCEPTED RISK / tracked**
 
@@ -309,7 +309,7 @@ The following findings must be resolved before production deployment:
 | ID | Severity | Blocker Reason |
 |---|---|---|
 | ~~**SEC-H-01**~~ RESOLVED (B-5) | HIGH | SSRF allows server-side HTTP requests to internal services; could expose Redis, MinIO, PostgreSQL, Hangfire — **fixed**: `OutboundUrlValidator` syntactic gate + connect-time IP guard on both outbound clients |
-| **SEC-H-02** | HIGH→PARTIAL | AutoMapper High-DoS **fixed (B-6)**; remaining Account.Web (Moderate) + react-router (High, RSC-only) have **no fix in their supported line** and are non-exploitable in this deployment — documented accepted-risk with compensating controls, framework/library upgrade tracked (§3.2) |
+| **SEC-H-02** | HIGH→ACCEPTED-RISK | All three deps accepted-risk with compensating controls: AutoMapper High-DoS **cannot be upgraded on ABP 9.3.7** (15.x removed the ctor ABP calls → runtime `MissingMethodException`; pinned 14.0.0, bounded by System.Text.Json `MaxDepth=64` + profile `.MaxDepth(8)`); Account.Web (Moderate) + react-router (High, RSC-only) have **no fix in their supported line** and are non-exploitable here — framework/library upgrade (ABP 10) tracked (§3.2) |
 | ~~**SEC-M-01**~~ RESOLVED (C-1) | MEDIUM | CAPTCHA bypass via malformed/non-object JSON body — now rejected with HTTP 400; regression-tested |
 | ~~**SEC-M-03**~~ RESOLVED (C-2) | MEDIUM | Password expiry now enforced server-side by `PasswordExpiryMiddleware` (403 `FoodSafe:Account:PasswordExpired`) |
 | ~~**SEC-M-04**~~ RESOLVED (C-3) | MEDIUM | `image/svg+xml` removed from branding allow-list (raster-only); regression-tested |
@@ -372,7 +372,7 @@ The following areas were explicitly checked and found to be properly implemented
 | Priority | Finding | Estimated Effort |
 |---|---|---|
 | ~~P0~~ DONE (B-5, 2026-07-28) | SEC-H-01 (SSRF) | `OutboundUrlValidator` + 58 regression tests |
-| ~~P0~~ DONE (B-6, 2026-07-28) | SEC-H-02 (AutoMapper DoS CVE-2026-32933) | Pinned AutoMapper 15.1.3; 591 backend tests green |
+| ACCEPTED-RISK (B-6, corrected 2026-07-28) | SEC-H-02 (AutoMapper DoS CVE-2026-32933) | Upgrade ABI-incompatible with ABP 9.3.7 (runtime `MissingMethodException`); reverted to 14.0.0 + `MaxDepth` compensating controls; real fix tracked to ABP 10 |
 | P2 — tracked accepted-risk | SEC-H-02 (Account.Web open-redirect; react-router RSC-CSRF) | No supported fix; non-exploitable here; ABP 10 / RR upgrade tracked |
 | ~~P0~~ DONE (C-1, 2026-07-28) | SEC-M-01 (CAPTCHA bypass) | Reject malformed/non-object body with 400; `LoginCaptchaMiddlewareTests` 7/7 green |
 | ~~P0~~ DONE (C-2, verified 2026-07-28) | SEC-M-03 (password expiry server-side) | `PasswordExpiryMiddleware` already enforcing 403 for expired/must-change sessions |
