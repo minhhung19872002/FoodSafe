@@ -16,7 +16,7 @@
 | F-004 | Master Catalogs                 | READY_FOR_TEST | `e2e/catalogs.spec.ts`                        | —               | 2026-07-26 |
 | F-005 | Geographic Catalogs             | READY_FOR_TEST | `e2e/geography.spec.ts`                       | —               | 2026-07-26 |
 | F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts` | `87cb7f6` | 2026-07-27 |
-| F-007 | Self Declarations               | READY_FOR_TEST | `e2e/self-declarations.spec.ts`               | —               | 2026-07-26 |
+| F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts` | `232c814` | 2026-07-27 |
 | F-008 | Product Registrations           | READY_FOR_TEST | `e2e/product-registrations.spec.ts`           | —               | 2026-07-26 |
 | F-009 | Advertisement Registrations     | READY_FOR_TEST | `e2e/advertisement-registrations.spec.ts`     | —               | 2026-07-26 |
 | F-010 | Eligibility Certificates        | READY_FOR_TEST | `e2e/eligibility-certificates.spec.ts`        | —               | 2026-07-26 |
@@ -46,8 +46,8 @@
 ## Summary
 
 - Total features: 32
-- VERIFIED: **4** (F-006 `features/businesses.md`, F-013 `features/inspection.md`, F-014 `features/food-poisoning.md`, F-015 `features/reporting.md`)
-- READY_FOR_TEST: **27** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
+- VERIFIED: **5** (F-006, F-007, F-013, F-014, F-015 — see `features/*.md`)
+- READY_FOR_TEST: **26** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
 - FAILED: 0
 - BLOCKED: **1** (F-002 — no Playwright spec exists)
 - NOT_STARTED: 0
