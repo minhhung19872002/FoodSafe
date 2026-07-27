@@ -46,3 +46,11 @@ public class ApiEndpointFilterDto : PagedAndSortedResultRequestDto
     public string? ExternalSystem { get; set; }
     public ApiEndpointStatus? Status { get; set; }
 }
+
+public class TestConnectionResultDto
+{
+    public bool IsSuccess { get; set; }
+    public int? StatusCode { get; set; }
+    public long DurationMs { get; set; }
+    public string? ErrorMessage { get; set; }
+}

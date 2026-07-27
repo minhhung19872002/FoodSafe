@@ -16,6 +16,7 @@ import {
   type TableColumnsType,
 } from "antd";
 import {
+  ApiOutlined,
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -40,6 +41,7 @@ import {
   useExportEndpoints,
   useExportCallLogs,
   useShareData,
+  useTestConnection,
 } from "../api/dataIntegrationMutations";
 import {
   API_ENDPOINT_STATUS,
@@ -75,6 +77,7 @@ function EndpointsTab() {
   const toggleMut = useToggleEndpointStatus();
   const deleteMut = useDeleteEndpoint();
   const exportMut = useExportEndpoints();
+  const testMut = useTestConnection();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<ApiEndpoint | null>(null);
@@ -131,9 +134,29 @@ function EndpointsTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 140,
+      width: 200,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            icon={<ApiOutlined />}
+            loading={testMut.isPending && testMut.variables === record.id}
+            onClick={() =>
+              testMut.mutate(record.id, {
+                onSuccess: (result) =>
+                  result.isSuccess
+                    ? message.success(
+                        `Kết nối thành công (HTTP ${result.statusCode ?? "—"}, ${result.durationMs}ms)`,
+                      )
+                    : message.warning(
+                        `Không kết nối được: ${result.errorMessage ?? "lỗi không xác định"}`,
+                      ),
+                onError: () => message.error("Không thể kiểm tra kết nối."),
+              })
+            }
+          >
+            Test
+          </Button>
           {canEdit && (
             <>
               <Button

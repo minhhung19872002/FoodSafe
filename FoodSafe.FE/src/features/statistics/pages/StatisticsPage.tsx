@@ -19,6 +19,11 @@ import {
   Line,
 } from "recharts";
 import { PageHeader } from "@/components/PageHeader";
+import { PoisoningMap } from "@/features/food-poisoning/components/PoisoningMap";
+import {
+  usePoisoningCases,
+  usePoisoningIncidents,
+} from "@/features/food-poisoning/api/foodPoisoningQueries";
 import { useStatistics } from "../api/statisticsQueries";
 import { ReportStatisticsSection } from "../components/ReportStatisticsSection";
 
@@ -55,6 +60,23 @@ const yearOptions = Array.from({ length: 5 }, (_, i) => {
   const y = currentYear() - i;
   return { value: y, label: `Năm ${y}` };
 });
+
+function PoisoningMapSection() {
+  const { data: casesData } = usePoisoningCases({
+    skipCount: 0,
+    maxResultCount: 500,
+  });
+  const { data: incidentsData } = usePoisoningIncidents({
+    skipCount: 0,
+    maxResultCount: 500,
+  });
+  return (
+    <PoisoningMap
+      cases={casesData?.items ?? []}
+      incidents={incidentsData?.items ?? []}
+    />
+  );
+}
 
 const EMPTY_STATS: StatisticsDto = {
   businessByStatus: [],
@@ -301,6 +323,12 @@ export default function StatisticsPage() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+          </Card>
+        </Col>
+
+        <Col xs={24}>
+          <Card title="Bản đồ tình hình ngộ độc thực phẩm" size="small">
+            <PoisoningMapSection />
           </Card>
         </Col>
       </Row>

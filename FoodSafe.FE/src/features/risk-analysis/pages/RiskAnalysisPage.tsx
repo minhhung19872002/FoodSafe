@@ -19,10 +19,12 @@ import {
   DeleteOutlined,
   SendOutlined,
   ExportOutlined,
+  PrinterOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { saveDownload } from "@/utils/download";
+import { escapeHtml, printHtml } from "@/utils/printHtml";
 import {
   ALERT_CATEGORY,
   ALERT_CATEGORY_LABELS,
@@ -124,6 +126,27 @@ export default function RiskAnalysisPage() {
       width: 160,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            aria-label={`In ${record.title}`}
+            icon={<PrinterOutlined />}
+            onClick={() =>
+              printHtml(
+                record.title,
+                `<h3>CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH</h3>
+                 <h2>PHÂN TÍCH MỐI NGUY CƠ AN TOÀN THỰC PHẨM</h2>
+                 <h3>${escapeHtml(record.title)}</h3>
+                 <p><strong>Danh mục:</strong> ${escapeHtml(ALERT_CATEGORY_LABELS[record.category])}</p>
+                 <p><strong>Mức độ nguy cơ:</strong> ${escapeHtml(RISK_LEVEL_CONFIG[record.riskLevel]?.label)}</p>
+                 <p><strong>Sản phẩm liên quan:</strong> ${escapeHtml(record.relatedProducts) || "—"}</p>
+                 <p><strong>Nội dung phân tích:</strong></p>
+                 <p>${escapeHtml(record.content)}</p>
+                 <p><strong>Bằng chứng:</strong> ${escapeHtml(record.evidence) || "—"}</p>
+                 <p><strong>Khuyến nghị:</strong> ${escapeHtml(record.recommendations) || "—"}</p>
+                 ${record.publishedAt ? `<p><strong>Ngày công bố:</strong> ${dayjs(record.publishedAt).format("DD/MM/YYYY")}</p>` : ""}`,
+              )
+            }
+          />
           {record.status === RISK_ANALYSIS_STATUS.Draft && (
             <>
               {hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Edit") && (

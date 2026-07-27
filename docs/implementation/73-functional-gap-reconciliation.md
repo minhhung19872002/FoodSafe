@@ -1,5 +1,14 @@
 # 73 — Functional Gap Reconciliation
 
+> **STATUS 2026-07-27 (later same day): CLOSED — STALE ANALYSIS.**
+> This document was written on `codex/production-readiness` before the audit-65/66 backlog
+> branch was merged into `main`. After that merge, most rows below were already implemented.
+> The truly-remaining gaps were re-reconciled and closed on branch
+> `feature/close-remaining-gaps`: FR-50-05 (endpoint Test Connection), FR-38-07 (document
+> attachments + print), FR-36-08 (risk analysis print), FR-39-08 (poisoning map on the
+> Statistics page), DT-08 (ActionMonthDates format validation), L1 (Class1.cs stubs removed),
+> and NFR-01..06 (k6 load test — see `docs/testing/05-load-test-results.md`).
+
 **Date**: 2026-07-27
 **Branch**: `codex/production-readiness`
 **Based on**: docs/audit/61 (corrected), docs/audit/65, docs/audit/68

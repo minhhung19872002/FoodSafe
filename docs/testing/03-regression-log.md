@@ -69,3 +69,12 @@ Record every verification invalidation and retest result here.
 - **Retest level**: 2 (rebuilt stack: `reporting-error-notifications` 2/2, `reporting-verification` 7/7, `reporting` 2/2, `inspection` 5/5, `inspection-verification` 7/7 — the last one flaked once inter-spec, passed 7/7 in isolation)
 - **Result**: PASSED
 - **Details**: Error-notification lifecycle runtime-verified: draft-rejection, submit→add (Pending), server validation 400, acknowledge (Acknowledged), respond (Corrected), persistence via separate GET, permission denial for noperm user, UI modal display. NOTE: FE `markViolationRemedied`/`setFollowUpResult` api methods are correct now but are **dead code — no UI calls them**; recorded in doc 66 M15.
+
+### 2026-07-27 — Remaining functional gaps closed (branch `feature/close-remaining-gaps`)
+
+- **Cause**: Six remaining gaps implemented after re-reconciling docs 73/74 against post-merge `main`: FR-50-05 endpoint Test Connection (`POST /api/v1/app/api-endpoint/{id}/test-connection` + FE Test button); FR-38-07 administrative document attachments (upload/download/delete controller + modal) and print view; FR-36-08 risk analysis print view (new `utils/printHtml.ts`); FR-39-08 poisoning map embedded on Statistics page; DT-08 `ActionMonthDates` format validation (BE DataAnnotations + FE antd rules, `dd/MM/yyyy - dd/MM/yyyy`); L1 six `Class1.cs` scaffold stubs deleted. NFR-01..06 evidenced by k6 load test (`scripts/load-test.k6.js`, results in `05-load-test-results.md`).
+- **Commit**: see this commit
+- **Affected features**: F-019 (Data Integration — additive endpoint), F-020/documents (attachments + print — additive), risk-analysis (print — FE-only additive), F-018/statistics (map section — FE-only additive), F-015 (Reporting — DTO validation tightened)
+- **Retest level**: 4 (full regression on rebuilt Docker stack with fresh code)
+- **Result**: PASSED — BE 519/519 (Domain 197, Application 251, HttpApi.Host 53, EFCore 18); FE Vitest 112/112; FE `npm run build` + oxlint clean; Playwright full E2E **235/235 passed (4.8m)**, no API interception
+- **Details**: Load test: 30 concurrent VUs held 2 minutes — 3,270 requests, 0% failed, avg 31ms, max 418ms (NFR-01/02/05/06 PASS); API container CPU avg ~54%, PostgreSQL ~20% under load (NFR-03/04 PASS). `ActionMonthDates` tightening is contract-narrowing but no seed/E2E/tests used non-conforming values; domain layer still accepts free text (validation at DTO boundary only).

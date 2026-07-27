@@ -13,15 +13,18 @@ namespace FoodSafe.DataIntegration;
 public class ApiEndpointAppService : ApplicationService
 {
     private readonly IRepository<ApiEndpoint, Guid> _endpoints;
+    private readonly IRepository<ApiCallLog, Guid> _callLogs;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
     public ApiEndpointAppService(
         IRepository<ApiEndpoint, Guid> endpoints,
+        IRepository<ApiCallLog, Guid> callLogs,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens)
     {
         _endpoints = endpoints;
+        _callLogs = callLogs;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
     }
@@ -126,6 +129,74 @@ public class ApiEndpointAppService : ApplicationService
         await _endpoints.DeleteAsync(entity,
             cancellationToken: _cancellationTokens.Token);
     }
+
+    /// <summary>
+    /// Probes the endpoint URL with a lightweight request and records the
+    /// attempt in the call history (FR-50-05 "Test Connection").
+    /// </summary>
+    public async Task<TestConnectionResultDto> TestConnectionAsync(Guid id)
+    {
+        var endpoint = await GetScopedAsync(id, DataScopeOperation.View);
+
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        int? statusCode = null;
+        string? errorMessage = null;
+        var isSuccess = false;
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Head, endpoint.Url);
+            using var response = await ProbeClient.SendAsync(
+                request, _cancellationTokens.Token);
+            statusCode = (int)response.StatusCode;
+            // HEAD may be unsupported (405) — the host is still reachable.
+            isSuccess = response.IsSuccessStatusCode ||
+                        statusCode is 405 or 401 or 403;
+            if (!isSuccess)
+            {
+                errorMessage = $"Máy chủ trả về HTTP {statusCode}.";
+            }
+        }
+        catch (Exception exception) when (exception is HttpRequestException
+                                              or TaskCanceledException
+                                              or UriFormatException
+                                              or InvalidOperationException)
+        {
+            errorMessage = exception.Message.Length > 4000
+                ? exception.Message[..4000]
+                : exception.Message;
+        }
+        stopwatch.Stop();
+
+        await _callLogs.InsertAsync(
+            ApiCallLog.Create(
+                GuidGenerator.Create(),
+                endpoint.OrganizationId,
+                ApiCallDirection.Outbound,
+                endpoint.ExternalSystem,
+                endpoint.Url,
+                "HEAD",
+                Clock.Now,
+                stopwatch.ElapsedMilliseconds,
+                isSuccess,
+                responseStatusCode: statusCode,
+                errorMessage: errorMessage),
+            autoSave: true,
+            cancellationToken: _cancellationTokens.Token);
+
+        return new TestConnectionResultDto
+        {
+            IsSuccess = isSuccess,
+            StatusCode = statusCode,
+            DurationMs = stopwatch.ElapsedMilliseconds,
+            ErrorMessage = errorMessage
+        };
+    }
+
+    private static readonly HttpClient ProbeClient = new()
+    {
+        Timeout = TimeSpan.FromSeconds(10)
+    };
 
     private async Task<IQueryable<ApiEndpoint>> ScopedQueryAsync(
         DataScopeOperation operation)
