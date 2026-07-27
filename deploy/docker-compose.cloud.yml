@@ -118,6 +118,7 @@ services:
       OpenIddict__Applications__FoodSafe_Swagger__RootUrl: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
       Seed__AdminEmail: ${SEED_ADMIN_EMAIL:-admin@foodsafe.local}
       Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD}
+      Seed__EnableDemoData: ${SEED_ENABLE_DEMO_DATA:-false}
     entrypoint: ["dotnet", "/app/migrator/FoodSafe.DbMigrator.dll"]
     depends_on:
       postgres:
