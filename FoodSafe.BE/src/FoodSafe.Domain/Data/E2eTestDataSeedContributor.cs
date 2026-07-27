@@ -43,10 +43,10 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
     // Region: Đông Bắc Bộ (seeded by MasterCatalogDataSeedContributor)
     static readonly Guid RegionDongBacBoId = Guid.Parse("7e5ccdd0-7eab-4bd4-a10a-e8c39c302002");
 
-    // Development-only seed password (SeedAsync returns early outside Development).
-    // Overridable via configuration Seed:TestPassword / env Seed__TestPassword so the
-    // literal is a fallback, not the sole source. Kept in sync with the e2e specs'
-    // E2E_TEST_USER_PASSWORD default so real-browser login stays deterministic.
+    // Development-only convenience password. It is a well-known literal that lives in
+    // git history, so it must NEVER back a real account outside Development. Kept in
+    // sync with the e2e specs' E2E_TEST_USER_PASSWORD default so real-browser login
+    // stays deterministic in Development/CI. See ResolveSeedPassword (C-5).
     const string DefaultTestPassword = "Admin@2026!";
 
     private readonly IRepository<Region, Guid> _regions;
@@ -249,6 +249,26 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
             passwordValidity: TimeSpan.FromDays(90));
     }
 
+    // Resolves the password for seeded accounts. An operator-set Seed:TestPassword
+    // always wins. Absent that, the built-in DefaultTestPassword is allowed ONLY in
+    // Development — outside Development (e.g. staging/production with demo or e2e
+    // seeding force-enabled) we refuse rather than mint privileged accounts whose
+    // password is published in git history (C-5).
+    public static string ResolveSeedPassword(string? configuredPassword, string? environment)
+    {
+        if (!string.IsNullOrWhiteSpace(configuredPassword))
+            return configuredPassword;
+
+        var env = environment ?? "Production";
+        if (env.Equals("Development", StringComparison.OrdinalIgnoreCase))
+            return DefaultTestPassword;
+
+        throw new InvalidOperationException(
+            "Refusing to seed accounts with the built-in development password outside the " +
+            "Development environment. Set 'Seed:TestPassword' (env Seed__TestPassword) to an " +
+            "operator-chosen secret before enabling demo or e2e seeding in this environment.");
+    }
+
     private async Task EnsureTestUserAsync(
         Guid userId,
         string email,
@@ -268,7 +288,9 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
         {
             Name = fullName
         };
-        var password = _configuration["Seed:TestPassword"] ?? DefaultTestPassword;
+        var env = _configuration["ASPNETCORE_ENVIRONMENT"]
+            ?? _configuration["Hosting:Environment"];
+        var password = ResolveSeedPassword(_configuration["Seed:TestPassword"], env);
         (await _userManager.CreateAsync(user, password)).CheckErrors();
 
         if (roleNames.Length > 0)

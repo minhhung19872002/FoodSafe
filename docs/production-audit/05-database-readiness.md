@@ -235,22 +235,20 @@ ALTER TABLE di_api_call_logs RENAME COLUMN "ExtraProperties" TO extra_properties
 ALTER TABLE di_api_endpoints RENAME COLUMN "ExtraProperties" TO extra_properties;
 ```
 
-### 5.2 HIGH: Hardcoded test credential matches dev SEED_ADMIN_PASSWORD
+### 5.2 ~~HIGH~~ RESOLVED (C-5, 2026-07-28): Hardcoded test credential can no longer back a real account outside Development
 
 **File:** `FoodSafe.BE/src/FoodSafe.Domain/Data/E2eTestDataSeedContributor.cs`
 
-```csharp
-const string TestPassword = "Admin@2026!";
-```
+The built-in literal `DefaultTestPassword = "Admin@2026!"` is a well-known value visible in git history, kept in sync with the e2e specs so real-browser login stays deterministic in Development/CI.
 
-This password is identical to the `SEED_ADMIN_PASSWORD=Admin@2026!` configured in `FoodSafe.BE/.env` (the active development environment file). While `.env` is gitignored and not committed, the password constant is in git-tracked source code and visible in the full commit history.
+Two layers now prevent it from ever backing a real account in a hardened environment:
 
-The seeder is guarded by `ASPNETCORE_ENVIRONMENT == "Development"`, which prevents it from running in Production. However, the credential exposure in source code is a security hygiene violation: if `Admin@2026!` is also used as the production bootstrap password, it is now disclosed to anyone with repository read access.
+1. **B-3** made the seed password config-overridable via `Seed:TestPassword` (env `Seed__TestPassword`).
+2. **C-5** added `ResolveSeedPassword(configuredPassword, environment)`: an operator-set `Seed:TestPassword` always wins; the built-in literal is allowed **only** when the environment is `Development`. Outside Development — e.g. staging/production with demo seeding force-enabled via `Seed:EnableDemoData=true` (which reaches the E2E seeder through `DemoDataSeedContributor.ForceSeedAsync`, bypassing the environment gate) — resolution throws `InvalidOperationException` rather than mint privileged (ProvinceAdmin) accounts with a git-history password.
 
-**Required actions:**
-1. Use a randomly generated placeholder constant in the seeder (e.g., `const string TestPassword = "Test@LocalDev1!"`)
-2. Ensure the production `SEED_ADMIN_PASSWORD` is distinct from any value appearing in source code
-3. If `Admin@2026!` was ever used in production, rotate it immediately
+Regression: `SeedPasswordResolutionTests` (12 cases) — refuses the built-in outside Development (incl. blank/whitespace `Seed:TestPassword`), allows it in Development, and honors an operator secret everywhere.
+
+**Residual (operational, not code):** ensure the production bootstrap `SEED_ADMIN_PASSWORD` is distinct from any value in source; if `Admin@2026!` was ever used as a real password, rotate it (tracked under B-3).
 
 ### 5.3 PostgreSQL SSL enforcement
 
@@ -293,7 +291,7 @@ An operator following `.env.example` to build a production environment file woul
 |---|---|---|---|
 | ~~H-1~~ L-4 (downgraded) | `ExtraProperties` PascalCase column naming — cosmetic only; model snapshot maps `HasColumnName("ExtraProperties")`, runtime verified working | `20260726083732_AddRemainingModules.cs` lines 294, 324 | None at runtime; optional cleanup rename |
 | ~~H-2~~ RESOLVED (C-4, 2026-07-28) | Six certificate/registration unique indexes gained `WHERE is_deleted = FALSE` partial filter via `20260727181120_SoftDeleteFilterOnCertificateNumbers`; regression `scripts/verify-softdelete-unique-indexes.sh` proves reuse-after-soft-delete on real PostgreSQL | `FoodSafeDbContextModelCreatingExtensions.cs`; `20260727181120_SoftDeleteFilterOnCertificateNumbers.cs`; `scripts/verify-softdelete-unique-indexes.sh` | Was: soft-deleted records permanently blocked reuse of their numbers. Now reissuable while live-row uniqueness is preserved |
-| H-3 | Hardcoded test password in source code matches dev SEED_ADMIN_PASSWORD | `E2eTestDataSeedContributor.cs` — `const string TestPassword = "Admin@2026!"` | Credential disclosure in git history |
+| ~~H-3~~ RESOLVED (C-5, 2026-07-28) | Built-in seed password now gated by `ResolveSeedPassword`: allowed only in Development; outside Development an operator-set `Seed:TestPassword` is mandatory or seeding aborts. `SeedPasswordResolutionTests` (12) | `E2eTestDataSeedContributor.cs` — `DefaultTestPassword` + `ResolveSeedPassword` | Was: git-history password could back privileged accounts if demo/e2e seeding ran outside Development. Now refused |
 
 ### MEDIUM
 
@@ -339,7 +337,7 @@ An operator following `.env.example` to build a production environment file woul
 | ~~P0~~ DONE (B-2) | ~~Create automated PostgreSQL backup script~~ → `scripts/backup-database.sh` (encryption, off-host MinIO mirror, retention, manifest). Remaining: schedule ≤ 24 h + wire staleness alert (operational). | DevOps |
 | ~~P0~~ DONE (B-2) | ~~Rehearse full backup restore; record RTO/RPO~~ → `scripts/rehearse-restore.sh`, CI-gated; evidence recorded in DR guide (RTO ~5–8 s, RPO 0 for snapshot). Remaining: add MinIO object-restore to production rehearsal. | DevOps |
 | ~~P0~~ DONE (B-4) | ~~Audit target database for orphaned rows before running migration `20260727104254_AddMissingForeignKeys`~~ → migration made non-destructive (repairs nullable orphans to NULL, aborts on NOT NULL orphans); CI-gated regression `scripts/verify-migration-nondestructive.sh`. Orphan audit now optional defence-in-depth. | DBA |
-| P1 | Replace `const string TestPassword = "Admin@2026!"` with a distinct placeholder; rotate if used in production | Backend / Security |
+| ~~P1~~ DONE (C-5) | ~~Replace `const string TestPassword = "Admin@2026!"` with a distinct placeholder~~ → built-in literal gated to Development by `ResolveSeedPassword`; operator `Seed:TestPassword` mandatory outside Development. Residual: rotate if ever used in production (B-3) | Backend / Security |
 | P1 | Add `REDIS_PASSWORD` to `.env.example` | DevOps |
 | P2 | Parallelize `StatisticsAppService` aggregation queries using `Task.WhenAll` | Backend |
 | P2 | Confirm whether cross-organization certificate number uniqueness is the intended business rule | Product |
