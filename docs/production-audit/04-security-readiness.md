@@ -30,7 +30,7 @@ All findings are verified against source code at HEAD `fe3dbd2`. No speculative 
 
 | ID | Severity | Area | Description | Evidence | Fix Required |
 |---|---|---|---|---|---|
-| SEC-H-01 | HIGH | Authorization / SSRF | SSRF via unvalidated data-integration endpoint URLs | See §3.1 | YES |
+| ~~SEC-H-01~~ RESOLVED (B-5) | HIGH | Authorization / SSRF | SSRF via unvalidated data-integration endpoint URLs — now blocked by `OutboundUrlValidator` (syntactic gate + connect-time IP guard) | See §3.1 | DONE |
 | SEC-H-02 | HIGH | Dependencies | react-router-dom CSRF bypass CVE (GHSA-qwww-vcr4-c8h2) | See §3.2 | YES |
 | SEC-M-01 | MEDIUM | Authentication | CAPTCHA bypass via malformed JSON body | See §3.3 | YES |
 | ~~SEC-M-02~~ RESOLVED (B-3) | MEDIUM | Secrets | Git history contains committed dev credentials — only commodity defaults; now rejected at Production startup + recurrence-guarded | See §3.4 / doc 09 | DONE |
@@ -77,9 +77,12 @@ using var request = new HttpRequestMessage(HttpMethod.Head, endpoint.Url);
 using var response = await ProbeClient.SendAsync(request, ...);
 ```
 
-**Fix:**
-1. Add URL validation in `ApiEndpoint.Create()` and `Update()`: parse the URL, reject non-HTTPS schemes in production, and block private-IP ranges (RFC 1918: `10.x`, `172.16–31.x`, `192.168.x`, loopback `127.x`/`::1`, link-local `169.254.x`).
-2. Configure `SocketsHttpHandler` on `SharedClient` and `ProbeClient` with `ConnectCallback` to DNS-resolve the hostname and reject private IP addresses after resolution (to prevent DNS rebinding).
+**Fix:** **RESOLVED (B-5, 2026-07-28).** A shared SSRF guard `FoodSafe.Security.OutboundUrlValidator` was added (`FoodSafe.BE/src/FoodSafe.Application/Security/OutboundUrlValidator.cs`) and wired into every outbound path:
+
+1. **Syntactic gate — `OutboundUrlValidator.Validate(url)`** — requires an absolute `http`/`https` URL, rejects embedded credentials (`user:pass@host`), and rejects literal-IP hosts in private/reserved ranges. Called in `ApiEndpointAppService.CreateAsync`/`UpdateAsync` (write time) and again in `TestConnectionAsync` and `DataSharingAppService.ShareAsync` before every send.
+2. **Connect-time IP guard — `OutboundUrlValidator.CreateGuardedHttpClient(...)`** — both `ProbeClient` and `SharedClient` are now built from a `SocketsHttpHandler` whose `ConnectCallback` resolves the host, filters out every blocked IP, and connects a socket **only** to the validated addresses (pinned — never re-resolved). This defeats DNS-rebinding / TOCTOU: a rebinding answer resolving to `127.0.0.1`, `10.x`, `169.254.169.254`, `::1`, `fc00::/7`, CGNAT `100.64/10`, etc. is refused at connect time even if the name passed the syntactic gate.
+
+`IsBlocked` covers IPv4 (`0/8`, `10/8`, `100.64/10`, `127/8`, `169.254/16`, `172.16–31`, `192.0.0/2.0/24`, `192.168/16`, `198.18/15`, `≥224`) and IPv6 (loopback, link-local, site-local, multicast, `::`, `fc00::/7`, IPv4-mapped). Regression: 58 test cases in `FoodSafe.Application.Tests/Security/OutboundUrlValidatorTests.cs`, including two real-socket tests asserting the guarded client refuses a live loopback listener (IPv4 and IPv6).
 
 ---
 
@@ -221,7 +224,9 @@ If successful, an attacker with `DataIntegration.ApiEndpoints.Create` permission
 - View all background job queues and history (information disclosure)
 - Potentially trigger or enqueue jobs (job injection)
 
-**Fix:** In addition to fixing SEC-H-01 (which eliminates the primary attack vector), add role-based authorization to the Hangfire dashboard as a defense-in-depth measure:
+**Status:** **Primary vector CLOSED by B-5.** The SSRF that made this reachable is fixed — `OutboundUrlValidator`'s connect-time guard refuses any request that resolves to loopback or a container-internal/private address, so `http://api:8080/hangfire` (and any Docker-internal host) can no longer be reached via the data-integration surface. The defense-in-depth role-based authorization below remains RECOMMENDED but is no longer the sole control.
+
+**Fix (defense-in-depth):** add role-based authorization to the Hangfire dashboard:
 
 ```csharp
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
@@ -300,7 +305,7 @@ The following findings must be resolved before production deployment:
 
 | ID | Severity | Blocker Reason |
 |---|---|---|
-| **SEC-H-01** | HIGH | SSRF allows server-side HTTP requests to internal services; could expose Redis, MinIO, PostgreSQL, Hangfire |
+| ~~**SEC-H-01**~~ RESOLVED (B-5) | HIGH | SSRF allows server-side HTTP requests to internal services; could expose Redis, MinIO, PostgreSQL, Hangfire — **fixed**: `OutboundUrlValidator` syntactic gate + connect-time IP guard on both outbound clients |
 | **SEC-H-02** | HIGH | CVE active in npm audit; CI pipeline may block deployment once advisory scanner runs |
 | **SEC-M-01** | MEDIUM | CAPTCHA bypass weakens brute-force protection on login and password-reset endpoints; violates ATTT level-2 |
 | **SEC-M-03** | MEDIUM | Password expiry not enforced server-side; API remains fully accessible with expired passwords; violates ATTT level-2 password policy |
@@ -363,7 +368,7 @@ The following areas were explicitly checked and found to be properly implemented
 
 | Priority | Finding | Estimated Effort |
 |---|---|---|
-| P0 — Must fix before launch | SEC-H-01 (SSRF) | 1 day |
+| ~~P0~~ DONE (B-5, 2026-07-28) | SEC-H-01 (SSRF) | `OutboundUrlValidator` + 58 regression tests |
 | P0 — Must fix before launch | SEC-M-01 (CAPTCHA bypass) | 2 hours |
 | P0 — Must fix before launch | SEC-M-03 (password expiry server-side) | 1 day |
 | P0 — Must fix before launch | SEC-M-04 (SVG XSS) | 2 hours (remove SVG from allowlist) |

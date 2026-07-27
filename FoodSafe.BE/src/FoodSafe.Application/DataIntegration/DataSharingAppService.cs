@@ -24,10 +24,9 @@ public class DataSharingAppService :
     ApplicationService,
     IDataSharingAppService
 {
-    private static readonly HttpClient SharedClient = new()
-    {
-        Timeout = TimeSpan.FromSeconds(30)
-    };
+    // SSRF-guarded: the connect callback refuses private/reserved IPs (B-5).
+    private static readonly HttpClient SharedClient =
+        OutboundUrlValidator.CreateGuardedHttpClient(TimeSpan.FromSeconds(30));
 
     private readonly IRepository<ApiEndpoint, Guid> _endpoints;
     private readonly IRepository<ApiCallLog, Guid> _logs;
@@ -64,6 +63,10 @@ public class DataSharingAppService :
                 "Điểm kết nối đang ngừng hoạt động. Kích hoạt trước khi chia sẻ.");
         }
 
+        // Reject internal/reserved targets before sending (B-5). The guarded
+        // client additionally re-checks the resolved IP at connect time.
+        var target = OutboundUrlValidator.Validate(endpoint.Url);
+
         var payload = JsonSerializer.Serialize(new
         {
             dataType = input.DataType.ToString(),
@@ -82,7 +85,7 @@ public class DataSharingAppService :
         try
         {
             using var request = new HttpRequestMessage(
-                new HttpMethod(endpoint.HttpMethod), endpoint.Url)
+                new HttpMethod(endpoint.HttpMethod), target)
             {
                 Content = new StringContent(
                     payload, Encoding.UTF8, "application/json")

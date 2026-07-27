@@ -72,6 +72,8 @@ public class ApiEndpointAppService : ApplicationService
             DataScopeOperation.Create, _cancellationTokens.Token);
         var orgId = scope.OrganizationIds.First();
 
+        OutboundUrlValidator.Validate(input.Url);
+
         var entity = ApiEndpoint.Create(
             GuidGenerator.Create(),
             orgId,
@@ -93,6 +95,8 @@ public class ApiEndpointAppService : ApplicationService
         Guid id, CreateUpdateApiEndpointDto input)
     {
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
+
+        OutboundUrlValidator.Validate(input.Url);
 
         entity.Update(
             input.Name,
@@ -144,8 +148,10 @@ public class ApiEndpointAppService : ApplicationService
         var isSuccess = false;
         try
         {
-            using var request = new HttpRequestMessage(
-                HttpMethod.Head, endpoint.Url);
+            // Re-validate at probe time; the guarded client additionally refuses
+            // to connect to any private/reserved IP (defeats DNS rebinding).
+            var target = OutboundUrlValidator.Validate(endpoint.Url);
+            using var request = new HttpRequestMessage(HttpMethod.Head, target);
             using var response = await ProbeClient.SendAsync(
                 request, _cancellationTokens.Token);
             statusCode = (int)response.StatusCode;
@@ -193,10 +199,9 @@ public class ApiEndpointAppService : ApplicationService
         };
     }
 
-    private static readonly HttpClient ProbeClient = new()
-    {
-        Timeout = TimeSpan.FromSeconds(10)
-    };
+    // SSRF-guarded: the connect callback refuses private/reserved IPs (B-5).
+    private static readonly HttpClient ProbeClient =
+        OutboundUrlValidator.CreateGuardedHttpClient(TimeSpan.FromSeconds(10));
 
     private async Task<IQueryable<ApiEndpoint>> ScopedQueryAsync(
         DataScopeOperation operation)
