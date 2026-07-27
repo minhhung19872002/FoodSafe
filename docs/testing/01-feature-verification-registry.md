@@ -23,7 +23,7 @@
 | F-011 | CFS Certificates                | READY_FOR_TEST | `e2e/cfs-certificates.spec.ts`                | —               | 2026-07-26 |
 | F-012 | Export Food Certificates        | READY_FOR_TEST | `e2e/export-food-certificates.spec.ts`        | —               | 2026-07-26 |
 | F-013 | Inspection Plans & Results      | VERIFIED       | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `c8f9537` | 2026-07-27 |
-| F-014 | Food Poisoning Cases            | READY_FOR_TEST | `e2e/food-poisoning.spec.ts`                  | —               | 2026-07-26 |
+| F-014 | Food Poisoning Cases            | VERIFIED       | `e2e/food-poisoning.spec.ts`, `e2e/food-poisoning-verification.spec.ts` | `3c12156` | 2026-07-27 |
 | F-015 | Reporting (NDTP/ATP/Action)     | READY_FOR_TEST | `e2e/reporting.spec.ts`                       | —               | 2026-07-26 |
 | F-016 | Alerts & News                   | READY_FOR_TEST | `e2e/alerts-news.spec.ts`                     | —               | 2026-07-26 |
 | F-017 | Testing Results                 | READY_FOR_TEST | `e2e/testing-results.spec.ts`                 | —               | 2026-07-26 |
@@ -46,8 +46,8 @@
 ## Summary
 
 - Total features: 32
-- VERIFIED: **1** (F-013 — full checklist, see `features/inspection.md`)
-- READY_FOR_TEST: **30** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
+- VERIFIED: **2** (F-013 `features/inspection.md`, F-014 `features/food-poisoning.md`)
+- READY_FOR_TEST: **29** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
 - FAILED: 0
 - BLOCKED: **1** (F-002 — no Playwright spec exists)
 - NOT_STARTED: 0
