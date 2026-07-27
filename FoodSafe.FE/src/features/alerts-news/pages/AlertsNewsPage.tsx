@@ -24,6 +24,7 @@ import {
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { RevokeModal } from "@/components/RevokeModal";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
 import { useAlerts, useNews } from "../api/alertsNewsQueries";
 import {
@@ -83,6 +84,7 @@ function AlertsTab() {
   const [editing, setEditing] = useState<AtpAlert | undefined>();
   const [recallOpen, setRecallOpen] = useState(false);
   const [recallingId, setRecallingId] = useState<string | null>(null);
+  const [detailAlert, setDetailAlert] = useState<AtpAlert | null>(null);
 
   const canCreate = hasPermission("FoodSafe.AlertsAndTesting.Alerts.Create");
   const canEdit = hasPermission("FoodSafe.AlertsAndTesting.Alerts.Edit");
@@ -305,6 +307,10 @@ function AlertsTab() {
         columns={columns}
         loading={isLoading}
         size="small"
+        onRow={(record) => ({
+          onDoubleClick: () => setDetailAlert(record),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
           pageSize: PAGE_SIZE,
@@ -340,6 +346,67 @@ function AlertsTab() {
           setRecallingId(null);
         }}
       />
+
+      <RecordDetailDrawer
+        title="Chi tiết cảnh báo"
+        record={detailAlert}
+        onClose={() => setDetailAlert(null)}
+        fields={[
+          { label: "Số cảnh báo", render: (r) => r.alertNumber },
+          { label: "Tiêu đề", render: (r) => r.title },
+          {
+            label: "Loại",
+            render: (r) => ALERT_CATEGORY_LABELS[r.category],
+          },
+          {
+            label: "Mức độ",
+            render: (r) => {
+              const cfg = ALERT_SEVERITY_CONFIG[r.severity];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          {
+            label: "Nguồn",
+            render: (r) => ALERT_SOURCE_LABELS[r.source],
+          },
+          {
+            label: "Trạng thái",
+            render: (r) => {
+              const cfg = ALERT_STATUS_CONFIG[r.status];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          { label: "Nội dung", span: 2, render: (r) => r.content },
+          { label: "Khu vực ảnh hưởng", render: (r) => r.affectedArea },
+          {
+            label: "Sản phẩm ảnh hưởng",
+            render: (r) => r.affectedProducts,
+          },
+          { label: "Cơ sở liên quan", render: (r) => r.businessName },
+          { label: "Người báo cáo", render: (r) => r.reporterName },
+          { label: "SĐT người báo cáo", render: (r) => r.reporterPhone },
+          { label: "Email người báo cáo", render: (r) => r.reporterEmail },
+          {
+            label: "Công khai",
+            render: (r) => (r.isPublic ? "Có" : "Không"),
+          },
+          {
+            label: "Ngày tạo",
+            render: (r) => dayjs(r.creationTime).format("DD/MM/YYYY"),
+          },
+          {
+            label: "Ngày xuất bản",
+            render: (r) =>
+              r.publishedAt ? dayjs(r.publishedAt).format("DD/MM/YYYY") : null,
+          },
+          {
+            label: "Ngày thu hồi",
+            render: (r) =>
+              r.recalledAt ? dayjs(r.recalledAt).format("DD/MM/YYYY") : null,
+          },
+          { label: "Lý do thu hồi", span: 2, render: (r) => r.recallReason },
+        ]}
+      />
     </>
   );
 }
@@ -360,6 +427,7 @@ function NewsTab() {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<AtpNews | undefined>();
+  const [detailNews, setDetailNews] = useState<AtpNews | null>(null);
 
   const canCreate = hasPermission("FoodSafe.AlertsAndTesting.News.Create");
   const canEdit = hasPermission("FoodSafe.AlertsAndTesting.News.Edit");
@@ -574,6 +642,10 @@ function NewsTab() {
         columns={columns}
         loading={isLoading}
         size="small"
+        onRow={(record) => ({
+          onDoubleClick: () => setDetailNews(record),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
           pageSize: PAGE_SIZE,
@@ -593,6 +665,54 @@ function NewsTab() {
         saving={createMut.isPending || updateMut.isPending}
         onCancel={() => setEditorOpen(false)}
         onSubmit={handleSubmit}
+      />
+
+      <RecordDetailDrawer
+        title="Chi tiết tin tức"
+        record={detailNews}
+        onClose={() => setDetailNews(null)}
+        fields={[
+          { label: "Tiêu đề", span: 2, render: (r) => r.title },
+          { label: "Chuyên mục", render: (r) => r.category },
+          { label: "Thẻ", render: (r) => r.tags },
+          {
+            label: "Trạng thái",
+            render: (r) => {
+              const cfg = NEWS_STATUS_CONFIG[r.status];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          { label: "Lượt xem", render: (r) => r.viewCount },
+          {
+            label: "Nổi bật",
+            render: (r) => (r.isFeatured ? <Tag color="gold">NB</Tag> : "Không"),
+          },
+          {
+            label: "Công khai",
+            render: (r) => (r.isPublic ? "Có" : "Không"),
+          },
+          { label: "Tóm tắt", span: 2, render: (r) => r.summary },
+          { label: "Nội dung", span: 2, render: (r) => r.content },
+          {
+            label: "Ngày tạo",
+            render: (r) => dayjs(r.creationTime).format("DD/MM/YYYY"),
+          },
+          {
+            label: "Ngày xuất bản",
+            render: (r) =>
+              r.publishedAt ? dayjs(r.publishedAt).format("DD/MM/YYYY") : null,
+          },
+          {
+            label: "Cảnh báo liên kết",
+            span: 2,
+            render: (r) =>
+              r.linkedAlerts.length > 0
+                ? r.linkedAlerts
+                    .map((a) => a.alertTitle ?? a.alertId)
+                    .join(", ")
+                : null,
+          },
+        ]}
       />
     </>
   );

@@ -24,6 +24,7 @@ import {
   type GeographicUpsert,
 } from "@/lib/geographyApi";
 import { PageHeader } from "@/components/PageHeader";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import {
   GeographicCatalogModal,
   type GeographicKind,
@@ -61,6 +62,10 @@ export default function GeographicCatalogPage() {
   const [districtId, setDistrictId] = useState("");
   const communes = useCommunes(districtId, false);
   const [modal, setModal] = useState<ModalState>();
+  const [detail, setDetail] = useState<{
+    kind: GeographicKind;
+    item: CatalogItem;
+  } | null>(null);
 
   useEffect(() => {
     const items = provinces.data?.items ?? [];
@@ -125,6 +130,10 @@ export default function GeographicCatalogPage() {
       loading={loading}
       dataSource={items}
       pagination={false}
+      onRow={(item) => ({
+        onDoubleClick: () => setDetail({ kind, item }),
+        style: { cursor: "pointer" },
+      })}
       locale={{ emptyText: <Empty description="Chưa có dữ liệu" /> }}
       columns={[
         { title: "Mã", dataIndex: "code", width: 130 },
@@ -336,6 +345,38 @@ export default function GeographicCatalogPage() {
           ]}
         />
       </div>
+
+      <RecordDetailDrawer
+        title="Chi tiết đơn vị hành chính"
+        record={detail?.item ?? null}
+        onClose={() => setDetail(null)}
+        fields={[
+          { label: "Mã", render: (r) => r.code },
+          { label: "Tên địa bàn", render: (r) => r.name },
+          ...(detail && detail.kind !== "province"
+            ? [
+                {
+                  label: "Loại",
+                  render: (r: CatalogItem) =>
+                    "type" in r
+                      ? ((detail.kind === "district"
+                          ? districtTypes
+                          : communeTypes)[r.type] ?? r.type)
+                      : null,
+                },
+              ]
+            : []),
+          { label: "Thứ tự", render: (r) => r.sortOrder },
+          {
+            label: "Trạng thái",
+            render: (r) => (
+              <Tag color={r.isActive ? "success" : "default"}>
+                {r.isActive ? "Hoạt động" : "Ngừng hoạt động"}
+              </Tag>
+            ),
+          },
+        ]}
+      />
 
       {modal && (
         <GeographicCatalogModal

@@ -42,6 +42,13 @@ public class InspectionPlanItemDto : EntityDto<Guid>
     public string? Notes { get; set; }
 }
 
+public class UpdateInspectionPlanItemStatusDto
+{
+    /// <summary>InProgress or Skipped; Completed is set by the inspection-result flow.</summary>
+    [Required]
+    public InspectionPlanItemStatus Status { get; set; }
+}
+
 public class CreateUpdateInspectionPlanDto
 {
     [Required]

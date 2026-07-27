@@ -23,6 +23,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
 import {
   useTestingCenterOptions,
@@ -45,6 +46,9 @@ import {
 
 const PAGE_SIZE = 15;
 
+const formatDate = (v?: string | null) =>
+  v ? dayjs(v).format("DD/MM/YYYY") : null;
+
 export default function TestingResultsPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<TestingResultFilter>({
@@ -61,6 +65,7 @@ export default function TestingResultsPage() {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<TestingResult | null>(null);
+  const [detailResult, setDetailResult] = useState<TestingResult | null>(null);
   const [form] = Form.useForm();
 
   const openCreate = () => {
@@ -212,6 +217,10 @@ export default function TestingResultsPage() {
         dataSource={data?.items}
         loading={isLoading}
         size="small"
+        onRow={(record) => ({
+          onDoubleClick: () => setDetailResult(record),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           total: data?.totalCount,
           pageSize: PAGE_SIZE,
@@ -221,6 +230,38 @@ export default function TestingResultsPage() {
           showTotal: (total) => `Tổng: ${total}`,
           showSizeChanger: false,
         }}
+      />
+      <RecordDetailDrawer
+        title="Chi tiết kết quả kiểm nghiệm"
+        record={detailResult}
+        onClose={() => setDetailResult(null)}
+        fields={[
+          { label: "Mã mẫu", render: (r) => r.sampleCode },
+          { label: "Tên mẫu", render: (r) => r.sampleName },
+          { label: "Mô tả", render: (r) => r.description, span: 2 },
+          { label: "Cơ sở kiểm nghiệm", render: (r) => r.testingCenterName },
+          { label: "Dịch vụ KN", render: (r) => r.testingServiceName },
+          { label: "Cơ sở lấy mẫu", render: (r) => r.businessName },
+          { label: "Sản phẩm", render: (r) => r.productName },
+          { label: "Ngày lấy mẫu", render: (r) => formatDate(r.sampleDate) },
+          { label: "Ngày nộp", render: (r) => formatDate(r.submissionDate) },
+          { label: "Ngày kết quả", render: (r) => formatDate(r.resultDate) },
+          {
+            label: "Kết quả",
+            render: (r) => {
+              const cfg = TESTING_OUTCOME_CONFIG[r.outcome];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          {
+            label: "Chỉ tiêu không đạt",
+            render: (r) => r.failedCriteria,
+            span: 2,
+          },
+          { label: "Số phiếu kiểm nghiệm", render: (r) => r.certificateNumber },
+          { label: "Công khai", render: (r) => (r.isPublic ? "Có" : "Không") },
+          { label: "Ngày tạo", render: (r) => formatDate(r.creationTime) },
+        ]}
       />
       <Modal
         title={editing ? "Sửa kết quả" : "Nhập kết quả kiểm nghiệm"}

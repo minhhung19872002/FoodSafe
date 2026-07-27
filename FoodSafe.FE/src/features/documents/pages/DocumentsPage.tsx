@@ -25,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
 import { escapeHtml, printHtml } from "@/utils/printHtml";
 import { DocumentAttachmentsModal } from "../components/DocumentAttachmentsModal";
@@ -63,6 +64,9 @@ export default function DocumentsPage() {
   const [editing, setEditing] = useState<AdministrativeDocument | null>(null);
   const [attachmentsDoc, setAttachmentsDoc] =
     useState<AdministrativeDocument | null>(null);
+  const [detailDoc, setDetailDoc] = useState<AdministrativeDocument | null>(
+    null,
+  );
   const [form] = Form.useForm();
 
   const printDocument = (record: AdministrativeDocument) =>
@@ -238,6 +242,10 @@ export default function DocumentsPage() {
         dataSource={data?.items}
         loading={isLoading}
         size="small"
+        onRow={(record) => ({
+          onDoubleClick: () => setDetailDoc(record),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           total: data?.totalCount,
           pageSize: PAGE_SIZE,
@@ -363,6 +371,49 @@ export default function DocumentsPage() {
         title={`Tài liệu đính kèm — ${attachmentsDoc?.documentNumber ?? ""}`}
         canEdit={hasPermission("FoodSafe.AlertsAndTesting.Documents.Edit")}
         onClose={() => setAttachmentsDoc(null)}
+      />
+      <RecordDetailDrawer
+        title="Chi tiết văn bản"
+        record={detailDoc}
+        onClose={() => setDetailDoc(null)}
+        fields={[
+          { label: "Số văn bản", render: (r) => r.documentNumber },
+          { label: "Loại văn bản", render: (r) => r.documentTypeName },
+          { label: "Tiêu đề", span: 2, render: (r) => r.title },
+          { label: "Cơ quan ban hành", render: (r) => r.issuingAuthority },
+          {
+            label: "Trạng thái",
+            render: (r) => {
+              const cfg = DOCUMENT_STATUS_CONFIG[r.status];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          {
+            label: "Ngày ban hành",
+            render: (r) => dayjs(r.issuedDate).format("DD/MM/YYYY"),
+          },
+          {
+            label: "Ngày hiệu lực",
+            render: (r) =>
+              r.effectiveDate
+                ? dayjs(r.effectiveDate).format("DD/MM/YYYY")
+                : null,
+          },
+          {
+            label: "Ngày hết hiệu lực",
+            render: (r) =>
+              r.expiryDate ? dayjs(r.expiryDate).format("DD/MM/YYYY") : null,
+          },
+          {
+            label: "Công khai",
+            render: (r) => (r.isPublic ? "Có" : "Không"),
+          },
+          { label: "Tóm tắt nội dung", span: 2, render: (r) => r.summary },
+          {
+            label: "Ngày tạo",
+            render: (r) => dayjs(r.creationTime).format("DD/MM/YYYY"),
+          },
+        ]}
       />
     </Card>
   );

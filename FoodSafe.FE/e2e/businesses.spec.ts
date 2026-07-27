@@ -59,11 +59,18 @@ async function removeStaleArtifacts(page: Page) {
 }
 
 async function chooseFirstOption(page: Page, label: string) {
-  await page.getByRole("combobox", { name: label }).click();
-  await page
-    .locator(".ant-select-dropdown:visible .ant-select-item-option")
-    .first()
-    .click();
+  const combo = page.getByRole("combobox", { name: label });
+  const wrapper = page.locator(".ant-select", { has: combo }).first();
+  // antd re-renders the dropdown while options load; retry until the
+  // selector actually displays a chosen value (non-empty text).
+  await expect(async () => {
+    await combo.click();
+    await page
+      .locator(".ant-select-dropdown:visible .ant-select-item-option")
+      .first()
+      .click({ timeout: 2_000 });
+    await expect(wrapper).toContainText(/\S/, { timeout: 1_000 });
+  }).toPass({ timeout: 20_000 });
 }
 
 test.describe("business and product management", () => {

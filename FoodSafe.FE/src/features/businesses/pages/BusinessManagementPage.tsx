@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { App, Modal } from "antd";
+import { App, Modal, Tag } from "antd";
 import { PageHeader } from "@/components/PageHeader";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCatalogOptions } from "@/features/catalogs/api/catalogQueries";
@@ -47,16 +48,17 @@ import { BusinessManagementView } from "../components/BusinessManagementView";
 import { MapPicker } from "../components/MapPicker";
 import { ProductEditorModal } from "../components/ProductEditorModal";
 import { ProductAttachmentsModal } from "../components/ProductAttachmentsModal";
-import type {
-  Business,
-  BusinessInput,
-  BusinessHandlerInput,
-  BusinessStatus,
-  Product,
-  ProductInput,
-  ProductStatus,
-  UpdateBusinessInput,
-  UpdateProductInput,
+import {
+  PRODUCT_STATUS,
+  type Business,
+  type BusinessInput,
+  type BusinessHandlerInput,
+  type BusinessStatus,
+  type Product,
+  type ProductInput,
+  type ProductStatus,
+  type UpdateBusinessInput,
+  type UpdateProductInput,
 } from "../types/business.types";
 
 const PAGE_SIZE = 20;
@@ -107,6 +109,7 @@ export default function BusinessManagementPage() {
   const [creatingBusiness, setCreatingBusiness] = useState(false);
   const [editingBusinessId, setEditingBusinessId] = useState<string>();
   const [editingProduct, setEditingProduct] = useState<Product>();
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [creatingProduct, setCreatingProduct] = useState(false);
   const [attachmentsProduct, setAttachmentsProduct] = useState<Product>();
   const [mappedBusiness, setMappedBusiness] = useState<Business>();
@@ -390,6 +393,7 @@ export default function BusinessManagementPage() {
           })
         }
         onManageProductAttachments={setAttachmentsProduct}
+        onShowProductDetail={setDetailProduct}
       />
       {(creatingBusiness || businessDetail.data) && (
         <BusinessEditorModal
@@ -588,6 +592,71 @@ export default function BusinessManagementPage() {
       <BusinessDetailDrawer
         business={detailBusiness}
         onClose={() => setDetailBusiness(undefined)}
+      />
+      <RecordDetailDrawer
+        title="Chi tiết sản phẩm"
+        record={detailProduct}
+        onClose={() => setDetailProduct(null)}
+        fields={[
+          { label: "Mã", render: (r) => r.code },
+          { label: "Tên sản phẩm", render: (r) => r.name },
+          {
+            label: "Cơ sở",
+            render: (r) =>
+              (businessOptions.data ?? []).find(
+                (item) => item.id === r.businessId,
+              )?.name,
+          },
+          {
+            label: "Nhóm sản phẩm",
+            render: (r) =>
+              productGroups.data?.items.find(
+                (item) => item.id === r.productGroupId,
+              )?.name,
+          },
+          { label: "Thương hiệu", render: (r) => r.brandName },
+          { label: "Nhà sản xuất", render: (r) => r.manufacturer },
+          {
+            label: "Nước sản xuất",
+            render: (r) =>
+              countries.data?.items.find(
+                (item) => item.id === r.manufacturingCountryId,
+              )?.name,
+          },
+          { label: "Khối lượng tịnh", render: (r) => r.netWeight },
+          {
+            label: "Hạn sử dụng",
+            render: (r) =>
+              r.expiryPeriodMonths !== undefined
+                ? `${r.expiryPeriodMonths} tháng`
+                : null,
+          },
+          {
+            label: "Trạng thái",
+            render: (r) => (
+              <Tag
+                color={r.status === PRODUCT_STATUS.Active ? "success" : "default"}
+              >
+                {r.status === PRODUCT_STATUS.Active
+                  ? "Đang kinh doanh"
+                  : "Ngừng"}
+              </Tag>
+            ),
+          },
+          { label: "Quy cách", render: (r) => r.specifications, span: 2 },
+          { label: "Thành phần", render: (r) => r.ingredients, span: 2 },
+          {
+            label: "Điều kiện bảo quản",
+            render: (r) => r.storageConditions,
+            span: 2,
+          },
+          {
+            label: "Hướng dẫn sử dụng",
+            render: (r) => r.usageInstructions,
+            span: 2,
+          },
+          { label: "Ghi chú", render: (r) => r.notes, span: 2 },
+        ]}
       />
     </div>
   );

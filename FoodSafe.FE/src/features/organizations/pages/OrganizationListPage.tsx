@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { App } from "antd";
+import { App, Tag } from "antd";
 import { useMutation } from "@tanstack/react-query";
 import { PageHeader } from "@/components/PageHeader";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { organizationApi } from "../api/organizationApi";
@@ -16,6 +17,7 @@ import {
 } from "../api/organizationQueries";
 import { OrganizationCreateModal } from "../components/OrganizationCreateModal";
 import { OrganizationListView } from "../components/OrganizationListView";
+import { organizationLevelConfig } from "../components/organizationConfig";
 import type {
   OrganizationDto,
   OrganizationLevel,
@@ -68,6 +70,8 @@ export default function OrganizationListPage() {
   const [pageSize, setPageSize] = useState(pageSizeDefault);
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<OrganizationDto>();
+  const [detailOrganization, setDetailOrganization] =
+    useState<OrganizationDto | null>(null);
 
   const queryFilter = useMemo(
     () => ({
@@ -145,6 +149,7 @@ export default function OrganizationListPage() {
         onRefresh={refresh}
         onCreate={() => setCreateOpen(true)}
         onEdit={setEditing}
+        onShowDetail={setDetailOrganization}
         onDelete={(organization) => {
           deleteMutation.mutate(organization.id, {
             onSuccess: () => {
@@ -159,6 +164,40 @@ export default function OrganizationListPage() {
         }}
         />
       </div>
+
+      <RecordDetailDrawer
+        title="Chi tiết đơn vị"
+        record={detailOrganization}
+        onClose={() => setDetailOrganization(null)}
+        fields={[
+          { label: "Mã", render: (r) => r.code },
+          { label: "Tên đơn vị", render: (r) => r.name },
+          {
+            label: "Cấp",
+            render: (r) => {
+              const config = organizationLevelConfig[r.level];
+              return <Tag color={config.color}>{config.label}</Tag>;
+            },
+          },
+          {
+            label: "Đơn vị cha",
+            render: (r) =>
+              organizationOptions.find((item) => item.id === r.parentId)?.name,
+          },
+          { label: "Địa chỉ", render: (r) => r.address, span: 2 },
+          { label: "Điện thoại", render: (r) => r.phone },
+          { label: "Email", render: (r) => r.email },
+          { label: "Người đứng đầu", render: (r) => r.leaderName },
+          {
+            label: "Trạng thái",
+            render: (r) => (
+              <Tag color={r.isActive ? "success" : "default"}>
+                {r.isActive ? "Hoạt động" : "Ngừng hoạt động"}
+              </Tag>
+            ),
+          },
+        ]}
+      />
 
       <OrganizationCreateModal
         open={createOpen || Boolean(editing)}

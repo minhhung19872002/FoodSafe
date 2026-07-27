@@ -2,6 +2,7 @@ import { api } from "@/lib/axios";
 import type {
   DashboardFilter,
   DashboardStats,
+  ExpiringLicense,
   ReportComplianceRow,
 } from "../types/dashboard.types";
 
@@ -11,6 +12,17 @@ export const dashboardApi = {
   async getStats(filter: DashboardFilter): Promise<DashboardStats> {
     return (
       await api.get<DashboardStats>(`${endpoint}/stats`, { params: filter })
+    ).data;
+  },
+
+  async getExpiringLicenses(
+    filter: DashboardFilter,
+  ): Promise<{ items: ExpiringLicense[] }> {
+    return (
+      await api.get<{ items: ExpiringLicense[] }>(
+        `${endpoint}/expiring-licenses`,
+        { params: filter },
+      )
     ).data;
   },
 

@@ -141,6 +141,29 @@ public class FoodPoisoningCaseAppService : ApplicationService
         return ToErrorReportDto(report);
     }
 
+    [Authorize(FoodSafePermissions.FoodPoisoning.Cases.Verify)]
+    public async Task<PoisoningErrorReportDto> AcknowledgeErrorReportAsync(Guid id, Guid reportId)
+    {
+        var entity = await GetScopedWithDetailsAsync(id, DataScopeOperation.Edit);
+        var report = entity.ErrorReports.FirstOrDefault(r => r.Id == reportId)
+            ?? throw new BusinessException(FoodSafeDomainErrorCodes.FoodPoisoning.CaseNotFound);
+        report.Acknowledge();
+        await _cases.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return ToErrorReportDto(report);
+    }
+
+    [Authorize(FoodSafePermissions.FoodPoisoning.Cases.Verify)]
+    public async Task<PoisoningErrorReportDto> RespondErrorReportAsync(
+        Guid id, Guid reportId, RespondPoisoningErrorReportDto input)
+    {
+        var entity = await GetScopedWithDetailsAsync(id, DataScopeOperation.Edit);
+        var report = entity.ErrorReports.FirstOrDefault(r => r.Id == reportId)
+            ?? throw new BusinessException(FoodSafeDomainErrorCodes.FoodPoisoning.CaseNotFound);
+        report.MarkCorrected(CurrentUser.GetId(), input.Response);
+        await _cases.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return ToErrorReportDto(report);
+    }
+
     private async Task<IQueryable<FoodPoisoningCase>> ScopedQueryAsync(DataScopeOperation operation)
     {
         var scope = await _dataScopeProvider.GetAsync(operation, _cancellationTokens.Token);

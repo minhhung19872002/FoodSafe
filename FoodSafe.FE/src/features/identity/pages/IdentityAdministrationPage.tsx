@@ -27,6 +27,8 @@ import {
   UnlockOutlined,
 } from "@ant-design/icons";
 import { useMutation } from "@tanstack/react-query";
+import dayjs from "dayjs";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
 import { identityApi } from "../api/identityApi";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -113,6 +115,7 @@ export default function IdentityAdministrationPage() {
     sorting: "Name",
   });
   const [editingUser, setEditingUser] = useState<AdminUser>();
+  const [detailUser, setDetailUser] = useState<AdminUser | null>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [activityUser, setActivityUser] = useState<AdminUser>();
   const [editingRole, setEditingRole] = useState<AdminRole>();
@@ -305,6 +308,10 @@ export default function IdentityAdministrationPage() {
           loading={users.isLoading}
           dataSource={users.data?.items}
           scroll={{ x: 1100 }}
+          onRow={(user) => ({
+            onDoubleClick: () => setDetailUser(user),
+            style: { cursor: "pointer" },
+          })}
           pagination={{
             total: users.data?.totalCount,
             current: userFilter.skipCount / pageSize + 1,
@@ -766,6 +773,74 @@ export default function IdentityAdministrationPage() {
             createUser.mutate(input, callbacks);
           }
         }}
+      />
+      <RecordDetailDrawer
+        title="Chi tiết người dùng"
+        record={detailUser}
+        onClose={() => setDetailUser(null)}
+        fields={[
+          { label: "Tên đăng nhập", render: (r) => r.userName },
+          { label: "Họ và tên", render: (r) => r.fullName },
+          { label: "Email", render: (r) => r.email },
+          { label: "Điện thoại", render: (r) => r.phoneNumber },
+          {
+            label: "Đơn vị",
+            render: (r) => r.organizationName ?? "Toàn hệ thống",
+          },
+          { label: "Chức vụ", render: (r) => r.position },
+          { label: "Phòng ban", render: (r) => r.department },
+          {
+            label: "Vai trò",
+            render: (r) => (
+              <Space wrap>
+                {r.roleNames.map((name) => (
+                  <Tag key={name}>{name}</Tag>
+                ))}
+              </Space>
+            ),
+            span: 2,
+          },
+          {
+            label: "Trạng thái",
+            render: (r) => (
+              <Tag color={r.isActive ? "green" : "default"}>
+                {r.isActive ? "Hoạt động" : "Vô hiệu"}
+              </Tag>
+            ),
+          },
+          {
+            label: "Khóa tài khoản",
+            render: (r) =>
+              r.isLocked ? <Tag color="red">Đang khóa</Tag> : "Không",
+          },
+          {
+            label: "Khóa đến",
+            render: (r) =>
+              r.lockoutEnd
+                ? dayjs(r.lockoutEnd).format("DD/MM/YYYY")
+                : null,
+          },
+          {
+            label: "Đổi mật khẩu",
+            render: (r) =>
+              r.mustChangePassword ? (
+                <Tag color="orange">Bắt buộc đổi</Tag>
+              ) : (
+                "Không"
+              ),
+          },
+          {
+            label: "Mật khẩu hết hạn",
+            render: (r) =>
+              r.passwordExpiresAt
+                ? dayjs(r.passwordExpiresAt).format("DD/MM/YYYY")
+                : null,
+          },
+          {
+            label: "Ngày tạo",
+            render: (r) => dayjs(r.creationTime).format("DD/MM/YYYY"),
+          },
+        ]}
       />
       <UserActivityDrawer
         user={activityUser}

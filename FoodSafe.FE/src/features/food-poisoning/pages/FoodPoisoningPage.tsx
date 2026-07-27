@@ -22,9 +22,11 @@ import {
   CheckCircleOutlined,
   SolutionOutlined,
   EnvironmentOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
 import {
   usePoisoningCases,
@@ -47,8 +49,10 @@ import {
 } from "../api/foodPoisoningMutations";
 import { CaseEditorModal } from "../components/CaseEditorModal";
 import { IncidentEditorModal } from "../components/IncidentEditorModal";
+import { PoisoningErrorReportsModal } from "../components/PoisoningErrorReportsModal";
 import { PoisoningMap } from "../components/PoisoningMap";
 import {
+  CAUSE_ASSESSMENT_CONFIG,
   POISONING_CASE_STATUS,
   POISONING_CASE_STATUS_CONFIG,
   POISONING_INCIDENT_STATUS,
@@ -69,6 +73,10 @@ import {
 
 const PAGE_SIZE = 15;
 
+const formatDate = (v?: string) => (v ? dayjs(v).format("DD/MM/YYYY") : null);
+const formatDateTime = (v?: string) =>
+  v ? dayjs(v).format("DD/MM/YYYY HH:mm") : null;
+
 function CasesTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<CaseFilter>({
@@ -85,6 +93,9 @@ function CasesTab() {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<FoodPoisoningCase | undefined>();
+  const [detailCase, setDetailCase] = useState<FoodPoisoningCase | null>(null);
+  const [errorReportCase, setErrorReportCase] =
+    useState<FoodPoisoningCase | null>(null);
 
   const canCreate = hasPermission("FoodSafe.FoodPoisoning.Cases.Create");
   const canEdit = hasPermission("FoodSafe.FoodPoisoning.Cases.Edit");
@@ -176,6 +187,14 @@ function CasesTab() {
       width: 240,
       render: (_: unknown, record: FoodPoisoningCase) => (
         <Space size="small">
+          {record.status !== POISONING_CASE_STATUS.Draft && (
+            <Button
+              size="small"
+              icon={<WarningOutlined />}
+              aria-label={`Sai sót ${record.caseCode}`}
+              onClick={() => setErrorReportCase(record)}
+            />
+          )}
           {record.status === POISONING_CASE_STATUS.Draft && canEdit && (
             <Button
               size="small"
@@ -302,6 +321,10 @@ function CasesTab() {
         columns={columns}
         loading={isLoading}
         size="small"
+        onRow={(record) => ({
+          onDoubleClick: () => setDetailCase(record),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
           pageSize: PAGE_SIZE,
@@ -321,6 +344,78 @@ function CasesTab() {
         saving={createMut.isPending || updateMut.isPending}
         onCancel={() => setEditorOpen(false)}
         onSubmit={handleSubmit}
+      />
+
+      <RecordDetailDrawer
+        title="Chi tiết ca ngộ độc"
+        record={detailCase}
+        onClose={() => setDetailCase(null)}
+        fields={[
+          { label: "Mã ca", render: (r) => r.caseCode },
+          {
+            label: "Trạng thái",
+            render: (r) => {
+              const cfg = POISONING_CASE_STATUS_CONFIG[r.status];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          { label: "Ngày báo cáo", render: (r) => formatDate(r.reportDate) },
+          {
+            label: "Ngày xảy ra",
+            render: (r) => formatDateTime(r.occurrenceDate),
+          },
+          { label: "Nạn nhân", render: (r) => r.victimName },
+          {
+            label: "Giới tính",
+            render: (r) =>
+              r.victimGender ? VICTIM_GENDER_CONFIG[r.victimGender]?.label : null,
+          },
+          { label: "Tuổi", render: (r) => r.victimAge },
+          { label: "SĐT nạn nhân", render: (r) => r.victimPhone },
+          { label: "Địa chỉ nạn nhân", render: (r) => r.victimAddress, span: 2 },
+          { label: "Địa điểm", render: (r) => r.locationDescription, span: 2 },
+          { label: "Thực phẩm nghi ngờ", render: (r) => r.suspectedFood },
+          { label: "Nguồn thực phẩm", render: (r) => r.foodSource },
+          {
+            label: "Ngày chế biến",
+            render: (r) => formatDate(r.foodPreparationDate),
+          },
+          {
+            label: "Thời gian khởi phát",
+            render: (r) => formatDateTime(r.onsetTime),
+          },
+          { label: "Triệu chứng", render: (r) => r.symptoms, span: 2 },
+          { label: "Cơ sở y tế", render: (r) => r.medicalFacility },
+          {
+            label: "Ngày điều trị",
+            render: (r) => formatDate(r.treatmentStartDate),
+          },
+          {
+            label: "Kết quả điều trị",
+            render: (r) => {
+              if (!r.treatmentResult) return null;
+              const cfg = TREATMENT_RESULT_CONFIG[r.treatmentResult];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          { label: "Người báo cáo", render: (r) => r.reporterName },
+          { label: "SĐT người báo", render: (r) => r.reporterPhone },
+          { label: "Đơn vị báo cáo", render: (r) => r.reporterOrganization },
+          { label: "Quan hệ nạn nhân", render: (r) => r.reporterRelation },
+          { label: "Ngày gửi báo cáo", render: (r) => formatDate(r.reportedAt) },
+          { label: "Ngày xác minh", render: (r) => formatDate(r.verifiedAt) },
+          { label: "Ngày tạo", render: (r) => formatDate(r.creationTime) },
+          { label: "Ghi chú", render: (r) => r.notes, span: 2 },
+        ]}
+      />
+
+      <PoisoningErrorReportsModal
+        kind="case"
+        targetId={errorReportCase?.id ?? null}
+        targetCode={errorReportCase?.caseCode ?? ""}
+        onClose={() => setErrorReportCase(null)}
+        canReport={canEdit}
+        canRespond={canVerify}
       />
     </>
   );
@@ -345,6 +440,10 @@ function IncidentsTab() {
   const [editing, setEditing] = useState<FoodPoisoningIncident | undefined>();
   const [concludeOpen, setConcludeOpen] = useState(false);
   const [concludingId, setConcludingId] = useState<string | null>(null);
+  const [detailIncident, setDetailIncident] =
+    useState<FoodPoisoningIncident | null>(null);
+  const [errorReportIncident, setErrorReportIncident] =
+    useState<FoodPoisoningIncident | null>(null);
 
   const canCreate = hasPermission("FoodSafe.FoodPoisoning.Incidents.Create");
   const canEdit = hasPermission("FoodSafe.FoodPoisoning.Incidents.Edit");
@@ -436,6 +535,14 @@ function IncidentsTab() {
       width: 280,
       render: (_: unknown, record: FoodPoisoningIncident) => (
         <Space size="small">
+          {record.status !== POISONING_INCIDENT_STATUS.Draft && (
+            <Button
+              size="small"
+              icon={<WarningOutlined />}
+              aria-label={`Sai sót ${record.incidentCode}`}
+              onClick={() => setErrorReportIncident(record)}
+            />
+          )}
           {record.status === POISONING_INCIDENT_STATUS.Draft && canEdit && (
             <Button
               size="small"
@@ -577,6 +684,10 @@ function IncidentsTab() {
         columns={columns}
         loading={isLoading}
         size="small"
+        onRow={(record) => ({
+          onDoubleClick: () => setDetailIncident(record),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
           pageSize: PAGE_SIZE,
@@ -596,6 +707,79 @@ function IncidentsTab() {
         saving={createMut.isPending || updateMut.isPending}
         onCancel={() => setEditorOpen(false)}
         onSubmit={handleSubmit}
+      />
+
+      <RecordDetailDrawer
+        title="Chi tiết vụ ngộ độc"
+        record={detailIncident}
+        onClose={() => setDetailIncident(null)}
+        fields={[
+          { label: "Mã vụ", render: (r) => r.incidentCode },
+          {
+            label: "Trạng thái",
+            render: (r) => {
+              const cfg = POISONING_INCIDENT_STATUS_CONFIG[r.status];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          {
+            label: "Ngày xảy ra",
+            render: (r) => formatDateTime(r.occurrenceDate),
+          },
+          { label: "Ngày kết thúc", render: (r) => formatDateTime(r.endDate) },
+          { label: "Địa điểm", render: (r) => r.locationDescription, span: 2 },
+          { label: "Số phơi nhiễm", render: (r) => r.exposedCount },
+          { label: "Số mắc", render: (r) => r.affectedCount },
+          { label: "Nhập viện", render: (r) => r.hospitalizedCount },
+          {
+            label: "Tử vong",
+            render: (r) =>
+              r.deathCount > 0 ? (
+                <Tag color="red">{r.deathCount}</Tag>
+              ) : (
+                r.deathCount
+              ),
+          },
+          { label: "Số ca liên quan", render: (r) => r.caseCount },
+          { label: "Thực phẩm nghi ngờ", render: (r) => r.suspectedFood },
+          { label: "Nguồn thực phẩm", render: (r) => r.foodSource },
+          { label: "Loại hình dịch vụ", render: (r) => r.foodServiceType },
+          {
+            label: "Đánh giá nguyên nhân",
+            render: (r) =>
+              r.causeAssessmentValue
+                ? CAUSE_ASSESSMENT_CONFIG[r.causeAssessmentValue]?.label
+                : null,
+          },
+          { label: "Tác nhân gây bệnh", render: (r) => r.causativeAgent },
+          { label: "Vi sinh vật", render: (r) => r.pathogen },
+          { label: "Đoàn điều tra", render: (r) => r.investigationTeam, span: 2 },
+          {
+            label: "Biện pháp kiểm soát",
+            render: (r) => r.controlMeasures,
+            span: 2,
+          },
+          {
+            label: "Biện pháp phòng ngừa",
+            render: (r) => r.preventionMeasures,
+            span: 2,
+          },
+          { label: "Kết luận", render: (r) => r.conclusion, span: 2 },
+          { label: "Ngày báo cáo", render: (r) => formatDate(r.reportedAt) },
+          { label: "Ngày xác minh", render: (r) => formatDate(r.verifiedAt) },
+          { label: "Ngày kết luận", render: (r) => formatDate(r.concludedAt) },
+          { label: "Ngày tạo", render: (r) => formatDate(r.creationTime) },
+          { label: "Ghi chú", render: (r) => r.notes, span: 2 },
+        ]}
+      />
+
+      <PoisoningErrorReportsModal
+        kind="incident"
+        targetId={errorReportIncident?.id ?? null}
+        targetCode={errorReportIncident?.incidentCode ?? ""}
+        onClose={() => setErrorReportIncident(null)}
+        canReport={canEdit}
+        canRespond={canVerify}
       />
 
       <ConcludeModal

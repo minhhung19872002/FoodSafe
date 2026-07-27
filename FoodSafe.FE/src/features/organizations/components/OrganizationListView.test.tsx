@@ -46,6 +46,7 @@ describe("OrganizationListView", () => {
         onCreate={vi.fn()}
         onEdit={onEdit}
         onDelete={vi.fn()}
+        onShowDetail={vi.fn()}
       />,
     );
 

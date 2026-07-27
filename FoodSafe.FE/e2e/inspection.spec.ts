@@ -142,6 +142,7 @@ test.describe("inspection management", () => {
     const businessSelect = planDialog.locator(".ant-select").last();
     await businessSelect.scrollIntoViewIfNeeded();
     await businessSelect.click();
+    await page.keyboard.type(businessName);
     await page.getByText(businessName, { exact: false }).last().click();
     await planDialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(page.getByText(planCode)).toBeVisible();
@@ -173,6 +174,7 @@ test.describe("inspection management", () => {
       name: "Ghi nhận kết quả kiểm tra",
     });
     await resultDialog.getByRole("combobox", { name: "Cơ sở SXKD" }).click();
+    await page.keyboard.type(businessName);
     await page.getByText(businessName, { exact: false }).last().click();
     await resultDialog
       .getByRole("combobox", { name: "Loại kiểm tra" })

@@ -10,7 +10,10 @@ import type {
   InspectionResultFilter,
   PagedResult,
 } from "../types/inspection.types";
-import type { FollowUpResult } from "../types/inspection.types";
+import type {
+  FollowUpResult,
+  InspectionPlanItemStatus,
+} from "../types/inspection.types";
 
 const planEndpoint = "/v1/app/inspection-plan";
 const planExcelEndpoint = `${planEndpoint}/excel`;
@@ -80,6 +83,18 @@ export const inspectionPlanApi = {
   async cancel(id: string, reason: string): Promise<InspectionPlan> {
     return (
       await api.post<InspectionPlan>(`${planEndpoint}/${id}/cancel`, { reason })
+    ).data;
+  },
+  async updateItemStatus(
+    id: string,
+    itemId: string,
+    status: InspectionPlanItemStatus,
+  ): Promise<InspectionPlan> {
+    return (
+      await api.put<InspectionPlan>(
+        `${planEndpoint}/${id}/item-status/${itemId}`,
+        { status },
+      )
     ).data;
   },
   async exportExcel(filter: InspectionPlanFilter): Promise<FileDownload> {
