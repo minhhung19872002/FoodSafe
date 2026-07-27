@@ -42,3 +42,6 @@ Thumbs.db
 # Local debugging artifacts - never commit
 cookies.txt
 prompt.txt
+
+# GCP provisioning state & generated secrets - never commit
+scripts/gcp/.secrets/

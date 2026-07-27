@@ -34,6 +34,7 @@ interface MasterCatalogViewProps {
   onEdit: (item: CatalogItem) => void;
   onDelete: (id: string) => void;
   onExport?: () => void;
+  onShowDetail: (item: CatalogItem) => void;
 }
 
 function buildColumns({
@@ -172,6 +173,10 @@ export function MasterCatalogView(props: MasterCatalogViewProps) {
         loading={props.loading}
         dataSource={props.items}
         columns={columns}
+        onRow={(item) => ({
+          onDoubleClick: () => props.onShowDetail(item),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           total: props.totalCount,
           pageSize: 100,

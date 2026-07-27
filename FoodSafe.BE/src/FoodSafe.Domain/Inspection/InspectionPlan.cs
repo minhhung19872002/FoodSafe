@@ -98,6 +98,31 @@ public sealed class InspectionPlan : FullAuditedAggregateRoot<Guid>
         _items.Remove(item);
     }
 
+    public InspectionPlanItem UpdateItemStatus(Guid itemId, InspectionPlanItemStatus status)
+    {
+        if (Status != InspectionPlanStatus.Approved && Status != InspectionPlanStatus.InProgress)
+            throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.InvalidStatusTransition);
+
+        var item = _items.FirstOrDefault(i => i.Id == itemId)
+            ?? throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.BusinessNotInPlan);
+
+        // Completed is reserved for the inspection-result flow.
+        switch (status)
+        {
+            case InspectionPlanItemStatus.InProgress when item.Status == InspectionPlanItemStatus.Pending:
+                item.MarkInProgress();
+                break;
+            case InspectionPlanItemStatus.Skipped when item.Status is InspectionPlanItemStatus.Pending
+                or InspectionPlanItemStatus.InProgress:
+                item.MarkSkipped();
+                break;
+            default:
+                throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.InvalidStatusTransition);
+        }
+
+        return item;
+    }
+
     public void Submit(Guid submittedById, DateTime submittedAt)
     {
         EnsureDraft();

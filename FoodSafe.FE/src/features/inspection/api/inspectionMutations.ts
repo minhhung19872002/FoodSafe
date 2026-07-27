@@ -3,6 +3,7 @@ import { inspectionPlanApi, inspectionResultApi } from "./inspectionApi";
 import { inspectionPlanKeys, inspectionResultKeys } from "./inspectionQueries";
 import type {
   InspectionPlanFilter,
+  InspectionPlanItemStatus,
   InspectionResultFilter,
 } from "../types/inspection.types";
 
@@ -64,6 +65,20 @@ export function useRejectInspectionPlan() {
 
 export function useCompleteInspectionPlan() {
   return usePlanRefresh(inspectionPlanApi.complete);
+}
+
+export function useUpdatePlanItemStatus() {
+  return usePlanRefresh(
+    ({
+      id,
+      itemId,
+      status,
+    }: {
+      id: string;
+      itemId: string;
+      status: InspectionPlanItemStatus;
+    }) => inspectionPlanApi.updateItemStatus(id, itemId, status),
+  );
 }
 
 export function useCancelInspectionPlan() {

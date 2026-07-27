@@ -28,6 +28,7 @@ import {
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { saveDownload } from "@/utils/download";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import {
   useApiEndpoints,
   useApiCallLogs,
@@ -81,6 +82,7 @@ function EndpointsTab() {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<ApiEndpoint | null>(null);
+  const [detailRecord, setDetailRecord] = useState<ApiEndpoint | null>(null);
   const [form] = Form.useForm();
 
   const canCreate = hasPermission(
@@ -258,6 +260,10 @@ function EndpointsTab() {
         dataSource={data?.items}
         loading={isLoading}
         size="small"
+        onRow={(record) => ({
+          onDoubleClick: () => setDetailRecord(record),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           total: data?.totalCount,
           pageSize: PAGE_SIZE,
@@ -267,6 +273,29 @@ function EndpointsTab() {
           showTotal: (total) => `Tổng: ${total}`,
           showSizeChanger: false,
         }}
+      />
+      <RecordDetailDrawer
+        title="Chi tiết endpoint"
+        record={detailRecord}
+        onClose={() => setDetailRecord(null)}
+        fields={[
+          { label: "Tên", render: (r) => r.name, span: 2 },
+          { label: "URL", render: (r) => r.url, span: 2 },
+          { label: "Phương thức", render: (r) => r.httpMethod },
+          { label: "Hệ thống", render: (r) => r.externalSystem },
+          {
+            label: "Xác thực",
+            render: (r) => API_AUTH_TYPE_LABELS[r.authType],
+          },
+          {
+            label: "Trạng thái",
+            render: (r) => {
+              const cfg = API_ENDPOINT_STATUS_CONFIG[r.status];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          { label: "Mô tả", render: (r) => r.description, span: 2 },
+        ]}
       />
       <Modal
         title={editing ? "Sửa endpoint" : "Thêm endpoint"}
@@ -539,6 +568,10 @@ function CallHistoryTab() {
         dataSource={data?.items}
         loading={isLoading}
         size="small"
+        onRow={(record) => ({
+          onDoubleClick: () => setDetailId(record.id),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           total: data?.totalCount,
           pageSize: PAGE_SIZE,

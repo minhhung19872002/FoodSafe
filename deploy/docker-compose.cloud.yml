@@ -1,0 +1,200 @@
+# FoodSafe — Cloud VM deployment (Google Compute Engine, single VM).
+#
+# Runs prebuilt images from Artifact Registry — no source build on the VM.
+# This file is copied to the VM as /opt/foodsafe/docker-compose.yml by
+# scripts/gcp/provision.sh and kept in sync by .github/workflows/deploy.yml.
+#
+# Required .env (see .env.cloud.example): IMAGE_REPO, IMAGE_TAG, PUBLIC_BASE_URL,
+# POSTGRES_PASSWORD, REDIS_PASSWORD, MINIO_ROOT_USER, MINIO_ROOT_PASSWORD,
+# STRING_ENCRYPTION_PASSPHRASE, SEED_ADMIN_PASSWORD.
+#
+# ASPNETCORE_ENVIRONMENT defaults to Staging: the app has hard Production-mode
+# gates (SSL SMTP with credentials, real Turnstile keys, PostgreSQL SslMode,
+# DataProtection PFX certificate). Switch to Production only after providing
+# all of them — see deploy/README.md.
+
+name: foodsafe
+
+x-backend-environment: &backend-environment
+  ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Staging}
+  ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB:-FoodSafe};Username=${POSTGRES_USER:-foodsafe};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD};SslMode=${POSTGRES_SSL_MODE:-Disable}
+  App__SelfUrl: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+  App__ClientUrl: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+  App__CorsOrigins: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+  App__RedirectAllowedUrls: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+  App__KnownProxies__0: 172.28.0.10
+  AuthServer__Authority: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+  AuthServer__RequireHttpsMetadata: ${REQUIRE_HTTPS_METADATA:-false}
+  StringEncryption__DefaultPassPhrase: ${STRING_ENCRYPTION_PASSPHRASE:?Set STRING_ENCRYPTION_PASSPHRASE}
+  DataProtection__KeysPath: /home/app/.aspnet/DataProtection-Keys
+  DataProtection__CertificatePath: ${DATA_PROTECTION_CERTIFICATE_PATH:-}
+  DataProtection__CertificatePassword: ${DATA_PROTECTION_CERTIFICATE_PASSWORD:-}
+  Database__AutoMigrate: "false"
+  BlobStorage__Endpoint: minio:9000
+  BlobStorage__AccessKey: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+  BlobStorage__SecretKey: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+  BlobStorage__BucketName: foodsafe-files
+  BlobStorage__WithSsl: "false"
+  MalwareScan__Host: clamav
+  MalwareScan__Port: "3310"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-FoodSafe}
+      POSTGRES_USER: ${POSTGRES_USER:-foodsafe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-foodsafe} -d ${POSTGRES_DB:-FoodSafe}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.30
+
+  redis:
+    image: redis:7-alpine
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD:?Set REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $REDIS_PASSWORD ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.40
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.50
+
+  clamav:
+    image: clamav/clamav:1.4
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping", "1"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.70
+
+  migrator:
+    image: ${IMAGE_REPO:?Set IMAGE_REPO}/foodsafe-api:${IMAGE_TAG:-latest}
+    environment:
+      <<: *backend-environment
+      OpenIddict__Applications__FoodSafe_Swagger__RootUrl: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+      Seed__AdminEmail: ${SEED_ADMIN_EMAIL:-admin@foodsafe.local}
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD}
+    entrypoint: ["dotnet", "/app/migrator/FoodSafe.DbMigrator.dll"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.21
+
+  api:
+    image: ${IMAGE_REPO:?Set IMAGE_REPO}/foodsafe-api:${IMAGE_TAG:-latest}
+    environment:
+      <<: *backend-environment
+      ASPNETCORE_URLS: http://+:8080
+      Captcha__SiteKey: ${CAPTCHA_SITE_KEY:-1x00000000000000000000AA}
+      Captcha__SecretKey: ${CAPTCHA_SECRET_KEY:-1x0000000000000000000000000000000AA}
+      Captcha__ExpectedHostname: ${CAPTCHA_EXPECTED_HOSTNAME:-localhost}
+      Settings__Abp.Mailing.DefaultFromAddress: ${SMTP_FROM_ADDRESS:-noreply@foodsafe.local}
+      Settings__Abp.Mailing.DefaultFromDisplayName: ${SMTP_FROM_NAME:-FoodSafe}
+      Settings__Abp.Mailing.Smtp.Host: ${SMTP_HOST:-}
+      Settings__Abp.Mailing.Smtp.Port: ${SMTP_PORT:-587}
+      Settings__Abp.Mailing.Smtp.EnableSsl: ${SMTP_ENABLE_SSL:-true}
+      Settings__Abp.Mailing.Smtp.UseDefaultCredentials: ${SMTP_USE_DEFAULT_CREDENTIALS:-false}
+      Settings__Abp.Mailing.Smtp.UserName: ${SMTP_USERNAME:-}
+      Settings__Abp.Mailing.Smtp.Password: ${SMTP_PASSWORD:-}
+    volumes:
+      - data_protection_keys:/home/app/.aspnet/DataProtection-Keys
+      - /opt/foodsafe/secrets:/run/secrets:ro
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "--fail",
+          "--header",
+          "X-Forwarded-Proto: https",
+          "http://127.0.0.1:8080/health"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.20
+
+  frontend:
+    image: ${IMAGE_REPO:?Set IMAGE_REPO}/foodsafe-frontend:${IMAGE_TAG:-latest}
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "0.0.0.0:${WEB_HTTP_PORT:-80}:8080"
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.10
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  clamav_data:
+  data_protection_keys:
+
+networks:
+  foodsafe:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24

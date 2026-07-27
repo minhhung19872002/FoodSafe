@@ -377,6 +377,10 @@ function NdtpTab() {
           showTotal: (total) => `Tổng: ${total}`,
           showSizeChanger: false,
         }}
+        onRow={(record) => ({
+          onDoubleClick: () => setDocView({ kind: "ndtp", report: record }),
+          style: { cursor: "pointer" },
+        })}
       />
       <Modal
         title="Tạo báo cáo NĐTP"
@@ -744,6 +748,10 @@ function AtpWorkTab() {
           showTotal: (total) => `Tổng: ${total}`,
           showSizeChanger: false,
         }}
+        onRow={(record) => ({
+          onDoubleClick: () => setDocView({ kind: "atp", report: record }),
+          style: { cursor: "pointer" },
+        })}
       />
       <Modal
         title="Tạo báo cáo công tác ATTP"
@@ -1137,6 +1145,11 @@ function ActionMonthTab() {
           showTotal: (total) => `Tổng: ${total}`,
           showSizeChanger: false,
         }}
+        onRow={(record) => ({
+          onDoubleClick: () =>
+            setDocView({ kind: "action-month", report: record }),
+          style: { cursor: "pointer" },
+        })}
       />
       <Modal
         title="Tạo báo cáo Tháng hành động"

@@ -11,6 +11,7 @@ import type {
   IncidentFilter,
   PagedResult,
   PoisoningErrorReport,
+  RespondErrorReportInput,
 } from "../types/foodPoisoning.types";
 
 const caseEndpoint = "/v1/app/food-poisoning-case";
@@ -71,6 +72,28 @@ export const poisoningCaseApi = {
     input: CreateErrorReportInput,
   ): Promise<void> {
     await api.post(`${caseEndpoint}/${id}/error-report`, input);
+  },
+  async acknowledgeErrorReport(
+    id: string,
+    reportId: string,
+  ): Promise<PoisoningErrorReport> {
+    return (
+      await api.post<PoisoningErrorReport>(
+        `${caseEndpoint}/${id}/acknowledge-error-report/${reportId}`,
+      )
+    ).data;
+  },
+  async respondErrorReport(
+    id: string,
+    reportId: string,
+    input: RespondErrorReportInput,
+  ): Promise<PoisoningErrorReport> {
+    return (
+      await api.post<PoisoningErrorReport>(
+        `${caseEndpoint}/${id}/respond-error-report/${reportId}`,
+        input,
+      )
+    ).data;
   },
   async exportExcel(filter: CaseFilter): Promise<FileDownload> {
     const response = await api.get<Blob>(`${caseExcelEndpoint}/export`, {
@@ -145,6 +168,28 @@ export const poisoningIncidentApi = {
     input: CreateErrorReportInput,
   ): Promise<void> {
     await api.post(`${incidentEndpoint}/${id}/error-report`, input);
+  },
+  async acknowledgeErrorReport(
+    id: string,
+    reportId: string,
+  ): Promise<PoisoningErrorReport> {
+    return (
+      await api.post<PoisoningErrorReport>(
+        `${incidentEndpoint}/${id}/acknowledge-error-report/${reportId}`,
+      )
+    ).data;
+  },
+  async respondErrorReport(
+    id: string,
+    reportId: string,
+    input: RespondErrorReportInput,
+  ): Promise<PoisoningErrorReport> {
+    return (
+      await api.post<PoisoningErrorReport>(
+        `${incidentEndpoint}/${id}/respond-error-report/${reportId}`,
+        input,
+      )
+    ).data;
   },
   async exportExcel(filter: IncidentFilter): Promise<FileDownload> {
     const response = await api.get<Blob>(`${incidentExcelEndpoint}/export`, {

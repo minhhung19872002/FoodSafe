@@ -37,6 +37,19 @@ public class LicenseBreakdownItem
     public int Count { get; set; }
 }
 
+public class ExpiringLicenseDto
+{
+    public Guid Id { get; set; }
+    public string LicenseType { get; set; } = string.Empty;
+    public string LicenseNumber { get; set; } = string.Empty;
+    public Guid BusinessId { get; set; }
+    public string BusinessName { get; set; } = string.Empty;
+    public DateTime ExpiryDate { get; set; }
+    public int DaysRemaining { get; set; }
+    /// <summary>Warning tier: 30, 60 or 90 (days threshold the license falls into).</summary>
+    public int WarningTier { get; set; }
+}
+
 public class RecentActivityItem
 {
     public string EntityType { get; set; } = string.Empty;

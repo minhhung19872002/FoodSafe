@@ -52,6 +52,25 @@ export const INSPECTION_PLAN_ITEM_STATUS = {
 export type InspectionPlanItemStatus =
   (typeof INSPECTION_PLAN_ITEM_STATUS)[keyof typeof INSPECTION_PLAN_ITEM_STATUS];
 
+export const INSPECTION_PLAN_ITEM_STATUS_CONFIG: Record<
+  InspectionPlanItemStatus,
+  { color: string; label: string }
+> = {
+  [INSPECTION_PLAN_ITEM_STATUS.Pending]: {
+    color: "default",
+    label: "Chờ kiểm tra",
+  },
+  [INSPECTION_PLAN_ITEM_STATUS.InProgress]: {
+    color: "processing",
+    label: "Đang kiểm tra",
+  },
+  [INSPECTION_PLAN_ITEM_STATUS.Completed]: {
+    color: "success",
+    label: "Đã kiểm tra",
+  },
+  [INSPECTION_PLAN_ITEM_STATUS.Skipped]: { color: "warning", label: "Bỏ qua" },
+};
+
 export const INSPECTION_TYPE = {
   Scheduled: 1,
   Unscheduled: 2,

@@ -207,6 +207,16 @@ public class InspectionPlanAppService : ApplicationService
         return (await ToDtosAsync([plan]))[0];
     }
 
+    [Authorize(FoodSafePermissions.Inspection.Plans.Edit)]
+    public async Task<InspectionPlanDto> UpdateItemStatusAsync(
+        Guid id, Guid itemId, UpdateInspectionPlanItemStatusDto input)
+    {
+        var plan = await GetScopedAsync(id, DataScopeOperation.Edit);
+        plan.UpdateItemStatus(itemId, input.Status);
+        await _plans.UpdateAsync(plan, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return (await ToDtosAsync([plan]))[0];
+    }
+
     public async Task<List<BusinessOption>> GetBusinessOptionsAsync(string? filter)
     {
         var scope = await _dataScopeProvider.GetAsync(

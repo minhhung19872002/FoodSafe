@@ -305,6 +305,10 @@ export interface CreateErrorReportInput {
   correctionRequest: string;
 }
 
+export interface RespondErrorReportInput {
+  response: string;
+}
+
 export interface FileDownload {
   blob: Blob;
   fileName: string;

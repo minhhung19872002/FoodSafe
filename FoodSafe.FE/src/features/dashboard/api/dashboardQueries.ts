@@ -8,12 +8,22 @@ export const dashboardKeys = {
     [...dashboardKeys.all, "stats", filter] as const,
   compliance: (filter: DashboardFilter) =>
     [...dashboardKeys.all, "compliance", filter] as const,
+  expiringLicenses: (filter: DashboardFilter) =>
+    [...dashboardKeys.all, "expiring-licenses", filter] as const,
 };
 
 export function useDashboardStats(filter: DashboardFilter) {
   return useQuery({
     queryKey: dashboardKeys.stats(filter),
     queryFn: () => dashboardApi.getStats(filter),
+    staleTime: 60_000,
+  });
+}
+
+export function useExpiringLicenses(filter: DashboardFilter) {
+  return useQuery({
+    queryKey: dashboardKeys.expiringLicenses(filter),
+    queryFn: () => dashboardApi.getExpiringLicenses(filter),
     staleTime: 60_000,
   });
 }
