@@ -11,20 +11,20 @@
 | ID    | Feature                         | Status         | E2E Spec                                      | Verified Commit | Date       |
 |-------|---------------------------------|----------------|-----------------------------------------------|-----------------|------------|
 | F-001 | Authentication (Login)          | READY_FOR_TEST | `e2e/auth.spec.ts`                            | —               | 2026-07-26 |
-| F-002 | Password Management             | BLOCKED        | **None**                                      | —               | 2026-07-26 |
+| F-002 | Password Management             | VERIFIED       | `e2e/password-management-verification.spec.ts` | `b2f13fb` | 2026-07-27 |
 | F-003 | Organizations                   | READY_FOR_TEST | `e2e/organizations.spec.ts`                   | —               | 2026-07-26 |
 | F-004 | Master Catalogs                 | READY_FOR_TEST | `e2e/catalogs.spec.ts`                        | —               | 2026-07-26 |
 | F-005 | Geographic Catalogs             | READY_FOR_TEST | `e2e/geography.spec.ts`                       | —               | 2026-07-26 |
 | F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts` | `87cb7f6` | 2026-07-27 |
 | F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts` | `232c814` | 2026-07-27 |
-| F-008 | Product Registrations           | READY_FOR_TEST | `e2e/product-registrations.spec.ts`           | —               | 2026-07-26 |
-| F-009 | Advertisement Registrations     | READY_FOR_TEST | `e2e/advertisement-registrations.spec.ts`     | —               | 2026-07-26 |
-| F-010 | Eligibility Certificates        | READY_FOR_TEST | `e2e/eligibility-certificates.spec.ts`        | —               | 2026-07-26 |
-| F-011 | CFS Certificates                | READY_FOR_TEST | `e2e/cfs-certificates.spec.ts`                | —               | 2026-07-26 |
-| F-012 | Export Food Certificates        | READY_FOR_TEST | `e2e/export-food-certificates.spec.ts`        | —               | 2026-07-26 |
+| F-008 | Product Registrations           | VERIFIED       | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `df7823c` | 2026-07-27 |
+| F-009 | Advertisement Registrations     | VERIFIED       | `e2e/advertisement-registrations.spec.ts`, `e2e/advertisement-registrations-verification.spec.ts` | `df7823c` | 2026-07-27 |
+| F-010 | Eligibility Certificates        | VERIFIED       | `e2e/eligibility-certificates.spec.ts`, `e2e/eligibility-certificates-verification.spec.ts` | `df7823c` | 2026-07-27 |
+| F-011 | CFS Certificates                | VERIFIED       | `e2e/cfs-certificates.spec.ts`, `e2e/cfs-certificates-verification.spec.ts` | `df7823c` | 2026-07-27 |
+| F-012 | Export Food Certificates        | VERIFIED       | `e2e/export-food-certificates.spec.ts`, `e2e/export-food-certificates-verification.spec.ts` | `df7823c` | 2026-07-27 |
 | F-013 | Inspection Plans & Results      | VERIFIED       | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `c8f9537` | 2026-07-27 |
 | F-014 | Food Poisoning Cases            | VERIFIED       | `e2e/food-poisoning.spec.ts`, `e2e/food-poisoning-verification.spec.ts` | `3c12156` | 2026-07-27 |
-| F-015 | Reporting (NDTP/ATP/Action)     | VERIFIED       | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts` | `e141203` | 2026-07-27 |
+| F-015 | Reporting (NDTP/ATP/Action)     | VERIFIED       | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts` | `df7823c` | 2026-07-27 |
 | F-016 | Alerts & News                   | READY_FOR_TEST | `e2e/alerts-news.spec.ts`                     | —               | 2026-07-26 |
 | F-017 | Testing Results                 | READY_FOR_TEST | `e2e/testing-results.spec.ts`                 | —               | 2026-07-26 |
 | F-018 | Risk Analysis                   | READY_FOR_TEST | `e2e/risk-analysis.spec.ts`                   | —               | 2026-07-26 |
@@ -46,11 +46,17 @@
 ## Summary
 
 - Total features: 32
-- VERIFIED: **5** (F-006, F-007, F-013, F-014, F-015 — see `features/*.md`)
-- READY_FOR_TEST: **26** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
+- VERIFIED: **12** (F-002, F-006..F-015 — see `features/*.md`)
+- READY_FOR_TEST: **20** (E2E specs pass against the real stack, but full verification checklist not yet executed per feature)
 - FAILED: 0
-- BLOCKED: **1** (F-002 — no Playwright spec exists)
+- BLOCKED: 0 (F-002 unblocked — implementation existed; spec added and verified)
 - NOT_STARTED: 0
+
+## Test Run (2026-07-27, second) — commit `df7823c` + security pass
+
+- **90 test cases** — **90 passed, 0 failed** (2.7m) after rebuilding both Docker images at HEAD (includes security-pass commit `06656c8`)
+- Clears the F-015 DIRTY flag set by the shared `FoodSafeHttpApiHostModule` change: reporting main + verification specs pass on the rebuilt stack
+- F-002 verified separately at `b2f13fb` (password-history product defect found and fixed — see `features/password-management.md`)
 
 ## Test Run (2026-07-27) — commit `c8f9537`
 
