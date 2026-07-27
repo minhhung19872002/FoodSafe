@@ -23,3 +23,19 @@ export function useTestingResult(id: string) {
     enabled: !!id,
   });
 }
+
+export function useTestingCenterOptions() {
+  return useQuery({
+    queryKey: [...trKeys.all, "testing-center-options"] as const,
+    queryFn: () => testingResultApi.testingCenterOptions(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useTestingServiceOptions() {
+  return useQuery({
+    queryKey: [...trKeys.all, "testing-service-options"] as const,
+    queryFn: () => testingResultApi.testingServiceOptions(),
+    staleTime: 5 * 60 * 1000,
+  });
+}

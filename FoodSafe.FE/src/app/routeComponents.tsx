@@ -115,6 +115,27 @@ export const SystemSettingsPage = lazy(
 export const DataIntegrationPage = lazy(
   () => import("@/features/data-integration/pages/DataIntegrationPage"),
 );
+export const PublicPortalHomePage = lazy(
+  () => import("@/features/public-portal/pages/PublicPortalHomePage"),
+);
+export const PublicGeneralSearchPage = lazy(
+  () => import("@/features/public-portal/pages/PublicGeneralSearchPage"),
+);
+export const PublicCertificateSearchPage = lazy(
+  () => import("@/features/public-portal/pages/PublicCertificateSearchPage"),
+);
+export const PublicWarnedBusinessesPage = lazy(
+  () => import("@/features/public-portal/pages/PublicWarnedBusinessesPage"),
+);
+export const PublicNewsPage = lazy(
+  () => import("@/features/public-portal/pages/PublicNewsPage"),
+);
+export const PublicDocumentsPage = lazy(
+  () => import("@/features/public-portal/pages/PublicDocumentsPage"),
+);
+export const CitizenAlertReportPage = lazy(
+  () => import("@/features/public-portal/pages/CitizenAlertReportPage"),
+);
 
 export function RouteLoading() {
   return (

@@ -40,9 +40,82 @@ import {
   SystemSettingsPage,
   DataIntegrationPage,
   RouteLoading,
+  PublicPortalHomePage,
+  PublicGeneralSearchPage,
+  PublicCertificateSearchPage,
+  PublicWarnedBusinessesPage,
+  PublicNewsPage,
+  PublicDocumentsPage,
+  CitizenAlertReportPage,
 } from "./routeComponents";
 
 export const router = createBrowserRouter([
+  // ── Public portal routes ─────────────────────────────────────────────────
+  {
+    path: "/cong-thong-tin",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicPortalHomePage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-chung",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicGeneralSearchPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-giay-phep",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicCertificateSearchPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/co-so-bi-canh-bao",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicWarnedBusinessesPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tin-tuc",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicNewsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tin-tuc/:id",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicNewsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-van-ban",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicDocumentsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/gui-phan-anh",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <CitizenAlertReportPage />
+      </Suspense>
+    ),
+  },
+  // ── End public portal routes ──────────────────────────────────────────────
   {
     path: "/tra-cuu-giay-du-dieu-kien",
     element: (

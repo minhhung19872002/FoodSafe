@@ -24,7 +24,11 @@ import {
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { saveDownload } from "@/utils/download";
-import { useTestingResults } from "../api/testingResultQueries";
+import {
+  useTestingCenterOptions,
+  useTestingResults,
+  useTestingServiceOptions,
+} from "../api/testingResultQueries";
 import {
   useCreateTestingResult,
   useUpdateTestingResult,
@@ -48,6 +52,8 @@ export default function TestingResultsPage() {
     maxResultCount: PAGE_SIZE,
   });
   const { data, isLoading } = useTestingResults(filter);
+  const testingCenters = useTestingCenterOptions();
+  const testingServices = useTestingServiceOptions();
   const createMut = useCreateTestingResult();
   const updateMut = useUpdateTestingResult();
   const deleteMut = useDeleteTestingResult();
@@ -283,14 +289,35 @@ export default function TestingResultsPage() {
           </Form.Item>
           <Space style={{ width: "100%" }}>
             <Form.Item
-              name="testingCenterName"
+              name="testingCenterId"
               label="Cơ sở kiểm nghiệm"
-              rules={[{ required: true, message: "Vui lòng nhập tên cơ sở KN" }]}
+              rules={[{ required: true, message: "Vui lòng chọn cơ sở KN" }]}
             >
-              <Input style={{ width: 290 }} placeholder="Tên cơ sở kiểm nghiệm" />
+              <Select
+                style={{ width: 290 }}
+                placeholder="Chọn cơ sở kiểm nghiệm"
+                showSearch
+                optionFilterProp="label"
+                loading={testingCenters.isLoading}
+                options={(testingCenters.data ?? []).map((x) => ({
+                  value: x.id,
+                  label: x.name,
+                }))}
+              />
             </Form.Item>
-            <Form.Item name="testingServiceName" label="Dịch vụ KN">
-              <Input style={{ width: 290 }} placeholder="Tên dịch vụ kiểm nghiệm" />
+            <Form.Item name="testingServiceId" label="Dịch vụ KN">
+              <Select
+                style={{ width: 290 }}
+                placeholder="Chọn dịch vụ kiểm nghiệm"
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                loading={testingServices.isLoading}
+                options={(testingServices.data ?? []).map((x) => ({
+                  value: x.id,
+                  label: x.name,
+                }))}
+              />
             </Form.Item>
           </Space>
           <Space style={{ width: "100%" }}>
