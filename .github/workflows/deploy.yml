@@ -91,10 +91,12 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "${{ secrets.VM_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Sync compose file
+      - name: Sync compose and Caddy files
         run: |
           scp -i ~/.ssh/deploy_key deploy/docker-compose.cloud.yml \
             "deploy@${{ secrets.VM_HOST }}:/opt/foodsafe/docker-compose.yml"
+          scp -i ~/.ssh/deploy_key deploy/Caddyfile \
+            "deploy@${{ secrets.VM_HOST }}:/opt/foodsafe/Caddyfile"
 
       - name: Deploy stack
         env:

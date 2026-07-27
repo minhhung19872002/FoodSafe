@@ -23,6 +23,7 @@ x-backend-environment: &backend-environment
   App__CorsOrigins: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
   App__RedirectAllowedUrls: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
   App__KnownProxies__0: 172.28.0.10
+  App__KnownProxies__1: 172.28.0.11
   AuthServer__Authority: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
   AuthServer__RequireHttpsMetadata: ${REQUIRE_HTTPS_METADATA:-false}
   StringEncryption__DefaultPassPhrase: ${STRING_ENCRYPTION_PASSPHRASE:?Set STRING_ENCRYPTION_PASSPHRASE}
@@ -178,12 +179,29 @@ services:
     depends_on:
       api:
         condition: service_healthy
-    ports:
-      - "0.0.0.0:${WEB_HTTP_PORT:-80}:8080"
     restart: unless-stopped
     networks:
       foodsafe:
         ipv4_address: 172.28.0.10
+
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-:80}
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      foodsafe:
+        ipv4_address: 172.28.0.11
 
 volumes:
   postgres_data:
@@ -191,6 +209,8 @@ volumes:
   minio_data:
   clamav_data:
   data_protection_keys:
+  caddy_data:
+  caddy_config:
 
 networks:
   foodsafe:

@@ -204,7 +204,7 @@ if [ ! -f "$VM_ENV_FILE" ]; then
 IMAGE_REPO=$IMAGE_REPO
 IMAGE_TAG=latest
 PUBLIC_BASE_URL=http://$STATIC_IP
-WEB_HTTP_PORT=80
+SITE_DOMAIN=:80
 ASPNETCORE_ENVIRONMENT=Staging
 REQUIRE_HTTPS_METADATA=false
 POSTGRES_SSL_MODE=Disable
@@ -238,6 +238,7 @@ if [ "${READY:-0}" != "1" ]; then
   exit 1
 fi
 scp "${SSH_OPTS[@]}" "$REPO_ROOT/deploy/docker-compose.cloud.yml" "deploy@$STATIC_IP:/opt/foodsafe/docker-compose.yml"
+scp "${SSH_OPTS[@]}" "$REPO_ROOT/deploy/Caddyfile" "deploy@$STATIC_IP:/opt/foodsafe/Caddyfile"
 scp "${SSH_OPTS[@]}" "$VM_ENV_FILE" "deploy@$STATIC_IP:/opt/foodsafe/.env"
 ssh "${SSH_OPTS[@]}" "deploy@$STATIC_IP" 'chmod 600 /opt/foodsafe/.env'
 

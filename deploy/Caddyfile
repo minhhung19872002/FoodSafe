@@ -1,0 +1,7 @@
+# FoodSafe edge proxy. SITE_DOMAIN comes from /opt/foodsafe/.env:
+#   SITE_DOMAIN=:80                     → plain HTTP (no domain yet)
+#   SITE_DOMAIN=attp.bluestar.com.vn    → automatic Let's Encrypt HTTPS
+#     (requires the domain's A record to point at this VM first)
+{$SITE_DOMAIN} {
+	reverse_proxy frontend:8080
+}
