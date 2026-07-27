@@ -33,24 +33,33 @@
 | F-021 | Audit Logs                      | VERIFIED       | `e2e/audit-logs.spec.ts`, `e2e/audit-logs-verification.spec.ts` | `3bb49ec` | 2026-07-27 |
 | F-022 | Dashboard                       | VERIFIED       | `e2e/dashboard.spec.ts`, `e2e/dashboard-verification.spec.ts` | `7316838` | 2026-07-27 |
 | F-023 | Statistics                      | VERIFIED       | `e2e/statistics.spec.ts`, `e2e/statistics-verification.spec.ts` | `7316838` | 2026-07-27 |
-| F-024 | Public Lookup — Business        | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
-| F-025 | Public Lookup — Self Declaration| READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
-| F-026 | Public Lookup — Product Reg.    | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
-| F-027 | Public Lookup — Eligibility     | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
-| F-028 | Public Lookup — CFS             | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
-| F-029 | Public Lookup — Export Food     | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
-| F-030 | Public Lookup — Ad Registration | READY_FOR_TEST | `e2e/public-lookups.spec.ts`                  | —               | 2026-07-26 |
+| F-024 | Public Lookup — Business        | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | pending | 2026-07-27 |
+| F-025 | Public Lookup — Self Declaration| VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | pending | 2026-07-27 |
+| F-026 | Public Lookup — Product Reg.    | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | pending | 2026-07-27 |
+| F-027 | Public Lookup — Eligibility     | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | pending | 2026-07-27 |
+| F-028 | Public Lookup — CFS             | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | pending | 2026-07-27 |
+| F-029 | Public Lookup — Export Food     | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | pending | 2026-07-27 |
+| F-030 | Public Lookup — Ad Registration | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | pending | 2026-07-27 |
 | F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `d855990` | 2026-07-27 |
 | F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `d855990` | 2026-07-27 |
 
 ## Summary
 
 - Total features: 32
-- VERIFIED: **26** (F-001..F-023, F-031, F-032 — see `features/*.md`)
-- READY_FOR_TEST: **6** (F-024..F-030, full verification checklist not yet executed)
+- VERIFIED: **32** (ALL features — see `features/*.md`)
+- READY_FOR_TEST: 0
 - FAILED: 0
 - BLOCKED: 0
 - NOT_STARTED: 0
+
+## Test Run (2026-07-27, fifth) — F-024..F-030 Public Lookups verified
+
+- **22 test cases** across new `public-lookups-verification.spec.ts` — **22 passed, 0 failed** (7.9s)
+- **7 smoke tests** in `public-lookups.spec.ts` — **7 passed** (4.3s)
+- Features verified: F-024..F-030 (all 7 public lookup features)
+- Key finding: ABP `UserFriendlyException` maps to HTTP 403, NOT 400 or 404. Public endpoints return 403 body with Vietnamese error message when entity not found — this is expected, not an error.
+- All 7 public endpoints confirmed AllowAnonymous (no session required)
+- Commit SHA: pending (recorded after commit)
 
 ## Test Run (2026-07-27, fourth) — F-001, F-003, F-004, F-005 verified
 
