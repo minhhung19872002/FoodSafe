@@ -32,10 +32,10 @@ All findings are verified against source code at HEAD `fe3dbd2`. No speculative 
 |---|---|---|---|---|---|
 | ~~SEC-H-01~~ RESOLVED (B-5) | HIGH | Authorization / SSRF | SSRF via unvalidated data-integration endpoint URLs — now blocked by `OutboundUrlValidator` (syntactic gate + connect-time IP guard) | See §3.1 | DONE |
 | SEC-H-02 | HIGH | Dependencies | Known-vulnerable deps: **AutoMapper DoS RESOLVED (B-6)**; Account.Web open-redirect + react-router RSC-CSRF = accepted-risk / not-applicable (no supported fix) | See §3.2 | PARTIAL — see §3.2 |
-| SEC-M-01 | MEDIUM | Authentication | CAPTCHA bypass via malformed JSON body | See §3.3 | YES |
+| ~~SEC-M-01~~ RESOLVED (C-1) | MEDIUM | Authentication | CAPTCHA bypass via malformed JSON body — malformed/non-object bodies now rejected with 400 | See §3.3 | DONE |
 | ~~SEC-M-02~~ RESOLVED (B-3) | MEDIUM | Secrets | Git history contains committed dev credentials — only commodity defaults; now rejected at Production startup + recurrence-guarded | See §3.4 / doc 09 | DONE |
-| SEC-M-03 | MEDIUM | Authentication | Password expiry enforced client-side only; backend APIs remain accessible | See §3.5 | YES |
-| SEC-M-04 | MEDIUM | Application | SVG allowed in branding uploads without script sanitization | See §3.6 | YES |
+| ~~SEC-M-03~~ RESOLVED (C-2) | MEDIUM | Authentication | Password expiry enforced client-side only — `PasswordExpiryMiddleware` now blocks expired/must-change sessions server-side (403) | See §3.5 | DONE |
+| ~~SEC-M-04~~ RESOLVED (C-3) | MEDIUM | Application | SVG allowed in branding uploads — `image/svg+xml` removed; allow-list now raster-only | See §3.6 | DONE |
 | SEC-M-05 | MEDIUM | Authorization | Hangfire dashboard reachable via SSRF (chains with SEC-H-01) | See §3.7 | YES |
 | SEC-L-01 | LOW | Secrets | CI ephemeral database password committed in `ci.yml` | See §3.8 | RECOMMENDED |
 | SEC-L-02 | LOW | Infrastructure | No startup validation that `RequireHttpsMetadata=true` in production | See §3.9 | RECOMMENDED |
@@ -135,15 +135,10 @@ catch (JsonException)
 
 **Practical impact:** An attacker sends a non-JSON (or invalid-JSON) body. CAPTCHA check is skipped. The controller model-binding then fails with HTTP 400 for most endpoints. For the `send-password-reset-code` endpoint, however, the request goes through to the ABP account controller which has its own input parsing; depending on ABP's content negotiation, it may still process the request (returning 400 for invalid input), confirming that CAPTCHA was not required. This weakens the brute-force protection on the password-reset code endpoint (which could be used for user enumeration probing with no CAPTCHA friction).
 
-**Fix:** Change the `catch` block to reject the request with HTTP 400 instead of calling `next()`:
-
-```csharp
-catch (JsonException)
-{
-    context.Response.StatusCode = StatusCodes.Status400BadRequest;
-    return;
-}
-```
+**Status:** **RESOLVED (C-1, 2026-07-28).**
+1. The `catch (JsonException)` branch now calls `RejectAsync(context)` (HTTP 400, error code `FoodSafe:Captcha:0001`) instead of `next()` — a malformed body can no longer skip CAPTCHA.
+2. Hardened an adjacent gap found while fixing: a **valid but non-object** body (e.g. `[]`, `"x"`, `123`) previously threw `InvalidOperationException` from `EnumerateObject()`, which the `catch (JsonException)` did **not** catch and would escape the middleware. The parser now guards `RootElement.ValueKind == JsonValueKind.Object`, so a non-object body resolves to an empty token → CAPTCHA verify fails → HTTP 400.
+3. Regression test `Login_Should_Reject_Unparseable_Or_Tokenless_Body` (`LoginCaptchaMiddlewareTests.cs`, Theory ×4: non-JSON, empty, truncated-JSON, `[]`) asserts 400 and that `next` is never called. Full suite: 7/7 pass.
 
 ---
 
@@ -178,7 +173,7 @@ The 90-day password expiry and `MustChangePassword` flags are checked by the fro
 
 **ATTT level-2 requirement:** Server-side enforcement is required ("Password policy bắt buộc" as a server control, not a display hint).
 
-**Fix:** Add an ASP.NET Core middleware or authorization policy that calls `ICurrentDataScopeProvider` / `AppUserProfile.IsPasswordExpired()` and returns HTTP 403 with an error code `FoodSafe:Account:PasswordExpired` for non-password-change API endpoints. Whitelist the following paths from the check: `/api/account/login`, `/api/account/logout`, `/api/v1/app/account-security/*`, `/api/abp/application-configuration`, `/api/v1/app/current-user-context`.
+**Status:** **RESOLVED (C-2, verified 2026-07-28).** `FoodSafe.HttpApi.Host/Security/PasswordExpiryMiddleware.cs` enforces the rule server-side: for any authenticated principal whose profile has `MustChangePassword` or `IsPasswordExpired(clock.Now)`, it returns HTTP 403 `FoodSafe:Account:PasswordExpired`. Registered in the module pipeline after `UseDynamicClaims` and before `UseAuthorization`. Whitelisted prefixes (so the user can still remediate): `/api/v1/app/account-security`, `/api/v1/app/current-user-context`, `/api/account/logout`, `/api/abp`, `/api/v1/public`, `/health`. The FE redirect remains as a UX affordance only; the block is now authoritative on the server.
 
 ---
 
@@ -210,7 +205,7 @@ An admin with `SystemAdministration.Settings` permission can upload an SVG conta
 
 **Threat model note:** This requires a malicious or compromised admin account, which is a privileged access vector.
 
-**Fix (preferred):** Remove `image/svg+xml` from `AllowedImageContentTypes`. Branding images should be raster formats only. Alternatively: strip `<script>`, event handlers, and `javascript:` URIs from uploaded SVGs using a dedicated SVG sanitizer library before storage.
+**Status:** **RESOLVED (C-3, 2026-07-28).** `image/svg+xml` removed from `AllowedImageContentTypes`; the allow-list is now raster-only (`image/png`, `image/jpeg`, `image/webp`) with an inline comment recording the stored-XSS rationale. The content-type guard was extracted to a testable `SystemSettingsAppService.EnsureAllowedImageContentType(string)` (behaviour unchanged for the upload path). Regression test `BrandingImageContentTypeTests` (`FoodSafe.Application.Tests`, 10 cases) confirms `image/svg+xml`, `image/svg+xml; charset=utf-8`, `text/html`, `application/xml`, `image/gif`, and empty are rejected with `FoodSafe:SystemSettings:InvalidImageType`, while the three raster types (case-insensitively) are accepted. All pass.
 
 ---
 
@@ -315,11 +310,11 @@ The following findings must be resolved before production deployment:
 |---|---|---|
 | ~~**SEC-H-01**~~ RESOLVED (B-5) | HIGH | SSRF allows server-side HTTP requests to internal services; could expose Redis, MinIO, PostgreSQL, Hangfire — **fixed**: `OutboundUrlValidator` syntactic gate + connect-time IP guard on both outbound clients |
 | **SEC-H-02** | HIGH→PARTIAL | AutoMapper High-DoS **fixed (B-6)**; remaining Account.Web (Moderate) + react-router (High, RSC-only) have **no fix in their supported line** and are non-exploitable in this deployment — documented accepted-risk with compensating controls, framework/library upgrade tracked (§3.2) |
-| **SEC-M-01** | MEDIUM | CAPTCHA bypass weakens brute-force protection on login and password-reset endpoints; violates ATTT level-2 |
-| **SEC-M-03** | MEDIUM | Password expiry not enforced server-side; API remains fully accessible with expired passwords; violates ATTT level-2 password policy |
-| **SEC-M-04** | MEDIUM | SVG upload can embed stored XSS on login page; served to all unauthenticated users |
+| ~~**SEC-M-01**~~ RESOLVED (C-1) | MEDIUM | CAPTCHA bypass via malformed/non-object JSON body — now rejected with HTTP 400; regression-tested |
+| ~~**SEC-M-03**~~ RESOLVED (C-2) | MEDIUM | Password expiry now enforced server-side by `PasswordExpiryMiddleware` (403 `FoodSafe:Account:PasswordExpired`) |
+| ~~**SEC-M-04**~~ RESOLVED (C-3) | MEDIUM | `image/svg+xml` removed from branding allow-list (raster-only); regression-tested |
 
-The remaining findings (SEC-M-02, SEC-M-05, SEC-L-01, SEC-L-02, SEC-L-03) are recommended fixes that do not block deployment but should be addressed in the first post-launch hardening sprint.
+All three P0 launch-blocking findings (SEC-M-01/03/04) are now RESOLVED. The remaining findings (SEC-M-05, SEC-L-01, SEC-L-02, SEC-L-03) are recommended fixes that do not block deployment but should be addressed in the first post-launch hardening sprint.
 
 ---
 
@@ -328,7 +323,7 @@ The remaining findings (SEC-M-02, SEC-M-05, SEC-L-01, SEC-L-02, SEC-L-03) are re
 | Requirement | Status | Notes |
 |---|---|---|
 | Password min 8 chars + complexity | PASS | Enforced in `ConfigureIdentity`: `RequiredLength=8`, `RequireDigit`, `RequireLowercase`, `RequireUppercase`, `RequireNonAlphanumeric` — `FoodSafeHttpApiHostModule.cs:458-463` |
-| Password 90-day expiry | PARTIAL — BLOCKER | 90-day validity coded (`AccountSecurityAppService.cs:18`), `RecordPasswordChanged` updates expiry. However, server-side enforcement of the expiry on API requests is missing (SEC-M-03) |
+| Password 90-day expiry | PASS | 90-day validity coded (`AccountSecurityAppService.cs:18`), `RecordPasswordChanged` updates expiry, and server-side enforcement is now applied by `PasswordExpiryMiddleware` (403 for expired/must-change sessions) — SEC-M-03 RESOLVED (C-2) |
 | Session timeout | PASS | `ExpireTimeSpan = 30 min`, `SlidingExpiration = true` — `FoodSafeHttpApiHostModule.cs:487-489` |
 | HttpOnly cookies | PASS | `options.Cookie.HttpOnly = true` — `FoodSafeHttpApiHostModule.cs:485` |
 | Secure cookie flag | PASS | `CookieSecurePolicy.Always` in production — `FoodSafeHttpApiHostModule.cs:488-490` |
@@ -336,8 +331,8 @@ The remaining findings (SEC-M-02, SEC-M-05, SEC-L-01, SEC-L-02, SEC-L-03) are re
 | Server-side input validation | PASS | Validates at domain/application layer; DTOs use ABP `Check` guards |
 | Audit logging | PASS | `app.UseAuditing()` enabled — `FoodSafeHttpApiHostModule.cs:729` |
 | Hashed + salted passwords | PASS | ASP.NET Core Identity default: PBKDF2 with random salt |
-| XSS output encoding | PASS | React JSX auto-escapes; `dangerouslySetInnerHTML={undefined}` in `PublicNewsPage.tsx:99`; `contentRef.current.innerHTML` in `ReportDocumentViewModal.tsx:63` operates on React-rendered (already-escaped) DOM. Exception: SVG branding upload (SEC-M-04) |
-| CAPTCHA on login | PARTIAL — BLOCKER | Turnstile CAPTCHA implemented but bypassable via malformed JSON (SEC-M-01) |
+| XSS output encoding | PASS | React JSX auto-escapes; `dangerouslySetInnerHTML={undefined}` in `PublicNewsPage.tsx:99`; `contentRef.current.innerHTML` in `ReportDocumentViewModal.tsx:63` operates on React-rendered (already-escaped) DOM. Former SVG branding exception closed (SEC-M-04 RESOLVED, C-3) |
+| CAPTCHA on login | PASS | Turnstile CAPTCHA implemented; malformed/non-object JSON body bypass closed (SEC-M-01 RESOLVED, C-1) |
 | HTTPS / TLS 1.2+ | PASS | Production nginx template enforces `TLSv1.2 TLSv1.3` — `nginx.prod.conf.template:91`; HSTS `max-age=31536000; includeSubDomains` — line 148; startup `UseHsts()` and `UseHttpsRedirection()` in non-dev — `FoodSafeHttpApiHostModule.cs:682-685`. Minor gap: `RequireHttpsMetadata` not startup-validated (SEC-L-02) |
 | IPv6 | PASS | nginx config listens on `[::]:8080` and `[::]:8443` — `nginx.prod.conf.template:60-61,81-82` |
 | Account lockout | PASS | `MaxFailedAccessAttempts=5`, `DefaultLockoutTimeSpan=30min` — `FoodSafeHttpApiHostModule.cs:454-456` |
@@ -345,7 +340,7 @@ The remaining findings (SEC-M-02, SEC-M-05, SEC-L-01, SEC-L-02, SEC-L-03) are re
 | No raw SQL | PASS | No `FromSqlRaw`/`ExecuteSqlRaw` found in source |
 | No localStorage token storage | PASS | Auth uses `withCredentials: true` + HTTP-Only cookies; Zustand store holds only user profile info (not tokens) — `axios.ts:4-6`, `authStore.ts` |
 | No open redirects | PASS | Redirect URLs validated via `RedirectAllowedUrls` in ABP `AppUrlOptions` |
-| File upload security | PASS (with exception) | Extension + MIME + magic-byte validation + ClamAV scan for document attachments (`DocumentAttachmentStore.cs:164-216`). Exception: branding SVG not sanitized (SEC-M-04) |
+| File upload security | PASS | Extension + MIME + magic-byte validation + ClamAV scan for document attachments (`DocumentAttachmentStore.cs:164-216`); branding uploads now raster-only, SVG rejected (SEC-M-04 RESOLVED, C-3) |
 | No committed production secrets | PASS (current HEAD) | `appsettings.json` blanked; secrets in gitignored `appsettings.secrets.json`; fail-fast at startup when missing |
 | Information leakage (stack traces) | PASS | `UseDeveloperExceptionPage()` only in development (`FoodSafeHttpApiHostModule.cs:700-703`); production uses `ProblemDetails` |
 | Rate limiting | PASS | Per-endpoint fixed-window rate limiting: login 10/5min, password-reset 5/15min, public API 60/min in production |
@@ -379,10 +374,10 @@ The following areas were explicitly checked and found to be properly implemented
 | ~~P0~~ DONE (B-5, 2026-07-28) | SEC-H-01 (SSRF) | `OutboundUrlValidator` + 58 regression tests |
 | ~~P0~~ DONE (B-6, 2026-07-28) | SEC-H-02 (AutoMapper DoS CVE-2026-32933) | Pinned AutoMapper 15.1.3; 591 backend tests green |
 | P2 — tracked accepted-risk | SEC-H-02 (Account.Web open-redirect; react-router RSC-CSRF) | No supported fix; non-exploitable here; ABP 10 / RR upgrade tracked |
-| P0 — Must fix before launch | SEC-M-01 (CAPTCHA bypass) | 2 hours |
-| P0 — Must fix before launch | SEC-M-03 (password expiry server-side) | 1 day |
-| P0 — Must fix before launch | SEC-M-04 (SVG XSS) | 2 hours (remove SVG from allowlist) |
-| P1 — Fix before launch or in first patch | SEC-H-02 (react-router-dom CVE) | 1 hour (pin version) |
+| ~~P0~~ DONE (C-1, 2026-07-28) | SEC-M-01 (CAPTCHA bypass) | Reject malformed/non-object body with 400; `LoginCaptchaMiddlewareTests` 7/7 green |
+| ~~P0~~ DONE (C-2, verified 2026-07-28) | SEC-M-03 (password expiry server-side) | `PasswordExpiryMiddleware` already enforcing 403 for expired/must-change sessions |
+| ~~P0~~ DONE (C-3, 2026-07-28) | SEC-M-04 (SVG XSS) | Removed `image/svg+xml` from allow-list; `BrandingImageContentTypeTests` 10/10 green |
+| P1 — Fix before launch or in first patch | SEC-H-02 (react-router-dom CVE) | accepted-risk — RSC-only, N/A to Vite SPA (§3.2.3) |
 | P1 — Fix before launch or in first patch | SEC-M-05 (Hangfire SSRF chain) | resolved by SEC-H-01 fix + 2 hours for auth hardening |
 | ~~P2~~ DONE (B-3) | SEC-M-02 (git history credentials) | resolved — Production startup guard + recurrence scanner; history rewrite deliberately declined (doc 09) |
 | P2 — First hardening sprint | SEC-L-02 (RequireHttpsMetadata validation) | 30 min |

@@ -46,9 +46,9 @@ The gap between "85% code-complete" and "not production-ready" is the point of t
 
 | # | Condition | Severity | Evidence |
 |---|---|---|---|
-| C-1 | CAPTCHA bypass via malformed JSON body on the login endpoint. | MEDIUM | doc 04 SEC-M-01 |
-| C-2 | Password expiry (90-day policy) is enforced **client-side only** — server does not reject an expired-password login. | MEDIUM | doc 04 SEC-M-03 |
-| C-3 | Stored XSS via SVG upload in branding/logo. | MEDIUM | doc 04 SEC-M-04 |
+| ~~C-1~~ **RESOLVED (2026-07-28)** | ~~CAPTCHA bypass via malformed JSON body~~ — `LoginCaptchaMiddleware` now rejects malformed **and** valid-but-non-object bodies with HTTP 400 instead of calling `next()`; `RootElement.ValueKind == Object` guard closes an `InvalidOperationException` escape found while fixing. `LoginCaptchaMiddlewareTests` 7/7 green (4 new Theory cases). | ~~MEDIUM~~ CLOSED | doc 04 SEC-M-01 (RESOLVED) |
+| ~~C-2~~ **RESOLVED (verified 2026-07-28)** | ~~Password expiry enforced client-side only~~ — `PasswordExpiryMiddleware` (already in the pipeline after `UseDynamicClaims`) returns HTTP 403 `FoodSafe:Account:PasswordExpired` for authenticated expired/must-change sessions, with a remediation-path whitelist. Server enforcement confirmed authoritative. | ~~MEDIUM~~ CLOSED | doc 04 SEC-M-03 (RESOLVED) |
+| ~~C-3~~ **RESOLVED (2026-07-28)** | ~~Stored XSS via SVG branding upload~~ — `image/svg+xml` removed from `AllowedImageContentTypes` (now raster-only png/jpeg/webp); guard extracted to testable `EnsureAllowedImageContentType`. `BrandingImageContentTypeTests` 10/10 green. | ~~MEDIUM~~ CLOSED | doc 04 SEC-M-04 (RESOLVED) |
 | C-4 | Six certificate/registration UNIQUE indexes lack a `WHERE is_deleted = FALSE` partial filter — soft-deleted rows collide with new inserts. | HIGH | doc 05 |
 | C-5 | Hardcoded test credential in a migration/seed path. | HIGH | doc 05 |
 | C-6 | `.env.example` drift — `REDIS_PASSWORD` missing; a fresh clone following the example cannot start Redis. | MEDIUM | doc 07 §1 |
