@@ -28,7 +28,7 @@ async function cleanTestReports(
       await request.post(`/api/v1/app/ndtp-report/${item.id}/${action}`, {
         headers,
         maxRedirects: 0,
-        data: action === "return" ? { reason: "E2E cleanup" } : undefined,
+        data: action === "return" ? { returnReason: "E2E cleanup" } : undefined,
       });
     }
     await request.delete(`/api/v1/app/ndtp-report/${item.id}`, {
