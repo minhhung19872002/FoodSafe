@@ -102,7 +102,18 @@ test.describe("reporting management", () => {
       .getByRole("spinbutton", { name: "Năm" })
       .fill(String(year));
     await createDialog.getByRole("combobox", { name: "Tháng" }).click();
-    await page.getByText(monthLabel, { exact: true }).click();
+    const monthDropdown = page.locator(".ant-select-dropdown:visible");
+    const monthOption = monthDropdown.locator(
+      `.ant-select-item-option[title="${monthLabel}"]`,
+    );
+    if (!(await monthOption.isVisible().catch(() => false))) {
+      await monthDropdown
+        .locator(".rc-virtual-list-holder")
+        .evaluate((el) => {
+          el.scrollTop = el.scrollHeight;
+        });
+    }
+    await monthOption.click();
     await createDialog
       .getByRole("textbox", { name: "Ghi chú" })
       .fill("E2E test report");
