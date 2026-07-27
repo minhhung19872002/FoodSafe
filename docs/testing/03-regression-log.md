@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — P1-1g concrete-artifact exports: documents Excel+print (FR-38-07), statistics business-breakdown Excel (FR-40-07)
+
+- **Cause**: Added browser-acceptance coverage for the remaining concrete-artifact export/print gaps in doc 73 (test-only; no product code changed).
+- **Commit**: `<pending>`
+- **Affected features**: FR-38-07 (administrative-document list Excel export + per-document print), FR-40-07 (statistics "Cơ sở SXKD" business-breakdown Excel export).
+- **Retest level**: 2 (feature runtime, new specs only)
+- **Result**: PASSED — 3/3 green (5.1s), real backend, no interception.
+- **Details**: New `documents-export-print.spec.ts` (2/2): a live document is seeded via the real authenticated admin API (`POST /api/v1/app/administrative-document`) after a real UI login (the live list is normally empty — all 23 fixtures soft-deleted); at `/documents` the list "Xuất Excel" downloads a non-empty OpenXML (PK) workbook and the per-row print button opens the real formatted print window (số văn bản + tiêu đề rendered); seeded rows deleted in `finally`. `excel-exports.spec.ts` +1 (FR-40-07): the "Cơ sở SXKD" tab's "Xuất Excel" (`GET /statistics/excel/business-breakdown`) downloads a non-empty PK workbook. Log: `exports-run.log`.
+
 ### 2026-07-28 — P1-1f citizen submission moderation: alert reject + news approval browser-proven (FR-29-06, FR-30-07)
 
 - **Cause**: New evidence for two IMPLEMENTED_NOT_VERIFIED citizen-moderation requirements (doc 77 P1-1f). New spec only (`FoodSafe.FE/e2e/citizen-moderation.spec.ts`) — no product code changed.

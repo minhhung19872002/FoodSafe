@@ -125,13 +125,14 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | FR-37-01..06 | Testing results CRUD + scope | `testing-results-verification` ✓, `testing-results` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-38-01/02/05/06 | Documents search/view/delete/scope | `documents-verification` ✓, `documents` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-38-03/04 | Document create/update (hard-coded type list) | `documents` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE (type-catalog integration gap) |
-| FR-38-07 | Per-document print/export | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-38-07 | Per-document print/export | `documents-export-print` ✓ (P1-1g) | pass | PASS_WITH_BROWSER_EVIDENCE — a live document is seeded via the real admin API, then the list "Xuất Excel" downloads a non-empty OpenXML (PK) workbook and the per-row print button opens the real formatted print window (số văn bản + tiêu đề rendered) |
 | FR-39-01/05..08 | Dashboard stats/charts/map | `dashboard-verification` ✓, `dashboard` ✓ (heading only) | pass | PASS_WITH_BACKEND_ONLY |
 | FR-39-02 | Dashboard year filter + quick-action drill-down | `dashboard-statistics-filters` ✓ (P1-1e) | pass | PASS_WITH_BROWSER_EVIDENCE — selecting a year re-renders the report-submission card title deterministically; a quick-action card navigates to `/inspection` |
 | FR-39-03/04/09 | Dashboard compliance widgets + chart PNG download | — | none | IMPLEMENTED_NOT_VERIFIED |
 | FR-40-01/03/05 | Statistics: licenses / NDTP / inspection | `statistics-verification` ✓, `statistics` ✓, `dashboard-statistics-filters` ✓ (P1-1e year-change) | pass | PASS_WITH_BROWSER_EVIDENCE — statistics year `Select` re-renders the monthly charts (titles carry the selected year); backend data path verified separately |
 | FR-40-02/04/06 | Statistics Excel exports (licenses-by-type / poisoning-by-area / inspection-summary) | `excel-exports` ✓ (P1-1a) | pass | PASS_WITH_BROWSER_EVIDENCE — all 3 report tabs export a non-empty OpenXML (PK) workbook via the real UI |
-| FR-40-07/08 | Statistics further breakdown exports | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-40-07 | Statistics business-breakdown export (Cơ sở SXKD) | `excel-exports` ✓ (P1-1g) | pass | PASS_WITH_BROWSER_EVIDENCE — the "Cơ sở SXKD" tab's "Xuất Excel" downloads a non-empty OpenXML (PK) workbook via the real UI |
+| FR-40-08 | Statistics further breakdown exports | — | none | IMPLEMENTED_NOT_VERIFIED |
 
 ### Group E — Cổng thông tin công khai (STT 41–49)
 

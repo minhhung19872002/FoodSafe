@@ -95,4 +95,24 @@ test.describe("P1-1a — Excel export downloads through the real UI", () => {
       await expectXlsx(await clickExport(page, activeExport));
     }
   });
+
+  test("FR-40-07 — statistics business-breakdown export (Cơ sở SXKD)", async ({
+    page,
+  }) => {
+    await signInAsAdmin(page);
+    await page.goto("/statistics");
+
+    // The "Cơ sở SXKD" tab hosts a nested tab set plus its own export button
+    // (GET /statistics/excel/business-breakdown). Activate the outer tab first;
+    // the inactive tab panels stay out of the a11y tree so the export button
+    // scopes cleanly to this tab even though it nests further tabs.
+    const businessTab = page.getByRole("tab", { name: "Cơ sở SXKD" });
+    await expect(businessTab).toBeVisible({ timeout: 15_000 });
+    await businessTab.click();
+
+    const activeExport = page
+      .getByRole("tabpanel")
+      .getByRole("button", { name: "Xuất Excel" });
+    await expectXlsx(await clickExport(page, activeExport));
+  });
 });
