@@ -112,3 +112,46 @@ public sealed class CitizenAlertReportController(
         [FromBody] CreateCitizenAlertReportDto input) =>
         service.CreateAsync(input);
 }
+
+[RemoteService]
+[ApiVersion(ApiContract.Version)]
+[AllowAnonymous]
+[Route("api/v1/public")]
+public sealed class CertificatePdfController(
+    ICertificatePdfAppService service) : AbpControllerBase
+{
+    [HttpGet("eligibility-certificates/{id:guid}/pdf")]
+    public async Task<IActionResult> GetEligibilityCertificatePdfAsync(Guid id)
+    {
+        var file = await service.GetEligibilityCertificatePdfAsync(id);
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
+    [HttpGet("self-declarations/{id:guid}/pdf")]
+    public async Task<IActionResult> GetSelfDeclarationPdfAsync(Guid id)
+    {
+        var file = await service.GetSelfDeclarationPdfAsync(id);
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
+    [HttpGet("product-registrations/{id:guid}/pdf")]
+    public async Task<IActionResult> GetProductRegistrationPdfAsync(Guid id)
+    {
+        var file = await service.GetProductRegistrationPdfAsync(id);
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
+    [HttpGet("cfs-certificates/{id:guid}/pdf")]
+    public async Task<IActionResult> GetCfsCertificatePdfAsync(Guid id)
+    {
+        var file = await service.GetCfsCertificatePdfAsync(id);
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+
+    [HttpGet("export-food-certificates/{id:guid}/pdf")]
+    public async Task<IActionResult> GetExportFoodCertificatePdfAsync(Guid id)
+    {
+        var file = await service.GetExportFoodCertificatePdfAsync(id);
+        return File(file.Content, file.ContentType, file.FileName);
+    }
+}

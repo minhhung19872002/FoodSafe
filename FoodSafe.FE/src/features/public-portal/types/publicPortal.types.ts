@@ -115,6 +115,7 @@ export interface PublicProduct {
 }
 
 export interface PublicCertificate {
+  id: string;
   number: string;
   businessName: string;
   productName: string;

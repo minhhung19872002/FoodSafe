@@ -39,6 +39,7 @@ public class PublicProductSummaryDto
 
 public class PublicCertificateSummaryDto
 {
+    public Guid Id { get; set; }
     public string Number { get; set; } = string.Empty;
     public string BusinessName { get; set; } = string.Empty;
     public string? ProductName { get; set; }
@@ -181,4 +182,20 @@ public interface IPublicContentAppService
 public interface ICitizenAlertReportAppService
 {
     Task<CitizenAlertReportResultDto> CreateAsync(CreateCitizenAlertReportDto input);
+}
+
+public class CertificatePdfDto
+{
+    public byte[] Content { get; set; } = [];
+    public string FileName { get; set; } = string.Empty;
+    public string ContentType { get; set; } = "application/pdf";
+}
+
+public interface ICertificatePdfAppService
+{
+    Task<CertificatePdfDto> GetEligibilityCertificatePdfAsync(Guid id);
+    Task<CertificatePdfDto> GetSelfDeclarationPdfAsync(Guid id);
+    Task<CertificatePdfDto> GetProductRegistrationPdfAsync(Guid id);
+    Task<CertificatePdfDto> GetCfsCertificatePdfAsync(Guid id);
+    Task<CertificatePdfDto> GetExportFoodCertificatePdfAsync(Guid id);
 }

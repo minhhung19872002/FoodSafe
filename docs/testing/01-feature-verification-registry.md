@@ -43,11 +43,12 @@
 | F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `d855990` | 2026-07-27 |
 | F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `d855990` | 2026-07-27 |
 | F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | `5aff855` | 2026-07-27 |
+| F-034 | Certificate PDF Download        | VERIFIED       | `e2e/certificate-pdf-verification.spec.ts` | (pending commit) | 2026-07-27 |
 
 ## Summary
 
-- Total features: 33
-- VERIFIED: **33** (ALL features — see `features/*.md`)
+- Total features: 34
+- VERIFIED: **34** (ALL features — see `features/*.md`)
 - READY_FOR_TEST: 0
 - FAILED: 0
 - BLOCKED: 0

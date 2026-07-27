@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Alert, Empty, Input, Space, Spin, Table, Tabs, Typography } from "antd";
+import { Alert, Button, Empty, Input, Space, Spin, Table, Tabs, Typography } from "antd";
+import { FilePdfOutlined } from "@ant-design/icons";
 import type { TablePaginationConfig } from "antd";
 import { PublicShell } from "../components/PublicShell";
 import {
@@ -22,9 +23,10 @@ interface CertSearchPanelProps {
   };
   placeholder: string;
   totalLabel: string;
+  pdfPath?: string;
 }
 
-function CertSearchPanel({ useHook, placeholder, totalLabel }: CertSearchPanelProps) {
+function CertSearchPanel({ useHook, placeholder, totalLabel, pdfPath }: CertSearchPanelProps) {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
   const [page, setPage] = useState(1);
@@ -103,6 +105,25 @@ function CertSearchPanel({ useHook, placeholder, totalLabel }: CertSearchPanelPr
             width={180}
           />
           <Table.Column title="Trạng thái" dataIndex="statusLabel" width={120} />
+          {pdfPath && (
+            <Table.Column<PublicCertificate>
+              title=""
+              key="pdf"
+              width={100}
+              render={(_, row) => (
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<FilePdfOutlined />}
+                  href={`/api/v1/public/${pdfPath}/${row.id}/pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Tải PDF
+                </Button>
+              )}
+            />
+          )}
         </Table>
       </Spin>
     </Space>
@@ -116,6 +137,7 @@ const TAB_ITEMS = [
     placeholder: "Số giấy phép, tên cơ sở...",
     totalLabel: "giấy phép",
     useHook: usePublicEligibilityCertificates,
+    pdfPath: "eligibility-certificates",
   },
   {
     key: "self-declarations",
@@ -123,6 +145,7 @@ const TAB_ITEMS = [
     placeholder: "Số hồ sơ, tên cơ sở...",
     totalLabel: "hồ sơ",
     useHook: usePublicSelfDeclarations,
+    pdfPath: "self-declarations",
   },
   {
     key: "product-registrations",
@@ -130,6 +153,7 @@ const TAB_ITEMS = [
     placeholder: "Số đăng ký, tên sản phẩm...",
     totalLabel: "đăng ký",
     useHook: usePublicProductRegistrations,
+    pdfPath: "product-registrations",
   },
   {
     key: "ad-registrations",
@@ -144,6 +168,7 @@ const TAB_ITEMS = [
     placeholder: "Số chứng nhận, tên cơ sở...",
     totalLabel: "chứng nhận",
     useHook: usePublicCfsCertificates,
+    pdfPath: "cfs-certificates",
   },
   {
     key: "export-food",
@@ -151,8 +176,9 @@ const TAB_ITEMS = [
     placeholder: "Số giấy chứng nhận, tên cơ sở...",
     totalLabel: "giấy chứng nhận",
     useHook: usePublicExportFoodCertificates,
+    pdfPath: "export-food-certificates",
   },
-] as const;
+];
 
 export default function PublicCertificateSearchPage() {
   return (
@@ -170,6 +196,7 @@ export default function PublicCertificateSearchPage() {
               useHook={tab.useHook}
               placeholder={tab.placeholder}
               totalLabel={tab.totalLabel}
+              pdfPath={"pdfPath" in tab ? tab.pdfPath : undefined}
             />
           ),
         }))}

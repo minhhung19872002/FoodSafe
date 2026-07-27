@@ -58,6 +58,7 @@ public class PublicCertificateSearchAppService :
             _ => null,
             (c, businessName, _) => new PublicCertificateSummaryDto
             {
+                Id = c.Id,
                 Number = c.CertificateNumber,
                 BusinessName = businessName,
                 ProductName = c.CertificationScope,
@@ -78,6 +79,7 @@ public class PublicCertificateSearchAppService :
             _ => null,
             (c, businessName, _) => new PublicCertificateSummaryDto
             {
+                Id = c.Id,
                 Number = c.DeclarationNumber,
                 BusinessName = businessName,
                 ProductName = c.ProductName,
@@ -98,6 +100,7 @@ public class PublicCertificateSearchAppService :
             _ => null,
             (c, businessName, _) => new PublicCertificateSummaryDto
             {
+                Id = c.Id,
                 Number = c.RegistrationNumber,
                 BusinessName = businessName,
                 ProductName = c.ProductName,
@@ -117,6 +120,7 @@ public class PublicCertificateSearchAppService :
             _ => null,
             (c, businessName, _) => new PublicCertificateSummaryDto
             {
+                Id = c.Id,
                 Number = c.RegistrationNumber,
                 BusinessName = businessName,
                 ProductName = c.ContentDescription,
@@ -136,6 +140,7 @@ public class PublicCertificateSearchAppService :
             c => c.ProductId,
             (c, businessName, productName) => new PublicCertificateSummaryDto
             {
+                Id = c.Id,
                 Number = c.CertificateNumber,
                 BusinessName = businessName,
                 ProductName = productName,
@@ -155,6 +160,7 @@ public class PublicCertificateSearchAppService :
             c => c.ProductId,
             (c, businessName, productName) => new PublicCertificateSummaryDto
             {
+                Id = c.Id,
                 Number = c.CertificateNumber,
                 BusinessName = businessName,
                 ProductName = productName,

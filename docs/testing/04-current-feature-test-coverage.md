@@ -11,8 +11,8 @@
 
 | Metric | Value |
 |--------|-------|
-| Total features | 33 |
-| **VERIFIED** | **33 (100%)** |
+| Total features | 34 |
+| **VERIFIED** | **34 (100%)** |
 | READY_FOR_TEST | 0 |
 | FAILED | 0 |
 | NOT_STARTED | 0 |
@@ -24,8 +24,8 @@
 | Metric | Value |
 |--------|-------|
 | Total Playwright specs | 50+ files |
-| Total test cases (2026-07-27 full run) | 227 |
-| Passed | **225** |
+| Total test cases (2026-07-27 full run) | 235 |
+| Passed | **233** |
 | Failed | **2** (known pre-existing, see below) |
 | API interception | None |
 
@@ -75,6 +75,7 @@
 | F-031 | Documents | **VERIFIED** | `d855990` | `e2e/documents-verification.spec.ts` |
 | F-032 | System Settings | **VERIFIED** | `d855990` | `e2e/system-settings-verification.spec.ts` |
 | F-033 | Public Portal (FR-41..FR-49) | **VERIFIED** | `5aff855` | `e2e/public-portal-verification.spec.ts` |
+| F-034 | Certificate PDF Download | **VERIFIED** | (pending commit) | `e2e/certificate-pdf-verification.spec.ts` |
 
 ---
 
