@@ -91,6 +91,7 @@ public class AccountSecurityAppService :
         var histories = await GetPasswordHistoryAsync(user.Id);
         EnsurePasswordIsNotReused(user, input.Password, histories);
 
+        var replacedPasswordHash = user.PasswordHash;
         var result = await _userManager.ResetPasswordAsync(
             user,
             input.ResetToken,
@@ -104,7 +105,11 @@ public class AccountSecurityAppService :
                     string.Join("; ", result.Errors.Select(x => x.Description)));
         }
 
-        await FinalizePasswordChangeAsync(user, profile, histories);
+        await FinalizePasswordChangeAsync(
+            user,
+            profile,
+            histories,
+            replacedPasswordHash);
     }
 
     private async Task ChangePasswordCoreAsync(
@@ -122,6 +127,7 @@ public class AccountSecurityAppService :
         var histories = await GetPasswordHistoryAsync(user.Id);
         EnsurePasswordIsNotReused(user, newPassword, histories);
 
+        var replacedPasswordHash = user.PasswordHash;
         var result = await _userManager.ChangePasswordAsync(
             user,
             currentPassword,
@@ -135,13 +141,18 @@ public class AccountSecurityAppService :
                     string.Join("; ", result.Errors.Select(x => x.Description)));
         }
 
-        await FinalizePasswordChangeAsync(user, profile, histories);
+        await FinalizePasswordChangeAsync(
+            user,
+            profile,
+            histories,
+            replacedPasswordHash);
     }
 
     private async Task FinalizePasswordChangeAsync(
         IdentityUser user,
         AppUserProfile? profile,
-        IReadOnlyList<PasswordHistory> histories)
+        IReadOnlyList<PasswordHistory> histories,
+        string? replacedPasswordHash)
     {
         var token = _cancellationTokens.Token;
         user.SetShouldChangePasswordOnNextLogin(false);
@@ -154,16 +165,19 @@ public class AccountSecurityAppService :
                 cancellationToken: token);
         }
 
-        await _passwordHistory.InsertAsync(
-            PasswordHistory.Create(
-                _guidGenerator.Create(),
-                user.Id,
-                user.PasswordHash
-                    ?? throw new InvalidOperationException(
-                        "The changed password did not produce a password hash."),
-                Clock.Now),
-            autoSave: false,
-            cancellationToken: token);
+        // The REPLACED hash goes into history — recording the new hash instead
+        // would let users flip straight back to their previous password.
+        if (!string.IsNullOrEmpty(replacedPasswordHash))
+        {
+            await _passwordHistory.InsertAsync(
+                PasswordHistory.Create(
+                    _guidGenerator.Create(),
+                    user.Id,
+                    replacedPasswordHash,
+                    Clock.Now),
+                autoSave: false,
+                cancellationToken: token);
+        }
 
         profile?.RecordPasswordChanged(Clock.Now, PasswordValidity);
     }

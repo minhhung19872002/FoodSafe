@@ -28,6 +28,11 @@ export async function signIn(
     },
   });
   expect(login.ok(), await login.text()).toBeTruthy();
+  const loginResult = (await login.json()) as { result?: number };
+  expect(
+    loginResult.result,
+    `login for ${userNameOrEmailAddress} returned result=${loginResult.result}`,
+  ).toBe(1);
 
   const refresh = await request.get(
     "/api/abp/application-configuration?IncludeLocalizationResources=false",
