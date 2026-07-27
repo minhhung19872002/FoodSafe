@@ -94,7 +94,7 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 |---|---|---|---|---|
 | FR-19-01/03..10/14/17/18 | Business list/create/edit/delete/detail/map/handlers/scope | `businesses-verification` ✓, `businesses` ✓ (EICAR + import validation + CRUD) | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-19-02 | Advanced business filters (status filter + multi-column sort + pagination) | `business-list-filters` ✓ (3/3: status filter, column sort asc/desc, pager) | pass | PASS_WITH_BROWSER_EVIDENCE |
-| FR-19-11..16 | Per-business tabs (self-decl/prod-reg/ad-reg/inspection/eligibility) | — | none | IMPLEMENTED_NOT_VERIFIED (partial/structural per doc 71) |
+| FR-19-11..16 | Per-business tabs (self-decl/prod-reg/ad-reg/inspection/eligibility) | `business-detail-tabs` ✓ (P1-1i) | pass | PASS_WITH_BROWSER_EVIDENCE — the "Hồ sơ cơ sở" drawer is opened for a real business (discovered via the self-declaration list so it owns related data); all 5 tabs each fire their **business-scoped** GET (`businessId=` asserted in the URL) returning 200, and the data-bearing "Tự công bố" tab shows ≥1 real row |
 | FR-20-01..08 | Product CRUD + Excel import/export | `businesses-verification` ✓, `businesses` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-21-01..09 | Self-declarations lifecycle | `self-declarations-verification` ✓ · `self-declarations` **✗ FAILED (60 s timeout)** | mixed | PASS_WITH_BROWSER_EVIDENCE (API/workflow/persistence) **but full-UI create→upload→revoke lifecycle FAILED** |
 | FR-22-01..09 | Product registrations (DKCB) lifecycle | `product-registrations-verification` ✓ · `product-registrations` **✗ FAILED (60 s)** | mixed | PASS_WITH_BROWSER_EVIDENCE **/ full-UI lifecycle FAILED** |

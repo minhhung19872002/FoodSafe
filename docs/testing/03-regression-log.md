@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — P1-1i business detail drawer related-record tabs (FR-19-11..16)
+
+- **Cause**: New browser-acceptance evidence for the per-business detail tabs (doc 77 P1-1i, doc 73 was IMPLEMENTED_NOT_VERIFIED partial/structural). New spec only (`FoodSafe.FE/e2e/business-detail-tabs.spec.ts`) — no product code changed.
+- **Commit**: `<pending>`
+- **Affected features**: F-011 business management (detail drawer related-record aggregation). No product/shared code changed → no invalidation of other features.
+- **Retest level**: 2 (single-feature runtime retest)
+- **Result**: PASSED — 1/1 green (2.9s), real backend, no interception.
+- **Details**: The test discovers a real business owning related data via the real self-declaration list (`GET /api/v1/app/self-declaration?MaxResultCount=1` → DTO `businessId`/`businessName`), then opens the "Hồ sơ cơ sở" drawer through the real browser at `/businesses`. All 5 tabs each fire their business-scoped GET (`businessId=` asserted in URL, 200): `self-declaration`, `product-registration`, `advertisement-registration`, `eligibility-certificate`, `inspection-result`; the "Tự công bố" tab shows ≥1 real row. Real React → nginx → ASP.NET Core → EF Core → PostgreSQL. Log: `bizdetail-run.log`. Stack unchanged (no rebuild).
+
 ### 2026-07-28 — P1-1h risk-analysis publish (FR-36-07) + public portal exposure (FR-36-08)
 
 - **Cause**: New browser-acceptance evidence for two IMPLEMENTED_NOT_VERIFIED risk-analysis requirements (doc 77 P1-1h). New spec only (`FoodSafe.FE/e2e/risk-analysis-publish.spec.ts`) — no product code changed.
