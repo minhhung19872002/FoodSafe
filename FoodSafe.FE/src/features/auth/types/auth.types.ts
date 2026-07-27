@@ -1,28 +1,45 @@
 export interface LoginRequest {
-  userNameOrEmailAddress: string
-  password: string
-  rememberMe?: boolean
+  userNameOrEmailAddress: string;
+  password: string;
+  captchaToken: string;
+  rememberMe?: boolean;
+}
+
+export interface CaptchaConfig {
+  provider: "turnstile";
+  siteKey: string;
+  action: string;
 }
 
 export interface LoginResponse {
-  accessToken: string
-  tokenType: string
-  expiresIn: number
-  refreshToken?: string
+  result: number;
+  description: string;
 }
 
 export interface CurrentUserDto {
-  id: string
-  name: string
-  email: string
-  organizationId: string
-  organizationName: string
-  roles: string[]
-  permissions: string[]
-  passwordMustChange: boolean
+  id: string;
+  userName: string;
+  name: string;
+  email: string;
+  organizationId: string | null;
+  organizationName: string | null;
+  roles: string[];
+  permissions: string[];
+  passwordMustChange: boolean;
 }
 
 export interface ChangePasswordRequest {
-  currentPassword: string
-  newPassword: string
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface CompleteInitialPasswordChangeRequest extends ChangePasswordRequest {
+  userNameOrEmailAddress: string;
+  captchaToken: string;
+}
+
+export interface ResetPasswordRequest {
+  userId: string;
+  resetToken: string;
+  password: string;
 }

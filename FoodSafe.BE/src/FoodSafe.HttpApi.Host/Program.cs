@@ -36,8 +36,11 @@ try
     var app = builder.Build();
     await app.InitializeApplicationAsync();
 
-    using (var scope = app.Services.CreateScope())
+    var autoMigrate = app.Configuration.GetValue<bool?>("Database:AutoMigrate")
+        ?? app.Environment.IsDevelopment();
+    if (autoMigrate)
     {
+        using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<FoodSafeDbContext>();
         await db.Database.MigrateAsync();
 

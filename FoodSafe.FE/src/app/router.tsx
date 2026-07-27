@@ -1,30 +1,211 @@
-import { lazy, Suspense } from 'react'
-import { createBrowserRouter, Navigate } from 'react-router-dom'
-import { Spin } from 'antd'
-import { AppLayout } from './AppLayout'
-import { PrivateRoute } from './PrivateRoute'
-
-const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
-const ChangePasswordPage = lazy(() => import('@/features/auth/pages/ChangePasswordPage'))
-const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'))
-
-const Loading = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-    <Spin size="large" />
-  </div>
-)
+import { Suspense } from "react";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import { AppLayout } from "./AppLayout";
+import { PrivateRoute } from "./PrivateRoute";
+import { PermissionRoute } from "./PermissionRoute";
+import {
+  ChangePasswordPage,
+  BusinessManagementPage,
+  SelfDeclarationPage,
+  ProductRegistrationPage,
+  PublicProductRegistrationLookupPage,
+  AdvertisementRegistrationPage,
+  EligibilityCertificatePage,
+  PublicEligibilityCertificateLookupPage,
+  CfsCertificatePage,
+  PublicCfsCertificateLookupPage,
+  ExportFoodCertificatePage,
+  PublicExportFoodCertificateLookupPage,
+  InspectionPage,
+  AlertsNewsPage,
+  FoodPoisoningPage,
+  ReportingPage,
+  RiskAnalysisPage,
+  TestingResultsPage,
+  DocumentsPage,
+  PublicBusinessLookupPage,
+  PublicSelfDeclarationLookupPage,
+  PublicAdRegistrationLookupPage,
+  CompleteInitialPasswordChangePage,
+  DashboardPage,
+  ForgotPasswordPage,
+  GeographicCatalogPage,
+  IdentityAdministrationPage,
+  LoginPage,
+  MasterCatalogPage,
+  OrganizationListPage,
+  ResetPasswordPage,
+  StatisticsPage,
+  AuditLogPage,
+  SystemSettingsPage,
+  DataIntegrationPage,
+  RouteLoading,
+  PublicPortalHomePage,
+  PublicGeneralSearchPage,
+  PublicCertificateSearchPage,
+  PublicWarnedBusinessesPage,
+  PublicNewsPage,
+  PublicDocumentsPage,
+  CitizenAlertReportPage,
+} from "./routeComponents";
 
 export const router = createBrowserRouter([
+  // ── Public portal routes ─────────────────────────────────────────────────
   {
-    path: '/login',
+    path: "/cong-thong-tin",
     element: (
-      <Suspense fallback={<Loading />}>
+      <Suspense fallback={<RouteLoading />}>
+        <PublicPortalHomePage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-chung",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicGeneralSearchPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-giay-phep",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicCertificateSearchPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/co-so-bi-canh-bao",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicWarnedBusinessesPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tin-tuc",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicNewsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tin-tuc/:id",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicNewsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-van-ban",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicDocumentsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/gui-phan-anh",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <CitizenAlertReportPage />
+      </Suspense>
+    ),
+  },
+  // ── End public portal routes ──────────────────────────────────────────────
+  {
+    path: "/tra-cuu-giay-du-dieu-kien",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicEligibilityCertificateLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-cfs",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicCfsCertificateLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-gcn-xuat-khau",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicExportFoodCertificateLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-dang-ky-cong-bo",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicProductRegistrationLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-co-so",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicBusinessLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-tu-cong-bo",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicSelfDeclarationLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-dang-ky-quang-cao",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicAdRegistrationLookupPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/login",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
         <LoginPage />
       </Suspense>
     ),
   },
   {
-    path: '/',
+    path: "/account/forgot-password",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <ForgotPasswordPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/account/reset-password",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <ResetPasswordPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/account/complete-password-change",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <CompleteInitialPasswordChangePage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/",
     element: (
       <PrivateRoute>
         <AppLayout />
@@ -36,21 +217,246 @@ export const router = createBrowserRouter([
         element: <Navigate to="/dashboard" replace />,
       },
       {
-        path: 'dashboard',
+        path: "dashboard",
         element: (
-          <Suspense fallback={<Loading />}>
+          <Suspense fallback={<RouteLoading />}>
             <DashboardPage />
           </Suspense>
         ),
       },
       {
-        path: 'account/change-password',
+        path: "organizations",
         element: (
-          <Suspense fallback={<Loading />}>
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Organizations.View">
+              <OrganizationListPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "geography",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.GeographicCatalogs.View">
+              <GeographicCatalogPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "businesses",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute
+              permission={[
+                "FoodSafe.BusinessManagement.Businesses.View",
+                "FoodSafe.BusinessManagement.Products.View",
+              ]}
+            >
+              <BusinessManagementPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "self-declarations",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute
+              permission={"FoodSafe.BusinessManagement.SelfDeclarations.View"}
+            >
+              <SelfDeclarationPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "product-registrations",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Licensing.ProductRegistrations.View">
+              <ProductRegistrationPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "advertisement-registrations",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Licensing.AdRegistrations.View">
+              <AdvertisementRegistrationPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "eligibility-certificates",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Licensing.EligibilityCertificates.View">
+              <EligibilityCertificatePage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "cfs-certificates",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Licensing.CfsCertificates.View">
+              <CfsCertificatePage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "export-food-certificates",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Licensing.ExportCertificates.View">
+              <ExportFoodCertificatePage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "inspection",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Inspection.Plans.View">
+              <InspectionPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "alerts-news",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.AlertsAndTesting.Alerts.View">
+              <AlertsNewsPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "food-poisoning",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.FoodPoisoning.Cases.View">
+              <FoodPoisoningPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "reporting",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Reporting.NdtpReports.View">
+              <ReportingPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "risk-analysis",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.AlertsAndTesting.RiskAnalyses.View">
+              <RiskAnalysisPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "testing-results",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.AlertsAndTesting.TestingResults.View">
+              <TestingResultsPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "documents",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.AlertsAndTesting.Documents.View">
+              <DocumentsPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "data-integration",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.DataIntegration.ApiEndpoints.View">
+              <DataIntegrationPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "statistics",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <StatisticsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "catalogs",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.Catalogs.View">
+              <MasterCatalogPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "administration/audit-logs",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.SystemAdmin.AuditLogs">
+              <AuditLogPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "administration/settings",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.SystemAdmin.Settings">
+              <SystemSettingsPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "administration/identity",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission="FoodSafe.SystemAdmin">
+              <IdentityAdministrationPage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "account/change-password",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
             <ChangePasswordPage />
           </Suspense>
         ),
       },
     ],
   },
-])
+]);

@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Configuration;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Identity;
@@ -18,13 +19,16 @@ public class FoodSafeDbMigrationService : ITransientDependency
 
     private readonly IDataSeeder _dataSeeder;
     private readonly IEnumerable<IFoodSafeDbSchemaMigrator> _dbSchemaMigrators;
+    private readonly IConfiguration _configuration;
 
     public FoodSafeDbMigrationService(
         IDataSeeder dataSeeder,
-        IEnumerable<IFoodSafeDbSchemaMigrator> dbSchemaMigrators)
+        IEnumerable<IFoodSafeDbSchemaMigrator> dbSchemaMigrators,
+        IConfiguration configuration)
     {
         _dataSeeder = dataSeeder;
         _dbSchemaMigrators = dbSchemaMigrators;
+        _configuration = configuration;
 
         Logger = NullLogger<FoodSafeDbMigrationService>.Instance;
     }
@@ -60,12 +64,19 @@ public class FoodSafeDbMigrationService : ITransientDependency
     private async Task SeedDataAsync()
     {
         Logger.LogInformation("Executing database seed...");
+        var adminPassword = _configuration["Seed:AdminPassword"];
+        if (adminPassword.IsNullOrWhiteSpace())
+        {
+            throw new InvalidOperationException(
+                "Seed:AdminPassword must be supplied through secrets or environment variables.");
+        }
 
         await _dataSeeder.SeedAsync(new DataSeedContext()
             .WithProperty(IdentityDataSeedContributor.AdminEmailPropertyName,
-                IdentityDataSeedContributor.AdminEmailDefaultValue)
+                _configuration["Seed:AdminEmail"]
+                    ?? IdentityDataSeedContributor.AdminEmailDefaultValue)
             .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName,
-                IdentityDataSeedContributor.AdminPasswordDefaultValue)
+                adminPassword)
         );
     }
 

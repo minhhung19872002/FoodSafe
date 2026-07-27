@@ -1,29 +1,54 @@
-# FoodSafe — Tài liệu Phân tích Dự án
+﻿# FoodSafe — Tài liệu Phân tích Dự án
 
 > Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh  
-> Phiên bản: 2.1 — Cập nhật lần cuối: 2026-07-25 (v2.1 Red-Team Review — Critical=0, High=0)
+> Phiên bản: 2.3 — Cập nhật lần cuối: 2026-07-25 (independent-finding resolution: 14 Accepted / 11 Partially accepted / 2 Rejected)
 
 ---
 
 ## Danh sách Tài liệu
 
+### Implementation documents
+
+| Document | Purpose | Status |
+|---|---|---|
+| [16-implementation-gap-analysis.md](16-implementation-gap-analysis.md) | Requirement-by-requirement implementation audit | Active |
+| [17-system-architecture.md](17-system-architecture.md) | Runtime, trust boundaries, deployment shape | Approved for implementation |
+| [18-backend-architecture.md](18-backend-architecture.md) | Backend boundaries and enforcement rules | Approved for implementation |
+| [19-frontend-architecture.md](19-frontend-architecture.md) | Frontend structure and quality rules | Approved for implementation |
+| [20-implementation-roadmap.md](20-implementation-roadmap.md) | Milestones, gates and current evidence | Active |
+| [36-local-development-guide.md](36-local-development-guide.md) | Reproducible container/native development and email testing | Active |
+| [37-ci-cd-guide.md](37-ci-cd-guide.md) | Enforced CI gates, release use and promotion controls | Active |
+| [38-deployment-guide.md](38-deployment-guide.md) | Container configuration, secrets and deployment validation | Active |
+| [39-operations-runbook.md](39-operations-runbook.md) | Health, monitoring, incident and maintenance procedures | Active |
+| [40-disaster-recovery-guide.md](40-disaster-recovery-guide.md) | RTO/RPO, protected state, restore and rehearsal procedure | Active |
+| [43-dependency-security-policy.md](43-dependency-security-policy.md) | Automated dependency gates and the temporary ABP advisory mitigation | Active |
+| [44-account-security-and-recovery.md](44-account-security-and-recovery.md) | Cookie/CSRF, CAPTCHA and password-recovery security boundary | Active |
+| [45-identity-administration.md](45-identity-administration.md) | Scoped user, role, permission and lifecycle administration | Active |
+| [46-master-catalogs.md](46-master-catalogs.md) | STT 08–18 master-catalog implementation and validation | Active |
+| [47-business-product-management.md](47-business-product-management.md) | STT 19–20 business/product implementation and validation | Active |
+| [48-self-declaration-management.md](48-self-declaration-management.md) | STT 21 self-declaration implementation and validation | Active |
+| [49-product-registration-management.md](49-product-registration-management.md) | STT 22 product-registration implementation and validation | Active |
+| [50-advertisement-registration-management.md](50-advertisement-registration-management.md) | STT 23 advertisement-registration implementation and validation | Active |
+| [51-eligibility-certificate-management.md](51-eligibility-certificate-management.md) | STT 24 eligibility-certificate implementation and validation | Active |
+
 | File | Nội dung | Trạng thái |
 |------|----------|-----------|
 | [01-functional-requirements.md](01-functional-requirements.md) | 57 chức năng chi tiết theo nhóm A/B/C/E/F | ✅ Hoàn thành |
 | [02-domain-model.md](02-domain-model.md) | Domain entities, Value Objects, Aggregates, Domain Events | ✅ Hoàn thành |
-| [03-database-schema.sql](03-database-schema.sql) | PostgreSQL DDL — **59 bảng tùy chỉnh** + ABP built-in (~80 tổng) | ✅ v2.1 — Red-team reviewed |
+| [03-database-schema.sql](03-database-schema.sql) | PostgreSQL DDL — 60 bảng tùy chỉnh + ABP built-in (~81 tổng) | ✅ v2.3 — DDL chạy thành công trên PostgreSQL 15 |
 | [04-state-machines.md](04-state-machines.md) | 9 workflow state machines + domain events | ✅ Hoàn thành |
 | [05-permission-matrix.md](05-permission-matrix.md) | Ma trận phân quyền 7 vai trò × tất cả chức năng | ✅ Hoàn thành |
 | [06-api-contracts.md](06-api-contracts.md) | API endpoints cho tất cả modules | ✅ Hoàn thành |
 | [07-non-functional-requirements.md](07-non-functional-requirements.md) | Bảo mật, hiệu năng, UI/UX, deployment | ✅ Hoàn thành |
 | [08-database-requirement-traceability.md](08-database-requirement-traceability.md) | Ma trận truy xuất nguồn gốc: 57 STT → bảng DB + gap analysis | ✅ Hoàn thành |
-| [09-database-data-dictionary.md](09-database-data-dictionary.md) | Data dictionary: mô tả 59 bảng, cột, enum, phân loại nhạy cảm | ✅ Hoàn thành |
+| [09-database-data-dictionary.md](09-database-data-dictionary.md) | Data dictionary + v2.3 added/changed structures | ✅ Hoàn thành |
 | [10-database-index-strategy.md](10-database-index-strategy.md) | Chiến lược index: BTRee/GIN/partial + partitioning recommendations | ✅ Hoàn thành |
 | [11-database-security-and-data-scope.md](11-database-security-and-data-scope.md) | Kiểm soát bảo mật ATTT Cấp 2 ở tầng DB: RLS, encryption, masking | ✅ Hoàn thành |
 | [12-database-history-and-audit-strategy.md](12-database-history-and-audit-strategy.md) | Chiến lược lịch sử trạng thái + ABP audit log retention | ✅ Hoàn thành |
 | [13-database-integration-strategy.md](13-database-integration-strategy.md) | Data contracts cho tích hợp ngoài (Bộ YT, Sở NN, Sở CT) | ✅ Hoàn thành |
-| [14-database-review-report.md](14-database-review-report.md) | Báo cáo tổng hợp audit v2.1: v2.0 findings + red-team Section 11 (Critical=0, High=0) | ✅ Hoàn thành |
-| [15-database-assumptions-and-open-questions.md](15-database-assumptions-and-open-questions.md) | 10 giả định (ASM-001–010) + 8 câu hỏi mở (OQ-001–008) cần xác nhận | ✅ Hoàn thành |
+| [14-database-review-report.md](14-database-review-report.md) | Báo cáo audit tổng hợp đến v2.3 | ✅ Hoàn thành |
+| [15-database-assumptions-and-open-questions.md](15-database-assumptions-and-open-questions.md) | Giả định/câu hỏi mở, gồm 9 nhóm câu hỏi từ findings partially accepted | ✅ Hoàn thành |
+| [16-independent-database-review.md](16-independent-database-review.md) | 27 findings độc lập + evidence/resolution từng finding | ✅ Đã resolution |
 
 ---
 
@@ -100,24 +125,24 @@
 
 ---
 
-## Tóm tắt Database Schema (v2.0)
+## Tóm tắt Database Schema (v2.3)
 
 | Module | Bảng | Entities chính |
 |--------|------|---------------|
-| Organizations | **3** | organizations, app_user_profiles, **password_history** |
+| Organizations | **4** | organizations, app_user_profiles, password_history, **management_scope_assignments** |
 | Catalogs | 12 | countries, regions, provinces, districts, communes, product_groups, business_types, business_classifications, ad_types, document_types, testing_centers, testing_services |
 | BusinessManagement | 5 | businesses, business_product_groups, business_handlers, products, self_declarations |
 | Licensing | 6 | product_registrations, advertisement_registrations, ad_reg_products, eligibility_certificates, cfs_certificates, export_food_certificates |
 | Inspection | **5** | inspection_plans, inspection_plan_items, inspection_results, **inspection_result_inspectors**, inspection_violations |
-| FoodPoisoning | 6 | food_poisoning_incidents, food_poisoning_cases, poisoning_case_error_reports, poisoning_incident_error_reports |
-| Reporting | **6** | ndtp_reports, ndtp_report_error_notifications, atp_work_reports, **atp_work_report_error_notifications**, action_month_reports, **action_month_report_error_notifications** |
-| AlertsAndTesting | **9** | public_alert_submissions, atp_alerts, atp_news, news_linked_alerts, risk_analyses, testing_results, **testing_result_services**, regulatory_documents |
-| CrossCutting | 3 | file_attachments, status_history, cached_dashboard_stats |
-| DataIntegration | 2 | api_specs, data_sharing_histories |
-| **Tổng** | **59** | (tăng từ 43, thêm 9 bảng mới — in đậm) |
+| FoodPoisoning | 4 | food_poisoning_incidents, food_poisoning_cases, poisoning_case_error_reports, poisoning_incident_error_reports |
+| Reporting | **9** | 3 report headers, 3 error-notification tables, **3 immutable submission tables** |
+| AlertsAndTesting | **8** | public_alert_submissions, atp_alerts, atp_news, news_linked_alerts, risk_analyses, testing_results, testing_result_services, regulatory_documents |
+| CrossCutting | 4 | **document_owners**, file_attachments, status_history, cached_dashboard_stats |
+| DataIntegration | 3 | api_specs, data_sharing_histories, **data_sharing_attempts** |
+| **Tổng** | **60** | v2.3 thêm 6 cấu trúc accepted; số liệu DDL-counted |
 
 *+ ABP built-in: ~21 bảng (AbpUsers, AbpRoles, AbpAuditLogs, AbpPermissionGrants, AbpSettings, OpenIddict...)*  
-*GRAND TOTAL: ~80 bảng*
+*GRAND TOTAL: ~81 bảng*
 
 ---
 
@@ -142,7 +167,7 @@
 | RT-H2 | `food_poisoning_cases.location_province_id` thiếu FK | ALTER TABLE thêm FK đến `cat_provinces` |
 | RT-H3 | `public_alert_submissions.location_district_id` thiếu FK | ALTER TABLE thêm FK đến `cat_districts` |
 | RT-H4 | `atp_alerts`: `source=2` không bắt buộc `public_submission_id` NOT NULL | Thêm `CONSTRAINT chk_alerts_source_submission CHECK (source != 2 OR public_submission_id IS NOT NULL)` |
-| RT-H5 | `public_alert_submissions`: `status=3` không bắt buộc `converted_alert_id` NOT NULL | Thêm `CONSTRAINT chk_pas_converted CHECK (status != 3 OR converted_alert_id IS NOT NULL)` |
+| RT-H5 | Quan hệ conversion hai chiều có thể không nhất quán | **Superseded v2.3:** chỉ giữ UNIQUE `atp_alerts.public_submission_id` authoritative |
 | RT-H6 | `testing_results.sample_code` không có UNIQUE per organization | Thêm partial UNIQUE index `(sample_code, organization_id) WHERE is_deleted = FALSE` |
 | RT-H7 | `inspection_plans` thiếu `submitted_by_id`/`submitted_at` — không theo dõi ai submit kế hoạch | Thêm 2 cột `submitted_by_id UUID NULL`, `submitted_at TIMESTAMPTZ NULL` |
 
@@ -155,6 +180,40 @@
 
 ---
 
+## Tóm tắt Audit v2.2 Independent Review — Vấn đề bổ sung đã phát hiện & xử lý
+
+> Đây là lần review thứ ba (độc lập, không tin tuyên bố READY của v2.1).  
+> **Kết quả: 0 Critical mới + 8 High + 11 Medium + 3 Low → đã sửa toàn bộ High. Critical=0, High=0.**
+
+### High mới (B/C/D/G/J) — Đã sửa tất cả:
+| Mã | Vấn đề | Giải pháp |
+|----|--------|-----------|
+| B-01 | 
+dtp_reports có CẢ inline UNIQUE lẫn partial index cùng tên — duplicate constraint | Xóa inline UNIQUE, giữ partial index |
+| B-02 | ction_month_reports cùng vấn đề B-01 | Cùng giải pháp |
+| B-03 | inspection_plans inline UNIQUE chưa được xóa (v2.1 chỉ thêm partial index, không xóa inline) | Xóa inline UNIQUE, thêm partial index |
+| C-01 | ile_attachments DDL vẫn có deleted_at (v2.1 chỉ sửa comment, không sửa DDL) + thiếu deleter_id | Đổi deleted_at → deletion_time, thêm deleter_id UUID NULL |
+| D-01 | cat_testing_centers thiếu FK cho ddress_commune/district/province_id | ALTER TABLE thêm 3 FK |
+| G-01 | ood_poisoning_cases thiếu eported_by_id/eported_at | Thêm 2 cột audit |
+| G-02 | ood_poisoning_incidents thiếu eported_by_id/eported_at | Thêm 2 cột audit |
+| J-01 | public_alert_submissions.assigned_organization_id thiếu FK thực tế | ALTER TABLE thêm FK đến organizations |
+
+### Medium mới — Đã sửa:
+- **E-01**: self_declarations CHECK dùng cột effective_date không tồn tại → sửa thành declaration_date
+- **E-02/E-03**: tp_alerts/tp_news thiếu CHECK status=3 → recall_reason IS NOT NULL
+- **E-04**: 3 bảng báo cáo thiếu CHECK status=4(Returned) → return_reason IS NOT NULL
+- **E-05**: 6 bảng giấy phép thiếu CHECK status=3(Revoked) → revoke_reason IS NOT NULL
+- **H-01/H-02**: product_registrations/dvertisement_registrations thiếu date range CHECK
+- **H-03**: egulatory_documents thiếu CHECK ordering issue ≤ effective ≤ expiry
+- **I-01**: usiness_handlers thiếu date range CHECK + thiếu deletion_time/deleter_id
+- **M-01**: ile_attachments thiếu organization_id → không thể scope file theo org
+- **U-01**: public_alert_submissions dùng cột audit không chuẩn ABP + thiếu soft-delete
+
+### Low mới — Đã sửa:
+- **Q-01/Q-02**: 5 index bổ sung cho FK geography và FK product_id
+- **T-01**: self_declarations unique index đổi scope từ global sang (business_id, declaration_number)
+
+---
 ## Tóm tắt Audit v2.0 — Vấn đề đã phát hiện & xử lý
 
 ### Critical (C) — Đã sửa tất cả:
@@ -213,7 +272,7 @@
 
 ## Bước Tiếp theo
 
-1. **Tạo EF Core migrations** từ database schema đã thiết kế
+1. **Chạy invariant tests trên PostgreSQL 15** từ database schema đã thiết kế
 2. **Phase 2**: Implement Organizations + Catalogs module (BE + FE)
 3. **Phase 3**: Implement BusinessManagement module
 4. **Phase 4**: Implement Licensing module
@@ -225,3 +284,5 @@
 10. **Phase 10**: Implement Public Portal
 11. **Phase 11**: Implement DataIntegration module
 12. **Phase 12**: Security hardening + /security-review
+
+

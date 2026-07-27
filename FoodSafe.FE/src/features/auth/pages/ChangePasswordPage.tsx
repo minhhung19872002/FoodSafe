@@ -1,50 +1,54 @@
-import { Card, Form, Input, Button, Typography, Space, Alert } from 'antd'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useChangePassword } from '../api/authMutations'
+import { Card, Form, Input, Button, Typography, Space, Alert } from "antd";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useChangePassword } from "../api/authMutations";
 
 const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, 'Vui lòng nhập mật khẩu hiện tại'),
+    currentPassword: z.string().min(1, "Vui lòng nhập mật khẩu hiện tại"),
     newPassword: z
       .string()
-      .min(8, 'Mật khẩu tối thiểu 8 ký tự')
+      .min(8, "Mật khẩu tối thiểu 8 ký tự")
       .regex(
         /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])/,
-        'Mật khẩu phải có chữ, số và ký tự đặc biệt',
+        "Mật khẩu phải có chữ, số và ký tự đặc biệt",
       ),
-    confirmPassword: z.string().min(1, 'Vui lòng xác nhận mật khẩu'),
+    confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
-    message: 'Mật khẩu xác nhận không khớp',
-    path: ['confirmPassword'],
-  })
+    message: "Mật khẩu xác nhận không khớp",
+    path: ["confirmPassword"],
+  });
 
-type ChangePasswordFormData = z.infer<typeof changePasswordSchema>
+type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
 interface Props {
-  isExpired?: boolean
+  isExpired?: boolean;
 }
 
 export default function ChangePasswordPage({ isExpired }: Props) {
-  const changeMutation = useChangePassword()
+  const changeMutation = useChangePassword();
 
-  const { control, handleSubmit, formState: { errors } } = useForm<ChangePasswordFormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
-  })
+  });
 
   const onSubmit = (data: ChangePasswordFormData) => {
     changeMutation.mutate({
       currentPassword: data.currentPassword,
       newPassword: data.newPassword,
-    })
-  }
+    });
+  };
 
   return (
-    <div style={{ maxWidth: 500, margin: '0 auto' }}>
+    <div style={{ maxWidth: 500, margin: "0 auto" }}>
       <Card>
-        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
           <Typography.Title level={4} style={{ margin: 0 }}>
             Đổi mật khẩu
           </Typography.Title>
@@ -61,14 +65,18 @@ export default function ChangePasswordPage({ isExpired }: Props) {
             <Form.Item
               label="Mật khẩu hiện tại"
               required
-              validateStatus={errors.currentPassword ? 'error' : ''}
+              validateStatus={errors.currentPassword ? "error" : ""}
               help={errors.currentPassword?.message}
             >
               <Controller
                 name="currentPassword"
                 control={control}
                 render={({ field }) => (
-                  <Input.Password {...field} placeholder="Nhập mật khẩu hiện tại" autoComplete="current-password" />
+                  <Input.Password
+                    {...field}
+                    placeholder="Nhập mật khẩu hiện tại"
+                    autoComplete="current-password"
+                  />
                 )}
               />
             </Form.Item>
@@ -76,14 +84,18 @@ export default function ChangePasswordPage({ isExpired }: Props) {
             <Form.Item
               label="Mật khẩu mới"
               required
-              validateStatus={errors.newPassword ? 'error' : ''}
+              validateStatus={errors.newPassword ? "error" : ""}
               help={errors.newPassword?.message}
             >
               <Controller
                 name="newPassword"
                 control={control}
                 render={({ field }) => (
-                  <Input.Password {...field} placeholder="Tối thiểu 8 ký tự, có chữ + số + ký tự đặc biệt" autoComplete="new-password" />
+                  <Input.Password
+                    {...field}
+                    placeholder="Tối thiểu 8 ký tự, có chữ + số + ký tự đặc biệt"
+                    autoComplete="new-password"
+                  />
                 )}
               />
             </Form.Item>
@@ -91,14 +103,18 @@ export default function ChangePasswordPage({ isExpired }: Props) {
             <Form.Item
               label="Xác nhận mật khẩu mới"
               required
-              validateStatus={errors.confirmPassword ? 'error' : ''}
+              validateStatus={errors.confirmPassword ? "error" : ""}
               help={errors.confirmPassword?.message}
             >
               <Controller
                 name="confirmPassword"
                 control={control}
                 render={({ field }) => (
-                  <Input.Password {...field} placeholder="Nhập lại mật khẩu mới" autoComplete="new-password" />
+                  <Input.Password
+                    {...field}
+                    placeholder="Nhập lại mật khẩu mới"
+                    autoComplete="new-password"
+                  />
                 )}
               />
             </Form.Item>
@@ -117,5 +133,5 @@ export default function ChangePasswordPage({ isExpired }: Props) {
         </Space>
       </Card>
     </div>
-  )
+  );
 }

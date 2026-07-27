@@ -640,14 +640,15 @@ CREATE INDEX idx_rd_fts ON regulatory_documents USING GIN (fts_vector);
 
 #### REQ-049: STT 49 — Gửi Phản ánh Cảnh báo (Public Alert Submission)
 
-| Tables | `public_alert_submissions`, `atp_alerts` (khi convert), `file_attachments` |
+| Tables | `public_alert_submissions`, `atp_alerts` (khi convert), `document_owners`, `file_attachments` |
 |--------|-----|
 | Coverage | **Covered** |
 
 **Mapping:**
 - CAPTCHA verified: `public_alert_submissions.captcha_verified`
 - Mã tra cứu: `tracking_code` (UNIQUE, random)
-- Convert thành cảnh báo: `converted_alert_id FK → atp_alerts.id` và `atp_alerts.public_submission_id FK → public_alert_submissions.id`
+- Convert thành cảnh báo: `atp_alerts.public_submission_id` là FK authoritative
+  và UNIQUE; reverse lookup được derive, không lưu reverse FK độc lập.
 
 ---
 
@@ -791,7 +792,9 @@ Hoặc dùng ABP Background Job để archive/delete logs > 2 năm.
 - Thiếu `checksum VARCHAR(64)` (SHA-256 để verify integrity)
 - Thiếu `virus_scan_status SMALLINT` (1=Pending, 2=Clean, 3=Infected, 4=Error)
 - Thiếu `retention_until DATE NULL` (cho document lifecycle)
-- Thiếu `entity_version INT NOT NULL DEFAULT 1` (cho report versioning — lịch sử file theo version)
+- Thiếu owner FK và phiên bản nội dung báo cáo. v2.3 thay polymorphic/version
+  column bằng `document_owners`; tệp báo cáo đã gửi thuộc owner của immutable
+  `*_report_submissions` tương ứng.
 
 ---
 
@@ -830,6 +833,23 @@ Hoặc dùng ABP Background Job để archive/delete logs > 2 năm.
 **Mapping:** Mọi API call đi/đến đều được ghi vào `data_sharing_histories` với request/response payload đầy đủ, status, retry count, và (sau audit) `idempotency_key` + `payload_checksum`.
 
 ---
+
+## v2.3 Independent-resolution traceability addendum
+
+| Source requirement | Enforced persistence |
+|---|---|
+| PDF req. 15; STT 19–28 — server data scope and facility children | Composite business/product/organization FKs |
+| PDF STT 20, 22, 27–32, 40 — geography **or management focal point** | `management_scope_assignments` plus organization tree |
+| PDF req. 32 — related-field DB integrity | hierarchy trigger, geographic composite FKs, inspection/testing tuples |
+| PDF STT 21–28; req. 39 — files on electronic records | `document_owners` + `file_attachments.document_owner_id` FK |
+| PDF STT 33–35 — official send locks content; correction/resubmit | immutable three typed `*_report_submissions` tables |
+| PDF STT 51–57 — detailed receive/share history and retry | envelope `data_sharing_histories` + immutable `data_sharing_attempts` |
+| PDF STT 21–26; public lookup | official-number uniqueness across retained soft-deleted history |
+| PDF STT 29/48 — citizen warning verification/conversion | unique authoritative `atp_alerts.public_submission_id` |
+
+Unimplemented partially accepted items and their stakeholder questions are
+listed in `15-database-assumptions-and-open-questions.md`; rejected IDB-013 and
+IDB-027 are not requirements.
 
 ## Tổng kết Gap Analysis
 

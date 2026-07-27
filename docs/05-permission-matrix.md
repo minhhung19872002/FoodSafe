@@ -225,6 +225,12 @@ FoodSafe
 
 ## Data Scoping Rules (Server-Side)
 
+Data scope is the union of (a) the organization/geographic tree and (b)
+effective `management_scope_assignments` for the current organization or user.
+This implements the PDF's repeated phrase “theo địa bàn quản lý hoặc theo đầu
+mối quản lý.” A focal-point assignment never grants a functional permission:
+the role permission and the resolved data scope must both pass.
+
 ### Rule 1: Xem theo cấp tổ chức
 
 ```csharp
@@ -272,6 +278,20 @@ var business = Business.Create(
 var business = await _repo.GetAsync(id);
 await CheckOrganizationAccessAsync(business.OrganizationId); // throws if no access
 ```
+
+### Rule 4: Phạm vi đầu mối quản lý
+
+For each operation, resolve active assignments where
+`valid_from <= now()` and (`valid_to IS NULL` or `valid_to > now()`). Match the
+entity by geography, explicit business, business type, or product group and
+then require the operation flag (`can_view`, `can_create`, `can_edit`, or
+`can_delete`). The resolver must not rewrite or impersonate the entity's
+`organization_id`; it only adds authorized jurisdiction.
+
+Report Submit/Verify/Return also validates that
+`submitted_to_organization_id` is an authorized upper organization or a
+configured focal-point recipient. Attachments inherit scope solely from their
+typed `document_owner`; clients cannot submit an independent attachment scope.
 
 ---
 

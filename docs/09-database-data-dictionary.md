@@ -878,7 +878,7 @@
 **Business name:** Phản ánh Cảnh báo từ Người dân  
 **Business purpose:** Tiếp nhận phản ánh qua cổng công khai (STT 49) — không yêu cầu đăng nhập.  
 **Security classification:** Confidential (thông tin người gửi)  
-**Soft delete:** No | **Audit:** Minimal (created_at only) | **Growth:** Low
+**Soft delete:** Yes | **Audit:** ABP standard | **Growth:** Low
 
 | Column | Business Meaning | Type | Sensitive |
 |--------|-----------------|------|-----------|
@@ -889,13 +889,27 @@
 | tracking_code | Mã tra cứu (random, unique) | VARCHAR(20) | |
 | captcha_verified | Đã xác minh CAPTCHA | BOOL | |
 | status | Trạng thái xử lý | SMALLINT | |
-| converted_alert_id | Chuyển thành cảnh báo | UUID → atp_alerts | |
+| assigned_organization_id | Đơn vị xử lý | UUID → organizations | |
+
+Conversion is derived from the unique authoritative
+`atp_alerts.public_submission_id`; no reverse FK is stored here.
 
 ---
 
 ## CROSS-CUTTING
 
 ---
+
+### Table: `document_owners`
+
+**Business purpose:** Shared-primary-key supertype proving attachment owner
+existence and organization equality.
+
+| Column | Business Meaning | Type | Req |
+|---|---|---|---|
+| id | Same ID as the typed aggregate/submission | UUID | Y |
+| organization_id | Inherited data scope; NULL only for anonymous/system owner | UUID | N |
+| owner_type | Allowed typed aggregate name | VARCHAR(100) | Y |
 
 ### Table: `file_attachments`
 
@@ -906,8 +920,7 @@
 
 | Column | Business Meaning | Type | Req | Notes |
 |--------|-----------------|------|-----|-------|
-| entity_type | Loại entity | VARCHAR(100) | Y | 'business', 'inspection_result'... |
-| entity_id | ID entity | UUID | Y | |
+| document_owner_id | Owner có FK thật | UUID | Y | References document_owners |
 | file_name | Tên file lưu (UUID-based) | VARCHAR(500) | Y | |
 | original_name | Tên file gốc người dùng upload | VARCHAR(500) | Y | |
 | storage_path | MinIO bucket/object path | VARCHAR(1000) | Y | |
@@ -915,8 +928,8 @@
 | mime_type | MIME type | VARCHAR(100) | N | |
 | checksum | SHA-256 hash (NEW) | VARCHAR(64) | N | Verify integrity |
 | virus_scan_status | Trạng thái quét virus (NEW) | SMALLINT | N | 1=Pending,2=Clean,3=Infected,4=Error |
-| retention_until | Ngày xóa tự động (NEW) | DATE | N | NULL = vĩnh viễn |
-| entity_version | Phiên bản entity khi upload (NEW) | INT | N | Cho report versioning |
+| retention_status | Trạng thái retention | SMALLINT | Y | Active/Archived/PendingDeletion |
+| retention_expires_at | Thời điểm hết retention | TIMESTAMPTZ | N | |
 | is_public | Người dùng ẩn danh được download | BOOL | Y | DEFAULT FALSE |
 | uploaded_by_id | AbpUsers.Id | UUID | N | |
 
@@ -1032,3 +1045,19 @@
 | duration_ms | Thời gian thực thi (ms) | INT | |
 | initiated_at | Thời điểm khởi tạo | TIMESTAMPTZ | |
 | completed_at | Thời điểm hoàn thành | TIMESTAMPTZ | |
+## v2.3 added/changed structures
+
+| Structure | Purpose |
+|---|---|
+| `management_scope_assignments` | Effective-dated focal-point jurisdiction by geography, business, business type, or product group, with operation flags |
+| `document_owners` | Enforceable shared-primary-key attachment owner and organization scope |
+| `ndtp_report_submissions` | Immutable NDTP report content per official submission |
+| `atp_work_report_submissions` | Immutable ATTP work report content per official submission |
+| `action_month_report_submissions` | Immutable action-month report content per official submission |
+| `data_sharing_attempts` | Immutable details for the initial integration call and every retry |
+
+`file_attachments` now uses `document_owner_id`; the former polymorphic
+`entity_type`, `entity_id`, and `entity_version` fields are removed. Report
+attachments bind to a submission owner. Product/licence/inspection/testing
+relationships use composite owner FKs, and report headers now persist
+`submitted_to_organization_id`.

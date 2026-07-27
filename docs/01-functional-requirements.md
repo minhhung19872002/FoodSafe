@@ -17,6 +17,13 @@
 | F | Tích hợp dữ liệu | 50–57 | 8 |
 | **Tổng** | | | **57** |
 
+### Quy tắc liên chức năng về tệp đính kèm
+
+Tệp đính kèm kế thừa owner, `organization_id`, mức công khai và vòng đời của
+aggregate cha. Mỗi tệp phải tham chiếu một `document_owner` có FK; không dùng
+chuỗi loại + UUID tự do. Tệp của báo cáo đã gửi thuộc snapshot submission bất
+biến tương ứng, không thuộc header báo cáo đang tiếp tục chỉnh sửa.
+
 ---
 
 ## NHÓM A — Quản trị Hệ thống (STT 1–5)
@@ -378,7 +385,11 @@ DataIntegration.*
 
 **19.5 — Export Excel + PDF (danh sách, chi tiết)**
 
-**Data scoping:** User cấp nào chỉ xem cơ sở thuộc đơn vị mình quản lý.
+**Data scoping:** User chỉ xem/sửa cơ sở trong phạm vi hợp nhất của cây
+đơn vị/địa bàn được quản lý và phân công **đầu mối quản lý** còn hiệu lực
+(theo địa bàn, cơ sở cụ thể, loại hình cơ sở hoặc nhóm sản phẩm). Phân công
+đầu mối không thay đổi `organization_id` sở hữu bản ghi và không tự động cấp
+quyền chức năng; cả permission và data scope đều phải thỏa.
 
 ---
 
@@ -393,6 +404,10 @@ DataIntegration.*
 - Upload file đính kèm (ảnh sản phẩm, nhãn hàng hóa)
 - Liên kết với cơ sở
 - Trạng thái sản phẩm (đang kinh doanh/ngừng kinh doanh)
+
+**Ràng buộc sở hữu:** Sản phẩm phải cùng cơ sở và `organization_id` với
+quan hệ cơ sở cha. Mọi giấy phép chọn sản phẩm phải chọn sản phẩm của chính
+cơ sở trên giấy phép.
 
 ---
 
@@ -625,6 +640,11 @@ DataIntegration.*
 **Workflow State Machine:**  
 `Draft → Submitted → Verified → Returned → (Draft lại) → Submitted → Completed`
 
+**Submission evidence:** Mỗi lần Submit tạo một snapshot bất biến gồm toàn bộ
+nội dung báo cáo, phiên bản, đơn vị gửi, đơn vị nhận, người/thời điểm gửi và
+SHA-256. Header báo cáo chỉ giữ workflow hiện tại; không dùng header đã chỉnh
+sửa để tái dựng nội dung của lần gửi trước.
+
 **Dữ liệu báo cáo:**
 - Số ca ngộ độc: tổng số, số mắc, số nhập viện, số tử vong
 - Số vụ ngộ độc: tổng số, số mắc, số nhập viện, số tử vong
@@ -644,6 +664,8 @@ DataIntegration.*
 - Chỉnh sửa số liệu và nhập nội dung tường thuật
 - Workflow giống NĐTP Report
 - Export PDF (theo mẫu chuẩn)
+
+Mỗi lần gửi áp dụng cùng quy tắc snapshot bất biến và đơn vị nhận như STT 33.
 
 **Nội dung báo cáo:**
 - Tổng quan tình hình cơ sở SXKD
@@ -669,6 +691,8 @@ DataIntegration.*
 - Đánh giá: kết quả, tồn tại, bài học kinh nghiệm, kiến nghị
 - Workflow giống NĐTP Report
 - Export PDF
+
+Mỗi lần gửi áp dụng cùng quy tắc snapshot bất biến và đơn vị nhận như STT 33.
 
 ---
 
@@ -908,6 +932,11 @@ DataIntegration.*
 - Xem chi tiết: request payload, response, thời gian, mã lỗi (nếu thất bại)
 - Thử lại (Retry) giao tiếp thất bại
 - Export lịch sử ra Excel
+
+**Lịch sử attempt:** Một lần giao tiếp logic là một envelope. Lần gửi/nhận ban
+đầu và từng retry là các attempt bất biến riêng, lưu số lần, endpoint, thời
+điểm bắt đầu/kết thúc, request/response, checksum, outcome và lỗi. Retry không
+được ghi đè bằng chứng của attempt trước.
 
 ---
 

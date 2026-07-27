@@ -1,4 +1,4 @@
-# Database Assumptions and Open Questions — FoodSafe
+﻿# Database Assumptions and Open Questions — FoodSafe
 
 > Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh  
 > Phiên bản: 1.0 — Ngày tạo: 2026-07-25  
@@ -10,7 +10,12 @@
 
 ### ASM-001: PDF Source Document
 
-**Assumption**: The original PDF source document (`Mẫu số 03. YCKT (1).pdf`, 42 pages) could not be parsed directly during this audit. The existing functional requirements document (`docs/01-functional-requirements.md`) claims to be derived from this PDF. This audit treats `01-functional-requirements.md` as an accurate and complete extraction.
+**Resolution (2026-07-25):** The original PDF (`Mẫu số 03. YCKT (1).pdf`,
+42 pages) was parsed and checked page-by-page during resolution of IDB-001
+through IDB-027. This is no longer an assumption. The comparison found one
+material omission in the distilled requirements: scope by **management focal
+point** in addition to managed geography. `01`, `05`, and the database scope
+design were corrected.
 
 **Scope of impact**: All 57 functional requirements, the entire domain model, all state machines.
 
@@ -22,7 +27,10 @@
 
 ### ASM-002: License Number Uniqueness Scope
 
-**Assumption**: `registration_number` (in `product_registrations`), `declaration_number` (in `self_declarations`), and `certificate_number` (in `eligibility_certificates`, `cfs_certificates`, `export_food_certificates`) are unique **globally** across the system — not unique per business or per issuing authority.
+**Current design:** self-declaration numbers are unique per business; government
+registration/certificate numbers are unique globally within their document
+table. Uniqueness covers soft-deleted retained history and therefore does not
+release an official identifier.
 
 **Rationale**: These are government-issued document numbers. In Vietnamese administrative practice, government-issued numbers (số đăng ký, số chứng nhận) are assigned sequentially by the issuing authority and are globally unique identifiers. A registration number should unambiguously identify exactly one document in the country.
 
@@ -143,29 +151,22 @@ This allows multiple `NULL` values (multiple businesses without a tax code) whil
 
 **Finding during audit**: The initial schema had `testing_results` missing a FK to `testing_services`. When adding `testing_service_id`, it was assumed that one test result record corresponds to exactly one testing service. However, the domain may require that a single test result references multiple services (e.g., a sample is tested for microbiological AND chemical indicators simultaneously).
 
-**Current implementation**: `testing_service_id UUID NOT NULL REFERENCES testing_services(id)` — one service per result record.
+**Resolution (2026-07-25):** Multiple services are supported through
+`testing_result_services`. The junction also carries `testing_center_id` and
+uses composite FKs so a result cannot select a service from another center.
 
-**Alternative**: If multiple services are needed per result, a junction table `testing_result_services(testing_result_id, testing_service_id)` would be required.
-
-**Risk**: Low — if multiple services are needed, the FE would need to display multiple service badges per result, and the DTO changes. The DB change (add junction table, remove FK column) is straightforward but requires migration.
-
-**Stakeholder question**: Can a single testing result record reference multiple testing services? Or is each result always for exactly one service?
+No further schema question remains for service cardinality. Parameter-level
+laboratory result lines were explicitly rejected as a source requirement in
+IDB-013; they may be proposed later as a new requirement.
 
 ---
 
 ### ASM-010: data_sharing_histories.status Update on Retry
 
-**Assumption**: The `data_sharing_histories` table, while conceptually insert-only (no business-driven updates), allows the retry lifecycle fields (`status`, `retry_count`, `next_retry_at`, `http_status_code`, `response_payload`, `completed_at`, `error_message`) to be updated by the retry background job. This is the only case where a `data_sharing_histories` record is updated.
-
-**Alternative (stricter immutability)**: Insert a new child record `data_sharing_history_attempts(id, history_id, attempt_number, status, http_status_code, response_payload, attempted_at, error_message)` for each retry attempt. The parent `data_sharing_histories` record would store only the final aggregated status.
-
-**Trade-off**: 
-- Current approach: simpler schema, slightly less audit granularity (cannot distinguish attempt 1 from attempt 3 outcomes without reading through the updates)
-- Strict approach: more audit granularity, more schema complexity, more storage
-
-**Recommendation for Phase 2+**: Implement the `data_sharing_history_attempts` child table after Phase 1 validation. Phase 1 uses the simpler approach.
-
-**Impact**: Schema change if strict immutability required — add `data_sharing_history_attempts` table, remove retry fields from `data_sharing_histories`.
+**Resolution (2026-07-25):** The envelope may update overall delivery/scheduling
+fields. Every initial call and retry inserts an immutable
+`data_sharing_attempts` row. Attempt-level request, response, checksums,
+timing, outcome, and error are never overwritten.
 
 ---
 
@@ -274,6 +275,65 @@ This allows multiple `NULL` values (multiple businesses without a tax code) whil
 
 ---
 
+## Open questions from independent-finding resolution
+
+### OQ-IDB-001: Report aggregation lineage
+
+Which exact subordinate report submissions and source records must be frozen as
+members of an upper-level aggregate? Must membership preserve only IDs, or also
+source hashes/values at aggregation time? This resolves the unimplemented part
+of IDB-003.
+
+### OQ-IDB-002: Food-safety commitment record
+
+Does “xác nhận cơ sở đã nộp bản cam kết” require only a current confirmation, or
+must the system manage the commitment number/form, signed/submitted/effective
+dates, receiver, status, replacement, and file? This resolves IDB-011.
+
+### OQ-IDB-003: Risk-management model
+
+Define the required risk-group/risk catalogs, forecast period/geography,
+assessment scoring, evidence links, and publication revision rules named
+generally by PDF STT 36. This resolves IDB-012 without inventing a taxonomy.
+
+### OQ-IDB-004: Database workflow locking scope
+
+Beyond immutable report submissions, which exact protected fields and states
+must be DB-trigger locked for poisoning records, plans, alerts, news, and risk
+analysis? Confirm whether all writes must go through stored transitions. This
+resolves IDB-014.
+
+### OQ-IDB-005: Correction-cycle identity
+
+Must every error notification reference a particular immutable submission,
+target organization, decision event, and resolution submission? Define repeated
+return semantics before changing the notice tables (IDB-016).
+
+### OQ-IDB-006: Integration identity and contract versioning
+
+For each partner/operation, define inbound idempotency ownership, correlation and
+external entity IDs, replay behavior, large-payload object paths, mandatory API
+contract linkage, and immutable API-spec revision rules. This covers IDB-017,
+IDB-019, and IDB-020.
+
+### OQ-IDB-007: Facility/product deduplication
+
+Confirm normalization and uniqueness for tax codes across inactive history,
+facilities without tax codes, product codes, and import-source provenance before
+introducing candidate/fuzzy duplicate rules (IDB-021).
+
+### OQ-IDB-008: Identity FK and actor snapshots
+
+Confirm ABP table creation order, account deletion/soft-delete policy, and which
+legal workflow events must snapshot user name, organization, and role before
+adding account FKs/snapshots (IDB-024).
+
+### OQ-IDB-009: Retention classification for cascaded children
+
+Classify junction/child rows as replaceable association or legal evidence and
+define hard-delete rights/retention before replacing the remaining cascades
+(IDB-025).
+
 ## Known Limitations of This Audit
 
 The following topics were reviewed but **not fully validated** in this audit pass:
@@ -291,3 +351,53 @@ The following topics were reviewed but **not fully validated** in this audit pas
 6. **Notification system**: An in-app notification table (`notifications`) was identified as a Phase 2+ concern. When report deadlines approach, when an alert submission is resolved, or when an integration call fails, the system should push notifications to relevant users. This requires a `notifications` table not present in the current schema.
 
 7. **Report template storage**: The system needs to store Word/Excel templates for generating report exports (QuestPDF templates, ClosedXML templates). These are file assets, not DB records, and are stored in MinIO. No schema change is required, but the MinIO bucket structure and template versioning strategy need to be documented.
+
+
+---
+
+## v2.2 Independent Review — New Assumptions and Design Decisions
+
+### ASM-v22-001: Self-Declaration Number Scope Changed to Business-Scoped
+
+**Assumption**: declaration_number (in self_declarations) is unique **per business**, not globally. Changed from the original ASM-002 assumption that all document numbers are globally unique.
+
+**Rationale**: Self-declaration numbers (số tự công bố) are assigned by the business itself under Nghị định 15/2018/NĐ-CP. There is no central registry issuing sequential numbers — each business maintains its own numbering sequence. Different businesses may legitimately use the same number formats (e.g., both Business A and Business B may have a declaration numbered "01/TCBS/2024"). Global uniqueness would cause false constraint violations on perfectly valid declarations from different businesses.
+
+**Impact**: Unique index changed from UNIQUE (declaration_number) to UNIQUE (business_id, declaration_number) WHERE is_deleted = FALSE.
+
+**Contrast**: This is different from government-issued numbers (eligibility certificates, CFS certificates, export certificates, product registrations) which ARE globally unique because the issuing authority (Chi cục ATTP, Bộ Y tế) assigns sequential serial numbers from a controlled registry.
+
+**Stakeholder confirmation needed**: Confirm that Nghị định 15/2018 indeed allows businesses to choose their own declaration numbers without central registry enforcement.
+
+---
+
+### ASM-v22-002: file_attachments.organization_id is Nullable
+
+**Assumption**: The organization_id column on ile_attachments is nullable (NULL allowed) because some system-level attachments may not belong to a specific organization — for example, regulatory document templates uploaded by a ProvinceAdmin for system-wide use, or files uploaded by background jobs.
+
+**Impact**: Authorization scoping at the AppService layer must handle the NULL case: a NULL organization_id on a file attachment means the file is accessible to all organizations (or is a system file). This must be explicitly documented in the authorization review (docs/11 §4).
+
+**Risk**: Medium — if the application does not correctly filter files by organization_id, users from Organization A could read attachments belonging to Organization B. The nullable design requires that the authorization filter in AppService explicitly checks organization_id IS NULL OR organization_id = currentOrgId rather than organization_id = currentOrgId.
+
+**Stakeholder confirmation needed**: Confirm that system-level attachments (not org-scoped) are a real use case. If not, change organization_id to NOT NULL.
+
+---
+
+### ASM-v22-003: business_handlers Is a Full Aggregate Part (Has Its Own Soft-Delete)
+
+**Assumption**: usiness_handlers (nhân viên phụ trách của cơ sở) has its own is_deleted + deletion_time + deleter_id columns, meaning individual handlers can be soft-deleted independently of the parent business. A handler can be marked inactive without deleting or modifying the parent business record.
+
+**Impact**: When querying active handlers for a business, the AppService must filter by is_deleted = FALSE on the usiness_handlers table, not just on the usinesses table.
+
+**Alternative**: If business_handlers should always be hard-deleted when a business is deleted, cascade delete would be correct. Current design is: soft-delete both independently.
+
+---
+
+### ASM-v22-004: public_alert_submissions Is Legally Significant Evidence
+
+**Assumption**: Public submissions of food alerts (public_alert_submissions) constitute legally admissible evidence under public health reporting laws. Therefore they must be soft-deletable (preserved) rather than hard-deletable, and must have a full audit trail.
+
+**Impact**: The table was changed from non-ABP audit columns (created_at, updated_at) to full ABP audit columns + soft-delete. Any existing data in this table would require a migration.
+
+**Risk**: This assumption is made on the basis of administrative procedure law (Luật xử lý vi phạm hành chính). If the legal team determines public submissions are not evidentiary, the soft-delete overhead can be removed.
+

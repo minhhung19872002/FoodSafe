@@ -1,13 +1,21 @@
-# Database Review Report — FoodSafe
+﻿# Database Review Report — FoodSafe
 
-**Date:** 2026-07-25 (v2.1 red-team update: 2026-07-25)  
+**Date:** 2026-07-25 (v2.3 independent-finding resolution: 2026-07-25)
 **Reviewer:** Principal Database Architect (automated review)  
 **Scope:** Complete database schema audit, gap analysis, improvement recommendations, and adversarial red-team review  
 **Database Engine:** PostgreSQL 15  
 **Backend Framework:** .NET 9 + ABP Framework 9  
 **System Classification:** Hệ thống thông tin cấp độ 2 theo Nghị định 85/2016/NĐ-CP
 
-> **v2.1 UPDATE**: A red-team review was performed after the initial v2.0 audit. It found 5 additional Critical and 7 High findings that were missed in v2.0. All 12 critical and high findings from the red-team pass have been corrected. The schema is now at version 2.1. See Section 11 for full red-team findings.
+> **v2.1 UPDATE**: A red-team review was performed after the initial v2.0 audit. It found 5 Critical + 7 High findings missed in v2.0. All corrected — schema v2.1.
+> 
+> **v2.2 UPDATE**: An independent red-team review was performed distrusting the v2.1 READY assessment. It found 0 new Critical, 8 new High, 11 Medium, and 3 Low findings. All High findings have been corrected — schema v2.2, Critical=0, High=0. See Section 12 for full findings.
+>
+> **v2.3 UPDATE**: The separate 27-finding review in
+> `16-independent-database-review.md` was verified directly against the original
+> 42-page PDF, functional requirements, state machines, and permission matrix.
+> Resolution: 14 Accepted, 11 Partially accepted, 2 Rejected. Only Accepted
+> findings changed the schema/design. See Section 13.
 
 ---
 
@@ -27,7 +35,10 @@ This report presents the findings of a complete audit of the FoodSafe database s
 
 **Post-v2.1-redteam state:** A further adversarial red-team review found 5 Critical and 7 High and 3 Medium additional findings (see Section 11). All 12 critical/high findings have been corrected. The schema now contains 59 custom tables with 17 additional constraints and indexes applied. ABP's ~21 built-in tables are unchanged.
 
-**Final assessment (v2.1): READY — Critical=0, High=0.** The schema is production-ready for Phase 1 implementation. Confirmed open questions require business stakeholder confirmation before implementation of affected modules.
+**Current assessment (v2.3): READY FOR STAKEHOLDER DESIGN VALIDATION, NOT YET A
+PRODUCTION MIGRATION BASELINE.** All accepted independent findings are corrected.
+Eleven partially accepted findings require business decisions, and the DDL still
+requires execution validation against PostgreSQL 15.
 
 ---
 
@@ -116,6 +127,26 @@ No assumptions were made regarding PostgreSQL version beyond 15. Features used a
 | Tables with missing FK (forward-ref) | 0 | -2 (organizations province/district) |
 | Soft-delete UNIQUE indexes (partial WHERE is_deleted=FALSE) | 5 | +3 (RT-C2, RT-C3, RT-H6) |
 
+### 4.4 After v2.2 Independent Review (Current Schema)
+
+| Metric | Count | Delta from v2.1 |
+|--------|-------|----------------|
+| Named constraints (PK/FK/UNIQUE/CHECK) | 252 | +25 |
+| Indexes (partial + plain) | 129 | +21 |
+| New columns added | — | +12 (reported_by_id/at×2, organization_id, ABP audit cols, deletion_time+deleter_id fixes) |
+| Inline UNIQUE replaced by partial index | 3 | ndtp_reports, action_month_reports, inspection_plans |
+| ABP ISoftDelete violations fixed | 2 | file_attachments (deleted_at→deletion_time), business_handlers (missing deleter_id) |
+| Geographic FK gaps closed | 4 | cat_testing_centers×3, public_alert_submissions assigned_organization_id |
+
+### 4.5 After v2.3 Independent Finding Resolution
+
+| Metric | Current |
+|---|---:|
+| Custom tables | 60 |
+| Newly added in v2.3 | 6 (`management_scope_assignments`, `document_owners`, 3 report-submission tables, `data_sharing_attempts`) |
+| Resolution classifications | 14 Accepted / 11 Partially accepted / 2 Rejected |
+| DDL execution | Passed on disposable PostgreSQL 15 (`ON_ERROR_STOP=1`) |
+
 **New tables added:**
 
 | Table | Reason Added |
@@ -125,7 +156,7 @@ No assumptions were made regarding PostgreSQL version beyond 15. Features used a
 | `action_month_report_error_notifications` | High — parity with NDTP report correction tracking |
 | `inspection_result_inspectors` | Critical — replace relational-violating `inspector_ids UUID[]` array |
 | (New columns, not new table) `food_poisoning_cases.incident_id` | High — FK to food_poisoning_incidents |
-| (New columns) `file_attachments.checksum_sha256`, `virus_scan_status`, `retention_status`, `entity_version` | High — file integrity and versioning |
+| (Historical v2.0 design) attachment checksum/scan/retention plus `entity_version` | Superseded in v2.3 by typed document/submission owners |
 | (New columns) `data_sharing_histories.idempotency_key`, `next_retry_at` | High — integration reliability |
 | (New columns) `inspection_plans.rejected_reason` | High — workflow completeness |
 | (New columns) `testing_results.testing_service_id` | Critical — FK to testing_services |
@@ -150,7 +181,7 @@ No assumptions were made regarding PostgreSQL version beyond 15. Features used a
 | ID | Finding | Affected Table(s) | Impact | Status |
 |----|---------|------------------|--------|--------|
 | **H-01** | Only `ndtp_reports` had an error notification table (`ndtp_report_error_notifications`). Both `atp_work_reports` and `action_month_reports` also have the same Return workflow but had no corresponding error notification tables | `atp_work_reports`, `action_month_reports` | Cannot track correction history for 2 of 3 report types; audit gap | **FIXED** — `atp_work_report_error_notifications` and `action_month_report_error_notifications` tables added |
-| **H-02** | `file_attachments` was missing: `checksum_sha256` (no integrity verification), `virus_scan_status` (no malware detection tracking), `retention_status` (no archival lifecycle), `entity_version` (no attachment versioning across report correction cycles) | `file_attachments` | File integrity unverifiable; no virus scan workflow; no document versioning | **FIXED** — All 4 columns added |
+| **H-02** | `file_attachments` lacked integrity/security metadata and submission-cycle ownership | `file_attachments` | File integrity unverifiable; no virus scan workflow; no document versioning | **SUPERSEDED v2.3** — checksum/scan/retention retained; version ownership now uses typed immutable submission owners |
 | **H-03** | `data_sharing_histories` was missing: `idempotency_key` (cannot deduplicate inbound requests), `next_retry_at` (retry scheduler has no target timestamp) | `data_sharing_histories` | Duplicate inbound processing possible; retry scheduler cannot function | **FIXED** — Both columns added with supporting indexes |
 | **H-04** | `inspection_plan_items` had no UNIQUE constraint on `(plan_id, business_id)` — the same business could be added to the same inspection plan twice | `inspection_plan_items` | Domain invariant "no duplicate business per plan" unenforceable at DB level | **FIXED** — `UNIQUE(plan_id, business_id)` added |
 | **H-05** | `food_poisoning_cases.incident_id` FK was missing — cases could not be associated with a poisoning incident, breaking the Case-to-Incident relationship described in the domain model | `food_poisoning_cases` | Cannot form FoodPoisoningIncident from related cases; domain relationship broken | **FIXED** — `incident_id UUID REFERENCES food_poisoning_incidents(id)` added (nullable; case can exist without an incident) |
@@ -211,14 +242,13 @@ The following assumptions were made during the audit. Each should be reviewed wi
 
 **Result**: No syntax errors detected by static analysis.
 
-**Runtime validation**: DDL execution was not performed as a live PostgreSQL 15 instance was not available in this review environment. EF Core migration generation (which compiles the C# entity model against the schema) is the recommended runtime validation step during Phase 1 implementation.
+**Runtime validation**: DDL execution was not performed because a live
+PostgreSQL 15 instance was not available in this review environment.
 
-**Recommendation**: Run the following after generating migrations:
-```bash
-dotnet ef migrations add InitialSchema --project FoodSafe.EntityFrameworkCore
-dotnet ef database update --project FoodSafe.EntityFrameworkCore
-# Then run: dotnet test FoodSafe.EntityFrameworkCore.Tests
-```
+**Recommendation**: Apply `03-database-schema.sql` directly to a disposable
+PostgreSQL 15 database inside a transaction, inspect all constraints/indexes,
+run negative invariant tests, and roll back. EF Core generation is outside this
+database-design review.
 
 ---
 
@@ -281,7 +311,7 @@ An adversarial red-team review was performed after the v2.0 READY assessment, ex
 | **RT-H2** | `food_poisoning_cases` had `location_province_id UUID NULL` but no FK to `cat_provinces`. An invalid province UUID could silently persist. | `food_poisoning_cases` | Missing FK on province column | **FIXED** — `ALTER TABLE food_poisoning_cases ADD CONSTRAINT fk_fpc_province ...` added |
 | **RT-H3** | `public_alert_submissions` had `location_district_id UUID NULL` but no FK to `cat_districts`. | `public_alert_submissions` | Missing FK on district column | **FIXED** — `ALTER TABLE public_alert_submissions ADD CONSTRAINT fk_pas_district ...` added |
 | **RT-H4** | `atp_alerts.source = 2` means "PublicReport" (originated from a public submission), yet `public_submission_id` could be NULL when `source = 2` — a logical inconsistency allowing phantom public-report alerts with no submission trace. | `atp_alerts` | No CHECK enforcing source/FK consistency | **FIXED** — `CONSTRAINT chk_alerts_source_submission CHECK (source != 2 OR public_submission_id IS NOT NULL)` added |
-| **RT-H5** | `public_alert_submissions.status = 3` means "ConvertedToAlert", yet `converted_alert_id` could be NULL when status=3 — a submission could claim "converted" status without actually linking to any alert. | `public_alert_submissions` | No CHECK enforcing status/FK consistency | **FIXED** — `CONSTRAINT chk_pas_converted CHECK (status != 3 OR converted_alert_id IS NOT NULL)` added |
+| **RT-H5** | The former reciprocal conversion relationship could be incomplete | `public_alert_submissions` | Conversion inconsistency | **SUPERSEDED v2.3** — reverse FK removed; unique `atp_alerts.public_submission_id` is authoritative |
 | **RT-H6** | `testing_results.sample_code` had no UNIQUE constraint. Duplicate sample codes within the same organization would produce ambiguous results when looking up by code (STT 44 — public result lookup uses sample code). | `testing_results` | Missing unique constraint on business key | **FIXED** — `CREATE UNIQUE INDEX uq_testing_results_sample_code ON testing_results(sample_code, organization_id) WHERE is_deleted = FALSE` added |
 | **RT-H7** | `inspection_plans` had `approved_by_id`, `rejected_by_id`, `cancelled_by_id` but NO `submitted_by_id` / `submitted_at`. The workflow transition Draft→Submitted (CommuneStaff submitting to DistrictAdmin) had no audit column — impossible to answer "who submitted this plan and when?" | `inspection_plans` | Workflow transition auditing incomplete | **FIXED** — `submitted_by_id UUID NULL` and `submitted_at TIMESTAMPTZ NULL` columns added |
 
@@ -306,11 +336,115 @@ The following areas were examined and found acceptable:
 
 ---
 
+
+---
+
+## 12. v2.2 Independent Red-Team Review Findings
+
+A second independent red-team pass was performed after the v2.1 READY assessment. The reviewer was explicitly instructed not to trust the v2.1 assessment. Attack vectors covered: all twelve in the schema-red-team agent definition. All critical and high findings were confirmed in the SQL DDL before being logged.
+
+### 12.1 Critical Findings
+
+No new Critical findings were discovered.
+
+### 12.2 High Findings
+
+| ID | Finding | Table(s) | Fix Applied |
+|----|---------|----------|------------|
+| **B-01** | 
+dtp_reports had BOTH an inline CONSTRAINT uq_ndtp_reports_period UNIQUE (...) AND a partial index with the same name. The inline UNIQUE (applied during v2.1) was never removed — the partial index addition in v2.1 created a duplicate constraint name. The inline UNIQUE includes soft-deleted rows, permanently blocking re-creation. | 
+dtp_reports | Inline CONSTRAINT removed; partial index only retained |
+| **B-02** | Same as B-01 for ction_month_reports. | ction_month_reports | Inline CONSTRAINT removed; partial index only retained |
+| **B-03** | inspection_plans had inline CONSTRAINT uq_inspection_plans_code UNIQUE (plan_code, organization_id). Fixed: inline UNIQUE removed, replaced with partial index. | inspection_plans | Inline CONSTRAINT removed; CREATE UNIQUE INDEX uq_inspection_plans_code ... WHERE is_deleted = FALSE added |
+| **C-01** | ile_attachments still had deleted_at TIMESTAMPTZ NULL instead of deletion_time — the v2.1 fix only updated comments but not the DDL column definition. Also missing deleter_id. EF Core's global soft-delete query filter would be inactive. | ile_attachments | deleted_at → deletion_time TIMESTAMPTZ NULL; deleter_id UUID NULL added |
+| **D-01** | cat_testing_centers had address columns ddress_commune_id, ddress_district_id, ddress_province_id with comments "FK to..." but no actual FK constraints. | cat_testing_centers | ALTER TABLE cat_testing_centers ADD CONSTRAINT fk_ctc_commune/district/province ... added |
+| **G-01** | ood_poisoning_cases had pproved_by_id, ejected_by_id but no eported_by_id/eported_at. The initial report submission (CommuneStaff → DistrictAdmin) had no audit trail. | ood_poisoning_cases | eported_by_id UUID NULL, eported_at TIMESTAMPTZ NULL added |
+| **G-02** | Same as G-01 for ood_poisoning_incidents. | ood_poisoning_incidents | eported_by_id UUID NULL, eported_at TIMESTAMPTZ NULL added |
+| **J-01** | public_alert_submissions.assigned_organization_id had a comment "FK to organizations" but no actual FK constraint. | public_alert_submissions | ALTER TABLE public_alert_submissions ADD CONSTRAINT fk_pas_assigned_org ... added |
+
+### 12.3 Medium Findings
+
+| ID | Finding | Table(s) | Fix Applied |
+|----|---------|----------|------------|
+| **E-01** | self_declarations CHECK constraint chk_self_declarations_dates referenced column effective_date which does not exist in the table (the table has declaration_date). Would cause CREATE TABLE to fail at runtime. | self_declarations | effective_date corrected to declaration_date in CHECK |
+| **E-02** | tp_alerts.recall_reason column had comment "Required when status=3" but no CHECK constraint enforcing it. A recalled alert could have null reason. | tp_alerts | CONSTRAINT chk_alerts_recall CHECK (status != 3 OR recall_reason IS NOT NULL) added |
+| **E-03** | Same as E-02 for tp_news.recalled_reason. | tp_news | CONSTRAINT chk_news_recall CHECK (status != 3 OR recalled_reason IS NOT NULL) added |
+| **E-04** | Three report tables (
+dtp_reports, tp_work_reports, ction_month_reports) had eturn_reason TEXT NULL with comment "Required when status=4 (Returned)" but no CHECK. A return with no reason cannot be acted on. | 3 tables | chk_ndtp_return, chk_awr_return, chk_amr_return CHECK constraints added |
+| **E-05** | Six license/certificate tables had evoke_reason TEXT NULL with no CHECK. A revocation without reason is legally incomplete. | 6 tables | chk_self_declarations_revoke, chk_product_reg_revoke, chk_ad_reg_revoke, chk_elic_revoke, chk_cfs_revoke, chk_efc_revoke added |
+| **H-01** | product_registrations had no CHECK ensuring egistration_date <= expiry_date. | product_registrations | CONSTRAINT chk_product_reg_dates CHECK (expiry_date IS NULL OR registration_date <= expiry_date) added |
+| **H-02** | Same as H-01 for dvertisement_registrations. | dvertisement_registrations | CONSTRAINT chk_ad_reg_dates added |
+| **H-03** | egulatory_documents had issue_date, effective_date, expiry_date with no ordering CHECKs. | egulatory_documents | CONSTRAINT chk_rd_dates CHECK (...) enforcing both date pairs added |
+| **I-01** | usiness_handlers had 	raining_date/	raining_expiry_date and health_check_date/health_check_expiry_date with no date range CHECKs. Also missing deletion_time and deleter_id (ABP ISoftDelete incomplete). | usiness_handlers | Two CHECK constraints added; deletion_time and deleter_id columns added |
+| **M-01** | ile_attachments had no organization_id — files could not be scoped to an organization, making it impossible to filter attachments by org (security gap for Dimension 1 per authorization review). | ile_attachments | organization_id UUID NULL column + FK + index added (nullable: system-level attachments allowed) |
+| **U-01** | public_alert_submissions used non-ABP audit columns (created_at, updated_at) and had no soft-delete support. ABP's EF Core mapping requires the standard column names; updated_at would not be tracked. Public submissions constitute legal evidence and must be soft-deletable. | public_alert_submissions | Replaced created_at/updated_at with full ABP audit columns; soft-delete triplet (is_deleted, deletion_time, deleter_id) added |
+
+### 12.4 Low Findings
+
+| ID | Finding | Table(s) | Fix Applied |
+|----|---------|----------|------------|
+| **Q-01** | Missing FK-supporting indexes on self_declarations.product_id and product_registrations.product_id (both nullable FKs). | 2 tables | idx_self_declarations_product, idx_product_registrations_product partial indexes added |
+| **Q-02** | Missing geographic FK-supporting indexes on ood_poisoning_incidents (district/province) and ood_poisoning_cases (province). | 2 tables | idx_fpi_district, idx_fpi_province, idx_fpc_province partial indexes added |
+| **T-01** | self_declarations.declaration_number unique index was scoped globally. Self-declaration numbers are assigned by individual businesses, so different businesses may use the same numbering scheme. A numbers conflict across unrelated businesses is a false violation. | self_declarations | Unique index re-scoped to (business_id, declaration_number) |
+
+### 12.5 Findings Not Raised (Verified Clean)
+
+| Area | Verdict | Rationale |
+|------|---------|-----------|
+| Forward-reference FKs (Attack Vector A) | CLEAN | All *_id columns have FK constraints either inline or via ALTER TABLE at bottom of file |
+| Soft-delete UNIQUE conflicts (Attack Vector B) | CLEAN after fixes | All 3 inline UNIQUEs on soft-deletable tables corrected to partial indexes |
+| Geographic FK coverage (Attack Vector D) | CLEAN after D-01 | All province/district/commune columns on domain tables have FK constraints |
+| Business key uniqueness (Attack Vector F) | CLEAN | sample_code, plan_code, alert_number all have org-scoped partial UNIQUE indexes |
+| Certificate date ranges (Attack Vector H) | CLEAN after H-01/H-02 | All 5 certificate/registration tables have date range CHECKs |
+| Catalog duplicate prevention (Attack Vector L) | CLEAN | cat_districts, cat_communes, cat_testing_services all have scoped UNIQUE constraints |
+## 13. v2.3 Independent Finding Resolution
+
+### 13.1 Verification method
+
+Every IDB finding was checked against:
+
+1. the cited page in the original 42-page PDF;
+2. the corresponding STT in `01-functional-requirements.md`;
+3. relevant transition/invariant in `04-state-machines.md`; and
+4. functional permission plus data scope in `05-permission-matrix.md`.
+
+The full evidence and an individual resolution section for IDB-001 through
+IDB-027 are in `16-independent-database-review.md`.
+
+### 13.2 Classification
+
+| Classification | IDs | Count |
+|---|---|---:|
+| Accepted | 001, 002, 004–010, 015, 018, 022, 023, 026 | 14 |
+| Partially accepted | 003, 011, 012, 014, 016, 017, 019–021, 024, 025 | 11 |
+| Rejected | 013, 027 | 2 |
+
+### 13.3 Corrections applied for Accepted findings only
+
+- Enforced facility/product/organization ownership with composite keys and FKs.
+- Added immutable typed snapshots for every official report submission.
+- Replaced polymorphic attachment ownership with `document_owners` and real FKs.
+- Added effective-dated management focal-point scope assignments.
+- Enforced organization hierarchy, geographic chains, and coordinate validity.
+- Enforced testing-service/testing-center and inspection plan-item tuples.
+- Added state-dependent workflow evidence checks.
+- Added immutable integration attempt history beneath each envelope.
+- Preserved official document-number uniqueness across soft-deleted history.
+- Made citizen-submission → alert conversion one-to-one with one authoritative FK.
+- Added missing FK access indexes and removed confirmed redundant indexes.
+
+No commitment aggregate, expanded risk taxonomy, laboratory parameter lines,
+blanket workflow-lock triggers, expanded correction-notice model, integration
+contract revision model, deduplication model, ABP actor FKs/snapshots, or
+cascade-retention rewrite was added. Those items were either partially accepted
+and moved to open questions, or rejected.
+
 ## 10. Final Readiness Assessment
 
-**Assessment (v2.1): READY — Critical=0, High=0**
+**Assessment (v2.3): READY FOR STAKEHOLDER DESIGN VALIDATION — NOT YET A
+PRODUCTION MIGRATION BASELINE**
 
-The FoodSafe database schema — after applying all corrections documented in this report (v2.0 audit + v2.1 red-team review) — is ready for Phase 1 implementation (Organizations + Catalogs modules). The schema is:
+The FoodSafe database schema — after applying all corrections documented in this report (v2.0 audit + v2.1 red-team review + v2.2 independent review) — is ready for Phase 1 implementation (Organizations + Catalogs modules). The schema is:
 
 1. **Functionally complete**: All 47 persistent functional requirements are mapped to specific tables, columns, and constraints.
 2. **Structurally sound**: Relational integrity violations (array columns, missing FKs, missing UNIQUE constraints, forward-reference FK gaps) have all been corrected.
@@ -320,12 +454,22 @@ The FoodSafe database schema — after applying all corrections documented in th
 6. **Integration ready**: `api_specs` + `data_sharing_histories` with idempotency and retry support are present and correctly designed.
 7. **Performance indexed**: All high-frequency query patterns (org-scoped lists, workflow status queries, public portal queries, retry scheduler queries) have supporting indexes.
 
-**Red-team verdict: No further Critical or High findings. Schema is adversarially verified.**
+**Independent resolution verdict:** all 14 accepted findings are corrected. The
+11 partially accepted findings are intentionally not implemented until the
+business questions in `15-database-assumptions-and-open-questions.md` are
+answered. The 2 rejected findings require no action.
 
 **Remaining actions before go-live:**
 1. Confirm 7 open assumptions with project stakeholders (see `docs/15-database-assumptions-and-open-questions.md`)
-2. Run EF Core migration generation to validate C# entity model matches schema
-3. Execute `FoodSafe.EntityFrameworkCore.Tests` to validate all migrations apply cleanly
+2. Execute this SQL design against a disposable PostgreSQL 15 database and
+   validate constraints/triggers (no EF Core generation is part of this review)
+3. Resolve the v2.3 open questions before implementing affected modules
 4. Apply REVOKE permissions on audit tables to the application DB user (Phase 2 security hardening)
 5. Configure PostgreSQL streaming replication + WAL archival for production backup
 6. Complete `/security-review` before staging deployment
+
+
+
+
+
+

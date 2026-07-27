@@ -7,12 +7,17 @@ obj/
 *.nupkg
 *.snupkg
 TestResults/
+publish/
+Logs/
 
 # appsettings with credentials — dùng env vars hoặc secrets.json trên máy local
 appsettings.Development.json
 appsettings.Production.json
 secrets.json
 *.secrets.json
+.env
+.env.*
+!.env.example
 
 # Rider / JetBrains
 .idea/
@@ -33,3 +38,7 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Local debugging artifacts - never commit
+cookies.txt
+prompt.txt

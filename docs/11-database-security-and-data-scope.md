@@ -67,7 +67,7 @@
 | `testing_results` | INTERNAL | — | Lab result data |
 | `regulatory_documents` | INTERNAL | — | Directive documents |
 | `public_alert_submissions` | CONFIDENTIAL | `submitter_name`, `submitter_phone`, `submitter_email` | Anonymous tipster PII must be protected |
-| `file_attachments` | Inherits from parent | — | Classification follows the entity it belongs to |
+| `document_owners`, `file_attachments` | Inherits from parent | — | Owner FK enforces existence; classification and scope follow the typed parent |
 | `status_history` | CONFIDENTIAL | — | Workflow audit trail; must not be tampered |
 | `cached_dashboard_stats` | INTERNAL | — | Aggregated statistics only |
 | `api_specs` | RESTRICTED | `auth_config_encrypted` | API credentials; AES-256 encrypted at rest |
@@ -96,7 +96,11 @@ Tỉnh Quảng Ninh (Province)
 
 Each `organizations` row has a `level` column (`Province`, `District`, `Commune`) and a nullable `parent_id` that forms the hierarchy.
 
-Every domain entity that is org-scoped carries an `organization_id UUID NOT NULL` column. This column is set at creation time from the authenticated user's own organization and **cannot be modified by client input after creation**.
+Every domain entity that is org-scoped carries an `organization_id UUID NOT NULL`
+column. This is the record's authoritative home/ownership scope and cannot be
+modified by client input after creation. Effective
+`management_scope_assignments` add focal-point jurisdiction without changing
+record ownership.
 
 ### 2.2 Data Scope Resolution
 
@@ -109,10 +113,14 @@ Data scope is resolved entirely on the server in the AppService layer. The resol
    - Province level  → all org IDs (no filter, or include all)
    - District level  → CurrentUser.OrgId + all commune IDs where parent_id = CurrentUser.OrgId
    - Commune level   → CurrentUser.OrgId only
-4. Apply WHERE organization_id IN (visible_org_ids) on every query
+4. Resolve active focal-point assignments for the current organization/user
+5. Apply the union of `organization_id IN (visible_org_ids)` and matching
+   focal-point geography/business/type/product-group scope
 ```
 
-**Key invariant**: The client never supplies an `organizationId` filter that the server trusts. Even if the request body contains `organizationId`, the server recomputes it from the authenticated identity. If the supplied ID falls outside the user's visible set, the server returns 403 Forbidden — it never silently returns an empty set (which would be exploitable for probing).
+**Key invariant**: The client never supplies an `organizationId` or focal-point
+assignment that the server trusts. The server recomputes both tree and assignment
+scope, then intersects it with the functional permission and operation flag.
 
 ### 2.3 Scope by Operation Type
 

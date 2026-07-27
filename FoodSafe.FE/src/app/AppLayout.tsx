@@ -1,193 +1,467 @@
-import { useState } from 'react'
-import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { useMemo, useState } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   Layout,
   Menu,
   Avatar,
   Dropdown,
   Breadcrumb,
-  theme,
+  Drawer,
+  Button,
   type MenuProps,
-} from 'antd'
+} from "antd";
 import {
   DashboardOutlined,
-  ShopOutlined,
-  AuditOutlined,
-  AlertOutlined,
-  FileTextOutlined,
-  BookOutlined,
-  SettingOutlined,
+  ApartmentOutlined,
+  EnvironmentOutlined,
   UserOutlined,
   LogoutOutlined,
   KeyOutlined,
-} from '@ant-design/icons'
-import { useAuthStore } from '@/features/auth/store/authStore'
-import { useLogout } from '@/features/auth/api/authMutations'
+  SafetyCertificateOutlined,
+  DatabaseOutlined,
+  ShopOutlined,
+  FileTextOutlined,
+  SolutionOutlined,
+  NotificationOutlined,
+  GlobalOutlined,
+  SettingOutlined,
+  MenuOutlined,
+  FileProtectOutlined,
+  ExportOutlined,
+  AuditOutlined,
+  AlertOutlined,
+  MedicineBoxOutlined,
+  BarChartOutlined,
+  ExperimentOutlined,
+  FundOutlined,
+  BookOutlined,
+  PieChartOutlined,
+  FileSearchOutlined,
+  ToolOutlined,
+  ApiOutlined,
+} from "@ant-design/icons";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { useLogout } from "@/features/auth/api/authMutations";
+import {
+  SIDEBAR_WIDTH,
+  SIDEBAR_COLLAPSED_WIDTH,
+} from "@/theme/themeConfig";
 
-const { Header, Sider, Content } = Layout
+const { Sider, Content } = Layout;
 
-const menuItems: MenuProps['items'] = [
+const BREADCRUMB_LABELS: Record<string, string> = {
+  dashboard: "Bảng điều khiển",
+  organizations: "Đơn vị",
+  geography: "Địa bàn",
+  catalogs: "Danh mục dùng chung",
+  businesses: "Cơ sở và sản phẩm",
+  "self-declarations": "Hồ sơ tự công bố",
+  "product-registrations": "Đăng ký công bố sản phẩm",
+  "advertisement-registrations": "Đăng ký quảng cáo",
+  "eligibility-certificates": "Giấy đủ điều kiện ATTP",
+  "cfs-certificates": "Chứng nhận CFS",
+  "export-food-certificates": "GCN Xuất khẩu thực phẩm",
+  inspection: "Thanh tra - Kiểm tra ATTP",
+  "alerts-news": "Cảnh báo và Tin tức",
+  "food-poisoning": "Ngộ độc thực phẩm",
+  reporting: "Báo cáo",
+  statistics: "Thống kê tổng hợp",
+  "audit-logs": "Nhật ký hoạt động",
+  settings: "Cấu hình hệ thống",
+  "risk-analysis": "Phân tích nguy cơ",
+  "testing-results": "Kết quả kiểm nghiệm",
+  documents: "Văn bản pháp quy",
+  "data-integration": "Tích hợp dữ liệu",
+  administration: "Quản trị hệ thống",
+  identity: "Tài khoản và quyền",
+  account: "Tài khoản",
+  "change-password": "Đổi mật khẩu",
+};
+
+interface NavItem {
+  key: string;
+  icon: React.ReactNode;
+  label: string;
+  permission?: string | string[];
+}
+
+interface NavGroup {
+  key: string;
+  label: string;
+  children: NavItem[];
+}
+
+type NavEntry = NavItem | NavGroup;
+
+const NAV_CONFIG: NavEntry[] = [
   {
-    key: '/dashboard',
+    key: "/dashboard",
     icon: <DashboardOutlined />,
-    label: 'Bảng điều khiển',
+    label: "Bảng điều khiển",
   },
   {
-    key: 'businesses',
+    key: "system",
+    label: "Quản trị hệ thống",
+    children: [
+      {
+        key: "/administration/identity",
+        icon: <SafetyCertificateOutlined />,
+        label: "Tài khoản và quyền",
+        permission: "FoodSafe.SystemAdmin",
+      },
+      {
+        key: "/organizations",
+        icon: <ApartmentOutlined />,
+        label: "Đơn vị",
+        permission: "FoodSafe.Organizations.View",
+      },
+      {
+        key: "/geography",
+        icon: <EnvironmentOutlined />,
+        label: "Địa bàn",
+        permission: "FoodSafe.GeographicCatalogs.View",
+      },
+      {
+        key: "/catalogs",
+        icon: <DatabaseOutlined />,
+        label: "Danh mục dùng chung",
+        permission: "FoodSafe.Catalogs.View",
+      },
+      {
+        key: "/administration/audit-logs",
+        icon: <FileSearchOutlined />,
+        label: "Nhật ký hoạt động",
+        permission: "FoodSafe.SystemAdmin.AuditLogs",
+      },
+      {
+        key: "/administration/settings",
+        icon: <ToolOutlined />,
+        label: "Cấu hình hệ thống",
+        permission: "FoodSafe.SystemAdmin.Settings",
+      },
+    ],
+  },
+  {
+    key: "/businesses",
     icon: <ShopOutlined />,
-    label: 'Quản lý cơ sở',
-    children: [
-      { key: '/businesses', label: 'Danh sách cơ sở' },
-      { key: '/businesses/products', label: 'Sản phẩm' },
+    label: "Cơ sở và sản phẩm",
+    permission: [
+      "FoodSafe.BusinessManagement.Businesses.View",
+      "FoodSafe.BusinessManagement.Products.View",
     ],
   },
   {
-    key: 'inspection',
+    key: "licensing",
+    label: "Công bố và giấy phép",
+    children: [
+      {
+        key: "/self-declarations",
+        icon: <FileTextOutlined />,
+        label: "Hồ sơ tự công bố",
+        permission: "FoodSafe.BusinessManagement.SelfDeclarations.View",
+      },
+      {
+        key: "/product-registrations",
+        icon: <SolutionOutlined />,
+        label: "Đăng ký công bố SP",
+        permission: "FoodSafe.Licensing.ProductRegistrations.View",
+      },
+      {
+        key: "/advertisement-registrations",
+        icon: <NotificationOutlined />,
+        label: "Đăng ký quảng cáo",
+        permission: "FoodSafe.Licensing.AdRegistrations.View",
+      },
+      {
+        key: "/eligibility-certificates",
+        icon: <FileProtectOutlined />,
+        label: "Giấy đủ ĐK ATTP",
+        permission: "FoodSafe.Licensing.EligibilityCertificates.View",
+      },
+      {
+        key: "/cfs-certificates",
+        icon: <GlobalOutlined />,
+        label: "Chứng nhận CFS",
+        permission: "FoodSafe.Licensing.CfsCertificates.View",
+      },
+      {
+        key: "/export-food-certificates",
+        icon: <ExportOutlined />,
+        label: "GCN Xuất khẩu",
+        permission: "FoodSafe.Licensing.ExportCertificates.View",
+      },
+    ],
+  },
+  {
+    key: "/inspection",
     icon: <AuditOutlined />,
-    label: 'Thanh kiểm tra',
+    label: "Thanh tra - Kiểm tra",
+    permission: "FoodSafe.Inspection.Plans.View",
+  },
+  {
+    key: "alerts-testing",
+    label: "Cảnh báo & Kiểm nghiệm",
     children: [
-      { key: '/inspection/plans', label: 'Kế hoạch' },
-      { key: '/inspection/results', label: 'Kết quả' },
+      {
+        key: "/alerts-news",
+        icon: <AlertOutlined />,
+        label: "Cảnh báo và Tin tức",
+        permission: "FoodSafe.AlertsAndTesting.Alerts.View",
+      },
+      {
+        key: "/risk-analysis",
+        icon: <FundOutlined />,
+        label: "Phân tích nguy cơ",
+        permission: "FoodSafe.AlertsAndTesting.RiskAnalyses.View",
+      },
+      {
+        key: "/testing-results",
+        icon: <ExperimentOutlined />,
+        label: "Kết quả kiểm nghiệm",
+        permission: "FoodSafe.AlertsAndTesting.TestingResults.View",
+      },
+      {
+        key: "/documents",
+        icon: <BookOutlined />,
+        label: "Văn bản pháp quy",
+        permission: "FoodSafe.AlertsAndTesting.Documents.View",
+      },
     ],
   },
   {
-    key: 'food-poisoning',
-    icon: <AlertOutlined />,
-    label: 'Ngộ độc thực phẩm',
-    children: [
-      { key: '/food-poisoning/cases', label: 'Ca ngộ độc' },
-      { key: '/food-poisoning/incidents', label: 'Vụ ngộ độc' },
-    ],
+    key: "/food-poisoning",
+    icon: <MedicineBoxOutlined />,
+    label: "Ngộ độc thực phẩm",
+    permission: "FoodSafe.FoodPoisoning.Cases.View",
   },
   {
-    key: 'reporting',
-    icon: <FileTextOutlined />,
-    label: 'Báo cáo',
-    children: [
-      { key: '/reporting/ndtp', label: 'Báo cáo NĐTP' },
-      { key: '/reporting/attp-work', label: 'Công tác ATTP' },
-    ],
+    key: "/reporting",
+    icon: <BarChartOutlined />,
+    label: "Báo cáo",
+    permission: "FoodSafe.Reporting.NdtpReports.View",
   },
   {
-    key: 'catalogs',
-    icon: <BookOutlined />,
-    label: 'Danh mục',
-    children: [
-      { key: '/catalogs/business-types', label: 'Loại hình cơ sở' },
-      { key: '/catalogs/product-groups', label: 'Nhóm sản phẩm' },
-    ],
+    key: "/data-integration",
+    icon: <ApiOutlined />,
+    label: "Tích hợp dữ liệu",
+    permission: "FoodSafe.DataIntegration.ApiEndpoints.View",
   },
   {
-    key: 'administration',
-    icon: <SettingOutlined />,
-    label: 'Quản trị',
-    children: [
-      { key: '/admin/users', label: 'Người dùng' },
-      { key: '/admin/roles', label: 'Vai trò' },
-      { key: '/admin/audit-log', label: 'Nhật ký thao tác' },
-    ],
+    key: "/statistics",
+    icon: <PieChartOutlined />,
+    label: "Thống kê tổng hợp",
   },
-]
+];
+
+function isNavGroup(entry: NavEntry): entry is NavGroup {
+  return "children" in entry;
+}
+
+function hasItemPermission(
+  item: NavItem,
+  hasPermission: (p: string) => boolean,
+): boolean {
+  if (!item.permission) return true;
+  if (Array.isArray(item.permission))
+    return item.permission.some(hasPermission);
+  return hasPermission(item.permission);
+}
+
+function buildMenuItems(
+  hasPermission: (p: string) => boolean,
+): MenuProps["items"] {
+  const result: NonNullable<MenuProps["items"]> = [];
+
+  for (const entry of NAV_CONFIG) {
+    if (isNavGroup(entry)) {
+      const children = entry.children.filter((child) =>
+        hasItemPermission(child, hasPermission),
+      );
+      if (children.length === 0) continue;
+      result.push({
+        type: "group",
+        key: entry.key,
+        label: entry.label,
+        children: children.map((child) => ({
+          key: child.key,
+          icon: child.icon,
+          label: child.label,
+        })),
+      });
+    } else {
+      if (!hasItemPermission(entry, hasPermission)) continue;
+      result.push({
+        key: entry.key,
+        icon: entry.icon,
+        label: entry.label,
+      });
+    }
+  }
+
+  return result;
+}
+
+function buildBreadcrumbs(pathname: string) {
+  const segments = pathname.split("/").filter(Boolean);
+  const items = [
+    { title: BREADCRUMB_LABELS[segments[0]] ?? "Trang chủ" },
+  ];
+  if (segments.length > 1) {
+    items.push({
+      title: BREADCRUMB_LABELS[segments[1]] ?? segments[1],
+    });
+  }
+  return items;
+}
 
 export function AppLayout() {
-  const [collapsed, setCollapsed] = useState(false)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const user = useAuthStore((s) => s.user)
-  const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken()
-  const logoutMutation = useLogout()
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const user = useAuthStore((s) => s.user);
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const logoutMutation = useLogout();
 
-  const userMenuItems: MenuProps['items'] = [
+  const menuItems = useMemo(
+    () => buildMenuItems(hasPermission),
+    [hasPermission],
+  );
+  const breadcrumbItems = useMemo(
+    () => buildBreadcrumbs(location.pathname),
+    [location.pathname],
+  );
+
+  const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
+    navigate(key);
+    setMobileOpen(false);
+  };
+
+  const userMenuItems: MenuProps["items"] = [
     {
-      key: 'change-password',
-      icon: <KeyOutlined />,
-      label: 'Đổi mật khẩu',
-      onClick: () => navigate('/account/change-password'),
+      key: "user-info",
+      label: user?.organizationName ?? "Phạm vi toàn hệ thống",
+      disabled: true,
+      style: { color: "rgba(0,0,0,0.45)", fontSize: 12 },
     },
-    { type: 'divider' },
+    { type: "divider" },
     {
-      key: 'logout',
+      key: "change-password",
+      icon: <KeyOutlined />,
+      label: "Đổi mật khẩu",
+      onClick: () => navigate("/account/change-password"),
+    },
+    { type: "divider" },
+    {
+      key: "logout",
       icon: <LogoutOutlined />,
-      label: 'Đăng xuất',
+      label: "Đăng xuất",
       danger: true,
       onClick: () => logoutMutation.mutate(),
     },
-  ]
+  ];
+
+  const sidebarContent = (
+    <>
+      <div className="sidebar-logo">
+        <div className="sidebar-logo-icon">
+          <SettingOutlined />
+        </div>
+        <div className="sidebar-logo-text">
+          <span className="sidebar-logo-title">FoodSafe</span>
+          <span className="sidebar-logo-subtitle">An toàn thực phẩm</span>
+        </div>
+      </div>
+      <Menu
+        theme="dark"
+        mode="inline"
+        selectedKeys={[location.pathname]}
+        items={menuItems}
+        onClick={handleMenuClick}
+        style={{ borderRight: 0, paddingTop: 8 }}
+      />
+    </>
+  );
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: "100vh" }}>
+      {/* Desktop sidebar */}
       <Sider
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
         theme="dark"
-        width={240}
+        width={SIDEBAR_WIDTH}
+        collapsedWidth={SIDEBAR_COLLAPSED_WIDTH}
+        className={collapsed ? "sidebar-collapsed" : ""}
+        breakpoint="lg"
+        onBreakpoint={(broken) => {
+          if (broken) setCollapsed(true);
+        }}
+        style={{
+          overflow: "auto",
+          height: "100vh",
+          position: "sticky",
+          top: 0,
+          left: 0,
+        }}
+        trigger={null}
       >
-        <div
-          style={{
-            height: 64,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontSize: collapsed ? 14 : 16,
-            fontWeight: 700,
-            padding: '0 16px',
-            background: 'rgba(255,255,255,0.05)',
-            margin: 8,
-            borderRadius: 8,
-          }}
-        >
-          {collapsed ? 'FS' : 'FoodSafe'}
-        </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          defaultOpenKeys={['businesses', 'inspection']}
-          items={menuItems}
-          onClick={({ key }) => navigate(key)}
-        />
+        {sidebarContent}
       </Sider>
 
+      {/* Mobile drawer */}
+      <Drawer
+        placement="left"
+        width={SIDEBAR_WIDTH}
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        styles={{ body: { padding: 0, background: "#001529" } }}
+        closable={false}
+      >
+        {sidebarContent}
+      </Drawer>
+
       <Layout>
-        <Header
-          style={{
-            background: colorBgContainer,
-            padding: '0 24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-          }}
-        >
-          <Breadcrumb
-            items={[
-              { title: 'Chi cục ATVSTP Quảng Ninh' },
-              { title: location.pathname.split('/')[1] || 'Trang chủ' },
-            ]}
-          />
+        <header className="app-header">
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => {
+                if (window.innerWidth < 992) {
+                  setMobileOpen(true);
+                } else {
+                  setCollapsed(!collapsed);
+                }
+              }}
+              style={{ fontSize: 16, width: 32, height: 32 }}
+            />
+            <Breadcrumb items={breadcrumbItems} />
+          </div>
 
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1677ff' }} />
-              <span>{user?.name ?? 'Người dùng'}</span>
+            <div className="app-header-user">
+              <Avatar
+                size="small"
+                icon={<UserOutlined />}
+                style={{ backgroundColor: "#00796B" }}
+              />
+              <span style={{ fontSize: 13 }}>
+                {user?.name ?? "Người dùng"}
+              </span>
             </div>
           </Dropdown>
-        </Header>
+        </header>
 
-        <Content
-          style={{
-            margin: '16px',
-            padding: 24,
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-            minHeight: 280,
-          }}
-        >
+        <Content style={{ margin: 16, minHeight: 280 }}>
           <Outlet />
         </Content>
+
+        <footer className="app-footer">
+          FoodSafe v1.0 — Phần mềm quản lý An toàn thực phẩm tỉnh Quảng Ninh
+        </footer>
       </Layout>
     </Layout>
-  )
+  );
 }
