@@ -132,7 +132,8 @@ export function useMarkViolationRemedied() {
       resultId: string;
       violationId: string;
       notes?: string;
-    }) => inspectionResultApi.markViolationRemedied(resultId, violationId, notes),
+    }) =>
+      inspectionResultApi.markViolationRemedied(resultId, violationId, notes),
   );
 }
 

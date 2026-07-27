@@ -55,7 +55,11 @@ export function RecordDetailDrawer<T>({
             labelStyle={{ width: 160 }}
           >
             {fields.map((f) => (
-              <Descriptions.Item key={f.label} label={f.label} span={f.span ?? 1}>
+              <Descriptions.Item
+                key={f.label}
+                label={f.label}
+                span={f.span ?? 1}
+              >
                 {displayValue(f.render(record))}
               </Descriptions.Item>
             ))}

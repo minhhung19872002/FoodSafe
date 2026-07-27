@@ -23,8 +23,10 @@ export interface SystemSettings {
   hasLoginBackground: boolean;
 }
 
-export interface UpdateSystemSettingsInput
-  extends Omit<SystemSettings, "hasSmtpPassword" | "hasLogo" | "hasLoginBackground"> {
+export interface UpdateSystemSettingsInput extends Omit<
+  SystemSettings,
+  "hasSmtpPassword" | "hasLogo" | "hasLoginBackground"
+> {
   smtpPassword?: string;
 }
 

@@ -19,8 +19,7 @@ export function useSystemSettings() {
 export function useUpdateSystemSettings() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: UpdateSystemSettingsInput) =>
-      settingsApi.update(input),
+    mutationFn: (input: UpdateSystemSettingsInput) => settingsApi.update(input),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: settingsKeys.all }),
   });

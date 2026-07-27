@@ -368,11 +368,17 @@ function CasesTab() {
           {
             label: "Giới tính",
             render: (r) =>
-              r.victimGender ? VICTIM_GENDER_CONFIG[r.victimGender]?.label : null,
+              r.victimGender
+                ? VICTIM_GENDER_CONFIG[r.victimGender]?.label
+                : null,
           },
           { label: "Tuổi", render: (r) => r.victimAge },
           { label: "SĐT nạn nhân", render: (r) => r.victimPhone },
-          { label: "Địa chỉ nạn nhân", render: (r) => r.victimAddress, span: 2 },
+          {
+            label: "Địa chỉ nạn nhân",
+            render: (r) => r.victimAddress,
+            span: 2,
+          },
           { label: "Địa điểm", render: (r) => r.locationDescription, span: 2 },
           { label: "Thực phẩm nghi ngờ", render: (r) => r.suspectedFood },
           { label: "Nguồn thực phẩm", render: (r) => r.foodSource },
@@ -402,7 +408,10 @@ function CasesTab() {
           { label: "SĐT người báo", render: (r) => r.reporterPhone },
           { label: "Đơn vị báo cáo", render: (r) => r.reporterOrganization },
           { label: "Quan hệ nạn nhân", render: (r) => r.reporterRelation },
-          { label: "Ngày gửi báo cáo", render: (r) => formatDate(r.reportedAt) },
+          {
+            label: "Ngày gửi báo cáo",
+            render: (r) => formatDate(r.reportedAt),
+          },
           { label: "Ngày xác minh", render: (r) => formatDate(r.verifiedAt) },
           { label: "Ngày tạo", render: (r) => formatDate(r.creationTime) },
           { label: "Ghi chú", render: (r) => r.notes, span: 2 },
@@ -753,7 +762,11 @@ function IncidentsTab() {
           },
           { label: "Tác nhân gây bệnh", render: (r) => r.causativeAgent },
           { label: "Vi sinh vật", render: (r) => r.pathogen },
-          { label: "Đoàn điều tra", render: (r) => r.investigationTeam, span: 2 },
+          {
+            label: "Đoàn điều tra",
+            render: (r) => r.investigationTeam,
+            span: 2,
+          },
           {
             label: "Biện pháp kiểm soát",
             render: (r) => r.controlMeasures,

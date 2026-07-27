@@ -1,4 +1,13 @@
-import { App, Button, Modal, Popconfirm, Select, Space, Table, Tag } from "antd";
+import {
+  App,
+  Button,
+  Modal,
+  Popconfirm,
+  Select,
+  Space,
+  Table,
+  Tag,
+} from "antd";
 import { CheckOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -128,8 +137,7 @@ export function InspectionFollowUpModal({ result, canEdit, onClose }: Props) {
                         void message.success(
                           "Đã cập nhật kết quả tái kiểm tra.",
                         ),
-                      onError: () =>
-                        void message.error("Không thể cập nhật."),
+                      onError: () => void message.error("Không thể cập nhật."),
                     },
                   )
                 }

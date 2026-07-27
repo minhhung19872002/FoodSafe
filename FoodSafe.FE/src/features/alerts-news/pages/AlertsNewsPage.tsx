@@ -685,7 +685,8 @@ function NewsTab() {
           { label: "Lượt xem", render: (r) => r.viewCount },
           {
             label: "Nổi bật",
-            render: (r) => (r.isFeatured ? <Tag color="gold">NB</Tag> : "Không"),
+            render: (r) =>
+              r.isFeatured ? <Tag color="gold">NB</Tag> : "Không",
           },
           {
             label: "Công khai",

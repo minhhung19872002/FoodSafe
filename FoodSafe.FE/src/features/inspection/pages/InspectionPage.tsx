@@ -148,7 +148,8 @@ function PlansTab() {
   const changeItemStatus = (
     plan: InspectionPlan,
     item: InspectionPlanItem,
-    status: typeof INSPECTION_PLAN_ITEM_STATUS.InProgress
+    status:
+      | typeof INSPECTION_PLAN_ITEM_STATUS.InProgress
       | typeof INSPECTION_PLAN_ITEM_STATUS.Skipped,
   ) => {
     itemStatusMutation.mutate(
@@ -532,8 +533,7 @@ function PlansTab() {
                             Bắt đầu
                           </Button>
                         )}
-                        {(item.status ===
-                          INSPECTION_PLAN_ITEM_STATUS.Pending ||
+                        {(item.status === INSPECTION_PLAN_ITEM_STATUS.Pending ||
                           item.status ===
                             INSPECTION_PLAN_ITEM_STATUS.InProgress) && (
                           <Popconfirm
@@ -728,7 +728,9 @@ function ResultsTab() {
               aria-label={`Theo dõi khắc phục ${item.businessName ?? item.id}`}
               icon={<AuditOutlined />}
               onClick={() => setFollowUpResultRow(item)}
-            >Theo dõi</Button>
+            >
+              Theo dõi
+            </Button>
           )}
           {canEdit && !item.isFinalized && (
             <Button
@@ -750,18 +752,14 @@ function ResultsTab() {
               cancelText="Hủy"
               onConfirm={() =>
                 finalizeMutation.mutate(item.id, {
-                  onSuccess: () =>
-                    void message.success("Đã chốt kết quả."),
-                  onError: () =>
-                    void message.error("Không thể chốt kết quả."),
+                  onSuccess: () => void message.success("Đã chốt kết quả."),
+                  onError: () => void message.error("Không thể chốt kết quả."),
                 })
               }
             >
-              <Button
-                size="small"
-                type="text"
-                icon={<LockOutlined />}
-              >Chốt</Button>
+              <Button size="small" type="text" icon={<LockOutlined />}>
+                Chốt
+              </Button>
             </Popconfirm>
           )}
           {item.isFinalized && (

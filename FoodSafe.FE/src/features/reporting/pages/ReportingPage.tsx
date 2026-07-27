@@ -933,9 +933,7 @@ function ActionMonthTab() {
             size="small"
             icon={<FileTextOutlined />}
             aria-label="Xem văn bản"
-            onClick={() =>
-              setDocView({ kind: "action-month", report: record })
-            }
+            onClick={() => setDocView({ kind: "action-month", report: record })}
           />
           {record.status === REPORT_STATUS.Draft &&
             hasPermission("FoodSafe.Reporting.ActionMonthReports.Edit") && (

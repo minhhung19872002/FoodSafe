@@ -360,7 +360,11 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               onChange={(v) => setViewMode(v as "table" | "map")}
               options={[
                 { value: "table", icon: <TableOutlined />, label: "Bảng" },
-                { value: "map", icon: <EnvironmentOutlined />, label: "Bản đồ" },
+                {
+                  value: "map",
+                  icon: <EnvironmentOutlined />,
+                  label: "Bản đồ",
+                },
               ]}
             />
           </div>

@@ -142,7 +142,9 @@ export default function MasterCatalogPage() {
           {
             label: "Thời gian trả kết quả",
             render: (r) =>
-              r.turnaroundDays !== undefined ? `${r.turnaroundDays} ngày` : null,
+              r.turnaroundDays !== undefined
+                ? `${r.turnaroundDays} ngày`
+                : null,
           },
         ] satisfies DetailField<CatalogItem>[])
       : []),

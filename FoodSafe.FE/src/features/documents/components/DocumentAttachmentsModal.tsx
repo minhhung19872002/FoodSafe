@@ -39,8 +39,7 @@ export function DocumentAttachmentsModal({
   const refresh = () => void queryClient.invalidateQueries({ queryKey });
 
   const upload = useMutation({
-    mutationFn: (file: File) =>
-      documentAttachmentApi.upload(documentId!, file),
+    mutationFn: (file: File) => documentAttachmentApi.upload(documentId!, file),
     onSuccess: () => {
       refresh();
       void message.success("Đã tải lên tài liệu.");

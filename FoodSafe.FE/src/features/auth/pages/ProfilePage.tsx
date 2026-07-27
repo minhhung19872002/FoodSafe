@@ -97,7 +97,11 @@ export default function ProfilePage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={8}>
           <Card title="Ảnh đại diện" size="small">
-            <Space direction="vertical" align="center" style={{ width: "100%" }}>
+            <Space
+              direction="vertical"
+              align="center"
+              style={{ width: "100%" }}
+            >
               <Avatar
                 size={96}
                 icon={<UserOutlined />}
@@ -152,9 +156,7 @@ export default function ProfilePage() {
               <Descriptions.Item label="Tên đăng nhập">
                 {data?.userName}
               </Descriptions.Item>
-              <Descriptions.Item label="Email">
-                {data?.email}
-              </Descriptions.Item>
+              <Descriptions.Item label="Email">{data?.email}</Descriptions.Item>
               <Descriptions.Item label="Đơn vị">
                 {data?.organizationName ?? "Toàn hệ thống"}
               </Descriptions.Item>
@@ -177,9 +179,7 @@ export default function ProfilePage() {
               <Form.Item
                 name="fullName"
                 label="Họ và tên"
-                rules={[
-                  { required: true, message: "Vui lòng nhập họ và tên" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập họ và tên" }]}
               >
                 <Input maxLength={200} />
               </Form.Item>

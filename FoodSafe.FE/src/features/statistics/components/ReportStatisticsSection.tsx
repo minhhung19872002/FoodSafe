@@ -20,7 +20,11 @@ interface Props {
 const licenseColumns: ColumnsType<LicensesByBusinessTypeRow> = [
   { title: "Loại hình cơ sở", dataIndex: "businessTypeName" },
   { title: "Tự công bố", dataIndex: "selfDeclarations", align: "right" },
-  { title: "Đăng ký công bố", dataIndex: "productRegistrations", align: "right" },
+  {
+    title: "Đăng ký công bố",
+    dataIndex: "productRegistrations",
+    align: "right",
+  },
   { title: "Giấy ĐĐK", dataIndex: "eligibilityCertificates", align: "right" },
   { title: "CFS", dataIndex: "cfsCertificates", align: "right" },
   { title: "GCN XK", dataIndex: "exportCertificates", align: "right" },

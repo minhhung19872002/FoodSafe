@@ -54,7 +54,9 @@ export function PoisoningErrorReportsModal({
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [responseText, setResponseText] = useState("");
 
-  const caseReports = useCaseErrorReports(kind === "case" ? (targetId ?? "") : "");
+  const caseReports = useCaseErrorReports(
+    kind === "case" ? (targetId ?? "") : "",
+  );
   const incidentReports = useIncidentErrorReports(
     kind === "incident" ? (targetId ?? "") : "",
   );
@@ -156,10 +158,7 @@ export function PoisoningErrorReportsModal({
                   </Typography.Text>
                   <Typography.Text>{item.correctionRequest}</Typography.Text>
                   {item.response && (
-                    <Alert
-                      type="info"
-                      message={`Phản hồi: ${item.response}`}
-                    />
+                    <Alert type="info" message={`Phản hồi: ${item.response}`} />
                   )}
                   {canRespond &&
                     item.status === ERROR_REPORT_STATUS.Pending && (

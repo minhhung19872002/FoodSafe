@@ -160,9 +160,7 @@ export default function IdentityAdministrationPage() {
 
   const showSuccess = (content: string) => void message.success(content);
   const showError = () =>
-    void message.error(
-      "Không thể thực hiện thao tác. Vui lòng kiểm tra lại.",
-    );
+    void message.error("Không thể thực hiện thao tác. Vui lòng kiểm tra lại.");
 
   const permissionSelectOptions = useMemo(
     () =>
@@ -511,8 +509,7 @@ export default function IdentityAdministrationPage() {
                         cancelText="Hủy"
                         onConfirm={() =>
                           deleteUser.mutate(user.id, {
-                            onSuccess: () =>
-                              showSuccess("Đã xóa tài khoản"),
+                            onSuccess: () => showSuccess("Đã xóa tài khoản"),
                             onError: showError,
                           })
                         }
@@ -816,9 +813,7 @@ export default function IdentityAdministrationPage() {
           {
             label: "Khóa đến",
             render: (r) =>
-              r.lockoutEnd
-                ? dayjs(r.lockoutEnd).format("DD/MM/YYYY")
-                : null,
+              r.lockoutEnd ? dayjs(r.lockoutEnd).format("DD/MM/YYYY") : null,
           },
           {
             label: "Đổi mật khẩu",

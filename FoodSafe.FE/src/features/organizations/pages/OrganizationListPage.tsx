@@ -107,61 +107,64 @@ export default function OrganizationListPage() {
 
   return (
     <div className="page-container">
-      <PageHeader title="Quản lý đơn vị" subtitle="Cơ cấu tổ chức và phân cấp đơn vị hành chính" />
+      <PageHeader
+        title="Quản lý đơn vị"
+        subtitle="Cơ cấu tổ chức và phân cấp đơn vị hành chính"
+      />
 
       <div className="page-card">
         <OrganizationListView
-        items={listQuery.data?.items ?? []}
-        treeItems={treeQuery.data?.items ?? []}
-        totalCount={listQuery.data?.totalCount ?? 0}
-        loading={listQuery.isLoading || treeQuery.isLoading}
-        page={page}
-        pageSize={pageSize}
-        filter={filter}
-        level={level}
-        canCreate={hasPermission("FoodSafe.Organizations.Create")}
-        canEdit={hasPermission("FoodSafe.Organizations.Edit")}
-        canDelete={hasPermission("FoodSafe.Organizations.Delete")}
-        deletingId={
-          deleteMutation.isPending ? deleteMutation.variables : undefined
-        }
-        exporting={exportMutation.isPending}
-        onExport={() =>
-          exportMutation.mutate(undefined, {
-            onSuccess: (file) => saveDownload(file.blob, file.fileName),
-            onError: () => {
-              void message.error("Không thể xuất danh sách đơn vị.");
-            },
-          })
-        }
-        onFilterChange={(value) => {
-          setFilter(value);
-          setPage(1);
-        }}
-        onLevelChange={(value) => {
-          setLevel(value);
-          setPage(1);
-        }}
-        onPageChange={(nextPage, nextPageSize) => {
-          setPage(nextPage);
-          setPageSize(nextPageSize);
-        }}
-        onRefresh={refresh}
-        onCreate={() => setCreateOpen(true)}
-        onEdit={setEditing}
-        onShowDetail={setDetailOrganization}
-        onDelete={(organization) => {
-          deleteMutation.mutate(organization.id, {
-            onSuccess: () => {
-              void message.success("Đã xóa đơn vị");
-            },
-            onError: () => {
-              void message.error(
-                "Không thể xóa đơn vị. Đơn vị có thể đang được sử dụng.",
-              );
-            },
-          });
-        }}
+          items={listQuery.data?.items ?? []}
+          treeItems={treeQuery.data?.items ?? []}
+          totalCount={listQuery.data?.totalCount ?? 0}
+          loading={listQuery.isLoading || treeQuery.isLoading}
+          page={page}
+          pageSize={pageSize}
+          filter={filter}
+          level={level}
+          canCreate={hasPermission("FoodSafe.Organizations.Create")}
+          canEdit={hasPermission("FoodSafe.Organizations.Edit")}
+          canDelete={hasPermission("FoodSafe.Organizations.Delete")}
+          deletingId={
+            deleteMutation.isPending ? deleteMutation.variables : undefined
+          }
+          exporting={exportMutation.isPending}
+          onExport={() =>
+            exportMutation.mutate(undefined, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => {
+                void message.error("Không thể xuất danh sách đơn vị.");
+              },
+            })
+          }
+          onFilterChange={(value) => {
+            setFilter(value);
+            setPage(1);
+          }}
+          onLevelChange={(value) => {
+            setLevel(value);
+            setPage(1);
+          }}
+          onPageChange={(nextPage, nextPageSize) => {
+            setPage(nextPage);
+            setPageSize(nextPageSize);
+          }}
+          onRefresh={refresh}
+          onCreate={() => setCreateOpen(true)}
+          onEdit={setEditing}
+          onShowDetail={setDetailOrganization}
+          onDelete={(organization) => {
+            deleteMutation.mutate(organization.id, {
+              onSuccess: () => {
+                void message.success("Đã xóa đơn vị");
+              },
+              onError: () => {
+                void message.error(
+                  "Không thể xóa đơn vị. Đơn vị có thể đang được sử dụng.",
+                );
+              },
+            });
+          }}
         />
       </div>
 

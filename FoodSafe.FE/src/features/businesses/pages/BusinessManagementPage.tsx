@@ -635,7 +635,9 @@ export default function BusinessManagementPage() {
             label: "Trạng thái",
             render: (r) => (
               <Tag
-                color={r.status === PRODUCT_STATUS.Active ? "success" : "default"}
+                color={
+                  r.status === PRODUCT_STATUS.Active ? "success" : "default"
+                }
               >
                 {r.status === PRODUCT_STATUS.Active
                   ? "Đang kinh doanh"

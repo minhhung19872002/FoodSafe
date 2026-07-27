@@ -64,8 +64,7 @@ export function useTestConnection() {
 export function useShareData() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: ShareDataInput) =>
-      dataIntegrationApi.shareData(input),
+    mutationFn: (input: ShareDataInput) => dataIntegrationApi.shareData(input),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["api-call-logs"] }),
   });
 }

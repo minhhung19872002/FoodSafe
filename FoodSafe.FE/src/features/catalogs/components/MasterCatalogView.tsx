@@ -4,15 +4,7 @@ import {
   ExportOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import {
-  Button,
-  Input,
-  Popconfirm,
-  Space,
-  Table,
-  Tabs,
-  Tag,
-} from "antd";
+import { Button, Input, Popconfirm, Space, Table, Tabs, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { catalogDefinitions } from "../types/catalog.types";
 import type { CatalogItem, CatalogKind } from "../types/catalog.types";

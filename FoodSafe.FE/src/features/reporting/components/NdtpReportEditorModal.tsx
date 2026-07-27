@@ -12,7 +12,10 @@ import {
 } from "antd";
 import { CalculatorOutlined } from "@ant-design/icons";
 import { reportCalculationApi } from "../api/reportingApi";
-import { useUpdateNdtpStats, useUpdateNdtpNarrative } from "../api/reportingMutations";
+import {
+  useUpdateNdtpStats,
+  useUpdateNdtpNarrative,
+} from "../api/reportingMutations";
 import type { NdtpReport } from "../types/reporting.types";
 
 interface Props {

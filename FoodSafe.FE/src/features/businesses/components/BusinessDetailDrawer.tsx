@@ -98,8 +98,7 @@ function RelatedTable({
 }) {
   const { data, isLoading } = useQuery({
     queryKey: ["business-related", kind, businessId] as const,
-    queryFn: () =>
-      businessRelatedApi[kind]({ businessId, ...PAGE }),
+    queryFn: () => businessRelatedApi[kind]({ businessId, ...PAGE }),
   });
   return (
     <Table
@@ -167,10 +166,7 @@ export function BusinessDetailDrawer({ business, onClose }: Props) {
               key: "ad-registrations",
               label: "Quảng cáo",
               children: (
-                <RelatedTable
-                  businessId={business.id}
-                  kind="adRegistrations"
-                />
+                <RelatedTable businessId={business.id} kind="adRegistrations" />
               ),
             },
             {
