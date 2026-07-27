@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — FR-33-02 NDTP roll-up aggregation ("Tổng hợp từ báo cáo tuyến dưới")
+
+- **Cause**: New browser-acceptance evidence for the NDTP roll-up aggregation button (doc 77 P1-1 batch; doc 73 was IMPLEMENTED_NOT_VERIFIED). New spec only (`FoodSafe.FE/e2e/ndtp-rollup-aggregation.spec.ts`) — no product code changed.
+- **Commit**: `714e318`
+- **Affected features**: F-022 reporting (NDTP roll-up aggregation). No product/shared code changed → no invalidation of other features.
+- **Retest level**: 2 (single-feature runtime retest)
+- **Result**: PASSED — 1/1 green (4.6s), real backend, no interception.
+- **Details**: Proves the higher-tier NDTP report's aggregated figures are driven by **real lower-tier report state**, not hard-coded. (1) A per-period **baseline** is read from the real `GET /api/v1/app/report-calculation/ndtp-aggregation?PeriodYear=&PeriodMonth=` (period derived from a per-run stamp to avoid the `idx_ndtp_org_period` unique-index residue collision). (2) A **lower-tier** (`district.staff@foodsafe.local`) NDTP report is seeded through the **real workflow** — create Draft → `PUT /{id}/stats` with real casualty/incident figures → `POST /{id}/submit` (session cookie + antiforgery → ASP.NET Core → domain state machine → PostgreSQL). (3) Re-reading aggregation shows `reportCount` and **all 8 stat fields** at exactly **baseline + child**. (4) An **org-isolation guard** asserts the higher-tier province draft's org ≠ the child report's org. (5) In the **real browser** at `/reporting`, the officer filters the NDTP list by year (AntD InputNumber via `pressSequentially` to fire rc-input-number `onChange`), opens the draft editor, clicks **"Tổng hợp từ báo cáo tuyến dưới"** — the real `GET …/ndtp-aggregation` returns 200, the success message reads `Đã tổng hợp từ {reportCount} báo cáo tuyến dưới`, and all 8 form fields populate with the aggregated values. (6) **Save** persists and survives a full `page.reload()`. Teardown walks the child back (Return → ReturnToDraft → Delete) and deletes the province draft; the baseline-delta assertion keeps the test re-run-safe regardless of residue. No API interception. Log: `ndtp-rollup5.log`. Stack unchanged (no rebuild).
+
 ### 2026-07-28 — P1-1j dashboard report-compliance widget (FR-39-03 ATTP work, FR-39-04 Action-Month)
 
 - **Cause**: New browser-acceptance evidence for the dashboard per-unit report-compliance widget (doc 77 P1-1j; doc 73 was IMPLEMENTED_NOT_VERIFIED). New spec only (`FoodSafe.FE/e2e/dashboard-report-compliance.spec.ts`) — no product code changed.

@@ -115,7 +115,7 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | FR-31-01..11 | Poisoning cases lifecycle + map + scope | `food-poisoning-verification` ✓, `food-poisoning` ✓ (leaflet render) | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-32-01..10 | Poisoning incidents lifecycle + conclude | `food-poisoning-verification` ✓, `food-poisoning` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-33-01/03..11 | NDTP report CRUD + workflow + error-notif + Excel | `reporting-verification` ✓, `reporting` ✓, `reporting-error-notifications` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE — all four workflow buttons now UI-driven: `reporting` test 1 = Submit/Verify/Complete, test 2 = Return(Trả lại + reason modal)/ReturnToDraft(Về nháp); re-run 7/7 at HEAD |
-| FR-33-02 | NDTP roll-up aggregation | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-33-02 | NDTP roll-up aggregation | `ndtp-rollup-aggregation` ✓ (714e318) | pass | PASS_WITH_BROWSER_EVIDENCE — higher-tier officer clicks "Tổng hợp từ báo cáo tuyến dưới" in the draft editor; real-HTTP seed of a Submitted lower-tier report, `GET /report-calculation/ndtp-aggregation` delta = baseline + child reportCount and all 8 stat fields, org-isolation guard, form fields populated with aggregated values, saved + persists after browser reload; no API interception |
 | FR-34-01..07/09/11 | ATTP work report CRUD + workflow | `reporting-verification` ✓, `reporting` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-34-08/10 | ATTP formatted view + auto-aggregation | — | none | IMPLEMENTED_NOT_VERIFIED |
 | FR-35-01..07/09/10 | Action-month report CRUD + workflow | `reporting-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
