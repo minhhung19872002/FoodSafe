@@ -224,3 +224,15 @@ After this matrix was first written, I root-caused and re-ran the 6 failing spec
 - **`advertisement-registrations` (FR-23), `export-food-certificates` (FR-26), `product-registrations` (FR-22), `self-declarations` (FR-21)** — deterministic hang at the business `combobox` because the AntD `Select` is **virtualized** and the target option wasn't typed/filtered into the DOM. Fixed by adding `await page.keyboard.type(businessName);` (the same technique the passing specs use). Re-ran patched: **all 4 pass in 6.0–7.3 s**, completing the full create → upload (MinIO+ClamAV) → public lookup → revoke → retention → delete → duplicate lifecycle. → reclassify features as **PASS_WITH_BROWSER_EVIDENCE**.
 
 Net: **0 FAILED (product)** modules. The "6 FAILED (full-UI lifecycle)" row in §4 is superseded by this addendum — it was a test-harness fragility, proven by executed re-runs (`pw-rerun6.log`, `pw-rerun4-patched.log`). Full detail and the release decision are in **doc 75 §3**.
+
+---
+
+## 7. Addendum — P1-1d list filter/sort sweep (executed)
+
+The P1-1d batch (doc 77) called for "list filter + sort + page-size" browser evidence across businesses, inspection, food-poisoning, alerts, testing, and risk-analysis. Resolution:
+
+- **businesses (FR-19-02)** was the *only* module with a genuine gap: the FE table declared `sorter` columns but the BE ignored `input.Sorting` (hard-coded Name-asc). Fixed with a BE `ApplySorting` whitelist + FE column sorters; `business-list-filters` 3/3 (§3, row FR-19-02).
+- **inspection, food-poisoning, alerts/news, testing, risk-analysis** — code survey (`grep sorter` over `src/features`, `grep OrderBy/input.Sorting` over the list AppServices) confirmed **none of these declare `sorter` columns** in the FE, and each BE list service orders deterministically (`OrderByDescending` on `CreationTime` / `Year` / `SampleDate` / `InspectionDate`) then `PageBy(input)`. So **sort is N/A** for these modules — there is no UI-requested sort the server drops, i.e. no businesses-style defect to fix.
+- **Filter (search) + empty-state** for all five already carry real-browser evidence in their `*-verification` specs (the search box is typed, a positive match is asserted, and a non-existent term asserts the empty state). Re-run at HEAD, **6/6 green, no interception** (`p1-1d-filter.log`): `inspection-verification` (filter + "empty state renders for unmatched search"), `food-poisoning-verification`, `alerts-news-verification`, `testing-results-verification`, `risk-analysis-verification`.
+
+Net for P1-1d: **1 real defect fixed (businesses sort)**; the other five modules were verification-only — filtering/empty-state proven in the browser, sorting correctly N/A. No product code change needed for the five.
