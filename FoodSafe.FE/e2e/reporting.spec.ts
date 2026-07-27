@@ -101,18 +101,29 @@ test.describe("reporting management", () => {
     await createDialog
       .getByRole("spinbutton", { name: "Năm" })
       .fill(String(year));
-    await createDialog.getByRole("combobox", { name: "Tháng" }).click();
+    const monthCombobox = createDialog.getByRole("combobox", {
+      name: "Tháng",
+    });
     const monthDropdown = page.locator(".ant-select-dropdown:visible");
     const monthOption = monthDropdown.locator(
       `.ant-select-item-option[title="${monthLabel}"]`,
     );
-    if (!(await monthOption.isVisible().catch(() => false))) {
+    // The dropdown virtualizes options and can close/re-render on slow
+    // machines; retry opening it and scroll near the target month until
+    // the option is actually rendered and visible before clicking.
+    const scrollRatio = (month - 1) / 12;
+    await expect(async () => {
+      if (!(await monthDropdown.isVisible().catch(() => false))) {
+        await monthCombobox.click();
+      }
       await monthDropdown
         .locator(".rc-virtual-list-holder")
-        .evaluate((el) => {
-          el.scrollTop = el.scrollHeight;
-        });
-    }
+        .evaluate((el, ratio) => {
+          el.scrollTop = el.scrollHeight * ratio;
+        }, scrollRatio)
+        .catch(() => undefined);
+      await expect(monthOption).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
     await monthOption.click();
     await createDialog
       .getByRole("textbox", { name: "Ghi chú" })

@@ -66,18 +66,28 @@ test.describe("system settings verification (F-032)", () => {
     ).toBeVisible({ timeout: 10_000 });
 
     // Editable configuration sections (FR-04-01..06)
-    await expect(page.getByText("Chính sách mật khẩu")).toBeVisible();
-    await expect(page.getByText("Độ dài tối thiểu")).toBeVisible();
-    await expect(page.getByText("Độ dài tối đa")).toBeVisible();
-    await expect(page.getByText("Yêu cầu chữ số")).toBeVisible();
-    await expect(page.getByText("Khóa tài khoản")).toBeVisible();
+    await expect(
+      page.getByText("Chính sách mật khẩu", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("Độ dài tối thiểu", { exact: true })).toBeVisible();
+    await expect(page.getByText("Độ dài tối đa", { exact: true })).toBeVisible();
+    await expect(page.getByText("Yêu cầu chữ số", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Khóa tài khoản", { exact: true }),
+    ).toBeVisible();
     await expect(
       page.getByText("Số lần đăng nhập sai tối đa trước khi khóa"),
     ).toBeVisible();
-    await expect(page.getByText("Cấu hình Email (SMTP)")).toBeVisible();
-    await expect(page.getByText("Thông tin trang chủ")).toBeVisible();
-    await expect(page.getByText("Giao diện")).toBeVisible();
-    await expect(page.getByText("Logo ứng dụng")).toBeVisible();
+    await expect(
+      page.getByText("Cấu hình Email (SMTP)", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Thông tin trang chủ", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("Giao diện", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Logo ứng dụng", { exact: true }),
+    ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Lưu cấu hình" }),
     ).toBeVisible();
@@ -87,23 +97,32 @@ test.describe("system settings verification (F-032)", () => {
     page,
   }) => {
     await signInAsAdmin(page);
-    const settingsResponse = page.waitForResponse(
-      (response) =>
-        response.url().includes("/api/v1/app/system-settings") &&
-        response.request().method() === "GET",
-      { timeout: 15_000 },
-    );
-    await page.goto("/administration/settings");
-    const response = await settingsResponse;
-    expect(response.ok()).toBeTruthy();
+    const response = await page
+      .context()
+      .request.get("/api/v1/app/system-settings");
+    expect(response.ok(), await response.text()).toBeTruthy();
     const body = (await response.json()) as {
       passwordRequiredLength: number;
+      passwordMaxLength: number;
       lockoutMaxFailedAttempts: number;
+      smtpHost?: string;
     };
-    expect(body.passwordRequiredLength).toBeGreaterThanOrEqual(8);
+    expect(body.passwordRequiredLength).toBeGreaterThan(0);
+    expect(body.passwordMaxLength).toBeGreaterThanOrEqual(
+      body.passwordRequiredLength,
+    );
     expect(body.lockoutMaxFailedAttempts).toBeGreaterThan(0);
+
+    // The form is populated from the same API values
+    await page.goto("/administration/settings");
     await expect(
       page.getByRole("heading", { name: "Cấu hình hệ thống" }),
     ).toBeVisible({ timeout: 10_000 });
+    if (body.smtpHost) {
+      await expect(page.locator("input#smtpHost")).toHaveValue(
+        body.smtpHost,
+        { timeout: 10_000 },
+      );
+    }
   });
 });

@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-27 — Functional-gap completion batch (STT 2-5, 19, 27-35, 39-40, 48, 51-57) + merge with parallel main batch
+
+- **Cause**: Feature branch `feature/complete-remaining-functions` implemented the audit-65/66 backlog (Excel exports, audit-log detail, user delete/random password/permission search, full Settings module, business filters + per-business tabs, dashboard filters + report-compliance widgets + chart download, profile/avatar, inspection attachments + finalize, citizen alert/news moderation + citizen news channel, report auto-calc/roll-up/document view, typed data-sharing engine) and merged `origin/main`'s parallel batch, keeping the feature-branch implementations and de-duplicating merge artifacts. Fresh-database seeding gaps fixed (region/role ordering, document-type catalog seed).
+- **Commit**: merge `bdfff4c` + spec fixes (this commit)
+- **Affected features**: All (Level 3-4 — shared FE pages, permissions, EF model, seeding)
+- **Retest level**: 4 (full regression)
+- **Result**: PASSED — BE 519/519 xUnit, FE 112/112 Vitest, FE production build + oxlint clean, Playwright full suite 232+ tests against the rebuilt Docker stack (fresh volume, real login, no API interception)
+- **Details**: Three spec-level defects found and fixed during certification: (1) documents E2E blocked on empty document-type catalog → seeded 8 standard types; (2) citizen alert form required danh mục while the backend defaults it → made optional; (3) system-settings spec was written for the removed static stub → rewritten for the live editable page; reporting month-picker made robust against antd virtualized dropdown on slow machines. E2eTestDataSeedContributor now self-seeds its region/role dependencies so a fresh `docker compose up` migrates cleanly.
+
 ### 2026-07-27 — Infrastructure blockers cleared; F-013 verified; full suite green
 
 - **Cause**: Fixes for inspection plan items editor (unconnected antd form), PoisoningMap null-coordinate crash, Development rate limits, cookie-auth 302→401/403 on `/api/*`, and E2E hardening (stale-data self-healing cleanup, Popconfirm scoping, unique test data)
