@@ -176,7 +176,9 @@ function NdtpTab() {
                 size="small"
                 icon={<EditOutlined />}
                 onClick={() => setEditReport(record)}
-              >Sửa</Button>
+              >
+                Sửa
+              </Button>
             )}
           {record.status === REPORT_STATUS.Draft &&
             hasPermission("FoodSafe.Reporting.NdtpReports.Submit") && (
@@ -190,7 +192,9 @@ function NdtpTab() {
                   })
                 }
               >
-                <Button size="small" icon={<SendOutlined />}>Gửi</Button>
+                <Button size="small" icon={<SendOutlined />}>
+                  Gửi
+                </Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Submitted &&
@@ -205,7 +209,9 @@ function NdtpTab() {
                   })
                 }
               >
-                <Button size="small" icon={<CheckCircleOutlined />}>Xác minh</Button>
+                <Button size="small" icon={<CheckCircleOutlined />}>
+                  Xác minh
+                </Button>
               </Popconfirm>
             )}
           {(record.status === REPORT_STATUS.Submitted ||
@@ -215,7 +221,9 @@ function NdtpTab() {
                 size="small"
                 icon={<RollbackOutlined />}
                 onClick={() => setReturnOpen(record.id)}
-              >Trả lại</Button>
+              >
+                Trả lại
+              </Button>
             )}
           {record.status === REPORT_STATUS.Verified &&
             hasPermission("FoodSafe.Reporting.NdtpReports.Complete") && (
@@ -229,7 +237,9 @@ function NdtpTab() {
                   })
                 }
               >
-                <Button size="small" icon={<FileDoneOutlined />}>Hoàn thành</Button>
+                <Button size="small" icon={<FileDoneOutlined />}>
+                  Hoàn thành
+                </Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Returned &&
@@ -244,7 +254,9 @@ function NdtpTab() {
                   })
                 }
               >
-                <Button size="small" icon={<EditOutlined />}>Về nháp</Button>
+                <Button size="small" icon={<EditOutlined />}>
+                  Về nháp
+                </Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Draft &&
@@ -259,7 +271,9 @@ function NdtpTab() {
                   })
                 }
               >
-                <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
+                <Button size="small" danger icon={<DeleteOutlined />}>
+                  Xóa
+                </Button>
               </Popconfirm>
             )}
           {record.status !== REPORT_STATUS.Draft && (
@@ -267,7 +281,9 @@ function NdtpTab() {
               size="small"
               icon={<WarningOutlined />}
               onClick={() => setErrorNotifReport(record)}
-            >Sai sót</Button>
+            >
+              Sai sót
+            </Button>
           )}
         </Space>
       ),
@@ -385,11 +401,7 @@ function NdtpTab() {
             });
           }}
         >
-          <Form.Item
-            name="periodYear"
-            label="Năm"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="periodYear" label="Năm" rules={[{ required: true }]}>
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item
@@ -475,8 +487,7 @@ function AtpWorkTab() {
       title: "Kỳ báo cáo",
       key: "period",
       render: (_, r) => {
-        const typeLbl =
-          REPORT_PERIOD_TYPE_CONFIG[r.periodType]?.label ?? "";
+        const typeLbl = REPORT_PERIOD_TYPE_CONFIG[r.periodType]?.label ?? "";
         const half = r.periodHalf ? ` (Kỳ ${r.periodHalf})` : "";
         return `${typeLbl} ${r.periodYear}${half}`;
       },
@@ -530,7 +541,9 @@ function AtpWorkTab() {
                 size="small"
                 icon={<EditOutlined />}
                 onClick={() => setEditReport(record)}
-              >Sửa</Button>
+              >
+                Sửa
+              </Button>
             )}
           {record.status === REPORT_STATUS.Draft &&
             hasPermission("FoodSafe.Reporting.AtpWorkReports.Submit") && (
@@ -544,7 +557,9 @@ function AtpWorkTab() {
                   })
                 }
               >
-                <Button size="small" icon={<SendOutlined />}>Gửi</Button>
+                <Button size="small" icon={<SendOutlined />}>
+                  Gửi
+                </Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Submitted &&
@@ -559,7 +574,9 @@ function AtpWorkTab() {
                   })
                 }
               >
-                <Button size="small" icon={<CheckCircleOutlined />}>Xác minh</Button>
+                <Button size="small" icon={<CheckCircleOutlined />}>
+                  Xác minh
+                </Button>
               </Popconfirm>
             )}
           {(record.status === REPORT_STATUS.Submitted ||
@@ -569,7 +586,9 @@ function AtpWorkTab() {
                 size="small"
                 icon={<RollbackOutlined />}
                 onClick={() => setReturnOpen(record.id)}
-              >Trả lại</Button>
+              >
+                Trả lại
+              </Button>
             )}
           {record.status === REPORT_STATUS.Verified &&
             hasPermission("FoodSafe.Reporting.AtpWorkReports.Complete") && (
@@ -583,7 +602,9 @@ function AtpWorkTab() {
                   })
                 }
               >
-                <Button size="small" icon={<FileDoneOutlined />}>Hoàn thành</Button>
+                <Button size="small" icon={<FileDoneOutlined />}>
+                  Hoàn thành
+                </Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Returned &&
@@ -598,7 +619,9 @@ function AtpWorkTab() {
                   })
                 }
               >
-                <Button size="small" icon={<EditOutlined />}>Về nháp</Button>
+                <Button size="small" icon={<EditOutlined />}>
+                  Về nháp
+                </Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Draft &&
@@ -613,7 +636,9 @@ function AtpWorkTab() {
                   })
                 }
               >
-                <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
+                <Button size="small" danger icon={<DeleteOutlined />}>
+                  Xóa
+                </Button>
               </Popconfirm>
             )}
           {record.status !== REPORT_STATUS.Draft && (
@@ -621,7 +646,9 @@ function AtpWorkTab() {
               size="small"
               icon={<WarningOutlined />}
               onClick={() => setErrorNotifReport(record)}
-            >Sai sót</Button>
+            >
+              Sai sót
+            </Button>
           )}
         </Space>
       ),
@@ -664,9 +691,10 @@ function AtpWorkTab() {
           placeholder="Loại kỳ"
           allowClear
           style={{ width: 120 }}
-          options={Object.entries(REPORT_PERIOD_TYPE_CONFIG).map(
-            ([k, v]) => ({ value: Number(k), label: v.label }),
-          )}
+          options={Object.entries(REPORT_PERIOD_TYPE_CONFIG).map(([k, v]) => ({
+            value: Number(k),
+            label: v.label,
+          }))}
           onChange={(v) =>
             setFilter((f) => ({ ...f, periodType: v, skipCount: 0 }))
           }
@@ -751,22 +779,15 @@ function AtpWorkTab() {
               )}
             />
           </Form.Item>
-          <Form.Item
-            name="periodYear"
-            label="Năm"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="periodYear" label="Năm" rules={[{ required: true }]}>
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item
             noStyle
-            shouldUpdate={(prev, cur) =>
-              prev.periodType !== cur.periodType
-            }
+            shouldUpdate={(prev, cur) => prev.periodType !== cur.periodType}
           >
             {({ getFieldValue }) =>
-              getFieldValue("periodType") ===
-              REPORT_PERIOD_TYPE.HalfYear ? (
+              getFieldValue("periodType") === REPORT_PERIOD_TYPE.HalfYear ? (
                 <Form.Item
                   name="periodHalf"
                   label="Kỳ"
@@ -909,19 +930,17 @@ function ActionMonthTab() {
             }
           />
           {record.status === REPORT_STATUS.Draft &&
-            hasPermission(
-              "FoodSafe.Reporting.ActionMonthReports.Edit",
-            ) && (
+            hasPermission("FoodSafe.Reporting.ActionMonthReports.Edit") && (
               <Button
                 size="small"
                 icon={<EditOutlined />}
                 onClick={() => setEditReport(record)}
-              >Sửa</Button>
+              >
+                Sửa
+              </Button>
             )}
           {record.status === REPORT_STATUS.Draft &&
-            hasPermission(
-              "FoodSafe.Reporting.ActionMonthReports.Submit",
-            ) && (
+            hasPermission("FoodSafe.Reporting.ActionMonthReports.Submit") && (
               <Popconfirm
                 title="Gửi báo cáo này?"
                 okText="Gửi"
@@ -932,13 +951,13 @@ function ActionMonthTab() {
                   })
                 }
               >
-                <Button size="small" icon={<SendOutlined />}>Gửi</Button>
+                <Button size="small" icon={<SendOutlined />}>
+                  Gửi
+                </Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Submitted &&
-            hasPermission(
-              "FoodSafe.Reporting.ActionMonthReports.Verify",
-            ) && (
+            hasPermission("FoodSafe.Reporting.ActionMonthReports.Verify") && (
               <Popconfirm
                 title="Xác minh báo cáo này?"
                 okText="Xác minh"
@@ -949,24 +968,24 @@ function ActionMonthTab() {
                   })
                 }
               >
-                <Button size="small" icon={<CheckCircleOutlined />}>Xác minh</Button>
+                <Button size="small" icon={<CheckCircleOutlined />}>
+                  Xác minh
+                </Button>
               </Popconfirm>
             )}
           {(record.status === REPORT_STATUS.Submitted ||
             record.status === REPORT_STATUS.Verified) &&
-            hasPermission(
-              "FoodSafe.Reporting.ActionMonthReports.Return",
-            ) && (
+            hasPermission("FoodSafe.Reporting.ActionMonthReports.Return") && (
               <Button
                 size="small"
                 icon={<RollbackOutlined />}
                 onClick={() => setReturnOpen(record.id)}
-              >Trả lại</Button>
+              >
+                Trả lại
+              </Button>
             )}
           {record.status === REPORT_STATUS.Verified &&
-            hasPermission(
-              "FoodSafe.Reporting.ActionMonthReports.Complete",
-            ) && (
+            hasPermission("FoodSafe.Reporting.ActionMonthReports.Complete") && (
               <Popconfirm
                 title="Hoàn thành báo cáo này?"
                 okText="Hoàn thành"
@@ -977,13 +996,13 @@ function ActionMonthTab() {
                   })
                 }
               >
-                <Button size="small" icon={<FileDoneOutlined />}>Hoàn thành</Button>
+                <Button size="small" icon={<FileDoneOutlined />}>
+                  Hoàn thành
+                </Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Returned &&
-            hasPermission(
-              "FoodSafe.Reporting.ActionMonthReports.Edit",
-            ) && (
+            hasPermission("FoodSafe.Reporting.ActionMonthReports.Edit") && (
               <Popconfirm
                 title="Chuyển về nháp để sửa?"
                 okText="Chuyển"
@@ -994,13 +1013,13 @@ function ActionMonthTab() {
                   })
                 }
               >
-                <Button size="small" icon={<EditOutlined />}>Về nháp</Button>
+                <Button size="small" icon={<EditOutlined />}>
+                  Về nháp
+                </Button>
               </Popconfirm>
             )}
           {record.status === REPORT_STATUS.Draft &&
-            hasPermission(
-              "FoodSafe.Reporting.ActionMonthReports.Delete",
-            ) && (
+            hasPermission("FoodSafe.Reporting.ActionMonthReports.Delete") && (
               <Popconfirm
                 title="Xóa báo cáo?"
                 okText="Xóa"
@@ -1011,7 +1030,9 @@ function ActionMonthTab() {
                   })
                 }
               >
-                <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
+                <Button size="small" danger icon={<DeleteOutlined />}>
+                  Xóa
+                </Button>
               </Popconfirm>
             )}
           {record.status !== REPORT_STATUS.Draft && (
@@ -1019,7 +1040,9 @@ function ActionMonthTab() {
               size="small"
               icon={<WarningOutlined />}
               onClick={() => setErrorNotifReport(record)}
-            >Sai sót</Button>
+            >
+              Sai sót
+            </Button>
           )}
         </Space>
       ),
@@ -1085,9 +1108,7 @@ function ActionMonthTab() {
         >
           Xuất Excel
         </Button>
-        {hasPermission(
-          "FoodSafe.Reporting.ActionMonthReports.Create",
-        ) && (
+        {hasPermission("FoodSafe.Reporting.ActionMonthReports.Create") && (
           <Button
             type="primary"
             icon={<PlusOutlined />}
@@ -1140,11 +1161,7 @@ function ActionMonthTab() {
             });
           }}
         >
-          <Form.Item
-            name="periodYear"
-            label="Năm"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="periodYear" label="Năm" rules={[{ required: true }]}>
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item name="actionMonthTheme" label="Chủ đề">

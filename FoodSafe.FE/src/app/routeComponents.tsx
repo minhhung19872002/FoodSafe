@@ -59,8 +59,7 @@ export const PublicEligibilityCertificateLookupPage = lazy(
     import("@/features/eligibility-certificates/pages/PublicEligibilityCertificateLookupPage"),
 );
 export const CfsCertificatePage = lazy(
-  () =>
-    import("@/features/cfs-certificates/pages/CfsCertificatePage"),
+  () => import("@/features/cfs-certificates/pages/CfsCertificatePage"),
 );
 export const PublicCfsCertificateLookupPage = lazy(
   () =>
@@ -99,8 +98,7 @@ export const PublicBusinessLookupPage = lazy(
   () => import("@/features/businesses/pages/PublicBusinessLookupPage"),
 );
 export const PublicSelfDeclarationLookupPage = lazy(
-  () =>
-    import("@/features/businesses/pages/PublicSelfDeclarationLookupPage"),
+  () => import("@/features/businesses/pages/PublicSelfDeclarationLookupPage"),
 );
 export const PublicAdRegistrationLookupPage = lazy(
   () =>

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using FoodSafe.Application.Contracts.Dashboard;
 using FoodSafe.BusinessManagement;
 using FoodSafe.Catalogs;
@@ -67,6 +68,14 @@ public class StatisticsAppService : ApplicationService
         var ct = _cancellationTokens.Token;
         var orgIds = scope.OrganizationIds;
         var global = scope.HasGlobalAccess;
+
+        if (input.OrganizationId.HasValue &&
+            (global || orgIds.Contains(input.OrganizationId.Value)))
+        {
+            orgIds = new HashSet<Guid> { input.OrganizationId.Value };
+            global = false;
+        }
+
         var year = input.Year ?? _clock.Now.Year;
 
         var dto = new StatisticsDto();
@@ -215,14 +224,18 @@ public class StatisticsAppService : ApplicationService
         dto.InspectionsByMonth = Enumerable.Range(1, 12)
             .Select(m => new MonthlyCount
             {
-                Year = year, Month = m, Label = monthNames[m],
+                Year = year,
+                Month = m,
+                Label = monthNames[m],
                 Count = monthly.FirstOrDefault(x => x.Month == m)?.Count ?? 0,
             }).ToList();
 
         dto.ViolationsByMonth = Enumerable.Range(1, 12)
             .Select(m => new MonthlyCount
             {
-                Year = year, Month = m, Label = monthNames[m],
+                Year = year,
+                Month = m,
+                Label = monthNames[m],
                 Count = violations.FirstOrDefault(x => x.Month == m)?.Count ?? 0,
             }).ToList();
 
@@ -251,7 +264,9 @@ public class StatisticsAppService : ApplicationService
         dto.PoisoningCasesByMonth = Enumerable.Range(1, 12)
             .Select(m => new MonthlyCount
             {
-                Year = year, Month = m, Label = monthNames[m],
+                Year = year,
+                Month = m,
+                Label = monthNames[m],
                 Count = monthly.FirstOrDefault(x => x.Month == m)?.Count ?? 0,
             }).ToList();
     }

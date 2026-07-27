@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using FoodSafe.BusinessManagement;
 using FoodSafe.IdentityAdministration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,8 @@ namespace FoodSafe.Controllers;
 [Authorize]
 [Route("api/v1/administration")]
 public sealed class IdentityAdministrationController(
-    IIdentityAdministrationAppService service) : AbpControllerBase
+    IIdentityAdministrationAppService service,
+    IUserExcelAppService userExcel) : AbpControllerBase
 {
     [HttpGet("users")]
     public Task<PagedResultDto<AdminUserDto>> GetUsersAsync(
@@ -63,6 +65,14 @@ public sealed class IdentityAdministrationController(
     [HttpPost("users/{id:guid}/password-reset")]
     public Task SendPasswordResetAsync(Guid id) =>
         service.SendPasswordResetAsync(id);
+
+    [HttpGet("users/excel")]
+    public async Task<IActionResult> ExportUsersAsync(
+        [FromQuery] GetAdminUserListInput input)
+    {
+        var file = await userExcel.ExportAsync(input);
+        return File(file.Content, file.ContentType, file.FileName);
+    }
 
     [HttpGet("users/{id:guid}/activity")]
     public Task<PagedResultDto<UserActivityDto>> GetUserActivityAsync(

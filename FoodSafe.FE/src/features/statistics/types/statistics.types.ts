@@ -23,6 +23,7 @@ export interface StatisticsDto {
 
 export interface StatisticsFilter {
   year?: number;
+  organizationId?: string;
 }
 
 export interface LicensesByBusinessTypeRow {

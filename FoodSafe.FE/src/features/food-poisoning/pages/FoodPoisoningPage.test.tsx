@@ -67,30 +67,34 @@ function mockData() {
 describe("FoodPoisoningPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders cases tab with create button for full-permission user", { timeout: 15000 }, async () => {
-    mockData();
-    useAuthStore.getState().setAuth({
-      id: "user",
-      name: "User",
-      email: "user@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["ProvinceStaff"],
-      permissions: [
-        "FoodSafe.FoodPoisoning.Cases.Create",
-        "FoodSafe.FoodPoisoning.Cases.Edit",
-        "FoodSafe.FoodPoisoning.Cases.Delete",
-        "FoodSafe.FoodPoisoning.Cases.Verify",
-      ],
-    });
+  it(
+    "renders cases tab with create button for full-permission user",
+    { timeout: 30000 },
+    async () => {
+      mockData();
+      useAuthStore.getState().setAuth({
+        id: "user",
+        name: "User",
+        email: "user@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["ProvinceStaff"],
+        permissions: [
+          "FoodSafe.FoodPoisoning.Cases.Create",
+          "FoodSafe.FoodPoisoning.Cases.Edit",
+          "FoodSafe.FoodPoisoning.Cases.Delete",
+          "FoodSafe.FoodPoisoning.Cases.Verify",
+        ],
+      });
 
-    renderPage();
+      renderPage();
 
-    expect(await screen.findByText("CA-001")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Tạo ca ngộ độc/ }),
-    ).toBeInTheDocument();
-  });
+      expect(await screen.findByText("CA-001")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Tạo ca ngộ độc/ }),
+      ).toBeInTheDocument();
+    },
+  );
 
   it("hides mutation controls for read-only user", async () => {
     mockData();

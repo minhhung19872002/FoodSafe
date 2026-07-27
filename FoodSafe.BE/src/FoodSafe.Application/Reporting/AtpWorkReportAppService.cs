@@ -225,17 +225,17 @@ public class AtpWorkReportAppService : ApplicationService
 
     private static ReportErrorNotificationDto ToNotificationDto(
         AtpWorkReportErrorNotification n) => new()
-    {
-        Id = n.Id,
-        FromOrganizationId = n.FromOrganizationId,
-        ErrorFields = n.ErrorFields,
-        CorrectionDetails = n.CorrectionDetails,
-        Status = n.Status,
-        Response = n.Response,
-        RespondedAt = n.RespondedAt,
-        RespondedById = n.RespondedById,
-        CreationTime = n.CreationTime
-    };
+        {
+            Id = n.Id,
+            FromOrganizationId = n.FromOrganizationId,
+            ErrorFields = n.ErrorFields,
+            CorrectionDetails = n.CorrectionDetails,
+            Status = n.Status,
+            Response = n.Response,
+            RespondedAt = n.RespondedAt,
+            RespondedById = n.RespondedById,
+            CreationTime = n.CreationTime
+        };
 
     private async Task<IQueryable<AtpWorkReport>> ScopedQueryAsync(DataScopeOperation operation)
     {

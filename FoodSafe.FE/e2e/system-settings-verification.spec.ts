@@ -65,45 +65,45 @@ test.describe("system settings verification (F-032)", () => {
       page.getByRole("heading", { name: "Cấu hình hệ thống" }),
     ).toBeVisible({ timeout: 10_000 });
 
-    // System info section
-    await expect(page.getByText("Phiên bản")).toBeVisible();
-    await expect(page.getByText(".NET 9")).toBeVisible();
-
-    // Password policy section
+    // Editable configuration sections (FR-04-01..06)
+    await expect(page.getByText("Chính sách mật khẩu")).toBeVisible();
     await expect(page.getByText("Độ dài tối thiểu")).toBeVisible();
-    await expect(page.getByText("Yêu cầu chữ hoa")).toBeVisible();
+    await expect(page.getByText("Độ dài tối đa")).toBeVisible();
     await expect(page.getByText("Yêu cầu chữ số")).toBeVisible();
-    await expect(page.getByText("90 ngày")).toBeVisible();
-
-    // Session section
-    await expect(page.getByText("Session timeout")).toBeVisible();
-
-    // Security section
-    await expect(page.getByText("CAPTCHA đăng nhập")).toBeVisible();
-    await expect(page.getByText("Audit logging")).toBeVisible();
+    await expect(page.getByText("Khóa tài khoản")).toBeVisible();
+    await expect(
+      page.getByText("Số lần đăng nhập sai tối đa trước khi khóa"),
+    ).toBeVisible();
+    await expect(page.getByText("Cấu hình Email (SMTP)")).toBeVisible();
+    await expect(page.getByText("Thông tin trang chủ")).toBeVisible();
+    await expect(page.getByText("Giao diện")).toBeVisible();
+    await expect(page.getByText("Logo ứng dụng")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Lưu cấu hình" }),
+    ).toBeVisible();
   });
 
-  test("settings page is static — no API calls needed (no CSRF, no mutations)", async ({
+  test("settings page loads live configuration from the API", async ({
     page,
   }) => {
     await signInAsAdmin(page);
-    const apiCalls: string[] = [];
-    page.on("request", (req) => {
-      const url = req.url();
-      if (url.includes("/api/v1/app/") || url.includes("/api/identity/")) {
-        apiCalls.push(`${req.method()} ${url}`);
-      }
-    });
+    const settingsResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/v1/app/system-settings") &&
+        response.request().method() === "GET",
+      { timeout: 15_000 },
+    );
     await page.goto("/administration/settings");
+    const response = await settingsResponse;
+    expect(response.ok()).toBeTruthy();
+    const body = (await response.json()) as {
+      passwordRequiredLength: number;
+      lockoutMaxFailedAttempts: number;
+    };
+    expect(body.passwordRequiredLength).toBeGreaterThanOrEqual(8);
+    expect(body.lockoutMaxFailedAttempts).toBeGreaterThan(0);
     await expect(
       page.getByRole("heading", { name: "Cấu hình hệ thống" }),
     ).toBeVisible({ timeout: 10_000 });
-    // Wait briefly to capture any async calls
-    await page.waitForTimeout(1500);
-    // The settings page should make no FoodSafe business API calls
-    const settingsCalls = apiCalls.filter((c) =>
-      c.includes("/settings") || c.includes("/configuration"),
-    );
-    expect(settingsCalls.length).toBe(0);
   });
 });

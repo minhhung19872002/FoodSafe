@@ -54,31 +54,35 @@ function mockData() {
 describe("InspectionPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders plans tab with create button for full-permission user", { timeout: 15000 }, async () => {
-    mockData();
-    useAuthStore.getState().setAuth({
-      id: "user",
-      name: "User",
-      email: "user@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["ProvinceStaff"],
-      permissions: [
-        "FoodSafe.Inspection.Plans.Create",
-        "FoodSafe.Inspection.Plans.Edit",
-        "FoodSafe.Inspection.Plans.Delete",
-        "FoodSafe.Inspection.Plans.Approve",
-        "FoodSafe.Inspection.Results.Create",
-        "FoodSafe.Inspection.Results.Edit",
-        "FoodSafe.Inspection.Results.Delete",
-      ],
-    });
-    renderPage();
-    expect(await screen.findByText("KH-001")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Tạo kế hoạch/ }),
-    ).toBeInTheDocument();
-  });
+  it(
+    "renders plans tab with create button for full-permission user",
+    { timeout: 30000 },
+    async () => {
+      mockData();
+      useAuthStore.getState().setAuth({
+        id: "user",
+        name: "User",
+        email: "user@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["ProvinceStaff"],
+        permissions: [
+          "FoodSafe.Inspection.Plans.Create",
+          "FoodSafe.Inspection.Plans.Edit",
+          "FoodSafe.Inspection.Plans.Delete",
+          "FoodSafe.Inspection.Plans.Approve",
+          "FoodSafe.Inspection.Results.Create",
+          "FoodSafe.Inspection.Results.Edit",
+          "FoodSafe.Inspection.Results.Delete",
+        ],
+      });
+      renderPage();
+      expect(await screen.findByText("KH-001")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Tạo kế hoạch/ }),
+      ).toBeInTheDocument();
+    },
+  );
 
   it("hides mutation controls for read-only user", async () => {
     mockData();

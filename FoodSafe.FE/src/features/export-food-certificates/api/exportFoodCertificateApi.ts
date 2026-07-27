@@ -63,7 +63,9 @@ export const exportFoodCertificateApi = {
     return response.data;
   },
 
-  async create(input: ExportFoodCertificateInput): Promise<ExportFoodCertificate> {
+  async create(
+    input: ExportFoodCertificateInput,
+  ): Promise<ExportFoodCertificate> {
     const response = await api.post<ExportFoodCertificate>(endpoint, input);
     return response.data;
   },

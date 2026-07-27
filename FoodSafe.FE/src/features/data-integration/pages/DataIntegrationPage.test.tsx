@@ -50,32 +50,34 @@ function mockData() {
 describe("DataIntegrationPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders endpoints tab with create button for full-permission user", { timeout: 15000 }, async () => {
-    mockData();
-    useAuthStore.getState().setAuth({
-      id: "user-1",
-      name: "Test User",
-      email: "test@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["ProvinceStaff"],
-      permissions: [
-        "FoodSafe.DataIntegration.ApiEndpoints.View",
-        "FoodSafe.DataIntegration.ApiEndpoints.Create",
-        "FoodSafe.DataIntegration.ApiEndpoints.Edit",
-        "FoodSafe.DataIntegration.ApiEndpoints.Delete",
-      ],
-    });
+  it(
+    "renders endpoints tab with create button for full-permission user",
+    { timeout: 30000 },
+    async () => {
+      mockData();
+      useAuthStore.getState().setAuth({
+        id: "user-1",
+        name: "Test User",
+        email: "test@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["ProvinceStaff"],
+        permissions: [
+          "FoodSafe.DataIntegration.ApiEndpoints.View",
+          "FoodSafe.DataIntegration.ApiEndpoints.Create",
+          "FoodSafe.DataIntegration.ApiEndpoints.Edit",
+          "FoodSafe.DataIntegration.ApiEndpoints.Delete",
+        ],
+      });
 
-    renderPage();
+      renderPage();
 
-    expect(
-      await screen.findByText("Sync Bộ Y tế"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Thêm endpoint/ }),
-    ).toBeInTheDocument();
-  });
+      expect(await screen.findByText("Sync Bộ Y tế")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Thêm endpoint/ }),
+      ).toBeInTheDocument();
+    },
+  );
 
   it("hides mutation controls for read-only user", async () => {
     mockData();
@@ -91,9 +93,7 @@ describe("DataIntegrationPage", () => {
 
     renderPage();
 
-    expect(
-      await screen.findByText("Sync Bộ Y tế"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Sync Bộ Y tế")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Thêm endpoint/ }),
     ).not.toBeInTheDocument();

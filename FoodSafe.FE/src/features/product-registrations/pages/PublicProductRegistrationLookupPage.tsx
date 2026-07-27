@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  Button,
-  Card,
-  Descriptions,
-  Input,
-  Space,
-  Typography,
-} from "antd";
+import { Button, Card, Descriptions, Input, Space, Typography } from "antd";
 import { StatusBadge } from "@/components/StatusBadge";
 import { productRegistrationApi } from "../api/productRegistrationApi";
 import type { PublicProductRegistration } from "../types/productRegistration.types";

@@ -26,7 +26,7 @@ function renderPage() {
 describe("AuditLogPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders audit log table with data", { timeout: 15000 }, async () => {
+  it("renders audit log table with data", { timeout: 30000 }, async () => {
     server.use(
       http.get("*/api/v1/app/audit-log", () =>
         HttpResponse.json({

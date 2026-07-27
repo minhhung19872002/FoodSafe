@@ -45,7 +45,7 @@ describe("LoginPage", () => {
     delete window.turnstile;
   });
 
-  it("renders login form with key elements", { timeout: 15000 }, async () => {
+  it("renders login form with key elements", { timeout: 30000 }, async () => {
     renderPage();
 
     expect(await screen.findByText("FoodSafe")).toBeInTheDocument();

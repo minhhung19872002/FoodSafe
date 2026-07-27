@@ -6,8 +6,7 @@ import type {
 } from "../types/dataIntegration.types";
 
 const keys = {
-  endpoints: (filter: ApiEndpointFilter) =>
-    ["api-endpoints", filter] as const,
+  endpoints: (filter: ApiEndpointFilter) => ["api-endpoints", filter] as const,
   callLogs: (filter: ApiCallLogFilter) => ["api-call-logs", filter] as const,
   callLog: (id: string) => ["api-call-log", id] as const,
 };

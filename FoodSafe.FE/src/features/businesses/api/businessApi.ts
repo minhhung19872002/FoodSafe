@@ -39,10 +39,9 @@ function excelDownload(data: Blob, contentDisposition?: string): ExcelDownload {
 
 export const publicBusinessApi = {
   async lookup(keyword: string): Promise<PublicBusiness> {
-    const response = await api.get<PublicBusiness>(
-      "/v1/public/businesses",
-      { params: { keyword } },
-    );
+    const response = await api.get<PublicBusiness>("/v1/public/businesses", {
+      params: { keyword },
+    });
     return response.data;
   },
 };

@@ -111,7 +111,8 @@ const PORTAL_CARDS: PortalCard[] = [
   },
   {
     title: "Gửi phản ánh",
-    description: "Gửi phản ánh, báo cáo sự cố an toàn thực phẩm tới cơ quan quản lý",
+    description:
+      "Gửi phản ánh, báo cáo sự cố an toàn thực phẩm tới cơ quan quản lý",
     to: "/gui-phan-anh",
     icon: <AlertOutlined style={{ fontSize: 32 }} />,
     color: "#B71C1C",
@@ -121,7 +122,10 @@ const PORTAL_CARDS: PortalCard[] = [
 export default function PublicPortalHomePage() {
   return (
     <PublicShell>
-      <Typography.Title level={2} style={{ textAlign: "center", marginBottom: 8 }}>
+      <Typography.Title
+        level={2}
+        style={{ textAlign: "center", marginBottom: 8 }}
+      >
         Cổng thông tin An toàn thực phẩm Quảng Ninh
       </Typography.Title>
       <Typography.Paragraph

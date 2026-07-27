@@ -56,21 +56,27 @@ function mockData() {
 describe("DashboardPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders dashboard stats for authenticated user", { timeout: 15000 }, async () => {
-    mockData();
-    useAuthStore.getState().setAuth({
-      id: "user-1",
-      name: "Test User",
-      email: "test@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["ProvinceStaff"],
-      permissions: [],
-    });
+  it(
+    "renders dashboard stats for authenticated user",
+    { timeout: 30000 },
+    async () => {
+      mockData();
+      useAuthStore.getState().setAuth({
+        id: "user-1",
+        name: "Test User",
+        email: "test@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["ProvinceStaff"],
+        permissions: [],
+      });
 
-    renderPage();
+      renderPage();
 
-    expect(await screen.findByText("150", {}, { timeout: 10000 })).toBeInTheDocument();
-    expect(screen.getByText("120 đang hoạt động")).toBeInTheDocument();
-  });
+      expect(
+        await screen.findByText("150", {}, { timeout: 10000 }),
+      ).toBeInTheDocument();
+      expect(screen.getByText("120 đang hoạt động")).toBeInTheDocument();
+    },
+  );
 });

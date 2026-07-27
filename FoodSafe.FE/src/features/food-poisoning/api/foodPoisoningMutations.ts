@@ -126,13 +126,8 @@ export function useVerifyIncident() {
 export function useConcludeIncident() {
   const refresh = useIncidentRefresh();
   return useMutation({
-    mutationFn: ({
-      id,
-      input,
-    }: {
-      id: string;
-      input: ConcludeIncidentInput;
-    }) => poisoningIncidentApi.conclude(id, input),
+    mutationFn: ({ id, input }: { id: string; input: ConcludeIncidentInput }) =>
+      poisoningIncidentApi.conclude(id, input),
     onSuccess: refresh,
   });
 }
@@ -153,8 +148,7 @@ export function useAddIncidentErrorReport() {
 
 export function useExportCases() {
   return useMutation({
-    mutationFn: (filter: CaseFilter) =>
-      poisoningCaseApi.exportExcel(filter),
+    mutationFn: (filter: CaseFilter) => poisoningCaseApi.exportExcel(filter),
   });
 }
 

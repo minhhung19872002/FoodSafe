@@ -1898,13 +1898,16 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             ConfigureAggregateAudit(entity, "pk_fpi");
 
-            entity.HasCheckConstraint("chk_fpi_status", "status IN (1, 2, 3, 4)");
-            entity.HasCheckConstraint("chk_fpi_report_evidence",
-                "status = 1 OR (reported_by_id IS NOT NULL AND reported_at IS NOT NULL)");
-            entity.HasCheckConstraint("chk_fpi_verify_evidence",
-                "status NOT IN (3, 4) OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)");
-            entity.HasCheckConstraint("chk_fpi_conclude_evidence",
-                "status <> 4 OR (concluded_by_id IS NOT NULL AND concluded_at IS NOT NULL)");
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("chk_fpi_status", "status IN (1, 2, 3, 4)");
+                t.HasCheckConstraint("chk_fpi_report_evidence",
+                    "status = 1 OR (reported_by_id IS NOT NULL AND reported_at IS NOT NULL)");
+                t.HasCheckConstraint("chk_fpi_verify_evidence",
+                    "status NOT IN (3, 4) OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)");
+                t.HasCheckConstraint("chk_fpi_conclude_evidence",
+                    "status <> 4 OR (concluded_by_id IS NOT NULL AND concluded_at IS NOT NULL)");
+            });
 
             entity.HasOne<Organization>()
                 .WithMany()
@@ -1992,11 +1995,14 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             ConfigureAggregateAudit(entity, "pk_fpc");
 
-            entity.HasCheckConstraint("chk_fpc_status", "status IN (1, 2, 3)");
-            entity.HasCheckConstraint("chk_fpc_report_evidence",
-                "status = 1 OR (reported_by_id IS NOT NULL AND reported_at IS NOT NULL)");
-            entity.HasCheckConstraint("chk_fpc_verify_evidence",
-                "status <> 3 OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)");
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("chk_fpc_status", "status IN (1, 2, 3)");
+                t.HasCheckConstraint("chk_fpc_report_evidence",
+                    "status = 1 OR (reported_by_id IS NOT NULL AND reported_at IS NOT NULL)");
+                t.HasCheckConstraint("chk_fpc_verify_evidence",
+                    "status <> 3 OR (verified_by_id IS NOT NULL AND verified_at IS NOT NULL)");
+            });
 
             entity.HasOne<Organization>()
                 .WithMany()
@@ -2059,7 +2065,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CreationTime).HasColumnName("creation_time");
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");
 
-            entity.HasCheckConstraint("chk_pcer_status", "status IN (1, 2, 3)");
+            entity.ToTable(t => t.HasCheckConstraint("chk_pcer_status", "status IN (1, 2, 3)"));
 
             entity.HasIndex(x => x.CaseId).HasDatabaseName("idx_pcer_case");
         });
@@ -2081,7 +2087,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CreationTime).HasColumnName("creation_time");
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");
 
-            entity.HasCheckConstraint("chk_pier_status", "status IN (1, 2, 3)");
+            entity.ToTable(t => t.HasCheckConstraint("chk_pier_status", "status IN (1, 2, 3)"));
 
             entity.HasIndex(x => x.IncidentId).HasDatabaseName("idx_pier_incident");
         });
@@ -2124,8 +2130,11 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
             entity.Property(x => x.Notes).HasColumnName("notes");
 
-            entity.HasCheckConstraint("chk_ndtp_status", "status IN (1, 2, 3, 4, 5)");
-            entity.HasCheckConstraint("chk_ndtp_month", "period_month >= 1 AND period_month <= 12");
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("chk_ndtp_status", "status IN (1, 2, 3, 4, 5)");
+                t.HasCheckConstraint("chk_ndtp_month", "period_month >= 1 AND period_month <= 12");
+            });
 
             entity.HasOne<Organization>()
                 .WithMany()
@@ -2164,7 +2173,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CreationTime).HasColumnName("creation_time");
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");
 
-            entity.HasCheckConstraint("chk_ndtp_ren_status", "status IN (1, 2, 3)");
+            entity.ToTable(t => t.HasCheckConstraint("chk_ndtp_ren_status", "status IN (1, 2, 3)"));
             entity.HasIndex(x => x.ReportId).HasDatabaseName("idx_ndtp_ren_report");
         });
 
@@ -2225,8 +2234,11 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
             entity.Property(x => x.Notes).HasColumnName("notes");
 
-            entity.HasCheckConstraint("chk_atp_status", "status IN (1, 2, 3, 4, 5)");
-            entity.HasCheckConstraint("chk_atp_period_type", "period_type IN (1, 2)");
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("chk_atp_status", "status IN (1, 2, 3, 4, 5)");
+                t.HasCheckConstraint("chk_atp_period_type", "period_type IN (1, 2)");
+            });
 
             entity.HasOne<Organization>()
                 .WithMany()
@@ -2265,7 +2277,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CreationTime).HasColumnName("creation_time");
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");
 
-            entity.HasCheckConstraint("chk_atp_ren_status", "status IN (1, 2, 3)");
+            entity.ToTable(t => t.HasCheckConstraint("chk_atp_ren_status", "status IN (1, 2, 3)"));
             entity.HasIndex(x => x.ReportId).HasDatabaseName("idx_atp_ren_report");
         });
 
@@ -2311,7 +2323,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
             entity.Property(x => x.Notes).HasColumnName("notes");
 
-            entity.HasCheckConstraint("chk_amr_status", "status IN (1, 2, 3, 4, 5)");
+            entity.ToTable(t => t.HasCheckConstraint("chk_amr_status", "status IN (1, 2, 3, 4, 5)"));
 
             entity.HasOne<Organization>()
                 .WithMany()
@@ -2350,7 +2362,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CreationTime).HasColumnName("creation_time");
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");
 
-            entity.HasCheckConstraint("chk_amr_ren_status", "status IN (1, 2, 3)");
+            entity.ToTable(t => t.HasCheckConstraint("chk_amr_ren_status", "status IN (1, 2, 3)"));
             entity.HasIndex(x => x.ReportId).HasDatabaseName("idx_amr_ren_report");
         });
     }
@@ -2382,8 +2394,11 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.DeleterId).HasColumnName("deleter_id");
             entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");
 
-            entity.HasCheckConstraint("chk_di_ep_status", "status IN (1, 2)");
-            entity.HasCheckConstraint("chk_di_ep_auth_type", "auth_type IN (1, 2, 3, 4)");
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint("chk_di_ep_status", "status IN (1, 2)");
+                t.HasCheckConstraint("chk_di_ep_auth_type", "auth_type IN (1, 2, 3, 4)");
+            });
 
             entity.HasOne<Organization>()
                 .WithMany()
@@ -2427,7 +2442,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");
             entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");
 
-            entity.HasCheckConstraint("chk_di_cl_direction", "direction IN (1, 2)");
+            entity.ToTable(t => t.HasCheckConstraint("chk_di_cl_direction", "direction IN (1, 2)"));
 
             entity.HasOne<Organization>()
                 .WithMany()

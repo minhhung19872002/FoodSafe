@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  Alert,
-  Empty,
-  Input,
-  Space,
-  Spin,
-  Table,
-  Typography,
-} from "antd";
+import { Alert, Empty, Input, Space, Spin, Table, Typography } from "antd";
 import type { TablePaginationConfig } from "antd";
 import { PublicShell } from "../components/PublicShell";
 import { usePublicDocuments } from "../api/publicPortalQueries";
@@ -95,9 +87,17 @@ export default function PublicDocumentsPage() {
               render={(_v, _r, i) => (page - 1) * PAGE_SIZE + i + 1}
               width={60}
             />
-            <Table.Column title="Số văn bản" dataIndex="documentNumber" width={160} />
+            <Table.Column
+              title="Số văn bản"
+              dataIndex="documentNumber"
+              width={160}
+            />
             <Table.Column title="Tên văn bản" dataIndex="title" />
-            <Table.Column title="Loại văn bản" dataIndex="documentTypeName" width={140} />
+            <Table.Column
+              title="Loại văn bản"
+              dataIndex="documentTypeName"
+              width={140}
+            />
             <Table.Column
               title="Cơ quan ban hành"
               dataIndex="issuingAuthority"

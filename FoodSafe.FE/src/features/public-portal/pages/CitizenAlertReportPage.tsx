@@ -30,7 +30,7 @@ const alertReportSchema = z.object({
     .string()
     .min(1, "Vui lòng nhập nội dung phản ánh")
     .max(8000, "Nội dung không được vượt quá 8000 ký tự"),
-  category: z.number({ message: "Vui lòng chọn danh mục" }).int().min(1).max(6),
+  category: z.number().int().min(1).max(6).optional(),
   affectedArea: z.string().max(500).optional(),
   affectedProducts: z.string().max(500).optional(),
   reporterName: z.string().max(200).optional(),
@@ -45,7 +45,10 @@ const alertReportSchema = z.object({
   reporterEmail: z
     .string()
     .optional()
-    .refine((v) => !v || z.string().email().safeParse(v).success, "Email không hợp lệ"),
+    .refine(
+      (v) => !v || z.string().email().safeParse(v).success,
+      "Email không hợp lệ",
+    ),
   captchaToken: z.string().min(1, "Vui lòng hoàn thành xác minh CAPTCHA"),
 });
 
@@ -112,7 +115,7 @@ export default function CitizenAlertReportPage() {
       {
         title: data.title,
         content: data.content,
-        category: data.category as AlertCategory,
+        category: (data.category ?? 6) as AlertCategory,
         affectedArea: data.affectedArea || undefined,
         affectedProducts: data.affectedProducts || undefined,
         reporterName: data.reporterName || undefined,
@@ -210,7 +213,6 @@ export default function CitizenAlertReportPage() {
 
           <Form.Item
             label="Danh mục"
-            required
             validateStatus={errors.category ? "error" : ""}
             help={errors.category?.message}
           >
@@ -258,7 +260,10 @@ export default function CitizenAlertReportPage() {
               name="affectedArea"
               control={control}
               render={({ field }) => (
-                <Input {...field} placeholder="Ví dụ: Xã An Sinh, huyện Đông Triều" />
+                <Input
+                  {...field}
+                  placeholder="Ví dụ: Xã An Sinh, huyện Đông Triều"
+                />
               )}
             />
           </Form.Item>
@@ -280,7 +285,10 @@ export default function CitizenAlertReportPage() {
             />
           </Form.Item>
 
-          <Typography.Title level={5} style={{ marginTop: 8, marginBottom: 16 }}>
+          <Typography.Title
+            level={5}
+            style={{ marginTop: 8, marginBottom: 16 }}
+          >
             Thông tin người phản ánh (không bắt buộc)
           </Typography.Title>
 

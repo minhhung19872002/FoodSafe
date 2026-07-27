@@ -28,8 +28,7 @@ const atpEndpoint = "/v1/app/atp-work-report";
 const amrEndpoint = "/v1/app/action-month-report";
 
 function download(data: Blob, contentDisposition?: string): FileDownload {
-  const encoded =
-    contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  const encoded = contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
   const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
   return {
     blob: data,
@@ -100,17 +99,15 @@ export const ndtpReportApi = {
     id: string,
     input: UpdateNdtpReportStatsInput,
   ): Promise<NdtpReport> {
-    return (
-      await api.put<NdtpReport>(`${ndtpEndpoint}/${id}/stats`, input)
-    ).data;
+    return (await api.put<NdtpReport>(`${ndtpEndpoint}/${id}/stats`, input))
+      .data;
   },
   async updateNarrative(
     id: string,
     input: UpdateNdtpReportNarrativeInput,
   ): Promise<NdtpReport> {
-    return (
-      await api.put<NdtpReport>(`${ndtpEndpoint}/${id}/narrative`, input)
-    ).data;
+    return (await api.put<NdtpReport>(`${ndtpEndpoint}/${id}/narrative`, input))
+      .data;
   },
   async delete(id: string): Promise<void> {
     await api.delete(`${ndtpEndpoint}/${id}`);
@@ -122,9 +119,8 @@ export const ndtpReportApi = {
     return (await api.post<NdtpReport>(`${ndtpEndpoint}/${id}/verify`)).data;
   },
   async return(id: string, input: ReturnReportInput): Promise<NdtpReport> {
-    return (
-      await api.post<NdtpReport>(`${ndtpEndpoint}/${id}/return`, input)
-    ).data;
+    return (await api.post<NdtpReport>(`${ndtpEndpoint}/${id}/return`, input))
+      .data;
   },
   async complete(id: string): Promise<NdtpReport> {
     return (await api.post<NdtpReport>(`${ndtpEndpoint}/${id}/complete`)).data;
@@ -143,9 +139,7 @@ export const ndtpReportApi = {
 };
 
 export const atpWorkReportApi = {
-  async list(
-    filter: AtpWorkReportFilter,
-  ): Promise<PagedResult<AtpWorkReport>> {
+  async list(filter: AtpWorkReportFilter): Promise<PagedResult<AtpWorkReport>> {
     return (
       await api.get<PagedResult<AtpWorkReport>>(atpEndpoint, {
         params: filter,
@@ -162,9 +156,8 @@ export const atpWorkReportApi = {
     id: string,
     input: UpdateAtpWorkReportStatsInput,
   ): Promise<AtpWorkReport> {
-    return (
-      await api.put<AtpWorkReport>(`${atpEndpoint}/${id}/stats`, input)
-    ).data;
+    return (await api.put<AtpWorkReport>(`${atpEndpoint}/${id}/stats`, input))
+      .data;
   },
   async updateNarrative(
     id: string,
@@ -183,13 +176,9 @@ export const atpWorkReportApi = {
   async verify(id: string): Promise<AtpWorkReport> {
     return (await api.post<AtpWorkReport>(`${atpEndpoint}/${id}/verify`)).data;
   },
-  async return(
-    id: string,
-    input: ReturnReportInput,
-  ): Promise<AtpWorkReport> {
-    return (
-      await api.post<AtpWorkReport>(`${atpEndpoint}/${id}/return`, input)
-    ).data;
+  async return(id: string, input: ReturnReportInput): Promise<AtpWorkReport> {
+    return (await api.post<AtpWorkReport>(`${atpEndpoint}/${id}/return`, input))
+      .data;
   },
   async complete(id: string): Promise<AtpWorkReport> {
     return (await api.post<AtpWorkReport>(`${atpEndpoint}/${id}/complete`))
@@ -262,9 +251,8 @@ export const actionMonthReportApi = {
     ).data;
   },
   async complete(id: string): Promise<ActionMonthReport> {
-    return (
-      await api.post<ActionMonthReport>(`${amrEndpoint}/${id}/complete`)
-    ).data;
+    return (await api.post<ActionMonthReport>(`${amrEndpoint}/${id}/complete`))
+      .data;
   },
   async returnToDraft(id: string): Promise<void> {
     await api.post(`${amrEndpoint}/${id}/return-to-draft`);

@@ -1,5 +1,14 @@
 import { useEffect } from "react";
-import { Col, DatePicker, Form, Input, InputNumber, Modal, Row, Select } from "antd";
+import {
+  Col,
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Row,
+  Select,
+} from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import type {
   BusinessOption,
@@ -66,11 +75,7 @@ export function ExportFoodCertificateEditorModal(props: Props) {
   return (
     <Modal
       open={open}
-      title={
-        registration
-          ? "Cập nhật GCN xuất khẩu"
-          : "Thêm GCN xuất khẩu"
-      }
+      title={registration ? "Cập nhật GCN xuất khẩu" : "Thêm GCN xuất khẩu"}
       width={820}
       okText="Lưu"
       cancelText="Hủy"
@@ -110,9 +115,7 @@ export function ExportFoodCertificateEditorModal(props: Props) {
                 optionFilterProp="label"
                 options={props.businesses.map((item) => ({
                   value: item.id,
-                  label: item.code
-                    ? `${item.code} — ${item.name}`
-                    : item.name,
+                  label: item.code ? `${item.code} — ${item.name}` : item.name,
                 }))}
                 onChange={(value) => {
                   form.setFieldValue("productId", undefined);
@@ -122,10 +125,7 @@ export function ExportFoodCertificateEditorModal(props: Props) {
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item
-              name="destinationCountryId"
-              label="Quốc gia đích"
-            >
+            <Form.Item name="destinationCountryId" label="Quốc gia đích">
               <Select
                 allowClear
                 showSearch
@@ -183,8 +183,7 @@ export function ExportFoodCertificateEditorModal(props: Props) {
                 ({ getFieldValue }) => ({
                   validator(_, value?: Dayjs) {
                     const start = getFieldValue("issueDate") as
-                      | Dayjs
-                      | undefined;
+                      Dayjs | undefined;
                     if (!value || !start || !value.isBefore(start, "day"))
                       return Promise.resolve();
                     return Promise.reject(

@@ -27,7 +27,9 @@ export function useDistricts(provinceId: string, activeOnly = true) {
     queryKey: keys.districts(provinceId, activeOnly),
     // provinceId is a route segment per ABP convention: GET /districts/{provinceId}
     queryFn: () =>
-      getGeographicItems<DistrictItem>(`districts/${provinceId}`, { activeOnly }),
+      getGeographicItems<DistrictItem>(`districts/${provinceId}`, {
+        activeOnly,
+      }),
     enabled: provinceId.length > 0,
   });
 }

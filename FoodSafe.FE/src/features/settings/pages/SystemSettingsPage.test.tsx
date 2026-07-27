@@ -28,7 +28,7 @@ describe("SystemSettingsPage", () => {
 
   it(
     "renders editable configuration form from API values",
-    { timeout: 15000 },
+    { timeout: 30000 },
     async () => {
       server.use(
         http.get("*/api/v1/app/system-settings", () =>

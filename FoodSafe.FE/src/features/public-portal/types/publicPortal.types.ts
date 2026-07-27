@@ -64,7 +64,10 @@ export const RISK_LEVEL = {
 
 export type RiskLevel = (typeof RISK_LEVEL)[keyof typeof RISK_LEVEL];
 
-export const RISK_LEVEL_CONFIG: Record<RiskLevel, { color: string; label: string }> = {
+export const RISK_LEVEL_CONFIG: Record<
+  RiskLevel,
+  { color: string; label: string }
+> = {
   [RISK_LEVEL.Low]: { color: "blue", label: "Thấp" },
   [RISK_LEVEL.Medium]: { color: "orange", label: "Trung bình" },
   [RISK_LEVEL.High]: { color: "red", label: "Cao" },

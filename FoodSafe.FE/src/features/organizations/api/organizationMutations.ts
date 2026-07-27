@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { organizationApi } from "./organizationApi";
 import { organizationKeys } from "./organizationQueries";
+import type { OrganizationFilter } from "../types/organization.types";
 
 export function useCreateOrganization() {
   const queryClient = useQueryClient();
@@ -38,5 +39,12 @@ export function useDeleteOrganization() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: organizationKeys.all });
     },
+  });
+}
+
+export function useExportOrganizations() {
+  return useMutation({
+    mutationFn: (filter: OrganizationFilter) =>
+      organizationApi.exportExcel(filter),
   });
 }

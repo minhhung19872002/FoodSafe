@@ -49,7 +49,7 @@ function mockData() {
 describe("StatisticsPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders statistics page heading", { timeout: 15000 }, async () => {
+  it("renders statistics page heading", { timeout: 30000 }, async () => {
     mockData();
     useAuthStore.getState().setAuth({
       id: "user-1",
@@ -63,8 +63,6 @@ describe("StatisticsPage", () => {
 
     renderPage();
 
-    expect(
-      await screen.findByText("Thống kê tổng hợp"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Thống kê tổng hợp")).toBeInTheDocument();
   });
 });

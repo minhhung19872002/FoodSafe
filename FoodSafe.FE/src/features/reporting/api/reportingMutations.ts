@@ -31,8 +31,7 @@ function useNdtpRefresh() {
 export function useCreateNdtpReport() {
   const refresh = useNdtpRefresh();
   return useMutation({
-    mutationFn: (input: CreateNdtpReportInput) =>
-      ndtpReportApi.create(input),
+    mutationFn: (input: CreateNdtpReportInput) => ndtpReportApi.create(input),
     onSuccess: refresh,
   });
 }
@@ -298,8 +297,7 @@ export function useReturnAmrToDraft() {
 
 export function useExportNdtpReports() {
   return useMutation({
-    mutationFn: (filter: NdtpReportFilter) =>
-      ndtpReportApi.exportExcel(filter),
+    mutationFn: (filter: NdtpReportFilter) => ndtpReportApi.exportExcel(filter),
   });
 }
 

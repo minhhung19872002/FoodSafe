@@ -1,9 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { inspectionPlanApi, inspectionResultApi } from "./inspectionApi";
-import {
-  inspectionPlanKeys,
-  inspectionResultKeys,
-} from "./inspectionQueries";
+import { inspectionPlanKeys, inspectionResultKeys } from "./inspectionQueries";
 import type {
   InspectionPlanFilter,
   InspectionResultFilter,
@@ -60,9 +57,8 @@ export function useApproveInspectionPlan() {
 }
 
 export function useRejectInspectionPlan() {
-  return usePlanRefresh(
-    ({ id, reason }: { id: string; reason: string }) =>
-      inspectionPlanApi.reject(id, reason),
+  return usePlanRefresh(({ id, reason }: { id: string; reason: string }) =>
+    inspectionPlanApi.reject(id, reason),
   );
 }
 
@@ -71,9 +67,8 @@ export function useCompleteInspectionPlan() {
 }
 
 export function useCancelInspectionPlan() {
-  return usePlanRefresh(
-    ({ id, reason }: { id: string; reason: string }) =>
-      inspectionPlanApi.cancel(id, reason),
+  return usePlanRefresh(({ id, reason }: { id: string; reason: string }) =>
+    inspectionPlanApi.cancel(id, reason),
   );
 }
 

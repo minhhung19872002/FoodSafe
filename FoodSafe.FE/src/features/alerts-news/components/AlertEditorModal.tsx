@@ -106,7 +106,11 @@ export function AlertEditorModal(props: Props) {
         </Form.Item>
 
         <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 16,
+          }}
         >
           <Form.Item
             name="category"
@@ -130,11 +134,7 @@ export function AlertEditorModal(props: Props) {
               )}
             />
           </Form.Item>
-          <Form.Item
-            name="source"
-            label="Nguồn"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="source" label="Nguồn" rules={[{ required: true }]}>
             <Select
               options={Object.entries(ALERT_SOURCE_LABELS).map(
                 ([value, label]) => ({ value: Number(value), label }),
@@ -155,7 +155,9 @@ export function AlertEditorModal(props: Props) {
           <Input.TextArea rows={4} />
         </Form.Item>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+        >
           <Form.Item name="affectedArea" label="Khu vực ảnh hưởng">
             <Input />
           </Form.Item>
@@ -165,7 +167,11 @@ export function AlertEditorModal(props: Props) {
         </div>
 
         <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 16,
+          }}
         >
           <Form.Item name="reporterName" label="Người báo cáo">
             <Input maxLength={200} />

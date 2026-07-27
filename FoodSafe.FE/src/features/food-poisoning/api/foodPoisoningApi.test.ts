@@ -13,7 +13,10 @@ describe("foodPoisoningApi", () => {
       }),
     );
 
-    const result = await poisoningCaseApi.list({ skipCount: 0, maxResultCount: 10 });
+    const result = await poisoningCaseApi.list({
+      skipCount: 0,
+      maxResultCount: 10,
+    });
 
     expect(requestedPath).toBe("/api/v1/app/food-poisoning-case");
     expect(result.items).toEqual([]);
@@ -37,9 +40,7 @@ describe("foodPoisoningApi", () => {
 
     const result = await poisoningCaseApi.submit("case-1");
 
-    expect(requestedPath).toBe(
-      "/api/v1/app/food-poisoning-case/case-1/submit",
-    );
+    expect(requestedPath).toBe("/api/v1/app/food-poisoning-case/case-1/submit");
     expect(result.id).toBe("case-1");
   });
 
@@ -52,7 +53,10 @@ describe("foodPoisoningApi", () => {
       }),
     );
 
-    const result = await poisoningIncidentApi.list({ skipCount: 0, maxResultCount: 10 });
+    const result = await poisoningIncidentApi.list({
+      skipCount: 0,
+      maxResultCount: 10,
+    });
 
     expect(requestedPath).toBe("/api/v1/app/food-poisoning-incident");
     expect(result.items).toEqual([]);

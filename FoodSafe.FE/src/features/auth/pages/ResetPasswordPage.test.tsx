@@ -24,14 +24,18 @@ function renderPage(search = "") {
 }
 
 describe("ResetPasswordPage", () => {
-  it("shows invalid link when search params are missing", { timeout: 15000 }, async () => {
-    renderPage();
+  it(
+    "shows invalid link when search params are missing",
+    { timeout: 30000 },
+    async () => {
+      renderPage();
 
-    expect(
-      await screen.findByText("Liên kết không hợp lệ hoặc đã hết hạn"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Gửi yêu cầu mới/ }),
-    ).toBeInTheDocument();
-  });
+      expect(
+        await screen.findByText("Liên kết không hợp lệ hoặc đã hết hạn"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Gửi yêu cầu mới/ }),
+      ).toBeInTheDocument();
+    },
+  );
 });

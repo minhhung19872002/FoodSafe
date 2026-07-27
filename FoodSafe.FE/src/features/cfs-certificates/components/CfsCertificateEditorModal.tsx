@@ -101,9 +101,7 @@ export function CfsCertificateEditorModal(props: Props) {
                 optionFilterProp="label"
                 options={props.businesses.map((item) => ({
                   value: item.id,
-                  label: item.code
-                    ? `${item.code} — ${item.name}`
-                    : item.name,
+                  label: item.code ? `${item.code} — ${item.name}` : item.name,
                 }))}
                 onChange={(value) => {
                   form.setFieldValue("productId", undefined);
@@ -171,8 +169,7 @@ export function CfsCertificateEditorModal(props: Props) {
                 ({ getFieldValue }) => ({
                   validator(_, value?: Dayjs) {
                     const start = getFieldValue("issueDate") as
-                      | Dayjs
-                      | undefined;
+                      Dayjs | undefined;
                     if (!value || !start || !value.isBefore(start, "day"))
                       return Promise.resolve();
                     return Promise.reject(

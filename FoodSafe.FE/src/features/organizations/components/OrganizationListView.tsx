@@ -153,7 +153,12 @@ export function OrganizationListView({
               return <Tag color={config.color}>{config.label}</Tag>;
             },
           },
-          { title: "Điện thoại", dataIndex: "phone", width: 150, ellipsis: true },
+          {
+            title: "Điện thoại",
+            dataIndex: "phone",
+            width: 150,
+            ellipsis: true,
+          },
           {
             title: "Trạng thái",
             dataIndex: "isActive",

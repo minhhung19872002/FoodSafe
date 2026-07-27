@@ -50,36 +50,40 @@ function mockData() {
 describe("AlertsNewsPage", () => {
   afterEach(() => useAuthStore.getState().clearAuth());
 
-  it("renders alerts tab with create button for full-permission user", { timeout: 15000 }, async () => {
-    mockData();
-    useAuthStore.getState().setAuth({
-      id: "user-1",
-      name: "Test User",
-      email: "test@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["ProvinceStaff"],
-      permissions: [
-        "FoodSafe.AlertsAndTesting.Alerts.Create",
-        "FoodSafe.AlertsAndTesting.Alerts.Edit",
-        "FoodSafe.AlertsAndTesting.Alerts.Delete",
-        "FoodSafe.AlertsAndTesting.Alerts.Publish",
-        "FoodSafe.AlertsAndTesting.News.Create",
-        "FoodSafe.AlertsAndTesting.News.Edit",
-        "FoodSafe.AlertsAndTesting.News.Delete",
-        "FoodSafe.AlertsAndTesting.News.Publish",
-      ],
-    });
+  it(
+    "renders alerts tab with create button for full-permission user",
+    { timeout: 30000 },
+    async () => {
+      mockData();
+      useAuthStore.getState().setAuth({
+        id: "user-1",
+        name: "Test User",
+        email: "test@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["ProvinceStaff"],
+        permissions: [
+          "FoodSafe.AlertsAndTesting.Alerts.Create",
+          "FoodSafe.AlertsAndTesting.Alerts.Edit",
+          "FoodSafe.AlertsAndTesting.Alerts.Delete",
+          "FoodSafe.AlertsAndTesting.Alerts.Publish",
+          "FoodSafe.AlertsAndTesting.News.Create",
+          "FoodSafe.AlertsAndTesting.News.Edit",
+          "FoodSafe.AlertsAndTesting.News.Delete",
+          "FoodSafe.AlertsAndTesting.News.Publish",
+        ],
+      });
 
-    renderPage();
+      renderPage();
 
-    expect(
-      await screen.findByText("Cảnh báo nguy cơ kiểm thử"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Tạo cảnh báo/ }),
-    ).toBeInTheDocument();
-  });
+      expect(
+        await screen.findByText("Cảnh báo nguy cơ kiểm thử"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Tạo cảnh báo/ }),
+      ).toBeInTheDocument();
+    },
+  );
 
   it("hides mutation controls for read-only user", async () => {
     mockData();

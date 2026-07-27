@@ -126,14 +126,14 @@ export default function RiskAnalysisPage() {
         <Space size="small">
           {record.status === RISK_ANALYSIS_STATUS.Draft && (
             <>
-              {hasPermission(
-                "FoodSafe.AlertsAndTesting.RiskAnalyses.Edit",
-              ) && (
+              {hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Edit") && (
                 <Button
                   size="small"
                   icon={<EditOutlined />}
                   onClick={() => openEdit(record)}
-                >Sửa</Button>
+                >
+                  Sửa
+                </Button>
               )}
               {hasPermission(
                 "FoodSafe.AlertsAndTesting.RiskAnalyses.Publish",
@@ -149,7 +149,9 @@ export default function RiskAnalysisPage() {
                     })
                   }
                 >
-                  <Button size="small" icon={<SendOutlined />}>Xuất bản</Button>
+                  <Button size="small" icon={<SendOutlined />}>
+                    Xuất bản
+                  </Button>
                 </Popconfirm>
               )}
               {hasPermission(
@@ -166,7 +168,9 @@ export default function RiskAnalysisPage() {
                     })
                   }
                 >
-                  <Button size="small" danger icon={<DeleteOutlined />}>Xóa</Button>
+                  <Button size="small" danger icon={<DeleteOutlined />}>
+                    Xóa
+                  </Button>
                 </Popconfirm>
               )}
             </>
@@ -222,9 +226,7 @@ export default function RiskAnalysisPage() {
         >
           Xuất Excel
         </Button>
-        {hasPermission(
-          "FoodSafe.AlertsAndTesting.RiskAnalyses.Create",
-        ) && (
+        {hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Create") && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Tạo phân tích
           </Button>
@@ -284,11 +286,7 @@ export default function RiskAnalysisPage() {
             }
           }}
         >
-          <Form.Item
-            name="title"
-            label="Tiêu đề"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="title" label="Tiêu đề" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Space style={{ width: "100%" }}>
