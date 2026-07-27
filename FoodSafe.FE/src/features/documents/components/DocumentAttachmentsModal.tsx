@@ -66,13 +66,13 @@ export function DocumentAttachmentsModal({
     { title: "Tên file", dataIndex: "originalName", ellipsis: true },
     {
       title: "Kích thước",
-      dataIndex: "sizeBytes",
+      dataIndex: "fileSize",
       width: 110,
       render: (v: number) => `${(v / 1024).toFixed(0)} KB`,
     },
     {
       title: "Ngày tải",
-      dataIndex: "creationTime",
+      dataIndex: "uploadTime",
       width: 130,
       render: (v: string) => dayjs(v).format("DD/MM/YYYY HH:mm"),
     },

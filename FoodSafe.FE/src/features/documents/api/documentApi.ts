@@ -66,10 +66,10 @@ export const documentApi = {
 export interface DocumentAttachment {
   id: string;
   originalName: string;
-  sizeBytes: number;
+  fileSize: number;
   mimeType?: string;
   description?: string;
-  creationTime: string;
+  uploadTime: string;
 }
 
 export const documentAttachmentApi = {
