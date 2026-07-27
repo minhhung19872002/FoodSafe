@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — P1-1a: Excel-export browser evidence for uncovered admin/catalog/statistics modules (FR-02-13, FR-03-03, FR-06-06, FR-17-05, FR-40-02/04/06)
 
 - **Cause**: Evidence-only sweep (no product code change). doc 73 listed these five exports as `IMPLEMENTED_NOT_VERIFIED` — the export UIs existed but no executed spec exercised the real download. Added `e2e/excel-exports.spec.ts` to drive each real "Xuất Excel" button and assert the browser receives a genuine, non-empty OpenXML workbook.
-- **Commit**: `<this commit>` (files: `e2e/excel-exports.spec.ts`, docs 73/03)
+- **Commit**: `2adc785` (files: `e2e/excel-exports.spec.ts`, docs 73/03)
 - **Affected features**: F-001 identity admin, F-003 audit logs, F-006 organizations, F-catalogs, F-statistics — export path only. No shared capability touched (test-only addition) → no invalidation of other features.
 - **Retest level**: 2 (per-feature runtime evidence, export sub-flow)
 - **Result**: PASSED
