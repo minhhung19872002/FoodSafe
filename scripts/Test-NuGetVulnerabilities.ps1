@@ -9,11 +9,19 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $audit = $auditJson | ConvertFrom-Json
-# AutoMapper GHSA-rvv3-g6hj-g44x (CVE-2026-32933) is FIXED, not allow-listed:
-# common.props pins AutoMapper 15.1.3 (>= 15.1.1), so it no longer appears in
-# the audit. Deliberately NOT in the allow-list so any future AutoMapper
-# advisory fails the gate instead of being silently ignored.
+# AutoMapper GHSA-rvv3-g6hj-g44x (CVE-2026-32933) is allow-listed as an
+# accepted, mitigated risk. The fix (>= 15.1.1) is ABI-INCOMPATIBLE with ABP
+# 9.3.7: Volo.Abp.AutoMapper 9.3.7 calls the AutoMapper 14 constructor
+# `MapperConfiguration(MapperConfigurationExpression)` that 15.x removed, so a
+# 15.x pin builds but throws MissingMethodException at runtime (every
+# ObjectMapper call 500s). AutoMapper is therefore pinned to exactly 14.0.0 in
+# common.props. The uncontrolled-recursion DoS is mitigated by (1) System.Text.
+# Json MaxDepth=64 bounding request-graph depth before mapping and (2) the only
+# recursive profiles being capped with .MaxDepth(8). Real fix tracked: ABP 10
+# upgrade (ABP 10 targets AutoMapper 15).
 $allowList = @{
+    'AutoMapper|https://github.com/advisories/GHSA-rvv3-g6hj-g44x' =
+        'Uncontrolled-recursion DoS; fix (>= 15.1.1) is ABI-incompatible with ABP 9.3.7 (MissingMethodException at runtime). Pinned to 14.0.0. Mitigated: System.Text.Json MaxDepth=64 + recursive AutoMapper profiles capped at .MaxDepth(8). Tracked: ABP 10 upgrade (doc 08 B-6).'
     'Volo.Abp.Account.Web|https://github.com/advisories/GHSA-vfm5-cr22-jg3m' =
         'Open redirect in Account registration returnUrl; no fix in ABP 9.3.x (first fixed 10.0.0-rc.2). Not exploitable: self-registration disabled (IsSelfRegistrationEnabled=false) + AppUrlOptions.RedirectAllowedUrls bounds redirects. Tracked: ABP 10 upgrade (doc 04 §3.2.2).'
 }

@@ -25,14 +25,26 @@
   </ItemGroup>
 
   <!--
-    Security pin (B-6 / CVE-2026-32933, GHSA-rvv3-g6hj-g44x): ABP 9.3.7 pulls
-    AutoMapper 14.0.0 transitively, which has an uncontrolled-recursion DoS
-    (StackOverflow on deeply nested graphs). First fixed in 15.1.1. We pin the
-    latest 15.1.x directly so every project resolves the patched assembly.
-    Compatible with Volo.Abp.AutoMapper 9.3.7 (dependency constraint is
-    AutoMapper >= 14.0.0). Verified by full solution build + test suite.
+    AutoMapper is ABI-LOCKED to 14.0.0 by ABP 9.3.7. Volo.Abp.AutoMapper 9.3.7
+    was compiled against AutoMapper 14 and its MapperAccessor calls
+    `new MapperConfiguration(MapperConfigurationExpression)`. AutoMapper 15.x
+    REMOVED that constructor (it now requires an ILoggerFactory), so although a
+    15.x pin *builds* (NuGet unifies ">= 14.0.0" up to 15), it throws
+    MissingMethodException at RUNTIME on the first ObjectMapper call, 500-ing
+    every AutoMapper-backed endpoint. A prior "B-6 fix" pinned 15.1.3 and was
+    only build/stale-artifact verified; a clean container restore surfaced the
+    crash. Pinned to exactly 14.0.0 (the version ABP resolves and runs against).
+
+    Residual: CVE-2026-32933 / GHSA-rvv3-g6hj-g44x (AutoMapper uncontrolled-
+    recursion DoS, first fixed 15.1.1 — NOT back-ported to the 14.x line).
+    Mitigated: (1) System.Text.Json bounds request depth to MaxDepth=64 before
+    any mapping runs, so an attacker cannot deliver a deeply nested graph; (2)
+    the only recursive mapping profiles (geographic Country->..->Commune,
+    Organization) are explicitly capped with .MaxDepth(8). Real fix is the
+    tracked ABP 10 upgrade (ABP 10 targets AutoMapper 15). See docs/production-
+    audit/08 (B-6) and scripts/Test-NuGetVulnerabilities.ps1 allow-list.
   -->
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="15.1.3" />
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
   </ItemGroup>
 </Project>
