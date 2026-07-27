@@ -108,9 +108,9 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | FR-28-01/02/04/06/07 | Inspection results filter/view/update/scope | `inspection-verification` ✓ | pass | PASS_WITH_BACKEND_ONLY |
 | FR-28-03/05 | Result finalize + document download | `inspection-attachments` ✓ (result: upload→reload-persist→download→delete) | pass | PASS_WITH_BROWSER_EVIDENCE (document up/download); finalize transition still API-only |
 | FR-29-01..05/07..09 | Alert CRUD + recall + export + scope | `alerts-news-verification` ✓, `alerts-news` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
-| FR-29-06 | Citizen alert moderation queue | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-29-06 | Citizen alert moderation queue | `citizen-moderation` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-30-01..06/08 | News CRUD + link + recall | `alerts-news-verification` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
-| FR-30-07 | Citizen news approval | — | none | IMPLEMENTED_NOT_VERIFIED |
+| FR-30-07 | Citizen news approval | `citizen-moderation` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-30-09 | Public news listing | `public-portal-verification` ✓ | pass | PASS_WITH_BACKEND_ONLY |
 | FR-31-01..11 | Poisoning cases lifecycle + map + scope | `food-poisoning-verification` ✓, `food-poisoning` ✓ (leaflet render) | pass | PASS_WITH_BROWSER_EVIDENCE |
 | FR-32-01..10 | Poisoning incidents lifecycle + conclude | `food-poisoning-verification` ✓, `food-poisoning` ✓ | pass | PASS_WITH_BROWSER_EVIDENCE |
@@ -236,3 +236,12 @@ The P1-1d batch (doc 77) called for "list filter + sort + page-size" browser evi
 - **Filter (search) + empty-state** for all five already carry real-browser evidence in their `*-verification` specs (the search box is typed, a positive match is asserted, and a non-existent term asserts the empty state). Re-run at HEAD, **6/6 green, no interception** (`p1-1d-filter.log`): `inspection-verification` (filter + "empty state renders for unmatched search"), `food-poisoning-verification`, `alerts-news-verification`, `testing-results-verification`, `risk-analysis-verification`.
 
 Net for P1-1d: **1 real defect fixed (businesses sort)**; the other five modules were verification-only — filtering/empty-state proven in the browser, sorting correctly N/A. No product code change needed for the five.
+
+## 8. Addendum — citizen submission moderation (FR-29-06, FR-30-07) executed
+
+`citizen-moderation.spec.ts` — **2/2 green (10.1s)**, real backend, no interception (`cmod-all.log`). Both rows in §3 Group C move IMPLEMENTED_NOT_VERIFIED → PASS_WITH_BROWSER_EVIDENCE.
+
+- **Seeding (real HTTP, not interception):** citizen submissions are POSTed to the real public endpoints `POST /api/v1/public/news-reports` and `POST /api/v1/public/alert-reports` from a fresh anonymous browser context (XSRF primed, `captchaToken: "e2e-test-bypass-token"`). The request travels the real Turnstile captcha middleware (non-prod test secret returns success for any non-empty token), the real `CitizenNewsReportAppService` / `CitizenAlertReportAppService`, the real domain factories (`AtpNews.CreateCitizenSubmission`, `AtpAlert.Create` → `Source=PublicReport`, `Status=Draft`), and persists to PostgreSQL.
+- **FR-30-07 news approval (officer UI):** `/alerts-news` → tab "Tin tức ATTP" → filter **Nguồn = "Từ dân"** → seeded Draft row → **Xuất bản** (Popconfirm) → status flips to "Đã xuất bản" → **survives `page.reload()`** (re-filtered, still published).
+- **FR-29-06 alert moderation (officer UI):** `/alerts-news` (Alerts tab) → filter **Nguồn = "Từ dân"** → seeded row tagged source "Từ dân" + status "Nháp" → **Xóa** (reject; Draft-only delete + Popconfirm) → row leaves the moderation queue (count 0).
+- **Environment note (not a product defect):** the real `/gui-tin` / `/gui-phan-anh` citizen browser forms cannot seed in this environment because the third-party Cloudflare Turnstile *widget* never resolves to a token in headless CI (probed: the submit POST never fires, `page.waitForResponse` times out). This is an external-widget limitation; the citizen *endpoints* + captcha middleware + domain + persistence are all still exercised through real HTTP, and the officer-side moderation — the subject of these two requirements — is fully browser-driven.

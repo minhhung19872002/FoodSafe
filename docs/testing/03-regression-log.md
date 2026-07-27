@@ -17,6 +17,15 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — P1-1f citizen submission moderation: alert reject + news approval browser-proven (FR-29-06, FR-30-07)
+
+- **Cause**: New evidence for two IMPLEMENTED_NOT_VERIFIED citizen-moderation requirements (doc 77 P1-1f). New spec only (`FoodSafe.FE/e2e/citizen-moderation.spec.ts`) — no product code changed.
+- **Commit**: `<pending>` (files: new `citizen-moderation.spec.ts` + docs 73/77/03 only)
+- **Affected features**: F-016 alerts/news (citizen-source moderation queue). No product/shared code changed → no invalidation of other features.
+- **Retest level**: 2 (single-feature runtime retest — officer moderation of citizen submissions)
+- **Result**: PASSED
+- **Details**: `citizen-moderation.spec.ts` **2/2 green (10.1 s), no interception** (`cmod-all.log`). Citizen submissions seeded over **real HTTP** through the real public endpoints (`POST /api/v1/public/news-reports` + `/api/v1/public/alert-reports`, anonymous context, `captchaToken:"e2e-test-bypass-token"`) → real Turnstile captcha middleware → real app services → `AtpNews.CreateCitizenSubmission` / `AtpAlert.Create` (`Source=PublicReport`, `Status=Draft`) → PostgreSQL. Officer moderation driven entirely in the browser at `/alerts-news`: **FR-30-07** — tab "Tin tức ATTP", filter Nguồn="Từ dân", Draft row → **Xuất bản** → "Đã xuất bản", **persists across `page.reload()`**; **FR-29-06** — Alerts tab, filter Nguồn="Từ dân", row tagged "Từ dân"+"Nháp" → **Xóa** (reject, Draft-only) → row leaves the queue. Real React → nginx → ASP.NET Core → EF Core → PostgreSQL. **Env caveat** (not a defect): the real `/gui-tin`/`/gui-phan-anh` browser forms can't seed here — the third-party Turnstile widget never resolves a token in headless CI (submit POST never fires); the citizen endpoints are still fully exercised via real HTTP. doc 73 §8 records detail. Stack unchanged (no rebuild).
+
 ### 2026-07-28 — P1-1d (list filter/sort sweep): 5 sibling modules verification-only, sort correctly N/A
 
 - **Cause**: Evidence-only sweep (no product code change). P1-1d (doc 77) called for "list filter + sort + page-size" browser evidence across businesses + inspection/food-poisoning/alerts/testing/risk-analysis. **businesses** was already closed with a real fix (FR-19-02, `f29fedc`). This entry resolves the **remaining five modules**. A code survey (`grep sorter` over `FoodSafe.FE/src/features`; `grep OrderBy/input.Sorting` over the list AppServices) found that **only `businesses` declares `sorter` columns** — inspection/food-poisoning/alerts/testing/risk-analysis expose **no sort UI** and each BE list service orders deterministically (`OrderByDescending` on `CreationTime`/`Year`/`SampleDate`/`InspectionDate`) then `PageBy(input)`. So there is **no businesses-style hidden-sort defect** for the five: nothing in their UI requests a sort the server drops. Sort is therefore **N/A**, not a gap.
