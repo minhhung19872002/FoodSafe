@@ -24,3 +24,17 @@ public static class InboundSubmissionConsts
     public const int MaxCorrelationIdLength = 64;
     public const int MaxRejectReasonLength = 1000;
 }
+
+/// <summary>Shared length limits for FR-50-05 partner API specifications and DTOs.</summary>
+public static class ApiSpecConsts
+{
+    public const int MaxNameLength = 128;
+    public const int MaxTitleLength = 256;
+    public const int MaxSpecVersionLength = 64;
+    public const int MaxOpenApiVersionLength = 32;
+    public const int MaxDescriptionLength = 1024;
+    public const int MaxChecksumLength = 64;
+
+    /// <summary>Largest spec document we accept (2 MB of text).</summary>
+    public const int MaxContentBytes = 2 * 1024 * 1024;
+}

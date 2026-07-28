@@ -2618,5 +2618,70 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.HasIndex(x => new { x.OrganizationId, x.ReceivedAt })
                 .HasDatabaseName("idx_di_is_org_received");
         });
+
+        builder.Entity<ApiSpecification>(entity =>
+        {
+            entity.ToTable("di_api_specifications");
+            entity.ConfigureByConvention();
+
+            entity.HasKey(x => x.Id).HasName("pk_di_api_specifications");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id").IsRequired();
+            entity.Property(x => x.Name)
+                .HasColumnName("name")
+                .HasMaxLength(ApiSpecification.MaxNameLength).IsRequired();
+            entity.Property(x => x.VersionNumber)
+                .HasColumnName("version_number").IsRequired();
+            entity.Property(x => x.Title)
+                .HasColumnName("title")
+                .HasMaxLength(ApiSpecification.MaxTitleLength).IsRequired();
+            entity.Property(x => x.SpecVersion)
+                .HasColumnName("spec_version")
+                .HasMaxLength(ApiSpecification.MaxSpecVersionLength).IsRequired();
+            entity.Property(x => x.OpenApiVersion)
+                .HasColumnName("openapi_version")
+                .HasMaxLength(ApiSpecification.MaxOpenApiVersionLength).IsRequired();
+            entity.Property(x => x.Format)
+                .HasColumnName("format").HasConversion<short>().IsRequired();
+            entity.Property(x => x.Content)
+                .HasColumnName("content").IsRequired();
+            entity.Property(x => x.SizeBytes)
+                .HasColumnName("size_bytes").IsRequired();
+            entity.Property(x => x.Checksum)
+                .HasColumnName("checksum")
+                .HasMaxLength(ApiSpecification.MaxChecksumLength).IsRequired();
+            entity.Property(x => x.Description)
+                .HasColumnName("description")
+                .HasMaxLength(ApiSpecification.MaxDescriptionLength);
+            entity.Property(x => x.IsPublished)
+                .HasColumnName("is_published").IsRequired();
+            entity.Property(x => x.PublishedAt).HasColumnName("published_at");
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+            entity.Property(x => x.LastModificationTime).HasColumnName("last_modification_time");
+            entity.Property(x => x.LastModifierId).HasColumnName("last_modifier_id");
+            entity.Property(x => x.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
+            entity.Property(x => x.DeletionTime).HasColumnName("deletion_time");
+            entity.Property(x => x.DeleterId).HasColumnName("deleter_id");
+            entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_di_apispec_organization")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // One row per (org, name, version) — versioning is immutable per upload.
+            entity.HasIndex(x => new { x.OrganizationId, x.Name, x.VersionNumber })
+                .IsUnique()
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("uq_di_apispec_org_name_version");
+            // At most one published version per (org, name).
+            entity.HasIndex(x => new { x.OrganizationId, x.Name })
+                .IsUnique()
+                .HasFilter("is_deleted = FALSE AND is_published = TRUE")
+                .HasDatabaseName("uq_di_apispec_org_name_published");
+        });
     }
 }

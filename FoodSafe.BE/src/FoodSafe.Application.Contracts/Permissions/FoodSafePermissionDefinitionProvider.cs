@@ -584,6 +584,21 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
         partners.AddChild(
             FoodSafePermissions.DataIntegration.Partners.ManageKeys,
             LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.Partners.ManageKeys"));
+        var apiSpecs = dataIntegration.AddChild(
+            FoodSafePermissions.DataIntegration.ApiSpecs.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiSpecs"));
+        apiSpecs.AddChild(
+            FoodSafePermissions.DataIntegration.ApiSpecs.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiSpecs.View"));
+        apiSpecs.AddChild(
+            FoodSafePermissions.DataIntegration.ApiSpecs.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiSpecs.Create"));
+        apiSpecs.AddChild(
+            FoodSafePermissions.DataIntegration.ApiSpecs.Publish,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiSpecs.Publish"));
+        apiSpecs.AddChild(
+            FoodSafePermissions.DataIntegration.ApiSpecs.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiSpecs.Delete"));
 
         group.AddPermission(
             FoodSafePermissions.DataScope.All,

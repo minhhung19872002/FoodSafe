@@ -270,4 +270,50 @@ public sealed class CurrentUserContextPermissionContractTests
             FoodSafePermissions.SystemAdministration.Roles.ManagePermissions,
             permissions);
     }
+
+    /// <summary>
+    /// Same regression guard as above for the Data Integration group. The
+    /// admin page gates every Data Integration tab and row action on a
+    /// permission surfaced through this projection; a permission granted
+    /// server-side but absent from this allowlist is never reported to the
+    /// frontend, so its tab silently never renders — which is exactly how the
+    /// FR-50-05 "Đặc tả API" tab shipped invisible before this guard existed.
+    /// </summary>
+    [Fact]
+    public void Frontend_permission_projection_includes_data_integration()
+    {
+        var field = typeof(CurrentUserContextAppService).GetField(
+            "FoodSafePermissionNames",
+            BindingFlags.NonPublic | BindingFlags.Static);
+
+        var permissions = Assert.IsType<string[]>(field?.GetValue(null));
+
+        Assert.Contains(
+            FoodSafePermissions.DataIntegration.ApiEndpoints.View,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.DataIntegration.CallHistory.View,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.DataIntegration.Share,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.DataIntegration.Partners.View,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.DataIntegration.Partners.ManageKeys,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.DataIntegration.ApiSpecs.View,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.DataIntegration.ApiSpecs.Create,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.DataIntegration.ApiSpecs.Publish,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.DataIntegration.ApiSpecs.Delete,
+            permissions);
+    }
 }

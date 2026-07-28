@@ -7,7 +7,9 @@ import type {
   CreateUpdateApiEndpoint,
   IssuePartnerApiKeyInput,
   ShareDataInput,
+  UpdateApiSpecMetadataInput,
   UpdatePartnerAccount,
+  UploadApiSpecificationInput,
 } from "../types/dataIntegration.types";
 
 export function useCreateEndpoint() {
@@ -99,13 +101,8 @@ export function useCreatePartner() {
 export function useUpdatePartner() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      input,
-    }: {
-      id: string;
-      input: UpdatePartnerAccount;
-    }) => dataIntegrationApi.updatePartner(id, input),
+    mutationFn: ({ id, input }: { id: string; input: UpdatePartnerAccount }) =>
+      dataIntegrationApi.updatePartner(id, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["partner-accounts"] }),
   });
 }
@@ -152,5 +149,58 @@ export function useRevokePartnerKey() {
       void qc.invalidateQueries({ queryKey: ["partner-keys", id] });
       void qc.invalidateQueries({ queryKey: ["partner-accounts"] });
     },
+  });
+}
+
+export function useUploadApiSpec() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UploadApiSpecificationInput) =>
+      dataIntegrationApi.uploadApiSpec(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-specs"] }),
+  });
+}
+
+export function useUpdateApiSpecMetadata() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: UpdateApiSpecMetadataInput;
+    }) => dataIntegrationApi.updateApiSpecMetadata(id, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-specs"] }),
+  });
+}
+
+export function usePublishApiSpec() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => dataIntegrationApi.publishApiSpec(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-specs"] }),
+  });
+}
+
+export function useUnpublishApiSpec() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => dataIntegrationApi.unpublishApiSpec(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-specs"] }),
+  });
+}
+
+export function useDeleteApiSpec() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => dataIntegrationApi.deleteApiSpec(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-specs"] }),
+  });
+}
+
+export function useDownloadApiSpec() {
+  return useMutation({
+    mutationFn: (id: string) => dataIntegrationApi.downloadApiSpec(id),
   });
 }

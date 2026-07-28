@@ -3,6 +3,7 @@ import { dataIntegrationApi } from "./dataIntegrationApi";
 import type {
   ApiEndpointFilter,
   ApiCallLogFilter,
+  ApiSpecificationFilter,
   InboundSubmissionFilter,
   PartnerAccountFilter,
 } from "../types/dataIntegration.types";
@@ -17,6 +18,8 @@ const keys = {
   submissions: (filter: InboundSubmissionFilter) =>
     ["inbound-submissions", filter] as const,
   submission: (id: string) => ["inbound-submission", id] as const,
+  apiSpecs: (filter: ApiSpecificationFilter) => ["api-specs", filter] as const,
+  apiSpec: (id: string) => ["api-spec", id] as const,
 };
 
 export function useApiEndpoints(filter: ApiEndpointFilter, enabled = true) {
@@ -68,6 +71,22 @@ export function useInboundSubmissionDetail(id: string | undefined) {
   return useQuery({
     queryKey: keys.submission(id!),
     queryFn: () => dataIntegrationApi.getInboundSubmission(id!),
+    enabled: Boolean(id),
+  });
+}
+
+export function useApiSpecs(filter: ApiSpecificationFilter, enabled = true) {
+  return useQuery({
+    queryKey: keys.apiSpecs(filter),
+    queryFn: () => dataIntegrationApi.getApiSpecs(filter),
+    enabled,
+  });
+}
+
+export function useApiSpec(id: string | undefined) {
+  return useQuery({
+    queryKey: keys.apiSpec(id!),
+    queryFn: () => dataIntegrationApi.getApiSpec(id!),
     enabled: Boolean(id),
   });
 }

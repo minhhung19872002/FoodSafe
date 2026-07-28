@@ -34,6 +34,7 @@ import { saveDownload } from "@/utils/download";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { PartnersTab } from "../components/PartnersTab";
 import { InboundSubmissionsTab } from "../components/InboundSubmissionsTab";
+import { ApiSpecsTab } from "../components/ApiSpecsTab";
 import {
   useApiEndpoints,
   useApiCallLogs,
@@ -906,6 +907,9 @@ export default function DataIntegrationPage() {
   const canViewPartners = hasPermission(
     "FoodSafe.DataIntegration.Partners.View",
   );
+  const canViewApiSpecs = hasPermission(
+    "FoodSafe.DataIntegration.ApiSpecs.View",
+  );
 
   const tabItems = [
     ...(canViewEndpoints
@@ -937,6 +941,15 @@ export default function DataIntegrationPage() {
             key: "inbound",
             label: "Dữ liệu nhận về",
             children: <InboundSubmissionsTab />,
+          },
+        ]
+      : []),
+    ...(canViewApiSpecs
+      ? [
+          {
+            key: "api-specs",
+            label: "Đặc tả API",
+            children: <ApiSpecsTab />,
           },
         ]
       : []),

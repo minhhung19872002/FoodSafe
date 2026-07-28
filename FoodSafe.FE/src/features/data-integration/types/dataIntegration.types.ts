@@ -283,3 +283,65 @@ export interface InboundSubmissionFilter {
   skipCount: number;
   maxResultCount: number;
 }
+
+export const API_SPEC_FORMAT = {
+  Json: 1,
+  Yaml: 2,
+} as const;
+export type ApiSpecFormat =
+  (typeof API_SPEC_FORMAT)[keyof typeof API_SPEC_FORMAT];
+
+export const API_SPEC_FORMAT_CONFIG: Record<
+  ApiSpecFormat,
+  { color: string; label: string }
+> = {
+  [API_SPEC_FORMAT.Json]: { color: "geekblue", label: "JSON" },
+  [API_SPEC_FORMAT.Yaml]: { color: "purple", label: "YAML" },
+};
+
+/** One stored, immutable version of a named partner API specification (FR-50-05). */
+export interface ApiSpecification {
+  id: string;
+  organizationId: string;
+  name: string;
+  versionNumber: number;
+  title: string;
+  /** The API's own version, e.g. "1.2.0" (parsed info.version). */
+  specVersion: string;
+  /** Declared OpenAPI/Swagger version, e.g. "3.0.3". */
+  openApiVersion: string;
+  format: ApiSpecFormat;
+  sizeBytes: number;
+  checksum: string;
+  description?: string;
+  isPublished: boolean;
+  publishedAt?: string;
+  creationTime: string;
+}
+
+export interface UploadApiSpecificationInput {
+  name: string;
+  /** Raw OpenAPI 2.0/3.0 document (JSON or YAML); validated server-side. */
+  content: string;
+  description?: string;
+}
+
+export interface UpdateApiSpecMetadataInput {
+  description?: string;
+}
+
+export interface ApiSpecificationFilter {
+  filter?: string;
+  name?: string;
+  isPublished?: boolean;
+  skipCount: number;
+  maxResultCount: number;
+}
+
+/** The raw document body plus the headers needed to save it as a file. */
+export interface ApiSpecificationDownload {
+  content: string;
+  format: ApiSpecFormat;
+  fileName: string;
+  contentType: string;
+}

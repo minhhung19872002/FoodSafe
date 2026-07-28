@@ -48,3 +48,10 @@ public enum InboundSubmissionStatus : short
     Processed = 2,
     Rejected = 3,
 }
+
+/// <summary>Serialization format of an uploaded partner API specification (FR-50-05).</summary>
+public enum ApiSpecFormat : short
+{
+    Json = 1,
+    Yaml = 2,
+}
