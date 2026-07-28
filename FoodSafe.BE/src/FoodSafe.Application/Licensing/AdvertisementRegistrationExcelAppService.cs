@@ -39,6 +39,7 @@ public class AdvertisementRegistrationExcelAppService :
                     AdvertisementTypeId = input.AdvertisementTypeId,
                     Status = input.Status,
                     ExpiringWithinDays = input.ExpiringWithinDays,
+                    Sorting = input.Sorting,
                     SkipCount = rows.Count,
                     MaxResultCount = PageSize
                 });

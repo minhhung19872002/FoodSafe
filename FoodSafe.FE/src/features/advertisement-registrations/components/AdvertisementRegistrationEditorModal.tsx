@@ -38,6 +38,13 @@ export function AdvertisementRegistrationEditorModal(props: Props) {
   const [form] = Form.useForm<Values>();
   const businessId = Form.useWatch("businessId", form);
   const { open, item, onBusinessChange } = props;
+
+  // Options chỉ chứa cơ sở Active (tối đa 500); khi sửa đăng ký của cơ sở
+  // ngoài danh sách đó vẫn phải hiển thị tên thay vì GUID.
+  const businessOptions =
+    item && !props.businesses.some((x) => x.id === item.businessId)
+      ? [{ id: item.businessId, name: item.businessName }, ...props.businesses]
+      : props.businesses;
   useEffect(() => {
     if (!open) return;
     form.setFieldsValue(
@@ -100,7 +107,8 @@ export function AdvertisementRegistrationEditorModal(props: Props) {
           <Select
             showSearch
             optionFilterProp="label"
-            options={props.businesses.map((x) => ({
+            disabled={Boolean(item)}
+            options={businessOptions.map((x) => ({
               value: x.id,
               label: x.code ? `${x.code} — ${x.name}` : x.name,
             }))}

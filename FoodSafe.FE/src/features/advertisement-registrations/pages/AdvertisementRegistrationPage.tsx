@@ -11,6 +11,7 @@ import { App, Button, Input, Select, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { extractApiError } from "@/lib/apiError";
 import { ProductRegistrationAttachmentsModal } from "@/features/product-registrations/components/ProductRegistrationAttachmentsModal";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
@@ -127,8 +128,7 @@ export default function AdvertisementRegistrationPage() {
         void message.success("Đã lưu đăng ký quảng cáo.");
         closeEditor();
       },
-      onError: () =>
-        void message.error("Không thể lưu đăng ký. Vui lòng kiểm tra dữ liệu."),
+      onError: (error: unknown) => void message.error(extractApiError(error)),
     };
     if (editing) updateMutation.mutate({ id: editing.id, input }, options);
     else createMutation.mutate(input, options);
@@ -220,7 +220,8 @@ export default function AdvertisementRegistrationPage() {
               onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã xóa đăng ký."),
-                  onError: () => void message.error("Không thể xóa đăng ký."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -242,8 +243,8 @@ export default function AdvertisementRegistrationPage() {
               onClick={() =>
                 exportMutation.mutate(queryFilter, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () =>
-                    void message.error("Không thể xuất danh sách."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 })
               }
             >
@@ -332,7 +333,7 @@ export default function AdvertisementRegistrationPage() {
           rowKey="id"
           size="middle"
           scroll={{ x: 1250 }}
-          loading={registrations.isLoading}
+          loading={registrations.isFetching}
           columns={columns}
           dataSource={registrations.data?.items ?? []}
           onRow={(record) => ({
@@ -449,7 +450,7 @@ export default function AdvertisementRegistrationPage() {
                 void message.success("Đã thu hồi đăng ký.");
                 setRevoking(undefined);
               },
-              onError: () => void message.error("Không thể thu hồi."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}
