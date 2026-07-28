@@ -6,6 +6,9 @@ namespace FoodSafe.Licensing;
 
 public sealed class ExportFoodCertificate : FullAuditedAggregateRoot<Guid>
 {
+    // Chặn giá trị mặc định 0001-01-01 khi client bỏ trống IssueDate.
+    private static readonly DateTime MinimumIssueDate = new(1900, 1, 1);
+
     public Guid BusinessId { get; private set; }
     public Guid? ProductId { get; private set; }
     public Guid? DestinationCountryId { get; private set; }
@@ -86,6 +89,10 @@ public sealed class ExportFoodCertificate : FullAuditedAggregateRoot<Guid>
             100);
 
         var normalizedIssueDate = issueDate.Date;
+        if (normalizedIssueDate < MinimumIssueDate)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.ExportFoodCertificate
+                    .InvalidIssueDate);
         var normalizedExpiryDate = expiryDate?.Date;
         if (normalizedExpiryDate.HasValue &&
             normalizedIssueDate > normalizedExpiryDate.Value)

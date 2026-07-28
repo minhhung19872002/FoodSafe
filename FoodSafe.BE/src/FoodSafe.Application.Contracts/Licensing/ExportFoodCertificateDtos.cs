@@ -63,7 +63,11 @@ public class UpsertExportFoodCertificateDto
     [StringLength(100)]
     public string? LotNumber { get; set; }
 
-    [Range(typeof(decimal), "0", "999999999.999")]
+    // ParseLimitsInInvariantCulture: RangeAttribute mặc định parse chuỗi giới
+    // hạn theo culture của request — vi-VN không nhận "." thập phân nên mọi
+    // create/update từ browser tiếng Việt trả 500.
+    [Range(typeof(decimal), "0", "999999999.999",
+        ParseLimitsInInvariantCulture = true)]
     public decimal? Quantity { get; set; }
 
     [StringLength(50)]

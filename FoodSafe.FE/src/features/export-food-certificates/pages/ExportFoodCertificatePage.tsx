@@ -12,6 +12,7 @@ import { App, Button, Input, Select, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { extractApiError } from "@/lib/apiError";
 import {
   useCreateExportFoodCertificate,
   useDeleteExportFoodCertificate,
@@ -133,10 +134,7 @@ export default function ExportFoodCertificatePage() {
         void message.success("Đã lưu giấy chứng nhận xuất khẩu.");
         closeEditor();
       },
-      onError: () =>
-        void message.error(
-          "Không thể lưu. Vui lòng kiểm tra số GCN và dữ liệu.",
-        ),
+      onError: (error: unknown) => void message.error(extractApiError(error)),
     };
     if (editing) updateMutation.mutate({ id: editing.id, input }, options);
     else createMutation.mutate(input, options);
@@ -227,10 +225,8 @@ export default function ExportFoodCertificatePage() {
               onClick: () =>
                 pdfMutation.mutate(item.id, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () =>
-                    void message.error(
-                      "Không thể tải bản PDF giấy chứng nhận xuất khẩu.",
-                    ),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
             {
@@ -266,10 +262,8 @@ export default function ExportFoodCertificatePage() {
                 deleteMutation.mutate(item.id, {
                   onSuccess: () =>
                     void message.success("Đã xóa giấy chứng nhận xuất khẩu."),
-                  onError: () =>
-                    void message.error(
-                      "Không thể xóa giấy chứng nhận xuất khẩu.",
-                    ),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -291,8 +285,8 @@ export default function ExportFoodCertificatePage() {
               onClick={() =>
                 exportMutation.mutate(queryFilter, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () =>
-                    void message.error("Không thể xuất danh sách."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 })
               }
             >
@@ -392,8 +386,8 @@ export default function ExportFoodCertificatePage() {
         <Table
           rowKey="id"
           size="middle"
-          scroll={{ x: 1600 }}
-          loading={registrations.isLoading}
+          scroll={{ x: 1300 }}
+          loading={registrations.isFetching}
           columns={columns}
           dataSource={registrations.data?.items ?? []}
           onRow={(record) => ({
@@ -485,10 +479,7 @@ export default function ExportFoodCertificatePage() {
             { id: attachmentsFor.id, file },
             {
               onSuccess: () => void message.success("Đã tải tệp lên."),
-              onError: () =>
-                void message.error(
-                  "Tệp không hợp lệ hoặc không vượt qua kiểm tra an toàn.",
-                ),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}
@@ -498,7 +489,7 @@ export default function ExportFoodCertificatePage() {
             { id: attachmentsFor.id, attachmentId: attachment.id },
             {
               onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => void message.error("Không thể tải tệp."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}
@@ -508,7 +499,7 @@ export default function ExportFoodCertificatePage() {
             { id: attachmentsFor.id, attachmentId },
             {
               onSuccess: () => void message.success("Đã xóa tệp."),
-              onError: () => void message.error("Không thể xóa tệp."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}
@@ -528,10 +519,7 @@ export default function ExportFoodCertificatePage() {
                 void message.success("Đã thu hồi giấy chứng nhận xuất khẩu.");
                 setRevoking(undefined);
               },
-              onError: () =>
-                void message.error(
-                  "Không thể thu hồi giấy chứng nhận xuất khẩu.",
-                ),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}

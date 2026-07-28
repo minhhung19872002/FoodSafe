@@ -56,7 +56,9 @@ public class ExportFoodCertificateAppService :
         var query = await ScopedQueryAsync(DataScopeOperation.View);
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            // Số GCN luôn lưu chữ hoa — uppercase filter để tìm không phân
+            // biệt hoa/thường.
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x => x.CertificateNumber.Contains(filter));
         }
         if (input.BusinessId.HasValue)
@@ -481,7 +483,8 @@ public class ExportFoodCertificateAppService :
     }
 
     // Honours the client's Sorting request against a whitelist; falls back to
-    // CreationTime descending (newest first).
+    // CreationTime descending (newest first). The Id tiebreaker keeps paging
+    // stable when many rows share the same sort value.
     private static IOrderedQueryable<ExportFoodCertificate> ApplySorting(
         IQueryable<ExportFoodCertificate> query,
         string? sorting)
@@ -491,7 +494,7 @@ public class ExportFoodCertificateAppService :
             .FirstOrDefault()
             ?.ToLowerInvariant();
 
-        return (field, descending) switch
+        var ordered = (field, descending) switch
         {
             ("issuedate", true)    => query.OrderByDescending(x => x.IssueDate),
             ("issuedate", false)   => query.OrderBy(x => x.IssueDate),
@@ -499,6 +502,7 @@ public class ExportFoodCertificateAppService :
             ("creationtime", false)=> query.OrderBy(x => x.CreationTime),
             _                      => query.OrderByDescending(x => x.CreationTime)
         };
+        return ordered.ThenBy(x => x.Id);
     }
 
     private static IQueryable<ExportFoodCertificate> ApplyStatusFilter(
