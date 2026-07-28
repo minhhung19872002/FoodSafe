@@ -1,8 +1,14 @@
-# CVE-2026-32933 — AutoMapper 14.0.0 DoS via uncontrolled recursion.
-# AutoMapper is a transitive dependency pinned by ABP Framework 9
-# (Volo.Abp.AutoMapper). The fixed versions (15.1.1/16.1.1) are a major
-# upgrade with a new licensing model and are not yet supported by ABP 9.
+# CVE-2026-32933 (GHSA-rvv3-g6hj-g44x) — AutoMapper 14.0.0 DoS via
+# uncontrolled recursion, detected in the API/migrator image .deps.json.
+# AutoMapper is pinned by ABP Framework 9 (Volo.Abp.AutoMapper): the fixed
+# versions (15.1.1/16.1.1) are a major upgrade that ABP 9.3.x cannot load at
+# runtime (MissingMethodException; verified incident, see common.props).
 # Risk assessment: mapping profiles only map bounded internal DTOs;
-# attacker-controlled object graphs never reach AutoMapper.
-# Remove this entry when ABP ships an AutoMapper >= 15.1.1 dependency.
-CVE-2026-32933
+# attacker-controlled object graphs are depth-limited by System.Text.Json
+# (MaxDepth=64) before mapping and recursive profiles are capped MaxDepth(8).
+# Owner: backend team (docs/43-dependency-security-policy.md, doc 08 B-6).
+# Remove together with the common.props pin/suppression and the
+# Test-NuGetVulnerabilities.ps1 allow-list entry when the ABP 10 upgrade
+# lands. Expiration enforced below: the scan fails again after this date so
+# the exception must be consciously renewed or removed.
+CVE-2026-32933 exp:2026-12-31

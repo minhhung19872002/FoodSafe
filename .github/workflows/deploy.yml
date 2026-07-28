@@ -49,6 +49,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: FoodSafe.BE
+          # Re-resolve base tags on every build; the GHA layer cache must not
+          # pin an outdated base digest after upstream security rebuilds.
+          pull: true
           push: true
           tags: |
             ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO }}/foodsafe-api:${{ github.sha }}
@@ -60,6 +63,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: FoodSafe.FE
+          pull: true
           push: true
           tags: |
             ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO }}/foodsafe-frontend:${{ github.sha }}

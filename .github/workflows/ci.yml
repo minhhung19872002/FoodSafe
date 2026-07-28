@@ -286,7 +286,9 @@ jobs:
 
       - name: Build deployable images
         working-directory: FoodSafe.BE
-        run: docker compose build api migrator frontend
+        # --pull: always re-resolve base-image tags so a warm builder cannot
+        # reuse a stale cached base and mask OS package fixes from the scans.
+        run: docker compose build --pull api migrator frontend
 
       - name: Validate production Compose overlay rendering
         working-directory: FoodSafe.BE
@@ -302,7 +304,7 @@ jobs:
         env:
           SSL_CERT_PATH: /tmp/ci-placeholder-tls.crt
           SSL_KEY_PATH: /tmp/ci-placeholder-tls.key
-        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml build frontend
+        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml build --pull frontend
 
       - name: Verify production frontend HTTPS/TLS/HSTS/IPv6 at runtime
         run: bash scripts/verify-prod-frontend.sh
