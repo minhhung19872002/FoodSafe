@@ -1,9 +1,14 @@
+@import "./styles/fonts.css";
+
 /* ==========================================================================
    FoodSafe — bộ nhận diện Chi cục ATVSTP Quảng Ninh
    Token màu giữ đồng bộ với src/theme/themeConfig.ts (export `brand`).
    ========================================================================== */
 
 :root {
+  --fs-font:
+    "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, Arial,
+    sans-serif;
   --fs-green: #128a3e;
   --fs-green-dark: #0a6b2e;
   --fs-green-light: #afd8b2;
@@ -39,8 +44,18 @@ body {
   margin: 0;
   background: var(--fs-bg);
   color: var(--fs-body);
+  /* Ant Design chỉ áp font token cho các class .ant-*; markup thường phải tự
+     khai báo, nếu không sẽ rơi về font mặc định của hệ điều hành. */
+  font-family: var(--fs-font);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: var(--fs-font);
 }
 
 #root {
@@ -1014,6 +1029,19 @@ body {
   margin: 0 0 28px;
 }
 
+.login-form-hint {
+  color: var(--fs-faint);
+}
+
+.login-form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+}
+
 .login-form-footer {
   text-align: center;
   margin-top: 20px;
@@ -1163,6 +1191,22 @@ body {
 /* Menu sidebar khớp cỡ chữ design */
 .ant-menu-dark.ant-menu-inline .ant-menu-item {
   font-size: 13px;
+}
+
+/* Icon điều hướng dạng ký tự, canh giữa trong ô 20px như design */
+.nav-icon {
+  display: inline-block;
+  width: 20px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1;
+  font-family:
+    "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+}
+
+.ant-menu-item .ant-menu-item-icon {
+  min-width: 20px;
+  font-size: 14px;
 }
 
 /* Breadcrumb trang quản trị */

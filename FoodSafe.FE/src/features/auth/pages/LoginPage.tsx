@@ -1,4 +1,4 @@
-import { Form, Input, Button, Typography } from "antd";
+import { Form, Input, Button, Checkbox, Typography } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -10,6 +10,7 @@ import {
   brandingLogoUrl,
   useBranding,
 } from "@/hooks/useBranding";
+import { usePublicCounts } from "@/hooks/usePublicCounts";
 import { useLogin } from "../api/authMutations";
 import { CaptchaWidget } from "../components/CaptchaWidget";
 
@@ -17,6 +18,7 @@ const loginSchema = z.object({
   captchaToken: z.string().min(1, "Vui lòng hoàn thành xác minh CAPTCHA"),
   userNameOrEmailAddress: z.string().min(1, "Vui lòng nhập tên đăng nhập"),
   password: z.string().min(1, "Vui lòng nhập mật khẩu"),
+  rememberMe: z.boolean(),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -28,6 +30,16 @@ export default function LoginPage() {
   const loginMutation = useLogin();
   const navigate = useNavigate();
   const branding = useBranding();
+  const counts = usePublicCounts();
+
+  const asideStats = [
+    { value: counts.data?.businesses, label: "cơ sở quản lý" },
+    {
+      value: counts.data?.eligibilityCertificates,
+      label: "giấy đủ điều kiện",
+    },
+    { value: counts.data?.selfDeclarations, label: "hồ sơ tự công bố" },
+  ];
 
   const {
     control,
@@ -40,6 +52,7 @@ export default function LoginPage() {
       captchaToken: "",
       userNameOrEmailAddress: "",
       password: "",
+      rememberMe: false,
     },
   });
 
@@ -93,6 +106,19 @@ export default function LoginPage() {
             Nền tảng nghiệp vụ dành cho cán bộ quản lý: cấp phép, thanh tra,
             giám sát nguy cơ và báo cáo toàn tỉnh trên một hệ thống duy nhất.
           </p>
+
+          {counts.isSuccess && (
+            <div className="login-aside-stats">
+              {asideStats.map((stat) => (
+                <div key={stat.label}>
+                  <div className="login-aside-stat-value">
+                    {(stat.value ?? 0).toLocaleString("vi-VN")}
+                  </div>
+                  <div className="login-aside-stat-label">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="login-aside-legal">
@@ -105,6 +131,10 @@ export default function LoginPage() {
           <h1 className="login-form-title">Đăng nhập</h1>
           <p className="login-form-sub">
             {branding.data?.homepageDescription ?? DEFAULT_ORGANIZATION}
+            <br />
+            <span className="login-form-hint">
+              Dành cho cán bộ được cấp tài khoản
+            </span>
           </p>
 
           <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
@@ -161,12 +191,26 @@ export default function LoginPage() {
               />
             </Form.Item>
 
-            <Form.Item style={{ textAlign: "right", marginBottom: 12 }}>
-              <Typography.Link
-                onClick={() => navigate("/account/forgot-password")}
-              >
-                Quên mật khẩu?
-              </Typography.Link>
+            <Form.Item style={{ marginBottom: 12 }}>
+              <div className="login-form-row">
+                <Controller
+                  name="rememberMe"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      checked={field.value}
+                      onChange={(event) => field.onChange(event.target.checked)}
+                    >
+                      Ghi nhớ đăng nhập
+                    </Checkbox>
+                  )}
+                />
+                <Typography.Link
+                  onClick={() => navigate("/account/forgot-password")}
+                >
+                  Quên mật khẩu?
+                </Typography.Link>
+              </div>
             </Form.Item>
 
             <Form.Item style={{ marginBottom: 0 }}>

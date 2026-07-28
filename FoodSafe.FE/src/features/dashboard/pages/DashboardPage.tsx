@@ -13,14 +13,7 @@ import {
   type TableColumnsType,
 } from "antd";
 import {
-  ShopOutlined,
-  FileProtectOutlined,
-  SafetyCertificateOutlined,
-  WarningOutlined,
   AuditOutlined,
-  AlertOutlined,
-  ExperimentOutlined,
-  MedicineBoxOutlined,
   PlusOutlined,
   PieChartOutlined,
   BarChartOutlined,
@@ -45,7 +38,7 @@ import type {
 } from "../types/dashboard.types";
 
 interface StatCardProps {
-  icon: React.ReactNode;
+  icon: string;
   iconBg: string;
   iconColor: string;
   label: string;
@@ -104,34 +97,29 @@ const QUICK_ACTIONS = [
     icon: <PlusOutlined />,
     label: "Thêm cơ sở mới",
     permission: "FoodSafe.BusinessManagement.Businesses.Create",
-    color: brand.green,
   },
   {
     key: "/self-declarations",
     icon: <SolutionOutlined />,
     label: "Tự công bố SP",
     permission: "FoodSafe.BusinessManagement.SelfDeclarations.Create",
-    color: brand.blue,
   },
   {
     key: "/inspection",
     icon: <AuditOutlined />,
     label: "Kế hoạch thanh tra",
     permission: "FoodSafe.Inspection.Plans.View",
-    color: "#6B21A8",
   },
   {
     key: "/reporting",
     icon: <BarChartOutlined />,
     label: "Báo cáo",
     permission: "FoodSafe.Reporting.NdtpReports.View",
-    color: brand.amber,
   },
   {
     key: "/statistics",
     icon: <PieChartOutlined />,
     label: "Thống kê tổng hợp",
-    color: brand.greenMid,
   },
 ] as const;
 
@@ -296,12 +284,13 @@ export default function DashboardPage() {
         {QUICK_ACTIONS.filter(
           (a) =>
             !("permission" in a && a.permission) || hasPermission(a.permission),
-        ).map((action) => (
+        ).map((action, index) => (
           <Button
             key={action.key}
+            /* Thiết kế dùng một nút chính, các nút còn lại là nút viền. */
+            type={index === 0 ? "primary" : "default"}
             icon={action.icon}
             onClick={() => navigate(action.key)}
-            style={{ borderColor: action.color, color: action.color }}
           >
             {action.label}
           </Button>
@@ -311,7 +300,7 @@ export default function DashboardPage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            icon={<ShopOutlined />}
+            icon={"🏭"}
             iconBg={brand.greenPale}
             iconColor={brand.greenDark}
             label="Cơ sở SXKD"
@@ -321,7 +310,7 @@ export default function DashboardPage() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            icon={<FileProtectOutlined />}
+            icon={"📄"}
             iconBg="#E8EFFD"
             iconColor={brand.navy}
             label="Hồ sơ công bố"
@@ -331,7 +320,7 @@ export default function DashboardPage() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            icon={<SafetyCertificateOutlined />}
+            icon={"📋"}
             iconBg={brand.greenPale}
             iconColor={brand.success}
             label="Giấy chứng nhận"
@@ -345,7 +334,7 @@ export default function DashboardPage() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            icon={<WarningOutlined />}
+            icon={"⏰"}
             iconBg="#FBF1E2"
             iconColor={brand.amber}
             label="Sắp hết hạn"
@@ -358,7 +347,7 @@ export default function DashboardPage() {
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            icon={<AuditOutlined />}
+            icon={"🔍"}
             iconBg="#F3E8FD"
             iconColor="#6B21A8"
             label="Thanh tra"
@@ -368,7 +357,7 @@ export default function DashboardPage() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            icon={<MedicineBoxOutlined />}
+            icon={"🚑"}
             iconBg="#FBEAE7"
             iconColor={brand.red}
             label="Ngộ độc thực phẩm"
@@ -378,7 +367,7 @@ export default function DashboardPage() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            icon={<AlertOutlined />}
+            icon={"⚠️"}
             iconBg="#FBF1E2"
             iconColor={brand.amber}
             label="Cảnh báo & phân tích"
@@ -388,7 +377,7 @@ export default function DashboardPage() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            icon={<ExperimentOutlined />}
+            icon={"🧪"}
             iconBg="#E8EFFD"
             iconColor={brand.blue}
             label="Kiểm nghiệm"

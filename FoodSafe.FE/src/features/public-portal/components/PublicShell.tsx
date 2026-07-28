@@ -7,14 +7,15 @@ interface NavEntry {
   label: string;
 }
 
+/** Thứ tự và nhãn theo bản thiết kế; hai mục cuối là route sẵn có của hệ thống. */
 const NAV_ITEMS: NavEntry[] = [
   { to: "/cong-thong-tin", label: "Trang chủ" },
   { to: "/tra-cuu-chung", label: "Tra cứu" },
-  { to: "/tra-cuu-giay-phep", label: "Tra cứu giấy phép" },
   { to: "/co-so-bi-canh-bao", label: "Cơ sở bị cảnh báo" },
   { to: "/tin-tuc", label: "Tin tức" },
   { to: "/tra-cuu-van-ban", label: "Văn bản" },
   { to: "/gui-phan-anh", label: "Gửi phản ánh" },
+  { to: "/tra-cuu-giay-phep", label: "Tra cứu giấy phép" },
   { to: "/gui-tin", label: "Gửi tin" },
 ];
 
@@ -22,6 +23,14 @@ const DEFAULT_HOTLINE = "0981 815 815";
 const DEFAULT_ADDRESS =
   "Tầng 18, Tòa nhà liên cơ quan số 3, P. Hồng Hà, TP. Hạ Long";
 const DEFAULT_EMAIL = "ccvsattp@quangninh.gov.vn";
+
+/**
+ * Cấu hình branding trả về chuỗi rỗng khi quản trị viên chưa nhập, nên `??`
+ * không đủ — phải coi chuỗi rỗng/khoảng trắng là chưa có giá trị.
+ */
+function orDefault(value: string | undefined, fallback: string): string {
+  return value?.trim() ? value.trim() : fallback;
+}
 
 interface PublicShellProps {
   children: ReactNode;
@@ -32,7 +41,9 @@ interface PublicShellProps {
 export function PublicShell({ children, fullBleed = false }: PublicShellProps) {
   const navigate = useNavigate();
   const branding = useBranding();
-  const hotline = branding.data?.contactPhone ?? DEFAULT_HOTLINE;
+  const hotline = orDefault(branding.data?.contactPhone, DEFAULT_HOTLINE);
+  const email = orDefault(branding.data?.contactEmail, DEFAULT_EMAIL);
+  const address = orDefault(branding.data?.contactAddress, DEFAULT_ADDRESS);
 
   return (
     <div className="portal-layout">
@@ -109,7 +120,7 @@ export function PublicShell({ children, fullBleed = false }: PublicShellProps) {
             <div className="portal-footer-text">
               Chi cục An toàn vệ sinh thực phẩm — Sở Y tế Quảng Ninh
               <br />
-              {branding.data?.contactAddress ?? DEFAULT_ADDRESS}
+              {address}
             </div>
           </div>
 
@@ -127,7 +138,7 @@ export function PublicShell({ children, fullBleed = false }: PublicShellProps) {
             <div className="portal-footer-text">
               Hotline: <span className="portal-footer-hotline">{hotline}</span>
               <br />
-              Email: {branding.data?.contactEmail ?? DEFAULT_EMAIL}
+              Email: {email}
               <br />
               Giờ hành chính: T2–T6, 8:00–17:00
             </div>

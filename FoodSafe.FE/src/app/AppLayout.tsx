@@ -13,35 +13,12 @@ import {
   type MenuProps,
 } from "antd";
 import {
-  DashboardOutlined,
-  ApartmentOutlined,
-  EnvironmentOutlined,
   UserOutlined,
   LogoutOutlined,
   KeyOutlined,
   BellOutlined,
   SearchOutlined,
-  SafetyCertificateOutlined,
-  DatabaseOutlined,
-  ShopOutlined,
-  FileTextOutlined,
-  SolutionOutlined,
-  NotificationOutlined,
-  GlobalOutlined,
   MenuOutlined,
-  FileProtectOutlined,
-  ExportOutlined,
-  AuditOutlined,
-  AlertOutlined,
-  MedicineBoxOutlined,
-  BarChartOutlined,
-  ExperimentOutlined,
-  FundOutlined,
-  BookOutlined,
-  PieChartOutlined,
-  FileSearchOutlined,
-  ToolOutlined,
-  ApiOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -98,121 +75,103 @@ interface NavGroup {
 
 type NavEntry = NavItem | NavGroup;
 
+/**
+ * Icon điều hướng dạng ký tự như trong bản thiết kế. Nhãn chữ nằm ngay cạnh
+ * nên icon được ẩn khỏi trình đọc màn hình để tránh đọc lặp.
+ */
+function navIcon(glyph: string) {
+  return (
+    <span className="nav-icon" aria-hidden="true">
+      {glyph}
+    </span>
+  );
+}
+
 const NAV_CONFIG: NavEntry[] = [
   {
-    key: "/dashboard",
-    icon: <DashboardOutlined />,
-    label: "Bảng điều khiển",
-  },
-  {
-    key: "system",
-    label: "Quản trị hệ thống",
+    key: "overview",
+    label: "Tổng quan",
     children: [
-      {
-        key: "/administration/identity",
-        icon: <SafetyCertificateOutlined />,
-        label: "Tài khoản và quyền",
-        permission: "FoodSafe.SystemAdmin",
-      },
-      {
-        key: "/organizations",
-        icon: <ApartmentOutlined />,
-        label: "Đơn vị",
-        permission: "FoodSafe.Organizations.View",
-      },
-      {
-        key: "/geography",
-        icon: <EnvironmentOutlined />,
-        label: "Địa bàn",
-        permission: "FoodSafe.GeographicCatalogs.View",
-      },
-      {
-        key: "/catalogs",
-        icon: <DatabaseOutlined />,
-        label: "Danh mục dùng chung",
-        permission: "FoodSafe.Catalogs.View",
-      },
-      {
-        key: "/administration/audit-logs",
-        icon: <FileSearchOutlined />,
-        label: "Nhật ký hoạt động",
-        permission: "FoodSafe.SystemAdmin.AuditLogs",
-      },
-      {
-        key: "/administration/settings",
-        icon: <ToolOutlined />,
-        label: "Cấu hình hệ thống",
-        permission: "FoodSafe.SystemAdmin.Settings",
-      },
-    ],
-  },
-  {
-    key: "/businesses",
-    icon: <ShopOutlined />,
-    label: "Cơ sở và sản phẩm",
-    permission: [
-      "FoodSafe.BusinessManagement.Businesses.View",
-      "FoodSafe.BusinessManagement.Products.View",
+      { key: "/dashboard", icon: navIcon("📊"), label: "Bảng điều khiển" },
+      { key: "/statistics", icon: navIcon("📈"), label: "Thống kê tổng hợp" },
     ],
   },
   {
     key: "licensing",
-    label: "Công bố và giấy phép",
+    label: "Cơ sở & giấy phép",
     children: [
       {
+        key: "/businesses",
+        icon: navIcon("🏭"),
+        label: "Cơ sở và sản phẩm",
+        permission: [
+          "FoodSafe.BusinessManagement.Businesses.View",
+          "FoodSafe.BusinessManagement.Products.View",
+        ],
+      },
+      {
         key: "/self-declarations",
-        icon: <FileTextOutlined />,
+        icon: navIcon("📄"),
         label: "Hồ sơ tự công bố",
         permission: "FoodSafe.BusinessManagement.SelfDeclarations.View",
       },
       {
         key: "/product-registrations",
-        icon: <SolutionOutlined />,
+        icon: navIcon("✅"),
         label: "Đăng ký công bố SP",
         permission: "FoodSafe.Licensing.ProductRegistrations.View",
       },
       {
         key: "/advertisement-registrations",
-        icon: <NotificationOutlined />,
+        icon: navIcon("📣"),
         label: "Đăng ký quảng cáo",
         permission: "FoodSafe.Licensing.AdRegistrations.View",
       },
       {
         key: "/eligibility-certificates",
-        icon: <FileProtectOutlined />,
+        icon: navIcon("📋"),
         label: "Giấy đủ ĐK ATTP",
         permission: "FoodSafe.Licensing.EligibilityCertificates.View",
       },
       {
         key: "/cfs-certificates",
-        icon: <GlobalOutlined />,
+        icon: navIcon("🌐"),
         label: "Chứng nhận CFS",
         permission: "FoodSafe.Licensing.CfsCertificates.View",
       },
       {
         key: "/export-food-certificates",
-        icon: <ExportOutlined />,
+        icon: navIcon("🚢"),
         label: "GCN Xuất khẩu",
         permission: "FoodSafe.Licensing.ExportCertificates.View",
       },
     ],
   },
   {
-    key: "/inspection",
-    icon: <AuditOutlined />,
-    label: "Thanh tra - Kiểm tra",
-    permission: [
-      "FoodSafe.Inspection.Plans.View",
-      "FoodSafe.Inspection.Results.View",
-    ],
-  },
-  {
-    key: "alerts-testing",
-    label: "Cảnh báo & Kiểm nghiệm",
+    key: "operations",
+    label: "Nghiệp vụ",
     children: [
       {
+        key: "/inspection",
+        icon: navIcon("🔍"),
+        label: "Thanh tra - Kiểm tra",
+        permission: [
+          "FoodSafe.Inspection.Plans.View",
+          "FoodSafe.Inspection.Results.View",
+        ],
+      },
+      {
+        key: "/food-poisoning",
+        icon: navIcon("🚑"),
+        label: "Ngộ độc thực phẩm",
+        permission: [
+          "FoodSafe.FoodPoisoning.Cases.View",
+          "FoodSafe.FoodPoisoning.Incidents.View",
+        ],
+      },
+      {
         key: "/alerts-news",
-        icon: <AlertOutlined />,
+        icon: navIcon("📢"),
         label: "Cảnh báo và Tin tức",
         permission: [
           "FoodSafe.AlertsAndTesting.Alerts.View",
@@ -221,56 +180,84 @@ const NAV_CONFIG: NavEntry[] = [
       },
       {
         key: "/risk-analysis",
-        icon: <FundOutlined />,
+        icon: navIcon("⚖️"),
         label: "Phân tích nguy cơ",
         permission: "FoodSafe.AlertsAndTesting.RiskAnalyses.View",
       },
       {
         key: "/testing-results",
-        icon: <ExperimentOutlined />,
+        icon: navIcon("🧪"),
         label: "Kết quả kiểm nghiệm",
         permission: "FoodSafe.AlertsAndTesting.TestingResults.View",
       },
       {
         key: "/documents",
-        icon: <BookOutlined />,
+        icon: navIcon("📚"),
         label: "Văn bản pháp quy",
         permission: "FoodSafe.AlertsAndTesting.Documents.View",
+      },
+      {
+        key: "/reporting",
+        icon: navIcon("🗂️"),
+        label: "Báo cáo",
+        permission: [
+          "FoodSafe.Reporting.NdtpReports.View",
+          "FoodSafe.Reporting.AtpWorkReports.View",
+          "FoodSafe.Reporting.ActionMonthReports.View",
+        ],
       },
     ],
   },
   {
-    key: "/food-poisoning",
-    icon: <MedicineBoxOutlined />,
-    label: "Ngộ độc thực phẩm",
-    permission: [
-      "FoodSafe.FoodPoisoning.Cases.View",
-      "FoodSafe.FoodPoisoning.Incidents.View",
+    key: "system",
+    label: "Quản trị hệ thống",
+    children: [
+      {
+        key: "/administration/identity",
+        icon: navIcon("🛡️"),
+        label: "Tài khoản và quyền",
+        permission: "FoodSafe.SystemAdmin",
+      },
+      {
+        key: "/organizations",
+        icon: navIcon("🏛"),
+        label: "Đơn vị",
+        permission: "FoodSafe.Organizations.View",
+      },
+      {
+        key: "/geography",
+        icon: navIcon("🗺️"),
+        label: "Địa bàn",
+        permission: "FoodSafe.GeographicCatalogs.View",
+      },
+      {
+        key: "/catalogs",
+        icon: navIcon("🗃️"),
+        label: "Danh mục dùng chung",
+        permission: "FoodSafe.Catalogs.View",
+      },
+      {
+        key: "/data-integration",
+        icon: navIcon("🔌"),
+        label: "Tích hợp dữ liệu",
+        permission: [
+          "FoodSafe.DataIntegration.ApiEndpoints.View",
+          "FoodSafe.DataIntegration.CallHistory.View",
+        ],
+      },
+      {
+        key: "/administration/audit-logs",
+        icon: navIcon("📝"),
+        label: "Nhật ký hoạt động",
+        permission: "FoodSafe.SystemAdmin.AuditLogs",
+      },
+      {
+        key: "/administration/settings",
+        icon: navIcon("⚙️"),
+        label: "Cấu hình hệ thống",
+        permission: "FoodSafe.SystemAdmin.Settings",
+      },
     ],
-  },
-  {
-    key: "/reporting",
-    icon: <BarChartOutlined />,
-    label: "Báo cáo",
-    permission: [
-      "FoodSafe.Reporting.NdtpReports.View",
-      "FoodSafe.Reporting.AtpWorkReports.View",
-      "FoodSafe.Reporting.ActionMonthReports.View",
-    ],
-  },
-  {
-    key: "/data-integration",
-    icon: <ApiOutlined />,
-    label: "Tích hợp dữ liệu",
-    permission: [
-      "FoodSafe.DataIntegration.ApiEndpoints.View",
-      "FoodSafe.DataIntegration.CallHistory.View",
-    ],
-  },
-  {
-    key: "/statistics",
-    icon: <PieChartOutlined />,
-    label: "Thống kê tổng hợp",
   },
 ];
 

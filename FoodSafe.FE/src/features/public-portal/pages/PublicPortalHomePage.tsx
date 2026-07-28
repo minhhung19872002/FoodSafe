@@ -1,29 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Input, Skeleton } from "antd";
-import {
-  SafetyCertificateOutlined,
-  WarningOutlined,
-  NotificationOutlined,
-  FileTextOutlined,
-  AlertOutlined,
-  ShopOutlined,
-  FileProtectOutlined,
-  GlobalOutlined,
-  ExportOutlined,
-  SolutionOutlined,
-  FundOutlined,
-} from "@ant-design/icons";
 import dayjs from "dayjs";
 import { brand } from "@/theme/themeConfig";
+import { usePublicCounts } from "@/hooks/usePublicCounts";
 import { PublicShell } from "../components/PublicShell";
-import {
-  usePublicAlerts,
-  usePublicBusinessSearch,
-  usePublicEligibilityCertificates,
-  usePublicNews,
-  usePublicSelfDeclarations,
-} from "../api/publicPortalQueries";
+import { usePublicAlerts, usePublicNews } from "../api/publicPortalQueries";
 import {
   ALERT_SEVERITY,
   type AlertSeverity,
@@ -33,7 +15,7 @@ interface PortalTile {
   title: string;
   description: string;
   to: string;
-  icon: React.ReactNode;
+  icon: string;
   iconBg: string;
   iconColor: string;
 }
@@ -43,7 +25,7 @@ const PORTAL_TILES: PortalTile[] = [
     title: "Cơ sở SXKD thực phẩm",
     description: "Kiểm tra cơ sở đã đăng ký quản lý ATTP",
     to: "/tra-cuu-co-so",
-    icon: <ShopOutlined />,
+    icon: "🏭",
     iconBg: brand.greenPale,
     iconColor: brand.greenDark,
   },
@@ -51,7 +33,7 @@ const PORTAL_TILES: PortalTile[] = [
     title: "Hồ sơ tự công bố",
     description: "Sản phẩm doanh nghiệp tự công bố chất lượng",
     to: "/tra-cuu-tu-cong-bo",
-    icon: <FileTextOutlined />,
+    icon: "📄",
     iconBg: "#E8EFFD",
     iconColor: brand.navy,
   },
@@ -59,7 +41,7 @@ const PORTAL_TILES: PortalTile[] = [
     title: "Đăng ký công bố sản phẩm",
     description: "TPBVSK, phụ gia, sản phẩm dinh dưỡng đặc biệt",
     to: "/tra-cuu-dang-ky-cong-bo",
-    icon: <SolutionOutlined />,
+    icon: "✅",
     iconBg: brand.greenPale,
     iconColor: brand.greenDark,
   },
@@ -67,7 +49,7 @@ const PORTAL_TILES: PortalTile[] = [
     title: "Giấy đủ điều kiện ATTP",
     description: "Cơ sở sản xuất, kinh doanh, dịch vụ ăn uống",
     to: "/tra-cuu-giay-du-dieu-kien",
-    icon: <SafetyCertificateOutlined />,
+    icon: "🛡️",
     iconBg: "#FBF1E2",
     iconColor: brand.amber,
   },
@@ -75,7 +57,7 @@ const PORTAL_TILES: PortalTile[] = [
     title: "Xác nhận quảng cáo",
     description: "Nội dung quảng cáo thực phẩm đã được duyệt",
     to: "/tra-cuu-dang-ky-quang-cao",
-    icon: <NotificationOutlined />,
+    icon: "📢",
     iconBg: "#F3E8FD",
     iconColor: "#6B21A8",
   },
@@ -83,7 +65,7 @@ const PORTAL_TILES: PortalTile[] = [
     title: "Chứng nhận CFS",
     description: "Certificate of Free Sale cho sản phẩm xuất khẩu",
     to: "/tra-cuu-cfs",
-    icon: <GlobalOutlined />,
+    icon: "🌐",
     iconBg: "#E8EFFD",
     iconColor: brand.navy,
   },
@@ -91,7 +73,7 @@ const PORTAL_TILES: PortalTile[] = [
     title: "GCN xuất khẩu thực phẩm",
     description: "Giấy chứng nhận phục vụ xuất khẩu thực phẩm",
     to: "/tra-cuu-gcn-xuat-khau",
-    icon: <ExportOutlined />,
+    icon: "🚢",
     iconBg: "#FBEAE7",
     iconColor: brand.red,
   },
@@ -99,7 +81,7 @@ const PORTAL_TILES: PortalTile[] = [
     title: "Tra cứu giấy phép (tổng hợp)",
     description: "Tra cứu tất cả loại giấy phép, chứng nhận ATTP",
     to: "/tra-cuu-giay-phep",
-    icon: <FileProtectOutlined />,
+    icon: "📋",
     iconBg: brand.greenPale,
     iconColor: brand.greenDark,
   },
@@ -107,7 +89,7 @@ const PORTAL_TILES: PortalTile[] = [
     title: "Cơ sở bị cảnh báo",
     description: "Cơ sở đang bị cảnh báo vi phạm an toàn thực phẩm",
     to: "/co-so-bi-canh-bao",
-    icon: <WarningOutlined />,
+    icon: "⚠️",
     iconBg: "#FBEAE7",
     iconColor: brand.red,
   },
@@ -115,7 +97,7 @@ const PORTAL_TILES: PortalTile[] = [
     title: "Tin tức & Cảnh báo",
     description: "Tin tức, cảnh báo và phân tích nguy cơ ATTP",
     to: "/tin-tuc",
-    icon: <FundOutlined />,
+    icon: "📰",
     iconBg: "#E8EFFD",
     iconColor: brand.blue,
   },
@@ -123,7 +105,7 @@ const PORTAL_TILES: PortalTile[] = [
     title: "Văn bản pháp quy",
     description: "Văn bản quy phạm pháp luật về an toàn thực phẩm",
     to: "/tra-cuu-van-ban",
-    icon: <FileTextOutlined />,
+    icon: "📄",
     iconBg: brand.greenPale,
     iconColor: brand.greenDark,
   },
@@ -131,14 +113,12 @@ const PORTAL_TILES: PortalTile[] = [
     title: "Gửi phản ánh",
     description: "Phản ánh sự cố an toàn thực phẩm tới cơ quan quản lý",
     to: "/gui-phan-anh",
-    icon: <AlertOutlined />,
+    icon: "📣",
     iconBg: "#FBEAE7",
     iconColor: brand.red,
   },
 ];
 
-/** Chỉ cần tổng số bản ghi nên lấy trang rỗng cho nhẹ. */
-const COUNT_ONLY = { SkipCount: 0, MaxResultCount: 1 } as const;
 const PREVIEW = { SkipCount: 0, MaxResultCount: 4 } as const;
 
 const SEVERITY_DOT: Record<AlertSeverity, string> = {
@@ -169,9 +149,7 @@ export default function PublicPortalHomePage() {
   const navigate = useNavigate();
   const [heroQuery, setHeroQuery] = useState("");
 
-  const businesses = usePublicBusinessSearch(COUNT_ONLY);
-  const eligibility = usePublicEligibilityCertificates(COUNT_ONLY);
-  const selfDeclarations = usePublicSelfDeclarations(COUNT_ONLY);
+  const counts = usePublicCounts();
   const alerts = usePublicAlerts(PREVIEW);
   const news = usePublicNews(PREVIEW);
 
@@ -187,29 +165,25 @@ export default function PublicPortalHomePage() {
   const stats = [
     {
       label: "Cơ sở SXKD được quản lý",
-      value: formatCount(businesses.data?.totalCount),
+      value: formatCount(counts.data?.businesses),
       color: brand.green,
-      loading: businesses.isLoading,
     },
     {
       label: "Giấy đủ điều kiện ATTP",
-      value: formatCount(eligibility.data?.totalCount),
+      value: formatCount(counts.data?.eligibilityCertificates),
       color: brand.green,
-      loading: eligibility.isLoading,
     },
     {
       label: "Hồ sơ tự công bố",
-      value: formatCount(selfDeclarations.data?.totalCount),
+      value: formatCount(counts.data?.selfDeclarations),
       color: brand.blue,
-      loading: selfDeclarations.isLoading,
     },
     {
       label: "Cảnh báo đang công khai",
-      value: formatCount(alerts.data?.totalCount),
+      value: formatCount(counts.data?.alerts),
       color: brand.red,
-      loading: alerts.isLoading,
     },
-  ];
+  ].map((stat) => ({ ...stat, loading: counts.isLoading }));
 
   return (
     <PublicShell fullBleed>
@@ -321,7 +295,7 @@ export default function PublicPortalHomePage() {
         <div className="portal-split">
           <div className="page-card">
             <div className="portal-block-head">
-              <h3 className="portal-block-title">⚠ Cảnh báo mới nhất</h3>
+              <h3 className="portal-block-title">⚠️ Cảnh báo mới nhất</h3>
               <Link to="/co-so-bi-canh-bao" style={{ fontSize: 13 }}>
                 Xem tất cả
               </Link>
