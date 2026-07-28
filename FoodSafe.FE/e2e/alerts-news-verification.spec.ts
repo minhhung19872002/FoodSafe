@@ -189,6 +189,100 @@ test.describe("alerts and news verification (F-016)", () => {
     expect(invalidSource.status()).toBe(400);
   });
 
+  test("linked references and length limits are validated server-side", async ({
+    page,
+  }) => {
+    await signInAsAdmin(page);
+    const headers = await csrfHeaders(page);
+    const request = page.context().request;
+    const bogusId = "11111111-2222-3333-4444-555555555555";
+
+    const bogusBusiness = await request.post("/api/v1/app/atp-alert", {
+      headers,
+      maxRedirects: 0,
+      data: {
+        title: "Cơ sở không tồn tại",
+        content: "businessId lạ phải bị chặn, không được trả 500",
+        category: 1,
+        severity: 2,
+        source: 1,
+        businessId: bogusId,
+      },
+    });
+    expect([400, 403]).toContain(bogusBusiness.status());
+    expect(await bogusBusiness.text()).toContain("FoodSafe:Alert:0005");
+
+    const bogusLinkedAlert = await request.post("/api/v1/app/atp-news", {
+      headers,
+      maxRedirects: 0,
+      data: {
+        title: "Cảnh báo liên kết không tồn tại",
+        content: "linkedAlertIds lạ phải bị chặn, không được trả 500",
+        linkedAlertIds: [bogusId],
+      },
+    });
+    expect([400, 403]).toContain(bogusLinkedAlert.status());
+    expect(await bogusLinkedAlert.text()).toContain("FoodSafe:News:0007");
+
+    const longSummary = await request.post("/api/v1/app/atp-news", {
+      headers,
+      maxRedirects: 0,
+      data: {
+        title: "Tóm tắt quá dài",
+        content: "summary 1500 ký tự phải trả 400",
+        summary: "x".repeat(1500),
+      },
+    });
+    expect(longSummary.status()).toBe(400);
+
+    const longPhone = await request.post("/api/v1/app/atp-alert", {
+      headers,
+      maxRedirects: 0,
+      data: {
+        title: "SĐT quá dài",
+        content: "reporterPhone 30 ký tự phải trả 400",
+        category: 1,
+        severity: 2,
+        source: 1,
+        reporterPhone: "0".repeat(30),
+      },
+    });
+    expect(longPhone.status()).toBe(400);
+  });
+
+  test("editing a draft alert can change its source", async ({ page }) => {
+    await signInAsAdmin(page);
+    const headers = await csrfHeaders(page);
+    const suffix = Date.now().toString().slice(-8);
+    const alert = await createDraftAlert(
+      page,
+      headers,
+      `E2E-ALERTV Nguồn ${suffix}`,
+    );
+
+    try {
+      const update = await page.context().request.put(
+        `/api/v1/app/atp-alert/${alert.id}`,
+        {
+          headers,
+          maxRedirects: 0,
+          data: {
+            title: `E2E-ALERTV Nguồn ${suffix}`,
+            content: "Đổi nguồn từ Nội bộ sang Từ dân",
+            category: 1,
+            severity: 2,
+            source: 2,
+          },
+        },
+      );
+      expect(update.ok(), await update.text()).toBeTruthy();
+      const updated = (await update.json()) as { source: number | string };
+      expect(String(updated.source)).toMatch(/^(PublicReport|2)$/);
+    } finally {
+      await deleteAlert(page, headers, alert.id);
+    }
+  });
+
   test("persistence after reload and empty state", async ({ page }) => {
     await signInAsAdmin(page);
     const headers = await csrfHeaders(page);
@@ -215,9 +309,7 @@ test.describe("alerts and news verification (F-016)", () => {
         .fill("KHONG-TON-TAI-XYZ-99999");
       await page.keyboard.press("Enter");
       await expect(
-        page
-          .locator(".ant-empty-description", { hasText: "Trống" })
-          .first(),
+        page.getByText("Không tìm thấy kết quả phù hợp").first(),
       ).toBeVisible({ timeout: 10_000 });
     } finally {
       await deleteAlert(page, headers, alert.id);

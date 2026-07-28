@@ -53,8 +53,7 @@ public class AtpAlertAppService : ApplicationService
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
 
-        query = query.OrderByDescending(x => x.CreationTime);
-        query = query.PageBy(input);
+        query = ApplySorting(query, input.Sorting).PageBy(input);
 
         var alerts = await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
         var dtos = await ToDtosAsync(alerts);
@@ -74,6 +73,8 @@ public class AtpAlertAppService : ApplicationService
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.Create, _cancellationTokens.Token);
         var orgId = scope.OrganizationIds.First();
+
+        await EnsureBusinessAccessibleAsync(input.BusinessId);
 
         var alert = AtpAlert.Create(
             GuidGenerator.Create(),
@@ -100,11 +101,14 @@ public class AtpAlertAppService : ApplicationService
     {
         var alert = await GetScopedAsync(id, DataScopeOperation.Edit);
 
+        await EnsureBusinessAccessibleAsync(input.BusinessId);
+
         alert.Update(
             input.Title,
             input.Content,
             input.Category,
             input.Severity,
+            input.Source,
             input.AlertNumber,
             input.AffectedArea,
             input.AffectedProducts,
@@ -162,6 +166,46 @@ public class AtpAlertAppService : ApplicationService
                ?? throw new BusinessException(FoodSafeDomainErrorCodes.Alert.NotFound);
     }
 
+    // Chỉ cho phép gắn cơ sở tồn tại và thuộc phạm vi đơn vị của người dùng —
+    // chặn cả lỗi FK 500 lẫn việc dò/gắn cơ sở của đơn vị khác qua API.
+    private async Task EnsureBusinessAccessibleAsync(Guid? businessId)
+    {
+        if (!businessId.HasValue)
+            return;
+
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.View, _cancellationTokens.Token);
+        var query = (await _businesses.GetQueryableAsync())
+            .Where(x => x.Id == businessId.Value);
+        if (!scope.HasGlobalAccess)
+            query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
+
+        if (!await AsyncExecuter.AnyAsync(query, _cancellationTokens.Token))
+            throw new BusinessException(FoodSafeDomainErrorCodes.Alert.BusinessNotAccessible);
+    }
+
+    // Sắp xếp theo yêu cầu của client trong danh sách cột cho phép; mặc định
+    // mới nhất lên đầu.
+    private static IOrderedQueryable<AtpAlert> ApplySorting(
+        IQueryable<AtpAlert> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("title", true) => query.OrderByDescending(x => x.Title),
+            ("title", false) => query.OrderBy(x => x.Title),
+            ("severity", true) => query.OrderByDescending(x => x.Severity),
+            ("severity", false) => query.OrderBy(x => x.Severity),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _ => query.OrderByDescending(x => x.CreationTime)
+        };
+    }
+
     private async Task<List<AtpAlertDto>> ToDtosAsync(IReadOnlyCollection<AtpAlert> alerts)
     {
         var businessIds = alerts.Where(a => a.BusinessId.HasValue)
@@ -170,10 +214,13 @@ public class AtpAlertAppService : ApplicationService
         Dictionary<Guid, string> businesses = new();
         if (businessIds.Length > 0)
         {
-            var bQuery = await _businesses.GetQueryableAsync();
-            var rows = await AsyncExecuter.ToListAsync(
-                bQuery.Where(x => businessIds.Contains(x.Id)),
-                _cancellationTokens.Token);
+            var scope = await _dataScopeProvider.GetAsync(
+                DataScopeOperation.View, _cancellationTokens.Token);
+            var bQuery = (await _businesses.GetQueryableAsync())
+                .Where(x => businessIds.Contains(x.Id));
+            if (!scope.HasGlobalAccess)
+                bQuery = bQuery.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
+            var rows = await AsyncExecuter.ToListAsync(bQuery, _cancellationTokens.Token);
             businesses = rows.ToDictionary(x => x.Id, x => x.Name);
         }
 

@@ -59,11 +59,13 @@ test.describe("alerts and news management", () => {
 
     let row = page.getByRole("row").filter({ hasText: title });
     await row.getByRole("button", { name: /Xuất bản/ }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
+      .click();
 
     row = page.getByRole("row").filter({ hasText: title });
-    await row.getByRole("button", { name: `Thao tác ${title}` }).click();
-    await page.getByRole("menuitem", { name: "Thu hồi" }).click();
+    await row.getByRole("button", { name: `Thu hồi ${title}` }).click();
     const recallDialog = page.getByRole("dialog", {
       name: "Thu hồi cảnh báo",
     });

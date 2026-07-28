@@ -134,6 +134,7 @@ export interface AlertFilter {
   severity?: AlertSeverity;
   source?: AlertSource;
   status?: AlertStatus;
+  sorting?: string;
   skipCount?: number;
   maxResultCount?: number;
 }
@@ -157,8 +158,13 @@ export interface AtpNews {
   status: NewsStatus;
   publishedAt?: string;
   publishedById?: string;
+  recalledById?: string;
+  recalledAt?: string;
   isPublic: boolean;
   isFeatured: boolean;
+  source: AlertSource;
+  reporterName?: string;
+  reporterContact?: string;
   creationTime: string;
   linkedAlerts: NewsLinkedAlert[];
 }
@@ -179,9 +185,20 @@ export interface NewsFilter {
   category?: string;
   status?: NewsStatus;
   source?: AlertSource;
+  sorting?: string;
   skipCount?: number;
   maxResultCount?: number;
 }
+
+/** Chuyên mục tin tức dùng chung cho form soạn tin và bộ lọc danh sách. */
+export const NEWS_CATEGORIES = [
+  "Hoạt động ATTP",
+  "Cảnh báo",
+  "Văn bản pháp luật",
+  "Tuyên truyền",
+  "Phản ánh người dân",
+  "Khác",
+] as const;
 
 export interface AlertOption {
   id: string;

@@ -48,8 +48,7 @@ public class AtpNewsAppService : ApplicationService
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
 
-        query = query.OrderByDescending(x => x.CreationTime);
-        query = query.PageBy(input);
+        query = ApplySorting(query, input.Sorting).PageBy(input);
 
         var articles = await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
         var dtos = await ToDtosAsync(articles);
@@ -69,6 +68,8 @@ public class AtpNewsAppService : ApplicationService
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.Create, _cancellationTokens.Token);
         var orgId = scope.OrganizationIds.First();
+
+        await EnsureAlertsAccessibleAsync(input.LinkedAlertIds);
 
         var article = AtpNews.Create(
             GuidGenerator.Create(),
@@ -92,6 +93,8 @@ public class AtpNewsAppService : ApplicationService
     public async Task<AtpNewsDto> UpdateAsync(Guid id, CreateUpdateAtpNewsDto input)
     {
         var article = await GetScopedAsync(id, DataScopeOperation.Edit);
+
+        await EnsureAlertsAccessibleAsync(input.LinkedAlertIds);
 
         article.Update(
             input.Title,
@@ -191,6 +194,48 @@ public class AtpNewsAppService : ApplicationService
                ?? throw new BusinessException(FoodSafeDomainErrorCodes.News.NotFound);
     }
 
+    // Chỉ cho phép liên kết cảnh báo tồn tại và thuộc phạm vi đơn vị của người
+    // dùng — chặn cả lỗi FK 500 lẫn việc dò/đọc cảnh báo của đơn vị khác qua API.
+    private async Task EnsureAlertsAccessibleAsync(IReadOnlyCollection<Guid> alertIds)
+    {
+        if (alertIds.Count == 0)
+            return;
+
+        var distinctIds = alertIds.Distinct().ToArray();
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.View, _cancellationTokens.Token);
+        var query = (await _alerts.GetQueryableAsync())
+            .Where(x => distinctIds.Contains(x.Id));
+        if (!scope.HasGlobalAccess)
+            query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
+
+        var accessibleCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
+        if (accessibleCount != distinctIds.Length)
+            throw new BusinessException(FoodSafeDomainErrorCodes.News.LinkedAlertNotAccessible);
+    }
+
+    // Sắp xếp theo yêu cầu của client trong danh sách cột cho phép; mặc định
+    // mới nhất lên đầu.
+    private static IOrderedQueryable<AtpNews> ApplySorting(
+        IQueryable<AtpNews> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("title", true) => query.OrderByDescending(x => x.Title),
+            ("title", false) => query.OrderBy(x => x.Title),
+            ("viewcount", true) => query.OrderByDescending(x => x.ViewCount),
+            ("viewcount", false) => query.OrderBy(x => x.ViewCount),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _ => query.OrderByDescending(x => x.CreationTime)
+        };
+    }
+
     private async Task<List<AtpNewsDto>> ToDtosAsync(IReadOnlyCollection<AtpNews> articles)
     {
         var alertIds = articles.SelectMany(a => a.LinkedAlerts.Select(la => la.AlertId))
@@ -199,10 +244,13 @@ public class AtpNewsAppService : ApplicationService
         Dictionary<Guid, string> alertTitles = new();
         if (alertIds.Length > 0)
         {
-            var aQuery = await _alerts.GetQueryableAsync();
-            var rows = await AsyncExecuter.ToListAsync(
-                aQuery.Where(x => alertIds.Contains(x.Id)),
-                _cancellationTokens.Token);
+            var scope = await _dataScopeProvider.GetAsync(
+                DataScopeOperation.View, _cancellationTokens.Token);
+            var aQuery = (await _alerts.GetQueryableAsync())
+                .Where(x => alertIds.Contains(x.Id));
+            if (!scope.HasGlobalAccess)
+                aQuery = aQuery.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
+            var rows = await AsyncExecuter.ToListAsync(aQuery, _cancellationTokens.Token);
             alertTitles = rows.ToDictionary(x => x.Id, x => x.Title);
         }
 

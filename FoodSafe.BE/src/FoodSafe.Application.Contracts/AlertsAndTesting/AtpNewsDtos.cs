@@ -44,10 +44,18 @@ public class CreateUpdateAtpNewsDto
     [Required]
     public string Content { get; set; } = string.Empty;
 
+    [StringLength(1000)]
     public string? Summary { get; set; }
+
+    [StringLength(500)]
     public string? ThumbnailStoragePath { get; set; }
+
+    [StringLength(100)]
     public string? Category { get; set; }
+
+    [StringLength(500)]
     public string? Tags { get; set; }
+
     public bool IsFeatured { get; set; }
     public List<Guid> LinkedAlertIds { get; set; } = new();
 }

@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { Checkbox, Form, Input, Modal, Select } from "antd";
 import { useAlertOptions } from "../api/alertsNewsQueries";
-import type { AtpNews, CreateUpdateNewsInput } from "../types/alertsNews.types";
+import {
+  NEWS_CATEGORIES,
+  type AtpNews,
+  type CreateUpdateNewsInput,
+} from "../types/alertsNews.types";
 
 interface FormValues {
   title: string;
@@ -20,14 +24,6 @@ interface Props {
   onCancel: () => void;
   onSubmit: (input: CreateUpdateNewsInput) => void;
 }
-
-const NEWS_CATEGORIES = [
-  "Hoạt động ATTP",
-  "Cảnh báo",
-  "Văn bản pháp luật",
-  "Tuyên truyền",
-  "Khác",
-];
 
 export function NewsEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
@@ -76,6 +72,9 @@ export function NewsEditorModal(props: Props) {
             title: values.title.trim(),
             content: values.content.trim(),
             summary: values.summary?.trim() || undefined,
+            // Form chưa có ô tải ảnh đại diện — giữ nguyên ảnh hiện có để
+            // việc sửa không âm thầm xóa mất.
+            thumbnailStoragePath: item?.thumbnailStoragePath,
             category: values.category || undefined,
             tags: values.tags?.trim() || undefined,
             isFeatured: values.isFeatured,
@@ -113,7 +112,7 @@ export function NewsEditorModal(props: Props) {
             />
           </Form.Item>
           <Form.Item name="tags" label="Thẻ (tags)">
-            <Input placeholder="tag1, tag2, tag3" />
+            <Input maxLength={500} placeholder="tag1, tag2, tag3" />
           </Form.Item>
         </div>
 
