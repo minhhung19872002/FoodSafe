@@ -171,3 +171,115 @@ export interface PagedResult<T> {
   totalCount: number;
   items: T[];
 }
+
+export const PARTNER_ACCOUNT_STATUS = {
+  Active: 1,
+  Suspended: 2,
+} as const;
+export type PartnerAccountStatus =
+  (typeof PARTNER_ACCOUNT_STATUS)[keyof typeof PARTNER_ACCOUNT_STATUS];
+
+export const PARTNER_ACCOUNT_STATUS_CONFIG: Record<
+  PartnerAccountStatus,
+  { color: string; label: string }
+> = {
+  [PARTNER_ACCOUNT_STATUS.Active]: { color: "green", label: "Hoạt động" },
+  [PARTNER_ACCOUNT_STATUS.Suspended]: { color: "default", label: "Tạm ngưng" },
+};
+
+export const INBOUND_SUBMISSION_STATUS = {
+  Received: 1,
+  Processed: 2,
+  Rejected: 3,
+} as const;
+export type InboundSubmissionStatus =
+  (typeof INBOUND_SUBMISSION_STATUS)[keyof typeof INBOUND_SUBMISSION_STATUS];
+
+export const INBOUND_SUBMISSION_STATUS_CONFIG: Record<
+  InboundSubmissionStatus,
+  { color: string; label: string }
+> = {
+  [INBOUND_SUBMISSION_STATUS.Received]: { color: "blue", label: "Đã nhận" },
+  [INBOUND_SUBMISSION_STATUS.Processed]: { color: "green", label: "Đã xử lý" },
+  [INBOUND_SUBMISSION_STATUS.Rejected]: { color: "red", label: "Từ chối" },
+};
+
+export interface PartnerAccount {
+  id: string;
+  organizationId: string;
+  code: string;
+  name: string;
+  externalSystem: string;
+  description?: string;
+  status: PartnerAccountStatus;
+  allowedDataTypes: SharedDataType[];
+  activeKeyCount: number;
+  creationTime: string;
+}
+
+export interface CreatePartnerAccount {
+  code: string;
+  name: string;
+  externalSystem: string;
+  allowedDataTypes: SharedDataType[];
+  description?: string;
+}
+
+export type UpdatePartnerAccount = Omit<CreatePartnerAccount, "code">;
+
+export interface PartnerAccountFilter {
+  filter?: string;
+  status?: PartnerAccountStatus;
+  skipCount: number;
+  maxResultCount: number;
+}
+
+export interface PartnerApiKey {
+  id: string;
+  partnerAccountId: string;
+  keyPrefix: string;
+  description?: string;
+  expiresAt?: string;
+  revokedAt?: string;
+  lastUsedAt?: string;
+  creationTime: string;
+}
+
+/** The raw key appears exactly once, in the issuance response. */
+export interface IssuedPartnerApiKey extends PartnerApiKey {
+  rawKey: string;
+}
+
+export interface IssuePartnerApiKeyInput {
+  expiresAt?: string;
+  description?: string;
+}
+
+export interface InboundSubmission {
+  id: string;
+  partnerAccountId: string;
+  partnerName: string;
+  organizationId: string;
+  dataType: SharedDataType;
+  schemaVersion: string;
+  requestId: string;
+  correlationId?: string;
+  recordCount: number;
+  receivedAt: string;
+  status: InboundSubmissionStatus;
+  rejectReason?: string;
+}
+
+export interface InboundSubmissionDetail extends InboundSubmission {
+  payload: string;
+}
+
+export interface InboundSubmissionFilter {
+  partnerAccountId?: string;
+  dataType?: SharedDataType;
+  status?: InboundSubmissionStatus;
+  fromDate?: string;
+  toDate?: string;
+  skipCount: number;
+  maxResultCount: number;
+}

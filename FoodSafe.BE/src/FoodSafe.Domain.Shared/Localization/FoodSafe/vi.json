@@ -275,6 +275,12 @@
     "Permission:DataIntegration.CallHistory": "Lịch sử API",
     "Permission:DataIntegration.CallHistory.View": "Xem lịch sử API",
     "Permission:DataIntegration.Share": "Chia sẻ dữ liệu liên thông",
+    "Permission:DataIntegration.Partners": "Đối tác liên thông",
+    "Permission:DataIntegration.Partners.View": "Xem đối tác liên thông",
+    "Permission:DataIntegration.Partners.Create": "Thêm đối tác liên thông",
+    "Permission:DataIntegration.Partners.Edit": "Sửa đối tác liên thông",
+    "Permission:DataIntegration.Partners.Delete": "Xóa đối tác liên thông",
+    "Permission:DataIntegration.Partners.ManageKeys": "Quản lý khóa API đối tác",
     "Permission:DataScope.All": "Truy cập dữ liệu tất cả đơn vị",
 
     "FoodSafe:DataIntegration:0001": "Không tìm thấy cấu hình API.",

@@ -97,6 +97,69 @@ public sealed class DataIntegrationApplicationContractTests
         registered.Count().ShouldBe(builders.Length);
     }
 
+    [Theory]
+    [InlineData("GetListAsync", null)]
+    [InlineData("GetAsync", null)]
+    [InlineData("CreateAsync", FoodSafePermissions.DataIntegration.Partners.Create)]
+    [InlineData("UpdateAsync", FoodSafePermissions.DataIntegration.Partners.Edit)]
+    [InlineData("ToggleStatusAsync", FoodSafePermissions.DataIntegration.Partners.Edit)]
+    [InlineData("DeleteAsync", FoodSafePermissions.DataIntegration.Partners.Delete)]
+    [InlineData("GetKeysAsync", FoodSafePermissions.DataIntegration.Partners.ManageKeys)]
+    [InlineData("IssueKeyAsync", FoodSafePermissions.DataIntegration.Partners.ManageKeys)]
+    [InlineData("RevokeKeyAsync", FoodSafePermissions.DataIntegration.Partners.ManageKeys)]
+    [InlineData("GetSubmissionsAsync", null)]
+    [InlineData("GetSubmissionAsync", null)]
+    public void Partner_admin_operations_should_use_least_privilege(
+        string methodName, string? expectedPermission)
+    {
+        typeof(PartnerAccountAppService)
+            .GetCustomAttribute<AuthorizeAttribute>()!
+            .Policy.ShouldBe(FoodSafePermissions.DataIntegration.Partners.View);
+
+        var method = typeof(PartnerAccountAppService).GetMethod(methodName);
+        method.ShouldNotBeNull();
+        method.GetCustomAttribute<AuthorizeAttribute>()?.Policy
+            .ShouldBe(expectedPermission);
+    }
+
+    [Fact]
+    public void Inbound_receive_service_authenticates_by_api_key_not_session()
+    {
+        // The partner-facing endpoint is anonymous at the ASP.NET layer by
+        // DESIGN: authentication is the hashed X-Api-Key, enforced inside
+        // ReceiveAsync, whose outcome the controller maps to 401/403/400.
+        typeof(PartnerInboundAppService)
+            .GetCustomAttribute<Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute>()
+            .ShouldNotBeNull();
+        var receive = typeof(PartnerInboundAppService).GetMethod("ReceiveAsync");
+        receive.ShouldNotBeNull();
+        // Argument validation must stay OFF: the interceptor would throw
+        // AbpValidationException ahead of the body, which the IActionResult
+        // controller surfaces as a 500 leaking the ABP error shape. The
+        // service validates in-method and returns outcomes as data.
+        receive.GetCustomAttribute<Volo.Abp.Validation.DisableValidationAttribute>()
+            .ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Partner_key_material_is_hashed_prefix_addressable_and_verifiable()
+    {
+        var (rawKey, keyPrefix, keyHash) = PartnerKeyMaterial.Generate();
+
+        rawKey.ShouldStartWith(PartnerKeyMaterial.Prefix);
+        keyPrefix.ShouldBe(rawKey[..PartnerApiKeyConsts.PrefixLength]);
+        keyHash.Length.ShouldBe(PartnerApiKeyConsts.HashLength);
+        keyHash.ShouldBe(keyHash.ToLowerInvariant());
+        // The stored hash never contains the raw key material.
+        keyHash.ShouldNotContain(rawKey[4..]);
+
+        PartnerKeyMaterial.Verify(rawKey, keyHash).ShouldBeTrue();
+        PartnerKeyMaterial.Verify(rawKey + "x", keyHash).ShouldBeFalse();
+
+        var second = PartnerKeyMaterial.Generate();
+        second.RawKey.ShouldNotBe(rawKey);
+    }
+
     [Fact]
     public void Call_log_service_should_be_read_only()
     {

@@ -233,6 +233,12 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.DataIntegration.ApiEndpoints.Delete,
         FoodSafePermissions.DataIntegration.CallHistory.Default,
         FoodSafePermissions.DataIntegration.CallHistory.View,
+        FoodSafePermissions.DataIntegration.Partners.Default,
+        FoodSafePermissions.DataIntegration.Partners.View,
+        FoodSafePermissions.DataIntegration.Partners.Create,
+        FoodSafePermissions.DataIntegration.Partners.Edit,
+        FoodSafePermissions.DataIntegration.Partners.Delete,
+        FoodSafePermissions.DataIntegration.Partners.ManageKeys,
         FoodSafePermissions.DataScope.All
     ];
 

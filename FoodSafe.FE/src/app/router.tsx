@@ -422,6 +422,7 @@ const appRoutes: RouteObject[] = [
               permission={[
                 "FoodSafe.DataIntegration.ApiEndpoints.View",
                 "FoodSafe.DataIntegration.CallHistory.View",
+                "FoodSafe.DataIntegration.Partners.View",
               ]}
             >
               <DataIntegrationPage />

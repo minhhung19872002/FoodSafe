@@ -6,11 +6,21 @@ import type {
   ApiCallLog,
   ApiCallLogDetail,
   ApiCallLogFilter,
+  CreatePartnerAccount,
   FileDownload,
+  InboundSubmission,
+  InboundSubmissionDetail,
+  InboundSubmissionFilter,
+  IssuePartnerApiKeyInput,
+  IssuedPartnerApiKey,
   PagedResult,
+  PartnerAccount,
+  PartnerAccountFilter,
+  PartnerApiKey,
   ShareDataInput,
   ShareDataResult,
   TestConnectionResult,
+  UpdatePartnerAccount,
 } from "../types/dataIntegration.types";
 
 function download(data: Blob, contentDisposition?: string): FileDownload {
@@ -82,4 +92,52 @@ export const dataIntegrationApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+
+  getPartners: (params: PartnerAccountFilter) =>
+    api
+      .get<PagedResult<PartnerAccount>>("/v1/app/partner-account", { params })
+      .then((r) => r.data),
+
+  createPartner: (input: CreatePartnerAccount) =>
+    api
+      .post<PartnerAccount>("/v1/app/partner-account", input)
+      .then((r) => r.data),
+
+  updatePartner: (id: string, input: UpdatePartnerAccount) =>
+    api
+      .put<PartnerAccount>(`/v1/app/partner-account/${id}`, input)
+      .then((r) => r.data),
+
+  togglePartnerStatus: (id: string) =>
+    api.post(`/v1/app/partner-account/${id}/toggle-status`),
+
+  deletePartner: (id: string) => api.delete(`/v1/app/partner-account/${id}`),
+
+  getPartnerKeys: (id: string) =>
+    api
+      .get<PartnerApiKey[]>(`/v1/app/partner-account/${id}/keys`)
+      .then((r) => r.data),
+
+  issuePartnerKey: (id: string, input: IssuePartnerApiKeyInput) =>
+    api
+      .post<IssuedPartnerApiKey>(`/v1/app/partner-account/${id}/keys`, input)
+      .then((r) => r.data),
+
+  revokePartnerKey: (id: string, keyId: string) =>
+    api.delete(`/v1/app/partner-account/${id}/keys/${keyId}`),
+
+  getInboundSubmissions: (params: InboundSubmissionFilter) =>
+    api
+      .get<PagedResult<InboundSubmission>>(
+        "/v1/app/partner-account/submissions",
+        { params },
+      )
+      .then((r) => r.data),
+
+  getInboundSubmission: (submissionId: string) =>
+    api
+      .get<InboundSubmissionDetail>(
+        `/v1/app/partner-account/submissions/${submissionId}`,
+      )
+      .then((r) => r.data),
 };

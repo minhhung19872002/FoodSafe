@@ -256,6 +256,12 @@
     "Permission:DataIntegration.CallHistory": "API call history",
     "Permission:DataIntegration.CallHistory.View": "View API call history",
     "Permission:DataIntegration.Share": "Share integration data",
+    "Permission:DataIntegration.Partners": "Integration partners",
+    "Permission:DataIntegration.Partners.View": "View integration partners",
+    "Permission:DataIntegration.Partners.Create": "Create integration partners",
+    "Permission:DataIntegration.Partners.Edit": "Edit integration partners",
+    "Permission:DataIntegration.Partners.Delete": "Delete integration partners",
+    "Permission:DataIntegration.Partners.ManageKeys": "Manage partner API keys",
     "Permission:DataScope.All": "Access all organization data",
 
     "FoodSafe:DataIntegration:0001": "API endpoint not found.",

@@ -32,6 +32,8 @@ import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { saveDownload } from "@/utils/download";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
+import { PartnersTab } from "../components/PartnersTab";
+import { InboundSubmissionsTab } from "../components/InboundSubmissionsTab";
 import {
   useApiEndpoints,
   useApiCallLogs,
@@ -901,6 +903,9 @@ export default function DataIntegrationPage() {
   const canViewCallHistory = hasPermission(
     "FoodSafe.DataIntegration.CallHistory.View",
   );
+  const canViewPartners = hasPermission(
+    "FoodSafe.DataIntegration.Partners.View",
+  );
 
   const tabItems = [
     ...(canViewEndpoints
@@ -918,6 +923,20 @@ export default function DataIntegrationPage() {
             key: "history",
             label: "Lịch sử gọi API",
             children: <CallHistoryTab />,
+          },
+        ]
+      : []),
+    ...(canViewPartners
+      ? [
+          {
+            key: "partners",
+            label: "Đối tác liên thông",
+            children: <PartnersTab />,
+          },
+          {
+            key: "inbound",
+            label: "Dữ liệu nhận về",
+            children: <InboundSubmissionsTab />,
           },
         ]
       : []),
