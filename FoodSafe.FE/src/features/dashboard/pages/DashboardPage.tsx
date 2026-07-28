@@ -28,6 +28,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import { brand } from "@/theme/themeConfig";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
 import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
@@ -62,28 +63,28 @@ function StatCard({
 }: StatCardProps) {
   return (
     <div className="stat-card">
-      <div
-        className="stat-card-icon"
-        style={{ background: iconBg, color: iconColor }}
-      >
-        {icon}
-      </div>
-      <div className="stat-card-content">
+      <div className="stat-card-head">
         <div className="stat-card-label">{label}</div>
-        <div className="stat-card-value">{value}</div>
-        {footer && <div className="stat-card-footer">{footer}</div>}
+        <div
+          className="stat-card-icon"
+          style={{ background: iconBg, color: iconColor }}
+        >
+          {icon}
+        </div>
       </div>
+      <div className="stat-card-value">{value}</div>
+      {footer && <div className="stat-card-footer">{footer}</div>}
     </div>
   );
 }
 
 const BREAKDOWN_COLORS = [
-  "#00796B",
-  "#0958D9",
-  "#389E0D",
-  "#D48806",
-  "#722ED1",
-  "#CF1322",
+  brand.green,
+  brand.blue,
+  brand.greenMid,
+  brand.amber,
+  "#6B21A8",
+  brand.red,
 ];
 
 const breakdownColumns: TableColumnsType<LicenseBreakdownItem> = [
@@ -103,34 +104,34 @@ const QUICK_ACTIONS = [
     icon: <PlusOutlined />,
     label: "Thêm cơ sở mới",
     permission: "FoodSafe.BusinessManagement.Businesses.Create",
-    color: "#00796B",
+    color: brand.green,
   },
   {
     key: "/self-declarations",
     icon: <SolutionOutlined />,
     label: "Tự công bố SP",
     permission: "FoodSafe.BusinessManagement.SelfDeclarations.Create",
-    color: "#0958D9",
+    color: brand.blue,
   },
   {
     key: "/inspection",
     icon: <AuditOutlined />,
     label: "Kế hoạch thanh tra",
     permission: "FoodSafe.Inspection.Plans.View",
-    color: "#722ED1",
+    color: "#6B21A8",
   },
   {
     key: "/reporting",
     icon: <BarChartOutlined />,
     label: "Báo cáo",
     permission: "FoodSafe.Reporting.NdtpReports.View",
-    color: "#D48806",
+    color: brand.amber,
   },
   {
     key: "/statistics",
     icon: <PieChartOutlined />,
     label: "Thống kê tổng hợp",
-    color: "#389E0D",
+    color: brand.greenMid,
   },
 ] as const;
 
@@ -311,8 +312,8 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             icon={<ShopOutlined />}
-            iconBg="rgba(0, 121, 107, 0.1)"
-            iconColor="#00796B"
+            iconBg={brand.greenPale}
+            iconColor={brand.greenDark}
             label="Cơ sở SXKD"
             value={stats?.totalBusinesses ?? 0}
             footer={`${stats?.activeBusinesses ?? 0} đang hoạt động`}
@@ -321,8 +322,8 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             icon={<FileProtectOutlined />}
-            iconBg="rgba(9, 88, 217, 0.1)"
-            iconColor="#0958D9"
+            iconBg="#E8EFFD"
+            iconColor={brand.navy}
             label="Hồ sơ công bố"
             value={totalLicenses}
             footer={`${stats?.totalSelfDeclarations ?? 0} tự công bố + ${stats?.totalProductRegistrations ?? 0} đăng ký`}
@@ -331,8 +332,8 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             icon={<SafetyCertificateOutlined />}
-            iconBg="rgba(56, 158, 13, 0.1)"
-            iconColor="#389E0D"
+            iconBg={brand.greenPale}
+            iconColor={brand.success}
             label="Giấy chứng nhận"
             value={
               (stats?.totalEligibilityCertificates ?? 0) +
@@ -345,8 +346,8 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             icon={<WarningOutlined />}
-            iconBg="rgba(212, 136, 6, 0.1)"
-            iconColor="#D48806"
+            iconBg="#FBF1E2"
+            iconColor={brand.amber}
             label="Sắp hết hạn"
             value={stats?.expiringWithin30Days ?? 0}
             footer="Hồ sơ/giấy phép hết hạn trong 30 ngày"
@@ -358,8 +359,8 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             icon={<AuditOutlined />}
-            iconBg="rgba(114, 46, 209, 0.1)"
-            iconColor="#722ED1"
+            iconBg="#F3E8FD"
+            iconColor="#6B21A8"
             label="Thanh tra"
             value={stats?.totalInspectionResults ?? 0}
             footer={`${stats?.inspectionViolationCount ?? 0} vi phạm / ${stats?.totalInspectionPlans ?? 0} kế hoạch`}
@@ -368,8 +369,8 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             icon={<MedicineBoxOutlined />}
-            iconBg="rgba(207, 19, 34, 0.1)"
-            iconColor="#CF1322"
+            iconBg="#FBEAE7"
+            iconColor={brand.red}
             label="Ngộ độc thực phẩm"
             value={stats?.totalFoodPoisoningCases ?? 0}
             footer="Ca ngộ độc ghi nhận"
@@ -378,8 +379,8 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             icon={<AlertOutlined />}
-            iconBg="rgba(250, 140, 22, 0.1)"
-            iconColor="#FA8C16"
+            iconBg="#FBF1E2"
+            iconColor={brand.amber}
             label="Cảnh báo & phân tích"
             value={(stats?.totalAlerts ?? 0) + (stats?.totalRiskAnalyses ?? 0)}
             footer={`${stats?.totalAlerts ?? 0} cảnh báo + ${stats?.totalRiskAnalyses ?? 0} phân tích nguy cơ`}
@@ -388,8 +389,8 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             icon={<ExperimentOutlined />}
-            iconBg="rgba(47, 84, 235, 0.1)"
-            iconColor="#2F54EB"
+            iconBg="#E8EFFD"
+            iconColor={brand.blue}
             label="Kiểm nghiệm"
             value={stats?.totalTestingResults ?? 0}
             footer="Kết quả kiểm nghiệm mẫu"

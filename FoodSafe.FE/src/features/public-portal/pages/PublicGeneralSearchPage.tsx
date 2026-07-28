@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Alert,
   Empty,
@@ -23,9 +24,16 @@ import {
 
 const PAGE_SIZE = 20;
 
+/** Từ khóa chuyển sang từ ô tra cứu ngoài trang chủ: /tra-cuu-chung?q=... */
+function useInitialKeyword(): string {
+  const [searchParams] = useSearchParams();
+  return searchParams.get("q") ?? "";
+}
+
 function BusinessSearchTab() {
-  const [keyword, setKeyword] = useState("");
-  const [submittedKeyword, setSubmittedKeyword] = useState("");
+  const initialKeyword = useInitialKeyword();
+  const [keyword, setKeyword] = useState(initialKeyword);
+  const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
   const [page, setPage] = useState(1);
 
   const filter = {
@@ -134,8 +142,9 @@ function BusinessSearchTab() {
 }
 
 function ProductSearchTab() {
-  const [keyword, setKeyword] = useState("");
-  const [submittedKeyword, setSubmittedKeyword] = useState("");
+  const initialKeyword = useInitialKeyword();
+  const [keyword, setKeyword] = useState(initialKeyword);
+  const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
   const [page, setPage] = useState(1);
 
   const filter = {

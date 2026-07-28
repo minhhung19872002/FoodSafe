@@ -4,10 +4,12 @@ import {
   Layout,
   Menu,
   Avatar,
+  Badge,
   Dropdown,
   Breadcrumb,
   Drawer,
   Button,
+  Input,
   type MenuProps,
 } from "antd";
 import {
@@ -17,6 +19,8 @@ import {
   UserOutlined,
   LogoutOutlined,
   KeyOutlined,
+  BellOutlined,
+  SearchOutlined,
   SafetyCertificateOutlined,
   DatabaseOutlined,
   ShopOutlined,
@@ -24,7 +28,6 @@ import {
   SolutionOutlined,
   NotificationOutlined,
   GlobalOutlined,
-  SettingOutlined,
   MenuOutlined,
   FileProtectOutlined,
   ExportOutlined,
@@ -43,7 +46,11 @@ import {
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
 import { brandingLogoUrl, useBranding } from "@/hooks/useBranding";
-import { SIDEBAR_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from "@/theme/themeConfig";
+import {
+  SIDEBAR_WIDTH,
+  SIDEBAR_COLLAPSED_WIDTH,
+  brand,
+} from "@/theme/themeConfig";
 
 const { Sider, Content } = Layout;
 
@@ -315,6 +322,14 @@ function buildMenuItems(
   return result;
 }
 
+/** Viết tắt tên cán bộ cho avatar, ví dụ "Nguyễn Thị Hòa" → "NH". */
+function initialsOf(name: string | undefined): string {
+  const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "FS";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+}
+
 function buildBreadcrumbs(pathname: string) {
   const segments = pathname.split("/").filter(Boolean);
   const items = [{ title: BREADCRUMB_LABELS[segments[0]] ?? "Trang chủ" }];
@@ -390,13 +405,11 @@ export function AppLayout() {
             style={{ height: 32, objectFit: "contain" }}
           />
         ) : (
-          <div className="sidebar-logo-icon">
-            <SettingOutlined />
-          </div>
+          <div className="sidebar-logo-icon">AT</div>
         )}
         <div className="sidebar-logo-text">
           <span className="sidebar-logo-title">FoodSafe</span>
-          <span className="sidebar-logo-subtitle">An toàn thực phẩm</span>
+          <span className="sidebar-logo-subtitle">Quản lý ATTP Quảng Ninh</span>
         </div>
       </div>
       <Menu
@@ -443,7 +456,7 @@ export function AppLayout() {
         width={SIDEBAR_WIDTH}
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
-        styles={{ body: { padding: 0, background: "#001529" } }}
+        styles={{ body: { padding: 0, background: brand.ink } }}
         closable={false}
       >
         {sidebarContent}
@@ -467,24 +480,60 @@ export function AppLayout() {
             <Breadcrumb items={breadcrumbItems} />
           </div>
 
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <div className="app-header-user">
-              <Avatar
-                size="small"
-                icon={<UserOutlined />}
-                style={{ backgroundColor: "#00796B" }}
+          <div className="app-header-actions">
+            <Input
+              className="app-header-search"
+              allowClear
+              prefix={<SearchOutlined style={{ color: brand.faint }} />}
+              placeholder="Tìm nhanh hồ sơ, cơ sở..."
+              aria-label="Tìm nhanh hồ sơ, cơ sở"
+            />
+
+            <Badge dot color={brand.red} offset={[-2, 3]}>
+              <Button
+                type="text"
+                icon={<BellOutlined />}
+                aria-label="Thông báo"
+                style={{
+                  background: brand.bgHead,
+                  width: 34,
+                  height: 34,
+                  borderRadius: 9,
+                }}
               />
-              <span style={{ fontSize: 13 }}>{user?.name ?? "Người dùng"}</span>
-            </div>
-          </Dropdown>
+            </Badge>
+
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <div className="app-header-user">
+                <Avatar
+                  size={32}
+                  style={{
+                    backgroundColor: brand.green,
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}
+                >
+                  {initialsOf(user?.name)}
+                </Avatar>
+                <div className="app-header-user-text">
+                  <span className="app-header-user-name">
+                    {user?.name ?? "Người dùng"}
+                  </span>
+                  <span className="app-header-user-org">
+                    {user?.organizationName ?? "Phạm vi toàn hệ thống"}
+                  </span>
+                </div>
+              </div>
+            </Dropdown>
+          </div>
         </header>
 
-        <Content style={{ margin: 16, minHeight: 280 }}>
+        <Content style={{ margin: 24, minHeight: 280 }}>
           <Outlet />
         </Content>
 
         <footer className="app-footer">
-          FoodSafe v1.0 — Phần mềm quản lý An toàn thực phẩm tỉnh Quảng Ninh
+          FoodSafe v2.0 — Phần mềm quản lý An toàn thực phẩm tỉnh Quảng Ninh
         </footer>
       </Layout>
     </Layout>

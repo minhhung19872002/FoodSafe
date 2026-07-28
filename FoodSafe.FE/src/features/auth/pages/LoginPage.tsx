@@ -1,7 +1,7 @@
-import { Card, Form, Input, Button, Typography, Space } from "antd";
+import { Form, Input, Button, Typography } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,6 +20,9 @@ const loginSchema = z.object({
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
+
+const DEFAULT_ORGANIZATION =
+  "Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh";
 
 export default function LoginPage() {
   const loginMutation = useLogin();
@@ -52,35 +55,57 @@ export default function LoginPage() {
   );
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: branding.data?.hasLoginBackground
-          ? `url(${brandingLoginBackgroundUrl}) center/cover no-repeat`
-          : "linear-gradient(135deg, #1677ff 0%, #0958d9 100%)",
-      }}
-    >
-      <Card style={{ width: 400, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}>
-        <Space direction="vertical" size={24} style={{ width: "100%" }}>
-          <div style={{ textAlign: "center" }}>
-            {branding.data?.hasLogo && (
+    <div className="login-page">
+      <aside
+        className="login-aside"
+        style={
+          branding.data?.hasLoginBackground
+            ? {
+                background: `linear-gradient(160deg, rgba(10,107,46,0.92) 0%, rgba(18,138,62,0.86) 100%), url(${brandingLoginBackgroundUrl}) center/cover no-repeat`,
+              }
+            : undefined
+        }
+      >
+        <div className="login-aside-brand">
+          <div className="login-aside-mark">
+            {branding.data?.hasLogo ? (
               <img
                 src={brandingLogoUrl}
-                alt="Logo"
-                style={{ maxHeight: 64, marginBottom: 8 }}
+                alt=""
+                style={{ height: 30, objectFit: "contain" }}
               />
+            ) : (
+              "AT"
             )}
-            <Typography.Title level={3} style={{ margin: 0, color: "#1677ff" }}>
-              FoodSafe
-            </Typography.Title>
-            <Typography.Text type="secondary">
-              {branding.data?.homepageDescription ??
-                "Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh"}
-            </Typography.Text>
           </div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>
+            <strong style={{ fontWeight: 700 }}>FoodSafe</strong> · Quảng Ninh
+          </div>
+        </div>
+
+        <div className="login-aside-body">
+          <h1 className="login-aside-title">
+            Hệ thống quản lý
+            <br />
+            An toàn thực phẩm
+          </h1>
+          <p className="login-aside-lead">
+            Nền tảng nghiệp vụ dành cho cán bộ quản lý: cấp phép, thanh tra,
+            giám sát nguy cơ và báo cáo toàn tỉnh trên một hệ thống duy nhất.
+          </p>
+        </div>
+
+        <div className="login-aside-legal">
+          © {new Date().getFullYear()} {DEFAULT_ORGANIZATION}
+        </div>
+      </aside>
+
+      <main className="login-panel">
+        <div className="login-form">
+          <h1 className="login-form-title">Đăng nhập</h1>
+          <p className="login-form-sub">
+            {branding.data?.homepageDescription ?? DEFAULT_ORGANIZATION}
+          </p>
 
           <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
             <Form.Item
@@ -156,8 +181,12 @@ export default function LoginPage() {
               </Button>
             </Form.Item>
           </Form>
-        </Space>
-      </Card>
+
+          <div className="login-form-footer">
+            <Link to="/cong-thong-tin">← Về cổng thông tin công khai</Link>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

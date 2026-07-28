@@ -1,142 +1,144 @@
 import type { ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Layout, Menu, Typography, Space } from "antd";
-import type { MenuProps } from "antd";
-import {
-  HomeOutlined,
-  SearchOutlined,
-  SafetyCertificateOutlined,
-  WarningOutlined,
-  NotificationOutlined,
-  FileTextOutlined,
-  AlertOutlined,
-  LoginOutlined,
-} from "@ant-design/icons";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useBranding } from "@/hooks/useBranding";
 
-const { Header, Content, Footer } = Layout;
+interface NavEntry {
+  to: string;
+  label: string;
+}
 
-const NAV_ITEMS: MenuProps["items"] = [
-  {
-    key: "/cong-thong-tin",
-    icon: <HomeOutlined />,
-    label: <Link to="/cong-thong-tin">Trang chủ</Link>,
-  },
-  {
-    key: "/tra-cuu-chung",
-    icon: <SearchOutlined />,
-    label: <Link to="/tra-cuu-chung">Tra cứu cơ sở & sản phẩm</Link>,
-  },
-  {
-    key: "/tra-cuu-giay-phep",
-    icon: <SafetyCertificateOutlined />,
-    label: <Link to="/tra-cuu-giay-phep">Tra cứu giấy phép</Link>,
-  },
-  {
-    key: "/co-so-bi-canh-bao",
-    icon: <WarningOutlined />,
-    label: <Link to="/co-so-bi-canh-bao">Cơ sở bị cảnh báo</Link>,
-  },
-  {
-    key: "/tin-tuc",
-    icon: <NotificationOutlined />,
-    label: <Link to="/tin-tuc">Tin tức & Cảnh báo</Link>,
-  },
-  {
-    key: "/tra-cuu-van-ban",
-    icon: <FileTextOutlined />,
-    label: <Link to="/tra-cuu-van-ban">Văn bản pháp quy</Link>,
-  },
-  {
-    key: "/gui-phan-anh",
-    icon: <AlertOutlined />,
-    label: <Link to="/gui-phan-anh">Gửi phản ánh</Link>,
-  },
-  {
-    key: "/gui-tin",
-    icon: <FileTextOutlined />,
-    label: <Link to="/gui-tin">Gửi tin</Link>,
-  },
+const NAV_ITEMS: NavEntry[] = [
+  { to: "/cong-thong-tin", label: "Trang chủ" },
+  { to: "/tra-cuu-chung", label: "Tra cứu" },
+  { to: "/tra-cuu-giay-phep", label: "Tra cứu giấy phép" },
+  { to: "/co-so-bi-canh-bao", label: "Cơ sở bị cảnh báo" },
+  { to: "/tin-tuc", label: "Tin tức" },
+  { to: "/tra-cuu-van-ban", label: "Văn bản" },
+  { to: "/gui-phan-anh", label: "Gửi phản ánh" },
+  { to: "/gui-tin", label: "Gửi tin" },
 ];
+
+const DEFAULT_HOTLINE = "0981 815 815";
+const DEFAULT_ADDRESS =
+  "Tầng 18, Tòa nhà liên cơ quan số 3, P. Hồng Hà, TP. Hạ Long";
+const DEFAULT_EMAIL = "ccvsattp@quangninh.gov.vn";
 
 interface PublicShellProps {
   children: ReactNode;
+  /** Trang chủ tự quản lý chiều rộng để hero tràn viền. */
+  fullBleed?: boolean;
 }
 
-export function PublicShell({ children }: PublicShellProps) {
-  const location = useLocation();
-
-  const selectedKey = NAV_ITEMS?.find((item) =>
-    location.pathname.startsWith(String(item?.key ?? "")),
-  )?.key as string | undefined;
+export function PublicShell({ children, fullBleed = false }: PublicShellProps) {
+  const navigate = useNavigate();
+  const branding = useBranding();
+  const hotline = branding.data?.contactPhone ?? DEFAULT_HOTLINE;
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Header
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          display: "flex",
-          alignItems: "center",
-          gap: 24,
-          padding: "0 24px",
-          background: "#00796B",
-        }}
-      >
-        <Typography.Title
-          level={5}
-          style={{
-            color: "#fff",
-            margin: 0,
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-          }}
-        >
-          Cổng thông tin An toàn thực phẩm Quảng Ninh
-        </Typography.Title>
+    <div className="portal-layout">
+      <div className="portal-strip">
+        <span>Chi cục An toàn vệ sinh thực phẩm — Sở Y tế Quảng Ninh</span>
+        <span style={{ display: "flex", gap: 16, alignItems: "center" }}>
+          <span>
+            Hotline: <strong>{hotline}</strong>
+          </span>
+          <Link to="/login" className="portal-strip-login">
+            Đăng nhập cán bộ →
+          </Link>
+        </span>
+      </div>
 
-        <Menu
-          mode="horizontal"
-          selectedKeys={selectedKey ? [selectedKey] : []}
-          items={NAV_ITEMS}
-          style={{ background: "transparent", borderBottom: "none", flex: 1 }}
-          theme="dark"
-          overflowedIndicatorPopupClassName="public-portal-nav-overflow"
-        />
-
-        <Space>
-          <Link
-            to="/login"
-            style={{
-              color: "#fff",
-              whiteSpace: "nowrap",
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
+      <header className="portal-header">
+        <div className="portal-header-inner">
+          <div
+            className="portal-brand"
+            role="link"
+            tabIndex={0}
+            onClick={() => navigate("/cong-thong-tin")}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                navigate("/cong-thong-tin");
+              }
             }}
           >
-            <LoginOutlined /> Đăng nhập
-          </Link>
-        </Space>
-      </Header>
+            <div className="portal-brand-mark">AT</div>
+            <div>
+              <div className="portal-brand-name">
+                Chi cục An toàn vệ sinh thực phẩm
+              </div>
+              <div className="portal-brand-sub">
+                Sở Y tế Quảng Ninh · Cổng tra cứu công khai
+              </div>
+            </div>
+          </div>
 
-      <Content
-        style={{
-          maxWidth: 1200,
-          width: "100%",
-          margin: "0 auto",
-          padding: "32px 24px",
-        }}
-      >
-        {children}
-      </Content>
+          <nav className="portal-nav">
+            {NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  isActive ? "portal-nav-link is-active" : "portal-nav-link"
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+      </header>
 
-      <Footer style={{ textAlign: "center", background: "#f5f5f5" }}>
-        <Typography.Text type="secondary">
-          Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh — Cổng thông tin
-          công khai ATTP
-        </Typography.Text>
-      </Footer>
-    </Layout>
+      <main className="portal-main">
+        {fullBleed ? (
+          children
+        ) : (
+          <div className="portal-section">{children}</div>
+        )}
+      </main>
+
+      <footer className="portal-footer">
+        <div className="portal-footer-inner">
+          <div>
+            <div className="portal-footer-brand">
+              <div className="portal-footer-mark">AT</div>
+              <div style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>
+                Cổng thông tin An toàn thực phẩm Quảng Ninh
+              </div>
+            </div>
+            <div className="portal-footer-text">
+              Chi cục An toàn vệ sinh thực phẩm — Sở Y tế Quảng Ninh
+              <br />
+              {branding.data?.contactAddress ?? DEFAULT_ADDRESS}
+            </div>
+          </div>
+
+          <div>
+            <div className="portal-footer-title">Tra cứu</div>
+            <div className="portal-footer-links">
+              <Link to="/tra-cuu-giay-phep">Tra cứu giấy phép</Link>
+              <Link to="/co-so-bi-canh-bao">Cơ sở bị cảnh báo</Link>
+              <Link to="/tra-cuu-van-ban">Văn bản pháp quy</Link>
+            </div>
+          </div>
+
+          <div>
+            <div className="portal-footer-title">Hỗ trợ</div>
+            <div className="portal-footer-text">
+              Hotline: <span className="portal-footer-hotline">{hotline}</span>
+              <br />
+              Email: {branding.data?.contactEmail ?? DEFAULT_EMAIL}
+              <br />
+              Giờ hành chính: T2–T6, 8:00–17:00
+            </div>
+          </div>
+        </div>
+
+        <div className="portal-footer-bottom">
+          © {new Date().getFullYear()} Chi cục An toàn vệ sinh thực phẩm Quảng
+          Ninh — Cổng thông tin công khai ATTP
+        </div>
+      </footer>
+    </div>
   );
 }
