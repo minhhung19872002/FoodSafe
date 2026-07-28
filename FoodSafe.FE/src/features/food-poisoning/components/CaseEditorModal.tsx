@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { DatePicker, Form, Input, InputNumber, Modal, Select } from "antd";
 import dayjs from "dayjs";
+import { usePoisoningIncidents } from "../api/foodPoisoningQueries";
 import {
   TREATMENT_RESULT_CONFIG,
   VICTIM_GENDER_CONFIG,
@@ -13,9 +14,10 @@ import {
 interface FormValues {
   reportDate: dayjs.Dayjs;
   occurrenceDate?: dayjs.Dayjs;
+  incidentId?: string;
   notes?: string;
-  locationDescription?: string;
-  victimName?: string;
+  locationDescription: string;
+  victimName: string;
   victimAge?: number;
   victimGender?: VictimGender;
   victimPhone?: string;
@@ -38,13 +40,35 @@ interface Props {
   open: boolean;
   item?: FoodPoisoningCase;
   saving: boolean;
+  /** Có quyền Incidents.View — điều kiện để tải danh sách vụ cho ô gán vụ. */
+  canLinkIncident: boolean;
   onCancel: () => void;
   onSubmit: (input: CreateUpdateCaseInput) => void;
 }
 
 export function CaseEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
-  const { open, item } = props;
+  const { open, item, canLinkIncident } = props;
+
+  const { data: incidentsData, isLoading: incidentsLoading } =
+    usePoisoningIncidents(
+      { skipCount: 0, maxResultCount: 200 },
+      { enabled: open && canLinkIncident },
+    );
+  const incidentOptions = (incidentsData?.items ?? []).map((incident) => ({
+    value: incident.id,
+    label: incident.locationDescription
+      ? `${incident.incidentCode} — ${incident.locationDescription}`
+      : incident.incidentCode,
+  }));
+  // Ca đã gán vụ ngoài trang đầu (hoặc user không xem được vụ): vẫn hiển thị mã
+  // thay vì ô trống để không mất liên kết khi lưu lại.
+  if (
+    item?.incidentId &&
+    !incidentOptions.some((option) => option.value === item.incidentId)
+  ) {
+    incidentOptions.unshift({ value: item.incidentId, label: item.incidentId });
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -54,6 +78,7 @@ export function CaseEditorModal(props: Props) {
         occurrenceDate: item.occurrenceDate
           ? dayjs(item.occurrenceDate)
           : undefined,
+        incidentId: item.incidentId ?? undefined,
         notes: item.notes,
         locationDescription: item.locationDescription,
         victimName: item.victimName,
@@ -103,10 +128,10 @@ export function CaseEditorModal(props: Props) {
           props.onSubmit({
             reportDate: values.reportDate.format("YYYY-MM-DD"),
             occurrenceDate: values.occurrenceDate?.toISOString(),
+            incidentId: values.incidentId,
             notes: values.notes?.trim() || undefined,
-            locationDescription:
-              values.locationDescription?.trim() || undefined,
-            victimName: values.victimName?.trim() || undefined,
+            locationDescription: values.locationDescription.trim(),
+            victimName: values.victimName.trim(),
             victimAge: values.victimAge,
             victimGender: values.victimGender,
             victimPhone: values.victimPhone?.trim() || undefined,
@@ -151,9 +176,33 @@ export function CaseEditorModal(props: Props) {
           </Form.Item>
         </div>
 
-        <Form.Item name="locationDescription" label="Địa điểm xảy ra">
-          <Input />
+        <Form.Item
+          name="locationDescription"
+          label="Địa điểm xảy ra"
+          rules={[
+            {
+              required: true,
+              whitespace: true,
+              message: "Vui lòng nhập địa điểm xảy ra.",
+            },
+            { max: 500, message: "Địa điểm không quá 500 ký tự." },
+          ]}
+        >
+          <Input maxLength={500} />
         </Form.Item>
+
+        {canLinkIncident && (
+          <Form.Item name="incidentId" label="Thuộc vụ ngộ độc">
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              loading={incidentsLoading}
+              placeholder="Chọn vụ ngộ độc liên quan (nếu có)"
+              options={incidentOptions}
+            />
+          </Form.Item>
+        )}
 
         <div
           style={{
@@ -172,7 +221,17 @@ export function CaseEditorModal(props: Props) {
             gap: 16,
           }}
         >
-          <Form.Item name="victimName" label="Họ tên">
+          <Form.Item
+            name="victimName"
+            label="Họ tên"
+            rules={[
+              {
+                required: true,
+                whitespace: true,
+                message: "Vui lòng nhập họ tên nạn nhân.",
+              },
+            ]}
+          >
             <Input maxLength={200} />
           </Form.Item>
           <Form.Item name="victimAge" label="Tuổi">

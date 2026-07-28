@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { poisoningCaseApi, poisoningIncidentApi } from "./foodPoisoningApi";
 import type { CaseFilter, IncidentFilter } from "../types/foodPoisoning.types";
 
@@ -28,6 +28,8 @@ export function usePoisoningCases(
     queryFn: () => poisoningCaseApi.list(filter),
     // Trang dùng chung (thống kê) tắt query khi thiếu quyền Cases.View.
     enabled: options?.enabled ?? true,
+    // Giữ trang cũ khi đổi filter/trang; bảng hiển thị loading qua isFetching.
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -56,6 +58,8 @@ export function usePoisoningIncidents(
     queryFn: () => poisoningIncidentApi.list(filter),
     // Trang dùng chung (thống kê) tắt query khi thiếu quyền Incidents.View.
     enabled: options?.enabled ?? true,
+    // Giữ trang cũ khi đổi filter/trang; bảng hiển thị loading qua isFetching.
+    placeholderData: keepPreviousData,
   });
 }
 

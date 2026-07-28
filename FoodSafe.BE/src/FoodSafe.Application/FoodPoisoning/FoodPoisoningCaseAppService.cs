@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Data;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Threading;
 using Volo.Abp.Users;
@@ -16,15 +17,18 @@ public class FoodPoisoningCaseAppService : ApplicationService
     private readonly IRepository<FoodPoisoningCase, Guid> _cases;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
+    private readonly IDataFilter _dataFilter;
 
     public FoodPoisoningCaseAppService(
         IRepository<FoodPoisoningCase, Guid> cases,
         ICurrentDataScopeProvider dataScopeProvider,
-        ICancellationTokenProvider cancellationTokens)
+        ICancellationTokenProvider cancellationTokens,
+        IDataFilter dataFilter)
     {
         _cases = cases;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
+        _dataFilter = dataFilter;
     }
 
     public async Task<PagedResultDto<FoodPoisoningCaseDto>> GetListAsync(FoodPoisoningCaseFilterDto input)
@@ -99,7 +103,7 @@ public class FoodPoisoningCaseAppService : ApplicationService
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
         if (entity.Status != PoisoningCaseStatus.Draft)
             throw new BusinessException(FoodSafeDomainErrorCodes.FoodPoisoning.CannotModifyNonDraft);
-        await _cases.DeleteAsync(entity, cancellationToken: _cancellationTokens.Token);
+        await _cases.DeleteAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
     }
 
     [Authorize(FoodSafePermissions.FoodPoisoning.Cases.Edit)]
@@ -146,7 +150,7 @@ public class FoodPoisoningCaseAppService : ApplicationService
     {
         var entity = await GetScopedWithDetailsAsync(id, DataScopeOperation.Edit);
         var report = entity.ErrorReports.FirstOrDefault(r => r.Id == reportId)
-            ?? throw new BusinessException(FoodSafeDomainErrorCodes.FoodPoisoning.CaseNotFound);
+            ?? throw new BusinessException(FoodSafeDomainErrorCodes.FoodPoisoning.ErrorReportNotFound);
         report.Acknowledge();
         await _cases.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return ToErrorReportDto(report);
@@ -158,7 +162,7 @@ public class FoodPoisoningCaseAppService : ApplicationService
     {
         var entity = await GetScopedWithDetailsAsync(id, DataScopeOperation.Edit);
         var report = entity.ErrorReports.FirstOrDefault(r => r.Id == reportId)
-            ?? throw new BusinessException(FoodSafeDomainErrorCodes.FoodPoisoning.CaseNotFound);
+            ?? throw new BusinessException(FoodSafeDomainErrorCodes.FoodPoisoning.ErrorReportNotFound);
         report.MarkCorrected(CurrentUser.GetId(), input.Response);
         await _cases.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return ToErrorReportDto(report);
@@ -198,11 +202,31 @@ public class FoodPoisoningCaseAppService : ApplicationService
     {
         var year = Clock.Now.Year;
         var prefix = $"NDTP-{year}";
-        var query = await _cases.GetQueryableAsync();
-        var count = await AsyncExecuter.CountAsync(
-            query.Where(x => x.OrganizationId == orgId && x.CaseCode.StartsWith(prefix)),
-            _cancellationTokens.Token);
-        return $"{prefix}-{(count + 1):D4}";
+        // Đếm cả bản ghi soft-deleted: nếu không, xóa Draft rồi tạo mới sẽ sinh
+        // lại mã đã cấp cho bản ghi cũ (unique index uq_fpc_org_code sẽ chặn 500).
+        using (_dataFilter.Disable<ISoftDelete>())
+        {
+            var query = await _cases.GetQueryableAsync();
+            var codes = await AsyncExecuter.ToListAsync(
+                query.Where(x => x.OrganizationId == orgId && x.CaseCode.StartsWith(prefix))
+                    .Select(x => x.CaseCode),
+                _cancellationTokens.Token);
+            return $"{prefix}-{(MaxSequence(codes, prefix) + 1):D4}";
+        }
+    }
+
+    internal static int MaxSequence(IEnumerable<string> codes, string prefix)
+    {
+        var max = 0;
+        foreach (var code in codes)
+        {
+            var suffix = code.Length > prefix.Length + 1
+                ? code[(prefix.Length + 1)..]
+                : string.Empty;
+            if (int.TryParse(suffix, out var sequence) && sequence > max)
+                max = sequence;
+        }
+        return max;
     }
 
     private static void ApplyDetails(FoodPoisoningCase entity, CreateUpdateFoodPoisoningCaseDto input)

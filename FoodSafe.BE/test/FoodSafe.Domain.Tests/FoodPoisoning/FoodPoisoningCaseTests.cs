@@ -132,6 +132,39 @@ public sealed class FoodPoisoningCaseTests
     }
 
     [Fact]
+    public void Acknowledge_Rejects_Already_Processed_Report()
+    {
+        var c = CreateDraft();
+        c.Submit(Guid.NewGuid(), DateTime.UtcNow);
+        c.Verify(Guid.NewGuid(), DateTime.UtcNow);
+        var report = c.AddErrorReport(Guid.NewGuid(), Guid.NewGuid(), "err", "fix", null);
+        report.Acknowledge();
+        Should.Throw<BusinessException>(() => report.Acknowledge());
+    }
+
+    [Fact]
+    public void MarkCorrected_Rejects_Corrected_Report()
+    {
+        var c = CreateDraft();
+        c.Submit(Guid.NewGuid(), DateTime.UtcNow);
+        c.Verify(Guid.NewGuid(), DateTime.UtcNow);
+        var report = c.AddErrorReport(Guid.NewGuid(), Guid.NewGuid(), "err", "fix", null);
+        report.MarkCorrected(Guid.NewGuid(), "đã sửa");
+        report.Status.ShouldBe(ErrorReportStatus.Corrected);
+        Should.Throw<BusinessException>(() => report.MarkCorrected(Guid.NewGuid(), "sửa lại"));
+    }
+
+    [Fact]
+    public void MarkCorrected_Rejects_Blank_Response()
+    {
+        var c = CreateDraft();
+        c.Submit(Guid.NewGuid(), DateTime.UtcNow);
+        c.Verify(Guid.NewGuid(), DateTime.UtcNow);
+        var report = c.AddErrorReport(Guid.NewGuid(), Guid.NewGuid(), "err", "fix", null);
+        Should.Throw<ArgumentException>(() => report.MarkCorrected(Guid.NewGuid(), " "));
+    }
+
+    [Fact]
     public void SetFoodInfo_Works_When_Draft()
     {
         var c = CreateDraft();

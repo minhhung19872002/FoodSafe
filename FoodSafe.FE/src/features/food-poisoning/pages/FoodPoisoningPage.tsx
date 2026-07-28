@@ -26,6 +26,7 @@ import {
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
+import { extractApiError } from "@/lib/apiError";
 import { saveDownload } from "@/utils/download";
 import {
   usePoisoningCases,
@@ -79,7 +80,7 @@ function CasesTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<CaseFilter>({});
   const pagination = useTablePagination(15);
-  const { data, isLoading } = usePoisoningCases({
+  const { data, isFetching } = usePoisoningCases({
     ...filter,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
@@ -101,6 +102,9 @@ function CasesTab() {
   const canEdit = hasPermission("FoodSafe.FoodPoisoning.Cases.Edit");
   const canDelete = hasPermission("FoodSafe.FoodPoisoning.Cases.Delete");
   const canVerify = hasPermission("FoodSafe.FoodPoisoning.Cases.Verify");
+  const canLinkIncident = hasPermission(
+    "FoodSafe.FoodPoisoning.Incidents.View",
+  );
 
   function openCreate() {
     setEditing(undefined);
@@ -121,8 +125,8 @@ function CasesTab() {
         message.success("Tạo ca ngộ độc thành công.");
       }
       setEditorOpen(false);
-    } catch {
-      message.error("Thao tác thất bại. Vui lòng thử lại.");
+    } catch (error) {
+      message.error(extractApiError(error));
     }
   }
 
@@ -212,7 +216,7 @@ function CasesTab() {
               onClick: () =>
                 submitMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã gửi báo cáo."),
-                  onError: () => message.error("Không thể gửi báo cáo."),
+                  onError: (error) => message.error(extractApiError(error)),
                 }),
             },
             {
@@ -225,7 +229,7 @@ function CasesTab() {
               onClick: () =>
                 verifyMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xác minh."),
-                  onError: () => message.error("Không thể xác minh."),
+                  onError: (error) => message.error(extractApiError(error)),
                 }),
             },
             {
@@ -239,7 +243,7 @@ function CasesTab() {
               onClick: () =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa."),
-                  onError: () => message.error("Không thể xóa."),
+                  onError: (error) => message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -291,7 +295,7 @@ function CasesTab() {
           onClick={() =>
             exportMut.mutate(filter, {
               onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => message.error("Không thể xuất danh sách."),
+              onError: (error) => message.error(extractApiError(error)),
             })
           }
         >
@@ -308,7 +312,7 @@ function CasesTab() {
         rowKey="id"
         dataSource={data?.items}
         columns={columns}
-        loading={isLoading}
+        loading={isFetching}
         size="small"
         onRow={(record) => ({
           onDoubleClick: () => setDetailCase(record),
@@ -321,6 +325,7 @@ function CasesTab() {
         open={editorOpen}
         item={editing}
         saving={createMut.isPending || updateMut.isPending}
+        canLinkIncident={canLinkIncident}
         onCancel={() => setEditorOpen(false)}
         onSubmit={handleSubmit}
       />
@@ -413,7 +418,7 @@ function IncidentsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<IncidentFilter>({});
   const pagination = useTablePagination(15);
-  const { data, isLoading } = usePoisoningIncidents({
+  const { data, isFetching } = usePoisoningIncidents({
     ...filter,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
@@ -462,8 +467,8 @@ function IncidentsTab() {
         message.success("Tạo vụ ngộ độc thành công.");
       }
       setEditorOpen(false);
-    } catch {
-      message.error("Thao tác thất bại. Vui lòng thử lại.");
+    } catch (error) {
+      message.error(extractApiError(error));
     }
   }
 
@@ -552,7 +557,7 @@ function IncidentsTab() {
               onClick: () =>
                 submitMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã gửi báo cáo."),
-                  onError: () => message.error("Không thể gửi báo cáo."),
+                  onError: (error) => message.error(extractApiError(error)),
                 }),
             },
             {
@@ -566,7 +571,7 @@ function IncidentsTab() {
               onClick: () =>
                 verifyMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xác minh."),
-                  onError: () => message.error("Không thể xác minh."),
+                  onError: (error) => message.error(extractApiError(error)),
                 }),
             },
             {
@@ -592,7 +597,7 @@ function IncidentsTab() {
               onClick: () =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa."),
-                  onError: () => message.error("Không thể xóa."),
+                  onError: (error) => message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -644,7 +649,7 @@ function IncidentsTab() {
           onClick={() =>
             exportMut.mutate(filter, {
               onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => message.error("Không thể xuất danh sách."),
+              onError: (error) => message.error(extractApiError(error)),
             })
           }
         >
@@ -661,7 +666,7 @@ function IncidentsTab() {
         rowKey="id"
         dataSource={data?.items}
         columns={columns}
-        loading={isLoading}
+        loading={isFetching}
         size="small"
         onRow={(record) => ({
           onDoubleClick: () => setDetailIncident(record),
@@ -760,15 +765,20 @@ function IncidentsTab() {
         loading={concludeMut.isPending}
         onCancel={() => setConcludeOpen(false)}
         onConfirm={async (conclusion) => {
-          if (concludingId) {
+          if (!concludingId) return false;
+          try {
             await concludeMut.mutateAsync({
               id: concludingId,
               input: { conclusion },
             });
             message.success("Đã kết luận vụ ngộ độc.");
+            setConcludeOpen(false);
+            setConcludingId(null);
+            return true;
+          } catch (error) {
+            message.error(extractApiError(error));
+            return false;
           }
-          setConcludeOpen(false);
-          setConcludingId(null);
         }}
       />
     </>
@@ -779,7 +789,8 @@ function ConcludeModal(props: {
   open: boolean;
   loading: boolean;
   onCancel: () => void;
-  onConfirm: (conclusion: string) => void;
+  /** Trả về `true` khi kết luận thành công để modal xóa nội dung đã nhập. */
+  onConfirm: (conclusion: string) => Promise<boolean>;
 }) {
   const [value, setValue] = useState("");
 
@@ -794,13 +805,15 @@ function ConcludeModal(props: {
         setValue("");
         props.onCancel();
       }}
-      onOk={() => {
+      onOk={async () => {
         if (!value.trim()) {
           message.warning("Vui lòng nhập nội dung kết luận.");
           return;
         }
-        props.onConfirm(value.trim());
-        setValue("");
+        // Giữ nguyên nội dung khi máy chủ từ chối để người dùng sửa và gửi lại.
+        if (await props.onConfirm(value.trim())) {
+          setValue("");
+        }
       }}
       destroyOnHidden
     >

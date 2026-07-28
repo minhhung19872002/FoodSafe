@@ -49,20 +49,27 @@ public class FoodPoisoningIncidentDto : EntityDto<Guid>
 
 public class CreateUpdateFoodPoisoningIncidentDto
 {
+    [Required]
     public DateTime? OccurrenceDate { get; set; }
     public DateTime? EndDate { get; set; }
     public string? Notes { get; set; }
 
-    public string? LocationDescription { get; set; }
+    [Required]
+    [StringLength(500)]
+    public string LocationDescription { get; set; } = string.Empty;
     public Guid? LocationCommuneId { get; set; }
     public Guid? LocationDistrictId { get; set; }
     public Guid? LocationProvinceId { get; set; }
     public double? LocationLatitude { get; set; }
     public double? LocationLongitude { get; set; }
 
+    [Range(0, 1_000_000)]
     public int ExposedCount { get; set; }
+    [Range(0, 1_000_000)]
     public int AffectedCount { get; set; }
+    [Range(0, 1_000_000)]
     public int HospitalizedCount { get; set; }
+    [Range(0, 1_000_000)]
     public int DeathCount { get; set; }
 
     public string? SuspectedFood { get; set; }

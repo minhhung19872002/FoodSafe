@@ -183,6 +183,28 @@ public sealed class FoodPoisoningIncidentTests
     }
 
     [Fact]
+    public void Acknowledge_Rejects_Already_Processed_Report()
+    {
+        var i = CreateDraft();
+        i.Submit(Guid.NewGuid(), DateTime.UtcNow);
+        i.Verify(Guid.NewGuid(), DateTime.UtcNow);
+        var report = i.AddErrorReport(Guid.NewGuid(), Guid.NewGuid(), "err", "fix", null);
+        report.Acknowledge();
+        Should.Throw<BusinessException>(() => report.Acknowledge());
+    }
+
+    [Fact]
+    public void MarkCorrected_Rejects_Corrected_Report()
+    {
+        var i = CreateDraft();
+        i.Submit(Guid.NewGuid(), DateTime.UtcNow);
+        i.Verify(Guid.NewGuid(), DateTime.UtcNow);
+        var report = i.AddErrorReport(Guid.NewGuid(), Guid.NewGuid(), "err", "fix", null);
+        report.MarkCorrected(Guid.NewGuid(), "đã sửa");
+        Should.Throw<BusinessException>(() => report.MarkCorrected(Guid.NewGuid(), "sửa lại"));
+    }
+
+    [Fact]
     public void SetInvestigationInfo_Works_When_Draft()
     {
         var i = CreateDraft();

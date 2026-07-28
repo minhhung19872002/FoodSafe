@@ -9,10 +9,10 @@ import {
 } from "../types/foodPoisoning.types";
 
 interface FormValues {
-  occurrenceDate?: dayjs.Dayjs;
+  occurrenceDate: dayjs.Dayjs;
   endDate?: dayjs.Dayjs;
   notes?: string;
-  locationDescription?: string;
+  locationDescription: string;
   exposedCount: number;
   affectedCount: number;
   hospitalizedCount: number;
@@ -92,11 +92,10 @@ export function IncidentEditorModal(props: Props) {
         preserve={false}
         onFinish={(values) =>
           props.onSubmit({
-            occurrenceDate: values.occurrenceDate?.toISOString(),
+            occurrenceDate: values.occurrenceDate.toISOString(),
             endDate: values.endDate?.toISOString(),
             notes: values.notes?.trim() || undefined,
-            locationDescription:
-              values.locationDescription?.trim() || undefined,
+            locationDescription: values.locationDescription.trim(),
             exposedCount: values.exposedCount,
             affectedCount: values.affectedCount,
             hospitalizedCount: values.hospitalizedCount,
@@ -120,7 +119,13 @@ export function IncidentEditorModal(props: Props) {
             gap: 16,
           }}
         >
-          <Form.Item name="occurrenceDate" label="Thời điểm xảy ra">
+          <Form.Item
+            name="occurrenceDate"
+            label="Thời điểm xảy ra"
+            rules={[
+              { required: true, message: "Vui lòng chọn thời điểm xảy ra." },
+            ]}
+          >
             <DatePicker
               showTime
               format="DD/MM/YYYY HH:mm"
@@ -136,8 +141,19 @@ export function IncidentEditorModal(props: Props) {
           </Form.Item>
         </div>
 
-        <Form.Item name="locationDescription" label="Địa điểm xảy ra">
-          <Input />
+        <Form.Item
+          name="locationDescription"
+          label="Địa điểm xảy ra"
+          rules={[
+            {
+              required: true,
+              whitespace: true,
+              message: "Vui lòng nhập địa điểm xảy ra.",
+            },
+            { max: 500, message: "Địa điểm không quá 500 ký tự." },
+          ]}
+        >
+          <Input maxLength={500} />
         </Form.Item>
 
         <div

@@ -56,15 +56,19 @@ public class CreateUpdateFoodPoisoningCaseDto
     public Guid? IncidentId { get; set; }
     public string? Notes { get; set; }
 
-    public string? LocationDescription { get; set; }
+    [Required]
+    [StringLength(500)]
+    public string LocationDescription { get; set; } = string.Empty;
     public Guid? LocationCommuneId { get; set; }
     public Guid? LocationDistrictId { get; set; }
     public Guid? LocationProvinceId { get; set; }
     public double? LocationLatitude { get; set; }
     public double? LocationLongitude { get; set; }
 
+    [Required]
     [StringLength(200)]
-    public string? VictimName { get; set; }
+    public string VictimName { get; set; } = string.Empty;
+    [Range(0, 150)]
     public int? VictimAge { get; set; }
     public VictimGender? VictimGender { get; set; }
     [StringLength(50)]
