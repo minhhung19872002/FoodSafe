@@ -406,7 +406,7 @@ export default function StatisticsPage() {
         </Row>
       )}
 
-      <ReportStatisticsSection year={year} />
+      <ReportStatisticsSection year={year} organizationId={organizationId} />
     </div>
   );
 }

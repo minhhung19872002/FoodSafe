@@ -84,21 +84,23 @@ public class ReportStatisticsAppService : ApplicationService
         var orgIds = scope.OrganizationIds;
         var global = scope.HasGlobalAccess;
         var year = input.Year ?? _clock.Now.Year;
+        var filterOrgId = input.OrganizationId;
 
         var dto = new ReportStatisticsDto();
-        await AddLicensesByBusinessTypeAsync(dto, global, orgIds, ct);
-        await AddPoisoningByAreaAsync(dto, global, orgIds, year, ct);
-        await AddInspectionSummaryAsync(dto, global, orgIds, year, ct);
-        await AddBusinessBreakdownAsync(dto, global, orgIds, ct);
+        await AddLicensesByBusinessTypeAsync(dto, global, orgIds, filterOrgId, ct);
+        await AddPoisoningByAreaAsync(dto, global, orgIds, filterOrgId, year, ct);
+        await AddInspectionSummaryAsync(dto, global, orgIds, filterOrgId, year, ct);
+        await AddBusinessBreakdownAsync(dto, global, orgIds, filterOrgId, ct);
         return dto;
     }
 
     private async Task AddLicensesByBusinessTypeAsync(
         ReportStatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        CancellationToken ct)
+        Guid? filterOrgId, CancellationToken ct)
     {
         var bizQ = (await _businesses.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value);
 
         var rows = new Dictionary<Guid, LicensesByBusinessTypeRow>();
 
@@ -131,22 +133,28 @@ public class ReportStatisticsAppService : ApplicationService
         }
 
         await CollectAsync(_selfDeclarations,
-            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId)),
+            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
             (row, count) => row.SelfDeclarations += count);
         await CollectAsync(_productRegistrations,
-            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId)),
+            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
             (row, count) => row.ProductRegistrations += count);
         await CollectAsync(_eligibilityCertificates,
-            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId)),
+            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
             (row, count) => row.EligibilityCertificates += count);
         await CollectAsync(_cfsCertificates,
-            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId)),
+            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
             (row, count) => row.CfsCertificates += count);
         await CollectAsync(_exportCertificates,
-            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId)),
+            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
             (row, count) => row.ExportCertificates += count);
         await CollectAsync(_adRegistrations,
-            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId)),
+            q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
             (row, count) => row.AdRegistrations += count);
 
         var typeIds = rows.Keys.Where(k => k != Guid.Empty).ToList();
@@ -182,10 +190,11 @@ public class ReportStatisticsAppService : ApplicationService
 
     private async Task AddPoisoningByAreaAsync(
         ReportStatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        int year, CancellationToken ct)
+        Guid? filterOrgId, int year, CancellationToken ct)
     {
         var caseQ = (await _poisoningCases.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
             .Where(x => x.ReportDate.Year == year);
 
         var grouped = await AsyncExecuter.ToListAsync(
@@ -224,10 +233,11 @@ public class ReportStatisticsAppService : ApplicationService
 
     private async Task AddInspectionSummaryAsync(
         ReportStatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        int year, CancellationToken ct)
+        Guid? filterOrgId, int year, CancellationToken ct)
     {
         var planQ = (await _inspectionPlans.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
             .Where(x => x.Year == year);
         var plans = await AsyncExecuter.ToListAsync(
             planQ.GroupBy(x => x.OrganizationId)
@@ -235,6 +245,7 @@ public class ReportStatisticsAppService : ApplicationService
 
         var resultQ = (await _inspectionResults.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
             .Where(x => x.InspectionDate.Year == year);
         var results = await AsyncExecuter.ToListAsync(
             resultQ.GroupBy(x => x.OrganizationId)
@@ -273,10 +284,11 @@ public class ReportStatisticsAppService : ApplicationService
 
     private async Task AddBusinessBreakdownAsync(
         ReportStatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        CancellationToken ct)
+        Guid? filterOrgId, CancellationToken ct)
     {
         var bizQ = (await _businesses.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value);
 
         var byType = await AsyncExecuter.ToListAsync(
             bizQ.GroupBy(b => b.BusinessTypeId)

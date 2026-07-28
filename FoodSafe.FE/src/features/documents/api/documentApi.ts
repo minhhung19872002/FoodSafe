@@ -83,9 +83,7 @@ export const documentAttachmentApi = {
   async upload(documentId: string, file: File): Promise<void> {
     const form = new FormData();
     form.append("file", file);
-    await api.post(`${endpoint}/${documentId}/attachments`, form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    await api.post(`${endpoint}/${documentId}/attachments`, form);
   },
   async download(
     documentId: string,

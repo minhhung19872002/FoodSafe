@@ -124,7 +124,6 @@ export const exportFoodCertificateApi = {
     const response = await api.post<FileAttachment>(
       `${endpoint}/${id}/attachments`,
       form,
-      { headers: { "Content-Type": "multipart/form-data" } },
     );
     return response.data;
   },

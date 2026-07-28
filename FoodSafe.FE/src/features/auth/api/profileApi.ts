@@ -28,9 +28,7 @@ export const profileApi = {
   async uploadAvatar(file: File): Promise<void> {
     const form = new FormData();
     form.append("file", file);
-    await api.post(`${endpoint}/avatar`, form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    await api.post(`${endpoint}/avatar`, form);
   },
   async deleteAvatar(): Promise<void> {
     await api.delete(`${endpoint}/avatar`);

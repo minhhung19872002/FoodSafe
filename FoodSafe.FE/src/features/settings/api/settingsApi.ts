@@ -21,9 +21,7 @@ export const settingsApi = {
   async uploadImage(kind: BrandingImageKind, file: File): Promise<void> {
     const form = new FormData();
     form.append("file", file);
-    await api.post(`${endpoint}/${kind}`, form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    await api.post(`${endpoint}/${kind}`, form);
   },
 
   async deleteImage(kind: BrandingImageKind): Promise<void> {

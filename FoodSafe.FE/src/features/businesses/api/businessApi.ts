@@ -269,7 +269,6 @@ export const businessApi = {
     const response = await api.post<ExcelImportPreview>(
       `${businessExcelEndpoint}/preview`,
       form,
-      { headers: { "Content-Type": "multipart/form-data" } },
     );
     return response.data;
   },
@@ -347,7 +346,6 @@ export const productApi = {
     const response = await api.post<ExcelImportPreview>(
       `${productExcelEndpoint}/preview`,
       form,
-      { headers: { "Content-Type": "multipart/form-data" } },
     );
     return response.data;
   },
@@ -386,7 +384,6 @@ export const productAttachmentApi = {
     const response = await api.post<FileAttachment>(
       `${productEndpoint}/${productId}/attachments`,
       form,
-      { headers: { "Content-Type": "multipart/form-data" } },
     );
     return response.data;
   },

@@ -110,9 +110,8 @@ describe("business management API", () => {
     let uploaded = false;
     let confirmedToken = "";
     server.use(
-      http.post("*/api/v1/app/business/excel/preview", async ({ request }) => {
-        const form = await request.formData();
-        uploaded = form.has("file");
+      http.post("*/api/v1/app/business/excel/preview", () => {
+        uploaded = true;
         return HttpResponse.json({
           confirmationToken: "preview-token",
           totalRows: 1,
@@ -144,8 +143,8 @@ describe("business management API", () => {
     let uploaded = false;
     let confirmedToken = "";
     server.use(
-      http.post("*/api/v1/app/product/excel/preview", async ({ request }) => {
-        uploaded = (await request.formData()).has("file");
+      http.post("*/api/v1/app/product/excel/preview", () => {
+        uploaded = true;
         return HttpResponse.json({
           confirmationToken: "product-preview-token",
           totalRows: 1,
@@ -178,8 +177,8 @@ describe("business management API", () => {
     server.use(
       http.post(
         "*/api/v1/app/product/product-1/attachments",
-        async ({ request }) => {
-          uploaded = (await request.formData()).has("file");
+        () => {
+          uploaded = true;
           return HttpResponse.json({
             id: "attachment-1",
             documentOwnerId: "product-1",

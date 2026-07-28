@@ -130,9 +130,7 @@ function attachmentApi(base: string) {
       const form = new FormData();
       form.append("file", file);
       if (description) form.append("description", description);
-      await api.post(`${base}/${ownerId}/attachments`, form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await api.post(`${base}/${ownerId}/attachments`, form);
     },
     async download(
       ownerId: string,

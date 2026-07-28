@@ -79,9 +79,7 @@ export const eligibilityCertificateApi = {
     const form = new FormData();
     form.append("file", file);
     return (
-      await api.post<FileAttachment>(`${endpoint}/${id}/attachments`, form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
+      await api.post<FileAttachment>(`${endpoint}/${id}/attachments`, form)
     ).data;
   },
   async downloadAttachment(id: string, attachmentId: string) {

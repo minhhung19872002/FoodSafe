@@ -1,5 +1,5 @@
 import { App, Button, Card, Table, Tabs } from "antd";
-import { ExportOutlined } from "@ant-design/icons";
+import { ExportOutlined, PrinterOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useMutation } from "@tanstack/react-query";
 import { saveDownload } from "@/utils/download";
@@ -15,6 +15,7 @@ import type {
 
 interface Props {
   year: number;
+  organizationId?: string;
 }
 
 const licenseColumns: ColumnsType<LicensesByBusinessTypeRow> = [
@@ -52,12 +53,13 @@ const breakdownColumns: ColumnsType<BusinessBreakdownRow> = [
   { title: "Số cơ sở", dataIndex: "count", align: "right" },
 ];
 
-export function ReportStatisticsSection({ year }: Props) {
+export function ReportStatisticsSection({ year, organizationId }: Props) {
   const { message } = App.useApp();
-  const { data, isLoading } = useReportStatistics({ year });
+  const filter = { year, organizationId };
+  const { data, isLoading } = useReportStatistics(filter);
   const exportMut = useMutation({
     mutationFn: (kind: ReportExportKind) =>
-      statisticsApi.exportReport(kind, { year }),
+      statisticsApi.exportReport(kind, filter),
   });
 
   const handleExport = (kind: ReportExportKind) =>
@@ -82,6 +84,14 @@ export function ReportStatisticsSection({ year }: Props) {
       size="small"
       style={{ marginTop: 16 }}
       loading={isLoading}
+      extra={
+        <Button
+          icon={<PrinterOutlined />}
+          onClick={() => window.print()}
+        >
+          In báo cáo
+        </Button>
+      }
     >
       <Tabs
         items={[

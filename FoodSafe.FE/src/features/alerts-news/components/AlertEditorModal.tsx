@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Form, Input, Modal, Select } from "antd";
 import {
   ALERT_CATEGORY,
@@ -13,6 +13,7 @@ import {
   type AtpAlert,
   type CreateUpdateAlertInput,
 } from "../types/alertsNews.types";
+import { useBusinessList } from "@/features/businesses/api/businessQueries";
 
 interface FormValues {
   title: string;
@@ -20,6 +21,7 @@ interface FormValues {
   category: AlertCategory;
   severity: AlertSeverity;
   source: AlertSource;
+  businessId?: string;
   alertNumber?: string;
   affectedArea?: string;
   affectedProducts?: string;
@@ -39,6 +41,11 @@ interface Props {
 export function AlertEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
   const { open, item } = props;
+  const [bizSearch, setBizSearch] = useState("");
+  const { data: bizData, isFetching: bizFetching } = useBusinessList(
+    { filter: bizSearch || undefined, skipCount: 0, maxResultCount: 30 },
+    open,
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -49,6 +56,7 @@ export function AlertEditorModal(props: Props) {
         category: item.category,
         severity: item.severity,
         source: item.source,
+        businessId: item.businessId,
         alertNumber: item.alertNumber,
         affectedArea: item.affectedArea,
         affectedProducts: item.affectedProducts,
@@ -88,9 +96,7 @@ export function AlertEditorModal(props: Props) {
             category: values.category,
             severity: values.severity,
             source: values.source,
-            // Form chưa có ô chọn cơ sở — giữ nguyên cơ sở đã gắn (ví dụ từ
-            // phản ánh của dân) để việc sửa không âm thầm xóa liên kết.
-            businessId: item?.businessId,
+            businessId: values.businessId || undefined,
             alertNumber: values.alertNumber?.trim() || undefined,
             affectedArea: values.affectedArea?.trim() || undefined,
             affectedProducts: values.affectedProducts?.trim() || undefined,
@@ -146,9 +152,27 @@ export function AlertEditorModal(props: Props) {
           </Form.Item>
         </div>
 
-        <Form.Item name="alertNumber" label="Số cảnh báo">
-          <Input maxLength={100} />
-        </Form.Item>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+        >
+          <Form.Item name="alertNumber" label="Số cảnh báo">
+            <Input maxLength={100} />
+          </Form.Item>
+          <Form.Item name="businessId" label="Cơ sở liên quan">
+            <Select
+              allowClear
+              showSearch
+              loading={bizFetching}
+              filterOption={false}
+              onSearch={(v) => setBizSearch(v)}
+              placeholder="Tìm theo tên cơ sở…"
+              options={(bizData?.items ?? []).map((b) => ({
+                value: b.id,
+                label: b.code ? `${b.name} (${b.code})` : b.name,
+              }))}
+            />
+          </Form.Item>
+        </div>
 
         <Form.Item
           name="content"
