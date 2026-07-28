@@ -1203,19 +1203,30 @@ button {
   letter-spacing: -0.2px;
 }
 
-/* Hộp thoại */
-.ant-modal .ant-modal-content {
+/* Hộp thoại (AntD v6: panel là .ant-modal-container) */
+.ant-modal .ant-modal-container {
   border-radius: 16px;
 }
 
-/* Modal cao hơn màn hình: cuộn bên trong body, giữ header + footer cố định */
-.ant-modal .ant-modal-body {
-  max-height: calc(100vh - 240px);
-  overflow-y: auto;
+/* Modal luôn căn giữa màn hình: modal ngắn nằm giữa, modal dài cao gần full
+   màn hình với khoảng thở trên/dưới, nội dung cuộn bên trong body còn
+   header + footer cố định. */
+.ant-modal-wrap {
+  display: flex;
 }
 
-.ant-modal .ant-modal-header {
-  border-radius: 16px 16px 0 0;
+.ant-modal {
+  top: 0;
+  margin: auto;
+  padding-bottom: 0;
+}
+
+.ant-modal .ant-modal-body {
+  /* 100vh - khoảng thở trên/dưới - header - footer - padding panel */
+  max-height: calc(100vh - 190px);
+  overflow-y: auto;
+  /* Row gutter dùng margin âm nên dễ sinh scroll ngang trong container cuộn */
+  overflow-x: hidden;
 }
 
 .ant-modal .ant-modal-title {
