@@ -32,7 +32,7 @@
 | F-019c | Data Integration — Outbound Auth Credentials (P0-2, FR-50/51) | VERIFIED | `e2e/data-integration-credentials.spec.ts` (6/6) | `8be91bc` | 2026-07-28 |
 | F-019d | Data Integration — Outbound Share via UI + history persistence (P1-3, FR-51) | VERIFIED | `e2e/data-integration-share.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
 | F-019e | Data Integration — Typed share payloads + retry attempt history (Batch F-1, FR-51..57) | VERIFIED | `e2e/data-integration-retry.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
-| F-019f | Data Integration — Inbound partner surface: accounts, API keys, receive endpoint (Batch F-2, INT-03) | VERIFIED | `e2e/data-integration-partners.spec.ts` (3/3; full DI subset 23/23) | `52d35c1` | 2026-07-28 |
+| F-019f | Data Integration — Inbound partner surface: accounts, API keys, receive endpoint (Batch F-2, INT-03) | VERIFIED | `e2e/data-integration-partners.spec.ts` (3/3; full DI subset 20/20) | `adb30eb` | 2026-07-28 |
 | F-020 | Identity Administration         | VERIFIED       | `e2e/identity-administration.spec.ts`, `e2e/identity-administration-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-021 | Audit Logs                      | VERIFIED       | `e2e/audit-logs.spec.ts`, `e2e/audit-logs-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-022 | Dashboard                       | VERIFIED       | `e2e/dashboard.spec.ts`, `e2e/dashboard-verification.spec.ts` | `8be91bc` | 2026-07-28 |

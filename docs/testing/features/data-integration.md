@@ -57,7 +57,7 @@
 
 ## Status: VERIFIED
 
-- **Feature ID**: F-019f · **Verified Git commit**: `52d35c1` · **Date**: 2026-07-28
+- **Feature ID**: F-019f · **Verified Git commit**: `adb30eb` · **Date**: 2026-07-28
 - **Environment**: Docker Compose full stack at `http://127.0.0.1:8080` (api + migrator rebuilt from the working tree; migration `20260728064640` applied) · **Database**: real PostgreSQL 15 · **API interception**: **No**
 - **Accounts**: `admin` (real login); partner calls use a **cookie-less** Playwright `request` context — no session, X-Api-Key only
 - **Frontend route**: `/data-integration` (new tabs: Đối tác liên thông / Dữ liệu nhận về)
@@ -69,7 +69,7 @@
 
 ## Evidence
 
-`e2e/data-integration-partners.spec.ts` — 3/3 (subset run 23/23 at `52d35c1`):
+`e2e/data-integration-partners.spec.ts` — 3/3 (full DataIntegration subset 20/20 re-run at `adb30eb`; submissions return 200/400/401/403 with zero 500s in the API log):
 
 1. **Lifecycle via real UI**: create partner (dialog) → issue key (raw `fsp_…` key rendered exactly once) → cookie-less partner POST → 200 + submissionId → duplicate X-Request-Id → `duplicate:true` + original id + exactly one DB row → submission row + Vietnamese payload visible in UI, survive reload → Inbound row in call history → UI revoke → 401 → UI rotation (new key authenticates) → UI suspend (popconfirm) → 401.
 2. **Guards**: no/garbage/unprefixed key → 401; expired key → 401; suspended partner → 401 (single generic message across all credential failures); data type outside allow-list → 403 `DataTypeNotAllowed`; unknown segment, stale timestamp (±300s replay window), missing X-Request-Id, missing X-Timestamp, unsupported schemaVersion, empty records → 400.
@@ -91,7 +91,7 @@
 
 ## Notes
 
-- Two product defects were found by this run and fixed at `52d35c1`: empty-records 500 (ABP arg-validation vs. the data-outcome contract; now `[DisableValidation]` + in-method checks) and `\uXXXX`-escaped stored payloads (now human-readable).
+- Defect history: the empty-records path leaked a raw 500 (ABP method-argument validation pre-empting the in-service data-outcome contract through the `IActionResult` controller). `52d35c1` tried to fix this with `[DisableValidation]` alone, but re-running the spec against a stack rebuilt from that commit showed the `ValidationInterceptor` still ran and threw; `adb30eb` removes every DataAnnotation from `InboundEnvelopeDto` (in-method structural checks are the only validation) and ports the `SourceSystem` length cap to an in-method guard — empty/oversized/bad-schema envelopes now deterministically return 400. The `\uXXXX`-escaped stored-payload fix from `52d35c1` (now human-readable) stands.
 - Raw API keys are never persisted or retrievable: storage is SHA-256 hash + 12-char prefix; verification is fixed-time.
 - Business ingestion of received payloads stays EXTERNALLY_BLOCKED on the TT 31/2026 field mapping (INT-02); submissions persist verbatim with status `Received`.
 
@@ -100,4 +100,4 @@
 - BE `Domain/DataIntegration/{PartnerAccount,PartnerApiKey,InboundSubmission}.cs`, `Application/DataIntegration/{PartnerAccountAppService,PartnerInboundAppService,PartnerKeyMaterial}.cs`, `HttpApi/DataIntegration/{PartnerAccountController,PartnerInboundController}.cs`
 - FE `src/features/data-integration/components/{PartnersTab,InboundSubmissionsTab}.tsx`
 - Depends on auth/scope/axios (Level 3) + `OutboundUrlValidator` (shared outbound client, hardened this batch)
-- Invalid for commits after `52d35c1` touching these paths
+- Invalid for commits after `adb30eb` touching these paths
