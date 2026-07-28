@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   AuditOutlined,
   CheckCircleOutlined,
@@ -77,8 +78,6 @@ import {
   type InspectionType,
 } from "../types/inspection.types";
 
-const PAGE_SIZE = 20;
-
 const formatDate = (value?: string) =>
   value ? dayjs(value).format("DD/MM/YYYY") : null;
 
@@ -117,7 +116,7 @@ function PlansTab() {
   const canDelete = hasPermission("FoodSafe.Inspection.Plans.Delete");
   const canApprove = hasPermission("FoodSafe.Inspection.Plans.Approve");
 
-  const [page, setPage] = useState(1);
+  const planPagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<InspectionPlanStatus>();
   const [planTypeFilter, setPlanTypeFilter] = useState<InspectionPlanType>();
@@ -134,8 +133,8 @@ function PlansTab() {
     status: statusFilter,
     planType: planTypeFilter,
     year: yearFilter,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    skipCount: planPagination.skipCount,
+    maxResultCount: planPagination.maxResultCount,
   };
   const plans = useInspectionPlans(queryFilter);
   const [businessSearch, setBusinessSearch] = useState("");
@@ -361,7 +360,7 @@ function PlansTab() {
           style={{ width: 260 }}
           onSearch={(v) => {
             setFilter(v.trim());
-            setPage(1);
+            planPagination.resetToFirstPage();
           }}
         />
         <Select
@@ -373,7 +372,7 @@ function PlansTab() {
           )}
           onChange={(v) => {
             setPlanTypeFilter(v);
-            setPage(1);
+            planPagination.resetToFirstPage();
           }}
         />
         <Select
@@ -385,7 +384,7 @@ function PlansTab() {
           )}
           onChange={(v) => {
             setStatusFilter(v);
-            setPage(1);
+            planPagination.resetToFirstPage();
           }}
         />
         <InputNumber
@@ -395,7 +394,7 @@ function PlansTab() {
           max={2099}
           onChange={(v) => {
             setYearFilter(v ?? undefined);
-            setPage(1);
+            planPagination.resetToFirstPage();
           }}
         />
         <div style={{ flex: 1 }} />
@@ -432,14 +431,7 @@ function PlansTab() {
           style: { cursor: "pointer" },
         })}
         dataSource={plans.data?.items ?? []}
-        pagination={{
-          current: page,
-          pageSize: PAGE_SIZE,
-          total: plans.data?.totalCount ?? 0,
-          showSizeChanger: false,
-          showTotal: (total) => `Tổng ${total} bản ghi`,
-          onChange: setPage,
-        }}
+        pagination={planPagination.buildConfig(plans.data?.totalCount)}
       />
       <InspectionPlanEditorModal
         open={editorOpen}
@@ -625,7 +617,7 @@ function ResultsTab() {
   const canEdit = hasPermission("FoodSafe.Inspection.Results.Edit");
   const canDelete = hasPermission("FoodSafe.Inspection.Results.Delete");
 
-  const [page, setPage] = useState(1);
+  const resultsPagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [inspectionType, setInspectionType] = useState<InspectionType>();
   const [overallResult, setOverallResult] = useState<InspectionOverallResult>();
@@ -642,8 +634,8 @@ function ResultsTab() {
     filter: filter || undefined,
     inspectionType,
     overallResult,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    skipCount: resultsPagination.skipCount,
+    maxResultCount: resultsPagination.maxResultCount,
   };
   const results = useInspectionResults(queryFilter);
   const [businessSearch, setBusinessSearch] = useState("");
@@ -827,7 +819,7 @@ function ResultsTab() {
           style={{ width: 260 }}
           onSearch={(v) => {
             setFilter(v.trim());
-            setPage(1);
+            resultsPagination.resetToFirstPage();
           }}
         />
         <Select
@@ -839,7 +831,7 @@ function ResultsTab() {
           )}
           onChange={(v) => {
             setInspectionType(v);
-            setPage(1);
+            resultsPagination.resetToFirstPage();
           }}
         />
         <Select
@@ -851,7 +843,7 @@ function ResultsTab() {
           )}
           onChange={(v) => {
             setOverallResult(v);
-            setPage(1);
+            resultsPagination.resetToFirstPage();
           }}
         />
         <div style={{ flex: 1 }} />
@@ -888,14 +880,7 @@ function ResultsTab() {
           style: { cursor: "pointer" },
         })}
         dataSource={results.data?.items ?? []}
-        pagination={{
-          current: page,
-          pageSize: PAGE_SIZE,
-          total: results.data?.totalCount ?? 0,
-          showSizeChanger: false,
-          showTotal: (total) => `Tổng ${total} bản ghi`,
-          onChange: setPage,
-        }}
+        pagination={resultsPagination.buildConfig(results.data?.totalCount)}
       />
       <InspectionResultEditorModal
         open={editorOpen}

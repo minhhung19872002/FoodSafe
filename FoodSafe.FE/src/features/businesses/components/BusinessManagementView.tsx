@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { TablePaginationConfig } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -62,11 +63,8 @@ interface BusinessManagementViewProps {
   onDistrictChange: (value?: string) => void;
   onBusinessSortingChange: (value?: string) => void;
   onShowDetail: (business: Business) => void;
-  businessTotal: number;
-  productTotal: number;
-  businessPage: number;
-  productPage: number;
-  pageSize: number;
+  businessPagination: TablePaginationConfig;
+  productPagination: TablePaginationConfig;
   loading: boolean;
   canViewBusinesses: boolean;
   canViewProducts: boolean;
@@ -85,8 +83,6 @@ interface BusinessManagementViewProps {
   onProductFilterChange: (value: string) => void;
   onBusinessStatusChange: (value?: BusinessStatus) => void;
   onProductStatusChange: (value?: ProductStatus) => void;
-  onBusinessPageChange: (page: number) => void;
-  onProductPageChange: (page: number) => void;
   onCreateBusiness: () => void;
   onImportBusiness: () => void;
   onExportBusiness: () => void;
@@ -425,13 +421,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               onChange={(_pagination, _filters, sorter) =>
                 handleBusinessSort(sorter)
               }
-              pagination={{
-                current: props.businessPage,
-                pageSize: props.pageSize,
-                total: props.businessTotal,
-                showTotal: (total) => `${total} bản ghi`,
-                onChange: props.onBusinessPageChange,
-              }}
+              pagination={props.businessPagination}
             />
           ) : (
             <BusinessLocationMap
@@ -492,13 +482,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               style: { cursor: "pointer" },
             })}
             columns={productColumns}
-            pagination={{
-              current: props.productPage,
-              pageSize: props.pageSize,
-              total: props.productTotal,
-              showTotal: (total) => `${total} bản ghi`,
-              onChange: props.onProductPageChange,
-            }}
+            pagination={props.productPagination}
           />
         </>
       )}

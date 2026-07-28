@@ -42,8 +42,8 @@ export interface AuditLogFilter {
   startTime?: string;
   endTime?: string;
   hasException?: boolean;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
 }
 
 export interface PagedResult<T> {

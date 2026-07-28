@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { Alert, Empty, Input, Space, Spin, Table, Typography } from "antd";
-import type { TablePaginationConfig } from "antd";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { PublicShell } from "../components/PublicShell";
 import { usePublicDocuments } from "../api/publicPortalQueries";
-
-const PAGE_SIZE = 20;
 
 function formatDate(iso: string) {
   return iso ? new Date(iso).toLocaleDateString("vi-VN") : "—";
@@ -13,23 +11,19 @@ function formatDate(iso: string) {
 export default function PublicDocumentsPage() {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
 
   const filter = {
     Keyword: submittedKeyword || undefined,
-    SkipCount: (page - 1) * PAGE_SIZE,
-    MaxResultCount: PAGE_SIZE,
+    SkipCount: pagination.skipCount,
+    MaxResultCount: pagination.maxResultCount,
   };
 
   const { data, isFetching, isError } = usePublicDocuments(filter);
 
   const handleSearch = () => {
-    setPage(1);
+    pagination.resetToFirstPage();
     setSubmittedKeyword(keyword);
-  };
-
-  const handleTableChange = (pagination: TablePaginationConfig) => {
-    setPage(pagination.current ?? 1);
   };
 
   return (
@@ -70,21 +64,16 @@ export default function PublicDocumentsPage() {
           <Table
             dataSource={data?.items}
             rowKey={(row) => row.documentNumber || row.title}
-            pagination={{
-              current: page,
-              pageSize: PAGE_SIZE,
-              total: data?.totalCount ?? 0,
-              showTotal: (total) => `Tổng ${total} văn bản`,
-              showSizeChanger: false,
-            }}
-            onChange={handleTableChange}
+            pagination={pagination.buildConfig(data?.totalCount)}
             locale={{ emptyText: <Empty description="Không có văn bản nào" /> }}
             size="middle"
             scroll={{ x: 1000 }}
           >
             <Table.Column
               title="STT"
-              render={(_v, _r, i) => (page - 1) * PAGE_SIZE + i + 1}
+              render={(_v, _r, i) =>
+                (pagination.page - 1) * pagination.pageSize + i + 1
+              }
               width={60}
             />
             <Table.Column

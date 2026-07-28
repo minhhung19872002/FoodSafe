@@ -197,8 +197,8 @@ export interface CaseFilter {
   reportDateFrom?: string;
   reportDateTo?: string;
   incidentId?: string;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
 }
 
 export interface FoodPoisoningIncident {
@@ -280,8 +280,8 @@ export interface IncidentFilter {
   status?: PoisoningIncidentStatus;
   occurrenceDateFrom?: string;
   occurrenceDateTo?: string;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
 }
 
 export interface ConcludeIncidentInput {

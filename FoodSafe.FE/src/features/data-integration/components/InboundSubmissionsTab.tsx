@@ -17,6 +17,7 @@ import {
   useInboundSubmissionDetail,
   useInboundSubmissions,
 } from "../api/dataIntegrationQueries";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   INBOUND_SUBMISSION_STATUS_CONFIG,
   SHARED_DATA_TYPE,
@@ -27,15 +28,15 @@ import {
   type SharedDataType,
 } from "../types/dataIntegration.types";
 
-const PAGE_SIZE = 15;
-
 /** Read-only view of the data partners pushed in through the inbound API (INT-03, STT 51-57 "nhận"). */
 export function InboundSubmissionsTab() {
-  const [filter, setFilter] = useState<InboundSubmissionFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<InboundSubmissionFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useInboundSubmissions({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useInboundSubmissions(filter);
   const [detailId, setDetailId] = useState<string>();
   const detail = useInboundSubmissionDetail(detailId);
 
@@ -99,9 +100,10 @@ export function InboundSubmissionsTab() {
           options={Object.entries(SHARED_DATA_TYPE_LABELS)
             .filter(([v]) => Number(v) !== SHARED_DATA_TYPE.Other)
             .map(([value, label]) => ({ value: Number(value), label }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, dataType: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, dataType: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Trạng thái"
@@ -110,19 +112,22 @@ export function InboundSubmissionsTab() {
           options={Object.entries(INBOUND_SUBMISSION_STATUS_CONFIG).map(
             ([k, v]) => ({ value: Number(k), label: v.label }),
           )}
-          onChange={(v) => setFilter((f) => ({ ...f, status: v, skipCount: 0 }))}
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <DatePicker.RangePicker
           placeholder={["Từ ngày", "Đến ngày"]}
           format="DD/MM/YYYY"
-          onChange={(range) =>
+          onChange={(range) => {
             setFilter((f) => ({
               ...f,
               fromDate: range?.[0]?.format("YYYY-MM-DD"),
               toDate: range?.[1]?.format("YYYY-MM-DD"),
-              skipCount: 0,
-            }))
-          }
+            }));
+            pagination.resetToFirstPage();
+          }}
         />
       </Space>
       <Table
@@ -135,15 +140,7 @@ export function InboundSubmissionsTab() {
           onDoubleClick: () => setDetailId(record.id),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
       <Modal
         title="Chi tiết dữ liệu nhận về"

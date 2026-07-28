@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { Alert, Empty, Space, Spin, Table, Tag, Typography } from "antd";
-import type { TablePaginationConfig } from "antd";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { PublicShell } from "../components/PublicShell";
 import { usePublicWarnedBusinesses } from "../api/publicPortalQueries";
 import {
@@ -9,21 +8,15 @@ import {
   type PublicWarnedBusiness,
 } from "../types/publicPortal.types";
 
-const PAGE_SIZE = 20;
-
 export default function PublicWarnedBusinessesPage() {
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
 
   const filter = {
-    SkipCount: (page - 1) * PAGE_SIZE,
-    MaxResultCount: PAGE_SIZE,
+    SkipCount: pagination.skipCount,
+    MaxResultCount: pagination.maxResultCount,
   };
 
   const { data, isFetching, isError } = usePublicWarnedBusinesses(filter);
-
-  const handleTableChange = (pagination: TablePaginationConfig) => {
-    setPage(pagination.current ?? 1);
-  };
 
   return (
     <PublicShell>
@@ -48,14 +41,7 @@ export default function PublicWarnedBusinessesPage() {
         <Table<PublicWarnedBusiness>
           dataSource={data?.items}
           rowKey={(row) => `${row.businessCode}-${row.alertNumber}`}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: data?.totalCount ?? 0,
-            showTotal: (total) => `Tổng ${total} cơ sở bị cảnh báo`,
-            showSizeChanger: false,
-          }}
-          onChange={handleTableChange}
+          pagination={pagination.buildConfig(data?.totalCount)}
           locale={{
             emptyText: (
               <Empty description="Không có cơ sở nào đang bị cảnh báo" />
@@ -81,7 +67,9 @@ export default function PublicWarnedBusinessesPage() {
         >
           <Table.Column
             title="STT"
-            render={(_v, _r, i) => (page - 1) * PAGE_SIZE + i + 1}
+            render={(_v, _r, i) =>
+              (pagination.page - 1) * pagination.pageSize + i + 1
+            }
             width={60}
           />
           <Table.Column title="Tên cơ sở" dataIndex="businessName" />

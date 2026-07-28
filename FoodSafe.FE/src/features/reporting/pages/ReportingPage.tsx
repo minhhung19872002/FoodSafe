@@ -84,8 +84,8 @@ import {
   type ActionMonthReportFilter,
   type ReportStatus,
 } from "../types/reporting.types";
+import { useTablePagination } from "@/hooks/useTablePagination";
 
-const PAGE_SIZE = 15;
 const MONTHS = Array.from({ length: 12 }, (_, i) => ({
   value: i + 1,
   label: `Tháng ${i + 1}`,
@@ -99,11 +99,13 @@ function StatusTag({ status }: { status: ReportStatus }) {
 
 function NdtpTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<NdtpReportFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<NdtpReportFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useNdtpReports({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useNdtpReports(filter);
   const createMut = useCreateNdtpReport();
   const deleteMut = useDeleteNdtpReport();
   const submitMut = useSubmitNdtpReport();
@@ -332,20 +334,18 @@ function NdtpTab() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <InputNumber<number>
           placeholder="Năm"
           style={{ width: 100 }}
-          onChange={(v) =>
-            setFilter((f) => ({
-              ...f,
-              periodYear: v ?? undefined,
-              skipCount: 0,
-            }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, periodYear: v ?? undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Button
           icon={<ExportOutlined />}
@@ -382,15 +382,7 @@ function NdtpTab() {
         dataSource={data?.items}
         loading={isLoading}
         size="small"
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
         onRow={(record) => ({
           onDoubleClick: () => setDocView({ kind: "ndtp", report: record }),
           style: { cursor: "pointer" },
@@ -477,11 +469,13 @@ function NdtpTab() {
 
 function AtpWorkTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<AtpWorkReportFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<AtpWorkReportFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useAtpWorkReports({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useAtpWorkReports(filter);
   const createMut = useCreateAtpWorkReport();
   const deleteMut = useDeleteAtpWorkReport();
   const submitMut = useSubmitAtpWorkReport();
@@ -713,9 +707,10 @@ function AtpWorkTab() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Loại kỳ"
@@ -725,9 +720,10 @@ function AtpWorkTab() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, periodType: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, periodType: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Button
           icon={<ExportOutlined />}
@@ -765,15 +761,7 @@ function AtpWorkTab() {
         dataSource={data?.items}
         loading={isLoading}
         size="small"
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
         onRow={(record) => ({
           onDoubleClick: () => setDocView({ kind: "atp", report: record }),
           style: { cursor: "pointer" },
@@ -885,11 +873,13 @@ function AtpWorkTab() {
 
 function ActionMonthTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<ActionMonthReportFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<ActionMonthReportFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useActionMonthReports({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useActionMonthReports(filter);
   const createMut = useCreateActionMonthReport();
   const deleteMut = useDeleteActionMonthReport();
   const submitMut = useSubmitActionMonthReport();
@@ -1125,20 +1115,18 @@ function ActionMonthTab() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <InputNumber<number>
           placeholder="Năm"
           style={{ width: 100 }}
-          onChange={(v) =>
-            setFilter((f) => ({
-              ...f,
-              periodYear: v ?? undefined,
-              skipCount: 0,
-            }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, periodYear: v ?? undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Button
           icon={<ExportOutlined />}
@@ -1172,15 +1160,7 @@ function ActionMonthTab() {
         dataSource={data?.items}
         loading={isLoading}
         size="small"
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
         onRow={(record) => ({
           onDoubleClick: () =>
             setDocView({ kind: "action-month", report: record }),

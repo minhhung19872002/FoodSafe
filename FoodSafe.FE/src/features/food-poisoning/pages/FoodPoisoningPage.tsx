@@ -70,8 +70,7 @@ import {
   type TreatmentResult,
   type VictimGender,
 } from "../types/foodPoisoning.types";
-
-const PAGE_SIZE = 15;
+import { useTablePagination } from "@/hooks/useTablePagination";
 
 const formatDate = (v?: string) => (v ? dayjs(v).format("DD/MM/YYYY") : null);
 const formatDateTime = (v?: string) =>
@@ -79,11 +78,13 @@ const formatDateTime = (v?: string) =>
 
 function CasesTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<CaseFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<CaseFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = usePoisoningCases({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = usePoisoningCases(filter);
   const createMut = useCreateCase();
   const updateMut = useUpdateCase();
   const deleteMut = useDeleteCase();
@@ -273,21 +274,19 @@ function CasesTab() {
           allowClear
           placeholder="Tìm theo mã ca, tên nạn nhân..."
           style={{ width: 280 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           allowClear
           placeholder="Trạng thái"
           style={{ width: 150 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(POISONING_CASE_STATUS_CONFIG).map(
             ([value, cfg]) => ({
               value: Number(value),
@@ -325,17 +324,7 @@ function CasesTab() {
           onDoubleClick: () => setDetailCase(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
-          pageSize: PAGE_SIZE,
-          total: data?.totalCount,
-          showSizeChanger: false,
-          onChange: (page) =>
-            setFilter((f) => ({
-              ...f,
-              skipCount: (page - 1) * PAGE_SIZE,
-            })),
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
 
       <CaseEditorModal
@@ -432,11 +421,13 @@ function CasesTab() {
 
 function IncidentsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<IncidentFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<IncidentFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = usePoisoningIncidents({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = usePoisoningIncidents(filter);
   const createMut = useCreateIncident();
   const updateMut = useUpdateIncident();
   const deleteMut = useDeleteIncident();
@@ -645,21 +636,19 @@ function IncidentsTab() {
           allowClear
           placeholder="Tìm theo mã vụ, địa điểm..."
           style={{ width: 280 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           allowClear
           placeholder="Trạng thái"
           style={{ width: 150 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(POISONING_INCIDENT_STATUS_CONFIG).map(
             ([value, cfg]) => ({
               value: Number(value),
@@ -697,17 +686,7 @@ function IncidentsTab() {
           onDoubleClick: () => setDetailIncident(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
-          pageSize: PAGE_SIZE,
-          total: data?.totalCount,
-          showSizeChanger: false,
-          onChange: (page) =>
-            setFilter((f) => ({
-              ...f,
-              skipCount: (page - 1) * PAGE_SIZE,
-            })),
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
 
       <IncidentEditorModal

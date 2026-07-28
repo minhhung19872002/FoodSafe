@@ -17,6 +17,7 @@ import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RevokeModal } from "@/components/RevokeModal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { saveDownload } from "@/utils/download";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   useCreateProductRegistration,
   useDeleteProductRegistration,
@@ -44,8 +45,6 @@ import {
   type ProductRegistrationInput,
 } from "../types/productRegistration.types";
 
-const PAGE_SIZE = 20;
-
 export default function ProductRegistrationPage() {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -56,7 +55,7 @@ export default function ProductRegistrationPage() {
   const canDelete = hasPermission(
     "FoodSafe.Licensing.ProductRegistrations.Delete",
   );
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [businessId, setBusinessId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
@@ -75,8 +74,8 @@ export default function ProductRegistrationPage() {
     businessId,
     status,
     expiringWithinDays,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   };
   const registrations = useProductRegistrations(queryFilter);
   const businesses = useProductRegistrationBusinesses();
@@ -272,7 +271,7 @@ export default function ProductRegistrationPage() {
               style={{ width: 310 }}
               onSearch={(value) => {
                 setFilter(value.trim());
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -288,7 +287,7 @@ export default function ProductRegistrationPage() {
               }))}
               onChange={(value) => {
                 setBusinessId(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -302,7 +301,7 @@ export default function ProductRegistrationPage() {
               ]}
               onChange={(value) => {
                 setStatus(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -316,7 +315,7 @@ export default function ProductRegistrationPage() {
               ]}
               onChange={(value) => {
                 setExpiringWithinDays(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
           </Space>
@@ -333,14 +332,9 @@ export default function ProductRegistrationPage() {
             onDoubleClick: () => setDetailRecord(record),
             style: { cursor: "pointer" },
           })}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: registrations.data?.totalCount ?? 0,
-            showSizeChanger: false,
-            showTotal: (total) => `${total} bản ghi`,
-            onChange: setPage,
-          }}
+          pagination={pagination.buildConfig(
+            registrations.data?.totalCount ?? 0,
+          )}
         />
       </div>
 

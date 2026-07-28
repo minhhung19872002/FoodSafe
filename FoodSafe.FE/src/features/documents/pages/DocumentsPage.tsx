@@ -43,16 +43,17 @@ import {
   type DocumentFilter,
   type DocumentStatus,
 } from "../types/document.types";
-
-const PAGE_SIZE = 15;
+import { useTablePagination } from "@/hooks/useTablePagination";
 
 export default function DocumentsPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<DocumentFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<DocumentFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useDocuments({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useDocuments(filter);
   const { data: documentTypes, isLoading: docTypesLoading } =
     useDocumentTypes();
   const createMut = useCreateDocument();
@@ -198,13 +199,10 @@ export default function DocumentsPage() {
           placeholder="Số VB, tiêu đề"
           allowClear
           style={{ width: 200 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Trạng thái"
@@ -214,9 +212,10 @@ export default function DocumentsPage() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Button
           icon={<ExportOutlined />}
@@ -246,15 +245,7 @@ export default function DocumentsPage() {
           onDoubleClick: () => setDetailDoc(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
       <Modal
         title={editing ? "Sửa văn bản" : "Thêm văn bản"}

@@ -44,8 +44,7 @@ import { ExpiryTag } from "@/components/ExpiryTag";
 import { RevokeModal } from "@/components/RevokeModal";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
-
-const PAGE_SIZE = 20;
+import { useTablePagination } from "@/hooks/useTablePagination";
 
 export default function CfsCertificatePage() {
   const { message } = App.useApp();
@@ -53,7 +52,7 @@ export default function CfsCertificatePage() {
   const canCreate = hasPermission("FoodSafe.Licensing.CfsCertificates.Create");
   const canEdit = hasPermission("FoodSafe.Licensing.CfsCertificates.Edit");
   const canDelete = hasPermission("FoodSafe.Licensing.CfsCertificates.Delete");
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [businessId, setBusinessId] = useState<string>();
   const [destinationCountryId, setDestinationCountryId] = useState<string>();
@@ -72,8 +71,8 @@ export default function CfsCertificatePage() {
     destinationCountryId,
     status,
     expiringWithinDays,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   };
   const registrations = useCfsCertificates(queryFilter);
   const businesses = useCfsCertificateBusinesses();
@@ -276,7 +275,7 @@ export default function CfsCertificatePage() {
               style={{ width: 310 }}
               onSearch={(value) => {
                 setFilter(value.trim());
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -292,7 +291,7 @@ export default function CfsCertificatePage() {
               }))}
               onChange={(value) => {
                 setBusinessId(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -308,7 +307,7 @@ export default function CfsCertificatePage() {
               }))}
               onChange={(value) => {
                 setDestinationCountryId(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -322,7 +321,7 @@ export default function CfsCertificatePage() {
               ]}
               onChange={(value) => {
                 setStatus(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -336,7 +335,7 @@ export default function CfsCertificatePage() {
               ]}
               onChange={(value) => {
                 setExpiringWithinDays(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
           </Space>
@@ -353,14 +352,9 @@ export default function CfsCertificatePage() {
             onDoubleClick: () => setDetailRecord(record),
             style: { cursor: "pointer" },
           })}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: registrations.data?.totalCount ?? 0,
-            showSizeChanger: false,
-            showTotal: (total) => `Tổng ${total} bản ghi`,
-            onChange: setPage,
-          }}
+          pagination={pagination.buildConfig(
+            registrations.data?.totalCount ?? 0,
+          )}
         />
       </div>
 

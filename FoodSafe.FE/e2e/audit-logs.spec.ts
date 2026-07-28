@@ -29,7 +29,7 @@ test.describe("audit log viewer", () => {
     const rows = page.locator("table tbody tr.ant-table-row");
     await expect(rows.first()).toBeVisible({ timeout: 10_000 });
 
-    const paginationInfo = page.getByText(/Tổng:?\s*\d+\s*bản ghi/);
+    const paginationInfo = page.getByText(/Hiển thị\s*\d+-\d+\/\d+/);
     await expect(paginationInfo).toBeVisible();
 
     await page.getByPlaceholder("Tìm theo URL").fill("/api/v1/app");

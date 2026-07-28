@@ -1336,6 +1336,26 @@ button {
   }
 }
 
+/* ── Table pagination: page-size select on the left, page buttons on the right ── */
+
+.ant-table-wrapper .ant-table-pagination.ant-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 8px;
+}
+
+.ant-table-wrapper .ant-table-pagination .ant-pagination-total-text {
+  order: -2;
+}
+
+.ant-table-wrapper .ant-table-pagination .ant-pagination-options {
+  order: -1;
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}
+
 /* ── Reduced motion ── */
 
 @media (prefers-reduced-motion: reduce) {

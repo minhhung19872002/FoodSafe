@@ -26,6 +26,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { saveDownload } from "@/utils/download";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { useApiSpecs } from "../api/dataIntegrationQueries";
@@ -44,7 +45,6 @@ import {
   type ApiSpecificationFilter,
 } from "../types/dataIntegration.types";
 
-const PAGE_SIZE = 15;
 const MAX_CONTENT_BYTES = 2 * 1024 * 1024;
 const ACCEPTED_EXTENSIONS = ".json,.yaml,.yml";
 
@@ -69,11 +69,13 @@ function partnerUrl(name: string): string {
 /** Admin UI for versioned partner API specifications (FR-50-05). */
 export function ApiSpecsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<ApiSpecificationFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<ApiSpecificationFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useApiSpecs({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useApiSpecs(filter);
   const publishMut = usePublishApiSpec();
   const unpublishMut = useUnpublishApiSpec();
   const deleteMut = useDeleteApiSpec();
@@ -253,9 +255,10 @@ export function ApiSpecsTab() {
           placeholder="Tên, tiêu đề đặc tả"
           allowClear
           style={{ width: 240 }}
-          onSearch={(v) =>
-            setFilter((f) => ({ ...f, filter: v || undefined, skipCount: 0 }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Trạng thái"
@@ -265,13 +268,13 @@ export function ApiSpecsTab() {
             { value: true, label: "Đã xuất bản" },
             { value: false, label: "Nháp" },
           ]}
-          onChange={(v) =>
+          onChange={(v) => {
             setFilter((f) => ({
               ...f,
               isPublished: v as boolean | undefined,
-              skipCount: 0,
-            }))
-          }
+            }));
+            pagination.resetToFirstPage();
+          }}
         />
         {canCreate && (
           <Button
@@ -293,15 +296,7 @@ export function ApiSpecsTab() {
           onDoubleClick: () => setDetailRecord(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
 
       <UploadApiSpecModal

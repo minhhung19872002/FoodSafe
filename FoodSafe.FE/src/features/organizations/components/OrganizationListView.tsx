@@ -9,6 +9,7 @@ import {
   Tag,
   Tree,
 } from "antd";
+import type { TablePaginationConfig } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -28,10 +29,8 @@ import type {
 interface Props {
   items: OrganizationDto[];
   treeItems: OrganizationTreeNode[];
-  totalCount: number;
   loading: boolean;
-  page: number;
-  pageSize: number;
+  pagination: TablePaginationConfig;
   filter: string;
   level?: OrganizationLevel;
   canCreate: boolean;
@@ -42,7 +41,6 @@ interface Props {
   onExport: () => void;
   onFilterChange: (value: string) => void;
   onLevelChange: (value?: OrganizationLevel) => void;
-  onPageChange: (page: number, pageSize: number) => void;
   onRefresh: () => void;
   onCreate: () => void;
   onEdit: (organization: OrganizationDto) => void;
@@ -67,10 +65,8 @@ function toTreeData(items: OrganizationTreeNode[]): DataNode[] {
 export function OrganizationListView({
   items,
   treeItems,
-  totalCount,
   loading,
-  page,
-  pageSize,
+  pagination,
   filter,
   level,
   canCreate,
@@ -81,7 +77,6 @@ export function OrganizationListView({
   onExport,
   onFilterChange,
   onLevelChange,
-  onPageChange,
   onRefresh,
   onCreate,
   onEdit,
@@ -139,14 +134,7 @@ export function OrganizationListView({
           onDoubleClick: () => onShowDetail(organization),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          current: page,
-          pageSize,
-          total: totalCount,
-          showSizeChanger: true,
-          showTotal: (total) => `${total} bản ghi`,
-          onChange: onPageChange,
-        }}
+        pagination={pagination}
         columns={[
           { title: "Mã", dataIndex: "code", width: 130, ellipsis: true },
           { title: "Tên đơn vị", dataIndex: "name", ellipsis: true },

@@ -16,6 +16,7 @@ import { ExpiryTag } from "@/components/ExpiryTag";
 import { RevokeModal } from "@/components/RevokeModal";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   useCreateSelfDeclaration,
   useDeleteSelfDeclaration,
@@ -42,8 +43,6 @@ import {
   type SelfDeclarationInput,
 } from "../types/selfDeclaration.types";
 
-const PAGE_SIZE = 20;
-
 export default function SelfDeclarationPage() {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -56,7 +55,7 @@ export default function SelfDeclarationPage() {
   const canDelete = hasPermission(
     "FoodSafe.BusinessManagement.SelfDeclarations.Delete",
   );
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [businessId, setBusinessId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
@@ -75,8 +74,8 @@ export default function SelfDeclarationPage() {
     businessId,
     status,
     expiringWithinDays,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   };
   const declarations = useSelfDeclarations(queryFilter);
   const businesses = useSelfDeclarationBusinesses();
@@ -258,7 +257,7 @@ export default function SelfDeclarationPage() {
             style={{ width: 280 }}
             onSearch={(value) => {
               setFilter(value.trim());
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -274,7 +273,7 @@ export default function SelfDeclarationPage() {
             }))}
             onChange={(value) => {
               setBusinessId(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -288,7 +287,7 @@ export default function SelfDeclarationPage() {
             ]}
             onChange={(value) => {
               setStatus(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -302,7 +301,7 @@ export default function SelfDeclarationPage() {
             ]}
             onChange={(value) => {
               setExpiringWithinDays(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
         </div>
@@ -318,14 +317,9 @@ export default function SelfDeclarationPage() {
             onDoubleClick: () => setDetailRecord(record),
             style: { cursor: "pointer" },
           })}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: declarations.data?.totalCount ?? 0,
-            showSizeChanger: false,
-            showTotal: (total) => `${total} bản ghi`,
-            onChange: setPage,
-          }}
+          pagination={pagination.buildConfig(
+            declarations.data?.totalCount ?? 0,
+          )}
         />
       </div>
 

@@ -26,7 +26,11 @@ import {
 } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { usePartnerAccounts, usePartnerKeys } from "../api/dataIntegrationQueries";
+import { useTablePagination } from "@/hooks/useTablePagination";
+import {
+  usePartnerAccounts,
+  usePartnerKeys,
+} from "../api/dataIntegrationQueries";
 import {
   useCreatePartner,
   useDeletePartner,
@@ -47,7 +51,6 @@ import {
   type SharedDataType,
 } from "../types/dataIntegration.types";
 
-const PAGE_SIZE = 15;
 const EXTERNAL_SYSTEMS = ["Bộ Y tế", "Sở Nông nghiệp", "Sở Công thương"];
 
 function apiErrorMessage(error: unknown, fallback: string): string {
@@ -68,11 +71,13 @@ interface PartnerFormValues {
 /** Admin UI for inbound partner accounts + API keys (INT-03, FR-50). */
 export function PartnersTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<PartnerAccountFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<PartnerAccountFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = usePartnerAccounts({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = usePartnerAccounts(filter);
   const createMut = useCreatePartner();
   const updateMut = useUpdatePartner();
   const toggleMut = useTogglePartnerStatus();
@@ -230,9 +235,7 @@ export function PartnersTab() {
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa đối tác."),
                   onError: (error) =>
-                    void message.error(
-                      apiErrorMessage(error, "Xóa thất bại."),
-                    ),
+                    void message.error(apiErrorMessage(error, "Xóa thất bại.")),
                 })
               }
             >
@@ -251,9 +254,10 @@ export function PartnersTab() {
           placeholder="Mã, tên, hệ thống"
           allowClear
           style={{ width: 240 }}
-          onSearch={(v) =>
-            setFilter((f) => ({ ...f, filter: v || undefined, skipCount: 0 }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Trạng thái"
@@ -262,7 +266,10 @@ export function PartnersTab() {
           options={Object.entries(PARTNER_ACCOUNT_STATUS_CONFIG).map(
             ([k, v]) => ({ value: Number(k), label: v.label }),
           )}
-          onChange={(v) => setFilter((f) => ({ ...f, status: v, skipCount: 0 }))}
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         {canCreate && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
@@ -276,15 +283,7 @@ export function PartnersTab() {
         dataSource={data?.items}
         loading={isLoading}
         size="small"
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
 
       <Modal
@@ -297,12 +296,7 @@ export function PartnersTab() {
         confirmLoading={createMut.isPending || updateMut.isPending}
         destroyOnHidden
       >
-        <Form
-          form={form}
-          layout="vertical"
-          preserve={false}
-          onFinish={submit}
-        >
+        <Form form={form} layout="vertical" preserve={false} onFinish={submit}>
           {!editing && (
             <Form.Item
               name="code"
@@ -472,8 +466,7 @@ function PartnerKeysModal({
             title: "Hết hạn",
             dataIndex: "expiresAt",
             width: 110,
-            render: (v?: string) =>
-              v ? dayjs(v).format("DD/MM/YYYY") : "—",
+            render: (v?: string) => (v ? dayjs(v).format("DD/MM/YYYY") : "—"),
           },
           {
             title: "Dùng lần cuối",

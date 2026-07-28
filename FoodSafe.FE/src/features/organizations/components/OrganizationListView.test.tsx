@@ -29,10 +29,15 @@ describe("OrganizationListView", () => {
           },
         ]}
         treeItems={[]}
-        totalCount={1}
         loading={false}
-        page={1}
-        pageSize={20}
+        pagination={{
+          current: 1,
+          pageSize: 20,
+          total: 1,
+          showSizeChanger: true,
+          pageSizeOptions: [10, 20, 50, 100],
+          onChange: vi.fn(),
+        }}
         filter=""
         canCreate
         canEdit
@@ -41,7 +46,6 @@ describe("OrganizationListView", () => {
         onExport={vi.fn()}
         onFilterChange={onFilterChange}
         onLevelChange={vi.fn()}
-        onPageChange={vi.fn()}
         onRefresh={vi.fn()}
         onCreate={vi.fn()}
         onEdit={onEdit}

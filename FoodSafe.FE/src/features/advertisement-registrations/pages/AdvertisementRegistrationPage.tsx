@@ -17,6 +17,7 @@ import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RevokeModal } from "@/components/RevokeModal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { saveDownload } from "@/utils/download";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   useCreateAdvertisementRegistration,
   useDeleteAdvertisementAttachment,
@@ -43,15 +44,13 @@ import {
   type LicenseStatus,
 } from "../types/advertisementRegistration.types";
 
-const PAGE_SIZE = 20;
-
 export default function AdvertisementRegistrationPage() {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canCreate = hasPermission("FoodSafe.Licensing.AdRegistrations.Create");
   const canEdit = hasPermission("FoodSafe.Licensing.AdRegistrations.Edit");
   const canDelete = hasPermission("FoodSafe.Licensing.AdRegistrations.Delete");
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [businessId, setBusinessId] = useState<string>();
   const [advertisementTypeId, setAdvertisementTypeId] = useState<string>();
@@ -72,8 +71,8 @@ export default function AdvertisementRegistrationPage() {
     advertisementTypeId,
     status,
     expiringWithinDays,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   };
   const registrations = useAdvertisementRegistrations(queryFilter);
   const businesses = useAdvertisementBusinesses();
@@ -248,7 +247,7 @@ export default function AdvertisementRegistrationPage() {
             style={{ width: 300 }}
             onSearch={(value) => {
               setFilter(value.trim());
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -263,7 +262,7 @@ export default function AdvertisementRegistrationPage() {
             }))}
             onChange={(value) => {
               setBusinessId(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -276,7 +275,7 @@ export default function AdvertisementRegistrationPage() {
             }))}
             onChange={(value) => {
               setAdvertisementTypeId(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -290,7 +289,7 @@ export default function AdvertisementRegistrationPage() {
             ]}
             onChange={(value) => {
               setStatus(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -303,7 +302,7 @@ export default function AdvertisementRegistrationPage() {
             }))}
             onChange={(value) => {
               setExpiringWithinDays(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
         </div>
@@ -318,14 +317,9 @@ export default function AdvertisementRegistrationPage() {
             onDoubleClick: () => setDetailRecord(record),
             style: { cursor: "pointer" },
           })}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: registrations.data?.totalCount ?? 0,
-            showSizeChanger: false,
-            showTotal: (total) => `${total} bản ghi`,
-            onChange: setPage,
-          }}
+          pagination={pagination.buildConfig(
+            registrations.data?.totalCount ?? 0,
+          )}
         />
       </div>
       <RecordDetailDrawer

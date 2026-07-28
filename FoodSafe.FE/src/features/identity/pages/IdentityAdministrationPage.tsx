@@ -29,6 +29,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { saveDownload } from "@/utils/download";
 import { identityApi } from "../api/identityApi";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -92,8 +93,6 @@ const userFormPermissions = [
   { name: permission.manageUserScope, label: "Gán phạm vi dữ liệu" },
 ] as const;
 
-const pageSize = 10;
-
 function organizationOptions(
   items: OrganizationTreeNode[],
   depth = 0,
@@ -121,14 +120,12 @@ export default function IdentityAdministrationPage() {
   const userFormBlockedReason = missingUserFormPermissions.length
     ? `Bạn chưa có quyền ${missingUserFormPermissions.join(" và ")}. Liên hệ quản trị viên hệ thống để được cấp quyền.`
     : undefined;
+  const usersPagination = useTablePagination(10);
+  const rolesPagination = useTablePagination(10);
   const [userFilter, setUserFilter] = useState<UserFilter>({
-    skipCount: 0,
-    maxResultCount: pageSize,
     sorting: "UserName",
   });
   const [roleFilter, setRoleFilter] = useState<RoleFilter>({
-    skipCount: 0,
-    maxResultCount: pageSize,
     sorting: "Name",
   });
   const [editingUser, setEditingUser] = useState<AdminUser>();
@@ -140,8 +137,16 @@ export default function IdentityAdministrationPage() {
   const [permissionRole, setPermissionRole] = useState<AdminRole>();
   const [activeTab, setActiveTab] = useState(canViewUsers ? "users" : "roles");
 
-  const users = useAdminUsers(userFilter);
-  const roles = useAdminRoles(roleFilter);
+  const users = useAdminUsers({
+    ...userFilter,
+    skipCount: usersPagination.skipCount,
+    maxResultCount: usersPagination.maxResultCount,
+  });
+  const roles = useAdminRoles({
+    ...roleFilter,
+    skipCount: rolesPagination.skipCount,
+    maxResultCount: rolesPagination.maxResultCount,
+  });
   const roleOptions = useAdminRoles({
     skipCount: 0,
     maxResultCount: 500,
@@ -214,13 +219,13 @@ export default function IdentityAdministrationPage() {
             allowClear
             placeholder="Tên, email hoặc số điện thoại"
             style={{ width: 290 }}
-            onSearch={(filter) =>
+            onSearch={(filter) => {
               setUserFilter((current) => ({
                 ...current,
                 filter: filter || undefined,
-                skipCount: 0,
-              }))
-            }
+              }));
+              usersPagination.resetToFirstPage();
+            }}
           />
           <Select
             aria-label="Lọc vai trò"
@@ -228,13 +233,10 @@ export default function IdentityAdministrationPage() {
             placeholder="Vai trò"
             options={roleSelectOptions}
             style={{ width: 180 }}
-            onChange={(roleId) =>
-              setUserFilter((current) => ({
-                ...current,
-                roleId,
-                skipCount: 0,
-              }))
-            }
+            onChange={(roleId) => {
+              setUserFilter((current) => ({ ...current, roleId }));
+              usersPagination.resetToFirstPage();
+            }}
           />
           <Select
             aria-label="Lọc đơn vị"
@@ -244,13 +246,10 @@ export default function IdentityAdministrationPage() {
             placeholder="Đơn vị"
             options={organizationSelectOptions}
             style={{ width: 210 }}
-            onChange={(organizationId) =>
-              setUserFilter((current) => ({
-                ...current,
-                organizationId,
-                skipCount: 0,
-              }))
-            }
+            onChange={(organizationId) => {
+              setUserFilter((current) => ({ ...current, organizationId }));
+              usersPagination.resetToFirstPage();
+            }}
           />
           <Select
             aria-label="Lọc theo quyền"
@@ -260,13 +259,10 @@ export default function IdentityAdministrationPage() {
             placeholder="Quyền"
             options={permissionSelectOptions}
             style={{ width: 210 }}
-            onChange={(permissionName) =>
-              setUserFilter((current) => ({
-                ...current,
-                permissionName,
-                skipCount: 0,
-              }))
-            }
+            onChange={(permissionName) => {
+              setUserFilter((current) => ({ ...current, permissionName }));
+              usersPagination.resetToFirstPage();
+            }}
           />
           <Select
             aria-label="Lọc trạng thái tài khoản"
@@ -278,7 +274,7 @@ export default function IdentityAdministrationPage() {
               { value: "inactive", label: "Đã vô hiệu hóa" },
               { value: "locked", label: "Đang khóa" },
             ]}
-            onChange={(value) =>
+            onChange={(value) => {
               setUserFilter((current) => ({
                 ...current,
                 isActive:
@@ -288,9 +284,9 @@ export default function IdentityAdministrationPage() {
                       ? false
                       : undefined,
                 isLocked: value === "locked" ? true : undefined,
-                skipCount: 0,
-              }))
-            }
+              }));
+              usersPagination.resetToFirstPage();
+            }}
           />
           <Button
             icon={<ExportOutlined />}
@@ -331,18 +327,7 @@ export default function IdentityAdministrationPage() {
             onDoubleClick: () => setDetailUser(user),
             style: { cursor: "pointer" },
           })}
-          pagination={{
-            total: users.data?.totalCount,
-            current: userFilter.skipCount / pageSize + 1,
-            pageSize,
-            showSizeChanger: false,
-            showTotal: (total) => `${total} bản ghi`,
-            onChange: (page) =>
-              setUserFilter((current) => ({
-                ...current,
-                skipCount: (page - 1) * pageSize,
-              })),
-          }}
+          pagination={usersPagination.buildConfig(users.data?.totalCount)}
           columns={[
             {
               title: "Tài khoản",
@@ -582,13 +567,13 @@ export default function IdentityAdministrationPage() {
             allowClear
             placeholder="Tên hoặc mô tả vai trò"
             style={{ width: 290 }}
-            onSearch={(filter) =>
+            onSearch={(filter) => {
               setRoleFilter((current) => ({
                 ...current,
                 filter: filter || undefined,
-                skipCount: 0,
-              }))
-            }
+              }));
+              rolesPagination.resetToFirstPage();
+            }}
           />
           <Select
             aria-label="Lọc trạng thái vai trò"
@@ -599,13 +584,10 @@ export default function IdentityAdministrationPage() {
               { value: true, label: "Đang hoạt động" },
               { value: false, label: "Đã vô hiệu hóa" },
             ]}
-            onChange={(isActive) =>
-              setRoleFilter((current) => ({
-                ...current,
-                isActive,
-                skipCount: 0,
-              }))
-            }
+            onChange={(isActive) => {
+              setRoleFilter((current) => ({ ...current, isActive }));
+              rolesPagination.resetToFirstPage();
+            }}
           />
           {hasPermission(permission.createRole) && (
             <Button
@@ -626,18 +608,7 @@ export default function IdentityAdministrationPage() {
           loading={roles.isLoading}
           dataSource={roles.data?.items}
           scroll={{ x: 900 }}
-          pagination={{
-            total: roles.data?.totalCount,
-            current: roleFilter.skipCount / pageSize + 1,
-            pageSize,
-            showSizeChanger: false,
-            showTotal: (total) => `${total} bản ghi`,
-            onChange: (page) =>
-              setRoleFilter((current) => ({
-                ...current,
-                skipCount: (page - 1) * pageSize,
-              })),
-          }}
+          pagination={rolesPagination.buildConfig(roles.data?.totalCount)}
           columns={[
             {
               title: "Vai trò",
@@ -705,8 +676,8 @@ export default function IdentityAdministrationPage() {
                           setUserFilter((current) => ({
                             ...current,
                             roleId: role.id,
-                            skipCount: 0,
                           }));
+                          usersPagination.resetToFirstPage();
                           setActiveTab("users");
                         }}
                       />

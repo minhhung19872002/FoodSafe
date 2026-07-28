@@ -63,16 +63,17 @@ import {
   type NewsFilter,
   type NewsStatus,
 } from "../types/alertsNews.types";
-
-const PAGE_SIZE = 15;
+import { useTablePagination } from "@/hooks/useTablePagination";
 
 function AlertsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<AlertFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<AlertFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useAlerts({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useAlerts(filter);
   const createMut = useCreateAlert();
   const updateMut = useUpdateAlert();
   const deleteMut = useDeleteAlert();
@@ -239,21 +240,19 @@ function AlertsTab() {
           allowClear
           placeholder="Tìm theo tiêu đề, số cảnh báo..."
           style={{ width: 280 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           allowClear
           placeholder="Trạng thái"
           style={{ width: 150 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(ALERT_STATUS_CONFIG).map(([value, cfg]) => ({
             value: Number(value),
             label: cfg.label,
@@ -263,9 +262,10 @@ function AlertsTab() {
           allowClear
           placeholder="Mức độ"
           style={{ width: 150 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, severity: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, severity: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(ALERT_SEVERITY_CONFIG).map(
             ([value, cfg]) => ({ value: Number(value), label: cfg.label }),
           )}
@@ -274,9 +274,10 @@ function AlertsTab() {
           allowClear
           placeholder="Nguồn"
           style={{ width: 160 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, source: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, source: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(ALERT_SOURCE_LABELS).map(
             ([value, label]) => ({ value: Number(value), label }),
           )}
@@ -311,17 +312,7 @@ function AlertsTab() {
           onDoubleClick: () => setDetailAlert(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
-          pageSize: PAGE_SIZE,
-          total: data?.totalCount,
-          showSizeChanger: false,
-          onChange: (page) =>
-            setFilter((f) => ({
-              ...f,
-              skipCount: (page - 1) * PAGE_SIZE,
-            })),
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
 
       <AlertEditorModal
@@ -413,11 +404,13 @@ function AlertsTab() {
 
 function NewsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<NewsFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<NewsFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useNews({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useNews(filter);
   const createMut = useCreateNews();
   const updateMut = useUpdateNews();
   const deleteMut = useDeleteNews();
@@ -585,21 +578,19 @@ function NewsTab() {
           allowClear
           placeholder="Tìm theo tiêu đề..."
           style={{ width: 280 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           allowClear
           placeholder="Trạng thái"
           style={{ width: 150 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(NEWS_STATUS_CONFIG).map(([value, cfg]) => ({
             value: Number(value),
             label: cfg.label,
@@ -609,9 +600,10 @@ function NewsTab() {
           allowClear
           placeholder="Nguồn"
           style={{ width: 160 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, source: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, source: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(ALERT_SOURCE_LABELS).map(
             ([value, label]) => ({ value: Number(value), label }),
           )}
@@ -646,17 +638,7 @@ function NewsTab() {
           onDoubleClick: () => setDetailNews(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
-          pageSize: PAGE_SIZE,
-          total: data?.totalCount,
-          showSizeChanger: false,
-          onChange: (page) =>
-            setFilter((f) => ({
-              ...f,
-              skipCount: (page - 1) * PAGE_SIZE,
-            })),
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
 
       <NewsEditorModal

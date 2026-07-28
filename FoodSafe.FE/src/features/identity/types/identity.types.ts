@@ -49,8 +49,8 @@ export interface UserFilter {
   isActive?: boolean;
   isLocked?: boolean;
   permissionName?: string;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
   sorting?: string;
 }
 
@@ -90,8 +90,8 @@ export interface AdminRole {
 export interface RoleFilter {
   filter?: string;
   isActive?: boolean;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
   sorting?: string;
 }
 

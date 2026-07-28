@@ -134,8 +134,8 @@ export interface AlertFilter {
   severity?: AlertSeverity;
   source?: AlertSource;
   status?: AlertStatus;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
 }
 
 export interface NewsLinkedAlert {
@@ -179,8 +179,8 @@ export interface NewsFilter {
   category?: string;
   status?: NewsStatus;
   source?: AlertSource;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
 }
 
 export interface AlertOption {

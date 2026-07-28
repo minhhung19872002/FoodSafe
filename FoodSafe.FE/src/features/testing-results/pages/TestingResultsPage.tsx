@@ -43,19 +43,20 @@ import {
   type TestingResultFilter,
   type TestingOutcome,
 } from "../types/testingResult.types";
-
-const PAGE_SIZE = 15;
+import { useTablePagination } from "@/hooks/useTablePagination";
 
 const formatDate = (v?: string | null) =>
   v ? dayjs(v).format("DD/MM/YYYY") : null;
 
 export default function TestingResultsPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<TestingResultFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<TestingResultFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useTestingResults({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useTestingResults(filter);
   const testingCenters = useTestingCenterOptions();
   const testingServices = useTestingServiceOptions();
   const createMut = useCreateTestingResult();
@@ -173,13 +174,10 @@ export default function TestingResultsPage() {
           placeholder="Mã mẫu, tên mẫu"
           allowClear
           style={{ width: 200 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Kết quả"
@@ -189,9 +187,10 @@ export default function TestingResultsPage() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, outcome: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, outcome: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Button
           icon={<ExportOutlined />}
@@ -221,15 +220,7 @@ export default function TestingResultsPage() {
           onDoubleClick: () => setDetailResult(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
       <RecordDetailDrawer
         title="Chi tiết kết quả kiểm nghiệm"

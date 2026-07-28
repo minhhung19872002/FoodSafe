@@ -44,8 +44,7 @@ import { ExpiryTag } from "@/components/ExpiryTag";
 import { RevokeModal } from "@/components/RevokeModal";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
-
-const PAGE_SIZE = 20;
+import { useTablePagination } from "@/hooks/useTablePagination";
 
 export default function ExportFoodCertificatePage() {
   const { message } = App.useApp();
@@ -57,7 +56,7 @@ export default function ExportFoodCertificatePage() {
   const canDelete = hasPermission(
     "FoodSafe.Licensing.ExportCertificates.Delete",
   );
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [businessId, setBusinessId] = useState<string>();
   const [destinationCountryId, setDestinationCountryId] = useState<string>();
@@ -77,8 +76,8 @@ export default function ExportFoodCertificatePage() {
     destinationCountryId,
     status,
     expiringWithinDays,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   };
   const registrations = useExportFoodCertificates(queryFilter);
   const businesses = useExportFoodCertificateBusinesses();
@@ -302,7 +301,7 @@ export default function ExportFoodCertificatePage() {
               style={{ width: 310 }}
               onSearch={(value) => {
                 setFilter(value.trim());
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -318,7 +317,7 @@ export default function ExportFoodCertificatePage() {
               }))}
               onChange={(value) => {
                 setBusinessId(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -334,7 +333,7 @@ export default function ExportFoodCertificatePage() {
               }))}
               onChange={(value) => {
                 setDestinationCountryId(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -348,7 +347,7 @@ export default function ExportFoodCertificatePage() {
               ]}
               onChange={(value) => {
                 setStatus(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -362,7 +361,7 @@ export default function ExportFoodCertificatePage() {
               ]}
               onChange={(value) => {
                 setExpiringWithinDays(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
           </Space>
@@ -379,14 +378,9 @@ export default function ExportFoodCertificatePage() {
             onDoubleClick: () => setDetailRecord(record),
             style: { cursor: "pointer" },
           })}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: registrations.data?.totalCount ?? 0,
-            showSizeChanger: false,
-            showTotal: (total) => `Tổng ${total} bản ghi`,
-            onChange: setPage,
-          }}
+          pagination={pagination.buildConfig(
+            registrations.data?.totalCount ?? 0,
+          )}
         />
       </div>
 

@@ -30,6 +30,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { saveDownload } from "@/utils/download";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { PartnersTab } from "../components/PartnersTab";
@@ -70,7 +71,6 @@ import {
   type SharedDataType,
 } from "../types/dataIntegration.types";
 
-const PAGE_SIZE = 15;
 const HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
 const EXTERNAL_SYSTEMS = ["Bộ Y tế", "Sở Nông nghiệp", "Sở Công thương"];
 
@@ -86,11 +86,13 @@ function apiErrorMessage(error: unknown, fallback: string): string {
 
 function EndpointsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<ApiEndpointFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<ApiEndpointFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useApiEndpoints({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useApiEndpoints(filter);
   const createMut = useCreateEndpoint();
   const updateMut = useUpdateEndpoint();
   const toggleMut = useToggleEndpointStatus();
@@ -238,9 +240,10 @@ function EndpointsTab() {
           placeholder="Tên, URL, hệ thống"
           allowClear
           style={{ width: 240 }}
-          onSearch={(v) =>
-            setFilter((f) => ({ ...f, filter: v || undefined, skipCount: 0 }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Trạng thái"
@@ -250,9 +253,10 @@ function EndpointsTab() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Button
           icon={<ExportOutlined />}
@@ -282,15 +286,7 @@ function EndpointsTab() {
           onDoubleClick: () => setDetailRecord(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
       <RecordDetailDrawer
         title="Chi tiết endpoint"
@@ -472,11 +468,13 @@ function EndpointsTab() {
 
 function CallHistoryTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<ApiCallLogFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<ApiCallLogFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useApiCallLogs({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useApiCallLogs(filter);
   const exportMut = useExportCallLogs();
   const shareMut = useShareData();
   const retryMut = useRetryCallLog();
@@ -614,14 +612,14 @@ function CallHistoryTab() {
       <Tabs
         size="small"
         activeKey={String(filter.dataType ?? "all")}
-        onChange={(key) =>
+        onChange={(key) => {
           setFilter((f) => ({
             ...f,
             dataType:
               key === "all" ? undefined : (Number(key) as SharedDataType),
-            skipCount: 0,
-          }))
-        }
+          }));
+          pagination.resetToFirstPage();
+        }}
         items={[
           { key: "all", label: "Tất cả" },
           ...Object.entries(SHARED_DATA_TYPE_LABELS)
@@ -634,9 +632,10 @@ function CallHistoryTab() {
           placeholder="URL, hệ thống"
           allowClear
           style={{ width: 240 }}
-          onSearch={(v) =>
-            setFilter((f) => ({ ...f, filter: v || undefined, skipCount: 0 }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Hướng"
@@ -646,9 +645,10 @@ function CallHistoryTab() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, direction: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, direction: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Kết quả"
@@ -658,25 +658,22 @@ function CallHistoryTab() {
             { value: true, label: "Thành công" },
             { value: false, label: "Thất bại" },
           ]}
-          onChange={(v) =>
-            setFilter((f) => ({
-              ...f,
-              isSuccess: v as boolean | undefined,
-              skipCount: 0,
-            }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, isSuccess: v as boolean | undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <DatePicker.RangePicker
           placeholder={["Từ ngày", "Đến ngày"]}
           format="DD/MM/YYYY"
-          onChange={(range) =>
+          onChange={(range) => {
             setFilter((f) => ({
               ...f,
               fromDate: range?.[0]?.format("YYYY-MM-DD"),
               toDate: range?.[1]?.format("YYYY-MM-DD"),
-              skipCount: 0,
-            }))
-          }
+            }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Button
           icon={<ExportOutlined />}
@@ -715,15 +712,7 @@ function CallHistoryTab() {
           onDoubleClick: () => setDetailId(record.id),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
       <Modal
         title="Chia sẻ dữ liệu đến hệ thống bên ngoài"

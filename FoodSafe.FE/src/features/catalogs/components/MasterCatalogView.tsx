@@ -5,6 +5,7 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import { Button, Input, Popconfirm, Space, Table, Tabs, Tag } from "antd";
+import type { TablePaginationConfig } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { catalogDefinitions } from "../types/catalog.types";
 import type { CatalogItem, CatalogKind } from "../types/catalog.types";
@@ -13,9 +14,7 @@ interface MasterCatalogViewProps {
   kind: CatalogKind;
   filter: string;
   items: CatalogItem[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
+  pagination: TablePaginationConfig;
   loading: boolean;
   deleting: boolean;
   canCreate: boolean;
@@ -24,7 +23,6 @@ interface MasterCatalogViewProps {
   exporting?: boolean;
   onKindChange: (kind: CatalogKind) => void;
   onFilterChange: (filter: string) => void;
-  onPageChange: (page: number, pageSize: number) => void;
   onCreate: () => void;
   onEdit: (item: CatalogItem) => void;
   onDelete: (id: string) => void;
@@ -172,15 +170,7 @@ export function MasterCatalogView(props: MasterCatalogViewProps) {
           onDoubleClick: () => props.onShowDetail(item),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          current: props.page,
-          pageSize: props.pageSize,
-          total: props.totalCount,
-          showSizeChanger: true,
-          pageSizeOptions: [20, 50, 100],
-          onChange: props.onPageChange,
-          showTotal: (total) => `${total} bản ghi`,
-        }}
+        pagination={props.pagination}
       />
     </>
   );

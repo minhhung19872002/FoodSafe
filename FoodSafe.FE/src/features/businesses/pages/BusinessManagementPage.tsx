@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { App, Modal, Tag } from "antd";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
@@ -61,8 +62,6 @@ import {
   type UpdateProductInput,
 } from "../types/business.types";
 
-const PAGE_SIZE = 20;
-
 function flattenOrganizations(
   nodes: OrganizationTreeNode[],
 ): OrganizationDto[] {
@@ -105,8 +104,8 @@ export default function BusinessManagementPage() {
   const [businessSorting, setBusinessSorting] = useState<string>();
   const [detailBusiness, setDetailBusiness] = useState<Business>();
   const [productStatus, setProductStatus] = useState<ProductStatus>();
-  const [businessPage, setBusinessPage] = useState(1);
-  const [productPage, setProductPage] = useState(1);
+  const businessPagination = useTablePagination(20);
+  const productPagination = useTablePagination(20);
   const [creatingBusiness, setCreatingBusiness] = useState(false);
   const [editingBusinessId, setEditingBusinessId] = useState<string>();
   const [editingProduct, setEditingProduct] = useState<Product>();
@@ -128,8 +127,8 @@ export default function BusinessManagementPage() {
       provinceId,
       districtId,
       sorting: businessSorting,
-      skipCount: (businessPage - 1) * PAGE_SIZE,
-      maxResultCount: PAGE_SIZE,
+      skipCount: businessPagination.skipCount,
+      maxResultCount: businessPagination.maxResultCount,
     },
     canViewBusinesses,
   );
@@ -138,8 +137,8 @@ export default function BusinessManagementPage() {
     {
       filter: productFilter || undefined,
       status: productStatus,
-      skipCount: (productPage - 1) * PAGE_SIZE,
-      maxResultCount: PAGE_SIZE,
+      skipCount: productPagination.skipCount,
+      maxResultCount: productPagination.maxResultCount,
     },
     canViewProducts,
   );
@@ -244,11 +243,12 @@ export default function BusinessManagementPage() {
         productFilter={productFilter}
         businessStatus={businessStatus}
         productStatus={productStatus}
-        businessTotal={businessList.data?.totalCount ?? 0}
-        productTotal={productList.data?.totalCount ?? 0}
-        businessPage={businessPage}
-        productPage={productPage}
-        pageSize={PAGE_SIZE}
+        businessPagination={businessPagination.buildConfig(
+          businessList.data?.totalCount,
+        )}
+        productPagination={productPagination.buildConfig(
+          productList.data?.totalCount,
+        )}
         loading={businessList.isLoading || productList.isLoading}
         canViewBusinesses={canViewBusinesses}
         canViewProducts={canViewProducts}
@@ -281,15 +281,15 @@ export default function BusinessManagementPage() {
         onTabChange={setActiveTab}
         onBusinessFilterChange={(value) => {
           setBusinessFilter(value);
-          setBusinessPage(1);
+          businessPagination.resetToFirstPage();
         }}
         onProductFilterChange={(value) => {
           setProductFilter(value);
-          setProductPage(1);
+          productPagination.resetToFirstPage();
         }}
         onBusinessStatusChange={(value) => {
           setBusinessStatus(value);
-          setBusinessPage(1);
+          businessPagination.resetToFirstPage();
         }}
         businessTypeId={businessTypeId}
         businessClassificationId={businessClassificationId}
@@ -298,7 +298,7 @@ export default function BusinessManagementPage() {
         businessSorting={businessSorting}
         onBusinessSortingChange={(value) => {
           setBusinessSorting(value);
-          setBusinessPage(1);
+          businessPagination.resetToFirstPage();
         }}
         businessTypeOptions={(businessTypes.data?.items ?? []).map((item) => ({
           value: item.id,
@@ -317,28 +317,26 @@ export default function BusinessManagementPage() {
         }))}
         onBusinessTypeChange={(value) => {
           setBusinessTypeId(value);
-          setBusinessPage(1);
+          businessPagination.resetToFirstPage();
         }}
         onClassificationChange={(value) => {
           setBusinessClassificationId(value);
-          setBusinessPage(1);
+          businessPagination.resetToFirstPage();
         }}
         onProvinceChange={(value) => {
           setProvinceId(value);
           setDistrictId(undefined);
-          setBusinessPage(1);
+          businessPagination.resetToFirstPage();
         }}
         onDistrictChange={(value) => {
           setDistrictId(value);
-          setBusinessPage(1);
+          businessPagination.resetToFirstPage();
         }}
         onShowDetail={setDetailBusiness}
         onProductStatusChange={(value) => {
           setProductStatus(value);
-          setProductPage(1);
+          productPagination.resetToFirstPage();
         }}
-        onBusinessPageChange={setBusinessPage}
-        onProductPageChange={setProductPage}
         onCreateBusiness={() => setCreatingBusiness(true)}
         onImportBusiness={() => setImportingBusinesses(true)}
         onExportBusiness={() =>
@@ -347,7 +345,7 @@ export default function BusinessManagementPage() {
               filter: businessFilter || undefined,
               status: businessStatus,
               skipCount: 0,
-              maxResultCount: PAGE_SIZE,
+              maxResultCount: 20,
             },
             {
               onSuccess: ({ blob, fileName }) => {
@@ -366,7 +364,7 @@ export default function BusinessManagementPage() {
               filter: productFilter || undefined,
               status: productStatus,
               skipCount: 0,
-              maxResultCount: PAGE_SIZE,
+              maxResultCount: 20,
             },
             {
               onSuccess: ({ blob, fileName }) => {

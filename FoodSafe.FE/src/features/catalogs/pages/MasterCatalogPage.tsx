@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { App, Tag } from "antd";
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
@@ -21,15 +22,13 @@ import type {
   CatalogKind,
 } from "../types/catalog.types";
 
-const defaultPageSize = 20;
 const riskLevelLabels = ["", "Cao", "Trung bình", "Thấp"];
 
 export default function MasterCatalogPage() {
   const { message } = App.useApp();
   const [kind, setKind] = useState<CatalogKind>("country");
   const [filter, setFilter] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(defaultPageSize);
+  const pagination = useTablePagination(20);
   const [productGroupSearch, setProductGroupSearch] = useState("");
   const [testingCenterSearch, setTestingCenterSearch] = useState("");
   const [editing, setEditing] = useState<CatalogItem | null | undefined>();
@@ -46,8 +45,8 @@ export default function MasterCatalogPage() {
 
   const catalog = useCatalog(kind, {
     filter: filter || undefined,
-    skipCount: (page - 1) * pageSize,
-    maxResultCount: pageSize,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
   const productGroups = useCatalogOptions("product-group", productGroupSearch);
   const testingCenters = useCatalogOptions(
@@ -188,9 +187,7 @@ export default function MasterCatalogPage() {
           kind={kind}
           filter={filter}
           items={catalog.data?.items ?? []}
-          totalCount={catalog.data?.totalCount ?? 0}
-          page={page}
-          pageSize={pageSize}
+          pagination={pagination.buildConfig(catalog.data?.totalCount)}
           loading={catalog.isFetching}
           deleting={deleteCatalog.isPending}
           canCreate={canCreate}
@@ -199,17 +196,13 @@ export default function MasterCatalogPage() {
           onKindChange={(nextKind) => {
             setKind(nextKind);
             setFilter("");
-            setPage(1);
+            pagination.resetToFirstPage();
             setDetailItem(null);
           }}
           exporting={exportServices.isPending}
           onFilterChange={(nextFilter) => {
             setFilter(nextFilter);
-            setPage(1);
-          }}
-          onPageChange={(nextPage, nextPageSize) => {
-            setPage(nextPage);
-            setPageSize(nextPageSize);
+            pagination.resetToFirstPage();
           }}
           onCreate={() => setEditing(null)}
           onEdit={setEditing}

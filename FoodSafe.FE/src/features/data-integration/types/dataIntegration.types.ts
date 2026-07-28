@@ -79,8 +79,8 @@ export interface ApiEndpointFilter {
   filter?: string;
   externalSystem?: string;
   status?: ApiEndpointStatus;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
 }
 
 export const SHARED_DATA_TYPE = {
@@ -163,8 +163,8 @@ export interface ApiCallLogFilter {
   fromDate?: string;
   toDate?: string;
   dataType?: SharedDataType;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
 }
 
 export interface PagedResult<T> {
@@ -230,8 +230,8 @@ export type UpdatePartnerAccount = Omit<CreatePartnerAccount, "code">;
 export interface PartnerAccountFilter {
   filter?: string;
   status?: PartnerAccountStatus;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
 }
 
 export interface PartnerApiKey {
@@ -280,8 +280,8 @@ export interface InboundSubmissionFilter {
   status?: InboundSubmissionStatus;
   fromDate?: string;
   toDate?: string;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
 }
 
 export const API_SPEC_FORMAT = {
@@ -334,8 +334,8 @@ export interface ApiSpecificationFilter {
   filter?: string;
   name?: string;
   isPublished?: boolean;
-  skipCount: number;
-  maxResultCount: number;
+  skipCount?: number;
+  maxResultCount?: number;
 }
 
 /** The raw document body plus the headers needed to save it as a file. */
