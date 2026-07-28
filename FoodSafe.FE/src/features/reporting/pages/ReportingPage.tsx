@@ -1276,27 +1276,31 @@ function ActionMonthTab() {
 }
 
 export default function ReportingPage() {
-  return (
-    <Card>
-      <Tabs
-        items={[
-          {
-            key: "ndtp",
-            label: "Báo cáo NĐTP",
-            children: <NdtpTab />,
-          },
-          {
-            key: "atp-work",
-            label: "Công tác ATTP",
-            children: <AtpWorkTab />,
-          },
+  // Route cho vào khi có quyền xem BẤT KỲ loại báo cáo nào (ROUTE_PERMISSIONS.
+  // reporting) — chỉ hiện tab tương ứng quyền, tránh tab mặc định gọi API bị
+  // 403 với người chỉ có quyền một loại (UIA-006).
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const tabs = [
+    ...(hasPermission("FoodSafe.Reporting.NdtpReports.View")
+      ? [{ key: "ndtp", label: "Báo cáo NĐTP", children: <NdtpTab /> }]
+      : []),
+    ...(hasPermission("FoodSafe.Reporting.AtpWorkReports.View")
+      ? [{ key: "atp-work", label: "Công tác ATTP", children: <AtpWorkTab /> }]
+      : []),
+    ...(hasPermission("FoodSafe.Reporting.ActionMonthReports.View")
+      ? [
           {
             key: "action-month",
             label: "Tháng hành động",
             children: <ActionMonthTab />,
           },
-        ]}
-      />
+        ]
+      : []),
+  ];
+
+  return (
+    <Card>
+      <Tabs items={tabs} />
     </Card>
   );
 }

@@ -79,7 +79,10 @@ describe("FoodPoisoningPage", () => {
         organizationId: null,
         organizationName: null,
         roles: ["ProvinceStaff"],
+        // Tab "Ca ngộ độc" chỉ hiện khi có Cases.View — người dùng thật luôn
+        // có View kèm các quyền thao tác, fixture phải phản ánh đúng như vậy.
         permissions: [
+          "FoodSafe.FoodPoisoning.Cases.View",
           "FoodSafe.FoodPoisoning.Cases.Create",
           "FoodSafe.FoodPoisoning.Cases.Edit",
           "FoodSafe.FoodPoisoning.Cases.Delete",

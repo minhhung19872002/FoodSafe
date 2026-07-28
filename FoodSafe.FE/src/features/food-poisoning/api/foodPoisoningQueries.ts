@@ -19,10 +19,15 @@ export const incidentKeys = {
     [...incidentKeys.all, "error-reports", id] as const,
 };
 
-export function usePoisoningCases(filter: CaseFilter) {
+export function usePoisoningCases(
+  filter: CaseFilter,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: caseKeys.list(filter),
     queryFn: () => poisoningCaseApi.list(filter),
+    // Trang dùng chung (thống kê) tắt query khi thiếu quyền Cases.View.
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -42,10 +47,15 @@ export function useCaseErrorReports(id: string) {
   });
 }
 
-export function usePoisoningIncidents(filter: IncidentFilter) {
+export function usePoisoningIncidents(
+  filter: IncidentFilter,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: incidentKeys.list(filter),
     queryFn: () => poisoningIncidentApi.list(filter),
+    // Trang dùng chung (thống kê) tắt query khi thiếu quyền Incidents.View.
+    enabled: options?.enabled ?? true,
   });
 }
 

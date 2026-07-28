@@ -8,6 +8,7 @@ import {
   type DetailField,
 } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
+import { extractApiError } from "@/lib/apiError";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { exportTestingServices } from "../api/catalogApi";
 import { useDeleteCatalog, useSaveCatalog } from "../api/catalogMutations";
@@ -73,10 +74,9 @@ export default function MasterCatalogPage() {
           closeEditor();
           void message.success("Đã lưu dữ liệu danh mục");
         },
-        onError: () =>
-          void message.error(
-            "Không thể lưu. Vui lòng kiểm tra mã và dữ liệu liên quan.",
-          ),
+        // Máy chủ trả về lý do cụ thể ("Mã danh mục đã tồn tại."...) — hiển
+        // thị nguyên văn thay vì một câu chung chung (UIA-007).
+        onError: (error) => void message.error(extractApiError(error)),
       },
     );
   };
@@ -84,8 +84,7 @@ export default function MasterCatalogPage() {
   const handleDelete = (id: string) => {
     deleteCatalog.mutate(id, {
       onSuccess: () => void message.success("Đã xóa dữ liệu danh mục"),
-      onError: () =>
-        void message.error("Không thể xóa dữ liệu đang được sử dụng."),
+      onError: (error) => void message.error(extractApiError(error)),
     });
   };
 

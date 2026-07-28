@@ -115,6 +115,33 @@ button {
   align-items: center;
 }
 
+/* AntD Space không tự xuống dòng, nên một hàng chọn lọc/nút dài trở thành
+   một khối không thể chia nhỏ và đẩy trang cuộn ngang trên màn hẹp. Trong
+   hai vùng thanh công cụ của hệ thống, Space phải xuống dòng được và các ô
+   nhập/chọn đặt bề rộng cố định không được vượt khung chứa. */
+.page-header-actions .ant-space,
+.filter-toolbar .ant-space {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* Từng item của Space cũng phải bị kẹp — ô tìm kiếm 310px trong Space chỉ
+   xuống dòng thôi thì vẫn rộng hơn màn hình 390px. */
+.page-header-actions .ant-space-item,
+.filter-toolbar .ant-space-item {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.page-header-actions .ant-input-search,
+.page-header-actions .ant-select,
+.filter-toolbar .ant-input-search,
+.filter-toolbar .ant-select,
+.filter-toolbar .ant-input,
+.filter-toolbar .ant-picker {
+  max-width: 100%;
+}
+
 /* ── Sidebar ── */
 
 .sidebar-logo {
@@ -1067,6 +1094,14 @@ button {
 /* Bảng: tiêu đề cột IN HOA nhỏ, viền hàng mảnh như design */
 .ant-table-wrapper .ant-table {
   background: transparent;
+}
+
+/* Lưới an toàn chống tràn: bảng rộng hơn khung chứa phải tự cuộn ngang BÊN
+   TRONG khung của nó — trang không bao giờ cuộn ngang vì một bảng. Bảng đã
+   khai báo scroll.x giữ nguyên hành vi (AntD đặt overflow inline, thắng rule
+   này); bảng chưa khai báo được rule này đỡ. */
+.ant-table-wrapper .ant-table-content {
+  overflow-x: auto;
 }
 
 .ant-table-wrapper .ant-table-thead > tr > th {

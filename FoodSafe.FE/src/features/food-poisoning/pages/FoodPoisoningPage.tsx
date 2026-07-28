@@ -854,15 +854,21 @@ function ConcludeModal(props: {
   );
 }
 
-function MapTab() {
-  const { data: casesData } = usePoisoningCases({
-    skipCount: 0,
-    maxResultCount: 500,
-  });
-  const { data: incidentsData } = usePoisoningIncidents({
-    skipCount: 0,
-    maxResultCount: 500,
-  });
+function MapTab({
+  showCases,
+  showIncidents,
+}: {
+  showCases: boolean;
+  showIncidents: boolean;
+}) {
+  const { data: casesData } = usePoisoningCases(
+    { skipCount: 0, maxResultCount: 500 },
+    { enabled: showCases },
+  );
+  const { data: incidentsData } = usePoisoningIncidents(
+    { skipCount: 0, maxResultCount: 500 },
+    { enabled: showIncidents },
+  );
 
   return (
     <PoisoningMap
@@ -873,34 +879,47 @@ function MapTab() {
 }
 
 export default function FoodPoisoningPage() {
+  // Route cho vào khi có Cases.View HOẶC Incidents.View (ROUTE_PERMISSIONS.
+  // foodPoisoning) — người chỉ có một quyền không được thấy tab còn lại,
+  // nếu không tab mặc định sẽ gọi API bị 403 (UIA-006).
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const canViewCases = hasPermission("FoodSafe.FoodPoisoning.Cases.View");
+  const canViewIncidents = hasPermission(
+    "FoodSafe.FoodPoisoning.Incidents.View",
+  );
+
+  const tabs = [
+    ...(canViewCases
+      ? [{ key: "cases", label: "Ca ngộ độc nhỏ lẻ", children: <CasesTab /> }]
+      : []),
+    ...(canViewIncidents
+      ? [
+          {
+            key: "incidents",
+            label: "Vụ ngộ độc thực phẩm",
+            children: <IncidentsTab />,
+          },
+        ]
+      : []),
+    {
+      key: "map",
+      label: (
+        <span>
+          <EnvironmentOutlined style={{ marginRight: 4 }} />
+          Bản đồ
+        </span>
+      ),
+      children: (
+        <MapTab showCases={canViewCases} showIncidents={canViewIncidents} />
+      ),
+    },
+  ];
+
   return (
     <div className="page-container">
       <h1 className="page-header-title">Ngộ độc thực phẩm</h1>
       <Card>
-        <Tabs
-          items={[
-            {
-              key: "cases",
-              label: "Ca ngộ độc nhỏ lẻ",
-              children: <CasesTab />,
-            },
-            {
-              key: "incidents",
-              label: "Vụ ngộ độc thực phẩm",
-              children: <IncidentsTab />,
-            },
-            {
-              key: "map",
-              label: (
-                <span>
-                  <EnvironmentOutlined style={{ marginRight: 4 }} />
-                  Bản đồ
-                </span>
-              ),
-              children: <MapTab />,
-            },
-          ]}
-        />
+        <Tabs items={tabs} />
       </Card>
     </div>
   );

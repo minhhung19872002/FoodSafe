@@ -17,9 +17,12 @@ export function useOrganizationList(filter: OrganizationFilter) {
   });
 }
 
-export function useOrganizationTree() {
+export function useOrganizationTree(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: organizationKeys.tree(),
     queryFn: organizationApi.getTree,
+    // Endpoint đòi quyền Organizations.View — trang dùng chung (dashboard,
+    // thống kê) phải tắt query khi người dùng không có quyền, tránh 403.
+    enabled: options?.enabled ?? true,
   });
 }
