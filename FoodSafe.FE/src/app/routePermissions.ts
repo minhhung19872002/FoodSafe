@@ -49,6 +49,7 @@ export const ROUTE_PERMISSIONS = {
     "FoodSafe.DataIntegration.ApiEndpoints.View",
     "FoodSafe.DataIntegration.CallHistory.View",
     "FoodSafe.DataIntegration.Partners.View",
+    "FoodSafe.DataIntegration.ApiSpecs.View",
   ],
   catalogs: ["FoodSafe.Catalogs.View"],
   identity: ["FoodSafe.SystemAdmin"],

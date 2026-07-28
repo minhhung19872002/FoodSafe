@@ -264,4 +264,183 @@ test.describe("partner API specification management (FR-50-05)", () => {
     const list = (await listRes.json()) as { totalCount: number };
     expect(list.totalCount).toBe(0);
   });
+
+  // BASE-002 (G-02): ApiSpecs.View is part of the /data-integration route
+  // permission list, so a user holding ONLY that permission can enter the
+  // route and sees exactly the one tab their permission grants — while a
+  // user with no Data Integration permission at all still gets the 403 page.
+  test("user with only ApiSpecs.View reaches the route and sees only that tab", async ({
+    browser,
+  }) => {
+    const suffix = Date.now().toString().slice(-9);
+    const roleName = `e2e-apispec-only-${suffix}`;
+    const email = `e2e.apispec.${suffix}@foodsafe.local`;
+    const ADMIN = "/api/v1/administration";
+
+    const admin = await browser.newContext();
+    const adminPage = await admin.newPage();
+    const adminPassword = process.env.E2E_ADMIN_PASSWORD;
+    if (!adminPassword) {
+      throw new Error("E2E_ADMIN_PASSWORD is required");
+    }
+    await signIn(adminPage, "admin", adminPassword);
+    const csrf = await requestVerificationToken(adminPage);
+    const adminReq = admin.request;
+    const authHeaders = { RequestVerificationToken: csrf };
+
+    let roleId = "";
+    let userId = "";
+    try {
+      // Role that carries ONLY the ApiSpecs.View permission — via the real API.
+      const roleRes = await adminReq.post(`${ADMIN}/roles`, {
+        headers: authHeaders,
+        data: { name: roleName, description: "E2E BASE-002 fixture" },
+      });
+      expect(roleRes.ok(), await roleRes.text()).toBeTruthy();
+      roleId = ((await roleRes.json()) as { id: string }).id;
+      // The server requires the parent chain to be granted alongside a child
+      // (UpdateRolePermissionsAsync parent check) — exactly what the real
+      // permission drawer sends. The parents unlock nothing by themselves:
+      // every route/tab/API guard checks a concrete *.View permission.
+      const permRes = await adminReq.put(`${ADMIN}/roles/${roleId}/permissions`, {
+        headers: authHeaders,
+        data: {
+          permissions: [
+            { name: "FoodSafe.DataIntegration", isGranted: true },
+            { name: "FoodSafe.DataIntegration.ApiSpecs", isGranted: true },
+            {
+              name: "FoodSafe.DataIntegration.ApiSpecs.View",
+              isGranted: true,
+            },
+          ],
+        },
+      });
+      expect(permRes.ok(), await permRes.text()).toBeTruthy();
+
+      // User in the same organization as the admin fixture pool.
+      const orgLookup = await adminReq.get(`${ADMIN}/users`, {
+        params: {
+          filter: "province.admin",
+          skipCount: 0,
+          maxResultCount: 1,
+        },
+      });
+      expect(orgLookup.ok()).toBeTruthy();
+      const orgId = (
+        (await orgLookup.json()) as {
+          items: { organizationId: string }[];
+        }
+      ).items[0]?.organizationId;
+      expect(orgId, "seed organization id").toBeTruthy();
+
+      const userRes = await adminReq.post(`${ADMIN}/users`, {
+        headers: authHeaders,
+        data: {
+          fullName: "E2E ApiSpec Only",
+          email,
+          organizationId: orgId,
+          roleNames: [roleName],
+          geographyScopes: [],
+        },
+      });
+      expect(userRes.ok(), await userRes.text()).toBeTruthy();
+      userId = ((await userRes.json()) as { id: string }).id;
+
+      const pwdRes = await adminReq.post(
+        `${ADMIN}/users/${userId}/random-password`,
+        { headers: authHeaders },
+      );
+      expect(pwdRes.ok(), await pwdRes.text()).toBeTruthy();
+      const generated = ((await pwdRes.json()) as { password: string })
+        .password;
+
+      // Fresh browser context. ABP refuses login (result=3 NotAllowed) while
+      // ShouldChangePasswordOnNextLogin is set, so complete the forced initial
+      // password change through the real session-less endpoint first — the
+      // same flow the login screen drives.
+      const ctx = await browser.newContext();
+      const page = await ctx.newPage();
+      try {
+        const cfg = await ctx.request.get(
+          "/api/abp/application-configuration?IncludeLocalizationResources=false",
+        );
+        expect(cfg.ok()).toBeTruthy();
+        const userCsrf = await requestVerificationToken(page);
+        const newPassword = `E2e@${suffix}Aa1`;
+        const change = await ctx.request.post(
+          "/api/v1/app/account-security/complete-initial-password-change",
+          {
+            headers: { RequestVerificationToken: userCsrf },
+            data: {
+              userNameOrEmailAddress: email,
+              captchaToken: "XXXX.DUMMY.TOKEN.XXXX",
+              currentPassword: generated,
+              newPassword,
+            },
+          },
+        );
+        expect(change.ok(), await change.text()).toBeTruthy();
+        await signIn(page, email, newPassword);
+
+        await page.goto("/data-integration");
+        // Route admits the user (no 403 result) and shows exactly one tab.
+        await expect(
+          page.getByRole("tab", { name: "Đặc tả API" }),
+        ).toBeVisible({ timeout: 15_000 });
+        await expect(
+          page.getByText("Không có quyền truy cập"),
+        ).toHaveCount(0);
+        for (const hidden of [
+          "Cấu hình API",
+          "Lịch sử gọi API",
+          "Đối tác liên thông",
+          "Dữ liệu nhận về",
+        ]) {
+          await expect(page.getByRole("tab", { name: hidden })).toHaveCount(0);
+        }
+        // Backend still enforces the permission wall beyond the visible tab:
+        // the management list this tab uses is allowed…
+        const allowed = await ctx.request.get(MGMT_LIST, {
+          maxRedirects: 0,
+        });
+        expect(allowed.ok(), await allowed.text()).toBeTruthy();
+        // …but sibling Data Integration APIs stay 403 for this user.
+        const forbidden = await ctx.request.get("/api/v1/app/api-endpoint", {
+          maxRedirects: 0,
+        });
+        expect([403, 302]).toContain(forbidden.status());
+      } finally {
+        await ctx.close();
+      }
+
+      // Contrast case: the seeded no-permission user gets the 403 page, not the tab.
+      const noPermCtx = await browser.newContext();
+      const noPermPage = await noPermCtx.newPage();
+      try {
+        await signIn(noPermPage, "noperm@foodsafe.local", TEST_PASSWORD);
+        await noPermPage.goto("/data-integration");
+        await expect(
+          noPermPage.getByText("Không có quyền truy cập"),
+        ).toBeVisible({ timeout: 15_000 });
+        await expect(
+          noPermPage.getByRole("tab", { name: "Đặc tả API" }),
+        ).toHaveCount(0);
+      } finally {
+        await noPermCtx.close();
+      }
+    } finally {
+      // Cleanup through the same real API surface.
+      if (userId) {
+        await adminReq.delete(`${ADMIN}/users/${userId}`, {
+          headers: authHeaders,
+        });
+      }
+      if (roleId) {
+        await adminReq.delete(`${ADMIN}/roles/${roleId}`, {
+          headers: authHeaders,
+        });
+      }
+      await admin.close();
+    }
+  });
 });

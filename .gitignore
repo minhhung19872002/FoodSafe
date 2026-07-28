@@ -52,3 +52,8 @@ FoodSafe.BE/backups/
 
 # ABP static libs restored at build time by `abp install-libs` — not source.
 FoodSafe.BE/src/FoodSafe.HttpApi.Host/wwwroot/libs/
+
+# Test-run artifacts (Playwright bookkeeping, visual-probe outputs) — never source.
+# (testing/ui-audit/.gitignore already scopes its own screenshots/ output.)
+test-results/
+FoodSafe.FE/.results/
