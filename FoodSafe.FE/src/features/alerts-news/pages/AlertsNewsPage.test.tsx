@@ -63,10 +63,12 @@ describe("AlertsNewsPage", () => {
         organizationName: null,
         roles: ["ProvinceStaff"],
         permissions: [
+          "FoodSafe.AlertsAndTesting.Alerts.View",
           "FoodSafe.AlertsAndTesting.Alerts.Create",
           "FoodSafe.AlertsAndTesting.Alerts.Edit",
           "FoodSafe.AlertsAndTesting.Alerts.Delete",
           "FoodSafe.AlertsAndTesting.Alerts.Publish",
+          "FoodSafe.AlertsAndTesting.News.View",
           "FoodSafe.AlertsAndTesting.News.Create",
           "FoodSafe.AlertsAndTesting.News.Edit",
           "FoodSafe.AlertsAndTesting.News.Delete",

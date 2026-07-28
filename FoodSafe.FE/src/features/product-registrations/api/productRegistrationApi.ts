@@ -89,6 +89,14 @@ export const productRegistrationApi = {
     return download(response.data, response.headers["content-disposition"]);
   },
 
+  async downloadPdf(id: string): Promise<FileDownload> {
+    const response = await api.get<Blob>(
+      `/v1/public/product-registrations/${id}/pdf`,
+      { responseType: "blob" },
+    );
+    return download(response.data, response.headers["content-disposition"]);
+  },
+
   async attachments(id: string): Promise<FileAttachment[]> {
     const response = await api.get<FileAttachment[]>(
       `${endpoint}/${id}/attachments`,

@@ -25,6 +25,7 @@ import {
   FileDoneOutlined,
   FileTextOutlined,
   ExportOutlined,
+  EyeOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -34,6 +35,7 @@ import { NdtpReportEditorModal } from "../components/NdtpReportEditorModal";
 import { AtpWorkReportEditorModal } from "../components/AtpWorkReportEditorModal";
 import { ActionMonthReportEditorModal } from "../components/ActionMonthReportEditorModal";
 import ReportErrorNotificationsModal from "../components/ReportErrorNotificationsModal";
+import { ReportDetailDrawer } from "../components/ReportDetailDrawer";
 import {
   ReportDocumentViewModal,
   type ReportDocument,
@@ -118,6 +120,7 @@ function NdtpTab() {
     null,
   );
   const [docView, setDocView] = useState<ReportDocument | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
@@ -161,9 +164,15 @@ function NdtpTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 200,
+      width: 240,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            icon={<EyeOutlined />}
+            aria-label="Xem chi tiết"
+            onClick={() => setDetailId(record.id)}
+          />
           <Button
             size="small"
             icon={<FileTextOutlined />}
@@ -295,6 +304,11 @@ function NdtpTab() {
       <NdtpReportEditorModal
         report={editReport}
         onClose={() => setEditReport(null)}
+      />
+      <ReportDetailDrawer
+        kind="ndtp"
+        reportId={detailId}
+        onClose={() => setDetailId(null)}
       />
       <ReportErrorNotificationsModal
         kind="ndtp"
@@ -483,6 +497,7 @@ function AtpWorkTab() {
   const [errorNotifReport, setErrorNotifReport] =
     useState<AtpWorkReport | null>(null);
   const [docView, setDocView] = useState<ReportDocument | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
@@ -530,9 +545,15 @@ function AtpWorkTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 200,
+      width: 240,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            icon={<EyeOutlined />}
+            aria-label="Xem chi tiết"
+            onClick={() => setDetailId(record.id)}
+          />
           <Button
             size="small"
             icon={<FileTextOutlined />}
@@ -664,6 +685,11 @@ function AtpWorkTab() {
       <AtpWorkReportEditorModal
         report={editReport}
         onClose={() => setEditReport(null)}
+      />
+      <ReportDetailDrawer
+        kind="atp"
+        reportId={detailId}
+        onClose={() => setDetailId(null)}
       />
       <ReportErrorNotificationsModal
         kind="atp"
@@ -879,6 +905,7 @@ function ActionMonthTab() {
   const [errorNotifReport, setErrorNotifReport] =
     useState<ActionMonthReport | null>(null);
   const [docView, setDocView] = useState<ReportDocument | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
@@ -926,9 +953,15 @@ function ActionMonthTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 200,
+      width: 240,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            icon={<EyeOutlined />}
+            aria-label="Xem chi tiết"
+            onClick={() => setDetailId(record.id)}
+          />
           <Button
             size="small"
             icon={<FileTextOutlined />}
@@ -1060,6 +1093,11 @@ function ActionMonthTab() {
       <ActionMonthReportEditorModal
         report={editReport}
         onClose={() => setEditReport(null)}
+      />
+      <ReportDetailDrawer
+        kind="amr"
+        reportId={detailId}
+        onClose={() => setDetailId(null)}
       />
       <ReportErrorNotificationsModal
         kind="amr"

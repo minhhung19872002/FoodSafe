@@ -338,10 +338,7 @@ export default function TestingResultsPage() {
                 showSearch
                 optionFilterProp="label"
                 loading={testingCenters.isLoading}
-                options={(testingCenters.data ?? []).map((x) => ({
-                  value: x.id,
-                  label: x.name,
-                }))}
+                options={testingCenters.data ?? []}
               />
             </Form.Item>
             <Form.Item name="testingServiceId" label="Dịch vụ KN">
@@ -352,10 +349,7 @@ export default function TestingResultsPage() {
                 showSearch
                 optionFilterProp="label"
                 loading={testingServices.isLoading}
-                options={(testingServices.data ?? []).map((x) => ({
-                  value: x.id,
-                  label: x.name,
-                }))}
+                options={testingServices.data ?? []}
               />
             </Form.Item>
           </Space>

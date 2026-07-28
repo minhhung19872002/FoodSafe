@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
@@ -102,6 +103,23 @@ public class AccountSecurityAppService :
     public async Task ResetPasswordAsync(CompletePasswordResetDto input)
     {
         var user = await _userManager.GetByIdAsync(input.UserId);
+
+        // The reset token MUST be proven before any password-dependent rule runs.
+        // With the reuse check first this anonymous endpoint was a password
+        // oracle: even a garbage token yielded "reused" vs "change failed", which
+        // confirms a guessed password. VerifyUserTokenAsync is side-effect free
+        // and leaves the security stamp untouched, so ResetPasswordAsync below
+        // still accepts the same token.
+        if (!await _userManager.VerifyUserTokenAsync(
+                user,
+                _userManager.Options.Tokens.PasswordResetTokenProvider,
+                UserManager<IdentityUser>.ResetPasswordTokenPurpose,
+                input.ResetToken))
+        {
+            throw PasswordChangeFailure(
+                IdentityResult.Failed(_userManager.ErrorDescriber.InvalidToken()));
+        }
+
         var profile = await GetProfileAsync(user.Id);
         var histories = await GetPasswordHistoryAsync(user.Id);
         EnsurePasswordIsNotReused(user, input.Password, histories);
@@ -113,11 +131,7 @@ public class AccountSecurityAppService :
             input.Password);
         if (!result.Succeeded)
         {
-            throw new BusinessException(
-                    FoodSafeDomainErrorCodes.Account.PasswordChangeFailed)
-                .WithData(
-                    "IdentityErrors",
-                    string.Join("; ", result.Errors.Select(x => x.Description)));
+            throw PasswordChangeFailure(result);
         }
 
         await FinalizePasswordChangeAsync(
@@ -149,11 +163,7 @@ public class AccountSecurityAppService :
             newPassword);
         if (!result.Succeeded)
         {
-            throw new BusinessException(
-                    FoodSafeDomainErrorCodes.Account.PasswordChangeFailed)
-                .WithData(
-                    "IdentityErrors",
-                    string.Join("; ", result.Errors.Select(x => x.Description)));
+            throw PasswordChangeFailure(result);
         }
 
         await FinalizePasswordChangeAsync(
@@ -207,6 +217,15 @@ public class AccountSecurityAppService :
                 .OrderByDescending(x => x.CreatedAt),
             _cancellationTokens.Token);
     }
+
+    // One shape for every Identity-level rejection (invalid reset token, weak
+    // password, ...) so callers keep a single predictable failure contract.
+    private static BusinessException PasswordChangeFailure(IdentityResult result)
+        => new BusinessException(
+                FoodSafeDomainErrorCodes.Account.PasswordChangeFailed)
+            .WithData(
+                "IdentityErrors",
+                string.Join("; ", result.Errors.Select(x => x.Description)));
 
     private void EnsurePasswordIsNotReused(
         IdentityUser user,

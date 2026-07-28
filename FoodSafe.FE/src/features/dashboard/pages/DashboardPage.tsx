@@ -36,6 +36,7 @@ import {
   useExpiringLicenses,
   useReportCompliance,
 } from "../api/dashboardQueries";
+import { RecentActivityPanel } from "../components/RecentActivityPanel";
 import type {
   ExpiringLicense,
   LicenseBreakdownItem,
@@ -497,7 +498,8 @@ export default function DashboardPage() {
       </Row>
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24}>
+        {/* Compliance table shares the row with the activity feed on wide screens. */}
+        <Col xs={24} xl={16}>
           <Card
             title={`Tình hình nộp báo cáo của các đơn vị — Năm ${year ?? currentYear}`}
             size="small"
@@ -512,6 +514,9 @@ export default function DashboardPage() {
               scroll={{ x: 700 }}
             />
           </Card>
+        </Col>
+        <Col xs={24} xl={8}>
+          <RecentActivityPanel items={stats?.recentActivities ?? []} />
         </Col>
       </Row>
     </div>

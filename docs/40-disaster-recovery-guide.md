@@ -139,3 +139,135 @@ A production-like backup/restore rehearsal has now been performed and recorded,
 and is enforced on every CI run. **B-2 is resolved.** MinIO object-restore and
 the full application-level acceptance checks above remain a pre-first-release
 operational exercise on production hardware.
+
+## Backup and restore scripts
+
+Two executable scripts implement the mechanical part of the procedure above.
+Both are Windows PowerShell 5.1 compatible, are run from the repository root,
+and drive the Compose stack with `docker compose exec`, so they need Docker
+Desktop running, the stack up, and `FoodSafe.BE/.env` present (that file is
+gitignored). Neither script reads, prints, or passes a credential:
+`pg_dump`, `pg_restore`, `psql` and `mc` read `POSTGRES_PASSWORD`,
+`MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD` from the environment of their own
+container, which Compose populated from `.env`. Only the non-secret
+`POSTGRES_DB` and `POSTGRES_USER` names are read from `.env`.
+
+### scripts/Backup-FoodSafeDatabase.ps1
+
+```powershell
+# Interactive backup with defaults
+.\scripts\Backup-FoodSafeDatabase.ps1
+
+# Scheduled nightly backup with the documented 30-day retention
+.\scripts\Backup-FoodSafeDatabase.ps1 -Destination D:\FoodSafeBackups `
+    -RetentionDays 30 -Label nightly
+```
+
+The script runs `pg_dump --format=custom --no-owner --no-privileges` inside the
+`postgres` container, verifies the archive is non-empty and readable with
+`pg_restore --list`, copies it out, checks the copied size, records its
+SHA-256, mirrors the MinIO bucket with `mc mirror`, and writes a manifest.
+
+Parameters: `-Destination` (default `$env:FOODSAFE_BACKUP_ROOT`, else
+`D:\FoodSafeBackups`), `-RetentionDays` (0 = keep everything; pass 30 for the
+retention this guide documents), `-Label`, `-SkipMinio` (database only — the
+result is then not a complete recovery point), `-NoMinioChecksums`,
+`-MinioBucket` (default `foodsafe-files`), and the overrides `-ComposeFile`,
+`-EnvFile`, `-PostgresService`, `-MinioService`, `-Database`, `-User`.
+Exit code 0 means the backup was created and verified; 1 means failure. Wire
+that exit code into the scheduler so the 24-hour backup-freshness alert in
+`docs/39-operations-runbook.md` has a signal to fire on.
+
+Each run creates one timestamped folder, `<Destination>\yyyyMMdd-HHmmss[-label]`,
+containing:
+
+- `FoodSafe-<db>-<timestamp>.dump` — the custom-format archive;
+- `table-rowcounts.csv` — exact row count of every public base table, the
+  inventory the restore is checked against;
+- `manifest.json` — start/end time, duration, restore point, source, dump size,
+  SHA-256, archive entry count, table/row totals, EF migration head, MinIO
+  object count and size, and the outcome;
+- `minio\objects\...` — the mirrored bucket contents;
+- `minio\minio-inventory.jsonl` and `minio\minio-checksums.csv` — object
+  inventory and per-object SHA-256.
+
+### scripts/Restore-FoodSafeDatabase.ps1
+
+```powershell
+# Rehearsal: restore the newest backup into a fresh database
+.\scripts\Restore-FoodSafeDatabase.ps1 -Latest
+
+# Real recovery over the live database, after stopping the API
+docker compose --env-file .env stop api
+.\scripts\Restore-FoodSafeDatabase.ps1 `
+    -DumpPath D:\FoodSafeBackups\20260727-232626\FoodSafe-FoodSafe-20260727-232626.dump `
+    -TargetDatabase FoodSafe -ConfirmDropDatabase FoodSafe -AllowLiveDatabaseOverwrite
+```
+
+The script hashes the dump and compares it with `manifest.json` before doing
+anything, refusing a corrupt or modified archive. It then creates the target
+database and runs `pg_restore --exit-on-error --single-transaction --no-owner
+--no-privileges`, exactly as the logical restore above.
+
+**This script can destroy data, so it is gated.** The default target is the
+fresh database `FoodSafe_Restore`. If the target database already exists, the
+script refuses unless `-ConfirmDropDatabase` is given with the target's exact
+name (case-sensitive). If the target is also the live application database from
+`.env`, `-AllowLiveDatabaseOverwrite` is required in addition. A refusal exits
+with code **2** and changes nothing; 0 means restored and verified, 1 means a
+failure or a verification mismatch.
+
+After the restore it reports and checks: public table count, the
+`__EFMigrationsHistory` head and migration count, row counts of `AbpUsers` and
+`businesses`, and — unless `-SkipInventoryComparison` is passed — every table's
+row count against `table-rowcounts.csv`, listing each mismatch and failing if
+any table differs. It also prints the elapsed time as an input to the RTO
+measurement.
+
+`-RestoreMinio` additionally mirrors `minio\objects` back into the bucket
+(creating it if absent) and compares the resulting object count with the
+manifest. It requires `-ConfirmMinioOverwrite <bucket>`. Objects present in the
+bucket but absent from the backup are overwritten only on key collision; they
+are never deleted.
+
+### Rehearsal steps
+
+1. Take a backup and note the backup ID:
+   `.\scripts\Backup-FoodSafeDatabase.ps1 -Label rehearsal`.
+2. Bring up an isolated Compose project containing only PostgreSQL and MinIO —
+   not the production stack, and with no public ingress.
+3. Restore into it, pointing the script at that project:
+   `.\scripts\Restore-FoodSafeDatabase.ps1 -Latest -ComposeFile <isolated compose> -EnvFile <isolated env> -RestoreMinio -ConfirmMinioOverwrite foodsafe-files`.
+4. Require the inventory comparison to report that every table matches, and the
+   EF migration head to match the application image being recovered.
+5. Continue with the functional items in "Restore acceptance checks" above —
+   sign-in, scoped reads, an expected cross-scope denial, SMTP recovery mail,
+   ingress health — which the scripts do not automate.
+6. Record elapsed recovery time and measured data loss against RTO and RPO.
+7. Destroy the rehearsal environment and its volumes
+   (`docker compose ... down -v`) and record the evidence.
+
+### What the scripts deliberately do not do
+
+These remain manual and must not be assumed from a green script run:
+
+- no encryption at rest and no off-host transfer of the run folder;
+- no WAL archiving, therefore no point-in-time recovery — the only recovery
+  point is the moment the dump was taken, so the 24-hour RPO holds only if the
+  backup is scheduled at least daily;
+- no backup of the ASP.NET data-protection key ring
+  (volume `foodsafe_data_protection_keys`) or of
+  `FoodSafe.BE/secrets/foodsafe-data-protection.pfx`; this guide requires the
+  key ring and its certificate to live in separate protected stores, so they
+  are not copied beside the database dump;
+- no backup-freshness alerting;
+- mirroring MinIO to a filesystem does not preserve S3 object metadata or
+  versions — production still needs server-side replication or `mc mirror` into
+  a versioned target;
+- none of the functional restore acceptance checks.
+
+The scripts were exercised against the local development stack on 2026-07-27
+(0.62 MB dump, 86 tables, 5,488 rows, 14 objects; restore into an isolated
+PostgreSQL/MinIO project reported an exact inventory match). That is tooling
+evidence only. The production-like rehearsal required by the release gate above
+is still outstanding.

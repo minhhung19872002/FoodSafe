@@ -1,7 +1,5 @@
-import { useRef, useState } from "react";
-import { App, Button, Card, Col, Row, Select, Spin } from "antd";
-import { DownloadOutlined } from "@ant-design/icons";
-import { downloadChartAsPng } from "@/utils/chartExport";
+import { useMemo, useState } from "react";
+import { Card, Col, Row, Select, Space, Spin } from "antd";
 import type { StatisticsDto } from "../types/statistics.types";
 import {
   BarChart,
@@ -24,7 +22,10 @@ import {
   usePoisoningCases,
   usePoisoningIncidents,
 } from "@/features/food-poisoning/api/foodPoisoningQueries";
+import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
+import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
 import { useStatistics } from "../api/statisticsQueries";
+import { ChartCard } from "../components/ChartCard";
 import { ReportStatisticsSection } from "../components/ReportStatisticsSection";
 
 const COLORS = [
@@ -61,6 +62,29 @@ const yearOptions = Array.from({ length: 5 }, (_, i) => {
   return { value: y, label: `Năm ${y}` };
 });
 
+/**
+ * Flattens the organisation tree into indented select options.
+ * Duplicated from the dashboard feature on purpose: features must not import
+ * from each other, and this pure helper has no shared home inside this feature.
+ */
+function flattenOrganizationOptions(
+  nodes: OrganizationTreeNode[],
+  depth = 0,
+): Array<{ value: string; label: string }> {
+  return nodes.flatMap((node) => [
+    {
+      value: node.id,
+      label: `${" ".repeat(depth * 3)}${node.name}`,
+    },
+    ...flattenOrganizationOptions(node.children, depth + 1),
+  ]);
+}
+
+/** A chart is empty when every bucket is zero, not only when the array is. */
+function hasChartData(items: ReadonlyArray<{ count: number }>): boolean {
+  return items.some((item) => item.count > 0);
+}
+
 function PoisoningMapSection() {
   const { data: casesData } = usePoisoningCases({
     skipCount: 0,
@@ -90,34 +114,18 @@ const EMPTY_STATS: StatisticsDto = {
 };
 
 export default function StatisticsPage() {
-  const { message } = App.useApp();
   const [year, setYear] = useState(currentYear());
-  const { data, isLoading } = useStatistics({ year });
+  const [organizationId, setOrganizationId] = useState<string>();
+  const filter = useMemo(
+    () => ({ year, organizationId }),
+    [year, organizationId],
+  );
+  const { data, isLoading } = useStatistics(filter);
   const stats = data ?? EMPTY_STATS;
-  const inspectionChartRef = useRef<HTMLDivElement>(null);
-  const poisoningChartRef = useRef<HTMLDivElement>(null);
-
-  const saveChart = (
-    ref: React.RefObject<HTMLDivElement | null>,
-    fileName: string,
-  ) => {
-    if (!ref.current) return;
-    downloadChartAsPng(ref.current, fileName).catch(() =>
-      message.error("Không thể lưu ảnh biểu đồ."),
-    );
-  };
-
-  const chartDownloadButton = (
-    ref: React.RefObject<HTMLDivElement | null>,
-    fileName: string,
-  ) => (
-    <Button
-      type="text"
-      size="small"
-      icon={<DownloadOutlined />}
-      aria-label={`Tải ảnh ${fileName}`}
-      onClick={() => saveChart(ref, fileName)}
-    />
+  const organizationTree = useOrganizationTree();
+  const organizationOptions = useMemo(
+    () => flattenOrganizationOptions(organizationTree.data?.items ?? []),
+    [organizationTree.data?.items],
   );
 
   return (
@@ -125,12 +133,25 @@ export default function StatisticsPage() {
       <PageHeader
         title="Thống kê tổng hợp"
         actions={
-          <Select
-            value={year}
-            onChange={setYear}
-            options={yearOptions}
-            style={{ width: 140 }}
-          />
+          <Space>
+            <Select
+              value={year}
+              onChange={setYear}
+              options={yearOptions}
+              style={{ width: 140 }}
+            />
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="Toàn bộ đơn vị"
+              value={organizationId}
+              onChange={setOrganizationId}
+              options={organizationOptions}
+              loading={organizationTree.isLoading}
+              style={{ width: 220 }}
+            />
+          </Space>
         }
       />
 
@@ -141,7 +162,12 @@ export default function StatisticsPage() {
       ) : (
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={12}>
-            <Card title="Cơ sở theo trạng thái" size="small">
+            <ChartCard
+              title="Cơ sở theo trạng thái"
+              fileName={`co-so-theo-trang-thai-${year}.png`}
+              height={280}
+              isEmpty={!hasChartData(stats.businessByStatus)}
+            >
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
@@ -163,11 +189,16 @@ export default function StatisticsPage() {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-            </Card>
+            </ChartCard>
           </Col>
 
           <Col xs={24} lg={12}>
-            <Card title="Top loại hình cơ sở" size="small">
+            <ChartCard
+              title="Top loại hình cơ sở"
+              fileName={`loai-hinh-co-so-${year}.png`}
+              height={280}
+              isEmpty={!hasChartData(stats.businessByType)}
+            >
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart
                   data={stats.businessByType}
@@ -186,11 +217,16 @@ export default function StatisticsPage() {
                   <Bar dataKey="count" fill="#00796B" name="Số lượng" />
                 </BarChart>
               </ResponsiveContainer>
-            </Card>
+            </ChartCard>
           </Col>
 
           <Col xs={24} lg={12}>
-            <Card title="Giấy phép / Chứng nhận theo loại" size="small">
+            <ChartCard
+              title="Giấy phép / Chứng nhận theo loại"
+              fileName={`giay-phep-theo-loai-${year}.png`}
+              height={280}
+              isEmpty={!hasChartData(stats.licenseByCategory)}
+            >
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={stats.licenseByCategory}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -200,11 +236,16 @@ export default function StatisticsPage() {
                   <Bar dataKey="count" fill="#0958D9" name="Số lượng" />
                 </BarChart>
               </ResponsiveContainer>
-            </Card>
+            </ChartCard>
           </Col>
 
           <Col xs={24} lg={12}>
-            <Card title="Trạng thái giấy phép" size="small">
+            <ChartCard
+              title="Trạng thái giấy phép"
+              fileName={`trang-thai-giay-phep-${year}.png`}
+              height={280}
+              isEmpty={!hasChartData(stats.licenseByStatus)}
+            >
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
@@ -228,42 +269,43 @@ export default function StatisticsPage() {
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
-            </Card>
+            </ChartCard>
           </Col>
 
           <Col xs={24}>
-            <Card
+            <ChartCard
               title={`Thanh kiểm tra theo tháng — Năm ${year}`}
-              size="small"
-              extra={chartDownloadButton(
-                inspectionChartRef,
-                `thanh-kiem-tra-${year}.png`,
-              )}
+              fileName={`thanh-kiem-tra-${year}.png`}
+              height={300}
+              isEmpty={!hasChartData(stats.inspectionsByMonth)}
             >
-              <div ref={inspectionChartRef}>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={stats.inspectionsByMonth}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="label" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="count"
-                      stroke="#00796B"
-                      name="Tổng kiểm tra"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={stats.inspectionsByMonth}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#00796B"
+                    name="Tổng kiểm tra"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartCard>
           </Col>
 
           <Col xs={24} lg={12}>
-            <Card title={`Vi phạm theo tháng — Năm ${year}`} size="small">
+            <ChartCard
+              title={`Vi phạm theo tháng — Năm ${year}`}
+              fileName={`vi-pham-theo-thang-${year}.png`}
+              height={280}
+              isEmpty={!hasChartData(stats.violationsByMonth)}
+            >
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={stats.violationsByMonth}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -273,11 +315,16 @@ export default function StatisticsPage() {
                   <Bar dataKey="count" fill="#CF1322" name="Vi phạm" />
                 </BarChart>
               </ResponsiveContainer>
-            </Card>
+            </ChartCard>
           </Col>
 
           <Col xs={24} lg={12}>
-            <Card title="Kết quả kiểm tra" size="small">
+            <ChartCard
+              title="Kết quả kiểm tra"
+              fileName={`ket-qua-kiem-tra-${year}.png`}
+              height={280}
+              isEmpty={!hasChartData(stats.inspectionOutcome)}
+            >
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
@@ -300,30 +347,26 @@ export default function StatisticsPage() {
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
-            </Card>
+            </ChartCard>
           </Col>
 
           <Col xs={24}>
-            <Card
+            <ChartCard
               title={`Ngộ độc thực phẩm theo tháng — Năm ${year}`}
-              size="small"
-              extra={chartDownloadButton(
-                poisoningChartRef,
-                `ngo-doc-thuc-pham-${year}.png`,
-              )}
+              fileName={`ngo-doc-thuc-pham-${year}.png`}
+              height={300}
+              isEmpty={!hasChartData(stats.poisoningCasesByMonth)}
             >
-              <div ref={poisoningChartRef}>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={stats.poisoningCasesByMonth}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="label" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#D48806" name="Số ca" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.poisoningCasesByMonth}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#CF1322" name="Vi phạm" />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
           </Col>
 
           <Col xs={24}>

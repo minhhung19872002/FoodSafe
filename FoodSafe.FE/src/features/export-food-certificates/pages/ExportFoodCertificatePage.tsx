@@ -3,6 +3,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
+  FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
   StopOutlined,
@@ -15,6 +16,7 @@ import {
   useDeleteExportFoodCertificate,
   useDeleteExportFoodCertificateAttachment,
   useDownloadExportFoodCertificateAttachment,
+  useDownloadExportFoodCertificatePdf,
   useExportExportFoodCertificates,
   useRevokeExportFoodCertificate,
   useUpdateExportFoodCertificate,
@@ -88,6 +90,7 @@ export default function ExportFoodCertificatePage() {
   const deleteMutation = useDeleteExportFoodCertificate();
   const revokeMutation = useRevokeExportFoodCertificate();
   const exportMutation = useExportExportFoodCertificates();
+  const pdfMutation = useDownloadExportFoodCertificatePdf();
   const uploadMutation = useUploadExportFoodCertificateAttachment();
   const downloadMutation = useDownloadExportFoodCertificateAttachment();
   const deleteAttachmentMutation = useDeleteExportFoodCertificateAttachment();
@@ -183,6 +186,22 @@ export default function ExportFoodCertificatePage() {
             aria-label={`Tệp ${item.certificateNumber}`}
             icon={<FileTextOutlined />}
             onClick={() => setAttachmentsFor(item)}
+          />
+          <Button
+            type="text"
+            size="small"
+            aria-label={`Tải PDF ${item.certificateNumber}`}
+            icon={<FilePdfOutlined />}
+            loading={pdfMutation.isPending && pdfMutation.variables === item.id}
+            onClick={() =>
+              pdfMutation.mutate(item.id, {
+                onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                onError: () =>
+                  void message.error(
+                    "Không thể tải bản PDF giấy chứng nhận xuất khẩu.",
+                  ),
+              })
+            }
           />
           {canEdit && item.status !== LICENSE_STATUS.Revoked && (
             <>

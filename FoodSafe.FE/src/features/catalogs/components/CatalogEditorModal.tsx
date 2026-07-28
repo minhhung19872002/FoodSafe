@@ -26,6 +26,8 @@ interface CatalogEditorModalProps {
   testingCenters: CatalogItem[];
   open: boolean;
   saving: boolean;
+  onProductGroupSearch: (keyword: string) => void;
+  onTestingCenterSearch: (keyword: string) => void;
   onCancel: () => void;
   onSave: (input: CatalogInput) => void;
 }
@@ -45,6 +47,8 @@ export function CatalogEditorModal({
   testingCenters,
   open,
   saving,
+  onProductGroupSearch,
+  onTestingCenterSearch,
   onCancel,
   onSave,
 }: CatalogEditorModalProps) {
@@ -222,6 +226,10 @@ export function CatalogEditorModal({
                     <Select
                       {...field}
                       value={field.value || undefined}
+                      showSearch
+                      filterOption={false}
+                      onSearch={onProductGroupSearch}
+                      placeholder="Tìm theo mã hoặc tên nhóm"
                       options={productGroups
                         .filter((group) => group.level === 1)
                         .map((group) => ({
@@ -431,6 +439,10 @@ export function CatalogEditorModal({
                   <Select
                     {...field}
                     value={field.value || undefined}
+                    showSearch
+                    filterOption={false}
+                    onSearch={onTestingCenterSearch}
+                    placeholder="Tìm theo mã hoặc tên trung tâm"
                     options={testingCenters.map((center) => ({
                       value: center.id,
                       label: `${center.code} — ${center.name}`,

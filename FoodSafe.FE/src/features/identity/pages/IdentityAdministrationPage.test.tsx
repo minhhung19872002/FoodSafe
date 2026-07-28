@@ -83,6 +83,8 @@ describe("IdentityAdministrationPage", () => {
           "FoodSafe.SystemAdmin.Users",
           "FoodSafe.SystemAdmin.Users.Create",
           "FoodSafe.SystemAdmin.Users.Edit",
+          "FoodSafe.SystemAdmin.Users.ManageRoles",
+          "FoodSafe.SystemAdmin.Users.ManageScope",
           "FoodSafe.SystemAdmin.Roles",
           "FoodSafe.SystemAdmin.Roles.Create",
         ],
@@ -94,9 +96,39 @@ describe("IdentityAdministrationPage", () => {
       expect(
         await screen.findByText("Nguyễn Admin", {}, { timeout: 10000 }),
       ).toBeInTheDocument();
+      // Truy vấn theo aria-label thay vì theo role: role query rất chậm trên
+      // trang này (jsdom phải tính accessible name cho toàn bộ DOM antd).
+      expect(screen.getByLabelText("Tạo tài khoản")).toBeEnabled();
+      expect(screen.getByLabelText("Sửa Nguyễn Admin")).toBeEnabled();
+    },
+  );
+
+  it(
+    "disables user create and edit without ManageRoles and ManageScope",
+    { timeout: 30000 },
+    async () => {
+      mockApis();
+      useAuthStore.getState().setAuth({
+        id: "operator-1",
+        name: "Operator",
+        email: "operator@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["Operator"],
+        permissions: [
+          "FoodSafe.SystemAdmin.Users",
+          "FoodSafe.SystemAdmin.Users.Create",
+          "FoodSafe.SystemAdmin.Users.Edit",
+        ],
+      });
+
+      renderPage();
+
       expect(
-        screen.getByRole("button", { name: /Tạo tài khoản/ }),
+        await screen.findByText("Nguyễn Admin", {}, { timeout: 10000 }),
       ).toBeInTheDocument();
+      expect(screen.getByLabelText("Tạo tài khoản")).toBeDisabled();
+      expect(screen.getByLabelText("Sửa Nguyễn Admin")).toBeDisabled();
     },
   );
 

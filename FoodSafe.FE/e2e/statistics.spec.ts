@@ -17,7 +17,9 @@ test.describe("statistics page", () => {
       page.getByText("Giấy phép / Chứng nhận theo loại"),
     ).toBeVisible();
 
-    const yearSelector = page.getByRole("combobox");
-    await expect(yearSelector).toBeVisible();
+    // The page now carries a year selector and an organisation selector, so
+    // the bare combobox role is ambiguous — assert on both explicitly.
+    await expect(page.getByRole("combobox")).toHaveCount(2);
+    await expect(page.getByRole("combobox").first()).toBeVisible();
   });
 });

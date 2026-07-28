@@ -8,11 +8,9 @@ test.describe("dashboard", () => {
     await signInAsAdmin(page);
     await page.goto("/");
 
-    await expect(
-      page.getByRole("heading", { name: /Xin chào/ }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Xin chào/ })).toBeVisible();
 
-    await expect(page.getByText("Cơ sở SXKD")).toBeVisible();
+    await expect(page.getByText("Cơ sở SXKD").first()).toBeVisible();
     await expect(page.getByText("Phân bố hồ sơ theo loại")).toBeVisible();
     await expect(page.getByText("Chi tiết theo loại hồ sơ")).toBeVisible();
   });

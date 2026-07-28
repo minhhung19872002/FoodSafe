@@ -20,12 +20,17 @@ import type {
   CatalogKind,
 } from "../types/catalog.types";
 
+const defaultPageSize = 20;
 const riskLevelLabels = ["", "Cao", "Trung bình", "Thấp"];
 
 export default function MasterCatalogPage() {
   const { message } = App.useApp();
   const [kind, setKind] = useState<CatalogKind>("country");
   const [filter, setFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
+  const [productGroupSearch, setProductGroupSearch] = useState("");
+  const [testingCenterSearch, setTestingCenterSearch] = useState("");
   const [editing, setEditing] = useState<CatalogItem | null | undefined>();
   const [detailItem, setDetailItem] = useState<CatalogItem | null>(null);
   const canCreate = useAuthStore((state) =>
@@ -38,21 +43,34 @@ export default function MasterCatalogPage() {
     state.hasPermission("FoodSafe.Catalogs.Delete"),
   );
 
-  const catalog = useCatalog(kind, { filter, maxResultCount: 100 });
-  const productGroups = useCatalogOptions("product-group");
-  const testingCenters = useCatalogOptions("testing-center");
+  const catalog = useCatalog(kind, {
+    filter: filter || undefined,
+    skipCount: (page - 1) * pageSize,
+    maxResultCount: pageSize,
+  });
+  const productGroups = useCatalogOptions("product-group", productGroupSearch);
+  const testingCenters = useCatalogOptions(
+    "testing-center",
+    testingCenterSearch,
+  );
   const saveCatalog = useSaveCatalog(kind);
   const deleteCatalog = useDeleteCatalog(kind);
   const exportServices = useMutation({
     mutationFn: () => exportTestingServices(filter),
   });
 
+  const closeEditor = () => {
+    setEditing(undefined);
+    setProductGroupSearch("");
+    setTestingCenterSearch("");
+  };
+
   const handleSave = (input: CatalogInput) => {
     saveCatalog.mutate(
       { input, id: editing?.id },
       {
         onSuccess: () => {
-          setEditing(undefined);
+          closeEditor();
           void message.success("Đã lưu dữ liệu danh mục");
         },
         onError: () =>
@@ -172,7 +190,9 @@ export default function MasterCatalogPage() {
           filter={filter}
           items={catalog.data?.items ?? []}
           totalCount={catalog.data?.totalCount ?? 0}
-          loading={catalog.isLoading}
+          page={page}
+          pageSize={pageSize}
+          loading={catalog.isFetching}
           deleting={deleteCatalog.isPending}
           canCreate={canCreate}
           canEdit={canEdit}
@@ -180,10 +200,18 @@ export default function MasterCatalogPage() {
           onKindChange={(nextKind) => {
             setKind(nextKind);
             setFilter("");
+            setPage(1);
             setDetailItem(null);
           }}
           exporting={exportServices.isPending}
-          onFilterChange={setFilter}
+          onFilterChange={(nextFilter) => {
+            setFilter(nextFilter);
+            setPage(1);
+          }}
+          onPageChange={(nextPage, nextPageSize) => {
+            setPage(nextPage);
+            setPageSize(nextPageSize);
+          }}
           onCreate={() => setEditing(null)}
           onEdit={setEditing}
           onShowDetail={setDetailItem}
@@ -210,7 +238,9 @@ export default function MasterCatalogPage() {
         testingCenters={testingCenters.data?.items ?? []}
         open={editing !== undefined}
         saving={saveCatalog.isPending}
-        onCancel={() => setEditing(undefined)}
+        onProductGroupSearch={setProductGroupSearch}
+        onTestingCenterSearch={setTestingCenterSearch}
+        onCancel={closeEditor}
         onSave={handleSave}
       />
     </div>

@@ -20,6 +20,15 @@ export interface PagedResult<T> {
   items: T[];
 }
 
+/**
+ * View model for every `Select` in this feature: the `api/` layer adapts each
+ * backend lookup DTO into this shape so pages/components never touch raw DTOs.
+ */
+export interface LookupOption {
+  value: string;
+  label: string;
+}
+
 export interface TestingResult {
   id: string;
   organizationId: string;

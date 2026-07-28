@@ -69,7 +69,8 @@ export default function CompleteInitialPasswordChangePage() {
             Thiết lập mật khẩu mới
           </Typography.Title>
           <Typography.Paragraph type="secondary">
-            Tài khoản này phải đổi mật khẩu trước lần đăng nhập đầu tiên.
+            Tài khoản này phải đổi mật khẩu trước khi đăng nhập (đăng nhập lần
+            đầu hoặc mật khẩu đã hết hạn).
           </Typography.Paragraph>
           <Form
             layout="vertical"

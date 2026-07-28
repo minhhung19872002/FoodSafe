@@ -1,3 +1,4 @@
+using System.Globalization;
 using FoodSafe.AlertsAndTesting;
 using FoodSafe.Application.Contracts.Dashboard;
 using FoodSafe.BusinessManagement;
@@ -19,6 +20,8 @@ namespace FoodSafe.Dashboard;
 [Authorize]
 public class DashboardAppService : ApplicationService
 {
+    private const int RecentActivityCount = 12;
+
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
     private readonly IClock _clock;
@@ -39,6 +42,7 @@ public class DashboardAppService : ApplicationService
     private readonly IRepository<NdtpReport, Guid> _ndtpReports;
     private readonly IRepository<AtpWorkReport, Guid> _atpWorkReports;
     private readonly IRepository<ActionMonthReport, Guid> _actionMonthReports;
+    private readonly IRepository<AppUserProfile, Guid> _userProfiles;
 
     public DashboardAppService(
         ICurrentDataScopeProvider dataScopeProvider,
@@ -60,7 +64,8 @@ public class DashboardAppService : ApplicationService
         IRepository<Organization, Guid> organizations,
         IRepository<NdtpReport, Guid> ndtpReports,
         IRepository<AtpWorkReport, Guid> atpWorkReports,
-        IRepository<ActionMonthReport, Guid> actionMonthReports)
+        IRepository<ActionMonthReport, Guid> actionMonthReports,
+        IRepository<AppUserProfile, Guid> userProfiles)
     {
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
@@ -82,6 +87,7 @@ public class DashboardAppService : ApplicationService
         _ndtpReports = ndtpReports;
         _atpWorkReports = atpWorkReports;
         _actionMonthReports = actionMonthReports;
+        _userProfiles = userProfiles;
     }
 
     public async Task<DashboardStatsDto> GetStatsAsync(DashboardFilterDto input)
@@ -155,6 +161,9 @@ public class DashboardAppService : ApplicationService
         var totalRisk = await AsyncExecuter.CountAsync(riskQ, ct);
         var totalTest = await AsyncExecuter.CountAsync(testQ, ct);
 
+        var recentActivities = await GetRecentActivitiesAsync(
+            businessQ, selfDeclQ, resultQ, caseQ, alertQ, testQ, ct);
+
         return new DashboardStatsDto
         {
             TotalBusinesses = totalBusinesses,
@@ -182,8 +191,135 @@ public class DashboardAppService : ApplicationService
                 new() { Category = "GCN Xuất khẩu", Count = totalExport },
                 new() { Category = "Quảng cáo", Count = totalAdReg },
             ],
+            RecentActivities = recentActivities,
         };
     }
+
+    // Each queryable passed in is already narrowed by the caller's organization
+    // scope (and by Year where the surrounding metric applies), so the feed can
+    // never surface a record the user is not allowed to count.
+    private async Task<List<RecentActivityItem>> GetRecentActivitiesAsync(
+        IQueryable<Business> businessQ,
+        IQueryable<SelfDeclaration> selfDeclQ,
+        IQueryable<InspectionResult> resultQ,
+        IQueryable<FoodPoisoningCase> caseQ,
+        IQueryable<AtpAlert> alertQ,
+        IQueryable<TestingResult> testQ,
+        CancellationToken ct)
+    {
+        // Ordering and Take run in the database, so each source returns at most
+        // RecentActivityCount rows.
+        var businessRows = await AsyncExecuter.ToListAsync(
+            businessQ.OrderByDescending(x => x.CreationTime)
+                .Take(RecentActivityCount)
+                .Select(x => new { x.CreationTime, x.CreatorId, x.Name, x.Code }),
+            ct);
+        var selfDeclRows = await AsyncExecuter.ToListAsync(
+            selfDeclQ.OrderByDescending(x => x.CreationTime)
+                .Take(RecentActivityCount)
+                .Select(x => new
+                {
+                    x.CreationTime, x.CreatorId, x.DeclarationNumber, x.ProductName
+                }),
+            ct);
+        var resultRows = await AsyncExecuter.ToListAsync(
+            resultQ.OrderByDescending(x => x.CreationTime)
+                .Take(RecentActivityCount)
+                .Select(x => new
+                {
+                    x.CreationTime, x.CreatorId, x.InspectionDate, x.HasViolation
+                }),
+            ct);
+        var caseRows = await AsyncExecuter.ToListAsync(
+            caseQ.OrderByDescending(x => x.CreationTime)
+                .Take(RecentActivityCount)
+                .Select(x => new
+                {
+                    x.CreationTime, x.CreatorId, x.CaseCode, x.SuspectedFood
+                }),
+            ct);
+        var alertRows = await AsyncExecuter.ToListAsync(
+            alertQ.OrderByDescending(x => x.CreationTime)
+                .Take(RecentActivityCount)
+                .Select(x => new { x.CreationTime, x.CreatorId, x.Title, x.AlertNumber }),
+            ct);
+        var testRows = await AsyncExecuter.ToListAsync(
+            testQ.OrderByDescending(x => x.CreationTime)
+                .Take(RecentActivityCount)
+                .Select(x => new
+                {
+                    x.CreationTime, x.CreatorId, x.SampleCode, x.SampleName
+                }),
+            ct);
+
+        var rows = new List<RecentActivityRow>(RecentActivityCount * 6);
+        rows.AddRange(businessRows.Select(x => new RecentActivityRow(
+            "Business", Describe(x.Name, x.Code), x.CreationTime, x.CreatorId)));
+        rows.AddRange(selfDeclRows.Select(x => new RecentActivityRow(
+            "SelfDeclaration", Describe(x.DeclarationNumber, x.ProductName),
+            x.CreationTime, x.CreatorId)));
+        rows.AddRange(resultRows.Select(x => new RecentActivityRow(
+            "InspectionResult",
+            Describe(
+                $"Thanh tra ngày {FormatDate(x.InspectionDate)}",
+                x.HasViolation ? "có vi phạm" : null),
+            x.CreationTime, x.CreatorId)));
+        rows.AddRange(caseRows.Select(x => new RecentActivityRow(
+            "FoodPoisoningCase", Describe(x.CaseCode, x.SuspectedFood),
+            x.CreationTime, x.CreatorId)));
+        rows.AddRange(alertRows.Select(x => new RecentActivityRow(
+            "AtpAlert", Describe(x.Title, x.AlertNumber),
+            x.CreationTime, x.CreatorId)));
+        rows.AddRange(testRows.Select(x => new RecentActivityRow(
+            "TestingResult", Describe(x.SampleCode, x.SampleName),
+            x.CreationTime, x.CreatorId)));
+
+        var recent = rows
+            .OrderByDescending(x => x.CreationTime)
+            .Take(RecentActivityCount)
+            .ToList();
+        var creatorNames = await GetCreatorNamesAsync(recent, ct);
+
+        return recent.Select(x => new RecentActivityItem
+        {
+            EntityType = x.EntityType,
+            Description = x.Description,
+            CreationTime = x.CreationTime,
+            CreatorName = x.CreatorId.HasValue &&
+                creatorNames.TryGetValue(x.CreatorId.Value, out var creatorName)
+                    ? creatorName
+                    : null
+        }).ToList();
+    }
+
+    private async Task<Dictionary<Guid, string>> GetCreatorNamesAsync(
+        IReadOnlyCollection<RecentActivityRow> rows,
+        CancellationToken ct)
+    {
+        var creatorIds = rows
+            .Where(x => x.CreatorId.HasValue)
+            .Select(x => x.CreatorId!.Value)
+            .Distinct()
+            .ToList();
+        if (creatorIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var profileQ = await _userProfiles.GetQueryableAsync();
+        var profiles = await AsyncExecuter.ToListAsync(
+            profileQ.Where(p => creatorIds.Contains(p.UserId))
+                .Select(p => new { p.UserId, p.FullName }), ct);
+        return profiles
+            .GroupBy(p => p.UserId)
+            .ToDictionary(g => g.Key, g => g.First().FullName);
+    }
+
+    private static string Describe(string primary, string? secondary) =>
+        string.IsNullOrWhiteSpace(secondary) ? primary : $"{primary} - {secondary}";
+
+    private static string FormatDate(DateTime value) =>
+        value.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Licenses expiring within 90 days across all 5 license types,
@@ -368,4 +504,10 @@ public class DashboardAppService : ApplicationService
         }
         return subtree;
     }
+
+    private sealed record RecentActivityRow(
+        string EntityType,
+        string Description,
+        DateTime CreationTime,
+        Guid? CreatorId);
 }

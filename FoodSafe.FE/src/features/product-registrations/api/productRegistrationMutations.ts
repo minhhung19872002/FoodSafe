@@ -54,6 +54,12 @@ export function useExportProductRegistrations() {
   });
 }
 
+export function useDownloadProductRegistrationPdf() {
+  return useMutation({
+    mutationFn: (id: string) => productRegistrationApi.downloadPdf(id),
+  });
+}
+
 export function useUploadProductRegistrationAttachment() {
   return useMutation({
     mutationFn: ({ id, file }: { id: string; file: File }) =>

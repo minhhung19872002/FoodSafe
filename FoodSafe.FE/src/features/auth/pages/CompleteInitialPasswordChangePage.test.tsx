@@ -68,7 +68,7 @@ describe("CompleteInitialPasswordChangePage", () => {
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          "Tài khoản này phải đổi mật khẩu trước lần đăng nhập đầu tiên.",
+          "Tài khoản này phải đổi mật khẩu trước khi đăng nhập (đăng nhập lần đầu hoặc mật khẩu đã hết hạn).",
         ),
       ).toBeInTheDocument();
       const usernameInput = screen.getByDisplayValue("testuser");

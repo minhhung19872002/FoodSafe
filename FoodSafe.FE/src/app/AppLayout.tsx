@@ -194,7 +194,10 @@ const NAV_CONFIG: NavEntry[] = [
     key: "/inspection",
     icon: <AuditOutlined />,
     label: "Thanh tra - Kiểm tra",
-    permission: "FoodSafe.Inspection.Plans.View",
+    permission: [
+      "FoodSafe.Inspection.Plans.View",
+      "FoodSafe.Inspection.Results.View",
+    ],
   },
   {
     key: "alerts-testing",
@@ -204,7 +207,10 @@ const NAV_CONFIG: NavEntry[] = [
         key: "/alerts-news",
         icon: <AlertOutlined />,
         label: "Cảnh báo và Tin tức",
-        permission: "FoodSafe.AlertsAndTesting.Alerts.View",
+        permission: [
+          "FoodSafe.AlertsAndTesting.Alerts.View",
+          "FoodSafe.AlertsAndTesting.News.View",
+        ],
       },
       {
         key: "/risk-analysis",
@@ -230,19 +236,29 @@ const NAV_CONFIG: NavEntry[] = [
     key: "/food-poisoning",
     icon: <MedicineBoxOutlined />,
     label: "Ngộ độc thực phẩm",
-    permission: "FoodSafe.FoodPoisoning.Cases.View",
+    permission: [
+      "FoodSafe.FoodPoisoning.Cases.View",
+      "FoodSafe.FoodPoisoning.Incidents.View",
+    ],
   },
   {
     key: "/reporting",
     icon: <BarChartOutlined />,
     label: "Báo cáo",
-    permission: "FoodSafe.Reporting.NdtpReports.View",
+    permission: [
+      "FoodSafe.Reporting.NdtpReports.View",
+      "FoodSafe.Reporting.AtpWorkReports.View",
+      "FoodSafe.Reporting.ActionMonthReports.View",
+    ],
   },
   {
     key: "/data-integration",
     icon: <ApiOutlined />,
     label: "Tích hợp dữ liệu",
-    permission: "FoodSafe.DataIntegration.ApiEndpoints.View",
+    permission: [
+      "FoodSafe.DataIntegration.ApiEndpoints.View",
+      "FoodSafe.DataIntegration.CallHistory.View",
+    ],
   },
   {
     key: "/statistics",

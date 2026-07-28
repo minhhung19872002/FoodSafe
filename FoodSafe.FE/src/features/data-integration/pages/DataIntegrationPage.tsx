@@ -481,11 +481,17 @@ function CallHistoryTab() {
   const [shareOpen, setShareOpen] = useState(false);
   const [shareForm] = Form.useForm();
   const detail = useApiCallLogDetail(detailId);
-  const endpoints = useApiEndpoints({
-    skipCount: 0,
-    maxResultCount: 100,
-    status: API_ENDPOINT_STATUS.Active,
-  });
+  const canViewEndpoints = hasPermission(
+    "FoodSafe.DataIntegration.ApiEndpoints.View",
+  );
+  const endpoints = useApiEndpoints(
+    {
+      skipCount: 0,
+      maxResultCount: 100,
+      status: API_ENDPOINT_STATUS.Active,
+    },
+    canViewEndpoints,
+  );
   const canShare = hasPermission("FoodSafe.DataIntegration.Share");
 
   const columns: TableColumnsType<ApiCallLog> = [
@@ -888,22 +894,38 @@ function CallHistoryTab() {
 }
 
 export default function DataIntegrationPage() {
-  return (
-    <Card>
-      <Tabs
-        items={[
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const canViewEndpoints = hasPermission(
+    "FoodSafe.DataIntegration.ApiEndpoints.View",
+  );
+  const canViewCallHistory = hasPermission(
+    "FoodSafe.DataIntegration.CallHistory.View",
+  );
+
+  const tabItems = [
+    ...(canViewEndpoints
+      ? [
           {
             key: "endpoints",
             label: "Cấu hình API",
             children: <EndpointsTab />,
           },
+        ]
+      : []),
+    ...(canViewCallHistory
+      ? [
           {
             key: "history",
             label: "Lịch sử gọi API",
             children: <CallHistoryTab />,
           },
-        ]}
-      />
+        ]
+      : []),
+  ];
+
+  return (
+    <Card>
+      <Tabs defaultActiveKey={tabItems[0]?.key} items={tabItems} />
     </Card>
   );
 }

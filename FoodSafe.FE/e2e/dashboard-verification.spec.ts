@@ -30,10 +30,9 @@ test.describe("dashboard verification (F-022)", () => {
       "noperm@foodsafe.local",
     );
     try {
-      const res = await page.context().request.get(
-        "/api/v1/app/dashboard/stats",
-        { maxRedirects: 0 },
-      );
+      const res = await page
+        .context()
+        .request.get("/api/v1/app/dashboard/stats", { maxRedirects: 0 });
       expect(res.ok(), await res.text()).toBeTruthy();
     } finally {
       await context.close();
@@ -44,10 +43,9 @@ test.describe("dashboard verification (F-022)", () => {
     page,
   }) => {
     await signInAsAdmin(page);
-    const res = await page.context().request.get(
-      "/api/v1/app/dashboard/stats",
-      { maxRedirects: 0 },
-    );
+    const res = await page
+      .context()
+      .request.get("/api/v1/app/dashboard/stats", { maxRedirects: 0 });
     expect(res.ok(), await res.text()).toBeTruthy();
     const body = (await res.json()) as {
       totalBusinesses: number;
@@ -79,10 +77,9 @@ test.describe("dashboard verification (F-022)", () => {
       "district.staff@foodsafe.local",
     );
     try {
-      const res = await page.context().request.get(
-        "/api/v1/app/dashboard/stats",
-        { maxRedirects: 0 },
-      );
+      const res = await page
+        .context()
+        .request.get("/api/v1/app/dashboard/stats", { maxRedirects: 0 });
       expect(res.ok(), await res.text()).toBeTruthy();
       const body = (await res.json()) as { totalBusinesses: number };
       expect(typeof body.totalBusinesses).toBe("number");
@@ -97,10 +94,10 @@ test.describe("dashboard verification (F-022)", () => {
   }) => {
     await signInAsAdmin(page);
     await page.goto("/dashboard");
-    await expect(
-      page.getByRole("heading", { name: /Xin chào/ }),
-    ).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText("Cơ sở SXKD")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Xin chào/ })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByText("Cơ sở SXKD").first()).toBeVisible();
     await expect(page.getByText("Phân bố hồ sơ theo loại")).toBeVisible();
     await expect(page.getByText("Chi tiết theo loại hồ sơ")).toBeVisible();
   });

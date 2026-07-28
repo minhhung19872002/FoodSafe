@@ -1,6 +1,21 @@
 # Implementation Progress — FoodSafe
 
-Last updated: 2026-07-25
+Last updated: 2026-07-27
+
+> **Status correction (2026-07-27).** Everything below the "Milestone 1 evidence" heading was
+> written on 2026-07-25 and the module rows in the table above it are **out of date**. The rows
+> marking STT 25–57 as "Not started" no longer describe the codebase: those modules were
+> implemented across commits `276f5b1` → `0eba6b6` and the whole system was re-certified at
+> merge `fe3dbd2` (Playwright 235/235, backend 519/519, fresh-volume stack).
+>
+> Authoritative current state lives in `docs/testing/01-feature-verification-registry.md`
+> (34/34 features VERIFIED at `fe3dbd2`) and `docs/testing/03-regression-log.md`. Treat the
+> historical evidence sections below as an append-only record of how the system got here, not
+> as a statement of what is missing today.
+>
+> Remaining work is no longer functional scope; it is the deferred infrastructure listed in
+> `PLAN.md` (production TLS, DNS, PostgreSQL server-side SSL, backup/restore rehearsal,
+> hosting/monitoring) plus the final security review.
 
 | Area | Status | Evidence / next gate |
 |---|---|---|

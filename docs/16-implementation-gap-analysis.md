@@ -1,5 +1,18 @@
 # Implementation Gap Analysis — FoodSafe
 
+> **Superseded (2026-07-27).** This matrix reflects the 2026-07-25 audit. Every row marking
+> STT 25–57 as "Missing / Design only" has since been closed: those modules were implemented
+> across commits `276f5b1` → `0eba6b6`, and all 34 features were re-certified at merge
+> `fe3dbd2` on a fresh-volume stack (Playwright 235/235, backend 519/519, 20 migrations, 86
+> tables).
+>
+> `README.md` gates production-readiness on this document and on
+> `docs/41-implementation-progress.md`. That gate is now limited to the **cross-cutting** rows
+> at the bottom of this file — production TLS deployment, the backup/restore rehearsal and the
+> final security review remain genuinely open. The per-requirement table is historical.
+>
+> For current status read `docs/testing/01-feature-verification-registry.md`.
+
 ## Audit metadata
 
 - Audit date: 2026-07-25

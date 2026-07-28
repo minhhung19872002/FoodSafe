@@ -67,10 +67,12 @@ describe("InspectionPage", () => {
         organizationName: null,
         roles: ["ProvinceStaff"],
         permissions: [
+          "FoodSafe.Inspection.Plans.View",
           "FoodSafe.Inspection.Plans.Create",
           "FoodSafe.Inspection.Plans.Edit",
           "FoodSafe.Inspection.Plans.Delete",
           "FoodSafe.Inspection.Plans.Approve",
+          "FoodSafe.Inspection.Results.View",
           "FoodSafe.Inspection.Results.Create",
           "FoodSafe.Inspection.Results.Edit",
           "FoodSafe.Inspection.Results.Delete",

@@ -119,33 +119,33 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
 
     private async Task SeedCatalogsAsync(DateTime now)
     {
-        await InsertIfMissingAsync(TypeManufacturingId, () => BusinessType.Create(
+        await InsertCatalogIfMissingAsync(TypeManufacturingId, "SXCB", () => BusinessType.Create(
             TypeManufacturingId, "SXCB", "Sản xuất, chế biến thực phẩm", null, 1, true));
-        await InsertIfMissingAsync(TypeTradingId, () => BusinessType.Create(
+        await InsertCatalogIfMissingAsync(TypeTradingId, "KDTP", () => BusinessType.Create(
             TypeTradingId, "KDTP", "Kinh doanh thực phẩm", null, 2, true));
-        await InsertIfMissingAsync(TypeFoodServiceId, () => BusinessType.Create(
+        await InsertCatalogIfMissingAsync(TypeFoodServiceId, "DVAU", () => BusinessType.Create(
             TypeFoodServiceId, "DVAU", "Dịch vụ ăn uống", null, 3, true));
-        await InsertIfMissingAsync(TypeCollectiveKitchenId, () => BusinessType.Create(
+        await InsertCatalogIfMissingAsync(TypeCollectiveKitchenId, "BATT", () => BusinessType.Create(
             TypeCollectiveKitchenId, "BATT", "Bếp ăn tập thể", null, 4, true));
 
-        await InsertIfMissingAsync(GroupSeafoodId, () => ProductGroup.Create(
+        await InsertCatalogIfMissingAsync(GroupSeafoodId, "THUYSAN", () => ProductGroup.Create(
             GroupSeafoodId, "THUYSAN", "Thủy sản và sản phẩm thủy sản", 1, null, null, 1, true));
-        await InsertIfMissingAsync(GroupCondimentId, () => ProductGroup.Create(
+        await InsertCatalogIfMissingAsync(GroupCondimentId, "GIAVI", () => ProductGroup.Create(
             GroupCondimentId, "GIAVI", "Nước mắm và gia vị", 1, null, null, 2, true));
-        await InsertIfMissingAsync(GroupConfectioneryId, () => ProductGroup.Create(
+        await InsertCatalogIfMissingAsync(GroupConfectioneryId, "BANHKEO", () => ProductGroup.Create(
             GroupConfectioneryId, "BANHKEO", "Bánh kẹo và đồ ngọt", 1, null, null, 3, true));
-        await InsertIfMissingAsync(GroupMeatId, () => ProductGroup.Create(
+        await InsertCatalogIfMissingAsync(GroupMeatId, "THITCB", () => ProductGroup.Create(
             GroupMeatId, "THITCB", "Thịt và sản phẩm chế biến từ thịt", 1, null, null, 4, true));
 
-        await InsertIfMissingAsync(ClassHighRiskId, () => BusinessClassification.Create(
+        await InsertCatalogIfMissingAsync(ClassHighRiskId, "NC-CAO", () => BusinessClassification.Create(
             ClassHighRiskId, "NC-CAO", "Nguy cơ cao",
             "Cơ sở sản xuất, chế biến thực phẩm quy mô lớn hoặc phục vụ nhóm nhạy cảm",
             BusinessRiskLevel.High, null, 1, true));
-        await InsertIfMissingAsync(ClassMediumRiskId, () => BusinessClassification.Create(
+        await InsertCatalogIfMissingAsync(ClassMediumRiskId, "NC-TB", () => BusinessClassification.Create(
             ClassMediumRiskId, "NC-TB", "Nguy cơ trung bình",
             "Cơ sở sản xuất nhỏ lẻ, dịch vụ ăn uống có địa điểm cố định",
             BusinessRiskLevel.Medium, null, 2, true));
-        await InsertIfMissingAsync(ClassLowRiskId, () => BusinessClassification.Create(
+        await InsertCatalogIfMissingAsync(ClassLowRiskId, "NC-THAP", () => BusinessClassification.Create(
             ClassLowRiskId, "NC-THAP", "Nguy cơ thấp",
             "Cơ sở kinh doanh thực phẩm bao gói sẵn",
             BusinessRiskLevel.Low, null, 3, true));
@@ -942,6 +942,24 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
     {
         var repository = Repository<TEntity>();
         if (await repository.AnyAsync(x => x.Id == id))
+            return;
+        await repository.InsertAsync(factory(), autoSave: true);
+    }
+
+    /// <summary>
+    /// Reference catalogs carry a UNIQUE Code, and
+    /// <see cref="ReferenceCatalogDataSeedContributor"/> seeds the regulatory
+    /// taxonomy using its own identifiers. ABP does not guarantee contributor
+    /// order, so an id-only existence check would try to insert a code that is
+    /// already present and abort the whole migration on the unique index.
+    /// Checking the code as well makes whichever contributor runs first win.
+    /// </summary>
+    private async Task InsertCatalogIfMissingAsync<TEntity>(
+        Guid id, string code, Func<TEntity> factory)
+        where TEntity : MasterCatalog
+    {
+        var repository = Repository<TEntity>();
+        if (await repository.AnyAsync(x => x.Id == id || x.Code == code))
             return;
         await repository.InsertAsync(factory(), autoSave: true);
     }
