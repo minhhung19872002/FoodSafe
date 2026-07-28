@@ -1,10 +1,17 @@
 {
   "baseline": {
     "branch": "feat/integration-completion",
-    "commit": "aad87c175c664ca5d45f3c96a616720616b60992",
-    "dirty": true,
+    "commit": "17149f6e1af41e62dbdb606a00fd866bfd399e31",
+    "dirty": false,
     "generatedAt": "2026-07-28",
-    "dirtyNote": "47 working-tree entries: complete-but-uncommitted ApiSpecification feature (incl. migration 20260728081422) + route-permission refactor + UI polish + local artifacts"
+    "dirtyNote": "Phase-0 freeze commit. The audit snapshot was taken at aad87c1 with a dirty tree; the ApiSpecification feature landed at 5bc0d86/83ec103 (concurrent session) and Phase 0 (BASE-001..004) closed the remainder at this commit. Gates at freeze: BE 663/663, EF drift none, migration clean-apply/upgrade/rollback ok, Vitest 116/116, full Playwright 292/292 (0 flaky)."
+  },
+  "phase0": {
+    "freezeCommit": "17149f6e1af41e62dbdb606a00fd866bfd399e31",
+    "completedTaskIds": ["BASE-001", "BASE-002", "BASE-003", "BASE-004"],
+    "closedGaps": ["G-01", "G-02", "G-03"],
+    "date": "2026-07-28",
+    "report": "docs/audit/phase-0/PHASE_0_EXECUTION_REPORT.md"
   },
   "requirementCounts": {
     "total": 469,
@@ -13,8 +20,8 @@
     "operations": 17
   },
   "statusCounts": {
-    "FULLY_IMPLEMENTED": 400,
-    "MOSTLY_IMPLEMENTED": 31,
+    "FULLY_IMPLEMENTED": 401,
+    "MOSTLY_IMPLEMENTED": 30,
     "PARTIALLY_IMPLEMENTED": 5,
     "UI_ONLY": 0,
     "BACKEND_ONLY": 0,
@@ -29,16 +36,22 @@
   },
   "readiness": {
     "functionalCoveragePercent": 100,
-    "endToEndCompletionPercent": 93.8,
-    "uatReadinessPercent": 88,
+    "endToEndCompletionPercent": 94.1,
+    "uatReadinessPercent": 90,
     "productionReadinessPercent": 58,
     "customerAcceptanceReadinessPercent": 50,
     "confidence": "MEDIUM"
   },
+  "readinessRanges": {
+    "uatReadiness": { "min": 88, "max": 92 },
+    "productionReadiness": { "min": 55, "max": 60 },
+    "customerAcceptanceReadiness": { "min": 45, "max": 55 }
+  },
   "readinessNotes": {
+    "endToEndRaw": "350/372 FULLY after the Phase-0 freeze promoted FR-50-05 (MOSTLY -> FULLY; gaps G-01/G-02 closed)",
     "endToEndWeighted": 98.9,
-    "formula": "raw = FULLY/372; weighted = (FULLY + 0.85*MOSTLY + 0.5*PARTIAL)/372; NFR completion 79.7% raw / 95.3% weighted on 64-item software denominator (excludes 13 infra-deferred, 1 L2 doc, 2 externally blocked); details in docs/audit/CURRENT_REQUIREMENT_GAP_ANALYSIS.md §I",
-    "confidenceDriver": "dirty tree + parallel active sessions + last full Playwright run 4 commits behind HEAD"
+    "formula": "raw = FULLY/372; weighted = (FULLY + 0.85*MOSTLY + 0.5*PARTIAL)/372 = (350+0.85*20+0.5*2)/372; NFR completion 79.7% raw / 95.3% weighted on 64-item software denominator (excludes 13 infra-deferred, 1 L2 doc, 2 externally blocked); details in docs/audit/CURRENT_REQUIREMENT_GAP_ANALYSIS.md §I + Phase-0 addendum",
+    "confidenceDriver": "functional evidence now HIGH (clean freeze commit, 292/292 full suite at that commit); overall MEDIUM because production/ops/external tracks remain unstarted; UAT/production/acceptance figures are judgment ranges (see readinessRanges)"
   },
   "tasks": [
     { "id": "BASE-001", "priority": "P0", "track": "A", "requirementIds": ["FR-50-05"], "title": "Freeze working tree into one verified commit (feature+migration atomically, purge artifacts)", "dependencies": [], "effort": "S", "acceptanceCriteria": ["git status clean", "CI build/format/drift/supply-chain green at freeze commit"] },

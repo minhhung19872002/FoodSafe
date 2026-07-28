@@ -219,4 +219,6 @@ Common evidence anchors (referenced as [1]..[9] to keep rows readable):
 ### Roll-up (must match gap analysis §C and REMAINING_PLAN_SUMMARY.json)
 
 FULLY 400 · MOSTLY 31 · PARTIALLY 5 · NOT_IMPLEMENTED 28 · EXTERNALLY_BLOCKED 2 · NOT_APPLICABLE 3 · total 469.
+
+> **PHASE-0 ADDENDUM (freeze `17149f6`)**: FR-50-05 row is now **FULL** (G-01/G-02 closed — feature committed at `5bc0d86`, route permission fixed and spec 5/5 at the freeze). Post-freeze roll-up: **FULLY 401 · MOSTLY 30** · PARTIALLY 5 · NOT_IMPLEMENTED 28 · EXTERNALLY_BLOCKED 2 · N/A 3; FR subset FULLY 350 · MOSTLY 20 · PARTIALLY 2.
 FR subset (372): FULLY 349 (A 30, B 57, C 206, E 30, F 26) · MOSTLY 21 (A 3: FR-03-02, FR-05-04/05; C 8: FR-29-06, FR-29-08, FR-30-07, FR-LIC-01, FR-34-08, FR-35-08, FR-38-03, FR-38-04; E 2: FR-49-01/02; F 8: FR-50-05, FR-51..57-01 ×7) · PARTIALLY 2 (FR-19-17, FR-40-08).

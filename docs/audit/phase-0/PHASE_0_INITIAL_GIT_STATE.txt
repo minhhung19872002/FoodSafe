@@ -1,0 +1,64 @@
+=== PHASE 0 INITIAL GIT STATE ===
+Captured: 2026-07-28 16:26:37 +0700
+
+--- branch ---
+feat/integration-completion
+
+--- HEAD ---
+6b6ff6ab51d275804e924fffa60841282b0f9f28 2026-07-28 16:05:58 +0700 docs(FR-50-05): record partner API spec management verification (F-019g @ 5bc0d86)
+
+--- git status --short ---
+ M .gitignore
+?? FoodSafe.BE/test-results/
+?? FoodSafe.FE/.results/
+?? docs/audit/CURRENT_REQUIREMENT_GAP_ANALYSIS.md
+?? docs/audit/CURRENT_REQUIREMENT_TRACEABILITY_MATRIX.md
+?? docs/audit/PROJECT_IMPLEMENTATION_INVENTORY.md
+?? docs/audit/phase-0/
+?? docs/planning/
+?? test-results/
+?? testing/production-review/
+
+--- staged files ---
+
+--- git diff --stat (unstaged tracked) ---
+ .gitignore | 1 +
+ 1 file changed, 1 insertion(+)
+
+--- git diff --name-only ---
+.gitignore
+
+--- untracked ---
+FoodSafe.BE/test-results/.last-run.json
+FoodSafe.FE/.results/probe-mobile-after-click.png
+docs/audit/CURRENT_REQUIREMENT_GAP_ANALYSIS.md
+docs/audit/CURRENT_REQUIREMENT_TRACEABILITY_MATRIX.md
+docs/audit/PROJECT_IMPLEMENTATION_INVENTORY.md
+docs/audit/phase-0/PHASE_0_INITIAL_GIT_STATE.txt
+docs/planning/REMAINING_IMPLEMENTATION_PLAN.md
+docs/planning/REMAINING_PLAN_SUMMARY.json
+docs/planning/REMAINING_TASK_BACKLOG.md
+docs/planning/UAT_AND_PRODUCTION_READINESS_GATES.md
+test-results/.last-run.json
+testing/production-review/backend-quality.md
+testing/production-review/business-flow-audit.md
+testing/production-review/final-report.md
+testing/production-review/frontend-quality.md
+testing/production-review/operations-readiness.md
+testing/production-review/performance-review.md
+testing/production-review/requirement-matrix.md
+testing/production-review/security-audit.md
+testing/production-review/system-overview.md
+testing/production-review/testing-quality.md
+
+--- last 10 commits ---
+6b6ff6a docs(FR-50-05): record partner API spec management verification (F-019g @ 5bc0d86)
+83ec103 fix: resolve UI responsiveness and permission issues
+5bc0d86 feat(FR-50-05): partner API specification management
+aad87c1 docs(FR-50-05): publish partner API spec + OpenAPI, verified by executable contract test
+0776230 test(INT-01): lock the two outbound SSRF caps with regression tests
+81d5aeb docs(testing): re-certify INT-03 (F-019f) at adb30eb after the leaked-500 fix
+adb30eb fix(INT-03): make inbound validation failures return 400, not a leaked 500
+6326af4 docs(testing): certify INT-03 (F-019f) at 52d35c1 — registry, matrix, impact map, go/no-go addendum
+52d35c1 feat(INT-03): inbound partner integration — accounts, hashed API keys, receive endpoint (Batch F-2)
+a853674 chore: untrack ABP static libs committed by mistake

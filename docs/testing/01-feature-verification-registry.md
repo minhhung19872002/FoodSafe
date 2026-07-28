@@ -33,7 +33,7 @@
 | F-019d | Data Integration — Outbound Share via UI + history persistence (P1-3, FR-51) | VERIFIED | `e2e/data-integration-share.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
 | F-019e | Data Integration — Typed share payloads + retry attempt history (Batch F-1, FR-51..57) | VERIFIED | `e2e/data-integration-retry.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
 | F-019f | Data Integration — Inbound partner surface: accounts, API keys, receive endpoint (Batch F-2, INT-03) | VERIFIED | `e2e/data-integration-partners.spec.ts` (3/3; full DI subset 20/20); FR-50-05 contract spec `e2e/partner-openapi-contract.spec.ts` (1/1 at `0776230`) | `adb30eb` | 2026-07-28 |
-| F-019g | Data Integration — Partner API Specification management (FR-50-05: upload/validate/version/publish/anonymous partner download/metadata) | VERIFIED | `e2e/api-specification-management.spec.ts` (4/4, no interception) | `5bc0d86` | 2026-07-28 |
+| F-019g | Data Integration — Partner API Specification management (FR-50-05: upload/validate/version/publish/anonymous partner download/metadata) + ApiSpecs route permission (G-02) | VERIFIED | `e2e/api-specification-management.spec.ts` (5/5, no interception; adds the ApiSpecs-only route-admission scenario) | `17149f6` | 2026-07-28 |
 | F-020 | Identity Administration         | VERIFIED       | `e2e/identity-administration.spec.ts`, `e2e/identity-administration-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-021 | Audit Logs                      | VERIFIED       | `e2e/audit-logs.spec.ts`, `e2e/audit-logs-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-022 | Dashboard                       | VERIFIED       | `e2e/dashboard.spec.ts`, `e2e/dashboard-verification.spec.ts` | `8be91bc` | 2026-07-28 |
@@ -258,3 +258,22 @@ Even the 8 passing tests do not qualify for VERIFIED status because:
 - `BLOCKED` means no test exists and cannot proceed without writing one
 - Previous `READY_FOR_TEST` status for all 32 features was incorrect — tests had never been run against the real stack
 
+
+---
+
+## Freeze certification — 2026-07-28, commit `17149f6` (Phase 0, BASE-001..004)
+
+The working tree was frozen into commit `17149f6e1af41e62dbdb606a00fd866bfd399e31` (`chore(baseline): freeze verified implementation baseline`) after the full gate ran green **on exactly this tree**:
+
+| Gate | Result |
+|---|---|
+| Backend build | 0 errors |
+| Backend tests | **663/663** (Domain 215, HttpApi.Host 71, Application 357, EFCore 20) |
+| EF model drift | none (`has-pending-model-changes` clean) |
+| Migration checks | clean-apply to empty DB ✓, upgrade from `20260728064640` ✓, rollback of `20260728081422_AddApiSpecification` ✓ (disposable DBs on the real PostgreSQL 15 container) |
+| FE type-check / lint | tsc 0 errors, oxlint clean |
+| FE unit (Vitest — not acceptance evidence) | **116/116** |
+| FE production build | ✓ |
+| Full Playwright suite | **292/292 passed, 0 failed, 0 flaky, 0 skipped** (5.2 m, workers=1, real Docker stack rebuilt from this tree, zero API interception) — includes the new ApiSpecs-only route-permission scenario and the previously flaky `reporting-error-notifications` |
+
+Row-stamp policy: rows stamped `8be91bc`/`adb30eb`/`5bc0d86` keep their historical stamps — their features were **not modified** between those commits and `17149f6`, and the 292/292 run at the freeze re-exercised all of them (this section is the citation). The only row re-stamped is **F-019g** (its spec gained the BASE-002 scenario at the freeze). Registry notes: the pre-`8be91bc` "Systemic Gaps / Priority Blockers" sections further above are **historical** (from the 0-VERIFIED era) and are superseded by the row table and this certification.

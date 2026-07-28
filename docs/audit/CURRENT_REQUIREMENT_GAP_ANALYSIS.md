@@ -1,5 +1,7 @@
 # Current Requirement Gap Analysis
 
+> **PHASE-0 ADDENDUM (2026-07-28, freeze commit `17149f6`):** the tables below are the audit snapshot at `aad87c1` + dirty tree. Phase 0 (BASE-001..004, report: `docs/audit/phase-0/PHASE_0_EXECUTION_REPORT.md`) has since closed **G-01** (baseline frozen; ApiSpecification feature landed at `5bc0d86`/`83ec103` via the concurrent session and the remainder committed at `17149f6` with the full gate green: BE 663/663, full Playwright **292/292**, drift none, Vitest 116/116), **G-02** (ApiSpecs.View added to the route map + real-stack spec), and **G-03** (test fixed at `83ec103`, re-verified). Consequently **FR-50-05 is now FULLY_IMPLEMENTED** — post-freeze roll-up: FULLY 401 / MOSTLY 30 / PARTIAL 5 / NOT_IMPLEMENTED 28 / EXTERNALLY_BLOCKED 2 / N-A 3; FR subset 350/20/2. `REMAINING_PLAN_SUMMARY.json` carries the post-freeze figures.
+
 **Type**: Evidence-based re-audit of the current repository against the customer requirement document.
 **Scope**: Analysis and planning only — no application source code was modified by this audit.
 **Companion documents**:
