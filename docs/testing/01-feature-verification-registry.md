@@ -10,43 +10,43 @@
 
 | ID    | Feature                         | Status         | E2E Spec                                      | Verified Commit | Date       |
 |-------|---------------------------------|----------------|-----------------------------------------------|-----------------|------------|
-| F-001 | Authentication (Login)          | VERIFIED       | `e2e/auth.spec.ts`, `e2e/auth-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-002 | Password Management             | VERIFIED       | `e2e/password-management-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-003 | Organizations                   | VERIFIED       | `e2e/organizations.spec.ts`, `e2e/organizations-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-004 | Master Catalogs                 | VERIFIED       | `e2e/catalogs.spec.ts`, `e2e/catalogs-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-005 | Geographic Catalogs             | VERIFIED       | `e2e/geography.spec.ts`, `e2e/geography-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-008 | Product Registrations           | VERIFIED       | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-009 | Advertisement Registrations     | VERIFIED       | `e2e/advertisement-registrations.spec.ts`, `e2e/advertisement-registrations-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-010 | Eligibility Certificates        | VERIFIED       | `e2e/eligibility-certificates.spec.ts`, `e2e/eligibility-certificates-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-011 | CFS Certificates                | VERIFIED       | `e2e/cfs-certificates.spec.ts`, `e2e/cfs-certificates-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-012 | Export Food Certificates        | VERIFIED       | `e2e/export-food-certificates.spec.ts`, `e2e/export-food-certificates-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-013 | Inspection Plans & Results      | VERIFIED       | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-014 | Food Poisoning Cases            | VERIFIED       | `e2e/food-poisoning.spec.ts`, `e2e/food-poisoning-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-015 | Reporting (NDTP/ATP/Action)     | VERIFIED       | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-016 | Alerts & News                   | VERIFIED       | `e2e/alerts-news.spec.ts`, `e2e/alerts-news-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-017 | Testing Results                 | VERIFIED       | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-018 | Risk Analysis                   | VERIFIED       | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-019 | Data Integration                | VERIFIED       | `e2e/data-integration.spec.ts`, `e2e/data-integration-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-019c | Data Integration — Outbound Auth Credentials (P0-2, FR-50/51) | VERIFIED | `e2e/data-integration-credentials.spec.ts` (6/6) | `71f35e2` | 2026-07-28 |
-| F-019d | Data Integration — Outbound Share via UI + history persistence (P1-3, FR-51) | VERIFIED | `e2e/data-integration-share.spec.ts` (3/3) | `9cfcf11` | 2026-07-28 |
-| F-019e | Data Integration — Typed share payloads + retry attempt history (Batch F-1, FR-51..57) | VERIFIED | `e2e/data-integration-retry.spec.ts` (3/3) | `71f35e2` | 2026-07-28 |
-| F-020 | Identity Administration         | VERIFIED       | `e2e/identity-administration.spec.ts`, `e2e/identity-administration-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-021 | Audit Logs                      | VERIFIED       | `e2e/audit-logs.spec.ts`, `e2e/audit-logs-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-022 | Dashboard                       | VERIFIED       | `e2e/dashboard.spec.ts`, `e2e/dashboard-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-023 | Statistics                      | VERIFIED       | `e2e/statistics.spec.ts`, `e2e/statistics-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-024 | Public Lookup — Business        | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-025 | Public Lookup — Self Declaration| VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-026 | Public Lookup — Product Reg.    | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-027 | Public Lookup — Eligibility     | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-028 | Public Lookup — CFS             | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-029 | Public Lookup — Export Food     | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-030 | Public Lookup — Ad Registration | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | `fe3dbd2` | 2026-07-27 |
-| F-034 | Certificate PDF Download (incl. anonymous citizen path) | VERIFIED | `e2e/certificate-pdf-verification.spec.ts` (5/5, cookie-less ctx) | `2c09c4d` | 2026-07-28 |
+| F-001 | Authentication (Login)          | VERIFIED       | `e2e/auth.spec.ts`, `e2e/auth-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-002 | Password Management             | VERIFIED       | `e2e/password-management-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-003 | Organizations                   | VERIFIED       | `e2e/organizations.spec.ts`, `e2e/organizations-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-004 | Master Catalogs                 | VERIFIED       | `e2e/catalogs.spec.ts`, `e2e/catalogs-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-005 | Geographic Catalogs             | VERIFIED       | `e2e/geography.spec.ts`, `e2e/geography-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-008 | Product Registrations           | VERIFIED       | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-009 | Advertisement Registrations     | VERIFIED       | `e2e/advertisement-registrations.spec.ts`, `e2e/advertisement-registrations-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-010 | Eligibility Certificates        | VERIFIED       | `e2e/eligibility-certificates.spec.ts`, `e2e/eligibility-certificates-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-011 | CFS Certificates                | VERIFIED       | `e2e/cfs-certificates.spec.ts`, `e2e/cfs-certificates-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-012 | Export Food Certificates        | VERIFIED       | `e2e/export-food-certificates.spec.ts`, `e2e/export-food-certificates-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-013 | Inspection Plans & Results      | VERIFIED       | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-014 | Food Poisoning Cases            | VERIFIED       | `e2e/food-poisoning.spec.ts`, `e2e/food-poisoning-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-015 | Reporting (NDTP/ATP/Action)     | VERIFIED       | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `4662fad` | 2026-07-28 |
+| F-016 | Alerts & News                   | VERIFIED       | `e2e/alerts-news.spec.ts`, `e2e/alerts-news-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-017 | Testing Results                 | VERIFIED       | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-018 | Risk Analysis                   | VERIFIED       | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-019 | Data Integration                | VERIFIED       | `e2e/data-integration.spec.ts`, `e2e/data-integration-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-019c | Data Integration — Outbound Auth Credentials (P0-2, FR-50/51) | VERIFIED | `e2e/data-integration-credentials.spec.ts` (6/6) | `4662fad` | 2026-07-28 |
+| F-019d | Data Integration — Outbound Share via UI + history persistence (P1-3, FR-51) | VERIFIED | `e2e/data-integration-share.spec.ts` (3/3) | `4662fad` | 2026-07-28 |
+| F-019e | Data Integration — Typed share payloads + retry attempt history (Batch F-1, FR-51..57) | VERIFIED | `e2e/data-integration-retry.spec.ts` (3/3) | `4662fad` | 2026-07-28 |
+| F-020 | Identity Administration         | VERIFIED       | `e2e/identity-administration.spec.ts`, `e2e/identity-administration-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-021 | Audit Logs                      | VERIFIED       | `e2e/audit-logs.spec.ts`, `e2e/audit-logs-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-022 | Dashboard                       | VERIFIED       | `e2e/dashboard.spec.ts`, `e2e/dashboard-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-023 | Statistics                      | VERIFIED       | `e2e/statistics.spec.ts`, `e2e/statistics-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-024 | Public Lookup — Business        | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-025 | Public Lookup — Self Declaration| VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-026 | Public Lookup — Product Reg.    | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-027 | Public Lookup — Eligibility     | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-028 | Public Lookup — CFS             | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-029 | Public Lookup — Export Food     | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-030 | Public Lookup — Ad Registration | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | `4662fad` | 2026-07-28 |
+| F-034 | Certificate PDF Download (incl. anonymous citizen path) | VERIFIED | `e2e/certificate-pdf-verification.spec.ts` (5/5, cookie-less ctx) | `4662fad` | 2026-07-28 |
 
 ## Summary
 
@@ -57,9 +57,12 @@
 - BLOCKED: 0
 - NOT_STARTED: 0
 
-## Merge note (2026-07-28) — main merged into fix/production-blockers
+## Merge note (2026-07-28) — main merged into fix/production-blockers — RE-CERTIFIED
 
-- This merge combines main's defect-fix batch (`b6c5384`, merge `363a70b`) with this branch's P0/P1/Batch F-1 work. Every evidence entry below predates the merge; treat all rows as **DIRTY pending a post-merge full-suite re-run**, then re-stamp affected rows with the merge SHA.
+- Merge `c57faa9` combined main's defect-fix batch (`b6c5384`, merge `363a70b`) with this branch's P0/P1/Batch F-1 work. All rows were marked DIRTY pending a post-merge re-run.
+- **Post-merge full-suite re-certification: `npx playwright test` → 283/283 passed, 0 failed/flaky/skipped (327s)** on the stack rebuilt from the merged tree (real login, no interception). Every registry row above is re-stamped to `4662fad`.
+- The re-run surfaced ONE semantic merge conflict git could not see: main's `ChartCard` disables the PNG download for empty charts, and the FR-39-09 spec assumed an always-enabled button (its svg pre-check passed on the AntD Empty graphic). Fixed in the spec (`4662fad`): it now seeds one real inspection result + one real poisoning case for the current year through the real API, asserts the button is ENABLED, downloads both PNGs, and cleans up. Product behaviour unchanged — the empty-state gate is main's intended UX.
+- First post-merge run (pre-fix): 282/283, the only failure being that spec. BE `dotnet test` on the merged tree: **621/621**; `tsc -b` + `oxlint` clean.
 
 ## Test Run (2026-07-28) — Batch F-1: typed share payloads + retry attempt history (FR-51..57)
 
