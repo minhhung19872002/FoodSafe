@@ -104,17 +104,30 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
         await ForceSeedAsync();
     }
 
-    // Seeds regardless of the environment gate. Idempotent; called by
-    // DemoDataSeedContributor to guarantee base areas/orgs/users exist
-    // independent of contributor ordering.
+    // Seeds regardless of the environment gate. Idempotent. Includes the E2E
+    // test accounts, so it may only be called from the e2e-enabled path — see
+    // ForceSeedBaseDataAsync for the demo-data caller.
     public async Task ForceSeedAsync()
+    {
+        await ForceSeedBaseDataAsync();
+        await SeedTestUsersAsync(_clock.Now);
+    }
+
+    // Reference data only: administrative areas, organizations and the profile
+    // of the real bootstrap admin. Deliberately excludes SeedTestUsersAsync.
+    //
+    // DemoDataSeedContributor calls this to guarantee its foreign keys exist
+    // independent of contributor ordering. Demo content must never drag in the
+    // E2E fixture accounts: outside Development those accounts cannot be given
+    // the built-in password (C-5), so seeding them aborted the migrator and, via
+    // `depends_on: service_completed_successfully`, took the whole stack down.
+    public async Task ForceSeedBaseDataAsync()
     {
         var now = _clock.Now;
 
         await SeedAdministrativeAreasAsync(now);
         await SeedOrganizationsAsync(now);
         await SeedAdminProfileAsync(now);
-        await SeedTestUsersAsync(now);
     }
 
     private async Task SeedAdministrativeAreasAsync(DateTime now)

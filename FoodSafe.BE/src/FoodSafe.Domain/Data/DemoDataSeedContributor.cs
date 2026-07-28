@@ -91,9 +91,11 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 StringComparison.OrdinalIgnoreCase))
             return;
 
-        // Base areas, organizations and users must exist regardless of
-        // contributor ordering; the E2E seeder is idempotent.
-        await _e2eSeeder.ForceSeedAsync();
+        // Base areas and organizations must exist regardless of contributor
+        // ordering; this call is idempotent. It must stay on the base-data
+        // overload: demo content must not create the E2E fixture accounts,
+        // which cannot be seeded outside Development without Seed:TestPassword.
+        await _e2eSeeder.ForceSeedBaseDataAsync();
 
         var now = _clock.Now;
 
