@@ -103,6 +103,9 @@ export default function BusinessManagementPage() {
   const [provinceId, setProvinceId] = useState<string>();
   const [districtId, setDistrictId] = useState<string>();
   const [businessSorting, setBusinessSorting] = useState<string>();
+  const [productSorting, setProductSorting] = useState<string | undefined>(
+    undefined,
+  );
   const [detailBusiness, setDetailBusiness] = useState<Business>();
   const [productStatus, setProductStatus] = useState<ProductStatus>();
   const businessPagination = useTablePagination(20);
@@ -138,6 +141,7 @@ export default function BusinessManagementPage() {
     {
       filter: productFilter || undefined,
       status: productStatus,
+      sorting: productSorting,
       skipCount: productPagination.skipCount,
       maxResultCount: productPagination.maxResultCount,
     },
@@ -304,6 +308,11 @@ export default function BusinessManagementPage() {
         onBusinessSortingChange={(value) => {
           setBusinessSorting(value);
           businessPagination.resetToFirstPage();
+        }}
+        productSorting={productSorting}
+        onProductSortingChange={(value) => {
+          setProductSorting(value);
+          productPagination.resetToFirstPage();
         }}
         businessTypeOptions={(businessTypes.data?.items ?? []).map((item) => ({
           value: item.id,

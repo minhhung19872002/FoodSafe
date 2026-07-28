@@ -93,12 +93,46 @@ test.describe("business delete guard & filtered export (F-006)", () => {
     ).toBeVisible();
     await expect(row).toContainText(businessName);
 
-    // Removing the product unblocks the business deletion.
+    // Removing the product unblocks... unless a self-declaration still exists.
     const productDeletion = await request.delete(
       `/api/v1/app/product/${product.id}`,
       { headers, maxRedirects: 0 },
     );
     expect(productDeletion.ok(), await productDeletion.text()).toBeTruthy();
+
+    const createdDeclaration = await request.post(
+      "/api/v1/app/self-declaration",
+      {
+        headers,
+        data: {
+          businessId: business.id,
+          declarationNumber: `E2E-GRD-TCB-${suffix}`,
+          declarationDate: "2026-01-01",
+          productName: `Sản phẩm công bố guard ${suffix}`,
+        },
+      },
+    );
+    expect(
+      createdDeclaration.ok(),
+      await createdDeclaration.text(),
+    ).toBeTruthy();
+    const declaration = (await createdDeclaration.json()) as { id: string };
+
+    const stillBlocked = await request.delete(
+      `/api/v1/app/business/${business.id}`,
+      { headers, maxRedirects: 0 },
+    );
+    expect(stillBlocked.ok()).toBeFalsy();
+    expect(await stillBlocked.text()).toContain("FoodSafe:Business:0010");
+
+    const declarationDeletion = await request.delete(
+      `/api/v1/app/self-declaration/${declaration.id}`,
+      { headers, maxRedirects: 0 },
+    );
+    expect(
+      declarationDeletion.ok(),
+      await declarationDeletion.text(),
+    ).toBeTruthy();
     const unblockedDeletion = await request.delete(
       `/api/v1/app/business/${business.id}`,
       { headers, maxRedirects: 0 },

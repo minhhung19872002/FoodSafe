@@ -117,6 +117,7 @@
     "FoodSafe:Business:0007": "Tọa độ cơ sở không hợp lệ.",
     "FoodSafe:Business:0008": "Số lao động không được âm.",
     "FoodSafe:Business:0009": "Ngày hết hạn chứng nhận không được trước ngày cấp.",
+    "FoodSafe:Business:0010": "Cơ sở vẫn còn sản phẩm trực thuộc hoặc hồ sơ tự công bố. Vui lòng xóa dữ liệu liên quan trước khi xóa cơ sở.",
     "FoodSafe:Product:0001": "Không tìm thấy sản phẩm.",
     "FoodSafe:Product:0002": "Trạng thái sản phẩm không hợp lệ.",
     "FoodSafe:Product:0003": "Hạn sử dụng sản phẩm không được âm.",

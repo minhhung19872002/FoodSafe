@@ -2,6 +2,41 @@
 
 ## Status: VERIFIED
 
+## Re-verification 2026-07-28 — production-readiness hardening (HEAD `dccac2e` + working tree)
+
+Deep FE+BE inspection of `/businesses`; 7 defects found and fixed, all
+re-proven on the freshly rebuilt Docker stack (api + frontend images built
+from this working tree; no API interception):
+
+| # | Defect | Fix |
+|---|---|---|
+| 1 | BE `BusinessExcelAppService.ExportAsync` dropped `ProvinceId`/`DistrictId`/`CommuneId`/`Sorting` → exported file ignored geographic filters | Copy all filters + sorting into the paged input |
+| 2 | FE export button sent only `filter`+`status` (dropped type/classification/province/district/sorting) | Pass every active filter |
+| 3 | Deleting a business soft-deleted it but left its products active (orphans in the product list) | New guard `FoodSafe:Business:0010` (vi+en localized): delete refused while products exist |
+| 4 | Delete/save toasts were hardcoded ("Không thể xóa cơ sở đang được sử dụng") — server business-rule reasons (duplicate code/tax code, guard) never reached the user | `extractApiError` adopted for business/product/handler create-update-delete |
+| 5 | Map view marker click opened the **edit modal** regardless of Edit permission | Marker click now opens the detail drawer |
+| 6 | `DateTime` values from BE (`2020-01-01T00:00:00`) rendered blank in `<input type="date">` when editing (business establishedDate + 4 handler dates) | Normalize to `YYYY-MM-DD` on form reset |
+| 7 | UX gaps: coordinates could never be cleared once set; handler expiry-before-issue dates only failed server-side with a generic toast; stale/no loading indicator (`isLoading` + cross-tab OR with `keepPreviousData`) | "Xóa tọa độ" button; zod `superRefine` date-order messages on the handler form; per-tab `isFetching` |
+
+- **New spec**: `e2e/business-delete-guard.spec.ts` (2 tests, `locale: vi-VN`) —
+  API + real-UI proof of the delete guard (403 + `FoodSafe:Business:0010`,
+  Vietnamese toast from the server, delete succeeds after removing the product)
+  and export-honours-filter proof (no-match `ProvinceId` workbook strictly
+  smaller than the unfiltered one; both valid xlsx).
+- **Evidence run** (Docker stack rebuilt from this tree, workers=1):
+  `businesses.spec.ts`, `businesses-verification.spec.ts`,
+  `business-list-filters.spec.ts`, `business-detail-tabs.spec.ts`,
+  `business-delete-guard.spec.ts` → **13/13 passed**. BE
+  `FoodSafe.Application.Tests` (BusinessManagement filter) **35/35**; FE Vitest
+  businesses **13/13**; `tsc -b` clean.
+- **Note**: `businesses.spec.ts` confirm-dialog clicks updated to accept any of
+  `Xóa|Đồng ý|OK` — the RowActions confirm modal renders the antd-locale
+  default label ("Đồng ý" under vi_VN), while ~20 other in-flight specs from
+  the concurrent UI-refactor session still click `"OK"` and will fail the same
+  way until updated.
+- Commit stamping deferred to the commit that lands this shared working tree
+  (concurrent session owns unrelated dirty files).
+
 - **Feature ID**: F-006
 - **Feature name**: Businesses & Products
 - **Status**: VERIFIED

@@ -237,7 +237,11 @@ test.describe("self-declaration management", () => {
     expect(blockedUpload.ok()).toBeFalsy();
 
     await row.getByRole("button", { name: `Xóa ${declarationNumber}` }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    // Nhãn nút xác nhận phụ thuộc cấu hình RowActions/locale antd.
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText("Đã xóa hồ sơ.")).toBeVisible();
 
     const duplicateResponse = await request.post(

@@ -16,6 +16,8 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
     private readonly IRepository<Business, Guid> _businesses;
     private readonly IRepository<BusinessProductGroup> _businessProductGroups;
     private readonly IRepository<BusinessHandler, Guid> _handlers;
+    private readonly IRepository<Product, Guid> _products;
+    private readonly IRepository<SelfDeclaration, Guid> _selfDeclarations;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
@@ -23,12 +25,16 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
         IRepository<Business, Guid> businesses,
         IRepository<BusinessProductGroup> businessProductGroups,
         IRepository<BusinessHandler, Guid> handlers,
+        IRepository<Product, Guid> products,
+        IRepository<SelfDeclaration, Guid> selfDeclarations,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens)
     {
         _businesses = businesses;
         _businessProductGroups = businessProductGroups;
         _handlers = handlers;
+        _products = products;
+        _selfDeclarations = selfDeclarations;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
     }
@@ -82,7 +88,8 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
 
     // Honours the client's Sorting request (e.g. "Name", "Code desc", "Status")
     // against a whitelist so the businesses list supports column sorting without
-    // exposing the query to dynamic-LINQ injection. Falls back to Name ascending.
+    // exposing the query to dynamic-LINQ injection. Falls back to CreationTime
+    // descending so newly created businesses surface at the top of the list.
     private static IOrderedQueryable<Business> ApplySorting(
         IQueryable<Business> query,
         string? sorting)
@@ -99,7 +106,9 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
             ("status", true) => query.OrderByDescending(x => x.Status).ThenBy(x => x.Name),
             ("status", false) => query.OrderBy(x => x.Status).ThenBy(x => x.Name),
             ("name", true) => query.OrderByDescending(x => x.Name),
-            _ => query.OrderBy(x => x.Name)
+            ("name", false) => query.OrderBy(x => x.Name),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _ => query.OrderByDescending(x => x.CreationTime)
         };
     }
 
@@ -172,6 +181,16 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
     public async Task DeleteAsync(Guid id)
     {
         var business = await GetScopedAsync(id, DataScopeOperation.Delete);
+        // Soft delete không lan sang dữ liệu trực thuộc: chặn xóa khi còn sản
+        // phẩm hoặc hồ sơ tự công bố để tránh bản ghi mồ côi trỏ về cơ sở đã xóa.
+        if (await _products.AnyAsync(
+                x => x.BusinessId == id,
+                _cancellationTokens.Token) ||
+            await _selfDeclarations.AnyAsync(
+                x => x.BusinessId == id,
+                _cancellationTokens.Token))
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Business.BusinessInUse);
         await _businesses.DeleteAsync(
             business,
             autoSave: true,

@@ -104,6 +104,7 @@
     "FoodSafe:Business:0007": "The business coordinates are invalid.",
     "FoodSafe:Business:0008": "Employee count cannot be negative.",
     "FoodSafe:Business:0009": "A certificate expiry date cannot precede its issue date.",
+    "FoodSafe:Business:0010": "The business still has dependent products or self-declarations. Remove them before deleting the business.",
     "FoodSafe:Product:0001": "The product was not found.",
     "FoodSafe:Product:0002": "The product status is invalid.",
     "FoodSafe:Product:0003": "The product expiry period cannot be negative.",

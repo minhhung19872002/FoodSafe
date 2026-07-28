@@ -50,6 +50,7 @@ public static class FoodSafeDomainErrorCodes
         public const string InvalidCoordinates = "FoodSafe:Business:0007";
         public const string InvalidEmployeeCount = "FoodSafe:Business:0008";
         public const string InvalidCertificateDates = "FoodSafe:Business:0009";
+        public const string BusinessInUse = "FoodSafe:Business:0010";
     }
 
     public static class Product

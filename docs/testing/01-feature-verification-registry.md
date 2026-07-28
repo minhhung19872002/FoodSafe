@@ -12,28 +12,28 @@
 |-------|---------------------------------|----------------|-----------------------------------------------|-----------------|------------|
 | F-001 | Authentication (Login)          | VERIFIED       | `e2e/auth.spec.ts`, `e2e/auth-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-002 | Password Management             | VERIFIED       | `e2e/password-management-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-003 | Organizations                   | VERIFIED       | `e2e/organizations.spec.ts`, `e2e/organizations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-003 | Organizations                   | DIRTY          | `e2e/organizations.spec.ts`, `e2e/organizations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-004 | Master Catalogs                 | VERIFIED       | `e2e/catalogs.spec.ts`, `e2e/catalogs-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-005 | Geographic Catalogs             | VERIFIED       | `e2e/geography.spec.ts`, `e2e/geography-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-008 | Product Registrations           | VERIFIED       | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-009 | Advertisement Registrations     | VERIFIED       | `e2e/advertisement-registrations.spec.ts`, `e2e/advertisement-registrations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-010 | Eligibility Certificates        | VERIFIED       | `e2e/eligibility-certificates.spec.ts`, `e2e/eligibility-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-011 | CFS Certificates                | VERIFIED       | `e2e/cfs-certificates.spec.ts`, `e2e/cfs-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-012 | Export Food Certificates        | VERIFIED       | `e2e/export-food-certificates.spec.ts`, `e2e/export-food-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-013 | Inspection Plans & Results      | VERIFIED       | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts`, `e2e/business-list-filters.spec.ts`, `e2e/business-detail-tabs.spec.ts`, `e2e/business-delete-guard.spec.ts` | `dccac2e`+wt | 2026-07-28 |
+| F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts`, `e2e/business-delete-guard.spec.ts` | `dccac2e`+wt | 2026-07-28 |
+| F-008 | Product Registrations           | DIRTY          | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-009 | Advertisement Registrations     | DIRTY          | `e2e/advertisement-registrations.spec.ts`, `e2e/advertisement-registrations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-010 | Eligibility Certificates        | DIRTY          | `e2e/eligibility-certificates.spec.ts`, `e2e/eligibility-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-011 | CFS Certificates                | DIRTY          | `e2e/cfs-certificates.spec.ts`, `e2e/cfs-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-012 | Export Food Certificates        | DIRTY          | `e2e/export-food-certificates.spec.ts`, `e2e/export-food-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-013 | Inspection Plans & Results      | DIRTY          | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-014 | Food Poisoning Cases            | VERIFIED       | `e2e/food-poisoning.spec.ts`, `e2e/food-poisoning-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-015 | Reporting (NDTP/ATP/Action)     | VERIFIED       | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-015 | Reporting (NDTP/ATP/Action)     | DIRTY          | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-016 | Alerts & News                   | VERIFIED       | `e2e/alerts-news.spec.ts`, `e2e/alerts-news-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-017 | Testing Results                 | VERIFIED       | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-017 | Testing Results                 | DIRTY          | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-018 | Risk Analysis                   | VERIFIED       | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-019 | Data Integration                | VERIFIED       | `e2e/data-integration.spec.ts`, `e2e/data-integration-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-019c | Data Integration — Outbound Auth Credentials (P0-2, FR-50/51) | VERIFIED | `e2e/data-integration-credentials.spec.ts` (6/6) | `8be91bc` | 2026-07-28 |
 | F-019d | Data Integration — Outbound Share via UI + history persistence (P1-3, FR-51) | VERIFIED | `e2e/data-integration-share.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
 | F-019e | Data Integration — Typed share payloads + retry attempt history (Batch F-1, FR-51..57) | VERIFIED | `e2e/data-integration-retry.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
-| F-019f | Data Integration — Inbound partner surface: accounts, API keys, receive endpoint (Batch F-2, INT-03) | VERIFIED | `e2e/data-integration-partners.spec.ts` (3/3; full DI subset 20/20); FR-50-05 contract spec `e2e/partner-openapi-contract.spec.ts` (1/1 at `0776230`) | `adb30eb` | 2026-07-28 |
-| F-019g | Data Integration — Partner API Specification management (FR-50-05: upload/validate/version/publish/anonymous partner download/metadata) + ApiSpecs route permission (G-02) | VERIFIED | `e2e/api-specification-management.spec.ts` (5/5, no interception; adds the ApiSpecs-only route-admission scenario) | `17149f6` | 2026-07-28 |
+| F-019f | Data Integration — Inbound partner surface: accounts, API keys, receive endpoint (Batch F-2, INT-03) | DIRTY | `e2e/data-integration-partners.spec.ts` (3/3; full DI subset 20/20); FR-50-05 contract spec `e2e/partner-openapi-contract.spec.ts` (1/1 at `0776230`) | `adb30eb` | 2026-07-28 |
+| F-019g | Data Integration — Partner API Specification management (FR-50-05: upload/validate/version/publish/anonymous partner download/metadata) + ApiSpecs route permission (G-02) | DIRTY | `e2e/api-specification-management.spec.ts` (5/5, no interception; adds the ApiSpecs-only route-admission scenario) | `17149f6` | 2026-07-28 |
 | F-020 | Identity Administration         | VERIFIED       | `e2e/identity-administration.spec.ts`, `e2e/identity-administration-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-021 | Audit Logs                      | VERIFIED       | `e2e/audit-logs.spec.ts`, `e2e/audit-logs-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-022 | Dashboard                       | VERIFIED       | `e2e/dashboard.spec.ts`, `e2e/dashboard-verification.spec.ts` | `8be91bc` | 2026-07-28 |
@@ -45,7 +45,7 @@
 | F-028 | Public Lookup — CFS             | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-029 | Public Lookup — Export Food     | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-030 | Public Lookup — Ad Registration | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-031 | Documents                       | DIRTY          | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-034 | Certificate PDF Download (incl. anonymous citizen path) | VERIFIED | `e2e/certificate-pdf-verification.spec.ts` (5/5, cookie-less ctx) | `8be91bc` | 2026-07-28 |
@@ -53,11 +53,20 @@
 ## Summary
 
 - Total features: 34
-- VERIFIED: **34** (ALL features — see `features/*.md`)
+- VERIFIED: 20 rows (of 39 table rows)
+- DIRTY: **14 rows** (2026-07-28 — default list ordering changed to `CreationTime desc` + server-side column sorting added; see "DIRTY batch" note below and `03-regression-log.md`)
 - READY_FOR_TEST: 0
 - FAILED: 0
 - BLOCKED: 0
 - NOT_STARTED: 0
+
+## DIRTY batch (2026-07-28) — default list sort → CreationTime desc, sortable columns
+
+- Cross-cutting UX change: every admin list now defaults to `CreationTime desc` (newest first); the previous business-field ordering (SampleDate, IssuedDate, InspectionDate, Year, PeriodYear, IssueDate, RegistrationDate, DeclarationDate, Name, Code) is now reachable via server-side column sorting (whitelisted `ApplySorting` per AppService + controlled AntD sorter per page, following the F-006 businesses pattern).
+- DTO constructor `Sorting` defaults that pre-empted the fallback were removed/changed (`BusinessListInput`, `GetOrganizationListInput`, `SelfDeclarationListInput`, `ProductListInput`, 5 Licensing inputs).
+- NOT affected (left as-is): Catalogs (`SortOrder` is a deliberate user-managed display order), FoodPoisoning/Alerts/News/RiskAnalysis/ApiEndpoints/Identity users (already `CreationTime desc`), call/submission logs (`CalledAt`/`ReceivedAt` desc), public portal ordering.
+- Rows marked DIRTY: F-003, F-006, F-007, F-008, F-009, F-010, F-011, F-012, F-013, F-015, F-017, F-019f, F-019g, F-031. Required retest: Level 2 per feature (list default order, header-click sort round-trip, pagination interplay). Build gates at change time: BE compile 0 errors, FE `tsc -b` clean, `oxlint` clean; runtime E2E NOT yet run — e2e specs asserting first-row/newest-first assumptions must be reviewed during retest.
+- **F-006 + F-007 retested and returned to VERIFIED** (2026-07-28, hardening batch): full feature suites + `business-delete-guard.spec.ts` ran **20/20** against a stack rebuilt from the tree containing the sorting changes for these two features (incl. `business-list-filters` sort/pagination spec). Remaining DIRTY rows still owe their Level-2 retest.
 
 ## UI restyle (2026-07-28) — áp bộ nhận diện FoodSafe Quảng Ninh — RE-VERIFIED
 

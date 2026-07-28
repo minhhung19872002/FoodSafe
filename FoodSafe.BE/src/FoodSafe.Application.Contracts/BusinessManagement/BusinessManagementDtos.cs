@@ -19,7 +19,7 @@ public sealed class BusinessListInput : PagedAndSortedResultRequestDto
     public BusinessListInput()
     {
         MaxResultCount = 20;
-        Sorting = "Name";
+        Sorting = "creationTime desc";
     }
 }
 
@@ -133,7 +133,7 @@ public sealed class ProductListInput : PagedAndSortedResultRequestDto
     public ProductListInput()
     {
         MaxResultCount = 20;
-        Sorting = "Name";
+        Sorting = "creationTime desc";
     }
 }
 

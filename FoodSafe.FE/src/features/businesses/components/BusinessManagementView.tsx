@@ -44,6 +44,7 @@ interface BusinessManagementViewProps {
   provinceId?: string;
   districtId?: string;
   businessSorting?: string;
+  productSorting?: string;
   businessTypeOptions: FilterOption[];
   classificationOptions: FilterOption[];
   provinceOptions: FilterOption[];
@@ -53,6 +54,7 @@ interface BusinessManagementViewProps {
   onProvinceChange: (value?: string) => void;
   onDistrictChange: (value?: string) => void;
   onBusinessSortingChange: (value?: string) => void;
+  onProductSortingChange: (value?: string) => void;
   onShowDetail: (business: Business) => void;
   businessPagination: TablePaginationConfig;
   productPagination: TablePaginationConfig;
@@ -121,6 +123,26 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     // actually changed so paging never silently resets to page 1.
     if (next !== props.businessSorting) {
       props.onBusinessSortingChange(next);
+    }
+  };
+
+  const sortOrderForProduct = (field: string): SortOrder => {
+    if (!props.productSorting) return null;
+    const [current, direction] = props.productSorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleProductSort = (
+    sorter: SorterResult<Product> | SorterResult<Product>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== props.productSorting) {
+      props.onProductSortingChange(next);
     }
   };
 
@@ -226,7 +248,13 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
 
   const productColumns: ColumnsType<Product> = [
     { title: "Mã", dataIndex: "code", width: 120 },
-    { title: "Tên sản phẩm", dataIndex: "name", ellipsis: true },
+    {
+      title: "Tên sản phẩm",
+      dataIndex: "name",
+      ellipsis: true,
+      sorter: true,
+      sortOrder: sortOrderForProduct("name"),
+    },
     { title: "Thương hiệu", dataIndex: "brandName", ellipsis: true },
     { title: "Nhà sản xuất", dataIndex: "manufacturer", ellipsis: true },
     {
@@ -464,6 +492,9 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               style: { cursor: "pointer" },
             })}
             columns={productColumns}
+            onChange={(_pagination, _filters, sorter) =>
+              handleProductSort(sorter)
+            }
             pagination={props.productPagination}
           />
         </>

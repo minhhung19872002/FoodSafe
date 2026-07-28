@@ -79,7 +79,7 @@ public class SelfDeclarationAppService :
             query,
             _cancellationTokens.Token);
         var rows = await AsyncExecuter.ToListAsync(
-            query.OrderByDescending(x => x.DeclarationDate)
+            ApplySorting(query, input.Sorting)
                 .ThenBy(x => x.DeclarationNumber)
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount),
@@ -482,4 +482,25 @@ public class SelfDeclarationAppService :
             _ => throw new UserFriendlyException(
                 "Trạng thái hồ sơ không hợp lệ.")
         };
+
+    // Honours the client's Sorting request (e.g. "declarationDate desc",
+    // "creationTime") against a whitelist. Falls back to CreationTime descending.
+    private static IOrderedQueryable<SelfDeclaration> ApplySorting(
+        IQueryable<SelfDeclaration> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("declarationdate", true)  => query.OrderByDescending(x => x.DeclarationDate),
+            ("declarationdate", false) => query.OrderBy(x => x.DeclarationDate),
+            ("creationtime",    true)  => query.OrderByDescending(x => x.CreationTime),
+            ("creationtime",    false) => query.OrderBy(x => x.CreationTime),
+            _                          => query.OrderByDescending(x => x.CreationTime)
+        };
+    }
 }

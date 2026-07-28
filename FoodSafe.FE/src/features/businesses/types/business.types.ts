@@ -191,6 +191,7 @@ export interface ProductFilter {
   businessId?: string;
   productGroupId?: string;
   status?: ProductStatus;
+  sorting?: string;
   skipCount: number;
   maxResultCount: number;
 }

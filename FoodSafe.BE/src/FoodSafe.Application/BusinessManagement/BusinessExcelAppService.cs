@@ -194,6 +194,10 @@ public class BusinessExcelAppService : ApplicationService,
                 BusinessClassificationId = input.BusinessClassificationId,
                 Status = input.Status,
                 HasEligibilityCertificate = input.HasEligibilityCertificate,
+                ProvinceId = input.ProvinceId,
+                DistrictId = input.DistrictId,
+                CommuneId = input.CommuneId,
+                Sorting = input.Sorting,
                 SkipCount = rows.Count,
                 MaxResultCount = ExportPageSize
             });

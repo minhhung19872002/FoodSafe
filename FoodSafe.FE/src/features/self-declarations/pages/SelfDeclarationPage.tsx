@@ -9,7 +9,9 @@ import {
 } from "@ant-design/icons";
 import { App, Button, Input, Select, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { extractApiError } from "@/lib/apiError";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ExpiryTag } from "@/components/ExpiryTag";
@@ -61,6 +63,7 @@ export default function SelfDeclarationPage() {
   const [businessId, setBusinessId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
   const [expiringWithinDays, setExpiringWithinDays] = useState<number>();
+  const [sorting, setSorting] = useState<string | undefined>(undefined);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<SelfDeclaration>();
   const [editorBusinessId, setEditorBusinessId] = useState<string>();
@@ -75,8 +78,32 @@ export default function SelfDeclarationPage() {
     businessId,
     status,
     expiringWithinDays,
+    sorting,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
+  };
+
+  // Server-side sorting: translate column-header clicks into the
+  // "<field> <asc|desc>" string the backend's ApplySorting whitelist parses.
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter: SorterResult<SelfDeclaration> | SorterResult<SelfDeclaration>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
   };
   const declarations = useSelfDeclarations(queryFilter);
   const businesses = useSelfDeclarationBusinesses();
@@ -103,10 +130,7 @@ export default function SelfDeclarationPage() {
         void message.success("Đã lưu hồ sơ tự công bố.");
         closeEditor();
       },
-      onError: () =>
-        void message.error(
-          "Không thể lưu hồ sơ. Vui lòng kiểm tra số hồ sơ và dữ liệu.",
-        ),
+      onError: (error: unknown) => void message.error(extractApiError(error)),
     };
     if (editing) updateMutation.mutate({ id: editing.id, input }, options);
     else createMutation.mutate(input, options);
@@ -132,6 +156,8 @@ export default function SelfDeclarationPage() {
       title: "Ngày công bố",
       dataIndex: "declarationDate",
       width: 120,
+      sorter: true,
+      sortOrder: sortOrderFor("declarationDate"),
       render: (value: string) => new Date(value).toLocaleDateString("vi-VN"),
     },
     {
@@ -198,7 +224,8 @@ export default function SelfDeclarationPage() {
               onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã xóa hồ sơ."),
-                  onError: () => void message.error("Không thể xóa hồ sơ."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -220,8 +247,8 @@ export default function SelfDeclarationPage() {
               onClick={() =>
                 exportMutation.mutate(queryFilter, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () =>
-                    void message.error("Không thể xuất danh sách."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 })
               }
             >
@@ -304,13 +331,14 @@ export default function SelfDeclarationPage() {
           rowKey="id"
           size="middle"
           scroll={{ x: 1000 }}
-          loading={declarations.isLoading}
+          loading={declarations.isFetching}
           columns={columns}
           dataSource={declarations.data?.items ?? []}
           onRow={(record) => ({
             onDoubleClick: () => setDetailRecord(record),
             style: { cursor: "pointer" },
           })}
+          onChange={(_pagination, _filters, sorter) => handleSort(sorter)}
           pagination={pagination.buildConfig(
             declarations.data?.totalCount ?? 0,
           )}
@@ -432,7 +460,7 @@ export default function SelfDeclarationPage() {
                 void message.success("Đã thu hồi hồ sơ.");
                 setRevoking(undefined);
               },
-              onError: () => void message.error("Không thể thu hồi hồ sơ."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}
