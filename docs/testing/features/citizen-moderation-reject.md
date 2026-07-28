@@ -2,7 +2,7 @@
 
 ## Status: VERIFIED
 
-- **Feature ID**: F-016b · **Verified Git commit**: working tree on top of `b31cc11` (re-stamp at the feature commit) · **Date**: 2026-07-28
+- **Feature ID**: F-016b · **Verified Git commit**: `17a29c6` · **Date**: 2026-07-28
 - **Environment**: Docker Compose full stack at `http://127.0.0.1:8080` · **Database**: real PostgreSQL 15 · **API interception**: **No**
 - **Accounts**: `admin`; citizen submissions arrive through a genuinely anonymous, cookie-less context
 - **Frontend route**: `/alerts-news` → tabs "Cảnh báo VSATTP" and "Tin tức ATTP", source filter "Từ dân"

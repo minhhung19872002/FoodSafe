@@ -25,7 +25,7 @@ Record every verification invalidation and retest result here.
   (`DataIntegration.Partners.Moderate`, incl. `CurrentUserContextAppService.FoodSafePermissionNames`),
   `AlertStatus`/`NewsStatus` enums, the shared `RevokeModal` (new optional `okText`/`description`/
   `placeholder` props, defaults unchanged), and migration `20260728144116_AddWorkflowDispositionFields`.
-- **Commit**: working tree on top of `b31cc11` (re-stamp at the feature commit)
+- **Commit**: `17a29c6`
 - **Affected features**: F-019h, F-016b (new); F-019f and F-016 touched (shared tab row actions,
   alert/news status rendering); `RevokeModal` consumers F-007..F-012 at Level 1.
 - **Retest level**: 3 (shared permission list + shared modal) — executed as a **full** suite run.

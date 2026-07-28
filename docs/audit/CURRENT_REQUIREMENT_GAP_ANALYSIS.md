@@ -1,6 +1,6 @@
 # Current Requirement Gap Analysis
 
-> **WORKFLOW-BATCH ADDENDUM (2026-07-28, on top of `b31cc11`):** the two remaining approval
+> **WORKFLOW-BATCH ADDENDUM (2026-07-28, commit `17a29c6`):** the two remaining approval
 > workflows are now built and verified against the real stack, closing **G-04** (inbound
 > submission disposition — `MarkProcessed()`/`Reject()` now have real call sites, permissions,
 > endpoints, UI and audit fields) and the moderation half of **G-09** (citizen submissions are

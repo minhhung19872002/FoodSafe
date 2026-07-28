@@ -49,8 +49,8 @@
 | F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-034 | Certificate PDF Download (incl. anonymous citizen path) | VERIFIED | `e2e/certificate-pdf-verification.spec.ts` (5/5, cookie-less ctx) | `8be91bc` | 2026-07-28 |
-| F-019h | Data Integration — Inbound submission disposition workflow (INT-03 / STT 51–57: Received → Processed \| Rejected, terminal, `Partners.Moderate`) | VERIFIED | `e2e/inbound-submission-disposition.spec.ts` (2/2, no interception) | wt-post-`b31cc11` | 2026-07-28 |
-| F-016b | Alerts & News — citizen moderation refusal (YCKT STT 29/30: Draft → Rejected with mandatory reason, record kept and never public) | VERIFIED | `e2e/citizen-moderation-reject.spec.ts` (2/2, no interception) | wt-post-`b31cc11` | 2026-07-28 |
+| F-019h | Data Integration — Inbound submission disposition workflow (INT-03 / STT 51–57: Received → Processed \| Rejected, terminal, `Partners.Moderate`) | VERIFIED | `e2e/inbound-submission-disposition.spec.ts` (2/2, no interception) | `17a29c6` | 2026-07-28 |
+| F-016b | Alerts & News — citizen moderation refusal (YCKT STT 29/30: Draft → Rejected with mandatory reason, record kept and never public) | VERIFIED | `e2e/citizen-moderation-reject.spec.ts` (2/2, no interception) | `17a29c6` | 2026-07-28 |
 
 ## Workflow completion batch (2026-07-28) — the last two project flows
 
@@ -59,10 +59,13 @@ Eight were already built; the remaining two — both approval flows — landed i
 are recorded above as **F-019h** and **F-016b**. Plan and full evidence:
 [`docs/implementation/78-workflow-completion-plan.md`](../implementation/78-workflow-completion-plan.md).
 
-Gate run at this working tree (on top of `b31cc11`): BE **690/690**, EF drift none, `tsc` clean,
+Gate run at `17a29c6`: BE **690/690**, EF drift none, `tsc` clean,
 `oxlint` clean, **full Playwright 304/304, 0 failed, 0 flaky**. Because the whole suite was run
-green — including every spec belonging to the DIRTY rows below — this batch also supplies the
-Level-2 runtime evidence those rows were owed; they are re-stamped when this batch is committed.
+green, every spec belonging to the still-DIRTY rows (F-003, F-019f, F-019g) passed at this
+commit too. That is **not** enough to clear them: those rows owe the sorting batch's specific
+retest (default `CreationTime desc` order, header-click sort round-trip, pagination interplay),
+and no spec asserts that yet. They stay DIRTY until someone adds those assertions — this batch
+only proves their existing specs still pass.
 
 Six pre-existing stale-spec defects were found and fixed during this run (locale-dependent
 confirm-button selectors, a Popconfirm→modal.confirm refactor the specs had not followed, a
