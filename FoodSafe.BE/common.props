@@ -23,4 +23,39 @@
   <ItemGroup>
     <Content Remove="$(UserProfile)\.nuget\packages\*\*\contentFiles\any\*\*.abppkg*" />
   </ItemGroup>
+
+  <!--
+    AutoMapper is ABI-LOCKED to 14.0.0 by ABP 9.3.7. Volo.Abp.AutoMapper 9.3.7
+    was compiled against AutoMapper 14 and its MapperAccessor calls
+    `new MapperConfiguration(MapperConfigurationExpression)`. AutoMapper 15.x
+    REMOVED that constructor (it now requires an ILoggerFactory), so although a
+    15.x pin *builds* (NuGet unifies ">= 14.0.0" up to 15), it throws
+    MissingMethodException at RUNTIME on the first ObjectMapper call, 500-ing
+    every AutoMapper-backed endpoint. A prior "B-6 fix" pinned 15.1.3 and was
+    only build/stale-artifact verified; a clean container restore surfaced the
+    crash. Pinned to exactly 14.0.0 (the version ABP resolves and runs against).
+
+    Residual: CVE-2026-32933 / GHSA-rvv3-g6hj-g44x (AutoMapper uncontrolled-
+    recursion DoS, first fixed 15.1.1 — NOT back-ported to the 14.x line).
+    Mitigated: (1) System.Text.Json bounds request depth to MaxDepth=64 before
+    any mapping runs, so an attacker cannot deliver a deeply nested graph; (2)
+    the only recursive mapping profiles (geographic Country->..->Commune,
+    Organization) are explicitly capped with .MaxDepth(8). Real fix is the
+    tracked ABP 10 upgrade (ABP 10 targets AutoMapper 15). See docs/production-
+    audit/08 (B-6) and scripts/Test-NuGetVulnerabilities.ps1 allow-list.
+
+    The NuGetAuditSuppress item below removes ONLY this advisory's NU1903
+    from restore/build (CI builds with warnings treated as errors). NuGet
+    auditing itself stays enabled, so any other advisory still fails the CI
+    build. The "dotnet list package" vulnerability audit ignores the
+    suppression, which keeps the Test-NuGetVulnerabilities.ps1 gate reporting
+    this finding as an explicitly mitigated risk on every CI run. Remove the
+    suppression together with the 14.0.0 pin, the audit-script allow-list
+    entry, and the .trivyignore entry when upgrading to an ABP line
+    compatible with AutoMapper >= 15.1.1.
+  -->
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
+  </ItemGroup>
 </Project>

@@ -175,4 +175,90 @@ test.describe("reporting management", () => {
       page.getByRole("tab", { name: "Tháng hành động" }),
     ).toBeVisible();
   });
+
+  // The forward path (submit→verify→complete) is UI-driven above; the RETURN
+  // buttons ("Trả lại" + "Về nháp") were only ever exercised at the API level
+  // (reporting-verification.spec.ts). This drives them through the real DOM so
+  // the full Submit/Verify/Return/Complete button set has browser evidence.
+  test("return path through the UI: submit → return (with reason) → back to draft", async ({
+    page,
+  }) => {
+    await signInAsAdmin(page);
+    const request = page.context().request;
+    const headers = {
+      RequestVerificationToken: await requestVerificationToken(page),
+    };
+    const takenPeriods = await cleanTestReports(request, headers);
+    const period = firstFreePeriod(takenPeriods);
+    expect(period, "no free test period available").toBeDefined();
+    const { year, month } = period!;
+    const periodLabel = `Tháng ${month}/${year}`;
+
+    // Seed the Draft over real HTTP (the create UI is already covered above);
+    // this test's subject is the return workflow buttons, not creation.
+    const created = await request.post("/api/v1/app/ndtp-report", {
+      headers,
+      data: { periodYear: year, periodMonth: month, notes: "E2E return path" },
+    });
+    expect(created.ok(), await created.text()).toBeTruthy();
+    const { id } = (await created.json()) as { id: string };
+
+    try {
+      await page.goto("/reporting");
+      await expect(
+        page.getByRole("tab", { name: "Báo cáo NĐTP" }),
+      ).toBeVisible();
+      // Isolate the seeded row via the year filter so it is unambiguous.
+      await page.getByPlaceholder("Năm").first().fill(String(year));
+      await page.keyboard.press("Enter");
+
+      let row = page.getByRole("row").filter({ hasText: periodLabel });
+      await expect(row.locator(".ant-tag").filter({ hasText: "Nháp" })).toBeVisible({
+        timeout: 10_000,
+      });
+
+      // Draft → Submitted via the "Gửi" button + its Popconfirm.
+      await row.getByRole("button", { name: /Gửi/ }).click();
+      await page
+        .locator(".ant-popover:visible")
+        .getByRole("button", { name: "Gửi" })
+        .click();
+      row = page.getByRole("row").filter({ hasText: periodLabel });
+      await expect(row.getByText("Đã gửi")).toBeVisible({ timeout: 10_000 });
+
+      // Submitted → Returned via the "Trả lại" button, which opens a modal that
+      // requires a reason (server-enforced) before the "Lưu" submit.
+      await row.getByRole("button", { name: /Trả lại/ }).click();
+      const returnDialog = page.getByRole("dialog", {
+        name: "Trả lại báo cáo",
+      });
+      await returnDialog
+        .getByRole("textbox", { name: "Lý do trả lại" })
+        .fill("Thiếu số liệu, đề nghị bổ sung");
+      await returnDialog
+        .getByRole("button", { name: "Lưu", exact: true })
+        .click();
+      await expect(returnDialog).not.toBeVisible({ timeout: 10_000 });
+      row = page.getByRole("row").filter({ hasText: periodLabel });
+      await expect(
+        row.locator(".ant-tag").filter({ hasText: "Trả lại" }),
+      ).toBeVisible({ timeout: 10_000 });
+
+      // Returned → Draft via the "Về nháp" button + its Popconfirm ("Chuyển").
+      await row.getByRole("button", { name: /Về nháp/ }).click();
+      await page
+        .locator(".ant-popover:visible")
+        .getByRole("button", { name: "Chuyển" })
+        .click();
+      row = page.getByRole("row").filter({ hasText: periodLabel });
+      await expect(
+        row.locator(".ant-tag").filter({ hasText: "Nháp" }),
+      ).toBeVisible({ timeout: 10_000 });
+    } finally {
+      await request.delete(`/api/v1/app/ndtp-report/${id}`, {
+        headers,
+        maxRedirects: 0,
+      });
+    }
+  });
 });

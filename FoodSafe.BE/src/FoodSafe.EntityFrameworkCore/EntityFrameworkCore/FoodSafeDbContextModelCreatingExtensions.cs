@@ -381,6 +381,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 x.DeclarationNumber
             })
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("uq_self_declarations_business_number");
             entity.HasIndex(x => x.BusinessId)
                 .HasFilter("is_deleted = FALSE")
@@ -490,6 +491,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             entity.HasIndex(x => x.RegistrationNumber)
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("uq_product_registrations_number");
             entity.HasIndex(x => x.BusinessId)
                 .HasFilter("is_deleted = FALSE")
@@ -592,6 +594,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             entity.HasIndex(x => x.CertificateNumber)
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("uq_cfs_certificates_number");
             entity.HasIndex(x => x.BusinessId)
                 .HasFilter("is_deleted = FALSE")
@@ -703,6 +706,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             entity.HasIndex(x => x.CertificateNumber)
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("uq_export_food_certificates_number");
             entity.HasIndex(x => x.BusinessId)
                 .HasFilter("is_deleted = FALSE")
@@ -814,6 +818,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
             entity.HasIndex(x => x.RegistrationNumber)
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName(
                     "uq_advertisement_registrations_number");
             entity.HasIndex(x => x.BusinessId)
@@ -927,6 +932,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasConstraintName("fk_elic_org");
             entity.HasIndex(x => x.CertificateNumber)
                 .IsUnique()
+                .HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("uq_eligibility_certificates_number");
             entity.HasIndex(x => x.BusinessId)
                 .HasFilter("is_deleted = FALSE")
@@ -2385,6 +2391,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.Description).HasColumnName("description").HasMaxLength(1024);
             entity.Property(x => x.AuthType).HasColumnName("auth_type").IsRequired();
             entity.Property(x => x.Status).HasColumnName("status").IsRequired();
+            entity.Property(x => x.EncryptedCredential).HasColumnName("credential_value");
 
             entity.Property(x => x.CreationTime).HasColumnName("creation_time");
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");
@@ -2439,11 +2446,21 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasColumnName("data_type")
                 .HasConversion<short>()
                 .HasDefaultValue(SharedDataType.Other);
+            entity.Property(x => x.EndpointId).HasColumnName("endpoint_id");
+            entity.Property(x => x.CorrelationId).HasColumnName("correlation_id");
+            entity.Property(x => x.AttemptNumber)
+                .HasColumnName("attempt_number")
+                .HasDefaultValue(1);
+            entity.Property(x => x.PayloadChecksum)
+                .HasColumnName("payload_checksum")
+                .HasMaxLength(64);
             entity.Property(x => x.CreationTime).HasColumnName("creation_time");
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");
             entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");
 
             entity.ToTable(t => t.HasCheckConstraint("chk_di_cl_direction", "direction IN (1, 2)"));
+            entity.ToTable(t => t.HasCheckConstraint(
+                "chk_di_cl_attempt", "attempt_number >= 1"));
 
             entity.HasOne<Organization>()
                 .WithMany()
@@ -2457,6 +2474,9 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasDatabaseName("idx_di_cl_ext_system");
             entity.HasIndex(x => x.IsSuccess)
                 .HasDatabaseName("idx_di_cl_success");
+            entity.HasIndex(x => x.CorrelationId)
+                .HasFilter("correlation_id IS NOT NULL")
+                .HasDatabaseName("idx_di_cl_correlation");
         });
     }
 }

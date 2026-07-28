@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
@@ -16,8 +17,11 @@ public class AccountSecurityAppService :
     ApplicationService,
     IAccountSecurityAppService
 {
-    private static readonly TimeSpan PasswordValidity = TimeSpan.FromDays(90);
+    // 90-day default per SEC-04; overridable via Security:PasswordValidityDays so the
+    // policy is configuration-driven rather than a hard-coded constant.
+    private const int DefaultPasswordValidityDays = 90;
 
+    private readonly TimeSpan _passwordValidity;
     private readonly ICurrentUser _currentUser;
     private readonly IdentityUserManager _userManager;
     private readonly IRepository<PasswordHistory, Guid> _passwordHistory;
@@ -31,7 +35,8 @@ public class AccountSecurityAppService :
         IRepository<PasswordHistory, Guid> passwordHistory,
         IRepository<AppUserProfile, Guid> profiles,
         IGuidGenerator guidGenerator,
-        ICancellationTokenProvider cancellationTokens)
+        ICancellationTokenProvider cancellationTokens,
+        IConfiguration configuration)
     {
         _currentUser = currentUser;
         _userManager = userManager;
@@ -39,6 +44,16 @@ public class AccountSecurityAppService :
         _profiles = profiles;
         _guidGenerator = guidGenerator;
         _cancellationTokens = cancellationTokens;
+
+        var validityDays = configuration.GetValue(
+            "Security:PasswordValidityDays",
+            DefaultPasswordValidityDays);
+        if (validityDays <= 0)
+        {
+            validityDays = DefaultPasswordValidityDays;
+        }
+
+        _passwordValidity = TimeSpan.FromDays(validityDays);
     }
 
     public async Task ChangePasswordAsync(ChangeOwnPasswordDto input)
@@ -189,7 +204,7 @@ public class AccountSecurityAppService :
                 cancellationToken: token);
         }
 
-        profile?.RecordPasswordChanged(Clock.Now, PasswordValidity);
+        profile?.RecordPasswordChanged(Clock.Now, _passwordValidity);
     }
 
     private async Task<List<PasswordHistory>> GetPasswordHistoryAsync(

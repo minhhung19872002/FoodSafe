@@ -18,8 +18,11 @@ export function downloadChartAsPng(
   clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
 
   const markup = new XMLSerializer().serializeToString(clone);
-  const blob = new Blob([markup], { type: "image/svg+xml;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
+  // Use a data: URI rather than a blob: URL: the app's Content Security Policy
+  // allows `img-src ... data:` but not `blob:`, so a blob URL is rejected before
+  // the image can load and the export silently fails. encodeURIComponent keeps
+  // the Vietnamese chart labels intact through the UTF-8 payload.
+  const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`;
 
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -30,7 +33,6 @@ export function downloadChartAsPng(
       canvas.height = rect.height * scale;
       const context = canvas.getContext("2d");
       if (!context) {
-        URL.revokeObjectURL(url);
         reject(new Error("Canvas unsupported"));
         return;
       }
@@ -38,7 +40,6 @@ export function downloadChartAsPng(
       context.fillRect(0, 0, canvas.width, canvas.height);
       context.scale(scale, scale);
       context.drawImage(image, 0, 0, rect.width, rect.height);
-      URL.revokeObjectURL(url);
       canvas.toBlob((pngBlob) => {
         if (!pngBlob) {
           reject(new Error("PNG conversion failed"));
@@ -54,7 +55,6 @@ export function downloadChartAsPng(
       }, "image/png");
     };
     image.onerror = () => {
-      URL.revokeObjectURL(url);
       reject(new Error("SVG rasterization failed"));
     };
     image.src = url;

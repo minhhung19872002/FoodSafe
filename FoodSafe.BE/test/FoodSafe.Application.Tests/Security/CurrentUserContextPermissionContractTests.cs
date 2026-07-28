@@ -206,4 +206,68 @@ public sealed class CurrentUserContextPermissionContractTests
             FoodSafePermissions.FoodPoisoning.Incidents.Conclude,
             permissions);
     }
+
+    /// <summary>
+    /// Regression guard for P1-1c: the identity-administration page gates each
+    /// row action on a permission surfaced through this projection. A permission
+    /// that is granted server-side but absent from this allowlist is never
+    /// reported to the frontend, so its control silently never renders — which is
+    /// exactly how <c>Users.Delete</c> shipped invisible. Every action the page
+    /// depends on must therefore be projected.
+    /// </summary>
+    [Fact]
+    public void Frontend_permission_projection_includes_system_administration()
+    {
+        var field = typeof(CurrentUserContextAppService).GetField(
+            "FoodSafePermissionNames",
+            BindingFlags.NonPublic | BindingFlags.Static);
+
+        var permissions = Assert.IsType<string[]>(field?.GetValue(null));
+
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Users.Default,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Users.Create,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Users.Edit,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Users.Delete,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Users.ManageRoles,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Users.ManageScope,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Users.Activate,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Users.Lock,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Users.ResetPassword,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Users.ViewActivity,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Roles.Default,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Roles.Create,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Roles.Edit,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Roles.Delete,
+            permissions);
+        Assert.Contains(
+            FoodSafePermissions.SystemAdministration.Roles.ManagePermissions,
+            permissions);
+    }
 }

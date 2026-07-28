@@ -23,6 +23,7 @@ import {
   Tag,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { BusinessLocationMap } from "./BusinessLocationMap";
 import {
   BUSINESS_STATUS,
@@ -50,6 +51,7 @@ interface BusinessManagementViewProps {
   businessClassificationId?: string;
   provinceId?: string;
   districtId?: string;
+  businessSorting?: string;
   businessTypeOptions: FilterOption[];
   classificationOptions: FilterOption[];
   provinceOptions: FilterOption[];
@@ -58,6 +60,7 @@ interface BusinessManagementViewProps {
   onClassificationChange: (value?: string) => void;
   onProvinceChange: (value?: string) => void;
   onDistrictChange: (value?: string) => void;
+  onBusinessSortingChange: (value?: string) => void;
   onShowDetail: (business: Business) => void;
   businessTotal: number;
   productTotal: number;
@@ -109,14 +112,53 @@ const businessStatusLabels: Record<BusinessStatus, string> = {
 export function BusinessManagementView(props: BusinessManagementViewProps) {
   const [viewMode, setViewMode] = useState<"table" | "map">("table");
 
+  // Server-side sorting: reflect the active sort in the column header so the
+  // control is controlled/testable, and translate header clicks into the
+  // "<field> <asc|desc>" string the backend's ApplySorting whitelist parses.
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!props.businessSorting) return null;
+    const [current, direction] = props.businessSorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleBusinessSort = (
+    sorter: SorterResult<Business> | SorterResult<Business>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    // Table onChange also fires for pagination; only react when the sort
+    // actually changed so paging never silently resets to page 1.
+    if (next !== props.businessSorting) {
+      props.onBusinessSortingChange(next);
+    }
+  };
+
   const businessColumns: ColumnsType<Business> = [
-    { title: "Mã", dataIndex: "code", width: 120 },
-    { title: "Tên cơ sở", dataIndex: "name", ellipsis: true },
+    {
+      title: "Mã",
+      dataIndex: "code",
+      width: 120,
+      sorter: true,
+      sortOrder: sortOrderFor("code"),
+    },
+    {
+      title: "Tên cơ sở",
+      dataIndex: "name",
+      ellipsis: true,
+      sorter: true,
+      sortOrder: sortOrderFor("name"),
+    },
     { title: "Địa chỉ", dataIndex: "addressStreet", ellipsis: true },
     {
       title: "Trạng thái",
       dataIndex: "status",
       width: 140,
+      sorter: true,
+      sortOrder: sortOrderFor("status"),
       render: (status: BusinessStatus) => (
         <Tag
           color={
@@ -380,6 +422,9 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
                 style: { cursor: "pointer" },
               })}
               columns={businessColumns}
+              onChange={(_pagination, _filters, sorter) =>
+                handleBusinessSort(sorter)
+              }
               pagination={{
                 current: props.businessPage,
                 pageSize: props.pageSize,

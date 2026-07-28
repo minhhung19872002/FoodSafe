@@ -133,6 +133,7 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.SystemAdministration.Users.Default,
         FoodSafePermissions.SystemAdministration.Users.Create,
         FoodSafePermissions.SystemAdministration.Users.Edit,
+        FoodSafePermissions.SystemAdministration.Users.Delete,
         FoodSafePermissions.SystemAdministration.Users.ManageRoles,
         FoodSafePermissions.SystemAdministration.Users.ManageScope,
         FoodSafePermissions.SystemAdministration.Users.Activate,
@@ -151,6 +152,7 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.DataIntegration.ApiEndpoints.Edit,
         FoodSafePermissions.DataIntegration.ApiEndpoints.Delete,
         FoodSafePermissions.DataIntegration.CallHistory.View,
+        FoodSafePermissions.DataIntegration.Share,
         FoodSafePermissions.DataScope.All
     ];
 

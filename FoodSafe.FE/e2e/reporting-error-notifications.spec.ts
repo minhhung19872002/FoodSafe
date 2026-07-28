@@ -151,12 +151,19 @@ test.describe("report error notifications (FR-33/34/35-05)", () => {
     expect(items[0].status).toBe(3);
     expect(items[0].response).toContain("trả lại");
 
-    // UI: the Sai sót button opens the modal listing the notification
+    // UI: the Sai sót button opens the modal listing the notification.
+    // Filter by year so the freshly-created report is guaranteed on page 1:
+    // the list is ordered by period year descending at 15 rows per page, so
+    // reports other specs leave behind for higher years (2098/2099) would
+    // otherwise push this 2088 report onto a later page and hide it.
     await page.goto("/reporting");
-    await page
-      .getByRole("row", { name: new RegExp(`Tháng 1/${YEAR}`) })
-      .getByRole("button", { name: "Sai sót" })
-      .click();
+    await page.getByPlaceholder("Năm").fill(String(YEAR));
+    await page.getByPlaceholder("Năm").press("Enter");
+    const reportRow = page.getByRole("row", {
+      name: new RegExp(`Tháng 1/${YEAR}`),
+    });
+    await expect(reportRow).toBeVisible();
+    await reportRow.getByRole("button", { name: "Sai sót" }).click();
     await expect(
       page.getByText("Trường sai sót: Số ca ngộ độc"),
     ).toBeVisible();

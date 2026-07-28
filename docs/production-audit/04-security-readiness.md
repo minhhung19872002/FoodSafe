@@ -1,0 +1,388 @@
+# Phase 4 — Security Readiness Audit
+
+**System:** FoodSafe — Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh  
+**Audited commit:** `fe3dbd2` (HEAD at audit time)  
+**Audit date:** 2026-07-27  
+**Classification:** ATTT Cấp độ 2 (Nghị định 85/2016/NĐ-CP)  
+**Scope:** Authorized defensive review of own codebase before production deployment
+
+---
+
+## 1. Methodology
+
+All findings are verified against source code at HEAD `fe3dbd2`. No speculative results are reported. Each finding cites exact file and line numbers.
+
+**Artefacts inspected:**
+
+| Area | Files / Commands |
+|---|---|
+| Authentication config | `FoodSafeHttpApiHostModule.cs`, `AccountSecurityAppService.cs`, `AppUserProfile.cs` |
+| Authorization | All `AppService` and `Controller` files (grep for `[Authorize]`, `[AllowAnonymous]`) |
+| Application security | Grep for `dangerouslySetInnerHTML`, `FromSqlRaw`, SSRF patterns, `innerHTML` |
+| Infrastructure | `docker-compose.yml`, `docker-compose.prod.yml`, `nginx.conf`, `nginx.prod.conf.template`, `Dockerfile` |
+| Secrets | `appsettings.json`, git history scan, `ci.yml` |
+| Dependencies | `npm audit --omit=dev` on `FoodSafe.FE` |
+| New post-audit features | `DataSharingAppService.cs`, `ApiEndpointAppService.cs`, `SystemSettingsAppService.cs`, `DashboardAppService.cs`, `ReportStatisticsAppService.cs`, `StatisticsAppService.cs`, `InspectionAttachmentAppServices.cs` |
+
+---
+
+## 2. Findings Table
+
+| ID | Severity | Area | Description | Evidence | Fix Required |
+|---|---|---|---|---|---|
+| ~~SEC-H-01~~ RESOLVED (B-5) | HIGH | Authorization / SSRF | SSRF via unvalidated data-integration endpoint URLs — now blocked by `OutboundUrlValidator` (syntactic gate + connect-time IP guard) | See §3.1 | DONE |
+| SEC-H-02 | HIGH | Dependencies | Known-vulnerable deps: **AutoMapper DoS = accepted-risk** (upgrade is ABI-incompatible with ABP 9.3.7 → runtime `MissingMethodException`; pinned 14.0.0 + `MaxDepth` compensating controls); Account.Web open-redirect + react-router RSC-CSRF = accepted-risk / not-applicable (no supported fix) | See §3.2 | ACCEPTED-RISK — 3 items, all tracked to ABP 10 (§3.2) |
+| ~~SEC-M-01~~ RESOLVED (C-1) | MEDIUM | Authentication | CAPTCHA bypass via malformed JSON body — malformed/non-object bodies now rejected with 400 | See §3.3 | DONE |
+| ~~SEC-M-02~~ RESOLVED (B-3) | MEDIUM | Secrets | Git history contains committed dev credentials — only commodity defaults; now rejected at Production startup + recurrence-guarded | See §3.4 / doc 09 | DONE |
+| ~~SEC-M-03~~ RESOLVED (C-2) | MEDIUM | Authentication | Password expiry enforced client-side only — `PasswordExpiryMiddleware` now blocks expired/must-change sessions server-side (403) | See §3.5 | DONE |
+| ~~SEC-M-04~~ RESOLVED (C-3) | MEDIUM | Application | SVG allowed in branding uploads — `image/svg+xml` removed; allow-list now raster-only | See §3.6 | DONE |
+| ~~SEC-M-05~~ RESOLVED (C-8) | MEDIUM | Authorization | Hangfire dashboard reachable via SSRF (chains with SEC-H-01) — primary vector closed by B-5; `HangfireAdminAuthorizationFilter` now also requires `SystemAdministration` | See §3.7 | DONE |
+| SEC-L-01 | LOW | Secrets | CI ephemeral database password committed in `ci.yml` | See §3.8 | RECOMMENDED |
+| SEC-L-02 | LOW | Infrastructure | No startup validation that `RequireHttpsMetadata=true` in production | See §3.9 | RECOMMENDED |
+| ~~SEC-L-03~~ CONFIRMED INTENTIONAL (C-8) | LOW | Authorization | Dashboard/statistics services use only `[Authorize]` — verified deliberate org-scoped design (`statistics-verification.spec.ts`); no change | See §3.10 | NO CHANGE |
+
+---
+
+## 3. Finding Details
+
+### 3.1 — SEC-H-01: SSRF via unvalidated data-integration endpoint URLs (HIGH)
+
+**Files:**
+- `FoodSafe.BE/src/FoodSafe.Domain/DataIntegration/ApiEndpoint.cs:19-46` — `Create()` factory
+- `FoodSafe.BE/src/FoodSafe.Application/DataIntegration/ApiEndpointAppService.cs:69-89` — `CreateAsync()`
+- `FoodSafe.BE/src/FoodSafe.Application/DataIntegration/ApiEndpointAppService.cs:137-194` — `TestConnectionAsync()`
+- `FoodSafe.BE/src/FoodSafe.Application/DataIntegration/DataSharingAppService.cs:84-90` — `ShareAsync()`
+
+**Description:**  
+`ApiEndpoint.Create()` accepts a user-supplied `url` string with no validation of URI scheme or network address range. Any user holding the `DataIntegration.ApiEndpoints.Create` permission can register an endpoint whose URL points to internal Docker-network services (e.g., `http://postgres:5432`, `http://redis:6379`, `http://minio:9000`, `http://api:8080/hangfire`).
+
+Two execution paths then perform server-side HTTP requests to the stored URL:
+
+1. `TestConnectionAsync()` — issues an HTTP HEAD request via `ProbeClient` (no network restrictions)
+2. `DataSharingAppService.ShareAsync()` — issues a full HTTP POST via `SharedClient`
+
+Both clients are plain `HttpClient` instances with no `SocketsHttpHandler` configured to block private-IP destinations.
+
+**Attack scenario:**  
+Admin or high-privilege user creates an endpoint with `url = "http://redis:6379"`, calls `TestConnection`. The server opens a TCP connection to the Redis container and may leak timing/error information about internal services. A more dangerous variant targets the MinIO management API or PostgreSQL to leak configuration metadata.
+
+**Evidence:**
+```csharp
+// ApiEndpoint.cs:29-44 — no URL format/scheme validation
+Check.NotNullOrWhiteSpace(url, nameof(url));   // only non-empty check
+return new ApiEndpoint { ... Url = url ... };
+
+// ApiEndpointAppService.cs:147-154 — unconstrained HttpClient
+using var request = new HttpRequestMessage(HttpMethod.Head, endpoint.Url);
+using var response = await ProbeClient.SendAsync(request, ...);
+```
+
+**Fix:** **RESOLVED (B-5, 2026-07-28).** A shared SSRF guard `FoodSafe.Security.OutboundUrlValidator` was added (`FoodSafe.BE/src/FoodSafe.Application/Security/OutboundUrlValidator.cs`) and wired into every outbound path:
+
+1. **Syntactic gate — `OutboundUrlValidator.Validate(url)`** — requires an absolute `http`/`https` URL, rejects embedded credentials (`user:pass@host`), and rejects literal-IP hosts in private/reserved ranges. Called in `ApiEndpointAppService.CreateAsync`/`UpdateAsync` (write time) and again in `TestConnectionAsync` and `DataSharingAppService.ShareAsync` before every send.
+2. **Connect-time IP guard — `OutboundUrlValidator.CreateGuardedHttpClient(...)`** — both `ProbeClient` and `SharedClient` are now built from a `SocketsHttpHandler` whose `ConnectCallback` resolves the host, filters out every blocked IP, and connects a socket **only** to the validated addresses (pinned — never re-resolved). This defeats DNS-rebinding / TOCTOU: a rebinding answer resolving to `127.0.0.1`, `10.x`, `169.254.169.254`, `::1`, `fc00::/7`, CGNAT `100.64/10`, etc. is refused at connect time even if the name passed the syntactic gate.
+
+`IsBlocked` covers IPv4 (`0/8`, `10/8`, `100.64/10`, `127/8`, `169.254/16`, `172.16–31`, `192.0.0/2.0/24`, `192.168/16`, `198.18/15`, `≥224`) and IPv6 (loopback, link-local, site-local, multicast, `::`, `fc00::/7`, IPv4-mapped). Regression: 58 test cases in `FoodSafe.Application.Tests/Security/OutboundUrlValidatorTests.cs`, including two real-socket tests asserting the guarded client refuses a live loopback listener (IPv4 and IPv6).
+
+---
+
+### 3.2 — SEC-H-02: Known-vulnerable dependencies (B-6)
+
+Three advisories were flagged by `dotnet list package --vulnerable` and `npm audit`. Disposition below; **all three are accepted-risk with compensating controls** — none has a fix that is compatible with the current ABP 9.3.7 line, and each is non-exploitable or bounded in this deployment. (An earlier revision of this section claimed AutoMapper was "fixed in code"; that was wrong — see below.)
+
+#### 3.2.1 — AutoMapper DoS — CVE-2026-32933 / GHSA-rvv3-g6hj-g44x (HIGH 7.5) — **ACCEPTED RISK / tracked (corrected 2026-07-28)**
+
+`Volo.Abp.AutoMapper 9.3.7` pulls `AutoMapper 14.0.0` into every backend project. AutoMapper < 15.1.1 has an uncontrolled-recursion flaw: a deeply nested object graph (~25,000 levels) exhausts the stack and raises an uncatchable `StackOverflowException`, terminating the process (unauthenticated DoS).
+
+**Why it is not simply upgraded (the earlier "fix" was runtime-broken):** AutoMapper 15.x **removed** the `MapperConfiguration(MapperConfigurationExpression)` constructor that `Volo.Abp.AutoMapper 9.3.7` calls (15.x requires an `ILoggerFactory`). A `15.1.3` pin therefore **builds** — NuGet unifies the `>=14` transitive request up to 15 — but throws `MissingMethodException` on **every** `ObjectMapper` call at runtime, i.e. an app-wide HTTP 500. The prior "pinned 15.1.3, runtime-verified, 591 tests green" claim was **build-/stale-artifact-verified only**; the runtime failure surfaced while re-verifying P0-2 and was traced to that pin. The pin has been **reverted to `AutoMapper 14.0.0`** (the only ABP-9.3.7-compatible line; no patched 14.0.x exists). A real fix requires the **ABP 10** upgrade (which moves to AutoMapper 15) — tracked.
+
+**Compensating controls (accepted-risk basis):** (1) ASP.NET Core's System.Text.Json enforces `MaxDepth = 64` by default, so an over-nested request body is rejected at deserialization before it can reach an AutoMapper projection; (2) the two recursive AutoMapper profiles (`GeographicCatalogAutoMapperProfile`, `OrganizationApplicationAutoMapperProfile`) are explicitly capped at `.MaxDepth(8)`. Together these bound recursion depth far below the ~25,000 needed to exhaust the stack. The advisory is re-added to the NuGet-vulnerability allow-list with this justification (see doc 43).
+
+#### 3.2.2 — Volo.Abp.Account.Web open redirect — GHSA-vfm5-cr22-jg3m (MODERATE 5.3) — **ACCEPTED RISK / tracked**
+
+Open redirect via the Account **registration** `returnUrl`. Affected 5.1.0–10.0.0-rc.1; **first fixed in 10.0.0-rc.2** — there is **no fix in the ABP 9.3.x line** (9.3.7 is the latest 9.3.x). A forward fix requires a full ABP 10 major upgrade, which would touch the entire framework surface and every business feature — out of scope for a targeted blocker fix ("do not modify business features unless required").
+
+**Why not exploitable here:** self-registration is **disabled** (`Abp.Account.IsSelfRegistrationEnabled = false`, `appsettings.json`), so the vulnerable registration path is unreachable; and outbound redirects are already constrained by ABP `AppUrlOptions.RedirectAllowedUrls` (see §6 non-findings, "No open redirects"). Net residual risk: negligible in this configuration.
+
+**Tracked remediation:** upgrade to ABP ≥ 10.0.0 in a dedicated framework-upgrade workstream with full regression (Level 4). Until then the two compensating controls above stand.
+
+#### 3.2.3 — react-router-dom RSC CSRF — GHSA-qwww-vcr4-c8h2 (HIGH) — **NOT APPLICABLE / tracked**
+
+`react-router-dom 7.18.1` falls in the advisory's `7.12.0 – 8.2.0` range. The flaw is specific to **React Server Components (RSC) mode**. FoodSafe.FE is a **Vite client-only SPA** — RSC mode is never enabled, so the vulnerable code path does not execute. CSRF on state-changing calls is independently mitigated: all mutations go through the ABP cookie session with antiforgery XSRF tokens (`SameSite=Strict`, validated server-side — §5).
+
+**Why not "fixed" by version bump:** npm publishes **no forward-patched version** — the maximum published is `7.18.1`, and the advisory extends to `8.2.0` with no `8.3.0+` released. The only version npm classifies as non-vulnerable is a **downgrade to `7.11.0`** (7 minors back, a breaking change). Downgrading a working router to silence a non-applicable advisory would risk real routing regressions for zero security benefit.
+
+**Tracked remediation:** adopt the patched `react-router-dom` release once published (≥ 8.3.0 or a back-ported 7.19+), with a routing smoke retest.
+
+---
+
+### 3.3 — SEC-M-01: CAPTCHA bypass via malformed JSON body (MEDIUM)
+
+**File:** `FoodSafe.BE/src/FoodSafe.HttpApi.Host/Security/LoginCaptchaMiddleware.cs:59-63`
+
+**Description:**  
+The `LoginCaptchaMiddleware` reads the request body, parses it as JSON to extract the `captchaToken` field, then verifies the token. The parse step is inside a `try/catch (JsonException)` block. When JSON parsing fails, the middleware calls `await next(context)` and bypasses CAPTCHA entirely.
+
+```csharp
+catch (JsonException)
+{
+    await next(context);  // CAPTCHA skipped for non-JSON requests
+    return;
+}
+```
+
+**Affected endpoints:** `/api/account/login`, `/api/account/send-password-reset-code`, `/api/v1/app/account-security/complete-initial-password-change`, `/api/v1/public/alert-reports`, `/api/v1/public/news-reports`.
+
+**Practical impact:** An attacker sends a non-JSON (or invalid-JSON) body. CAPTCHA check is skipped. The controller model-binding then fails with HTTP 400 for most endpoints. For the `send-password-reset-code` endpoint, however, the request goes through to the ABP account controller which has its own input parsing; depending on ABP's content negotiation, it may still process the request (returning 400 for invalid input), confirming that CAPTCHA was not required. This weakens the brute-force protection on the password-reset code endpoint (which could be used for user enumeration probing with no CAPTCHA friction).
+
+**Status:** **RESOLVED (C-1, 2026-07-28).**
+1. The `catch (JsonException)` branch now calls `RejectAsync(context)` (HTTP 400, error code `FoodSafe:Captcha:0001`) instead of `next()` — a malformed body can no longer skip CAPTCHA.
+2. Hardened an adjacent gap found while fixing: a **valid but non-object** body (e.g. `[]`, `"x"`, `123`) previously threw `InvalidOperationException` from `EnumerateObject()`, which the `catch (JsonException)` did **not** catch and would escape the middleware. The parser now guards `RootElement.ValueKind == JsonValueKind.Object`, so a non-object body resolves to an empty token → CAPTCHA verify fails → HTTP 400.
+3. Regression test `Login_Should_Reject_Unparseable_Or_Tokenless_Body` (`LoginCaptchaMiddlewareTests.cs`, Theory ×4: non-JSON, empty, truncated-JSON, `[]`) asserts 400 and that `next` is never called. Full suite: 7/7 pass.
+
+---
+
+### 3.4 — SEC-M-02: Git history contains committed dev credentials (MEDIUM)
+
+**Evidence:**  
+```
+git log --all -p -- appsettings.json (before commit 06656c8):
++    "Default": "Host=localhost;Port=5433;Database=FoodSafe;Username=postgres;Password=postgres"
+```
+
+Credentials were committed in `appsettings.json` at commit `abe2e17` and removed at `06656c8`. They remain permanently visible in git history.
+
+**Risk:** If any production or staging database uses `postgres` as the password for the `postgres` user (a common default), those credentials are now public. CI runners and any developer who cloned the repository before the cleanup has cached copies.
+
+**Fix:** **RESOLVED (B-3, 2026-07-28).** A full-history inventory (see [doc 09](09-secret-rotation-and-history.md)) confirms only commodity dev defaults / placeholders were ever committed — no real production secret. Resolution:
+1. `CoreSecretsValidator` now **rejects the `postgres`/`postgres` credential and the `change-this-in-production` passphrase at Production startup** — the leaked defaults can never authenticate.
+2. History rewrite deliberately **not** performed (nothing live to purge; a rewrite would break every recorded verified-commit SHA); `git filter-repo` contingency procedure documented in doc 09.
+3. Recurrence blocked by `scripts/scan-committed-secrets.sh` (CI-gated in the supply-chain job) + 13 `CoreSecretsValidatorTests`. The Development-only seed password is now config-overridable (`Seed:TestPassword`).
+
+---
+
+### 3.5 — SEC-M-03: Password expiry enforced client-side only (MEDIUM)
+
+**Files:**
+- `FoodSafe.FE/src/app/PrivateRoute.tsx:50` — FE redirect on `passwordMustChange`
+- `FoodSafe.FE/src/features/auth/api/authMutations.ts:52` — FE redirect after login
+- `FoodSafe.BE/src/FoodSafe.Application/Security/AccountSecurityAppService.cs:18` — 90-day validity constant
+
+**Description:**  
+The 90-day password expiry and `MustChangePassword` flags are checked by the frontend via `CurrentUserContextAppService.GetAsync()`. The frontend enforces a redirect to the password-change page. However, no backend middleware or filter blocks API calls from users whose passwords are expired or who have `MustChangePassword == true`. A user or automated client can bypass the frontend and continue calling all `[Authorize]`-protected endpoints with an expired-password session.
+
+**ATTT level-2 requirement:** Server-side enforcement is required ("Password policy bắt buộc" as a server control, not a display hint).
+
+**Status:** **RESOLVED (C-2, verified 2026-07-28).** `FoodSafe.HttpApi.Host/Security/PasswordExpiryMiddleware.cs` enforces the rule server-side: for any authenticated principal whose profile has `MustChangePassword` or `IsPasswordExpired(clock.Now)`, it returns HTTP 403 `FoodSafe:Account:PasswordExpired`. Registered in the module pipeline after `UseDynamicClaims` and before `UseAuthorization`. Whitelisted prefixes (so the user can still remediate): `/api/v1/app/account-security`, `/api/v1/app/current-user-context`, `/api/account/logout`, `/api/abp`, `/api/v1/public`, `/health`. The FE redirect remains as a UX affordance only; the block is now authoritative on the server.
+
+---
+
+### 3.6 — SEC-M-04: SVG allowed in branding image uploads without script sanitization (MEDIUM)
+
+**File:** `FoodSafe.BE/src/FoodSafe.Application/Settings/SystemSettingsAppService.cs:24-31`
+
+```csharp
+private static readonly HashSet<string> AllowedImageContentTypes = new(
+    StringComparer.OrdinalIgnoreCase)
+{
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "image/svg+xml"    // ← SVG allowed
+};
+```
+
+**File (serving):** `FoodSafe.BE/src/FoodSafe.HttpApi/Settings/PublicBrandingController.cs:28,39`
+
+```csharp
+return File(image.Content, image.ContentType);   // serves with original Content-Type
+```
+
+**Description:**  
+An admin with `SystemAdministration.Settings` permission can upload an SVG containing embedded `<script>` elements as the system logo or login-page background. The ClamAV malware scan does not detect XSS payloads. The stored SVG is served via `/api/v1/public/branding/logo` with `Content-Type: image/svg+xml`, which causes browsers to execute embedded JavaScript.
+
+**Affected surface:** `/api/v1/public/branding/logo` and `/api/v1/public/branding/login-background` — public, unauthenticated endpoints. A login-page SVG with embedded script executes for every unauthenticated visitor.
+
+**Threat model note:** This requires a malicious or compromised admin account, which is a privileged access vector.
+
+**Status:** **RESOLVED (C-3, 2026-07-28).** `image/svg+xml` removed from `AllowedImageContentTypes`; the allow-list is now raster-only (`image/png`, `image/jpeg`, `image/webp`) with an inline comment recording the stored-XSS rationale. The content-type guard was extracted to a testable `SystemSettingsAppService.EnsureAllowedImageContentType(string)` (behaviour unchanged for the upload path). Regression test `BrandingImageContentTypeTests` (`FoodSafe.Application.Tests`, 10 cases) confirms `image/svg+xml`, `image/svg+xml; charset=utf-8`, `text/html`, `application/xml`, `image/gif`, and empty are rejected with `FoodSafe:SystemSettings:InvalidImageType`, while the three raster types (case-insensitively) are accepted. All pass.
+
+---
+
+### 3.7 — SEC-M-05: Hangfire dashboard reachable via SSRF (MEDIUM, chains with SEC-H-01)
+
+**File:** `FoodSafe.BE/src/FoodSafe.HttpApi.Host/FoodSafeHttpApiHostModule.cs:731-734`
+
+```csharp
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = [new Hangfire.Dashboard.LocalRequestsOnlyAuthorizationFilter()]
+});
+```
+
+**Description:**  
+The Hangfire dashboard is protected only by `LocalRequestsOnlyAuthorizationFilter`, which allows access only from 127.0.0.1. The `/hangfire` path is not exposed via nginx. However, the SSRF vulnerability in SEC-H-01 allows server-side HTTP requests from the API container to `http://api:8080`. Depending on Docker's internal routing (loopback vs container-IP), a request from the container to itself may be classified as local, granting access to the Hangfire dashboard and allowing job manipulation.
+
+If successful, an attacker with `DataIntegration.ApiEndpoints.Create` permission who also controls the SSRF (SEC-H-01) could:
+- View all background job queues and history (information disclosure)
+- Potentially trigger or enqueue jobs (job injection)
+
+**Status:** **RESOLVED (C-8, 2026-07-28).** Primary vector was already CLOSED by B-5 — `OutboundUrlValidator`'s connect-time guard refuses any request that resolves to loopback or a container-internal/private address, so `http://api:8080/hangfire` (and any Docker-internal host) can no longer be reached via the data-integration surface. C-8 adds the defense-in-depth control below so that even a request that reaches the dashboard on loopback (e.g. a future reverse-proxy misconfiguration, or a decision to expose `/hangfire`) must be an authenticated `SystemAdministration` principal.
+
+**Fix (defense-in-depth, implemented):** `HangfireAdminAuthorizationFilter` (`FoodSafe.BE/src/FoodSafe.HttpApi.Host/Security/HangfireAdminAuthorizationFilter.cs`) resolves `IPermissionChecker` from the request scope and requires `FoodSafePermissions.SystemAdministration.Default`; it runs alongside `LocalRequestsOnlyAuthorizationFilter` and both must pass:
+
+```csharp
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization =
+    [
+        new Hangfire.Dashboard.LocalRequestsOnlyAuthorizationFilter(),
+        new HangfireAdminAuthorizationFilter()  // require SystemAdministration permission
+    ]
+});
+```
+
+**Regression (real stack, no mocks):** `scripts/verify-hangfire-authz.sh` drives the running api container. Before C-8, an unauthenticated **loopback** GET `/hangfire` returned **200** (the loopback filter alone served the dashboard); after C-8 the same request returns **401**, while `/health/live` stays 200. Verified PASS against the rebuilt dev stack at the C-8 commit.
+
+---
+
+### 3.8 — SEC-L-01: CI ephemeral database password committed in `ci.yml` (LOW)
+
+**File:** `.github/workflows/ci.yml:122-133`
+
+```yaml
+POSTGRES_PASSWORD: ci-database-only
+ConnectionStrings__Default: Host=127.0.0.1;...;Password=ci-database-only
+```
+
+**Description:**  
+The CI PostgreSQL service uses a hardcoded password committed in plain text. This is a GitHub Actions ephemeral database destroyed after each CI run. The password has no access to any real infrastructure.
+
+**Risk:** Low. Violates the principle of never committing credentials but poses no actual production risk.
+
+**Fix:** Move to a GitHub Actions secret (`${{ secrets.CI_DB_PASSWORD }}`). This removes the credential from repository history for future commits.
+
+---
+
+### 3.9 — SEC-L-02: No startup validation that `RequireHttpsMetadata=true` in production (LOW)
+
+**Files:**
+- `FoodSafe.BE/src/FoodSafe.HttpApi.Host/appsettings.json:13` — default `"false"`
+- `FoodSafe.BE/docker-compose.yml:12` — `${REQUIRE_HTTPS_METADATA:?Set REQUIRE_HTTPS_METADATA}` (operator must supply)
+- `FoodSafe.BE/src/FoodSafe.HttpApi.Host/FoodSafeHttpApiHostModule.cs:97-347` — `ValidateCoreSecrets` does not check this value
+
+**Description:**  
+The application's startup validators (`ValidateCoreSecrets`, `ValidatePostgreSqlSsl`, `ValidateEmailDelivery`) fail-fast when critical security settings are misconfigured in production. However, `AuthServer:RequireHttpsMetadata` is not validated. An operator could set `REQUIRE_HTTPS_METADATA=false` in production and the application would start without HTTPS metadata validation, weakening OpenIddict token security.
+
+**Fix:** Add a production check in `ConfigureServices` or `ValidateCoreSecrets`:
+
+```csharp
+if (hostingEnvironment.IsProduction())
+{
+    var requireHttps = configuration.GetValue<bool>("AuthServer:RequireHttpsMetadata");
+    if (!requireHttps)
+        throw new InvalidOperationException(
+            "AuthServer:RequireHttpsMetadata must be 'true' in Production.");
+}
+```
+
+---
+
+### 3.10 — SEC-L-03: Dashboard/statistics services missing granular permissions (LOW)
+
+**Files:**
+- `FoodSafe.BE/src/FoodSafe.Application/Dashboard/DashboardAppService.cs:19` — `[Authorize]`
+- `FoodSafe.BE/src/FoodSafe.Application/Dashboard/StatisticsAppService.cs:17` — `[Authorize]`
+- `FoodSafe.BE/src/FoodSafe.Application/Dashboard/ReportStatisticsAppService.cs:17` — `[Authorize]`
+- `FoodSafe.BE/src/FoodSafe.Application/Dashboard/StatisticsExcelAppService.cs:11` — `[Authorize]`
+
+**Description:**  
+All dashboard and statistics services require only `[Authorize]` (any authenticated user). Any user who can log in can view aggregated statistics and export Excel reports for all data categories, even without specific feature permissions. Data IS filtered by organization scope.
+
+**Risk:** Low. No data from another organization is exposed. A user without `BusinessManagement.Businesses.View` permission could still view business counts in the dashboard. This contradicts the principle of least privilege but is unlikely to be exploitable for data exfiltration given org-scoping.
+
+**Disposition (C-8, 2026-07-28): CONFIRMED intentional design — no code change.** "Any authenticated user may read org-scoped dashboard/statistics" is a **verified, deliberate** product decision, not an oversight. `FoodSafe.FE/e2e/statistics-verification.spec.ts` encodes it as acceptance evidence: line 24, `test("any authenticated user can access statistics (no specific permission required)")`, signs in as `noperm@foodsafe.local` (a principal holding **no** feature permissions) and asserts the statistics response is `res.ok()`; a companion case asserts an **unauthenticated** request is rejected (401/302). Adding a `Dashboard.View` permission gate would break this VERIFIED test and change a business feature against its documented intent — prohibited by the standing "do not modify business features unless required" constraint, and **not required**: the only exposure (cross-org leakage) is already prevented by organization scoping at the AppService layer, and the audit's own recommended resolution explicitly allows "document the intentional design decision that the dashboard is accessible to all authenticated users." The bare `[Authorize]` on `DashboardAppService`/`StatisticsAppService`/`ReportStatisticsAppService`/`StatisticsExcelAppService` and the un-permissioned `/statistics` FE route are therefore **correct as-is**. (Contrast `AuditLogAppService`, which correctly gates on `SystemAdministration.AuditLogs` because audit logs are genuinely admin-only.)
+
+---
+
+## 4. Production Blockers
+
+The following findings must be resolved before production deployment:
+
+| ID | Severity | Blocker Reason |
+|---|---|---|
+| ~~**SEC-H-01**~~ RESOLVED (B-5) | HIGH | SSRF allows server-side HTTP requests to internal services; could expose Redis, MinIO, PostgreSQL, Hangfire — **fixed**: `OutboundUrlValidator` syntactic gate + connect-time IP guard on both outbound clients |
+| **SEC-H-02** | HIGH→ACCEPTED-RISK | All three deps accepted-risk with compensating controls: AutoMapper High-DoS **cannot be upgraded on ABP 9.3.7** (15.x removed the ctor ABP calls → runtime `MissingMethodException`; pinned 14.0.0, bounded by System.Text.Json `MaxDepth=64` + profile `.MaxDepth(8)`); Account.Web (Moderate) + react-router (High, RSC-only) have **no fix in their supported line** and are non-exploitable here — framework/library upgrade (ABP 10) tracked (§3.2) |
+| ~~**SEC-M-01**~~ RESOLVED (C-1) | MEDIUM | CAPTCHA bypass via malformed/non-object JSON body — now rejected with HTTP 400; regression-tested |
+| ~~**SEC-M-03**~~ RESOLVED (C-2) | MEDIUM | Password expiry now enforced server-side by `PasswordExpiryMiddleware` (403 `FoodSafe:Account:PasswordExpired`) |
+| ~~**SEC-M-04**~~ RESOLVED (C-3) | MEDIUM | `image/svg+xml` removed from branding allow-list (raster-only); regression-tested |
+
+All three P0 launch-blocking findings (SEC-M-01/03/04) are now RESOLVED. Of the remaining recommended findings: **SEC-M-05 is RESOLVED (C-8)** — Hangfire dashboard now requires an authenticated `SystemAdministration` principal in addition to the loopback filter; **SEC-L-03 is CONFIRMED intentional (C-8)** — the org-scoped dashboard/statistics access is a verified product decision (`statistics-verification.spec.ts`) and correctly requires no change. SEC-L-01 (CI ephemeral DB password) and SEC-L-02 (`RequireHttpsMetadata` startup check) remain low-risk hardening items for the first post-launch sprint.
+
+---
+
+## 5. ATTT Level-2 Requirement Pass/Fail
+
+| Requirement | Status | Notes |
+|---|---|---|
+| Password min 8 chars + complexity | PASS | Enforced in `ConfigureIdentity`: `RequiredLength=8`, `RequireDigit`, `RequireLowercase`, `RequireUppercase`, `RequireNonAlphanumeric` — `FoodSafeHttpApiHostModule.cs:458-463` |
+| Password 90-day expiry | PASS | 90-day validity coded (`AccountSecurityAppService.cs:18`), `RecordPasswordChanged` updates expiry, and server-side enforcement is now applied by `PasswordExpiryMiddleware` (403 for expired/must-change sessions) — SEC-M-03 RESOLVED (C-2) |
+| Session timeout | PASS | `ExpireTimeSpan = 30 min`, `SlidingExpiration = true` — `FoodSafeHttpApiHostModule.cs:487-489` |
+| HttpOnly cookies | PASS | `options.Cookie.HttpOnly = true` — `FoodSafeHttpApiHostModule.cs:485` |
+| Secure cookie flag | PASS | `CookieSecurePolicy.Always` in production — `FoodSafeHttpApiHostModule.cs:488-490` |
+| CSRF protection | PASS | ABP anti-forgery enabled; `AutoValidate = true`, `SameSite.Strict`, `SecurePolicy.Always` in prod — `FoodSafeHttpApiHostModule.cs:439-446` |
+| Server-side input validation | PASS | Validates at domain/application layer; DTOs use ABP `Check` guards |
+| Audit logging | PASS | `app.UseAuditing()` enabled — `FoodSafeHttpApiHostModule.cs:729` |
+| Hashed + salted passwords | PASS | ASP.NET Core Identity default: PBKDF2 with random salt |
+| XSS output encoding | PASS | React JSX auto-escapes; `dangerouslySetInnerHTML={undefined}` in `PublicNewsPage.tsx:99`; `contentRef.current.innerHTML` in `ReportDocumentViewModal.tsx:63` operates on React-rendered (already-escaped) DOM. Former SVG branding exception closed (SEC-M-04 RESOLVED, C-3) |
+| CAPTCHA on login | PASS | Turnstile CAPTCHA implemented; malformed/non-object JSON body bypass closed (SEC-M-01 RESOLVED, C-1) |
+| HTTPS / TLS 1.2+ | PASS | Production nginx template enforces `TLSv1.2 TLSv1.3` — `nginx.prod.conf.template:91`; HSTS `max-age=31536000; includeSubDomains` — line 148; startup `UseHsts()` and `UseHttpsRedirection()` in non-dev — `FoodSafeHttpApiHostModule.cs:682-685`. Minor gap: `RequireHttpsMetadata` not startup-validated (SEC-L-02) |
+| IPv6 | PASS | nginx config listens on `[::]:8080` and `[::]:8443` — `nginx.prod.conf.template:60-61,81-82` |
+| Account lockout | PASS | `MaxFailedAccessAttempts=5`, `DefaultLockoutTimeSpan=30min` — `FoodSafeHttpApiHostModule.cs:454-456` |
+| Password history | PASS | Last N passwords retained in `PasswordHistory` table; reuse prevented by `EnsurePasswordIsNotReused` — `AccountSecurityAppService.cs:196-211` |
+| No raw SQL | PASS | No `FromSqlRaw`/`ExecuteSqlRaw` found in source |
+| No localStorage token storage | PASS | Auth uses `withCredentials: true` + HTTP-Only cookies; Zustand store holds only user profile info (not tokens) — `axios.ts:4-6`, `authStore.ts` |
+| No open redirects | PASS | Redirect URLs validated via `RedirectAllowedUrls` in ABP `AppUrlOptions` |
+| File upload security | PASS | Extension + MIME + magic-byte validation + ClamAV scan for document attachments (`DocumentAttachmentStore.cs:164-216`); branding uploads now raster-only, SVG rejected (SEC-M-04 RESOLVED, C-3) |
+| No committed production secrets | PASS (current HEAD) | `appsettings.json` blanked; secrets in gitignored `appsettings.secrets.json`; fail-fast at startup when missing |
+| Information leakage (stack traces) | PASS | `UseDeveloperExceptionPage()` only in development (`FoodSafeHttpApiHostModule.cs:700-703`); production uses `ProblemDetails` |
+| Rate limiting | PASS | Per-endpoint fixed-window rate limiting: login 10/5min, password-reset 5/15min, public API 60/min in production |
+
+---
+
+## 6. Non-Findings (Verified Secure)
+
+The following areas were explicitly checked and found to be properly implemented:
+
+- **Raw SQL injection:** No `FromSqlRaw`, `ExecuteSqlRaw`, or string-concatenated SQL in application code. All queries use EF Core LINQ.
+- **IDOR on file downloads:** `DocumentAttachmentStore.GetOwnedAsync()` (line 247) enforces `DocumentOwnerId == ownerId` in all download paths. Attachment lookup always validates parent ownership.
+- **Password reset token enumeration:** ABP's built-in `send-password-reset-code` returns a uniform success response regardless of whether the email exists. The `ResetPasswordAsync` takes `UserId` from the reset token URL (URL-encoded by ABP), not from user input directly.
+- **Organization scope on all modules:** `ICurrentDataScopeProvider.GetAsync()` is called in all inspected modules: BusinessManagement, Inspection, FoodPoisoning, Reporting, AlertsAndTesting, DataIntegration, Dashboard.
+- **Admin self-registration:** Self-registration is disabled: `"Abp.Account.IsSelfRegistrationEnabled": "false"` in `appsettings.json:17`.
+- **Dependency injection security:** ClamAV is required (throws `ScannerUnavailable` if unconfigured), not optional or skippable.
+- **Docker container users:** API container uses `$APP_UID` (non-root) — `Dockerfile:34`. Frontend uses `nginx` user — `FoodSafe.FE/Dockerfile:12`. PostgreSQL and Redis use their default non-root users.
+- **Infrastructure port exposure:** PostgreSQL and Redis ports bound to `127.0.0.1` (default) in `docker-compose.yml:34,56`. MinIO console also localhost-only.
+- **nginx security headers (production):** CSP, X-Frame-Options DENY, X-Content-Type-Options nosniff, HSTS, Referrer-Policy, Permissions-Policy all present in `nginx.prod.conf.template:148-153`.
+- **HSTS implementation:** Correctly present only in the HTTPS server block of `nginx.prod.conf.template`, not in the HTTP redirect server block.
+- **SVG/XSS in public news content:** `PublicNewsPage.tsx:99` has `dangerouslySetInnerHTML={undefined}` (explicitly not rendering raw HTML); news content rendered via `Typography.Paragraph` which escapes output.
+- **OpenIddict token lifetime:** Access token 15 min, refresh token 14 days — `FoodSafeHttpApiHostModule.cs:83-85`. Security stamp validated on every request (`ValidationInterval = TimeSpan.Zero`) — line 475-477.
+- **Data Protection keys:** Protected by X.509 certificate in production; requires `CertificatePath` and `CertificatePassword` — `FoodSafeHttpApiHostModule.cs:401-415`.
+
+---
+
+## 7. Remediation Priority
+
+| Priority | Finding | Estimated Effort |
+|---|---|---|
+| ~~P0~~ DONE (B-5, 2026-07-28) | SEC-H-01 (SSRF) | `OutboundUrlValidator` + 58 regression tests |
+| ACCEPTED-RISK (B-6, corrected 2026-07-28) | SEC-H-02 (AutoMapper DoS CVE-2026-32933) | Upgrade ABI-incompatible with ABP 9.3.7 (runtime `MissingMethodException`); reverted to 14.0.0 + `MaxDepth` compensating controls; real fix tracked to ABP 10 |
+| P2 — tracked accepted-risk | SEC-H-02 (Account.Web open-redirect; react-router RSC-CSRF) | No supported fix; non-exploitable here; ABP 10 / RR upgrade tracked |
+| ~~P0~~ DONE (C-1, 2026-07-28) | SEC-M-01 (CAPTCHA bypass) | Reject malformed/non-object body with 400; `LoginCaptchaMiddlewareTests` 7/7 green |
+| ~~P0~~ DONE (C-2, verified 2026-07-28) | SEC-M-03 (password expiry server-side) | `PasswordExpiryMiddleware` already enforcing 403 for expired/must-change sessions |
+| ~~P0~~ DONE (C-3, 2026-07-28) | SEC-M-04 (SVG XSS) | Removed `image/svg+xml` from allow-list; `BrandingImageContentTypeTests` 10/10 green |
+| P1 — Fix before launch or in first patch | SEC-H-02 (react-router-dom CVE) | accepted-risk — RSC-only, N/A to Vite SPA (§3.2.3) |
+| ~~P1~~ DONE (C-8, 2026-07-28) | SEC-M-05 (Hangfire SSRF chain) | Primary vector closed by B-5; `HangfireAdminAuthorizationFilter` adds `SystemAdministration` requirement; `scripts/verify-hangfire-authz.sh` real-stack regression (loopback unauth 200→401) |
+| ~~P2~~ DONE (B-3) | SEC-M-02 (git history credentials) | resolved — Production startup guard + recurrence scanner; history rewrite deliberately declined (doc 09) |
+| P2 — First hardening sprint | SEC-L-02 (RequireHttpsMetadata validation) | 30 min |
+| P2 — First hardening sprint | SEC-L-01 (CI DB password) | 1 hour (move to GitHub secret) |
+| ~~P3~~ CONFIRMED INTENTIONAL (C-8) | SEC-L-03 (dashboard granular permissions) | No change — org-scoped "any authenticated user" access is verified deliberate design (`statistics-verification.spec.ts` line 24); gating it would break VERIFIED acceptance and modify a business feature |

@@ -102,6 +102,7 @@ export default function BusinessManagementPage() {
     useState<string>();
   const [provinceId, setProvinceId] = useState<string>();
   const [districtId, setDistrictId] = useState<string>();
+  const [businessSorting, setBusinessSorting] = useState<string>();
   const [detailBusiness, setDetailBusiness] = useState<Business>();
   const [productStatus, setProductStatus] = useState<ProductStatus>();
   const [businessPage, setBusinessPage] = useState(1);
@@ -126,6 +127,7 @@ export default function BusinessManagementPage() {
       businessClassificationId,
       provinceId,
       districtId,
+      sorting: businessSorting,
       skipCount: (businessPage - 1) * PAGE_SIZE,
       maxResultCount: PAGE_SIZE,
     },
@@ -293,6 +295,11 @@ export default function BusinessManagementPage() {
         businessClassificationId={businessClassificationId}
         provinceId={provinceId}
         districtId={districtId}
+        businessSorting={businessSorting}
+        onBusinessSortingChange={(value) => {
+          setBusinessSorting(value);
+          setBusinessPage(1);
+        }}
         businessTypeOptions={(businessTypes.data?.items ?? []).map((item) => ({
           value: item.id,
           label: item.name,

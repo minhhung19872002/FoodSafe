@@ -13,6 +13,13 @@ public class ApiEndpointDto : EntityDto<Guid>
     public string? Description { get; set; }
     public ApiAuthType AuthType { get; set; }
     public ApiEndpointStatus Status { get; set; }
+
+    /// <summary>
+    /// True when an outbound-auth credential is stored. The credential value
+    /// itself is write-only and never returned to the client.
+    /// </summary>
+    public bool HasCredential { get; set; }
+
     public DateTime CreationTime { get; set; }
 }
 
@@ -38,6 +45,17 @@ public class CreateUpdateApiEndpointDto
     public string? Description { get; set; }
 
     public ApiAuthType AuthType { get; set; }
+
+    /// <summary>
+    /// Write-only outbound-auth secret (API key / bearer token / "user:pass"
+    /// for Basic). Encrypted at rest server-side and never returned. On update,
+    /// leave null to keep the stored value unchanged.
+    /// </summary>
+    [StringLength(4096)]
+    public string? Credential { get; set; }
+
+    /// <summary>On update, set true to remove the stored credential.</summary>
+    public bool ClearCredential { get; set; }
 }
 
 public class ApiEndpointFilterDto : PagedAndSortedResultRequestDto

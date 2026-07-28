@@ -57,6 +57,18 @@ thousands of levels deep.
 FoodSafe's HTTP JSON parser rejects deep request graphs at its framework depth
 limit, and FoodSafe does not map request DTOs through AutoMapper. Its
 application mappings are entity-to-flat-response-DTO projections and specify
-`MaxDepth(8)`. The CI exception is limited to this package/advisory pair.
-Remove it when upgrading to an ABP line compatible with AutoMapper 15.1.1 or
-later.
+`MaxDepth(8)`. The CI exception is limited to this package/advisory pair and
+is applied in three narrowly scoped places that must be removed together when
+upgrading to an ABP line compatible with AutoMapper 15.1.1 or later:
+
+- `FoodSafe.BE/common.props`: a `NuGetAuditSuppress` for
+  `GHSA-rvv3-g6hj-g44x` only, so the restore-replayed NU1903 does not fail
+  the warnings-as-errors CI build. NuGet auditing itself remains enabled and
+  any other advisory still fails the build.
+- `scripts/Test-NuGetVulnerabilities.ps1`: the allow-list entry for this
+  package/advisory pair. `dotnet list package --vulnerable` ignores
+  `NuGetAuditSuppress`, so this gate keeps detecting and reporting the
+  finding as an explicitly mitigated risk on every run.
+- `.trivyignore`: the `CVE-2026-32933` entry (found in the API/migrator image
+  `.deps.json`), with an enforced `exp:` date so the exception cannot outlive
+  its review.

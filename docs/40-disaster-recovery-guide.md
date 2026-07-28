@@ -26,7 +26,16 @@ Record start/end time, source, restore point, object count/size, checksum,
 encryption key reference, and outcome. Alert when the most recent verified
 backup is older than 24 hours.
 
-Typical PostgreSQL logical backup for a small deployment:
+This is automated by [`scripts/backup-database.sh`](../scripts/backup-database.sh):
+it produces a custom-format `pg_dump`, computes a SHA-256 checksum, optionally
+GPG-encrypts for off-host storage (`BACKUP_GPG_RECIPIENT`), prunes by retention
+(`BACKUP_RETENTION_DAYS`, default 30), can mirror to MinIO (`MINIO_MIRROR_TARGET`),
+and appends a JSON manifest record (start/end, restore point = latest EF
+`MigrationId`, size, checksum, outcome) to `backups/manifest.log`. It exits
+non-zero and records `outcome=FAILED` on any error so a scheduler can alert.
+Schedule it at least every 24 h to satisfy RPO.
+
+Underlying logical backup for a small deployment:
 
 ```powershell
 pg_dump --format=custom --no-owner --no-privileges --file FoodSafe.dump FoodSafe
@@ -55,7 +64,12 @@ isolated restore verifies it.
 8. Obtain incident-lead and business-owner approval before changing DNS or
    reopening ingress.
 
-For a logical PostgreSQL restore:
+For a logical PostgreSQL restore, use
+[`scripts/restore-database.sh <dump> <target-db>`](../scripts/restore-database.sh).
+It always creates a fresh target, restores with
+`pg_restore --exit-on-error --single-transaction --no-owner --no-privileges`,
+and refuses to overwrite the configured live database unless `FORCE=1`. It
+decrypts `*.gpg` dumps automatically. The equivalent manual sequence:
 
 ```powershell
 createdb FoodSafe_Restore
@@ -89,9 +103,42 @@ Run an isolated restore at least quarterly, before first production release,
 and after material database, MinIO, encryption, key-management, or deployment
 changes. Destroy rehearsal data securely after evidence is approved.
 
-The repository contains the procedure but not evidence of a completed
-production-like backup/restore rehearsal. Production readiness therefore
-remains blocked until that exercise is performed and recorded.
+An automated rehearsal is provided by
+[`scripts/rehearse-restore.sh`](../scripts/rehearse-restore.sh) and is gated in
+CI (the `database` job runs it against a freshly migrated PostgreSQL). It:
+
+1. Exports a consistent snapshot of the source (`pg_export_snapshot`) and holds
+   it open, so the dump and the source verification read the identical point in
+   time even while the live database is being written to — a naive
+   live-vs-restore comparison races concurrent writers and reports false
+   failures.
+2. Takes a real backup pinned to that snapshot (`backup-database.sh`).
+3. Restores into a throwaway database (`restore-database.sh`).
+4. Verifies the restore against the snapshot: EF migration id, `public` table
+   count, and exact row counts of key business tables all match.
+5. Reports elapsed recovery time (RTO indicator) and drops the throwaway DB.
+
+### Rehearsal evidence (recorded)
+
+| Field | Value |
+|---|---|
+| Date | 2026-07-27 |
+| Method | `scripts/rehearse-restore.sh` against the real Compose PostgreSQL 15 stack |
+| Backup tool | `scripts/backup-database.sh` (pg_dump custom, SHA-256, manifest) |
+| Restore tool | `scripts/restore-database.sh` (fresh DB, `--single-transaction --exit-on-error`) |
+| Restore point | `20260727131218_AddApiCallLogDataType` (latest EF migration) |
+| Migration history match | Yes |
+| `public` table count match | Yes (86 = 86) |
+| Business row-count match (snapshot-consistent) | Yes — `businesses`, `organizations`, `AbpUsers`, `cat_provinces`, `cat_communes` |
+| Restore errors | None (`pg_restore --exit-on-error` clean) |
+| Elapsed recovery time (RTO) | ~5–8 s (objective: < 4 h) |
+| Data loss (RPO) | 0 for the captured snapshot; scheduled ≤ 24 h in production |
+| CI gate | `.github/workflows/ci.yml` → `database` job → "Backup and restore rehearsal (B-2 disaster-recovery gate)" |
+
+A production-like backup/restore rehearsal has now been performed and recorded,
+and is enforced on every CI run. **B-2 is resolved.** MinIO object-restore and
+the full application-level acceptance checks above remain a pre-first-release
+operational exercise on production hardware.
 
 ## Backup and restore scripts
 

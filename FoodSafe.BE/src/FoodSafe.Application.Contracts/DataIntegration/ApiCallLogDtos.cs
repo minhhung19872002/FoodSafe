@@ -16,6 +16,9 @@ public class ApiCallLogDto : EntityDto<Guid>
     public string? ErrorMessage { get; set; }
     public SharedDataType DataType { get; set; }
     public DateTime CreationTime { get; set; }
+    public Guid? EndpointId { get; set; }
+    public Guid? CorrelationId { get; set; }
+    public int AttemptNumber { get; set; }
 }
 
 public class ApiCallLogDetailDto : ApiCallLogDto
@@ -23,6 +26,7 @@ public class ApiCallLogDetailDto : ApiCallLogDto
     public string? RequestHeaders { get; set; }
     public string? RequestBody { get; set; }
     public string? ResponseBody { get; set; }
+    public string? PayloadChecksum { get; set; }
 }
 
 public class ApiCallLogFilterDto : PagedAndSortedResultRequestDto

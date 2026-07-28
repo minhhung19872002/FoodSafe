@@ -58,6 +58,7 @@ export interface ApiEndpoint {
   description?: string;
   authType: ApiAuthType;
   status: ApiEndpointStatus;
+  hasCredential: boolean;
   creationTime: string;
 }
 
@@ -68,6 +69,10 @@ export interface CreateUpdateApiEndpoint {
   externalSystem: string;
   description?: string;
   authType: ApiAuthType;
+  /** Write-only outbound-auth secret; leave undefined to keep the stored value. */
+  credential?: string;
+  /** Set true on update to remove the stored credential. */
+  clearCredential?: boolean;
 }
 
 export interface ApiEndpointFilter {
@@ -137,12 +142,17 @@ export interface ApiCallLog {
   errorMessage?: string;
   dataType: SharedDataType;
   creationTime: string;
+  endpointId?: string;
+  /** Id of the envelope's original attempt; absent on the original itself. */
+  correlationId?: string;
+  attemptNumber: number;
 }
 
 export interface ApiCallLogDetail extends ApiCallLog {
   requestHeaders?: string;
   requestBody?: string;
   responseBody?: string;
+  payloadChecksum?: string;
 }
 
 export interface ApiCallLogFilter {

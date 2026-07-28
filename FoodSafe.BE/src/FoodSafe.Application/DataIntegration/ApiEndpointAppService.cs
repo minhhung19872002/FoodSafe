@@ -5,6 +5,7 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Security.Encryption;
 using Volo.Abp.Threading;
 
 namespace FoodSafe.DataIntegration;
@@ -16,17 +17,20 @@ public class ApiEndpointAppService : ApplicationService
     private readonly IRepository<ApiCallLog, Guid> _callLogs;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
+    private readonly IStringEncryptionService _encryption;
 
     public ApiEndpointAppService(
         IRepository<ApiEndpoint, Guid> endpoints,
         IRepository<ApiCallLog, Guid> callLogs,
         ICurrentDataScopeProvider dataScopeProvider,
-        ICancellationTokenProvider cancellationTokens)
+        ICancellationTokenProvider cancellationTokens,
+        IStringEncryptionService encryption)
     {
         _endpoints = endpoints;
         _callLogs = callLogs;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
+        _encryption = encryption;
     }
 
     public async Task<PagedResultDto<ApiEndpointDto>> GetListAsync(
@@ -72,6 +76,8 @@ public class ApiEndpointAppService : ApplicationService
             DataScopeOperation.Create, _cancellationTokens.Token);
         var orgId = scope.OrganizationIds.First();
 
+        OutboundUrlValidator.Validate(input.Url);
+
         var entity = ApiEndpoint.Create(
             GuidGenerator.Create(),
             orgId,
@@ -81,6 +87,9 @@ public class ApiEndpointAppService : ApplicationService
             input.ExternalSystem,
             input.AuthType,
             input.Description);
+
+        if (!input.Credential.IsNullOrWhiteSpace())
+            entity.SetEncryptedCredential(_encryption.Encrypt(input.Credential));
 
         await _endpoints.InsertAsync(entity, autoSave: true,
             cancellationToken: _cancellationTokens.Token);
@@ -94,6 +103,8 @@ public class ApiEndpointAppService : ApplicationService
     {
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
 
+        OutboundUrlValidator.Validate(input.Url);
+
         entity.Update(
             input.Name,
             input.Url,
@@ -101,6 +112,13 @@ public class ApiEndpointAppService : ApplicationService
             input.ExternalSystem,
             input.AuthType,
             input.Description);
+
+        // Write-only rotation: a supplied value replaces the stored secret; an
+        // explicit ClearCredential removes it; otherwise the stored value stays.
+        if (!input.Credential.IsNullOrWhiteSpace())
+            entity.SetEncryptedCredential(_encryption.Encrypt(input.Credential));
+        else if (input.ClearCredential)
+            entity.SetEncryptedCredential(null);
 
         await _endpoints.UpdateAsync(entity, autoSave: true,
             cancellationToken: _cancellationTokens.Token);
@@ -144,8 +162,10 @@ public class ApiEndpointAppService : ApplicationService
         var isSuccess = false;
         try
         {
-            using var request = new HttpRequestMessage(
-                HttpMethod.Head, endpoint.Url);
+            // Re-validate at probe time; the guarded client additionally refuses
+            // to connect to any private/reserved IP (defeats DNS rebinding).
+            var target = OutboundUrlValidator.Validate(endpoint.Url);
+            using var request = new HttpRequestMessage(HttpMethod.Head, target);
             using var response = await ProbeClient.SendAsync(
                 request, _cancellationTokens.Token);
             statusCode = (int)response.StatusCode;
@@ -193,10 +213,9 @@ public class ApiEndpointAppService : ApplicationService
         };
     }
 
-    private static readonly HttpClient ProbeClient = new()
-    {
-        Timeout = TimeSpan.FromSeconds(10)
-    };
+    // SSRF-guarded: the connect callback refuses private/reserved IPs (B-5).
+    private static readonly HttpClient ProbeClient =
+        OutboundUrlValidator.CreateGuardedHttpClient(TimeSpan.FromSeconds(10));
 
     private async Task<IQueryable<ApiEndpoint>> ScopedQueryAsync(
         DataScopeOperation operation)
@@ -232,6 +251,7 @@ public class ApiEndpointAppService : ApplicationService
         Description = e.Description,
         AuthType = e.AuthType,
         Status = e.Status,
+        HasCredential = e.HasCredential,
         CreationTime = e.CreationTime,
     };
 }

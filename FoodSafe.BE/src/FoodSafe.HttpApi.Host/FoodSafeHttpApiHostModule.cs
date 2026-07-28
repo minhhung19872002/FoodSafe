@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Asp.Versioning.ApplicationModels;
 using FoodSafe.EntityFrameworkCore;
+using FoodSafe.HealthChecks;
 using FoodSafe.Security;
 using FoodSafe.TextTemplating;
 using Hangfire;
@@ -9,6 +10,7 @@ using FoodSafe.Licensing;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -94,7 +96,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureSecureTextTemplating();
         ConfigureCaptcha(context, configuration, hostingEnvironment);
         ValidateEmailDelivery(configuration, hostingEnvironment);
-        ValidateCoreSecrets(configuration);
+        ValidateCoreSecrets(configuration, hostingEnvironment);
         ValidatePostgreSqlSsl(configuration, hostingEnvironment);
         ConfigureDataProtection(context, configuration, hostingEnvironment);
         ConfigureUrls(configuration);
@@ -110,7 +112,14 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureAntiForgery(hostingEnvironment);
         ConfigureIdentity(context, hostingEnvironment);
         ConfigureRateLimiting(context, hostingEnvironment);
-        context.Services.AddHealthChecks();
+        // IHttpClientFactory is needed by MinioReadinessHealthCheck; register it
+        // explicitly rather than relying on another feature's typed client.
+        context.Services.AddHttpClient();
+        context.Services.AddHealthChecks()
+            .AddCheck<PostgreSqlReadinessHealthCheck>(
+                "postgresql", tags: ["ready"])
+            .AddCheck<MinioReadinessHealthCheck>(
+                "minio", tags: ["ready"]);
         context.Services.AddHsts(options =>
         {
             options.MaxAge = TimeSpan.FromDays(365);
@@ -323,27 +332,14 @@ public class FoodSafeHttpApiHostModule : AbpModule
             hostingEnvironment.IsProduction());
     }
 
-    private static void ValidateCoreSecrets(IConfiguration configuration)
+    private static void ValidateCoreSecrets(
+        IConfiguration configuration,
+        IHostEnvironment hostingEnvironment)
     {
-        var connectionString = configuration.GetConnectionString("Default");
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            throw new InvalidOperationException(
-                "ConnectionStrings:Default is not configured. Provide it via "
-                + "environment variable ConnectionStrings__Default or "
-                + "appsettings.secrets.json (never commit credentials).");
-        }
-
-        var passPhrase = configuration["StringEncryption:DefaultPassPhrase"];
-        if (string.IsNullOrWhiteSpace(passPhrase)
-            || passPhrase == "change-this-in-production")
-        {
-            throw new InvalidOperationException(
-                "StringEncryption:DefaultPassPhrase is missing or uses the "
-                + "known default. Provide a unique value via environment "
-                + "variable StringEncryption__DefaultPassPhrase or "
-                + "appsettings.secrets.json.");
-        }
+        CoreSecretsValidator.Validate(
+            configuration.GetConnectionString("Default"),
+            configuration["StringEncryption:DefaultPassPhrase"],
+            hostingEnvironment.IsProduction());
     }
 
     private static void ValidateEmailDelivery(
@@ -713,6 +709,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         app.UseAbpOpenIddictValidation();
         app.UseUnitOfWork();
         app.UseDynamicClaims();
+        app.UseMiddleware<PasswordExpiryMiddleware>();
         app.UseAuthorization();
         if (env.IsDevelopment())
         {
@@ -730,11 +727,42 @@ public class FoodSafeHttpApiHostModule : AbpModule
         app.UseAbpSerilogEnrichers();
         app.UseHangfireDashboard("/hangfire", new DashboardOptions
         {
-            Authorization = [new Hangfire.Dashboard.LocalRequestsOnlyAuthorizationFilter()]
+            // Two independent controls, both must pass (C-8, doc 04 §3.7):
+            // (1) loopback-only (primary vector, B-5); (2) an authenticated principal
+            // holding SystemAdministration. Defence in depth against proxy
+            // misconfiguration or a future decision to expose the dashboard.
+            Authorization =
+            [
+                new Hangfire.Dashboard.LocalRequestsOnlyAuthorizationFilter(),
+                new HangfireAdminAuthorizationFilter()
+            ]
         });
         app.UseConfiguredEndpoints(endpoints =>
         {
-            endpoints.MapHealthChecks("/health");
+            // Liveness: is the process up and serving? No dependency checks, so a
+            // transient database/MinIO outage never makes the process look dead
+            // (which would trigger a needless restart under an orchestrator).
+            endpoints.MapHealthChecks("/health/live", new HealthCheckOptions
+            {
+                Predicate = _ => false,
+                ResponseWriter = HealthCheckResponseWriter.WriteJsonAsync,
+            });
+
+            // Readiness: can the app actually serve traffic? Exercises the real
+            // downstream dependencies (PostgreSQL, MinIO). Returns 503 when any
+            // "ready"-tagged check is Unhealthy.
+            var readinessOptions = new HealthCheckOptions
+            {
+                Predicate = registration => registration.Tags.Contains("ready"),
+                ResponseWriter = HealthCheckResponseWriter.WriteJsonAsync,
+            };
+            endpoints.MapHealthChecks("/health/ready", readinessOptions);
+
+            // Backward-compatible alias. Previously `/health` registered no probes
+            // and returned 200 regardless of dependency state (H-01); it now maps
+            // to the readiness set so the existing Compose api healthcheck actually
+            // reflects downstream connectivity.
+            endpoints.MapHealthChecks("/health", readinessOptions);
         });
     }
 }

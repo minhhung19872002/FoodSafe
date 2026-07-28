@@ -29,4 +29,10 @@ public class ShareDataResultDto
 public interface IDataSharingAppService : IApplicationService
 {
     Task<ShareDataResultDto> ShareAsync(ShareDataInput input);
+
+    /// <summary>
+    /// Re-sends a FAILED outbound attempt's stored payload to its endpoint,
+    /// appending a new immutable attempt row (STT 51-57 "Thử lại").
+    /// </summary>
+    Task<ShareDataResultDto> RetryAsync(Guid logId);
 }

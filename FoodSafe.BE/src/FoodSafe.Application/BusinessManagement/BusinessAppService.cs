@@ -73,11 +73,34 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
             query,
             _cancellationTokens.Token);
         var items = await AsyncExecuter.ToListAsync(
-            query.OrderBy(x => x.Name)
+            ApplySorting(query, input.Sorting)
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount),
             _cancellationTokens.Token);
         return new(total, ObjectMapper.Map<List<Business>, List<BusinessDto>>(items));
+    }
+
+    // Honours the client's Sorting request (e.g. "Name", "Code desc", "Status")
+    // against a whitelist so the businesses list supports column sorting without
+    // exposing the query to dynamic-LINQ injection. Falls back to Name ascending.
+    private static IOrderedQueryable<Business> ApplySorting(
+        IQueryable<Business> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("code", true) => query.OrderByDescending(x => x.Code),
+            ("code", false) => query.OrderBy(x => x.Code),
+            ("status", true) => query.OrderByDescending(x => x.Status).ThenBy(x => x.Name),
+            ("status", false) => query.OrderBy(x => x.Status).ThenBy(x => x.Name),
+            ("name", true) => query.OrderByDescending(x => x.Name),
+            _ => query.OrderBy(x => x.Name)
+        };
     }
 
     public async Task<BusinessDto> GetAsync(Guid id)

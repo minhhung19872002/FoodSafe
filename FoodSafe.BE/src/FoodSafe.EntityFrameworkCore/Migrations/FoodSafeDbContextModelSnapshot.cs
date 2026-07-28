@@ -1409,7 +1409,8 @@ namespace FoodSafe.Migrations
 
                     b.HasIndex("BusinessId", "DeclarationNumber")
                         .IsUnique()
-                        .HasDatabaseName("uq_self_declarations_business_number");
+                        .HasDatabaseName("uq_self_declarations_business_number")
+                        .HasFilter("is_deleted = FALSE");
 
                     b.HasIndex("BusinessId", "OrganizationId");
 
@@ -2323,6 +2324,12 @@ namespace FoodSafe.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<int>("AttemptNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("attempt_number");
+
                     b.Property<DateTime>("CalledAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("called_at");
@@ -2333,6 +2340,10 @@ namespace FoodSafe.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)")
                         .HasColumnName("concurrency_stamp");
+
+                    b.Property<Guid?>("CorrelationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("correlation_id");
 
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("timestamp with time zone")
@@ -2355,6 +2366,10 @@ namespace FoodSafe.Migrations
                     b.Property<long>("DurationMs")
                         .HasColumnType("bigint")
                         .HasColumnName("duration_ms");
+
+                    b.Property<Guid?>("EndpointId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("endpoint_id");
 
                     b.Property<string>("EndpointUrl")
                         .IsRequired()
@@ -2392,6 +2407,11 @@ namespace FoodSafe.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
+                    b.Property<string>("PayloadChecksum")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("payload_checksum");
+
                     b.Property<string>("RequestBody")
                         .HasColumnType("text")
                         .HasColumnName("request_body");
@@ -2411,6 +2431,10 @@ namespace FoodSafe.Migrations
                     b.HasKey("Id")
                         .HasName("pk_di_call_logs");
 
+                    b.HasIndex("CorrelationId")
+                        .HasDatabaseName("idx_di_cl_correlation")
+                        .HasFilter("correlation_id IS NOT NULL");
+
                     b.HasIndex("ExternalSystemName")
                         .HasDatabaseName("idx_di_cl_ext_system");
 
@@ -2422,6 +2446,8 @@ namespace FoodSafe.Migrations
 
                     b.ToTable("di_api_call_logs", null, t =>
                         {
+                            t.HasCheckConstraint("chk_di_cl_attempt", "attempt_number >= 1");
+
                             t.HasCheckConstraint("chk_di_cl_direction", "direction IN (1, 2)");
                         });
                 });
@@ -2463,6 +2489,10 @@ namespace FoodSafe.Migrations
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)")
                         .HasColumnName("description");
+
+                    b.Property<string>("EncryptedCredential")
+                        .HasColumnType("text")
+                        .HasColumnName("credential_value");
 
                     b.Property<string>("ExternalSystem")
                         .IsRequired()
@@ -3848,7 +3878,8 @@ namespace FoodSafe.Migrations
 
                     b.HasIndex("RegistrationNumber")
                         .IsUnique()
-                        .HasDatabaseName("uq_advertisement_registrations_number");
+                        .HasDatabaseName("uq_advertisement_registrations_number")
+                        .HasFilter("is_deleted = FALSE");
 
                     b.HasIndex("BusinessId", "OrganizationId");
 
@@ -4009,7 +4040,8 @@ namespace FoodSafe.Migrations
 
                     b.HasIndex("CertificateNumber")
                         .IsUnique()
-                        .HasDatabaseName("uq_cfs_certificates_number");
+                        .HasDatabaseName("uq_cfs_certificates_number")
+                        .HasFilter("is_deleted = FALSE");
 
                     b.HasIndex("DestinationCountryId")
                         .HasDatabaseName("idx_cfs_destination_country")
@@ -4149,7 +4181,8 @@ namespace FoodSafe.Migrations
 
                     b.HasIndex("CertificateNumber")
                         .IsUnique()
-                        .HasDatabaseName("uq_eligibility_certificates_number");
+                        .HasDatabaseName("uq_eligibility_certificates_number")
+                        .HasFilter("is_deleted = FALSE");
 
                     b.HasIndex("OrganizationId")
                         .HasDatabaseName("idx_eligibility_certificates_org")
@@ -4292,7 +4325,8 @@ namespace FoodSafe.Migrations
 
                     b.HasIndex("CertificateNumber")
                         .IsUnique()
-                        .HasDatabaseName("uq_export_food_certificates_number");
+                        .HasDatabaseName("uq_export_food_certificates_number")
+                        .HasFilter("is_deleted = FALSE");
 
                     b.HasIndex("DestinationCountryId")
                         .HasDatabaseName("idx_export_cert_destination_country")
@@ -4460,7 +4494,8 @@ namespace FoodSafe.Migrations
 
                     b.HasIndex("RegistrationNumber")
                         .IsUnique()
-                        .HasDatabaseName("uq_product_registrations_number");
+                        .HasDatabaseName("uq_product_registrations_number")
+                        .HasFilter("is_deleted = FALSE");
 
                     b.HasIndex("BusinessId", "OrganizationId");
 

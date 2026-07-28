@@ -190,6 +190,23 @@ jobs:
           cat src/FoodSafe.EntityFrameworkCore/Migrations/*CiDriftProbe.cs || true
           git diff -- src/FoodSafe.EntityFrameworkCore/Migrations/FoodSafeDbContextModelSnapshot.cs | head -200
 
+      - name: Backup and restore rehearsal (B-2 disaster-recovery gate)
+        env:
+          # Target the job's PostgreSQL service container directly (no Compose here).
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+          POSTGRES_DB: FoodSafe_CI
+          POSTGRES_USER: foodsafe_ci
+        run: bash scripts/rehearse-restore.sh
+
+      - name: Migration non-destructive regression (B-4)
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+          PGHOST: 127.0.0.1
+          PGPORT: "5432"
+          PGUSER: foodsafe_ci
+          PGPASSWORD: ci-database-only
+        run: bash scripts/verify-migration-nondestructive.sh
+
   supply-chain:
     name: Dependency and container gates
     runs-on: ubuntu-latest
@@ -247,6 +264,12 @@ jobs:
           npm ci
           pwsh ../scripts/Test-NpmVulnerabilities.ps1
 
+      - name: Guard against credentials committed in tracked config (B-3)
+        run: bash scripts/scan-committed-secrets.sh
+
+      - name: Guard against .env.example drift (C-6)
+        run: bash scripts/verify-env-example-complete.sh
+
       - name: Scan repository for secrets and insecure configuration
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
@@ -263,7 +286,28 @@ jobs:
 
       - name: Build deployable images
         working-directory: FoodSafe.BE
-        run: docker compose build api migrator frontend
+        # --pull: always re-resolve base-image tags so a warm builder cannot
+        # reuse a stale cached base and mask OS package fixes from the scans.
+        run: docker compose build --pull api migrator frontend
+
+      - name: Validate production Compose overlay rendering
+        working-directory: FoodSafe.BE
+        env:
+          # Placeholder paths — overlay uses ${SSL_CERT_PATH:?}/${SSL_KEY_PATH:?}
+          # only for read-only volume mounts; config rendering just needs them set.
+          SSL_CERT_PATH: /tmp/ci-placeholder-tls.crt
+          SSL_KEY_PATH: /tmp/ci-placeholder-tls.key
+        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet
+
+      - name: Build production frontend image (Dockerfile.prod)
+        working-directory: FoodSafe.BE
+        env:
+          SSL_CERT_PATH: /tmp/ci-placeholder-tls.crt
+          SSL_KEY_PATH: /tmp/ci-placeholder-tls.key
+        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml build --pull frontend
+
+      - name: Verify production frontend HTTPS/TLS/HSTS/IPv6 at runtime
+        run: bash scripts/verify-prod-frontend.sh
 
       - name: Scan API image
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0

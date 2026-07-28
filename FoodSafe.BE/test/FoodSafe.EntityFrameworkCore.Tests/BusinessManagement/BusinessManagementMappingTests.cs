@@ -132,7 +132,7 @@ public sealed class BusinessManagementMappingTests
             index.GetDatabaseName() ==
             "uq_self_declarations_business_number");
         unique.IsUnique.ShouldBeTrue();
-        unique.GetFilter().ShouldBeNull();
+        unique.GetFilter().ShouldBe("is_deleted = FALSE");
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public sealed class BusinessManagementMappingTests
             index.GetDatabaseName() ==
             "uq_product_registrations_number");
         unique.IsUnique.ShouldBeTrue();
-        unique.GetFilter().ShouldBeNull();
+        unique.GetFilter().ShouldBe("is_deleted = FALSE");
     }
 
     [Fact]
@@ -187,6 +187,6 @@ public sealed class BusinessManagementMappingTests
             index.GetDatabaseName() ==
             "uq_eligibility_certificates_number");
         unique.IsUnique.ShouldBeTrue();
-        unique.GetFilter().ShouldBeNull();
+        unique.GetFilter().ShouldBe("is_deleted = FALSE");
     }
 }

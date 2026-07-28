@@ -58,6 +58,46 @@ public sealed class DataIntegrationApplicationContractTests
     }
 
     [Fact]
+    public void Data_sharing_share_and_retry_should_require_share_permission()
+    {
+        typeof(DataSharingAppService)
+            .GetCustomAttribute<AuthorizeAttribute>()!
+            .Policy.ShouldBe(FoodSafePermissions.DataIntegration.Share);
+
+        typeof(DataSharingAppService).GetMethod("ShareAsync").ShouldNotBeNull();
+        typeof(DataSharingAppService).GetMethod("RetryAsync").ShouldNotBeNull();
+        typeof(IDataSharingAppService).GetMethod("RetryAsync").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Every_shared_data_type_should_have_exactly_one_payload_builder()
+    {
+        // Builders only touch their repositories inside BuildRecordsAsync, so
+        // metadata can be read from instances constructed with null services.
+        var builders = new ISharedDataPayloadBuilder[]
+        {
+            new AlertSharedDataPayloadBuilder(null!, null!),
+            new NewsSharedDataPayloadBuilder(null!, null!),
+            new InspectionResultSharedDataPayloadBuilder(null!, null!),
+            new FoodPoisoningSharedDataPayloadBuilder(null!, null!),
+            new ProductSharedDataPayloadBuilder(null!, null!),
+            new BusinessSharedDataPayloadBuilder(null!, null!),
+            new LicenseSharedDataPayloadBuilder(null!, null!, null!, null!, null!),
+        };
+
+        var expected = Enum.GetValues<SharedDataType>()
+            .Where(t => t != SharedDataType.Other);
+        builders.Select(b => b.DataType)
+            .OrderBy(t => t)
+            .ShouldBe(expected.OrderBy(t => t));
+
+        var registered = typeof(ISharedDataPayloadBuilder).Assembly.GetTypes()
+            .Where(t => t.IsClass && !t.IsAbstract &&
+                        typeof(ISharedDataPayloadBuilder).IsAssignableFrom(t));
+        registered.Count().ShouldBe(builders.Length);
+    }
+
+    [Fact]
     public void Call_log_service_should_be_read_only()
     {
         var methods = typeof(ApiCallLogAppService)

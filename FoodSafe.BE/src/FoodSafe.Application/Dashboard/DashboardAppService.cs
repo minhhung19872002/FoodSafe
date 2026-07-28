@@ -219,7 +219,10 @@ public class DashboardAppService : ApplicationService
                 .Take(RecentActivityCount)
                 .Select(x => new
                 {
-                    x.CreationTime, x.CreatorId, x.DeclarationNumber, x.ProductName
+                    x.CreationTime,
+                    x.CreatorId,
+                    x.DeclarationNumber,
+                    x.ProductName
                 }),
             ct);
         var resultRows = await AsyncExecuter.ToListAsync(
@@ -227,7 +230,10 @@ public class DashboardAppService : ApplicationService
                 .Take(RecentActivityCount)
                 .Select(x => new
                 {
-                    x.CreationTime, x.CreatorId, x.InspectionDate, x.HasViolation
+                    x.CreationTime,
+                    x.CreatorId,
+                    x.InspectionDate,
+                    x.HasViolation
                 }),
             ct);
         var caseRows = await AsyncExecuter.ToListAsync(
@@ -235,7 +241,10 @@ public class DashboardAppService : ApplicationService
                 .Take(RecentActivityCount)
                 .Select(x => new
                 {
-                    x.CreationTime, x.CreatorId, x.CaseCode, x.SuspectedFood
+                    x.CreationTime,
+                    x.CreatorId,
+                    x.CaseCode,
+                    x.SuspectedFood
                 }),
             ct);
         var alertRows = await AsyncExecuter.ToListAsync(
@@ -248,7 +257,10 @@ public class DashboardAppService : ApplicationService
                 .Take(RecentActivityCount)
                 .Select(x => new
                 {
-                    x.CreationTime, x.CreatorId, x.SampleCode, x.SampleName
+                    x.CreationTime,
+                    x.CreatorId,
+                    x.SampleCode,
+                    x.SampleName
                 }),
             ct);
 

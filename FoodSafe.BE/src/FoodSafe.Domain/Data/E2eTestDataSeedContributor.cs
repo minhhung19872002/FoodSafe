@@ -29,6 +29,8 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
     internal static readonly Guid UserDistrictStaffId = Guid.Parse("e2e00000-0000-4000-8020-000000000002");
     internal static readonly Guid UserReadonlyId = Guid.Parse("e2e00000-0000-4000-8020-000000000003");
     static readonly Guid UserNoPermId = Guid.Parse("e2e00000-0000-4000-8020-000000000004");
+    // Deterministic user whose password is already expired (SEC-04 enforcement test).
+    internal static readonly Guid UserExpiredPasswordId = Guid.Parse("e2e00000-0000-4000-8020-000000000005");
 
     // AppUserProfile IDs
     static readonly Guid ProfileAdminId = Guid.Parse("e2e00000-0000-4000-8030-000000000000");
@@ -36,11 +38,16 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
     static readonly Guid ProfileDistrictStaffId = Guid.Parse("e2e00000-0000-4000-8030-000000000002");
     static readonly Guid ProfileReadonlyId = Guid.Parse("e2e00000-0000-4000-8030-000000000003");
     static readonly Guid ProfileNoPermId = Guid.Parse("e2e00000-0000-4000-8030-000000000004");
+    static readonly Guid ProfileExpiredPasswordId = Guid.Parse("e2e00000-0000-4000-8030-000000000005");
 
     // Region: Đông Bắc Bộ (seeded by MasterCatalogDataSeedContributor)
     static readonly Guid RegionDongBacBoId = Guid.Parse("7e5ccdd0-7eab-4bd4-a10a-e8c39c302002");
 
-    const string TestPassword = "Admin@2026!";
+    // Development-only convenience password. It is a well-known literal that lives in
+    // git history, so it must NEVER back a real account outside Development. Kept in
+    // sync with the e2e specs' E2E_TEST_USER_PASSWORD default so real-browser login
+    // stays deterministic in Development/CI. See ResolveSeedPassword (C-5).
+    const string DefaultTestPassword = "Admin@2026!";
 
     private readonly IRepository<Region, Guid> _regions;
     private readonly IRepository<Province, Guid> _provinces;
@@ -230,6 +237,36 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
             UserNoPermId, "noperm@foodsafe.local",
             "Phạm Thị Không Quyền", OrgProvinceId,
             ProfileNoPermId, [], now);
+
+        // Password changed 100 days ago under a 90-day policy → expired 10 days ago.
+        // Fully permissioned (ProvinceAdmin) so the SEC-04 gate is proven to block
+        // even an authorized user, not merely one lacking permissions.
+        await EnsureTestUserAsync(
+            UserExpiredPasswordId, "expired.pw@foodsafe.local",
+            "Đỗ Văn Hết Hạn", OrgProvinceId,
+            ProfileExpiredPasswordId, ["ProvinceAdmin"], now,
+            passwordChangedAt: now.AddDays(-100),
+            passwordValidity: TimeSpan.FromDays(90));
+    }
+
+    // Resolves the password for seeded accounts. An operator-set Seed:TestPassword
+    // always wins. Absent that, the built-in DefaultTestPassword is allowed ONLY in
+    // Development — outside Development (e.g. staging/production with demo or e2e
+    // seeding force-enabled) we refuse rather than mint privileged accounts whose
+    // password is published in git history (C-5).
+    public static string ResolveSeedPassword(string? configuredPassword, string? environment)
+    {
+        if (!string.IsNullOrWhiteSpace(configuredPassword))
+            return configuredPassword;
+
+        var env = environment ?? "Production";
+        if (env.Equals("Development", StringComparison.OrdinalIgnoreCase))
+            return DefaultTestPassword;
+
+        throw new InvalidOperationException(
+            "Refusing to seed accounts with the built-in development password outside the " +
+            "Development environment. Set 'Seed:TestPassword' (env Seed__TestPassword) to an " +
+            "operator-chosen secret before enabling demo or e2e seeding in this environment.");
     }
 
     private async Task EnsureTestUserAsync(
@@ -239,7 +276,9 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
         Guid organizationId,
         Guid profileId,
         string[] roleNames,
-        DateTime now)
+        DateTime now,
+        DateTime? passwordChangedAt = null,
+        TimeSpan? passwordValidity = null)
     {
         var existingUser = await _userManager.FindByNameAsync(email);
         if (existingUser is not null)
@@ -249,7 +288,10 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
         {
             Name = fullName
         };
-        (await _userManager.CreateAsync(user, TestPassword)).CheckErrors();
+        var env = _configuration["ASPNETCORE_ENVIRONMENT"]
+            ?? _configuration["Hosting:Environment"];
+        var password = ResolveSeedPassword(_configuration["Seed:TestPassword"], env);
+        (await _userManager.CreateAsync(user, password)).CheckErrors();
 
         if (roleNames.Length > 0)
         {
@@ -276,7 +318,9 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
 
         var profile = AppUserProfile.Create(
             profileId, user.Id, organizationId, fullName, now);
-        profile.RecordPasswordChanged(now, TimeSpan.FromDays(3650));
+        profile.RecordPasswordChanged(
+            passwordChangedAt ?? now,
+            passwordValidity ?? TimeSpan.FromDays(3650));
         await _profiles.InsertAsync(profile, autoSave: true);
     }
 }

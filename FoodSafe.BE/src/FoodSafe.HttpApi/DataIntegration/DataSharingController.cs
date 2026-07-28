@@ -18,4 +18,8 @@ public sealed class DataSharingController(
     public Task<ShareDataResultDto> ShareAsync(
         [FromBody] ShareDataInput input) =>
         service.ShareAsync(input);
+
+    [HttpPost("retry/{logId:guid}")]
+    public Task<ShareDataResultDto> RetryAsync(Guid logId) =>
+        service.RetryAsync(logId);
 }

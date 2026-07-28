@@ -144,6 +144,7 @@ test.describe("self-declaration management", () => {
 
     await page.getByRole("button", { name: "Thêm hồ sơ" }).click();
     await page.getByRole("combobox", { name: "Cơ sở SXKD" }).click();
+    await page.keyboard.type(businessName);
     await page.getByText(businessName, { exact: false }).last().click();
     await page.getByRole("combobox", { name: "Sản phẩm liên kết" }).click();
     await page.getByText(productName, { exact: false }).last().click();
