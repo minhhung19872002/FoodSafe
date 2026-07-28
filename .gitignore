@@ -49,3 +49,6 @@ scripts/gcp/.secrets/
 
 # Database backup artifacts produced by scripts/backup-database.sh - never commit
 FoodSafe.BE/backups/
+
+# ABP static libs restored at build time by `abp install-libs` — not source.
+FoodSafe.BE/src/FoodSafe.HttpApi.Host/wwwroot/libs/
