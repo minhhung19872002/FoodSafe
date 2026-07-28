@@ -14,8 +14,11 @@ import {
   Table,
   Tag,
   Typography,
+
+
   type TableColumnsType,
 } from "antd";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { RowActions } from "@/components/RowActions";
 import {
   DeleteOutlined,
@@ -73,12 +76,35 @@ interface PartnerFormValues {
 export function PartnersTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<PartnerAccountFilter>({});
+  const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading } = usePartnerAccounts({
     ...filter,
+    sorting,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   });
+
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter: SorterResult<PartnerAccount> | SorterResult<PartnerAccount>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
   const createMut = useCreatePartner();
   const updateMut = useUpdatePartner();
   const toggleMut = useTogglePartnerStatus();
@@ -143,7 +169,13 @@ export function PartnersTab() {
 
   const columns: TableColumnsType<PartnerAccount> = [
     { title: "Mã", dataIndex: "code", width: 130, ellipsis: true },
-    { title: "Tên đối tác", dataIndex: "name", ellipsis: true },
+    {
+      title: "Tên đối tác",
+      dataIndex: "name",
+      ellipsis: true,
+      sorter: true,
+      sortOrder: sortOrderFor("name"),
+    },
     {
       title: "Hệ thống",
       dataIndex: "externalSystem",
@@ -286,6 +318,7 @@ export function PartnersTab() {
         loading={isLoading}
         size="small"
         pagination={pagination.buildConfig(data?.totalCount)}
+        onChange={(_pagination, _filters, sorter) => handleSort(sorter)}
       />
 
       <Modal

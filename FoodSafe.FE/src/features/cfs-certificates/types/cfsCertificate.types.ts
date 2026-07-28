@@ -46,6 +46,7 @@ export interface CfsCertificateFilter {
   destinationCountryId?: string;
   status?: LicenseStatus;
   expiringWithinDays?: number;
+  sorting?: string;
   skipCount: number;
   maxResultCount: number;
 }

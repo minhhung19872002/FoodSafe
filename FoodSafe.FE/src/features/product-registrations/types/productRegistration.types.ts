@@ -50,6 +50,7 @@ export interface ProductRegistrationFilter {
   productId?: string;
   status?: LicenseStatus;
   expiringWithinDays?: number;
+  sorting?: string;
   skipCount: number;
   maxResultCount: number;
 }

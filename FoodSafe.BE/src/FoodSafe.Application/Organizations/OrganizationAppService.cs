@@ -238,8 +238,10 @@ public class OrganizationAppService :
             ("name", false) => query.OrderBy(x => x.Name),
             ("level", true) => query.OrderByDescending(x => x.Level).ThenBy(x => x.Code),
             ("level", false) => query.OrderBy(x => x.Level).ThenBy(x => x.Code),
-            (_, true) => query.OrderByDescending(x => x.Code),
-            _ => query.OrderBy(x => x.Code)
+            ("code", true) => query.OrderByDescending(x => x.Code),
+            ("code", false) => query.OrderBy(x => x.Code),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _ => query.OrderByDescending(x => x.CreationTime)
         };
     }
 }

@@ -178,6 +178,7 @@ export interface InspectionPlanFilter {
   planType?: InspectionPlanType;
   status?: InspectionPlanStatus;
   year?: number;
+  sorting?: string;
   skipCount?: number;
   maxResultCount?: number;
 }
@@ -276,6 +277,7 @@ export interface InspectionResultFilter {
   hasViolation?: boolean;
   fromDate?: string;
   toDate?: string;
+  sorting?: string;
   skipCount?: number;
   maxResultCount?: number;
 }

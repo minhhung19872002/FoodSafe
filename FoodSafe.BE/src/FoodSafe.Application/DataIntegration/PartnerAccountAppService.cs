@@ -59,7 +59,7 @@ public class PartnerAccountAppService :
             query = query.Where(x => x.Status == input.Status.Value);
 
         var totalCount = await AsyncExecuter.CountAsync(query, ct);
-        query = query.OrderBy(x => x.Name).PageBy(input);
+        query = ApplySorting(query, input.Sorting).PageBy(input);
         var items = await AsyncExecuter.ToListAsync(query, ct);
 
         var partnerIds = items.Select(x => x.Id).ToList();
@@ -261,6 +261,25 @@ public class PartnerAccountAppService :
             .Select(p => new { p.Id, p.Name });
         var pairs = await AsyncExecuter.ToListAsync(query, ct);
         return pairs.ToDictionary(p => p.Id, p => p.Name);
+    }
+
+    // Honours the client's Sorting request (e.g. "name", "creationTime desc")
+    // against a whitelist. Falls back to CreationTime descending (newest first).
+    private static IOrderedQueryable<PartnerAccount> ApplySorting(
+        IQueryable<PartnerAccount> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("name", true) => query.OrderByDescending(x => x.Name),
+            ("name", false) => query.OrderBy(x => x.Name),
+            _ => query.OrderByDescending(x => x.CreationTime)
+        };
     }
 
     private async Task<IQueryable<PartnerAccount>> ScopedQueryAsync(

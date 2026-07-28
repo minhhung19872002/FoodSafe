@@ -38,8 +38,7 @@ public class ActionMonthReportAppService : ApplicationService
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
 
-        query = query.OrderByDescending(x => x.PeriodYear);
-        query = query.PageBy(input);
+        query = ApplySorting(query, input.Sorting).PageBy(input);
 
         var items = await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
         return new PagedResultDto<ActionMonthReportDto>(totalCount, items.Select(ToDto).ToList());
@@ -235,6 +234,26 @@ public class ActionMonthReportAppService : ApplicationService
         if (!scope.HasGlobalAccess)
             query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
         return query;
+    }
+
+    // Honours the client's Sorting request (e.g. "periodYear desc", "creationTime asc")
+    // against a whitelist. Falls back to CreationTime descending.
+    private static IOrderedQueryable<ActionMonthReport> ApplySorting(
+        IQueryable<ActionMonthReport> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("periodYear", true) => query.OrderByDescending(x => x.PeriodYear),
+            ("periodYear", false) => query.OrderBy(x => x.PeriodYear),
+            ("creationTime", false) => query.OrderBy(x => x.CreationTime),
+            _ => query.OrderByDescending(x => x.CreationTime)
+        };
     }
 
     private async Task<ActionMonthReport> GetScopedAsync(Guid id, DataScopeOperation operation)

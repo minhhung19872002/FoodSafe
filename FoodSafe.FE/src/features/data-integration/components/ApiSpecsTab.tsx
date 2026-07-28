@@ -12,9 +12,12 @@ import {
   Tag,
   Typography,
   Upload,
+
+
   type TableColumnsType,
   type UploadProps,
 } from "antd";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { RowActions } from "@/components/RowActions";
 import {
   CloudUploadOutlined,
@@ -70,12 +73,35 @@ function partnerUrl(name: string): string {
 export function ApiSpecsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<ApiSpecificationFilter>({});
+  const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading } = useApiSpecs({
     ...filter,
+    sorting,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   });
+
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter: SorterResult<ApiSpecification> | SorterResult<ApiSpecification>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
   const publishMut = usePublishApiSpec();
   const unpublishMut = useUnpublishApiSpec();
   const deleteMut = useDeleteApiSpec();
@@ -103,7 +129,14 @@ export function ApiSpecsTab() {
     });
 
   const columns: TableColumnsType<ApiSpecification> = [
-    { title: "Tên đặc tả", dataIndex: "name", width: 180, ellipsis: true },
+    {
+      title: "Tên đặc tả",
+      dataIndex: "name",
+      width: 180,
+      ellipsis: true,
+      sorter: true,
+      sortOrder: sortOrderFor("name"),
+    },
     {
       title: "Phiên bản",
       dataIndex: "versionNumber",
@@ -282,6 +315,7 @@ export function ApiSpecsTab() {
           style: { cursor: "pointer" },
         })}
         pagination={pagination.buildConfig(data?.totalCount)}
+        onChange={(_pagination, _filters, sorter) => handleSort(sorter)}
       />
 
       <UploadApiSpecModal

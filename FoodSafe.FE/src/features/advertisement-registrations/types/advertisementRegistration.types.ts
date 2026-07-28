@@ -61,6 +61,7 @@ export interface AdvertisementRegistrationFilter {
   productId?: string;
   status?: LicenseStatus;
   expiringWithinDays?: number;
+  sorting?: string;
   skipCount: number;
   maxResultCount: number;
 }

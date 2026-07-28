@@ -65,10 +65,7 @@ public class ApiSpecificationAppService :
             query = query.Where(x => x.IsPublished == input.IsPublished.Value);
 
         var totalCount = await AsyncExecuter.CountAsync(query, ct);
-        query = query
-            .OrderBy(x => x.Name)
-            .ThenByDescending(x => x.VersionNumber)
-            .PageBy(input);
+        query = ApplySorting(query, input.Sorting).PageBy(input);
         var items = await AsyncExecuter.ToListAsync(query, ct);
 
         return new PagedResultDto<ApiSpecificationDto>(
@@ -191,6 +188,27 @@ public class ApiSpecificationAppService :
             .OrderByDescending(x => x.VersionNumber);
         var spec = await AsyncExecuter.FirstOrDefaultAsync(query, ct);
         return spec is null ? null : ToDownloadDto(spec);
+    }
+
+    // Honours the client's Sorting request against a whitelist.
+    // The name cases preserve ThenByDescending(VersionNumber) so all versions of a
+    // spec group appear newest-first within their name bucket.
+    // Falls back to CreationTime descending (newest first).
+    private static IOrderedQueryable<ApiSpecification> ApplySorting(
+        IQueryable<ApiSpecification> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("name", true) => query.OrderByDescending(x => x.Name).ThenByDescending(x => x.VersionNumber),
+            ("name", false) => query.OrderBy(x => x.Name).ThenByDescending(x => x.VersionNumber),
+            _ => query.OrderByDescending(x => x.CreationTime)
+        };
     }
 
     private async Task<int> NextVersionNumberAsync(

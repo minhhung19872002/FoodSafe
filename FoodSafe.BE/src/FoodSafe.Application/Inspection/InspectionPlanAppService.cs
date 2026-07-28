@@ -55,8 +55,7 @@ public class InspectionPlanAppService : ApplicationService
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
 
-        query = query.OrderByDescending(x => x.Year)
-            .ThenByDescending(x => x.CreationTime);
+        query = ApplySorting(query, input.Sorting);
         query = query.PageBy(input);
 
         var plans = await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
@@ -243,6 +242,25 @@ public class InspectionPlanAppService : ApplicationService
                     Code = x.TaxCode
                 }),
             _cancellationTokens.Token);
+    }
+
+    private static IOrderedQueryable<InspectionPlan> ApplySorting(
+        IQueryable<InspectionPlan> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("year", true) => query.OrderByDescending(x => x.Year).ThenByDescending(x => x.CreationTime),
+            ("year", false) => query.OrderBy(x => x.Year).ThenByDescending(x => x.CreationTime),
+            ("creationtime", true) => query.OrderByDescending(x => x.CreationTime),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _ => query.OrderByDescending(x => x.CreationTime)
+        };
     }
 
     private async Task<IQueryable<InspectionPlan>> ScopedQueryAsync(

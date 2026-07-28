@@ -87,8 +87,7 @@ public class AdvertisementRegistrationAppService :
             query,
             _cancellationTokens.Token);
         var rows = await AsyncExecuter.ToListAsync(
-            query.OrderByDescending(x => x.RegistrationDate)
-                .ThenBy(x => x.RegistrationNumber)
+            ApplySorting(query, input.Sorting)
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount),
             _cancellationTokens.Token);
@@ -498,6 +497,27 @@ public class AdvertisementRegistrationAppService :
                 }).ToArray();
             return dto;
         }).ToList();
+    }
+
+    // Honours the client's Sorting request against a whitelist; falls back to
+    // CreationTime descending (newest first).
+    private static IOrderedQueryable<AdvertisementRegistration> ApplySorting(
+        IQueryable<AdvertisementRegistration> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("registrationdate", true)  => query.OrderByDescending(x => x.RegistrationDate),
+            ("registrationdate", false) => query.OrderBy(x => x.RegistrationDate),
+            ("creationtime", true)      => query.OrderByDescending(x => x.CreationTime),
+            ("creationtime", false)     => query.OrderBy(x => x.CreationTime),
+            _                           => query.OrderByDescending(x => x.CreationTime)
+        };
     }
 
     private static IQueryable<AdvertisementRegistration> ApplyStatusFilter(

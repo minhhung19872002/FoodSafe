@@ -14,6 +14,7 @@ import {
   Tag,
   type TableColumnsType,
 } from "antd";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { RowActions } from "@/components/RowActions";
 import {
   PlusOutlined,
@@ -100,9 +101,11 @@ function StatusTag({ status }: { status: ReportStatus }) {
 function NdtpTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<NdtpReportFilter>({});
+  const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading } = useNdtpReports({
     ...filter,
+    sorting,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   });
@@ -126,12 +129,36 @@ function NdtpTab() {
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter: SorterResult<NdtpReport> | SorterResult<NdtpReport>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
+
   const columns: TableColumnsType<NdtpReport> = [
     {
       title: "Kỳ báo cáo",
       key: "period",
+      dataIndex: "periodYear",
       render: (_, r) => `Tháng ${r.periodMonth}/${r.periodYear}`,
       width: 140,
+      sorter: true,
+      sortOrder: sortOrderFor("periodYear"),
     },
     {
       title: "Trạng thái",
@@ -365,6 +392,7 @@ function NdtpTab() {
         loading={isLoading}
         size="small"
         pagination={pagination.buildConfig(data?.totalCount)}
+        onChange={(_, __, sorter) => handleSort(sorter)}
         onRow={(record) => ({
           onDoubleClick: () => setDocView({ kind: "ndtp", report: record }),
           style: { cursor: "pointer" },
@@ -452,9 +480,11 @@ function NdtpTab() {
 function AtpWorkTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<AtpWorkReportFilter>({});
+  const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading } = useAtpWorkReports({
     ...filter,
+    sorting,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   });
@@ -477,16 +507,40 @@ function AtpWorkTab() {
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter: SorterResult<AtpWorkReport> | SorterResult<AtpWorkReport>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
+
   const columns: TableColumnsType<AtpWorkReport> = [
     {
       title: "Kỳ báo cáo",
       key: "period",
+      dataIndex: "periodYear",
       render: (_, r) => {
         const typeLbl = REPORT_PERIOD_TYPE_CONFIG[r.periodType]?.label ?? "";
         const half = r.periodHalf ? ` (Kỳ ${r.periodHalf})` : "";
         return `${typeLbl} ${r.periodYear}${half}`;
       },
       width: 180,
+      sorter: true,
+      sortOrder: sortOrderFor("periodYear"),
     },
     {
       title: "Trạng thái",
@@ -726,6 +780,7 @@ function AtpWorkTab() {
         loading={isLoading}
         size="small"
         pagination={pagination.buildConfig(data?.totalCount)}
+        onChange={(_, __, sorter) => handleSort(sorter)}
         onRow={(record) => ({
           onDoubleClick: () => setDocView({ kind: "atp", report: record }),
           style: { cursor: "pointer" },
@@ -838,9 +893,11 @@ function AtpWorkTab() {
 function ActionMonthTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<ActionMonthReportFilter>({});
+  const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading } = useActionMonthReports({
     ...filter,
+    sorting,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   });
@@ -863,11 +920,34 @@ function ActionMonthTab() {
   const [form] = Form.useForm();
   const [returnForm] = Form.useForm();
 
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter: SorterResult<ActionMonthReport> | SorterResult<ActionMonthReport>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
+
   const columns: TableColumnsType<ActionMonthReport> = [
     {
       title: "Năm",
       dataIndex: "periodYear",
       width: 80,
+      sorter: true,
+      sortOrder: sortOrderFor("periodYear"),
     },
     {
       title: "Chủ đề",
@@ -1110,6 +1190,7 @@ function ActionMonthTab() {
         loading={isLoading}
         size="small"
         pagination={pagination.buildConfig(data?.totalCount)}
+        onChange={(_, __, sorter) => handleSort(sorter)}
         onRow={(record) => ({
           onDoubleClick: () =>
             setDocView({ kind: "action-month", report: record }),

@@ -14,6 +14,7 @@ import {
   Tag,
   type TableColumnsType,
 } from "antd";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import {
   PlusOutlined,
   EditOutlined,
@@ -48,12 +49,38 @@ import { RowActions } from "@/components/RowActions";
 export default function DocumentsPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<DocumentFilter>({});
+  const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading } = useDocuments({
     ...filter,
+    sorting,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   });
+
+  // Server-side sorting: reflect the active sort in the column header and
+  // translate AntD SorterResult into the "<field> <asc|desc>" string the
+  // backend's ApplySorting whitelist parses.
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter: SorterResult<AdministrativeDocument> | SorterResult<AdministrativeDocument>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
   const { data: documentTypes, isLoading: docTypesLoading } =
     useDocumentTypes();
   const createMut = useCreateDocument();
@@ -132,6 +159,8 @@ export default function DocumentsPage() {
       title: "Ngày ban hành",
       dataIndex: "issuedDate",
       width: 120,
+      sorter: true,
+      sortOrder: sortOrderFor("issuedDate"),
       render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
     },
     {
@@ -249,6 +278,7 @@ export default function DocumentsPage() {
           style: { cursor: "pointer" },
         })}
         pagination={pagination.buildConfig(data?.totalCount)}
+        onChange={(_, __, sorter) => handleSort(sorter)}
       />
       <Modal
         title={editing ? "Sửa văn bản" : "Thêm văn bản"}

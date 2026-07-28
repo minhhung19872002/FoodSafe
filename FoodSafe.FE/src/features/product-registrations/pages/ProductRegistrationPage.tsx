@@ -10,6 +10,7 @@ import {
 } from "@ant-design/icons";
 import { App, Button, Input, Select, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
@@ -61,6 +62,7 @@ export default function ProductRegistrationPage() {
   const [businessId, setBusinessId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
   const [expiringWithinDays, setExpiringWithinDays] = useState<number>();
+  const [sorting, setSorting] = useState<string>();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<ProductRegistration>();
   const [editorBusinessId, setEditorBusinessId] = useState<string>();
@@ -70,11 +72,35 @@ export default function ProductRegistrationPage() {
     null,
   );
 
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter:
+      | SorterResult<ProductRegistration>
+      | SorterResult<ProductRegistration>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
+
   const queryFilter = {
     filter: filter || undefined,
     businessId,
     status,
     expiringWithinDays,
+    sorting,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   };
@@ -131,6 +157,8 @@ export default function ProductRegistrationPage() {
       title: "Ngày đăng ký",
       dataIndex: "registrationDate",
       width: 125,
+      sorter: true,
+      sortOrder: sortOrderFor("registrationDate"),
       render: (value: string) => new Date(value).toLocaleDateString("vi-VN"),
     },
     {
@@ -328,6 +356,7 @@ export default function ProductRegistrationPage() {
             onDoubleClick: () => setDetailRecord(record),
             style: { cursor: "pointer" },
           })}
+          onChange={(_, __, sorter) => handleSort(sorter)}
           pagination={pagination.buildConfig(
             registrations.data?.totalCount ?? 0,
           )}

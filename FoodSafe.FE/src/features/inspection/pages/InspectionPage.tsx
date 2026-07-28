@@ -27,6 +27,7 @@ import {
 } from "antd";
 import { RowActions } from "@/components/RowActions";
 import type { ColumnsType } from "antd/es/table";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { PageHeader } from "@/components/PageHeader";
@@ -122,6 +123,7 @@ function PlansTab() {
   const [statusFilter, setStatusFilter] = useState<InspectionPlanStatus>();
   const [planTypeFilter, setPlanTypeFilter] = useState<InspectionPlanType>();
   const [yearFilter, setYearFilter] = useState<number>();
+  const [planSorting, setPlanSorting] = useState<string | undefined>(undefined);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<InspectionPlan>();
   const [rejecting, setRejecting] = useState<InspectionPlan>();
@@ -134,10 +136,32 @@ function PlansTab() {
     status: statusFilter,
     planType: planTypeFilter,
     year: yearFilter,
+    sorting: planSorting,
     skipCount: planPagination.skipCount,
     maxResultCount: planPagination.maxResultCount,
   };
   const plans = useInspectionPlans(queryFilter);
+
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!planSorting) return null;
+    const [current, direction] = planSorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handlePlanSort = (
+    sorter: SorterResult<InspectionPlan> | SorterResult<InspectionPlan>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== planSorting) {
+      setPlanSorting(next);
+      planPagination.resetToFirstPage();
+    }
+  };
   const [businessSearch, setBusinessSearch] = useState("");
   const businesses = useInspectionBusinesses(businessSearch);
 
@@ -198,7 +222,13 @@ function PlansTab() {
       width: 120,
       render: (v: InspectionPlanType) => INSPECTION_PLAN_TYPE_LABELS[v] ?? v,
     },
-    { title: "Năm", dataIndex: "year", width: 70 },
+    {
+      title: "Năm",
+      dataIndex: "year",
+      width: 70,
+      sorter: true,
+      sortOrder: sortOrderFor("year"),
+    },
     {
       title: "Tiến độ",
       width: 100,
@@ -406,6 +436,7 @@ function PlansTab() {
           onDoubleClick: () => setDetailPlan(record),
           style: { cursor: "pointer" },
         })}
+        onChange={(_pag, _filters, sorter) => handlePlanSort(sorter)}
         dataSource={plans.data?.items ?? []}
         pagination={planPagination.buildConfig(plans.data?.totalCount)}
       />
@@ -597,6 +628,7 @@ function ResultsTab() {
   const [filter, setFilter] = useState("");
   const [inspectionType, setInspectionType] = useState<InspectionType>();
   const [overallResult, setOverallResult] = useState<InspectionOverallResult>();
+  const [resultSorting, setResultSorting] = useState<string | undefined>(undefined);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<InspectionResult>();
   const [attachmentsResult, setAttachmentsResult] =
@@ -610,10 +642,32 @@ function ResultsTab() {
     filter: filter || undefined,
     inspectionType,
     overallResult,
+    sorting: resultSorting,
     skipCount: resultsPagination.skipCount,
     maxResultCount: resultsPagination.maxResultCount,
   };
   const results = useInspectionResults(queryFilter);
+
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!resultSorting) return null;
+    const [current, direction] = resultSorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleResultSort = (
+    sorter: SorterResult<InspectionResult> | SorterResult<InspectionResult>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== resultSorting) {
+      setResultSorting(next);
+      resultsPagination.resetToFirstPage();
+    }
+  };
   const [businessSearch, setBusinessSearch] = useState("");
   const businesses = useInspectionBusinesses(businessSearch);
   // Results may be attached to an approved plan; the server then advances the
@@ -659,6 +713,8 @@ function ResultsTab() {
       title: "Ngày KT",
       dataIndex: "inspectionDate",
       width: 115,
+      sorter: true,
+      sortOrder: sortOrderFor("inspectionDate"),
       render: (v: string) => new Date(v).toLocaleDateString("vi-VN"),
     },
     { title: "Cơ sở SXKD", dataIndex: "businessName", ellipsis: true },
@@ -846,6 +902,7 @@ function ResultsTab() {
           onDoubleClick: () => setDetailResult(record),
           style: { cursor: "pointer" },
         })}
+        onChange={(_pag, _filters, sorter) => handleResultSort(sorter)}
         dataSource={results.data?.items ?? []}
         pagination={resultsPagination.buildConfig(results.data?.totalCount)}
       />

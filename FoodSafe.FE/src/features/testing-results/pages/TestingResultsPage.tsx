@@ -14,6 +14,7 @@ import {
   Tag,
   type TableColumnsType,
 } from "antd";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import {
   PlusOutlined,
   EditOutlined,
@@ -51,12 +52,38 @@ const formatDate = (v?: string | null) =>
 export default function TestingResultsPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<TestingResultFilter>({});
+  const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading } = useTestingResults({
     ...filter,
+    sorting,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   });
+
+  // Server-side sorting: reflect the active sort in the column header and
+  // translate AntD SorterResult into the "<field> <asc|desc>" string the
+  // backend's ApplySorting whitelist parses.
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter: SorterResult<TestingResult> | SorterResult<TestingResult>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
   const testingCenters = useTestingCenterOptions();
   const testingServices = useTestingServiceOptions();
   const createMut = useCreateTestingResult();
@@ -128,6 +155,8 @@ export default function TestingResultsPage() {
       title: "Ngày lấy mẫu",
       dataIndex: "sampleDate",
       width: 110,
+      sorter: true,
+      sortOrder: sortOrderFor("sampleDate"),
       render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
     },
     {
@@ -222,6 +251,7 @@ export default function TestingResultsPage() {
           style: { cursor: "pointer" },
         })}
         pagination={pagination.buildConfig(data?.totalCount)}
+        onChange={(_, __, sorter) => handleSort(sorter)}
       />
       <RecordDetailDrawer
         title="Chi tiết kết quả kiểm nghiệm"

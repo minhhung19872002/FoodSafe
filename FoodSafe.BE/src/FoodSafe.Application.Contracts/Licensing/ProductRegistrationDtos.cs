@@ -19,7 +19,6 @@ public sealed class ProductRegistrationListInput :
     public ProductRegistrationListInput()
     {
         MaxResultCount = 20;
-        Sorting = "RegistrationDate desc";
     }
 }
 

@@ -230,6 +230,7 @@ export type UpdatePartnerAccount = Omit<CreatePartnerAccount, "code">;
 export interface PartnerAccountFilter {
   filter?: string;
   status?: PartnerAccountStatus;
+  sorting?: string;
   skipCount?: number;
   maxResultCount?: number;
 }
@@ -334,6 +335,7 @@ export interface ApiSpecificationFilter {
   filter?: string;
   name?: string;
   isPublished?: boolean;
+  sorting?: string;
   skipCount?: number;
   maxResultCount?: number;
 }
