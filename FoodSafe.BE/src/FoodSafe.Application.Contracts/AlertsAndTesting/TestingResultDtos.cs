@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using FoodSafe.AlertsAndTesting;
 using Volo.Abp.Application.Dtos;
 
@@ -31,8 +32,12 @@ public class TestingResultDto
 
 public class CreateUpdateTestingResultDto
 {
+    [Required, StringLength(100)]
     public string SampleCode { get; set; } = string.Empty;
+
+    [Required, StringLength(500)]
     public string SampleName { get; set; } = string.Empty;
+
     public string? Description { get; set; }
     public Guid TestingCenterId { get; set; }
     public Guid? TestingServiceId { get; set; }
@@ -43,7 +48,10 @@ public class CreateUpdateTestingResultDto
     public DateTime? ResultDate { get; set; }
     public TestingResultOutcome Outcome { get; set; }
     public string? FailedCriteria { get; set; }
+
+    [StringLength(100)]
     public string? CertificateNumber { get; set; }
+
     public Guid? InspectionResultId { get; set; }
     public bool IsPublic { get; set; }
 }

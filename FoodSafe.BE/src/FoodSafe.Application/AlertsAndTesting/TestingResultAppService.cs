@@ -1,6 +1,7 @@
 using FoodSafe.Application.Contracts.AlertsAndTesting;
 using FoodSafe.BusinessManagement;
 using FoodSafe.Catalogs;
+using FoodSafe.Inspection;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -20,6 +21,7 @@ public class TestingResultAppService : ApplicationService
     private readonly IRepository<Product, Guid> _products;
     private readonly IRepository<TestingCenter, Guid> _centers;
     private readonly IRepository<TestingService, Guid> _services;
+    private readonly IRepository<InspectionResult, Guid> _inspectionResults;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
@@ -29,6 +31,7 @@ public class TestingResultAppService : ApplicationService
         IRepository<Product, Guid> products,
         IRepository<TestingCenter, Guid> centers,
         IRepository<TestingService, Guid> services,
+        IRepository<InspectionResult, Guid> inspectionResults,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens)
     {
@@ -37,6 +40,7 @@ public class TestingResultAppService : ApplicationService
         _products = products;
         _centers = centers;
         _services = services;
+        _inspectionResults = inspectionResults;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
     }
@@ -78,7 +82,14 @@ public class TestingResultAppService : ApplicationService
     {
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.Create, _cancellationTokens.Token);
-        var orgId = scope.OrganizationIds.First();
+        // Người dùng phạm vi toàn cục có thể không gắn đơn vị — không được để
+        // First() ném InvalidOperationException thành lỗi 500.
+        var orgId = scope.HomeOrganizationId
+            ?? (scope.OrganizationIds.Count > 0
+                ? scope.OrganizationIds.First()
+                : throw new BusinessException(
+                    FoodSafeDomainErrorCodes.DataScope.OrganizationNotFound));
+        await EnsureReferencesAsync(input, scope);
 
         var entity = TestingResult.Create(
             GuidGenerator.Create(),
@@ -108,6 +119,9 @@ public class TestingResultAppService : ApplicationService
     public async Task<TestingResultDto> UpdateAsync(Guid id, CreateUpdateTestingResultDto input)
     {
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.Edit, _cancellationTokens.Token);
+        await EnsureReferencesAsync(input, scope);
 
         entity.Update(
             input.SampleCode,
@@ -150,13 +164,87 @@ public class TestingResultAppService : ApplicationService
             .FirstOrDefault()
             ?.ToLowerInvariant();
 
+        // Id tiebreaker keeps paging stable when many rows share the same date.
         return (field, descending) switch
         {
-            ("sampledate", true)    => query.OrderByDescending(x => x.SampleDate),
-            ("sampledate", false)   => query.OrderBy(x => x.SampleDate),
-            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
-            _                       => query.OrderByDescending(x => x.CreationTime),
+            ("sampledate", true)    => query.OrderByDescending(x => x.SampleDate).ThenBy(x => x.Id),
+            ("sampledate", false)   => query.OrderBy(x => x.SampleDate).ThenBy(x => x.Id),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime).ThenBy(x => x.Id),
+            _                       => query.OrderByDescending(x => x.CreationTime).ThenBy(x => x.Id),
         };
+    }
+
+    /// <summary>
+    /// Trả lỗi nghiệp vụ tiếng Việt thay vì để FK vi phạm thành 500, và chặn
+    /// tham chiếu cơ sở/sản phẩm/đợt kiểm tra ngoài phạm vi dữ liệu.
+    /// </summary>
+    private async Task EnsureReferencesAsync(
+        CreateUpdateTestingResultDto input,
+        CurrentDataScope scope)
+    {
+        // Guid.Empty = "chưa chọn" (mã 0002, hợp đồng đã kiểm chứng);
+        // GUID khác rỗng nhưng không tồn tại/ngừng hoạt động = 0003.
+        if (input.TestingCenterId == Guid.Empty)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.TestingResult.TestingCenterRequired);
+        var centers = await _centers.GetQueryableAsync();
+        if (!await AsyncExecuter.AnyAsync(
+                centers.Where(x => x.Id == input.TestingCenterId && x.IsActive),
+                _cancellationTokens.Token))
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.TestingResult.TestingCenterNotFound);
+
+        if (input.TestingServiceId.HasValue)
+        {
+            var services = await _services.GetQueryableAsync();
+            if (!await AsyncExecuter.AnyAsync(
+                    services.Where(x =>
+                        x.Id == input.TestingServiceId.Value && x.IsActive),
+                    _cancellationTokens.Token))
+                throw new BusinessException(
+                    FoodSafeDomainErrorCodes.TestingResult.TestingServiceNotFound);
+        }
+
+        if (input.BusinessId.HasValue)
+        {
+            var businesses = await _businesses.GetQueryableAsync();
+            var businessQuery = businesses.Where(x => x.Id == input.BusinessId.Value);
+            if (!scope.HasGlobalAccess)
+                businessQuery = businessQuery.Where(x =>
+                    scope.OrganizationIds.Contains(x.OrganizationId));
+            if (!await AsyncExecuter.AnyAsync(businessQuery, _cancellationTokens.Token))
+                throw new BusinessException(
+                    FoodSafeDomainErrorCodes.TestingResult.BusinessOutOfScope);
+        }
+
+        if (input.ProductId.HasValue)
+        {
+            var products = await _products.GetQueryableAsync();
+            var productQuery = products.Where(x => x.Id == input.ProductId.Value);
+            // Sản phẩm phải thuộc đúng cơ sở lấy mẫu đã chọn (nếu có).
+            productQuery = input.BusinessId.HasValue
+                ? productQuery.Where(x => x.BusinessId == input.BusinessId.Value)
+                : scope.HasGlobalAccess
+                    ? productQuery
+                    : productQuery.Where(x =>
+                        scope.OrganizationIds.Contains(x.OrganizationId));
+            if (!await AsyncExecuter.AnyAsync(productQuery, _cancellationTokens.Token))
+                throw new BusinessException(
+                    FoodSafeDomainErrorCodes.TestingResult.ProductMismatch);
+        }
+
+        if (input.InspectionResultId.HasValue)
+        {
+            var inspections = await _inspectionResults.GetQueryableAsync();
+            var inspectionQuery = inspections.Where(x =>
+                x.Id == input.InspectionResultId.Value);
+            if (input.BusinessId.HasValue)
+                inspectionQuery = inspectionQuery.Where(x =>
+                    x.BusinessId == input.BusinessId.Value);
+            if (!await AsyncExecuter.AnyAsync(inspectionQuery, _cancellationTokens.Token))
+                throw new BusinessException(
+                    FoodSafeDomainErrorCodes.TestingResult.InspectionResultMismatch);
+        }
     }
 
     private async Task<IQueryable<TestingResult>> ScopedQueryAsync(DataScopeOperation operation)

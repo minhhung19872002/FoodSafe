@@ -154,6 +154,8 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:ExportFoodCertificate:0005";
         public const string CountryNotFound =
             "FoodSafe:ExportFoodCertificate:0006";
+        public const string InvalidIssueDate =
+            "FoodSafe:ExportFoodCertificate:0007";
     }
 
     public static class Inspection
@@ -176,6 +178,9 @@ public static class FoodSafeDomainErrorCodes
         public const string ResultAlreadyFinalized = "FoodSafe:Inspection:0016";
         public const string CannotModifyFinalizedResult =
             "FoodSafe:Inspection:0017";
+        public const string PlanItemWithoutPlan = "FoodSafe:Inspection:0018";
+        public const string ResultBusinessMismatch = "FoodSafe:Inspection:0019";
+        public const string FutureInspectionDate = "FoodSafe:Inspection:0020";
     }
 
     public static class Report
@@ -241,6 +246,11 @@ public static class FoodSafeDomainErrorCodes
     {
         public const string NotFound = "FoodSafe:TestingResult:0001";
         public const string TestingCenterRequired = "FoodSafe:TestingResult:0002";
+        public const string TestingCenterNotFound = "FoodSafe:TestingResult:0003";
+        public const string TestingServiceNotFound = "FoodSafe:TestingResult:0004";
+        public const string BusinessOutOfScope = "FoodSafe:TestingResult:0005";
+        public const string ProductMismatch = "FoodSafe:TestingResult:0006";
+        public const string InspectionResultMismatch = "FoodSafe:TestingResult:0007";
     }
 
     public static class Document

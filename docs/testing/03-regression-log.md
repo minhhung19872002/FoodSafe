@@ -501,3 +501,11 @@ Record every verification invalidation and retest result here.
 - **Change class**: Level 2 (single feature); run doubles as the sorting DIRTY-batch retest for F-008. Attachments-modal emptyText is shared by F-009/F-011/F-012/F-013 pages → Level-1 smoke ran on those 4 routes (all load, no page errors).
 - **Result**: PASSED — product-registrations specs **6/6** at rebuilt stack (workers=1, no interception); BE Domain ProductRegistration **4/4** + Licensing contracts **48/48**; Vitest product-registrations **4/4**; `tsc -b` clean. F-008 returned to VERIFIED at `8e7840e`.
 - **Note**: `FoodSafe:SelfDeclaration:*` error codes are still unlocalized (F-007 shows the same ABP fallback text on duplicate) — follow-up candidate, not touched here to keep scope bounded.
+
+### 2026-07-28 — F-017 /testing-results hardening + merge-regression recovery
+
+- **Cause**: dedicated FE+BE deep review. **Merge `363a70b` had silently dropped the full `TestingResultEditorModal`** (business/product/inspection cascading selects from `b6c5384`) from the page — the linkage fields could never be set from the UI though the component, api layer, and list column all survived. Page rewired to the full editor + restored business/center filter selects, merged with the newer sorting/page-size/RowActions work.
+- **BE hardening**: `EnsureReferencesAsync` (center 0003 / service 0004 / business-in-scope 0005 / product-of-business 0006 / inspection-of-business 0007 — previously bogus GUIDs died as FK 500s and cross-org references were accepted); `Guid.Empty` center keeps verified contract 0002; `.First()` org-resolution crash fixed via `HomeOrganizationId`; DTO `[Required]`/`[StringLength]`; ApplySorting Id tiebreakers (same class as the F-008 finding); Excel export honours `Sorting`.
+- **Localization debt closed**: `TestingResult:0002–0007` + **`SelfDeclaration:0001–0006`** vi/en entries added (F-007's duplicate-number toast previously fell back to ABP default text).
+- **Change class**: Level 2. Run doubles as the sorting DIRTY-batch retest for F-017.
+- **Result**: PASSED — testing-results specs **6/6** at rebuilt stack (workers=1, no interception); BE AlertsAndTesting **37/37**; Vitest **7/7**; `tsc -b` clean. F-017 returned to VERIFIED.
