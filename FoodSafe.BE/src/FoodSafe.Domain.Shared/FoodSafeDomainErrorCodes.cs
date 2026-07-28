@@ -122,6 +122,8 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:EligibilityCertificate:0003";
         public const string CannotModifyRevoked =
             "FoodSafe:EligibilityCertificate:0004";
+        public const string CannotChangeBusiness =
+            "FoodSafe:EligibilityCertificate:0005";
     }
 
     public static class CfsCertificate

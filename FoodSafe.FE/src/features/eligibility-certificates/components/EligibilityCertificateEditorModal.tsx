@@ -87,6 +87,7 @@ export function EligibilityCertificateEditorModal(props: Props) {
           <Select
             showSearch
             optionFilterProp="label"
+            placeholder="Chọn cơ sở SXKD"
             disabled={Boolean(item)}
             options={props.businesses.map((x) => ({
               value: x.id,
@@ -109,7 +110,11 @@ export function EligibilityCertificateEditorModal(props: Props) {
           label="Ngày cấp"
           rules={[{ required: true, message: "Vui lòng chọn ngày cấp." }]}
         >
-          <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
+          <DatePicker
+            format="DD/MM/YYYY"
+            placeholder="Chọn ngày"
+            style={{ width: "100%" }}
+          />
         </Form.Item>
         <Form.Item
           name="expiryDate"
@@ -128,7 +133,11 @@ export function EligibilityCertificateEditorModal(props: Props) {
             }),
           ]}
         >
-          <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
+          <DatePicker
+            format="DD/MM/YYYY"
+            placeholder="Chọn ngày (bỏ trống nếu không thời hạn)"
+            style={{ width: "100%" }}
+          />
         </Form.Item>
         <Form.Item name="certifyingAuthority" label="Cơ quan cấp">
           <Input maxLength={200} />

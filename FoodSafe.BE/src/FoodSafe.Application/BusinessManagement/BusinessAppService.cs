@@ -1,3 +1,4 @@
+using FoodSafe.Licensing;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -18,6 +19,11 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
     private readonly IRepository<BusinessHandler, Guid> _handlers;
     private readonly IRepository<Product, Guid> _products;
     private readonly IRepository<SelfDeclaration, Guid> _selfDeclarations;
+    private readonly IRepository<EligibilityCertificate, Guid> _eligibilityCertificates;
+    private readonly IRepository<CfsCertificate, Guid> _cfsCertificates;
+    private readonly IRepository<ExportFoodCertificate, Guid> _exportFoodCertificates;
+    private readonly IRepository<ProductRegistration, Guid> _productRegistrations;
+    private readonly IRepository<AdvertisementRegistration, Guid> _advertisementRegistrations;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
@@ -27,6 +33,11 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
         IRepository<BusinessHandler, Guid> handlers,
         IRepository<Product, Guid> products,
         IRepository<SelfDeclaration, Guid> selfDeclarations,
+        IRepository<EligibilityCertificate, Guid> eligibilityCertificates,
+        IRepository<CfsCertificate, Guid> cfsCertificates,
+        IRepository<ExportFoodCertificate, Guid> exportFoodCertificates,
+        IRepository<ProductRegistration, Guid> productRegistrations,
+        IRepository<AdvertisementRegistration, Guid> advertisementRegistrations,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens)
     {
@@ -35,6 +46,11 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
         _handlers = handlers;
         _products = products;
         _selfDeclarations = selfDeclarations;
+        _eligibilityCertificates = eligibilityCertificates;
+        _cfsCertificates = cfsCertificates;
+        _exportFoodCertificates = exportFoodCertificates;
+        _productRegistrations = productRegistrations;
+        _advertisementRegistrations = advertisementRegistrations;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
     }
@@ -182,11 +198,27 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
     {
         var business = await GetScopedAsync(id, DataScopeOperation.Delete);
         // Soft delete không lan sang dữ liệu trực thuộc: chặn xóa khi còn sản
-        // phẩm hoặc hồ sơ tự công bố để tránh bản ghi mồ côi trỏ về cơ sở đã xóa.
+        // phẩm, hồ sơ tự công bố hoặc giấy phép/chứng nhận để tránh bản ghi
+        // mồ côi trỏ về cơ sở đã xóa.
         if (await _products.AnyAsync(
                 x => x.BusinessId == id,
                 _cancellationTokens.Token) ||
             await _selfDeclarations.AnyAsync(
+                x => x.BusinessId == id,
+                _cancellationTokens.Token) ||
+            await _eligibilityCertificates.AnyAsync(
+                x => x.BusinessId == id,
+                _cancellationTokens.Token) ||
+            await _cfsCertificates.AnyAsync(
+                x => x.BusinessId == id,
+                _cancellationTokens.Token) ||
+            await _exportFoodCertificates.AnyAsync(
+                x => x.BusinessId == id,
+                _cancellationTokens.Token) ||
+            await _productRegistrations.AnyAsync(
+                x => x.BusinessId == id,
+                _cancellationTokens.Token) ||
+            await _advertisementRegistrations.AnyAsync(
                 x => x.BusinessId == id,
                 _cancellationTokens.Token))
             throw new BusinessException(
