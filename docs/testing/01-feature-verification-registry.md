@@ -29,6 +29,9 @@
 | F-017 | Testing Results                 | VERIFIED       | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | `e00dfb1` | 2026-07-27 |
 | F-018 | Risk Analysis                   | VERIFIED       | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts` | `de02e52` | 2026-07-27 |
 | F-019 | Data Integration                | VERIFIED       | `e2e/data-integration.spec.ts`, `e2e/data-integration-verification.spec.ts` | `11a6537` | 2026-07-27 |
+| F-019c | Data Integration — Outbound Auth Credentials (P0-2, FR-50/51) | VERIFIED | `e2e/data-integration-credentials.spec.ts` (6/6) | `3fe7325` | 2026-07-28 |
+| F-019d | Data Integration — Outbound Share via UI + history persistence (P1-3, FR-51) | VERIFIED | `e2e/data-integration-share.spec.ts` (3/3) | `9cfcf11` | 2026-07-28 |
+| F-019e | Data Integration — Typed share payloads + retry attempt history (Batch F-1, FR-51..57) | VERIFIED | `e2e/data-integration-retry.spec.ts` (3/3) | `71f35e2` | 2026-07-28 |
 | F-020 | Identity Administration         | VERIFIED       | `e2e/identity-administration.spec.ts`, `e2e/identity-administration-verification.spec.ts` | `d56eb2c` | 2026-07-27 |
 | F-021 | Audit Logs                      | VERIFIED       | `e2e/audit-logs.spec.ts`, `e2e/audit-logs-verification.spec.ts` | `3bb49ec` | 2026-07-27 |
 | F-022 | Dashboard                       | VERIFIED       | `e2e/dashboard.spec.ts`, `e2e/dashboard-verification.spec.ts` | `7316838` | 2026-07-27 |
@@ -43,7 +46,7 @@
 | F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `d855990` | 2026-07-27 |
 | F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `d855990` | 2026-07-27 |
 | F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | `5aff855` | 2026-07-27 |
-| F-034 | Certificate PDF Download        | VERIFIED       | `e2e/certificate-pdf-verification.spec.ts` | `86b793a` | 2026-07-27 |
+| F-034 | Certificate PDF Download        | VERIFIED       | `e2e/certificate-pdf-verification.spec.ts` | `c1b2c85`+wt | 2026-07-28 |
 
 ## Summary
 
@@ -53,6 +56,27 @@
 - FAILED: 0
 - BLOCKED: 0
 - NOT_STARTED: 0
+
+## Test Run (2026-07-28) — Batch F-1: typed share payloads + retry attempt history (FR-51..57)
+
+- Commit `71f35e2`. Share payload now carries the REAL records of the selected `SharedDataType` (per-type builder strategies, versioned envelope, org-scope in every builder); new `POST /data-sharing/retry/{logId}` appends an immutable linked attempt (correlation_id / attempt_number / sha256 payload_checksum — migration `20260728001241` confirmed applied); FE retry button + attempt column + date-range filter.
+- `e2e/data-integration-retry.spec.ts` **3/3** (6.4s, no interception): parsed request body of an entityId-pinned share = versioned envelope with the seeded alert (recordCount 1, exact title/id) + receiver reflection contains the record; UI retry of a failed share (postman-echo /status/503) → linked `#2` row, identical body+checksum, original untouched, persists after reload; date-range filter narrows table; guards (successful→403 VN error, readonly→403).
+- **F-019c re-verified at `71f35e2`** — its spec setup now pins one seeded record per share (the typed payload otherwise pushes the echo reflection past the 4000-char response truncation, hiding the reflected auth headers); assertions unchanged, **6/6**. DataIntegration subset **20/20**; cross-module smoke (businesses+auth) **13/13**; BE **621/621**.
+- **Full suite post-batch: 282/282 passed, 0 failed/flaky/skipped (306s)** — first fully-green full run on record (covers the impact-map Level-3 migration obligation). Baseline runs the same day: 278/1 (the 1 = `reporting-error-notifications` load-contention flake, green in isolation, 2.1s).
+
+## Test Run (2026-07-28) — SEC-04 password-expiry server-side enforcement (P0-1)
+
+- New middleware `PasswordExpiryMiddleware` (Host pipeline, after `UseDynamicClaims`) blocks every authenticated non-whitelisted request when the caller's `AppUserProfile` is `MustChangePassword` or `IsPasswordExpired`, returning 403 `FoodSafe:Account:PasswordExpired`. Whitelist: account-security, current-user-context, `/api/abp`, `/api/v1/public`, logout, health. Validity period moved to config `Security:PasswordValidityDays` (default 90).
+- Deterministic seed account `expired.pw@foodsafe.local` (ProvinceAdmin, password aged 100d under 90d policy → expired 10d ago). Spec never mutates it → re-runnable.
+- `e2e/password-expiry-enforcement.spec.ts`: **4 passed, 0 failed** (6.0s, workers=1), no API interception. Evidence: expired user logs in (`result=1`) but `/api/v1/app/business` → **403 gate** while holding **134 permissions** (proves gate ≠ RBAC); whitelisted change-password runs the controller (`FoodSafe:Account:0001`, not the gate); **admin control → 200**; real UI redirects the expired session to `/account/change-password`.
+- Cross-checked by curl on the live stack (login→business 403, admin→200). Closes the SEC-04 "expiry not exercised" gap (doc 73 → PASS_WITH_BROWSER_EVIDENCE). Commit `6dab46e`+wt.
+
+## Test Run (2026-07-28) — F-034 anonymous public certificate download (P1-2)
+
+- Strengthened `e2e/certificate-pdf-verification.spec.ts`: **5 passed, 0 failed** (4.1s), no API interception.
+- New decisive evidence: a **cookie-less** `browser.newContext()` (asserted 0 cookies) resolves each id via the anonymous public search endpoint and downloads a valid `%PDF` for **all 5 certificate types**; a second test clicks "Tải PDF" on `/tra-cuu-giay-phep` and fetches the linked doc anonymously.
+- Closes the FR-4x-03/04 gap that doc 75 had marked MISSING (endpoints existed all along — see doc 77 §1). Reclassified in doc 73 §3 Group E + §4 roll-up (MISSING 13 → 3).
+- Prior F-034 evidence (`86b793a`) only proved the **authenticated** byte-fetch; this proves the **citizen/anonymous** path required by FR-42/43/44/46/47-03/04.
 
 ## Test Run (2026-07-27, sixth) — F-033 Public Portal FR-41..FR-49 verified
 
