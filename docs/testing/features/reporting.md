@@ -5,7 +5,7 @@
 - **Feature ID**: F-015
 - **Feature name**: Reporting (NDTP / Công tác ATTP / Tháng hành động)
 - **Status**: VERIFIED
-- **Verified Git commit**: _(pending commit)_
+- **Verified Git commit**: `a92df0c`
 - **Verification date**: 2026-07-28
 - **Environment**: Docker Compose full stack (PostgreSQL 15, Redis 7, MinIO, ClamAV, ASP.NET Core API, nginx frontend) at `http://127.0.0.1:8080`
 - **Real database used**: Yes — PostgreSQL 15 in Docker, real EF Core migrations

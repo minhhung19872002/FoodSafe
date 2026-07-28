@@ -24,7 +24,7 @@
 | F-012 | Export Food Certificates        | VERIFIED       | `e2e/export-food-certificates.spec.ts`, `e2e/export-food-certificates-verification.spec.ts` | wt-post-`819b803` | 2026-07-28 |
 | F-013 | Inspection Plans & Results      | VERIFIED       | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `02e6b68` | 2026-07-28 |
 | F-014 | Food Poisoning Cases            | VERIFIED       | `e2e/food-poisoning.spec.ts`, `e2e/food-poisoning-verification.spec.ts` | `71d0e46` | 2026-07-28 |
-| F-015 | Reporting (NDTP/ATP/Action)     | VERIFIED       | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | _(pending)_ | 2026-07-28 |
+| F-015 | Reporting (NDTP/ATP/Action)     | VERIFIED       | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `a92df0c` | 2026-07-28 |
 | F-016 | Alerts & News                   | VERIFIED       | `e2e/alerts-news.spec.ts`, `e2e/alerts-news-verification.spec.ts` | `4fa40d5` | 2026-07-28 |
 | F-017 | Testing Results                 | VERIFIED       | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | wt-post-`66e4e7e` | 2026-07-28 |
 | F-018 | Risk Analysis                   | VERIFIED       | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts`, `e2e/risk-analysis-publish.spec.ts` | wt-post-`819b803` | 2026-07-28 |

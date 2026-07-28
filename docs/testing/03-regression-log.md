@@ -20,7 +20,7 @@ Record every verification invalidation and retest result here.
 ### 2026-07-28 — F-015 reporting production-readiness hardening
 
 - **Cause**: Full LOGIC/UI/UX audit of `/reporting` (real browser + API probes + code review; F-015 was DIRTY from the sorting batch `4a4af68`). Found 15 issues (4 LOGIC, 7 UX, 4 STYLE): (L1) ApplySorting case-mismatch made server-side sorting unreachable; (L2) duplicate period → raw 500 from DB unique index; (L3) `OrganizationIds.First()` non-deterministic HashSet iteration; (L4) `TotalAffected` miscalculation counted cases not people; (M1) `ReturnToDraft` threw wrong error code; (M5) API error showed empty table instead of error state; (M6) actor names displayed as GUIDs; (M7) document header hardcoded; (M8) editor modals gave no success feedback; (M9) E2E OK button locale mismatch; (S1/S2) export error handling; (S3) year filter unbounded; (S4) partial-save error handling; (S5) missing creationTime sorter + NDTP month filter.
-- **Commit**: _(pending)_
+- **Commit**: `a92df0c`
 - **Affected features**: F-015 only — all changes feature-local; `lib/apiError.ts` imported, not modified; `ReportNameEnricher` + `IReportActorsDto` are new files.
 - **Retest level**: 2
 - **Result**: PASSED — Docker stack rebuilt with all fixes; Playwright reporting E2E **11/11** (reporting.spec.ts 2/2, reporting-verification.spec.ts 7/7, reporting-error-notifications.spec.ts 2/2); BE Domain.Tests 48/48; BE Application.Tests 37/37; FE tsc 0 errors; FE vitest reporting 6/6; oxlint clean.
