@@ -104,3 +104,49 @@
 - Depends on auth/scope/axios (Level 3) + `OutboundUrlValidator` (shared outbound client, hardened this batch)
 - Contract spec `docs/integration/partner-openapi.yaml` + `e2e/partner-openapi-contract.spec.ts` (FR-50-05) — retest the contract spec whenever these BE paths change
 - Invalid for commits after `adb30eb` touching these paths (behavioral spec re-run green at `0776230` after api-container rebuild)
+
+---
+
+# F-019g — Partner API Specification management (FR-50-05)
+
+## Status: VERIFIED
+
+- **Feature ID**: F-019g · **Verified Git commit**: `5bc0d86` · **Date**: 2026-07-28
+- **Environment**: Docker Compose full stack at `http://127.0.0.1:8080` · **Database**: real PostgreSQL 15 (`di_api_specifications`, migration `20260728081422_AddApiSpecification`) · **API interception**: **No**
+- **Accounts**: `admin` (all `ApiSpecs` permissions), `noperm@foodsafe.local` (denied)
+- **Frontend route**: `/data-integration` → tab **"Đặc tả API"** (gated on `FoodSafe.DataIntegration.ApiSpecs.View`)
+- **Endpoints**:
+  - `GET /api/v1/app/api-specification` (list/search, `ApiSpecs.View`)
+  - `GET /api/v1/app/api-specification/{id}` (detail)
+  - `GET /api/v1/app/api-specification/{id}/download` (management download DTO)
+  - `POST /api/v1/app/api-specification` (upload + validate, `ApiSpecs.Create`)
+  - `PUT /api/v1/app/api-specification/{id}` (metadata edit)
+  - `POST /api/v1/app/api-specification/{id}/publish` · `/unpublish` (`ApiSpecs.Publish`)
+  - `DELETE /api/v1/app/api-specification/{id}` (`ApiSpecs.Delete`)
+  - `GET /api/v1/partner/api-spec/{name}` — **anonymous** partner download (published only)
+
+## Evidence
+
+- `e2e/api-specification-management.spec.ts` — **4/4**, real Docker stack, real login, zero interception:
+  1. Unauthenticated management API → 401/302.
+  2. `noperm@foodsafe.local` → 403/302 (permission denial).
+  3. Full UI lifecycle: upload a real OpenAPI 3.0.3 JSON file through the `Upload.Dragger` → row renders server-parsed `title` / `specVersion` / `Nháp` → authenticated list confirms persisted `title`, `specVersion`, `openApiVersion`, `format=Json(1)`, `checksum` matches `/^[a-f0-9]{64}$/`, `isPublished=false` → **partner GET before publish → 404** → publish via UI → **cookie-less partner GET → 200** (`content-type: application/json`, `content-disposition: attachment`, body contains title+version) → authenticated management download DTO (`content`/`format`/`fileName`) → unpublish via UI → **partner GET → 404** → `page.reload()` re-shows the row (persistence) → delete via UI → backend GET by id no longer ok.
+  4. Well-formed-but-invalid OpenAPI JSON → server rejects, FE surfaces `.ant-message-error` and keeps the modal open, `totalCount=0` (nothing persisted).
+- Backend: Domain `ApiSpecificationTests` 6/6; Application `ApiSpecificationContractTests` + `OpenApiSpecValidatorTests`; permission-projection contract tests — affected `FoodSafe.Application.Tests` filtered subset **22/22** green.
+
+## Checklist
+
+- Route loads · navigation entry (tab) works · real login · list/search from real API · create (upload) · validation displayed (invalid OpenAPI) · detail (list DTO) · edit (metadata endpoint) · lifecycle (publish/unpublish) · download (management DTO + anonymous partner file) · empty/error/success states · **permission denial displayed** · **unauthenticated rejected** · **persistence after reload** · organization scope: n/a (specs are province-level catalog, not org-scoped) — all ✅.
+
+## Notes
+
+- **Publication is the partner-visibility gate**: `PartnerApiSpecController` (`[AllowAnonymous]`) returns `NotFound()` for absent/unpublished names and never touches data scope, so no 500 leaks and unpublished drafts are invisible to partners.
+- **Permission-projection fix (regression-guarded)**: the four `ApiSpecs` permissions had to be added to `CurrentUserContextAppService.FoodSafePermissionNames` or the FE tab would never render despite server-side grants. New contract test `Frontend_permission_projection_includes_data_integration` locks this in. Change is additive → no VERIFIED feature invalidated.
+- Distinct from F-019f's `0776230` published **contract** (`docs/integration/partner-openapi.yaml`, a static description of our inbound API). F-019g is the in-app **management** of versioned specification documents.
+
+## Paths & dependencies
+
+- BE `Domain/DataIntegration/ApiSpecification.cs`, `Application/DataIntegration/{ApiSpecificationAppService,OpenApiSpecValidator}.cs`, `Application.Contracts/DataIntegration/ApiSpecificationDtos.cs`, `HttpApi/DataIntegration/{ApiSpecificationController,PartnerApiSpecController}.cs`, EF `di_api_specifications` mapping + migration `20260728081422`.
+- Shared: `Application/Security/CurrentUserContextAppService.cs` (permission projection — Level 3, additive), `Domain.Shared/Permissions/FoodSafePermissions.cs` + `Application.Contracts/Permissions/FoodSafePermissionDefinitionProvider.cs`, localization `vi.json`/`en.json`.
+- FE `src/features/data-integration/components/ApiSpecsTab.tsx` + `api/{dataIntegrationApi,dataIntegrationQueries,dataIntegrationMutations}.ts` + `types/dataIntegration.types.ts` + `pages/DataIntegrationPage.tsx` (tab registration).
+- Retest (Level 2) whenever these paths change; retest (Level 3) the DI features if `CurrentUserContextAppService` projection changes.
