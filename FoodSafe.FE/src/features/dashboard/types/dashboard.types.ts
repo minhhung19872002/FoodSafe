@@ -31,6 +31,18 @@ export interface ReportComplianceRow {
   actionMonthExpected: number;
 }
 
+export interface ExpiringLicense {
+  id: string;
+  licenseType: string;
+  licenseNumber: string;
+  businessId: string;
+  businessName: string;
+  expiryDate: string;
+  daysRemaining: number;
+  /** Warning tier: 30, 60 or 90 days. */
+  warningTier: number;
+}
+
 export interface DashboardStats {
   totalBusinesses: number;
   activeBusinesses: number;

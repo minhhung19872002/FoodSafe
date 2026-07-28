@@ -3,6 +3,7 @@ import { inspectionPlanApi, inspectionResultApi } from "./inspectionApi";
 import { inspectionPlanKeys, inspectionResultKeys } from "./inspectionQueries";
 import type {
   InspectionPlanFilter,
+  InspectionPlanItemStatus,
   InspectionResultFilter,
 } from "../types/inspection.types";
 
@@ -66,6 +67,20 @@ export function useCompleteInspectionPlan() {
   return usePlanRefresh(inspectionPlanApi.complete);
 }
 
+export function useUpdatePlanItemStatus() {
+  return usePlanRefresh(
+    ({
+      id,
+      itemId,
+      status,
+    }: {
+      id: string;
+      itemId: string;
+      status: InspectionPlanItemStatus;
+    }) => inspectionPlanApi.updateItemStatus(id, itemId, status),
+  );
+}
+
 export function useCancelInspectionPlan() {
   return usePlanRefresh(({ id, reason }: { id: string; reason: string }) =>
     inspectionPlanApi.cancel(id, reason),
@@ -117,7 +132,8 @@ export function useMarkViolationRemedied() {
       resultId: string;
       violationId: string;
       notes?: string;
-    }) => inspectionResultApi.markViolationRemedied(resultId, violationId, notes),
+    }) =>
+      inspectionResultApi.markViolationRemedied(resultId, violationId, notes),
   );
 }
 

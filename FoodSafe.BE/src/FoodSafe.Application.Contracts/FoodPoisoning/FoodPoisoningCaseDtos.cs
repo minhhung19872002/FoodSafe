@@ -121,3 +121,10 @@ public class CreatePoisoningErrorReportDto
     [Required]
     public string CorrectionRequest { get; set; } = string.Empty;
 }
+
+public class RespondPoisoningErrorReportDto
+{
+    [Required]
+    [StringLength(2000)]
+    public string Response { get; set; } = string.Empty;
+}

@@ -363,7 +363,7 @@ export default function StatisticsPage() {
                   <XAxis dataKey="label" />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#D48806" name="Số ca" />
+                  <Bar dataKey="count" fill="#CF1322" name="Vi phạm" />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>

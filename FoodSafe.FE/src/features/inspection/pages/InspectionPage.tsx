@@ -25,8 +25,10 @@ import {
   Tag,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { PageHeader } from "@/components/PageHeader";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RevokeModal } from "@/components/RevokeModal";
 import { saveDownload } from "@/utils/download";
 import {
@@ -44,6 +46,7 @@ import {
   useSubmitInspectionPlan,
   useUpdateInspectionPlan,
   useUpdateInspectionResult,
+  useUpdatePlanItemStatus,
 } from "../api/inspectionMutations";
 import {
   useInspectionBusinesses,
@@ -55,7 +58,10 @@ import { InspectionFollowUpModal } from "../components/InspectionFollowUpModal";
 import { InspectionPlanEditorModal } from "../components/InspectionPlanEditorModal";
 import { InspectionResultEditorModal } from "../components/InspectionResultEditorModal";
 import {
+  FOLLOW_UP_RESULT,
   INSPECTION_OVERALL_RESULT_CONFIG,
+  INSPECTION_PLAN_ITEM_STATUS,
+  INSPECTION_PLAN_ITEM_STATUS_CONFIG,
   INSPECTION_PLAN_STATUS,
   INSPECTION_PLAN_STATUS_CONFIG,
   INSPECTION_PLAN_TYPE_LABELS,
@@ -64,6 +70,7 @@ import {
   type CreateUpdateInspectionResultInput,
   type InspectionOverallResult,
   type InspectionPlan,
+  type InspectionPlanItem,
   type InspectionPlanStatus,
   type InspectionPlanType,
   type InspectionResult,
@@ -71,6 +78,9 @@ import {
 } from "../types/inspection.types";
 
 const PAGE_SIZE = 20;
+
+const formatDate = (value?: string) =>
+  value ? dayjs(value).format("DD/MM/YYYY") : null;
 
 export default function InspectionPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
@@ -117,6 +127,7 @@ function PlansTab() {
   const [rejecting, setRejecting] = useState<InspectionPlan>();
   const [cancelling, setCancelling] = useState<InspectionPlan>();
   const [attachmentsPlan, setAttachmentsPlan] = useState<InspectionPlan>();
+  const [detailPlan, setDetailPlan] = useState<InspectionPlan | null>(null);
 
   const queryFilter = {
     filter: filter || undefined,
@@ -127,7 +138,8 @@ function PlansTab() {
     maxResultCount: PAGE_SIZE,
   };
   const plans = useInspectionPlans(queryFilter);
-  const businesses = useInspectionBusinesses();
+  const [businessSearch, setBusinessSearch] = useState("");
+  const businesses = useInspectionBusinesses(businessSearch);
 
   const createMutation = useCreateInspectionPlan();
   const updateMutation = useUpdateInspectionPlan();
@@ -138,6 +150,26 @@ function PlansTab() {
   const completeMutation = useCompleteInspectionPlan();
   const cancelMutation = useCancelInspectionPlan();
   const exportMutation = useExportInspectionPlans();
+  const itemStatusMutation = useUpdatePlanItemStatus();
+
+  const changeItemStatus = (
+    plan: InspectionPlan,
+    item: InspectionPlanItem,
+    status:
+      | typeof INSPECTION_PLAN_ITEM_STATUS.InProgress
+      | typeof INSPECTION_PLAN_ITEM_STATUS.Skipped,
+  ) => {
+    itemStatusMutation.mutate(
+      { id: plan.id, itemId: item.id, status },
+      {
+        onSuccess: (updated) => {
+          setDetailPlan(updated as InspectionPlan);
+          void message.success("Đã cập nhật trạng thái cơ sở.");
+        },
+        onError: () => void message.error("Không thể cập nhật trạng thái."),
+      },
+    );
+  };
 
   const closeEditor = () => {
     setEditorOpen(false);
@@ -395,6 +427,10 @@ function PlansTab() {
         scroll={{ x: 1000 }}
         loading={plans.isLoading}
         columns={columns}
+        onRow={(record) => ({
+          onDoubleClick: () => setDetailPlan(record),
+          style: { cursor: "pointer" },
+        })}
         dataSource={plans.data?.items ?? []}
         pagination={{
           current: page,
@@ -412,7 +448,127 @@ function PlansTab() {
         saving={createMutation.isPending || updateMutation.isPending}
         onCancel={closeEditor}
         onSubmit={save}
+        onBusinessSearch={setBusinessSearch}
       />
+      <RecordDetailDrawer
+        title="Chi tiết kế hoạch thanh kiểm tra"
+        record={detailPlan}
+        onClose={() => setDetailPlan(null)}
+        fields={[
+          { label: "Mã kế hoạch", render: (r) => r.planCode },
+          { label: "Năm", render: (r) => r.year },
+          { label: "Tên kế hoạch", render: (r) => r.title, span: 2 },
+          {
+            label: "Loại kế hoạch",
+            render: (r) => INSPECTION_PLAN_TYPE_LABELS[r.planType],
+          },
+          {
+            label: "Trạng thái",
+            render: (r) => {
+              const cfg = INSPECTION_PLAN_STATUS_CONFIG[r.status];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          { label: "Từ ngày", render: (r) => formatDate(r.startDate) },
+          { label: "Đến ngày", render: (r) => formatDate(r.endDate) },
+          {
+            label: "Tiến độ",
+            render: (r) => `${r.completedItems}/${r.totalItems}`,
+          },
+          { label: "Ngày tạo", render: (r) => formatDate(r.creationTime) },
+          { label: "Mô tả", render: (r) => r.description, span: 2 },
+          { label: "Mục tiêu", render: (r) => r.objectives, span: 2 },
+          { label: "Ngày gửi duyệt", render: (r) => formatDate(r.submittedAt) },
+          { label: "Ngày phê duyệt", render: (r) => formatDate(r.approvedAt) },
+          { label: "Lý do từ chối", render: (r) => r.rejectedReason, span: 2 },
+          { label: "Lý do hủy", render: (r) => r.cancelledReason, span: 2 },
+        ]}
+      >
+        {detailPlan && (
+          <>
+            <h4 style={{ margin: "16px 0 8px" }}>
+              Danh sách cơ sở trong kế hoạch
+            </h4>
+            <Table<InspectionPlanItem>
+              rowKey="id"
+              size="small"
+              dataSource={detailPlan.items}
+              pagination={false}
+              locale={{ emptyText: "Chưa có cơ sở nào" }}
+              columns={[
+                { title: "STT", dataIndex: "sequenceNumber", width: 50 },
+                { title: "Cơ sở", dataIndex: "businessName", ellipsis: true },
+                {
+                  title: "Ngày dự kiến",
+                  dataIndex: "plannedDate",
+                  width: 110,
+                  render: (v?: string) => formatDate(v),
+                },
+                {
+                  title: "Trạng thái",
+                  dataIndex: "status",
+                  width: 120,
+                  render: (s: InspectionPlanItem["status"]) => {
+                    const cfg = INSPECTION_PLAN_ITEM_STATUS_CONFIG[s];
+                    return <Tag color={cfg.color}>{cfg.label}</Tag>;
+                  },
+                },
+                {
+                  title: "",
+                  key: "itemActions",
+                  width: 150,
+                  render: (_: unknown, item: InspectionPlanItem) => {
+                    const planActive =
+                      detailPlan.status === INSPECTION_PLAN_STATUS.Approved ||
+                      detailPlan.status === INSPECTION_PLAN_STATUS.InProgress;
+                    if (!planActive || !canEdit) return null;
+                    return (
+                      <Space size="small">
+                        {item.status ===
+                          INSPECTION_PLAN_ITEM_STATUS.Pending && (
+                          <Button
+                            size="small"
+                            loading={itemStatusMutation.isPending}
+                            onClick={() =>
+                              changeItemStatus(
+                                detailPlan,
+                                item,
+                                INSPECTION_PLAN_ITEM_STATUS.InProgress,
+                              )
+                            }
+                          >
+                            Bắt đầu
+                          </Button>
+                        )}
+                        {(item.status === INSPECTION_PLAN_ITEM_STATUS.Pending ||
+                          item.status ===
+                            INSPECTION_PLAN_ITEM_STATUS.InProgress) && (
+                          <Popconfirm
+                            title="Bỏ qua cơ sở này?"
+                            okText="Bỏ qua"
+                            cancelText="Hủy"
+                            onConfirm={() =>
+                              changeItemStatus(
+                                detailPlan,
+                                item,
+                                INSPECTION_PLAN_ITEM_STATUS.Skipped,
+                              )
+                            }
+                          >
+                            <Button size="small" danger>
+                              Bỏ qua
+                            </Button>
+                          </Popconfirm>
+                        )}
+                      </Space>
+                    );
+                  },
+                },
+              ]}
+            />
+          </>
+        )}
+      </RecordDetailDrawer>
       <RevokeModal
         open={Boolean(rejecting)}
         title={`Từ chối kế hoạch ${rejecting?.planCode ?? ""}`}
@@ -478,6 +634,9 @@ function ResultsTab() {
   const [attachmentsResult, setAttachmentsResult] =
     useState<InspectionResult>();
   const [followUpResult, setFollowUpResultRow] = useState<InspectionResult>();
+  const [detailResult, setDetailResult] = useState<InspectionResult | null>(
+    null,
+  );
 
   const queryFilter = {
     filter: filter || undefined,
@@ -487,7 +646,8 @@ function ResultsTab() {
     maxResultCount: PAGE_SIZE,
   };
   const results = useInspectionResults(queryFilter);
-  const businesses = useInspectionBusinesses();
+  const [businessSearch, setBusinessSearch] = useState("");
+  const businesses = useInspectionBusinesses(businessSearch);
   // Results may be attached to an approved plan; the server then advances the
   // plan to InProgress and marks the matching plan item completed. Only plans
   // the server will accept are offered.
@@ -723,6 +883,10 @@ function ResultsTab() {
         scroll={{ x: 1000 }}
         loading={results.isLoading}
         columns={columns}
+        onRow={(record) => ({
+          onDoubleClick: () => setDetailResult(record),
+          style: { cursor: "pointer" },
+        })}
         dataSource={results.data?.items ?? []}
         pagination={{
           current: page,
@@ -744,6 +908,7 @@ function ResultsTab() {
         saving={createMutation.isPending || updateMutation.isPending}
         onCancel={closeEditor}
         onSubmit={save}
+        onBusinessSearch={setBusinessSearch}
       />
       <InspectionAttachmentsModal
         ownerId={attachmentsResult?.id}
@@ -756,6 +921,90 @@ function ResultsTab() {
         result={followUpResult}
         canEdit={canEdit}
         onClose={() => setFollowUpResultRow(undefined)}
+      />
+      <RecordDetailDrawer
+        title="Chi tiết kết quả thanh kiểm tra"
+        record={detailResult}
+        onClose={() => setDetailResult(null)}
+        fields={[
+          { label: "Cơ sở SXKD", render: (r) => r.businessName, span: 2 },
+          {
+            label: "Ngày kiểm tra",
+            render: (r) => formatDate(r.inspectionDate),
+          },
+          {
+            label: "Loại kiểm tra",
+            render: (r) => INSPECTION_TYPE_LABELS[r.inspectionType],
+          },
+          { label: "Trưởng đoàn", render: (r) => r.teamLeader },
+          {
+            label: "Kết quả",
+            render: (r) => {
+              const cfg = INSPECTION_OVERALL_RESULT_CONFIG[r.overallResult];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          {
+            label: "Thành viên đoàn",
+            render: (r) => r.teamMembersText,
+            span: 2,
+          },
+          {
+            label: "Vi phạm",
+            render: (r) =>
+              r.hasViolation ? <Tag color="error">Có</Tag> : <Tag>Không</Tag>,
+          },
+          { label: "Số vi phạm", render: (r) => r.violations.length },
+          {
+            label: "Mô tả vi phạm",
+            render: (r) => r.violationDescription,
+            span: 2,
+          },
+          {
+            label: "Số tiền phạt",
+            render: (r) =>
+              r.fineAmount != null
+                ? `${r.fineAmount.toLocaleString("vi-VN")} đ`
+                : null,
+          },
+          { label: "Số QĐ xử phạt", render: (r) => r.adminDecisionNumber },
+          {
+            label: "Ngày QĐ xử phạt",
+            render: (r) => formatDate(r.adminDecisionDate),
+          },
+          {
+            label: "Tái kiểm tra",
+            render: (r) => (r.followUpRequired ? "Có" : "Không"),
+          },
+          {
+            label: "Ngày tái kiểm tra",
+            render: (r) => formatDate(r.followUpDate),
+          },
+          {
+            label: "KQ tái kiểm tra",
+            render: (r) =>
+              r.followUpResultValue == null
+                ? null
+                : r.followUpResultValue === FOLLOW_UP_RESULT.Passed
+                  ? "Đạt"
+                  : "Chưa đạt",
+          },
+          { label: "Kiến nghị", render: (r) => r.recommendations, span: 2 },
+          { label: "Ghi chú", render: (r) => r.notes, span: 2 },
+          {
+            label: "Trạng thái chốt",
+            render: (r) =>
+              r.isFinalized ? (
+                <Tag icon={<LockOutlined />} color="default">
+                  Đã chốt
+                </Tag>
+              ) : (
+                <Tag>Chưa chốt</Tag>
+              ),
+          },
+          { label: "Ngày chốt", render: (r) => formatDate(r.finalizedAt) },
+          { label: "Ngày tạo", render: (r) => formatDate(r.creationTime) },
+        ]}
       />
     </>
   );

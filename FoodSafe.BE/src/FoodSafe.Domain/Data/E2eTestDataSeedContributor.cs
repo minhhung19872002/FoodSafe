@@ -14,20 +14,20 @@ namespace FoodSafe.Data;
 public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransientDependency
 {
     // --- Fixed GUIDs for deterministic data (RFC 4122 v4 compliant) ---
-    // Administrative areas
-    static readonly Guid ProvinceQuangNinhId = Guid.Parse("e2e00000-0000-4000-8001-000000000001");
-    static readonly Guid DistrictHaLongId = Guid.Parse("e2e00000-0000-4000-8002-000000000001");
-    static readonly Guid CommuneBachDangId = Guid.Parse("e2e00000-0000-4000-8003-000000000001");
+    // Administrative areas (internal: referenced by DemoDataSeedContributor)
+    internal static readonly Guid ProvinceQuangNinhId = Guid.Parse("e2e00000-0000-4000-8001-000000000001");
+    internal static readonly Guid DistrictHaLongId = Guid.Parse("e2e00000-0000-4000-8002-000000000001");
+    internal static readonly Guid CommuneBachDangId = Guid.Parse("e2e00000-0000-4000-8003-000000000001");
 
-    // Organizations
-    static readonly Guid OrgProvinceId = Guid.Parse("e2e00000-0000-4000-8010-000000000001");
-    static readonly Guid OrgDistrictId = Guid.Parse("e2e00000-0000-4000-8010-000000000002");
-    static readonly Guid OrgCommuneId = Guid.Parse("e2e00000-0000-4000-8010-000000000003");
+    // Organizations (internal: referenced by DemoDataSeedContributor)
+    internal static readonly Guid OrgProvinceId = Guid.Parse("e2e00000-0000-4000-8010-000000000001");
+    internal static readonly Guid OrgDistrictId = Guid.Parse("e2e00000-0000-4000-8010-000000000002");
+    internal static readonly Guid OrgCommuneId = Guid.Parse("e2e00000-0000-4000-8010-000000000003");
 
     // Test users (not admin — admin is created by ABP)
-    static readonly Guid UserProvinceAdminId = Guid.Parse("e2e00000-0000-4000-8020-000000000001");
-    static readonly Guid UserDistrictStaffId = Guid.Parse("e2e00000-0000-4000-8020-000000000002");
-    static readonly Guid UserReadonlyId = Guid.Parse("e2e00000-0000-4000-8020-000000000003");
+    internal static readonly Guid UserProvinceAdminId = Guid.Parse("e2e00000-0000-4000-8020-000000000001");
+    internal static readonly Guid UserDistrictStaffId = Guid.Parse("e2e00000-0000-4000-8020-000000000002");
+    internal static readonly Guid UserReadonlyId = Guid.Parse("e2e00000-0000-4000-8020-000000000003");
     static readonly Guid UserNoPermId = Guid.Parse("e2e00000-0000-4000-8020-000000000004");
 
     // AppUserProfile IDs
@@ -86,9 +86,22 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
             ?? _configuration["Hosting:Environment"]
             ?? "Production";
 
-        if (!env.Equals("Development", StringComparison.OrdinalIgnoreCase))
+        var explicitlyEnabled = string.Equals(
+            _configuration["Seed:EnableE2eData"], "true",
+            StringComparison.OrdinalIgnoreCase);
+
+        if (!env.Equals("Development", StringComparison.OrdinalIgnoreCase) &&
+            !explicitlyEnabled)
             return;
 
+        await ForceSeedAsync();
+    }
+
+    // Seeds regardless of the environment gate. Idempotent; called by
+    // DemoDataSeedContributor to guarantee base areas/orgs/users exist
+    // independent of contributor ordering.
+    public async Task ForceSeedAsync()
+    {
         var now = _clock.Now;
 
         await SeedAdministrativeAreasAsync(now);

@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { RevokeModal } from "@/components/RevokeModal";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
 import {
   useCreateSelfDeclaration,
@@ -65,6 +66,9 @@ export default function SelfDeclarationPage() {
   const [editorBusinessId, setEditorBusinessId] = useState<string>();
   const [attachmentsFor, setAttachmentsFor] = useState<SelfDeclaration>();
   const [revoking, setRevoking] = useState<SelfDeclaration>();
+  const [detailRecord, setDetailRecord] = useState<SelfDeclaration | null>(
+    null,
+  );
 
   const queryFilter = {
     filter: filter || undefined,
@@ -310,6 +314,10 @@ export default function SelfDeclarationPage() {
           loading={declarations.isLoading}
           columns={columns}
           dataSource={declarations.data?.items ?? []}
+          onRow={(record) => ({
+            onDoubleClick: () => setDetailRecord(record),
+            style: { cursor: "pointer" },
+          })}
           pagination={{
             current: page,
             pageSize: PAGE_SIZE,
@@ -320,6 +328,50 @@ export default function SelfDeclarationPage() {
           }}
         />
       </div>
+
+      <RecordDetailDrawer
+        title="Chi tiết tự công bố sản phẩm"
+        record={detailRecord}
+        onClose={() => setDetailRecord(null)}
+        fields={[
+          { label: "Số hồ sơ", render: (r) => r.declarationNumber },
+          {
+            label: "Trạng thái",
+            render: (r) => <StatusBadge status={r.status} />,
+          },
+          { label: "Cơ sở SXKD", render: (r) => r.businessName, span: 2 },
+          { label: "Sản phẩm", render: (r) => r.productName, span: 2 },
+          {
+            label: "Sản phẩm liên kết",
+            render: (r) => r.linkedProductName,
+            span: 2,
+          },
+          { label: "Nhà sản xuất", render: (r) => r.manufacturer, span: 2 },
+          { label: "Mục đích", render: (r) => r.purpose, span: 2 },
+          {
+            label: "Ngày công bố",
+            render: (r) =>
+              new Date(r.declarationDate).toLocaleDateString("vi-VN"),
+          },
+          {
+            label: "Ngày hết hạn",
+            render: (r) =>
+              r.expiryDate
+                ? new Date(r.expiryDate).toLocaleDateString("vi-VN")
+                : null,
+          },
+          { label: "Lý do thu hồi", render: (r) => r.revokeReason, span: 2 },
+          {
+            label: "Ngày thu hồi",
+            render: (r) =>
+              r.revokedAt
+                ? new Date(r.revokedAt).toLocaleDateString("vi-VN")
+                : null,
+            span: 2,
+          },
+          { label: "Ghi chú", render: (r) => r.notes, span: 2 },
+        ]}
+      />
 
       <SelfDeclarationEditorModal
         open={editorOpen}

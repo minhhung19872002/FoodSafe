@@ -19,18 +19,17 @@ import {
   DeleteOutlined,
   SendOutlined,
   ExportOutlined,
-  EyeOutlined,
   PrinterOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
 import { escapeHtml, printHtml } from "@/utils/printHtml";
 import {
   ALERT_CATEGORY,
   ALERT_CATEGORY_LABELS,
 } from "@/features/alerts-news/types/alertsNews.types";
-import { RiskAnalysisDetailDrawer } from "../components/RiskAnalysisDetailDrawer";
 import { useRiskAnalyses } from "../api/riskAnalysisQueries";
 import {
   useCreateRiskAnalysis,
@@ -68,7 +67,7 @@ export default function RiskAnalysisPage() {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<RiskAnalysis | null>(null);
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailRecord, setDetailRecord] = useState<RiskAnalysis | null>(null);
   const [form] = Form.useForm();
 
   const openCreate = () => {
@@ -126,15 +125,9 @@ export default function RiskAnalysisPage() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 200,
+      width: 160,
       render: (_, record) => (
         <Space size="small">
-          <Button
-            size="small"
-            aria-label="Xem chi tiết"
-            icon={<EyeOutlined />}
-            onClick={() => setDetailId(record.id)}
-          />
           <Button
             size="small"
             aria-label={`In ${record.title}`}
@@ -270,6 +263,10 @@ export default function RiskAnalysisPage() {
         dataSource={data?.items}
         loading={isLoading}
         size="small"
+        onRow={(record) => ({
+          onDoubleClick: () => setDetailRecord(record),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           total: data?.totalCount,
           pageSize: PAGE_SIZE,
@@ -366,9 +363,52 @@ export default function RiskAnalysisPage() {
           </Form.Item>
         </Form>
       </Modal>
-      <RiskAnalysisDetailDrawer
-        riskAnalysisId={detailId}
-        onClose={() => setDetailId(null)}
+      <RecordDetailDrawer
+        title="Chi tiết phân tích nguy cơ"
+        record={detailRecord}
+        onClose={() => setDetailRecord(null)}
+        fields={[
+          { label: "Tiêu đề", span: 2, render: (r) => r.title },
+          {
+            label: "Chuyên mục",
+            render: (r) => ALERT_CATEGORY_LABELS[r.category],
+          },
+          {
+            label: "Mức độ",
+            render: (r) => {
+              const cfg = RISK_LEVEL_CONFIG[r.riskLevel];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          {
+            label: "Trạng thái",
+            render: (r) => {
+              const cfg = RISK_ANALYSIS_STATUS_CONFIG[r.status];
+              return <Tag color={cfg.color}>{cfg.label}</Tag>;
+            },
+          },
+          {
+            label: "Công khai",
+            render: (r) => (r.isPublic ? "Có" : "Không"),
+          },
+          { label: "Nội dung", span: 2, render: (r) => r.content },
+          {
+            label: "Sản phẩm liên quan",
+            span: 2,
+            render: (r) => r.relatedProducts,
+          },
+          { label: "Bằng chứng", span: 2, render: (r) => r.evidence },
+          { label: "Khuyến nghị", span: 2, render: (r) => r.recommendations },
+          {
+            label: "Ngày tạo",
+            render: (r) => dayjs(r.creationTime).format("DD/MM/YYYY"),
+          },
+          {
+            label: "Ngày công bố",
+            render: (r) =>
+              r.publishedAt ? dayjs(r.publishedAt).format("DD/MM/YYYY") : null,
+          },
+        ]}
       />
     </Card>
   );

@@ -66,8 +66,7 @@ export async function exportTestingServices(
     { params: { filter: filter || undefined }, responseType: "blob" },
   );
   const disposition = response.headers["content-disposition"] as
-    | string
-    | undefined;
+    string | undefined;
   const encoded = disposition?.match(/filename\*=UTF-8''([^;]+)/)?.[1];
   const plain = disposition?.match(/filename="?([^";]+)"?/)?.[1];
   return {

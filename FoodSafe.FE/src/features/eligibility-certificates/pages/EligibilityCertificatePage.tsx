@@ -14,6 +14,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { ProductRegistrationAttachmentsModal } from "@/features/product-registrations/components/ProductRegistrationAttachmentsModal";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RevokeModal } from "@/components/RevokeModal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { saveDownload } from "@/utils/download";
@@ -66,6 +67,8 @@ export default function EligibilityCertificatePage() {
   const [attachmentsFor, setAttachmentsFor] =
     useState<EligibilityCertificate>();
   const [revoking, setRevoking] = useState<EligibilityCertificate>();
+  const [detailRecord, setDetailRecord] =
+    useState<EligibilityCertificate | null>(null);
   const queryFilter = {
     filter: filter || undefined,
     businessId,
@@ -308,6 +311,10 @@ export default function EligibilityCertificatePage() {
           loading={certificates.isLoading}
           columns={columns}
           dataSource={certificates.data?.items ?? []}
+          onRow={(record) => ({
+            onDoubleClick: () => setDetailRecord(record),
+            style: { cursor: "pointer" },
+          })}
           pagination={{
             current: page,
             pageSize: PAGE_SIZE,
@@ -318,6 +325,50 @@ export default function EligibilityCertificatePage() {
           }}
         />
       </div>
+      <RecordDetailDrawer
+        title="Chi tiết giấy chứng nhận đủ điều kiện"
+        record={detailRecord}
+        onClose={() => setDetailRecord(null)}
+        fields={[
+          { label: "Số giấy", render: (r) => r.certificateNumber },
+          {
+            label: "Trạng thái",
+            render: (r) => <StatusBadge status={r.status} />,
+          },
+          { label: "Cơ sở SXKD", render: (r) => r.businessName, span: 2 },
+          {
+            label: "Ngày cấp",
+            render: (r) => new Date(r.issueDate).toLocaleDateString("vi-VN"),
+          },
+          {
+            label: "Ngày hết hạn",
+            render: (r) =>
+              r.expiryDate
+                ? new Date(r.expiryDate).toLocaleDateString("vi-VN")
+                : null,
+          },
+          {
+            label: "Cơ quan cấp",
+            render: (r) => r.certifyingAuthority,
+            span: 2,
+          },
+          {
+            label: "Phạm vi chứng nhận",
+            render: (r) => r.certificationScope,
+            span: 2,
+          },
+          { label: "Lý do thu hồi", render: (r) => r.revokeReason, span: 2 },
+          {
+            label: "Ngày thu hồi",
+            render: (r) =>
+              r.revokedAt
+                ? new Date(r.revokedAt).toLocaleDateString("vi-VN")
+                : null,
+            span: 2,
+          },
+          { label: "Ghi chú", render: (r) => r.notes, span: 2 },
+        ]}
+      />
       <EligibilityCertificateEditorModal
         open={editorOpen}
         item={editing}

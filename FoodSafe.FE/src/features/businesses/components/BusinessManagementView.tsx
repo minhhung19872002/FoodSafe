@@ -97,6 +97,7 @@ interface BusinessManagementViewProps {
   onEditProduct: (product: Product) => void;
   onDeleteProduct: (id: string) => void;
   onManageProductAttachments: (product: Product) => void;
+  onShowProductDetail: (product: Product) => void;
 }
 
 const businessStatusLabels: Record<BusinessStatus, string> = {
@@ -359,7 +360,11 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               onChange={(v) => setViewMode(v as "table" | "map")}
               options={[
                 { value: "table", icon: <TableOutlined />, label: "Bảng" },
-                { value: "map", icon: <EnvironmentOutlined />, label: "Bản đồ" },
+                {
+                  value: "map",
+                  icon: <EnvironmentOutlined />,
+                  label: "Bản đồ",
+                },
               ]}
             />
           </div>
@@ -370,6 +375,10 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               scroll={{ x: 900 }}
               loading={props.loading}
               dataSource={props.businesses}
+              onRow={(business) => ({
+                onDoubleClick: () => props.onShowDetail(business),
+                style: { cursor: "pointer" },
+              })}
               columns={businessColumns}
               pagination={{
                 current: props.businessPage,
@@ -433,6 +442,10 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
             scroll={{ x: 800 }}
             loading={props.loading}
             dataSource={props.products}
+            onRow={(product) => ({
+              onDoubleClick: () => props.onShowProductDetail(product),
+              style: { cursor: "pointer" },
+            })}
             columns={productColumns}
             pagination={{
               current: props.productPage,

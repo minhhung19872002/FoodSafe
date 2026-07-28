@@ -321,6 +321,75 @@ public class DashboardAppService : ApplicationService
     private static string FormatDate(DateTime value) =>
         value.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
 
+    /// <summary>
+    /// Licenses expiring within 90 days across all 5 license types,
+    /// tiered into 30/60/90-day warning buckets (FR license expiry warnings).
+    /// </summary>
+    public async Task<ListResultDto<ExpiringLicenseDto>> GetExpiringLicensesAsync(
+        DashboardFilterDto input)
+    {
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.View, _cancellationTokens.Token);
+        var ct = _cancellationTokens.Token;
+        var now = _clock.Now.Date;
+        var horizon = now.AddDays(90);
+        var orgIds = await ResolveOrganizationIdsAsync(scope, input.OrganizationId, ct);
+        var global = scope.HasGlobalAccess && !input.OrganizationId.HasValue;
+
+        var businessNames = await AsyncExecuter.ToListAsync(
+            (await _businesses.GetQueryableAsync())
+                .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+                .Select(b => new { b.Id, b.Name }),
+            ct);
+        var nameById = businessNames.ToDictionary(b => b.Id, b => b.Name);
+
+        var results = new List<ExpiringLicenseDto>();
+
+        async Task CollectAsync<T>(
+            IRepository<T, Guid> repository,
+            string licenseType,
+            Func<T, (Guid Id, Guid BusinessId, string Number, DateTime? Expiry, LicenseStatus Status)> selector)
+            where T : class, Volo.Abp.Domain.Entities.IEntity<Guid>
+        {
+            var items = await AsyncExecuter.ToListAsync(
+                await repository.GetQueryableAsync(), ct);
+            foreach (var item in items)
+            {
+                var (id, businessId, number, expiry, status) = selector(item);
+                if (status != LicenseStatus.Active || expiry is null) continue;
+                if (expiry.Value.Date <= now || expiry.Value.Date > horizon) continue;
+                if (!nameById.TryGetValue(businessId, out var businessName)) continue;
+
+                var daysRemaining = (int)(expiry.Value.Date - now).TotalDays;
+                results.Add(new ExpiringLicenseDto
+                {
+                    Id = id,
+                    LicenseType = licenseType,
+                    LicenseNumber = number,
+                    BusinessId = businessId,
+                    BusinessName = businessName,
+                    ExpiryDate = expiry.Value,
+                    DaysRemaining = daysRemaining,
+                    WarningTier = daysRemaining <= 30 ? 30 : daysRemaining <= 60 ? 60 : 90,
+                });
+            }
+        }
+
+        await CollectAsync(_eligibilityCertificates, "Giấy ĐĐK ATTP",
+            x => (x.Id, x.BusinessId, x.CertificateNumber, x.ExpiryDate, x.Status));
+        await CollectAsync(_cfsCertificates, "Chứng nhận CFS",
+            x => (x.Id, x.BusinessId, x.CertificateNumber, x.ExpiryDate, x.Status));
+        await CollectAsync(_exportCertificates, "GCN Xuất khẩu",
+            x => (x.Id, x.BusinessId, x.CertificateNumber, x.ExpiryDate, x.Status));
+        await CollectAsync(_productRegistrations, "Đăng ký công bố",
+            x => (x.Id, x.BusinessId, x.RegistrationNumber, x.ExpiryDate, x.Status));
+        await CollectAsync(_adRegistrations, "Quảng cáo",
+            x => (x.Id, x.BusinessId, x.RegistrationNumber, x.ExpiryDate, x.Status));
+
+        return new ListResultDto<ExpiringLicenseDto>(
+            results.OrderBy(x => x.DaysRemaining).ToList());
+    }
+
     public async Task<ListResultDto<ReportComplianceRowDto>>
         GetReportComplianceAsync(DashboardFilterDto input)
     {

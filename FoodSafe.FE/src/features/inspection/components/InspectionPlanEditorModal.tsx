@@ -48,6 +48,8 @@ interface Props {
   saving: boolean;
   onCancel: () => void;
   onSubmit: (input: CreateUpdateInspectionPlanInput) => void;
+  /** Server-side search: options list is refetched with this filter. */
+  onBusinessSearch?: (value: string) => void;
 }
 
 export function InspectionPlanEditorModal(props: Props) {
@@ -205,6 +207,7 @@ export function InspectionPlanEditorModal(props: Props) {
         businesses={props.businesses}
         items={items}
         onChange={setItems}
+        onBusinessSearch={props.onBusinessSearch}
       />
     </Modal>
   );
@@ -214,10 +217,12 @@ function PlanItemsEditor({
   businesses,
   items,
   onChange,
+  onBusinessSearch,
 }: {
   businesses: BusinessOption[];
   items: ItemRow[];
   onChange: (items: ItemRow[]) => void;
+  onBusinessSearch?: (value: string) => void;
 }) {
   const addItem = () => {
     onChange([
@@ -259,6 +264,7 @@ function PlanItemsEditor({
             value: x.id,
             label: x.code ? `${x.code} — ${x.name}` : x.name,
           }))}
+          onSearch={onBusinessSearch}
           onChange={(v) => updateItem(row.key, "businessId", v)}
         />
       ),

@@ -62,6 +62,8 @@ interface Props {
   saving: boolean;
   onCancel: () => void;
   onSubmit: (input: CreateUpdateInspectionResultInput) => void;
+  /** Server-side search: options list is refetched with this filter. */
+  onBusinessSearch?: (value: string) => void;
 }
 
 export function InspectionResultEditorModal(props: Props) {
@@ -185,6 +187,7 @@ export function InspectionResultEditorModal(props: Props) {
               value: x.id,
               label: x.code ? `${x.code} — ${x.name}` : x.name,
             }))}
+            onSearch={props.onBusinessSearch}
           />
         </Form.Item>
 

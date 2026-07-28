@@ -47,6 +47,7 @@ interface Props {
   onCreate: () => void;
   onEdit: (organization: OrganizationDto) => void;
   onDelete: (organization: OrganizationDto) => void;
+  onShowDetail: (organization: OrganizationDto) => void;
 }
 
 function toTreeData(items: OrganizationTreeNode[]): DataNode[] {
@@ -85,6 +86,7 @@ export function OrganizationListView({
   onCreate,
   onEdit,
   onDelete,
+  onShowDetail,
 }: Props) {
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -133,6 +135,10 @@ export function OrganizationListView({
         dataSource={items}
         size="middle"
         scroll={{ x: 800 }}
+        onRow={(organization) => ({
+          onDoubleClick: () => onShowDetail(organization),
+          style: { cursor: "pointer" },
+        })}
         pagination={{
           current: page,
           pageSize,

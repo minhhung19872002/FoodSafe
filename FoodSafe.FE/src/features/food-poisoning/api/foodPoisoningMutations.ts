@@ -8,6 +8,7 @@ import type {
   CreateUpdateCaseInput,
   CreateUpdateIncidentInput,
   IncidentFilter,
+  RespondErrorReportInput,
 } from "../types/foodPoisoning.types";
 
 function useCaseRefresh() {
@@ -67,6 +68,31 @@ export function useAddCaseErrorReport() {
       id: string;
       input: CreateErrorReportInput;
     }) => poisoningCaseApi.addErrorReport(id, input),
+    onSuccess: refresh,
+  });
+}
+
+export function useAcknowledgeCaseErrorReport() {
+  const refresh = useCaseRefresh();
+  return useMutation({
+    mutationFn: ({ id, reportId }: { id: string; reportId: string }) =>
+      poisoningCaseApi.acknowledgeErrorReport(id, reportId),
+    onSuccess: refresh,
+  });
+}
+
+export function useRespondCaseErrorReport() {
+  const refresh = useCaseRefresh();
+  return useMutation({
+    mutationFn: ({
+      id,
+      reportId,
+      input,
+    }: {
+      id: string;
+      reportId: string;
+      input: RespondErrorReportInput;
+    }) => poisoningCaseApi.respondErrorReport(id, reportId, input),
     onSuccess: refresh,
   });
 }
@@ -142,6 +168,31 @@ export function useAddIncidentErrorReport() {
       id: string;
       input: CreateErrorReportInput;
     }) => poisoningIncidentApi.addErrorReport(id, input),
+    onSuccess: refresh,
+  });
+}
+
+export function useAcknowledgeIncidentErrorReport() {
+  const refresh = useIncidentRefresh();
+  return useMutation({
+    mutationFn: ({ id, reportId }: { id: string; reportId: string }) =>
+      poisoningIncidentApi.acknowledgeErrorReport(id, reportId),
+    onSuccess: refresh,
+  });
+}
+
+export function useRespondIncidentErrorReport() {
+  const refresh = useIncidentRefresh();
+  return useMutation({
+    mutationFn: ({
+      id,
+      reportId,
+      input,
+    }: {
+      id: string;
+      reportId: string;
+      input: RespondErrorReportInput;
+    }) => poisoningIncidentApi.respondErrorReport(id, reportId, input),
     onSuccess: refresh,
   });
 }

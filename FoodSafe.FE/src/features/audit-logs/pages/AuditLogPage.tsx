@@ -88,8 +88,7 @@ export default function AuditLogPage() {
       dataIndex: "httpStatusCode",
       width: 110,
       align: "center",
-      render: (v?: number) =>
-        v ? <Tag color={statusColor(v)}>{v}</Tag> : "—",
+      render: (v?: number) => (v ? <Tag color={statusColor(v)}>{v}</Tag> : "—"),
     },
     {
       title: "Thời gian (ms)",
@@ -117,8 +116,7 @@ export default function AuditLogPage() {
       dataIndex: "hasException",
       width: 60,
       align: "center",
-      render: (v: boolean) =>
-        v ? <Tag color="error">Có</Tag> : null,
+      render: (v: boolean) => (v ? <Tag color="error">Có</Tag> : null),
     },
   ];
 
@@ -212,8 +210,7 @@ export default function AuditLogPage() {
         onChange={handleTableChange}
         pagination={{
           total: data?.totalCount ?? 0,
-          current:
-            Math.floor(filter.skipCount / filter.maxResultCount) + 1,
+          current: Math.floor(filter.skipCount / filter.maxResultCount) + 1,
           pageSize: filter.maxResultCount,
           showSizeChanger: true,
           showTotal: (total) => `Tổng: ${total} bản ghi`,

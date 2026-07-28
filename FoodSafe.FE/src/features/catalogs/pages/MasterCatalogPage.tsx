@@ -1,7 +1,12 @@
 import { useState } from "react";
-import { App } from "antd";
+import { App, Tag } from "antd";
 import { useMutation } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import { PageHeader } from "@/components/PageHeader";
+import {
+  RecordDetailDrawer,
+  type DetailField,
+} from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { exportTestingServices } from "../api/catalogApi";
@@ -16,6 +21,7 @@ import type {
 } from "../types/catalog.types";
 
 const defaultPageSize = 20;
+const riskLevelLabels = ["", "Cao", "Trung bình", "Thấp"];
 
 export default function MasterCatalogPage() {
   const { message } = App.useApp();
@@ -26,6 +32,7 @@ export default function MasterCatalogPage() {
   const [productGroupSearch, setProductGroupSearch] = useState("");
   const [testingCenterSearch, setTestingCenterSearch] = useState("");
   const [editing, setEditing] = useState<CatalogItem | null | undefined>();
+  const [detailItem, setDetailItem] = useState<CatalogItem | null>(null);
   const canCreate = useAuthStore((state) =>
     state.hasPermission("FoodSafe.Catalogs.Create"),
   );
@@ -82,6 +89,95 @@ export default function MasterCatalogPage() {
     });
   };
 
+  const detailFields: DetailField<CatalogItem>[] = [
+    { label: "Mã", render: (r) => r.code },
+    { label: "Tên", render: (r) => r.name },
+    ...(kind === "country"
+      ? ([
+          { label: "Mã Alpha-2", render: (r) => r.codeAlpha2 },
+          { label: "Mã Alpha-3", render: (r) => r.codeAlpha3 },
+          { label: "Tên tiếng Việt", render: (r) => r.nameVi },
+          { label: "Tên tiếng Anh", render: (r) => r.nameEn },
+        ] satisfies DetailField<CatalogItem>[])
+      : []),
+    ...(kind === "product-group"
+      ? ([
+          { label: "Cấp", render: (r) => r.level },
+          {
+            label: "Nhóm cha",
+            render: (r) =>
+              productGroups.data?.items.find((item) => item.id === r.parentId)
+                ?.name,
+          },
+        ] satisfies DetailField<CatalogItem>[])
+      : []),
+    ...(kind === "business-classification"
+      ? ([
+          {
+            label: "Mức rủi ro",
+            render: (r) =>
+              r.riskLevel !== undefined ? riskLevelLabels[r.riskLevel] : null,
+          },
+          { label: "Tiêu chí", render: (r) => r.criteria, span: 2 },
+        ] satisfies DetailField<CatalogItem>[])
+      : []),
+    ...(kind === "testing-center"
+      ? ([
+          { label: "Địa chỉ", render: (r) => r.address, span: 2 },
+          { label: "Người liên hệ", render: (r) => r.contactPerson },
+          { label: "Điện thoại", render: (r) => r.phone },
+          { label: "Email", render: (r) => r.email },
+          { label: "Số công nhận", render: (r) => r.accreditationNumber },
+          {
+            label: "Hết hạn công nhận",
+            render: (r) =>
+              r.accreditationExpiresAt
+                ? dayjs(r.accreditationExpiresAt).format("DD/MM/YYYY")
+                : null,
+          },
+          {
+            label: "Phạm vi công nhận",
+            render: (r) => r.accreditationScope,
+            span: 2,
+          },
+        ] satisfies DetailField<CatalogItem>[])
+      : []),
+    ...(kind === "testing-service"
+      ? ([
+          {
+            label: "Trung tâm kiểm nghiệm",
+            render: (r) =>
+              testingCenters.data?.items.find(
+                (item) => item.id === r.testingCenterId,
+              )?.name,
+          },
+          { label: "Đơn vị tính", render: (r) => r.unit },
+          { label: "Phương pháp", render: (r) => r.method },
+          {
+            label: "Đơn giá",
+            render: (r) => r.price?.toLocaleString("vi-VN"),
+          },
+          {
+            label: "Thời gian trả kết quả",
+            render: (r) =>
+              r.turnaroundDays !== undefined
+                ? `${r.turnaroundDays} ngày`
+                : null,
+          },
+        ] satisfies DetailField<CatalogItem>[])
+      : []),
+    { label: "Mô tả", render: (r) => r.description, span: 2 },
+    { label: "Thứ tự", render: (r) => r.sortOrder },
+    {
+      label: "Trạng thái",
+      render: (r) => (
+        <Tag color={r.isActive ? "success" : "default"}>
+          {r.isActive ? "Hoạt động" : "Ngừng"}
+        </Tag>
+      ),
+    },
+  ];
+
   return (
     <div className="page-container">
       <PageHeader
@@ -105,6 +201,7 @@ export default function MasterCatalogPage() {
             setKind(nextKind);
             setFilter("");
             setPage(1);
+            setDetailItem(null);
           }}
           exporting={exportServices.isPending}
           onFilterChange={(nextFilter) => {
@@ -117,6 +214,7 @@ export default function MasterCatalogPage() {
           }}
           onCreate={() => setEditing(null)}
           onEdit={setEditing}
+          onShowDetail={setDetailItem}
           onDelete={handleDelete}
           onExport={() =>
             exportServices.mutate(undefined, {
@@ -127,6 +225,12 @@ export default function MasterCatalogPage() {
           }
         />
       </div>
+      <RecordDetailDrawer
+        title="Chi tiết danh mục"
+        record={detailItem}
+        onClose={() => setDetailItem(null)}
+        fields={detailFields}
+      />
       <CatalogEditorModal
         kind={kind}
         item={editing ?? undefined}

@@ -97,9 +97,7 @@ export function InspectionAttachmentsModal({
             size="small"
             aria-label={`Tải ${item.originalName}`}
             icon={<DownloadOutlined />}
-            loading={
-              download.isPending && download.variables === item.id
-            }
+            loading={download.isPending && download.variables === item.id}
             onClick={() => download.mutate(item.id)}
           />
           {canEdit && (

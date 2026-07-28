@@ -1,13 +1,5 @@
 import { useCallback, useState } from "react";
-import {
-  Alert,
-  Button,
-  Form,
-  Input,
-  Result,
-  Space,
-  Typography,
-} from "antd";
+import { Alert, Button, Form, Input, Result, Space, Typography } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -130,8 +122,8 @@ export default function CitizenNewsReportPage() {
           Gửi tin về an toàn thực phẩm
         </Typography.Title>
         <Typography.Paragraph type="secondary" style={{ marginBottom: 32 }}>
-          Bạn có thể gửi tin tức, thông tin cảnh báo về an toàn thực phẩm.
-          Tin sẽ được cơ quan chức năng xem xét trước khi đăng tải công khai.
+          Bạn có thể gửi tin tức, thông tin cảnh báo về an toàn thực phẩm. Tin
+          sẽ được cơ quan chức năng xem xét trước khi đăng tải công khai.
         </Typography.Paragraph>
 
         {submitError && (
@@ -191,7 +183,10 @@ export default function CitizenNewsReportPage() {
             />
           </Form.Item>
 
-          <Typography.Title level={5} style={{ marginTop: 8, marginBottom: 16 }}>
+          <Typography.Title
+            level={5}
+            style={{ marginTop: 8, marginBottom: 16 }}
+          >
             Thông tin người gửi (không bắt buộc)
           </Typography.Title>
 

@@ -13,6 +13,7 @@ import type { ColumnsType } from "antd/es/table";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
+import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RevokeModal } from "@/components/RevokeModal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { saveDownload } from "@/utils/download";
@@ -65,6 +66,9 @@ export default function ProductRegistrationPage() {
   const [editorBusinessId, setEditorBusinessId] = useState<string>();
   const [attachmentsFor, setAttachmentsFor] = useState<ProductRegistration>();
   const [revoking, setRevoking] = useState<ProductRegistration>();
+  const [detailRecord, setDetailRecord] = useState<ProductRegistration | null>(
+    null,
+  );
 
   const queryFilter = {
     filter: filter || undefined,
@@ -325,6 +329,10 @@ export default function ProductRegistrationPage() {
           loading={registrations.isLoading}
           columns={columns}
           dataSource={registrations.data?.items ?? []}
+          onRow={(record) => ({
+            onDoubleClick: () => setDetailRecord(record),
+            style: { cursor: "pointer" },
+          })}
           pagination={{
             current: page,
             pageSize: PAGE_SIZE,
@@ -335,6 +343,62 @@ export default function ProductRegistrationPage() {
           }}
         />
       </div>
+
+      <RecordDetailDrawer
+        title="Chi tiết đăng ký bản công bố"
+        record={detailRecord}
+        onClose={() => setDetailRecord(null)}
+        fields={[
+          { label: "Số đăng ký", render: (r) => r.registrationNumber },
+          { label: "Số tiếp nhận", render: (r) => r.receiptNumber },
+          { label: "Cơ sở SXKD", render: (r) => r.businessName, span: 2 },
+          { label: "Sản phẩm", render: (r) => r.productName, span: 2 },
+          {
+            label: "Sản phẩm liên kết",
+            render: (r) => r.linkedProductName,
+            span: 2,
+          },
+          { label: "Nhà sản xuất", render: (r) => r.manufacturer, span: 2 },
+          {
+            label: "Cơ quan cấp",
+            render: (r) => r.certifyingAuthority,
+            span: 2,
+          },
+          {
+            label: "Ngày đăng ký",
+            render: (r) =>
+              new Date(r.registrationDate).toLocaleDateString("vi-VN"),
+          },
+          {
+            label: "Ngày tiếp nhận",
+            render: (r) =>
+              r.receiptDate
+                ? new Date(r.receiptDate).toLocaleDateString("vi-VN")
+                : null,
+          },
+          {
+            label: "Ngày hết hạn",
+            render: (r) =>
+              r.expiryDate
+                ? new Date(r.expiryDate).toLocaleDateString("vi-VN")
+                : null,
+          },
+          {
+            label: "Trạng thái",
+            render: (r) => <StatusBadge status={r.status} />,
+          },
+          { label: "Lý do thu hồi", render: (r) => r.revokeReason, span: 2 },
+          {
+            label: "Ngày thu hồi",
+            render: (r) =>
+              r.revokedAt
+                ? new Date(r.revokedAt).toLocaleDateString("vi-VN")
+                : null,
+            span: 2,
+          },
+          { label: "Ghi chú", render: (r) => r.notes, span: 2 },
+        ]}
+      />
 
       <ProductRegistrationEditorModal
         open={editorOpen}

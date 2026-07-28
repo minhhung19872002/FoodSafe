@@ -117,6 +117,7 @@ test.describe("eligibility certificate management", () => {
 
     await page.getByRole("button", { name: "Cấp giấy" }).click();
     await page.getByRole("combobox", { name: "Cơ sở SXKD" }).click();
+    await page.keyboard.type(businessName);
     await page.getByText(businessName, { exact: false }).last().click();
     await page
       .getByRole("textbox", { name: "Số giấy chứng nhận" })

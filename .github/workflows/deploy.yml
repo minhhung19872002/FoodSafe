@@ -1,0 +1,129 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  GAR_LOCATION: asia-southeast1
+  AR_REPO: foodsafe
+
+jobs:
+  build-push:
+    name: Build & push images
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+          token_format: access_token
+
+      - name: Log in to Artifact Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GAR_LOCATION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: FoodSafe.BE
+          push: true
+          tags: |
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO }}/foodsafe-api:${{ github.sha }}
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO }}/foodsafe-api:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: FoodSafe.FE
+          push: true
+          tags: |
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO }}/foodsafe-frontend:${{ github.sha }}
+            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO }}/foodsafe-frontend:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+
+  deploy:
+    name: Deploy to VM
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: build-push
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+          token_format: access_token
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.VM_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync compose and Caddy files
+        run: |
+          scp -i ~/.ssh/deploy_key deploy/docker-compose.cloud.yml \
+            "deploy@${{ secrets.VM_HOST }}:/opt/foodsafe/docker-compose.yml"
+          scp -i ~/.ssh/deploy_key deploy/Caddyfile \
+            "deploy@${{ secrets.VM_HOST }}:/opt/foodsafe/Caddyfile"
+
+      - name: Deploy stack
+        env:
+          REGISTRY_TOKEN: ${{ steps.auth.outputs.access_token }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "deploy@${{ secrets.VM_HOST }}" \
+            "REGISTRY_TOKEN='$REGISTRY_TOKEN' IMAGE_TAG='${{ github.sha }}' bash -s" <<'EOS'
+          set -euo pipefail
+          cd /opt/foodsafe
+          printf '%s' "$REGISTRY_TOKEN" | docker login -u oauth2accesstoken --password-stdin https://asia-southeast1-docker.pkg.dev
+          sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=$IMAGE_TAG/" .env
+          docker compose pull --quiet
+          docker compose up -d --remove-orphans
+          docker image prune -f >/dev/null
+          EOS
+
+      - name: Verify health
+        run: |
+          for i in $(seq 1 30); do
+            if curl --fail --silent --max-time 10 "http://${{ secrets.VM_HOST }}/health" >/dev/null; then
+              echo "Health check passed."
+              exit 0
+            fi
+            echo "Waiting for stack to become healthy... ($i/30)"
+            sleep 20
+          done
+          echo "Health check failed after 10 minutes."
+          ssh -i ~/.ssh/deploy_key "deploy@${{ secrets.VM_HOST }}" \
+            'cd /opt/foodsafe && docker compose ps && docker compose logs --tail=50 api migrator' || true
+          exit 1

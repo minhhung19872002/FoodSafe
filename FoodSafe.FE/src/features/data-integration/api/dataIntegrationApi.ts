@@ -62,9 +62,7 @@ export const dataIntegrationApi = {
 
   testConnection: (id: string) =>
     api
-      .post<TestConnectionResult>(
-        `/v1/app/api-endpoint/${id}/test-connection`,
-      )
+      .post<TestConnectionResult>(`/v1/app/api-endpoint/${id}/test-connection`)
       .then((r) => r.data),
 
   shareData: (input: ShareDataInput) =>

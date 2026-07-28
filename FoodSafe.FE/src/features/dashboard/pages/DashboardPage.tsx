@@ -9,6 +9,7 @@ import {
   Progress,
   Table,
   Button,
+  Tag,
   type TableColumnsType,
 } from "antd";
 import {
@@ -32,10 +33,12 @@ import { useOrganizationTree } from "@/features/organizations/api/organizationQu
 import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
 import {
   useDashboardStats,
+  useExpiringLicenses,
   useReportCompliance,
 } from "../api/dashboardQueries";
 import { RecentActivityPanel } from "../components/RecentActivityPanel";
 import type {
+  ExpiringLicense,
   LicenseBreakdownItem,
   ReportComplianceRow,
 } from "../types/dashboard.types";
@@ -185,6 +188,32 @@ const complianceColumns: TableColumnsType<ReportComplianceRow> = [
   },
 ];
 
+const expiringLicenseColumns: TableColumnsType<ExpiringLicense> = [
+  { title: "Loại giấy phép", dataIndex: "licenseType", width: 150 },
+  { title: "Số giấy phép", dataIndex: "licenseNumber", width: 160 },
+  { title: "Cơ sở", dataIndex: "businessName", ellipsis: true },
+  {
+    title: "Ngày hết hạn",
+    dataIndex: "expiryDate",
+    width: 120,
+    render: (v: string) => new Date(v).toLocaleDateString("vi-VN"),
+  },
+  {
+    title: "Còn lại",
+    dataIndex: "daysRemaining",
+    width: 130,
+    render: (days: number, row) => {
+      const color =
+        row.warningTier === 30
+          ? "error"
+          : row.warningTier === 60
+            ? "warning"
+            : "default";
+      return <Tag color={color}>{`${days} ngày`}</Tag>;
+    },
+  },
+];
+
 const currentYear = new Date().getFullYear();
 const yearOptions = Array.from({ length: 5 }, (_, index) => ({
   value: currentYear - index,
@@ -203,6 +232,7 @@ export default function DashboardPage() {
   );
   const { data: stats, isLoading } = useDashboardStats(filter);
   const compliance = useReportCompliance(filter);
+  const expiringLicenses = useExpiringLicenses(filter);
   const organizationTree = useOrganizationTree();
   const organizationOptions = useMemo(
     () => flattenOrganizationOptions(organizationTree.data?.items ?? []),
@@ -449,6 +479,26 @@ export default function DashboardPage() {
       </Row>
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col xs={24}>
+          <Card title="Giấy phép sắp hết hạn (30/60/90 ngày)" size="small">
+            <Table
+              rowKey="id"
+              columns={expiringLicenseColumns}
+              dataSource={expiringLicenses.data?.items ?? []}
+              loading={expiringLicenses.isLoading}
+              size="small"
+              locale={{
+                emptyText: "Không có giấy phép nào sắp hết hạn trong 90 ngày",
+              }}
+              pagination={{ pageSize: 10, hideOnSinglePage: true }}
+              scroll={{ x: 700 }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        {/* Compliance table shares the row with the activity feed on wide screens. */}
         <Col xs={24} xl={16}>
           <Card
             title={`Tình hình nộp báo cáo của các đơn vị — Năm ${year ?? currentYear}`}

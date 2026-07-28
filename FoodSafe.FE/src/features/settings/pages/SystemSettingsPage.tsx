@@ -109,8 +109,7 @@ function BrandingUploader({
             cancelText="Hủy"
             onConfirm={() =>
               remove.mutate(kind, {
-                onSuccess: () =>
-                  void message.success("Đã xóa hình ảnh."),
+                onSuccess: () => void message.success("Đã xóa hình ảnh."),
                 onError: () => void message.error("Không thể xóa hình ảnh."),
               })
             }
@@ -214,11 +213,7 @@ export default function SystemSettingsPage() {
                     label="Độ dài tối thiểu"
                     rules={[{ required: true, message: "Bắt buộc" }]}
                   >
-                    <InputNumber
-                      min={8}
-                      max={64}
-                      style={{ width: "100%" }}
-                    />
+                    <InputNumber min={8} max={64} style={{ width: "100%" }} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -227,11 +222,7 @@ export default function SystemSettingsPage() {
                     label="Độ dài tối đa"
                     rules={[{ required: true, message: "Bắt buộc" }]}
                   >
-                    <InputNumber
-                      min={16}
-                      max={256}
-                      style={{ width: "100%" }}
-                    />
+                    <InputNumber min={16} max={256} style={{ width: "100%" }} />
                   </Form.Item>
                 </Col>
               </Row>
@@ -359,10 +350,7 @@ export default function SystemSettingsPage() {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item
-                    name="smtpSenderDisplayName"
-                    label="Tên hiển thị"
-                  >
+                  <Form.Item name="smtpSenderDisplayName" label="Tên hiển thị">
                     <Input />
                   </Form.Item>
                 </Col>

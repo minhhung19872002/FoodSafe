@@ -100,7 +100,7 @@ public class ReportStatisticsAppService : ApplicationService
         var bizQ = (await _businesses.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
 
-        var rows = new Dictionary<Guid?, LicensesByBusinessTypeRow>();
+        var rows = new Dictionary<Guid, LicensesByBusinessTypeRow>();
 
         async Task CollectAsync<TLicense>(
             IRepository<TLicense, Guid> repository,
@@ -119,10 +119,11 @@ public class ReportStatisticsAppService : ApplicationService
                 ct);
             foreach (var group in grouped)
             {
-                if (!rows.TryGetValue(group.TypeId, out var row))
+                var key = group.TypeId ?? Guid.Empty;
+                if (!rows.TryGetValue(key, out var row))
                 {
                     row = new LicensesByBusinessTypeRow();
-                    rows[group.TypeId] = row;
+                    rows[key] = row;
                 }
 
                 assign(row, group.Count);
@@ -148,8 +149,7 @@ public class ReportStatisticsAppService : ApplicationService
             q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId)),
             (row, count) => row.AdRegistrations += count);
 
-        var typeIds = rows.Keys.Where(k => k.HasValue)
-            .Select(k => k!.Value).ToList();
+        var typeIds = rows.Keys.Where(k => k != Guid.Empty).ToList();
         var typeQ = await _businessTypes.GetQueryableAsync();
         var typeNames = await AsyncExecuter.ToListAsync(
             typeQ.Where(t => typeIds.Contains(t.Id))
@@ -159,8 +159,8 @@ public class ReportStatisticsAppService : ApplicationService
             .Select(pair =>
             {
                 var row = pair.Value;
-                row.BusinessTypeName = pair.Key.HasValue
-                    ? typeNames.FirstOrDefault(t => t.Id == pair.Key.Value)?.Name ?? "Khác"
+                row.BusinessTypeName = pair.Key != Guid.Empty
+                    ? typeNames.FirstOrDefault(t => t.Id == pair.Key)?.Name ?? "Khác"
                     : "Chưa phân loại";
                 row.Total = row.SelfDeclarations + row.ProductRegistrations +
                             row.EligibilityCertificates + row.CfsCertificates +
