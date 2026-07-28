@@ -242,6 +242,22 @@ export default function DocumentsPage() {
           }}
         />
         <Select
+          placeholder="Loại văn bản"
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          style={{ width: 180 }}
+          loading={docTypesLoading}
+          options={(documentTypes ?? []).map((t) => ({
+            value: t.id,
+            label: t.name,
+          }))}
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, documentTypeId: v }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <Select
           placeholder="Trạng thái"
           allowClear
           style={{ width: 140 }}

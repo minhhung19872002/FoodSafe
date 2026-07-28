@@ -145,6 +145,16 @@ export interface BusinessInspectionRecord {
   adminDecisionNumber?: string;
 }
 
+export interface BusinessTestingRecord {
+  id: string;
+  sampleCode: string;
+  sampleName: string;
+  sampleDate: string;
+  outcome: number;
+  failedCriteria: string | null;
+  certificateNumber: string | null;
+}
+
 export interface Product {
   id: string;
   businessId: string;

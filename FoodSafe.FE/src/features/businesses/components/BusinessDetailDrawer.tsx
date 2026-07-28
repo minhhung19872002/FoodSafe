@@ -7,6 +7,7 @@ import type {
   Business,
   BusinessInspectionRecord,
   BusinessRelatedRecord,
+  BusinessTestingRecord,
 } from "../types/business.types";
 
 interface Props {
@@ -94,7 +95,9 @@ function RelatedTable({
     | "selfDeclarations"
     | "productRegistrations"
     | "adRegistrations"
-    | "eligibilityCertificates";
+    | "eligibilityCertificates"
+    | "cfsCertificates"
+    | "exportFoodCertificates";
 }) {
   const { data, isLoading } = useQuery({
     queryKey: ["business-related", kind, businessId] as const,
@@ -106,6 +109,55 @@ function RelatedTable({
       size="small"
       loading={isLoading}
       columns={relatedColumns}
+      dataSource={data?.items}
+      pagination={false}
+    />
+  );
+}
+
+const TESTING_OUTCOME_CONFIG: Record<number, { color: string; label: string }> =
+  {
+    1: { color: "green", label: "Đạt" },
+    2: { color: "red", label: "Không đạt" },
+    3: { color: "orange", label: "Có điều kiện" },
+  };
+
+const testingColumns: ColumnsType<BusinessTestingRecord> = [
+  { title: "Mã mẫu", dataIndex: "sampleCode", width: 130 },
+  { title: "Tên mẫu", dataIndex: "sampleName" },
+  {
+    title: "Ngày lấy mẫu",
+    dataIndex: "sampleDate",
+    width: 120,
+    render: formatDate,
+  },
+  {
+    title: "Kết quả",
+    dataIndex: "outcome",
+    width: 120,
+    render: (v: number) => {
+      const cfg = TESTING_OUTCOME_CONFIG[v];
+      return cfg ? <Tag color={cfg.color}>{cfg.label}</Tag> : "—";
+    },
+  },
+  {
+    title: "Tiêu chí không đạt",
+    dataIndex: "failedCriteria",
+    render: (v: string | null) => v ?? "—",
+  },
+];
+
+function TestingResultTable({ businessId }: { businessId: string }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["business-related", "testingResults", businessId] as const,
+    queryFn: () => businessRelatedApi.testingResults({ businessId, ...PAGE }),
+  });
+  return (
+    <Table
+      rowKey="id"
+      size="small"
+      loading={isLoading}
+      columns={testingColumns}
       dataSource={data?.items}
       pagination={false}
     />
@@ -180,9 +232,34 @@ export function BusinessDetailDrawer({ business, onClose }: Props) {
               ),
             },
             {
+              key: "cfs",
+              label: "CFS",
+              children: (
+                <RelatedTable
+                  businessId={business.id}
+                  kind="cfsCertificates"
+                />
+              ),
+            },
+            {
+              key: "export-food",
+              label: "GCN xuất khẩu",
+              children: (
+                <RelatedTable
+                  businessId={business.id}
+                  kind="exportFoodCertificates"
+                />
+              ),
+            },
+            {
               key: "inspections",
-              label: "Kết quả thanh kiểm tra",
+              label: "Thanh kiểm tra",
               children: <InspectionTable businessId={business.id} />,
+            },
+            {
+              key: "testing-results",
+              label: "Kiểm nghiệm",
+              children: <TestingResultTable businessId={business.id} />,
             },
           ]}
         />

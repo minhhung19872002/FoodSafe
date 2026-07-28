@@ -8,6 +8,7 @@ import type {
   BusinessInput,
   BusinessInspectionRecord,
   BusinessRelatedRecord,
+  BusinessTestingRecord,
   ExcelDownload,
   ExcelImportPreview,
   ExcelImportResult,
@@ -141,11 +142,51 @@ export const businessRelatedApi = {
       expiryDate: raw.expiryDate,
     })),
 
+  cfsCertificates: (params: RelatedListParams) =>
+    fetchRelated<{
+      id: string;
+      certificateNumber: string;
+      issueDate?: string;
+      expiryDate?: string;
+      status?: number;
+    }>("/v1/app/cfs-certificate", params, (raw) => ({
+      id: raw.id,
+      number: raw.certificateNumber,
+      status: raw.status,
+      issuedDate: raw.issueDate,
+      expiryDate: raw.expiryDate,
+    })),
+
+  exportFoodCertificates: (params: RelatedListParams) =>
+    fetchRelated<{
+      id: string;
+      certificateNumber: string;
+      issueDate?: string;
+      expiryDate?: string;
+      status?: number;
+    }>("/v1/app/export-food-certificate", params, (raw) => ({
+      id: raw.id,
+      number: raw.certificateNumber,
+      status: raw.status,
+      issuedDate: raw.issueDate,
+      expiryDate: raw.expiryDate,
+    })),
+
   async inspectionResults(
     params: RelatedListParams,
   ): Promise<PagedResult<BusinessInspectionRecord>> {
     const response = await api.get<PagedResult<BusinessInspectionRecord>>(
       "/v1/app/inspection-result",
+      { params },
+    );
+    return response.data;
+  },
+
+  async testingResults(
+    params: RelatedListParams,
+  ): Promise<PagedResult<BusinessTestingRecord>> {
+    const response = await api.get<PagedResult<BusinessTestingRecord>>(
+      "/v1/app/testing-result",
       { params },
     );
     return response.data;
