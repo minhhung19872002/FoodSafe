@@ -1,4 +1,4 @@
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
 using FoodSafe.BusinessManagement;
 using FoodSafe.Permissions;
 using Microsoft.AspNetCore.Authorization;
@@ -31,7 +31,6 @@ public class ActionMonthReportExcelAppService :
             var page = await _reports.GetListAsync(
                 new ActionMonthReportFilterDto
                 {
-                    Filter = input.Filter,
                     Status = input.Status,
                     PeriodYear = input.PeriodYear,
                     SkipCount = rows.Count,
@@ -54,15 +53,15 @@ public class ActionMonthReportExcelAppService :
     private static byte[] CreateWorkbook(IReadOnlyList<ActionMonthReportDto> rows)
     {
         using var workbook = new XLWorkbook();
-        var sheet = workbook.Worksheets.Add("Tháng hành động");
+        var sheet = workbook.Worksheets.Add("ThÃ¡ng hÃ nh Ä‘á»™ng");
         var headers = new[]
         {
-            "Năm", "Chủ đề", "Thời gian",
-            "Bài báo", "Phát sóng", "Tuyên truyền", "Người tham gia",
-            "Áp phích", "Tờ rơi",
-            "CS kiểm tra", "Vi phạm", "Phạt", "Tiền phạt",
-            "TCCB mới",
-            "Trạng thái"
+            "NÄƒm", "Chá»§ Ä‘á»", "Thá»i gian",
+            "BÃ i bÃ¡o", "PhÃ¡t sÃ³ng", "TuyÃªn truyá»n", "NgÆ°á»i tham gia",
+            "Ãp phÃ­ch", "Tá» rÆ¡i",
+            "CS kiá»ƒm tra", "Vi pháº¡m", "Pháº¡t", "Tiá»n pháº¡t",
+            "TCCB má»›i",
+            "Tráº¡ng thÃ¡i"
         };
         for (var i = 0; i < headers.Length; i++)
             sheet.Cell(1, i + 1).Value = headers[i];
@@ -97,11 +96,11 @@ public class ActionMonthReportExcelAppService :
 
     private static string StatusLabel(ReportStatus s) => s switch
     {
-        ReportStatus.Draft => "Nháp",
-        ReportStatus.Submitted => "Đã gửi",
-        ReportStatus.Verified => "Đã xác minh",
-        ReportStatus.Returned => "Trả lại",
-        ReportStatus.Completed => "Hoàn thành",
+        ReportStatus.Draft => "NhÃ¡p",
+        ReportStatus.Submitted => "ÄÃ£ gá»­i",
+        ReportStatus.Verified => "ÄÃ£ xÃ¡c minh",
+        ReportStatus.Returned => "Tráº£ láº¡i",
+        ReportStatus.Completed => "HoÃ n thÃ nh",
         _ => s.ToString()
     };
 

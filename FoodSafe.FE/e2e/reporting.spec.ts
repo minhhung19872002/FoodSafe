@@ -154,19 +154,19 @@ test.describe("reporting management", () => {
     let row = page.getByRole("row").filter({ hasText: periodLabel });
     await row.getByRole("button", { name: `Thao tác ${periodLabel}` }).click();
     await page.getByRole("menuitem", { name: "Gửi" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
 
     row = page.getByRole("row").filter({ hasText: periodLabel });
     await expect(row.getByText("Đã gửi")).toBeVisible({ timeout: 10_000 });
     await row.getByRole("button", { name: `Thao tác ${periodLabel}` }).click();
     await page.getByRole("menuitem", { name: "Xác minh" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
 
     row = page.getByRole("row").filter({ hasText: periodLabel });
     await expect(row.getByText("Đã xác minh")).toBeVisible({ timeout: 10_000 });
     await row.getByRole("button", { name: `Thao tác ${periodLabel}` }).click();
     await page.getByRole("menuitem", { name: "Hoàn thành" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
 
     row = page.getByRole("row").filter({ hasText: periodLabel });
     await expect(row.getByText("Hoàn thành")).toBeVisible({ timeout: 10_000 });
@@ -229,7 +229,7 @@ test.describe("reporting management", () => {
       await page.getByRole("menuitem", { name: "Gửi" }).click();
       await page
         .getByRole("dialog")
-        .getByRole("button", { name: "OK" })
+        .getByRole("button", { name: /^(Đồng ý|OK)$/ })
         .click();
       row = page.getByRole("row").filter({ hasText: periodLabel });
       await expect(row.getByText("Đã gửi")).toBeVisible({ timeout: 10_000 });
@@ -262,7 +262,7 @@ test.describe("reporting management", () => {
       await page.getByRole("menuitem", { name: "Về nháp" }).click();
       await page
         .getByRole("dialog")
-        .getByRole("button", { name: "OK" })
+        .getByRole("button", { name: /^(Đồng ý|OK)$/ })
         .click();
       row = page.getByRole("row").filter({ hasText: periodLabel });
       await expect(

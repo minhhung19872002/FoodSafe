@@ -5,8 +5,8 @@
 - **Feature ID**: F-015
 - **Feature name**: Reporting (NDTP / Công tác ATTP / Tháng hành động)
 - **Status**: VERIFIED
-- **Verified Git commit**: `e141203`
-- **Verification date**: 2026-07-27
+- **Verified Git commit**: _(pending commit)_
+- **Verification date**: 2026-07-28
 - **Environment**: Docker Compose full stack (PostgreSQL 15, Redis 7, MinIO, ClamAV, ASP.NET Core API, nginx frontend) at `http://127.0.0.1:8080`
 - **Real database used**: Yes — PostgreSQL 15 in Docker, real EF Core migrations
 - **API interception used**: **No**
@@ -22,16 +22,17 @@
   - `POST /api/v1/app/ndtp-report/{id}/submit|verify|return|return-to-draft|complete`
   - `GET /api/v1/app/ndtp-report/excel/export`
 
-## Evidence — spec files (all passing at `e141203`)
+## Evidence — spec files (all 11 passing)
 
 - `FoodSafe.FE/e2e/reporting.spec.ts` — happy path: Excel export (PK magic bytes), create NDTP report via UI, edit stats via editor modal, workflow via Popconfirms Draft → "Đã gửi" → "Đã xác minh" → "Hoàn thành" with visible status tag assertions; ATP and Action-Month tabs render. Self-healing cleanup walks stale test reports through return/return-to-draft/delete and picks a free test period (years 2090–2099).
-- `FoodSafe.FE/e2e/reporting-verification.spec.ts` — 6 tests (uses year 2089 to avoid the main spec's pool):
+- `FoodSafe.FE/e2e/reporting-verification.spec.ts` — 7 tests (uses year 2089 to avoid the main spec's pool):
   1. Unauthenticated `GET /api/v1/app/ndtp-report` → 401.
   2. `noperm` user denied → 403.
   3. Cross-organization: province report absent from district list; direct GET blocked.
   4. Workflow guards: verify-on-Draft rejected, complete-on-Draft rejected, double submit rejected, delete-on-Submitted rejected; full return path passes (Submitted → Returned with reason → back to Draft → delete → GET confirms gone); return without `returnReason` → 400.
   5. Server-side validation: `periodMonth: 13` → 400 (`[Range(1,12)]`).
   6. Persistence after reload (report found via year filter after `page.reload()`); empty state ("Trống") for a year with no reports.
+  7. **Server-side sorting**: `periodYear asc/desc` produces opposite item orders (regression for case-mismatch in ApplySorting whitelist). **Duplicate period**: second create for same (org, year, month) → <500 with `FoodSafe:Report:0010` error code (not a raw 500 from DB unique index).
 
 ## Checklist results
 
@@ -46,7 +47,7 @@
 | Administrative-area scope | PASS via organization hierarchy scope |
 | Workflow transitions | PASS (full state machine: Draft→Submitted→Verified→Completed via UI; Submitted→Returned→Draft via API; all invalid transitions rejected) |
 | Immutability after submit | PASS (delete-on-Submitted rejected; per domain, stats edits only in Draft) |
-| Duplicate prevention | Covered by unique period per org (create collision produces error; cleanup guarantees free period per run) |
+| Duplicate prevention | PASS (application-level `EnsurePeriodIsFreeAsync` returns `FoodSafe:Report:0010` with <500 status; verified in `reporting-verification.spec.ts` test 7) |
 | Excel export | PASS (real .xlsx download) |
 | Loading state | PASS implicitly (antd Table loading wired to TanStack Query) |
 | Empty state | PASS ("Trống" via year filter) |
@@ -75,7 +76,27 @@
 
 - Any change under the related source paths (Level 2)
 - Auth/data-scope/axios/router changes (Level 3)
-- Registry entry invalid for commits after `e141203` touching the above paths
+- Registry entry invalid for commits after verified commit touching the above paths
+
+## 2026-07-28 — Production-readiness hardening (Level 2 retest)
+
+Fixes applied:
+- **L1 Sorting broken**: `ApplySorting` whitelist was case-sensitive; fixed to lowercase labels + `ThenBy(Id)` tiebreaker. All 3 report AppServices.
+- **L2 Duplicate period → 500**: Added `EnsurePeriodIsFreeAsync` to all 3 AppServices; dedicated `FoodSafe:Report:0010` error code.
+- **L3 OrganizationIds.First() non-deterministic**: Changed to `scope.HomeOrganizationId` for deterministic org assignment.
+- **L4 TotalAffected miscalculation**: `ReportCalculationAppService` now sums `PoisoningCaseCount + sum(incident.AffectedCount)` instead of just counting cases.
+- **M1 ReturnToDraft wrong error code**: Added dedicated `CannotReturnToDraftNonReturned` (Report:0011).
+- **M5 Error vs Empty state**: Added `ListErrorAlert` component to all 3 tabs when API errors occur.
+- **M6 Actor names as GUIDs**: Added `ReportNameEnricher` + `IReportActorsDto` to batch-resolve org/user names.
+- **M7 Document header hardcoded**: Now uses `report.organizationName?.toUpperCase()`.
+- **M8 Editor no success feedback**: Added `message.success("Đã lưu báo cáo.")` to all 3 editor modals.
+- **M9 E2E "OK" button locale**: Fixed to regex `/^(Đồng ý|OK)$/` for antd vi_VN locale.
+- **S1/S2 Export error handling**: Export uses `extractApiError` for localized error message.
+- **S3 Year filter range**: Added `min={2020} max={2100}` to year input + Vietnamese validation messages.
+- **S4 Partial-save error**: Added try/catch around narrative mutation with partial-save error message.
+- **S5 CreationTime sort column**: Added `creationTime` sorter column + `Tháng` filter select for NDTP tab.
+
+Retest: Level 2 — 11/11 Playwright specs passed. Docker stack rebuilt with all fixes.
 
 ## 2026-07-27 — Error notifications (FR-33-05, FR-34-05, FR-35-05)
 

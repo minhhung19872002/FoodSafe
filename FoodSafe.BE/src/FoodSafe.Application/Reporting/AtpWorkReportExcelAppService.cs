@@ -1,4 +1,4 @@
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
 using FoodSafe.BusinessManagement;
 using FoodSafe.Permissions;
 using Microsoft.AspNetCore.Authorization;
@@ -31,7 +31,6 @@ public class AtpWorkReportExcelAppService :
             var page = await _reports.GetListAsync(
                 new AtpWorkReportFilterDto
                 {
-                    Filter = input.Filter,
                     Status = input.Status,
                     PeriodType = input.PeriodType,
                     PeriodYear = input.PeriodYear,
@@ -55,16 +54,16 @@ public class AtpWorkReportExcelAppService :
     private static byte[] CreateWorkbook(IReadOnlyList<AtpWorkReportDto> rows)
     {
         using var workbook = new XLWorkbook();
-        var sheet = workbook.Worksheets.Add("Công tác ATTP");
+        var sheet = workbook.Worksheets.Add("CÃ´ng tÃ¡c ATTP");
         var headers = new[]
         {
-            "Kỳ", "Năm", "Nửa năm",
-            "Tổng CS", "CS mới", "Ngừng HĐ", "Có GCN",
-            "ĐKCB", "TCCB", "QC", "ĐĐK", "CFS", "GCN XK",
-            "KH thanh tra", "CS kiểm tra", "Vi phạm", "Phạt", "Tiền phạt",
-            "Ca NĐ", "Vụ NĐ", "Mắc", "Tử vong",
-            "Tập huấn", "Người TH", "Truyền thông", "VB ban hành",
-            "Trạng thái"
+            "Ká»³", "NÄƒm", "Ná»­a nÄƒm",
+            "Tá»•ng CS", "CS má»›i", "Ngá»«ng HÄ", "CÃ³ GCN",
+            "ÄKCB", "TCCB", "QC", "ÄÄK", "CFS", "GCN XK",
+            "KH thanh tra", "CS kiá»ƒm tra", "Vi pháº¡m", "Pháº¡t", "Tiá»n pháº¡t",
+            "Ca NÄ", "Vá»¥ NÄ", "Máº¯c", "Tá»­ vong",
+            "Táº­p huáº¥n", "NgÆ°á»i TH", "Truyá»n thÃ´ng", "VB ban hÃ nh",
+            "Tráº¡ng thÃ¡i"
         };
         for (var i = 0; i < headers.Length; i++)
             sheet.Cell(1, i + 1).Value = headers[i];
@@ -111,18 +110,18 @@ public class AtpWorkReportExcelAppService :
 
     private static string PeriodLabel(ReportPeriodType t) => t switch
     {
-        ReportPeriodType.HalfYear => "6 tháng",
-        ReportPeriodType.FullYear => "Cả năm",
+        ReportPeriodType.HalfYear => "6 thÃ¡ng",
+        ReportPeriodType.FullYear => "Cáº£ nÄƒm",
         _ => t.ToString()
     };
 
     private static string StatusLabel(ReportStatus s) => s switch
     {
-        ReportStatus.Draft => "Nháp",
-        ReportStatus.Submitted => "Đã gửi",
-        ReportStatus.Verified => "Đã xác minh",
-        ReportStatus.Returned => "Trả lại",
-        ReportStatus.Completed => "Hoàn thành",
+        ReportStatus.Draft => "NhÃ¡p",
+        ReportStatus.Submitted => "ÄÃ£ gá»­i",
+        ReportStatus.Verified => "ÄÃ£ xÃ¡c minh",
+        ReportStatus.Returned => "Tráº£ láº¡i",
+        ReportStatus.Completed => "HoÃ n thÃ nh",
         _ => s.ToString()
     };
 

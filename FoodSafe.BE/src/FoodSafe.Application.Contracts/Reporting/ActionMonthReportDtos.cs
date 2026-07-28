@@ -3,9 +3,10 @@ using Volo.Abp.Application.Dtos;
 
 namespace FoodSafe.Reporting;
 
-public class ActionMonthReportDto : EntityDto<Guid>
+public class ActionMonthReportDto : EntityDto<Guid>, IReportActorsDto
 {
     public Guid OrganizationId { get; set; }
+    public string? OrganizationName { get; set; }
     public int PeriodYear { get; set; }
     public string? ActionMonthTheme { get; set; }
     public string? ActionMonthDates { get; set; }
@@ -32,13 +33,17 @@ public class ActionMonthReportDto : EntityDto<Guid>
     public ReportStatus Status { get; set; }
     public short SubmissionVersion { get; set; }
     public Guid? SubmittedById { get; set; }
+    public string? SubmittedByName { get; set; }
     public DateTime? SubmittedAt { get; set; }
     public Guid? VerifiedById { get; set; }
+    public string? VerifiedByName { get; set; }
     public DateTime? VerifiedAt { get; set; }
     public Guid? ReturnedById { get; set; }
+    public string? ReturnedByName { get; set; }
     public DateTime? ReturnedAt { get; set; }
     public string? ReturnReason { get; set; }
     public Guid? CompletedById { get; set; }
+    public string? CompletedByName { get; set; }
     public DateTime? CompletedAt { get; set; }
     public string? Notes { get; set; }
     public DateTime CreationTime { get; set; }
@@ -103,7 +108,6 @@ public class UpdateActionMonthReportNarrativeDto
 
 public class ActionMonthReportFilterDto : PagedAndSortedResultRequestDto
 {
-    public string? Filter { get; set; }
     public ReportStatus? Status { get; set; }
     public int? PeriodYear { get; set; }
 }

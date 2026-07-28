@@ -16,15 +16,18 @@ public class ActionMonthReportAppService : ApplicationService
     private readonly IRepository<ActionMonthReport, Guid> _reports;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
+    private readonly ReportNameEnricher _nameEnricher;
 
     public ActionMonthReportAppService(
         IRepository<ActionMonthReport, Guid> reports,
         ICurrentDataScopeProvider dataScopeProvider,
-        ICancellationTokenProvider cancellationTokens)
+        ICancellationTokenProvider cancellationTokens,
+        ReportNameEnricher nameEnricher)
     {
         _reports = reports;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
+        _nameEnricher = nameEnricher;
     }
 
     public async Task<PagedResultDto<ActionMonthReportDto>> GetListAsync(ActionMonthReportFilterDto input)
@@ -41,13 +44,15 @@ public class ActionMonthReportAppService : ApplicationService
         query = ApplySorting(query, input.Sorting).PageBy(input);
 
         var items = await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
-        return new PagedResultDto<ActionMonthReportDto>(totalCount, items.Select(ToDto).ToList());
+        var dtos = items.Select(ToDto).ToList();
+        await _nameEnricher.EnrichAsync(dtos, _cancellationTokens.Token);
+        return new PagedResultDto<ActionMonthReportDto>(totalCount, dtos);
     }
 
     public async Task<ActionMonthReportDto> GetAsync(Guid id)
     {
         var entity = await GetScopedAsync(id, DataScopeOperation.View);
-        return ToDto(entity);
+        return await ToEnrichedDtoAsync(entity);
     }
 
     [Authorize(FoodSafePermissions.Reporting.ActionMonthReports.Create)]
@@ -55,7 +60,10 @@ public class ActionMonthReportAppService : ApplicationService
     {
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.Create, _cancellationTokens.Token);
-        var orgId = scope.OrganizationIds.First();
+        var orgId = scope.HomeOrganizationId
+            ?? throw new BusinessException(FoodSafeDomainErrorCodes.DataScope.OrganizationNotFound);
+
+        await EnsurePeriodIsFreeAsync(orgId, input.PeriodYear);
 
         var entity = ActionMonthReport.Create(
             GuidGenerator.Create(), orgId, input.PeriodYear);
@@ -64,6 +72,25 @@ public class ActionMonthReportAppService : ApplicationService
 
         await _reports.InsertAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return ToDto(entity);
+    }
+
+    private async Task EnsurePeriodIsFreeAsync(Guid organizationId, int periodYear)
+    {
+        var query = await _reports.GetQueryableAsync();
+        var exists = await AsyncExecuter.AnyAsync(
+            query.Where(x =>
+                x.OrganizationId == organizationId &&
+                x.PeriodYear == periodYear),
+            _cancellationTokens.Token);
+        if (exists)
+            throw new BusinessException(FoodSafeDomainErrorCodes.Report.DuplicatePeriod);
+    }
+
+    private async Task<ActionMonthReportDto> ToEnrichedDtoAsync(ActionMonthReport entity)
+    {
+        var dto = ToDto(entity);
+        await _nameEnricher.EnrichAsync([dto], _cancellationTokens.Token);
+        return dto;
     }
 
     [Authorize(FoodSafePermissions.Reporting.ActionMonthReports.Edit)]
@@ -247,13 +274,14 @@ public class ActionMonthReportAppService : ApplicationService
             .FirstOrDefault()
             ?.ToLowerInvariant();
 
-        return (field, descending) switch
+        var ordered = (field, descending) switch
         {
-            ("periodYear", true) => query.OrderByDescending(x => x.PeriodYear),
-            ("periodYear", false) => query.OrderBy(x => x.PeriodYear),
-            ("creationTime", false) => query.OrderBy(x => x.CreationTime),
+            ("periodyear", true) => query.OrderByDescending(x => x.PeriodYear),
+            ("periodyear", false) => query.OrderBy(x => x.PeriodYear),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
             _ => query.OrderByDescending(x => x.CreationTime)
         };
+        return ordered.ThenBy(x => x.Id);
     }
 
     private async Task<ActionMonthReport> GetScopedAsync(Guid id, DataScopeOperation operation)

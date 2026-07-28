@@ -134,8 +134,9 @@ public sealed class NdtpReportTests
     {
         var r = CreateDraft();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
-        Should.Throw<ArgumentException>(() =>
-            r.Return(Guid.NewGuid(), DateTime.UtcNow, ""));
+        Should.Throw<BusinessException>(() =>
+                r.Return(Guid.NewGuid(), DateTime.UtcNow, ""))
+            .Code.ShouldBe(FoodSafeDomainErrorCodes.Report.ReturnReasonRequired);
     }
 
     [Fact]

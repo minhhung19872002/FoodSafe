@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Modal, Form, InputNumber, Input, Divider, Row, Col } from "antd";
+import { App, Modal, Form, InputNumber, Input, Divider, Row, Col } from "antd";
 import {
   useUpdateAmrStats,
   useUpdateAmrNarrative,
@@ -12,6 +12,7 @@ interface Props {
 }
 
 export function ActionMonthReportEditorModal({ report, onClose }: Props) {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const updateStats = useUpdateAmrStats();
   const updateNarrative = useUpdateAmrNarrative();
@@ -62,19 +63,27 @@ export function ActionMonthReportEditorModal({ report, onClose }: Props) {
       },
     });
 
-    await updateNarrative.mutateAsync({
-      id: report.id,
-      input: {
-        actionMonthTheme: v.actionMonthTheme,
-        actionMonthDates: v.actionMonthDates,
-        achievements: v.achievements,
-        limitations: v.limitations,
-        lessonsLearned: v.lessonsLearned,
-        nextSteps: v.nextSteps,
-        notes: v.notes,
-      },
-    });
+    try {
+      await updateNarrative.mutateAsync({
+        id: report.id,
+        input: {
+          actionMonthTheme: v.actionMonthTheme,
+          actionMonthDates: v.actionMonthDates,
+          achievements: v.achievements,
+          limitations: v.limitations,
+          lessonsLearned: v.lessonsLearned,
+          nextSteps: v.nextSteps,
+          notes: v.notes,
+        },
+      });
+    } catch (error) {
+      void message.error(
+        "Đã lưu số liệu nhưng lưu phần thuyết minh thất bại. Vui lòng lưu lại lần nữa.",
+      );
+      throw error;
+    }
 
+    void message.success("Đã lưu báo cáo.");
     onClose();
   };
 
