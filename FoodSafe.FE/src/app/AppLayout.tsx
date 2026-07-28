@@ -19,6 +19,7 @@ import {
   BellOutlined,
   SearchOutlined,
   MenuOutlined,
+  DownOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
@@ -492,6 +493,9 @@ export function AppLayout() {
                     {user?.organizationName ?? "Phạm vi toàn hệ thống"}
                   </span>
                 </div>
+                <DownOutlined
+                  style={{ fontSize: 10, color: brand.muted, flexShrink: 0 }}
+                />
               </div>
             </Dropdown>
           </div>

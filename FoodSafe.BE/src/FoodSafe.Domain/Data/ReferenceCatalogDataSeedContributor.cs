@@ -29,12 +29,19 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
     static readonly Guid DistrictHaLongId = Guid.Parse("e2e00000-0000-4000-8002-000000000001");
     static readonly Guid RegionDongBacBoId = Guid.Parse("7e5ccdd0-7eab-4bd4-a10a-e8c39c302002");
 
+    // Stable ID for the Quảng Ninh CDC testing centre — used both here and in
+    // the TestingService seeds that reference it as their parent center.
+    static readonly Guid TestingCenterCdcId = DeterministicId(0x30a, 1);
+
     private readonly IRepository<Region, Guid> _regions;
     private readonly IRepository<Province, Guid> _provinces;
     private readonly IRepository<District, Guid> _districts;
     private readonly IRepository<BusinessType, Guid> _businessTypes;
     private readonly IRepository<BusinessClassification, Guid> _classifications;
     private readonly IRepository<ProductGroup, Guid> _productGroups;
+    private readonly IRepository<AdvertisementType, Guid> _advertisementTypes;
+    private readonly IRepository<TestingCenter, Guid> _testingCenters;
+    private readonly IRepository<TestingService, Guid> _testingServices;
     private readonly IClock _clock;
 
     public ReferenceCatalogDataSeedContributor(
@@ -44,6 +51,9 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
         IRepository<BusinessType, Guid> businessTypes,
         IRepository<BusinessClassification, Guid> classifications,
         IRepository<ProductGroup, Guid> productGroups,
+        IRepository<AdvertisementType, Guid> advertisementTypes,
+        IRepository<TestingCenter, Guid> testingCenters,
+        IRepository<TestingService, Guid> testingServices,
         IClock clock)
     {
         _regions = regions;
@@ -52,6 +62,9 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
         _businessTypes = businessTypes;
         _classifications = classifications;
         _productGroups = productGroups;
+        _advertisementTypes = advertisementTypes;
+        _testingCenters = testingCenters;
+        _testingServices = testingServices;
         _clock = clock;
     }
 
@@ -61,6 +74,9 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
         await SeedBusinessClassificationsAsync();
         await SeedProductGroupsAsync();
         await SeedQuangNinhDistrictsAsync();
+        await SeedAdvertisementTypesAsync();
+        await SeedTestingCenterAsync();
+        await SeedTestingServicesAsync();
     }
 
     private async Task SeedBusinessTypesAsync()
@@ -306,6 +322,95 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
             ProvinceQuangNinhId, "22", "Quảng Ninh", RegionDongBacBoId, "QN", 1);
         province.CreationTime = _clock.Now;
         await _provinces.InsertAsync(province, autoSave: true);
+    }
+
+    private async Task SeedAdvertisementTypesAsync()
+    {
+        var seeds = new (string Code, string Name, int SortOrder)[]
+        {
+            ("BAODIENTU",  "Báo điện tử / Báo trực tuyến", 1),
+            ("MXH",        "Mạng xã hội",                  2),
+            ("TRUYENHINH", "Truyền hình",                   3),
+            ("PHATHTANH",  "Phát thanh",                    4),
+            ("NGOAITROI",  "Biển quảng cáo ngoài trời",     5),
+        };
+
+        foreach (var seed in seeds)
+        {
+            if (await _advertisementTypes.AnyAsync(x => x.Code == seed.Code))
+            {
+                continue;
+            }
+
+            var entity = AdvertisementType.Create(
+                DeterministicId(0x309, seed.SortOrder),
+                seed.Code, seed.Name, null, seed.SortOrder, true);
+            entity.CreationTime = _clock.Now;
+            await _advertisementTypes.InsertAsync(entity, autoSave: true);
+        }
+    }
+
+    private async Task SeedTestingCenterAsync()
+    {
+        const string Code = "TTKN-QN";
+        if (await _testingCenters.AnyAsync(x => x.Code == Code))
+        {
+            return;
+        }
+
+        await EnsureQuangNinhProvinceAsync();
+
+        var entity = TestingCenter.Create(
+            TestingCenterCdcId, Code,
+            "Trung tâm Kiểm soát bệnh tật tỉnh Quảng Ninh - Khoa Xét nghiệm",
+            "651 Lê Thánh Tông, phường Bạch Đằng, TP Hạ Long",
+            ProvinceQuangNinhId, DistrictHaLongId, communeId: null,
+            contactPerson: "Phụ trách khoa Xét nghiệm",
+            phone: "0203 3825 447",
+            email: "kiemnghiem@quangninhcdc.vn",
+            accreditationNumber: "VILAS 675",
+            accreditationScope: "Kiểm nghiệm vi sinh, hóa lý thực phẩm và nước",
+            accreditationExpiresAt: _clock.Now.AddYears(5),
+            description: null, sortOrder: 1, isActive: true);
+        entity.CreationTime = _clock.Now;
+        await _testingCenters.InsertAsync(entity, autoSave: true);
+    }
+
+    private async Task SeedTestingServicesAsync()
+    {
+        // Guard: only insert if center already exists (created above or by DemoData).
+        var center = await _testingCenters.FirstOrDefaultAsync(x => x.Code == "TTKN-QN");
+        if (center is null) return;
+
+        var centerId = center.Id;
+
+        var seeds = new (string Code, string Name, string Unit, string Standard, decimal Price, int Days, int SortOrder)[]
+        {
+            ("KN-VS",   "Kiểm nghiệm vi sinh vật (Coliforms, E.coli, Salmonella)",
+             "Mẫu", "TCVN 4884-1:2015 / ISO 4833-1", 850_000m,  5, 1),
+            ("KN-HL",   "Kiểm nghiệm hóa lý (pH, độ ẩm, hàm lượng protein)",
+             "Mẫu", "TCVN 4594:1988",                620_000m,  4, 2),
+            ("KN-KLN",  "Kiểm nghiệm kim loại nặng (Pb, Cd, Hg, As)",
+             "Chỉ tiêu", "AOAC 999.10 / ICP-MS",     480_000m,  7, 3),
+            ("KN-BVTV", "Kiểm nghiệm dư lượng thuốc bảo vệ thực vật",
+             "Mẫu", "EN 15662:2018 (QuEChERS)",       1_950_000m, 10, 4),
+        };
+
+        foreach (var seed in seeds)
+        {
+            if (await _testingServices.AnyAsync(x => x.Code == seed.Code))
+            {
+                continue;
+            }
+
+            var entity = TestingService.Create(
+                DeterministicId(0x30b, seed.SortOrder),
+                centerId, seed.Code, seed.Name,
+                seed.Unit, seed.Standard, seed.Price,
+                seed.Days, description: null, seed.SortOrder, isActive: true);
+            entity.CreationTime = _clock.Now;
+            await _testingServices.InsertAsync(entity, autoSave: true);
+        }
     }
 
     /// <summary>

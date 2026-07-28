@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { App, Button, Dropdown, Space, Tooltip } from "antd";
+import { App, Button, Dropdown, Space } from "antd";
 import type { MenuProps } from "antd";
 import { EllipsisOutlined } from "@ant-design/icons";
 
@@ -72,17 +72,17 @@ export function RowActions({
   return (
     <Space size={4}>
       {inline.map((action) => (
-        <Tooltip key={action.key} title={action.label}>
-          <Button
-            type="text"
-            size="small"
-            danger={action.danger}
-            disabled={action.disabled}
-            icon={action.icon}
-            aria-label={action.ariaLabel ?? action.label}
-            onClick={() => run(action)}
-          />
-        </Tooltip>
+        <Button
+          key={action.key}
+          type="text"
+          size="small"
+          title={action.label}
+          danger={action.danger}
+          disabled={action.disabled}
+          icon={action.icon}
+          aria-label={action.ariaLabel ?? action.label}
+          onClick={() => run(action)}
+        />
       ))}
       {overflow.length > 0 && (
         <Dropdown
