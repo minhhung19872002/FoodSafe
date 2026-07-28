@@ -220,7 +220,9 @@ test.describe("INT-03 — inbound partner integration", () => {
       await page.getByRole("tab", { name: "Dữ liệu nhận về" }).click();
       const subRow = page.getByRole("row", { name: new RegExp(requestId) });
       await expect(subRow).toBeVisible();
-      await subRow.getByRole("button").click();
+      // The row also carries the disposition actions (Duyệt / Từ chối) for a
+      // Received submission — target the detail button explicitly.
+      await subRow.getByRole("button", { name: "Xem chi tiết" }).click();
       await expect(page.getByText("Chi tiết dữ liệu nhận về")).toBeVisible();
       await expect(
         page.getByText(new RegExp(`Cảnh báo liên thông ${RUN}`)),
@@ -285,7 +287,7 @@ test.describe("INT-03 — inbound partner integration", () => {
         .click();
       await page.getByRole("menuitem", { name: "Tạm ngưng" }).click();
       // modal.confirm replaces the former Popconfirm.
-      await page.getByRole("button", { name: "OK" }).click();
+      await page.getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
       await expect(
         page.getByText("Đã cập nhật trạng thái.", { exact: true }),
       ).toBeVisible();

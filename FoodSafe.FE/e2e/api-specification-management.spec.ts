@@ -159,9 +159,11 @@ test.describe("partner API specification management (FR-50-05)", () => {
 
     // ---- PUBLISH via the UI ----
     await row.getByRole("button", { name: "Xuất bản" }).click();
+    // RowActions asks for confirmation with a modal (not a Popconfirm); the
+    // AntD Vietnamese locale labels its OK button "Đồng ý".
     await page
-      .locator(".ant-popconfirm-buttons")
-      .getByRole("button", { name: "Xuất bản" })
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
       .click();
     await expect(row).toContainText("Đã xuất bản", { timeout: 10_000 });
 
@@ -194,8 +196,8 @@ test.describe("partner API specification management (FR-50-05)", () => {
     // ---- UNPUBLISH via the UI → partner download 404 again ----
     await row.getByRole("button", { name: "Gỡ" }).click();
     await page
-      .locator(".ant-popconfirm-buttons")
-      .getByRole("button", { name: "Gỡ" })
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
       .click();
     await expect(row).toContainText("Nháp", { timeout: 10_000 });
 
@@ -214,10 +216,15 @@ test.describe("partner API specification management (FR-50-05)", () => {
     await expect(rowAfterReload).toContainText("Nháp");
 
     // ---- DELETE via the UI ----
-    await rowAfterReload.locator("button.ant-btn-dangerous").click();
+    // Delete lives in the RowActions overflow menu (only the first two actions
+    // render inline), and confirms through a modal.
+    await rowAfterReload
+      .getByRole("button", { name: `Thao tác ${specName}` })
+      .click();
+    await page.getByRole("menuitem", { name: "Xóa" }).click();
     await page
-      .locator(".ant-popconfirm-buttons")
-      .getByRole("button", { name: "Xóa" })
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
       .click();
     await expect(page.getByText("Đã xóa.")).toBeVisible({ timeout: 10_000 });
 

@@ -18,6 +18,9 @@ public sealed class AtpNews : FullAuditedAggregateRoot<Guid>
     public Guid? PublishedById { get; private set; }
     public Guid? RecalledById { get; private set; }
     public DateTime? RecalledAt { get; private set; }
+    public Guid? RejectedById { get; private set; }
+    public DateTime? RejectedAt { get; private set; }
+    public string? RejectedReason { get; private set; }
     public bool IsPublic { get; private set; }
     public bool IsFeatured { get; private set; }
     public AlertSource Source { get; private set; } = AlertSource.Internal;
@@ -109,6 +112,24 @@ public sealed class AtpNews : FullAuditedAggregateRoot<Guid>
         PublishedById = publisherId;
         PublishedAt = publishedAt;
         IsPublic = isPublic;
+    }
+
+    /// <summary>
+    /// Moderation refusal of a draft — used for citizen activity reports that are not
+    /// published (FR-30-07). Kept with its reason instead of deleted so the decision
+    /// stays auditable.
+    /// </summary>
+    public void Reject(Guid rejecterId, DateTime rejectedAt, string reason)
+    {
+        EnsureDraft();
+
+        Check.NotNullOrWhiteSpace(reason, nameof(reason), 1000);
+
+        Status = NewsStatus.Rejected;
+        RejectedById = rejecterId;
+        RejectedAt = rejectedAt;
+        RejectedReason = reason.Trim();
+        IsPublic = false;
     }
 
     public void Recall(Guid recallerId, DateTime recalledAt)

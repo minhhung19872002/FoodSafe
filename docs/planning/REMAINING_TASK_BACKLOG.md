@@ -1,5 +1,14 @@
 # Remaining Task Backlog
 
+> **CLOSED 2026-07-28 — workflow completion batch.** `FUNC-INT-001` (inbound submission
+> disposition, gap `G-04`) and the moderation half of `FUNC-CIT-001` (reject-with-comment
+> persisted instead of hard delete, gap `G-09`) are **DONE and VERIFIED** against the real stack —
+> registry rows F-019h and F-016b, evidence in
+> [`docs/implementation/78-workflow-completion-plan.md`](../implementation/78-workflow-completion-plan.md).
+> With these two, **all 10 workflows** in `docs/04-state-machines.md` (+ INT-03) are implemented.
+> Still open from `FUNC-CIT-001`: the business-link selector in `AlertEditorModal` (a form
+> convenience, not a workflow step). The `EnableE2eData=false` half of `SEC-004` also remains.
+
 **Baseline**: `feat/integration-completion` @ `aad87c1` + dirty tree (audit §A) · 2026-07-28
 **49 tasks** — P0: 4 · P1: 17 · P2: 21 · P3: 7. Tracks: Phase-0/A (BASE, FUNC, EXT) · B (SEC) · C (TEST) · D (OPS) · E (DOC).
 Effort: XS <0.5d · S 0.5–1d · M 1–3d · L 3–5d. Owners: BE/FE/QA/DevOps/BA/SecEng/DocOwner.

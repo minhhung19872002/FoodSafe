@@ -59,4 +59,13 @@ public sealed class PartnerAccountController(
     [HttpGet("submissions/{submissionId:guid}")]
     public Task<InboundSubmissionDetailDto> GetSubmissionAsync(
         Guid submissionId) => service.GetSubmissionAsync(submissionId);
+
+    [HttpPost("submissions/{submissionId:guid}/process")]
+    public Task<InboundSubmissionDto> ProcessSubmissionAsync(Guid submissionId) =>
+        service.ProcessSubmissionAsync(submissionId);
+
+    [HttpPost("submissions/{submissionId:guid}/reject")]
+    public Task<InboundSubmissionDto> RejectSubmissionAsync(
+        Guid submissionId, [FromBody] RejectInboundSubmissionDto input) =>
+        service.RejectSubmissionAsync(submissionId, input);
 }

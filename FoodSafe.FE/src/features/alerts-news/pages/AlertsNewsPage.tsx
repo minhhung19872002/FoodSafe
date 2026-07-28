@@ -18,6 +18,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   SendOutlined,
+  StopOutlined,
   UndoOutlined,
   EyeOutlined,
   ExportOutlined,
@@ -36,11 +37,13 @@ import {
   useDeleteAlert,
   usePublishAlert,
   useRecallAlert,
+  useRejectAlert,
   useCreateNews,
   useUpdateNews,
   useDeleteNews,
   usePublishNews,
   useRecallNews,
+  useRejectNews,
   useExportAlerts,
   useExportNews,
 } from "../api/alertsNewsMutations";
@@ -115,12 +118,14 @@ function AlertsTab() {
   const deleteMut = useDeleteAlert();
   const publishMut = usePublishAlert();
   const recallMut = useRecallAlert();
+  const rejectMut = useRejectAlert();
   const exportMut = useExportAlerts();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<AtpAlert | undefined>();
   const [recallOpen, setRecallOpen] = useState(false);
   const [recallingId, setRecallingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [detailAlert, setDetailAlert] = useState<AtpAlert | null>(null);
 
   const canCreate = hasPermission("FoodSafe.AlertsAndTesting.Alerts.Create");
@@ -243,6 +248,15 @@ function AlertsTab() {
                       void message.error(extractApiError(error)),
                   },
                 ),
+            },
+            {
+              key: "reject",
+              label: "Từ chối",
+              ariaLabel: `Từ chối ${record.title}`,
+              icon: <StopOutlined />,
+              danger: true,
+              hidden: !(record.status === ALERT_STATUS.Draft && canPublish),
+              onClick: () => setRejectingId(record.id),
             },
             {
               key: "recall",
@@ -432,6 +446,29 @@ function AlertsTab() {
         }}
       />
 
+      <RevokeModal
+        open={Boolean(rejectingId)}
+        title="Từ chối cảnh báo"
+        okText="Từ chối"
+        description="Cảnh báo bị từ chối vẫn được lưu lại kèm lý do để phục vụ tra cứu, và không hiển thị trên cổng công khai."
+        placeholder="Lý do từ chối"
+        confirmLoading={rejectMut.isPending}
+        onCancel={() => setRejectingId(null)}
+        onConfirm={(reason) => {
+          if (!rejectingId) return;
+          rejectMut.mutate(
+            { id: rejectingId, reason },
+            {
+              onSuccess: () => {
+                void message.success("Đã từ chối cảnh báo.");
+                setRejectingId(null);
+              },
+              onError: (error) => void message.error(extractApiError(error)),
+            },
+          );
+        }}
+      />
+
       <RecordDetailDrawer
         title="Chi tiết cảnh báo"
         record={detailAlert}
@@ -490,6 +527,12 @@ function AlertsTab() {
               r.recalledAt ? dayjs(r.recalledAt).format("DD/MM/YYYY") : null,
           },
           { label: "Lý do thu hồi", span: 2, render: (r) => r.recallReason },
+          {
+            label: "Ngày từ chối",
+            render: (r) =>
+              r.rejectedAt ? dayjs(r.rejectedAt).format("DD/MM/YYYY") : null,
+          },
+          { label: "Lý do từ chối", span: 2, render: (r) => r.rejectedReason },
         ]}
       />
     </>
@@ -516,11 +559,13 @@ function NewsTab() {
   const deleteMut = useDeleteNews();
   const publishMut = usePublishNews();
   const recallMut = useRecallNews();
+  const rejectMut = useRejectNews();
   const exportMut = useExportNews();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<AtpNews | undefined>();
   const [detailNews, setDetailNews] = useState<AtpNews | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
 
   const canCreate = hasPermission("FoodSafe.AlertsAndTesting.News.Create");
   const canEdit = hasPermission("FoodSafe.AlertsAndTesting.News.Edit");
@@ -643,6 +688,15 @@ function NewsTab() {
                       void message.error(extractApiError(error)),
                   },
                 ),
+            },
+            {
+              key: "reject",
+              label: "Từ chối",
+              ariaLabel: `Từ chối ${record.title}`,
+              icon: <StopOutlined />,
+              danger: true,
+              hidden: !(record.status === NEWS_STATUS.Draft && canPublish),
+              onClick: () => setRejectingId(record.id),
             },
             {
               key: "recall",
@@ -801,6 +855,29 @@ function NewsTab() {
         onSubmit={handleSubmit}
       />
 
+      <RevokeModal
+        open={Boolean(rejectingId)}
+        title="Từ chối tin tức"
+        okText="Từ chối"
+        description="Tin tức bị từ chối vẫn được lưu lại kèm lý do để phục vụ tra cứu, và không hiển thị trên cổng công khai."
+        placeholder="Lý do từ chối"
+        confirmLoading={rejectMut.isPending}
+        onCancel={() => setRejectingId(null)}
+        onConfirm={(reason) => {
+          if (!rejectingId) return;
+          rejectMut.mutate(
+            { id: rejectingId, reason },
+            {
+              onSuccess: () => {
+                void message.success("Đã từ chối tin tức.");
+                setRejectingId(null);
+              },
+              onError: (error) => void message.error(extractApiError(error)),
+            },
+          );
+        }}
+      />
+
       <RecordDetailDrawer
         title="Chi tiết tin tức"
         record={detailNews}
@@ -848,6 +925,12 @@ function NewsTab() {
             render: (r) =>
               r.recalledAt ? dayjs(r.recalledAt).format("DD/MM/YYYY") : null,
           },
+          {
+            label: "Ngày từ chối",
+            render: (r) =>
+              r.rejectedAt ? dayjs(r.rejectedAt).format("DD/MM/YYYY") : null,
+          },
+          { label: "Lý do từ chối", span: 2, render: (r) => r.rejectedReason },
           {
             label: "Cảnh báo liên kết",
             span: 2,

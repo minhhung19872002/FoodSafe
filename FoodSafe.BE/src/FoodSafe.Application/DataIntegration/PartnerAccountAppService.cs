@@ -6,6 +6,7 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Threading;
+using Volo.Abp.Users;
 
 namespace FoodSafe.DataIntegration;
 
@@ -237,20 +238,67 @@ public class PartnerAccountAppService :
     public async Task<InboundSubmissionDetailDto> GetSubmissionAsync(Guid submissionId)
     {
         var ct = _cancellationTokens.Token;
-        var scope = await _dataScopeProvider.GetAsync(DataScopeOperation.View, ct);
-        var query = (await _submissions.GetQueryableAsync())
-            .WhereIf(!scope.HasGlobalAccess,
-                x => scope.OrganizationIds.Contains(x.OrganizationId))
-            .Where(x => x.Id == submissionId);
-        var entity = await AsyncExecuter.FirstOrDefaultAsync(query, ct)
-            ?? throw new BusinessException(
-                FoodSafeDomainErrorCodes.DataIntegration.SubmissionNotFound);
+        var entity = await GetScopedSubmissionAsync(
+            submissionId, DataScopeOperation.View, ct);
         var names = await PartnerNamesAsync([entity.PartnerAccountId], ct);
 
         var dto = (InboundSubmissionDetailDto)ToSubmissionDto(
             new InboundSubmissionDetailDto(), entity, names);
         dto.Payload = entity.Payload;
         return dto;
+    }
+
+    /// <summary>
+    /// Approves a submission received from a partner (Received → Processed).
+    /// The domain refuses a second disposition, so a retried request cannot
+    /// overwrite who decided what and when.
+    /// </summary>
+    [Authorize(FoodSafePermissions.DataIntegration.Partners.Moderate)]
+    public async Task<InboundSubmissionDto> ProcessSubmissionAsync(Guid submissionId)
+    {
+        var ct = _cancellationTokens.Token;
+        var submission = await GetScopedSubmissionAsync(
+            submissionId, DataScopeOperation.Edit, ct);
+
+        submission.MarkProcessed(CurrentUser.GetId(), Clock.Now);
+        await _submissions.UpdateAsync(submission, autoSave: true, cancellationToken: ct);
+
+        return await ToDispositionResultAsync(submission, ct);
+    }
+
+    /// <summary>Rejects a submission with a mandatory reason (Received → Rejected).</summary>
+    [Authorize(FoodSafePermissions.DataIntegration.Partners.Moderate)]
+    public async Task<InboundSubmissionDto> RejectSubmissionAsync(
+        Guid submissionId, RejectInboundSubmissionDto input)
+    {
+        var ct = _cancellationTokens.Token;
+        var submission = await GetScopedSubmissionAsync(
+            submissionId, DataScopeOperation.Edit, ct);
+
+        submission.Reject(CurrentUser.GetId(), Clock.Now, input.Reason);
+        await _submissions.UpdateAsync(submission, autoSave: true, cancellationToken: ct);
+
+        return await ToDispositionResultAsync(submission, ct);
+    }
+
+    private async Task<InboundSubmissionDto> ToDispositionResultAsync(
+        InboundSubmission submission, CancellationToken ct)
+    {
+        var names = await PartnerNamesAsync([submission.PartnerAccountId], ct);
+        return ToSubmissionDto(new InboundSubmissionDto(), submission, names);
+    }
+
+    private async Task<InboundSubmission> GetScopedSubmissionAsync(
+        Guid submissionId, DataScopeOperation operation, CancellationToken ct)
+    {
+        var scope = await _dataScopeProvider.GetAsync(operation, ct);
+        var query = (await _submissions.GetQueryableAsync())
+            .WhereIf(!scope.HasGlobalAccess,
+                x => scope.OrganizationIds.Contains(x.OrganizationId))
+            .Where(x => x.Id == submissionId);
+        return await AsyncExecuter.FirstOrDefaultAsync(query, ct)
+            ?? throw new BusinessException(
+                FoodSafeDomainErrorCodes.DataIntegration.SubmissionNotFound);
     }
 
     private async Task<Dictionary<Guid, string>> PartnerNamesAsync(
@@ -358,6 +406,8 @@ public class PartnerAccountAppService :
         dto.ReceivedAt = x.ReceivedAt;
         dto.Status = x.Status;
         dto.RejectReason = x.RejectReason;
+        dto.ProcessedById = x.ProcessedById;
+        dto.ProcessedAt = x.ProcessedAt;
         return dto;
     }
 }

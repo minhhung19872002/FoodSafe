@@ -146,6 +146,21 @@ export const dataIntegrationApi = {
       )
       .then((r) => r.data),
 
+  processInboundSubmission: (submissionId: string) =>
+    api
+      .post<InboundSubmission>(
+        `/v1/app/partner-account/submissions/${submissionId}/process`,
+      )
+      .then((r) => r.data),
+
+  rejectInboundSubmission: (submissionId: string, reason: string) =>
+    api
+      .post<InboundSubmission>(
+        `/v1/app/partner-account/submissions/${submissionId}/reject`,
+        { reason },
+      )
+      .then((r) => r.data),
+
   getApiSpecs: (params: ApiSpecificationFilter) =>
     api
       .get<PagedResult<ApiSpecification>>("/v1/app/api-specification", {

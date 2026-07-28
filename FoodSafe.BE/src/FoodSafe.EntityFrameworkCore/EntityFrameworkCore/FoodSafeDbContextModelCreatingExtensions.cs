@@ -1571,11 +1571,13 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 table.HasCheckConstraint("chk_alerts_category", "category IN (1, 2, 3, 4, 5, 6)");
                 table.HasCheckConstraint("chk_alerts_severity", "severity IN (1, 2, 3, 4)");
                 table.HasCheckConstraint("chk_alerts_source", "source IN (1, 2, 3)");
-                table.HasCheckConstraint("chk_alerts_status", "status IN (1, 2, 3)");
+                table.HasCheckConstraint("chk_alerts_status", "status IN (1, 2, 3, 4)");
                 table.HasCheckConstraint("chk_alerts_publish",
-                    "status = 1 OR (published_by_id IS NOT NULL AND published_at IS NOT NULL)");
+                    "status IN (1, 4) OR (published_by_id IS NOT NULL AND published_at IS NOT NULL)");
                 table.HasCheckConstraint("chk_alerts_recall",
                     "status <> 3 OR (recalled_by_id IS NOT NULL AND recalled_at IS NOT NULL AND recall_reason IS NOT NULL)");
+                table.HasCheckConstraint("chk_alerts_reject",
+                    "status <> 4 OR (rejected_by_id IS NOT NULL AND rejected_at IS NOT NULL AND rejected_reason IS NOT NULL)");
             });
             ConfigureAggregateAudit(entity, "pk_atp_alerts");
             entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
@@ -1597,6 +1599,9 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.RecalledById).HasColumnName("recalled_by_id");
             entity.Property(x => x.RecalledAt).HasColumnName("recalled_at");
             entity.Property(x => x.RecallReason).HasColumnName("recall_reason");
+            entity.Property(x => x.RejectedById).HasColumnName("rejected_by_id");
+            entity.Property(x => x.RejectedAt).HasColumnName("rejected_at");
+            entity.Property(x => x.RejectedReason).HasColumnName("rejected_reason");
             entity.Property(x => x.IsPublic).HasColumnName("is_public");
 
             entity.HasOne<Organization>()
@@ -1629,11 +1634,13 @@ public static class FoodSafeDbContextModelCreatingExtensions
         {
             entity.ToTable("atp_news", table =>
             {
-                table.HasCheckConstraint("chk_news_status", "status IN (1, 2, 3)");
+                table.HasCheckConstraint("chk_news_status", "status IN (1, 2, 3, 4)");
                 table.HasCheckConstraint("chk_news_publish",
-                    "status = 1 OR (published_by_id IS NOT NULL AND published_at IS NOT NULL)");
+                    "status IN (1, 4) OR (published_by_id IS NOT NULL AND published_at IS NOT NULL)");
                 table.HasCheckConstraint("chk_news_recall",
                     "status <> 3 OR (recalled_by_id IS NOT NULL AND recalled_at IS NOT NULL)");
+                table.HasCheckConstraint("chk_news_reject",
+                    "status <> 4 OR (rejected_by_id IS NOT NULL AND rejected_at IS NOT NULL AND rejected_reason IS NOT NULL)");
                 table.HasCheckConstraint("chk_news_view_count", "view_count >= 0");
             });
             ConfigureAggregateAudit(entity, "pk_atp_news");
@@ -1650,6 +1657,9 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.PublishedById).HasColumnName("published_by_id");
             entity.Property(x => x.RecalledById).HasColumnName("recalled_by_id");
             entity.Property(x => x.RecalledAt).HasColumnName("recalled_at");
+            entity.Property(x => x.RejectedById).HasColumnName("rejected_by_id");
+            entity.Property(x => x.RejectedAt).HasColumnName("rejected_at");
+            entity.Property(x => x.RejectedReason).HasColumnName("rejected_reason");
             entity.Property(x => x.IsPublic).HasColumnName("is_public");
             entity.Property(x => x.IsFeatured).HasColumnName("is_featured");
             entity.Property(x => x.Source)
@@ -2579,7 +2589,15 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
         builder.Entity<InboundSubmission>(entity =>
         {
-            entity.ToTable("di_inbound_submissions");
+            entity.ToTable("di_inbound_submissions", table =>
+            {
+                table.HasCheckConstraint("chk_di_is_status", "status IN (1, 2, 3)");
+                // A disposed submission always records who decided and when.
+                table.HasCheckConstraint("chk_di_is_disposition",
+                    "status = 1 OR (processed_by_id IS NOT NULL AND processed_at IS NOT NULL)");
+                table.HasCheckConstraint("chk_di_is_reject_reason",
+                    "status <> 3 OR reject_reason IS NOT NULL");
+            });
             entity.ConfigureByConvention();
 
             entity.HasKey(x => x.Id).HasName("pk_di_inbound_submissions");
@@ -2611,6 +2629,8 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.RejectReason)
                 .HasColumnName("reject_reason")
                 .HasMaxLength(InboundSubmission.MaxRejectReasonLength);
+            entity.Property(x => x.ProcessedById).HasColumnName("processed_by_id");
+            entity.Property(x => x.ProcessedAt).HasColumnName("processed_at");
             entity.Property(x => x.CreationTime).HasColumnName("creation_time");
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");
             entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");

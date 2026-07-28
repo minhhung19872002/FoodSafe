@@ -137,7 +137,7 @@ test.describe("citizen submission moderation", () => {
 
     // Approve → publish, confirming the modal.
     await row.getByRole("button", { name: /Xuất bản/ }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await page.getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
 
     row = page.getByRole("row").filter({ hasText: stamp });
     await expect(
@@ -196,7 +196,7 @@ test.describe("citizen submission moderation", () => {
       // Reject the submission (Draft-only delete) — open overflow then confirm the modal.
       await row.getByRole("button", { name: `Thao tác ${title}` }).click();
       await page.getByRole("menuitem", { name: "Xóa" }).click();
-      await page.getByRole("button", { name: "OK" }).click();
+      await page.getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
 
       // The rejected submission leaves the moderation queue.
       await expect(

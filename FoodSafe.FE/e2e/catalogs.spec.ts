@@ -65,7 +65,7 @@ test.describe("master catalog administration", () => {
     await expect(row).toContainText(updatedName);
 
     await row.getByRole("button", { name: `Xóa ${updatedName}` }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await page.getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
 
     await expect(page.getByText("Đã xóa dữ liệu danh mục")).toBeVisible();
     await expect(page.getByRole("row").filter({ hasText: code })).toHaveCount(

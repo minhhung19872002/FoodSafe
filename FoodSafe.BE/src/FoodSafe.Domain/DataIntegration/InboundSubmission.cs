@@ -38,6 +38,10 @@ public class InboundSubmission : CreationAuditedAggregateRoot<Guid>
     public InboundSubmissionStatus Status { get; private set; }
     public string? RejectReason { get; private set; }
 
+    /// <summary>Officer who approved or rejected the submission (null while Received).</summary>
+    public Guid? ProcessedById { get; private set; }
+    public DateTime? ProcessedAt { get; private set; }
+
     private InboundSubmission() { }
 
     public static InboundSubmission Create(
@@ -75,12 +79,38 @@ public class InboundSubmission : CreationAuditedAggregateRoot<Guid>
         };
     }
 
-    public void MarkProcessed() => Status = InboundSubmissionStatus.Processed;
-
-    public void Reject(string reason)
+    /// <summary>
+    /// Approves the submission (Received → Processed). Terminal: a submission that
+    /// already carries a disposition cannot be re-dispositioned, so a repeated call
+    /// — a double-clicked button, a retried request — cannot rewrite the audit trail.
+    /// </summary>
+    public void MarkProcessed(Guid processedById, DateTime processedAt)
     {
-        Status = InboundSubmissionStatus.Rejected;
+        EnsureAwaitingDisposition();
+
+        Status = InboundSubmissionStatus.Processed;
+        ProcessedById = processedById;
+        ProcessedAt = processedAt;
+    }
+
+    /// <summary>Rejects the submission with a mandatory reason (Received → Rejected).</summary>
+    public void Reject(Guid rejectedById, DateTime rejectedAt, string reason)
+    {
+        EnsureAwaitingDisposition();
+
         RejectReason = Check.NotNullOrWhiteSpace(
-            reason, nameof(reason), MaxRejectReasonLength);
+            reason, nameof(reason), MaxRejectReasonLength).Trim();
+        Status = InboundSubmissionStatus.Rejected;
+        ProcessedById = rejectedById;
+        ProcessedAt = rejectedAt;
+    }
+
+    private void EnsureAwaitingDisposition()
+    {
+        if (Status != InboundSubmissionStatus.Received)
+        {
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.DataIntegration.SubmissionAlreadyDisposed);
+        }
     }
 }

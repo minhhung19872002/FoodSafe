@@ -59,6 +59,7 @@ export const ALERT_STATUS = {
   Draft: 1,
   Published: 2,
   Recalled: 3,
+  Rejected: 4,
 } as const;
 export type AlertStatus = (typeof ALERT_STATUS)[keyof typeof ALERT_STATUS];
 
@@ -69,12 +70,14 @@ export const ALERT_STATUS_CONFIG: Record<
   [ALERT_STATUS.Draft]: { color: "default", label: "Nháp" },
   [ALERT_STATUS.Published]: { color: "green", label: "Đã xuất bản" },
   [ALERT_STATUS.Recalled]: { color: "red", label: "Đã thu hồi" },
+  [ALERT_STATUS.Rejected]: { color: "volcano", label: "Đã từ chối" },
 };
 
 export const NEWS_STATUS = {
   Draft: 1,
   Published: 2,
   Recalled: 3,
+  Rejected: 4,
 } as const;
 export type NewsStatus = (typeof NEWS_STATUS)[keyof typeof NEWS_STATUS];
 
@@ -85,6 +88,7 @@ export const NEWS_STATUS_CONFIG: Record<
   [NEWS_STATUS.Draft]: { color: "default", label: "Nháp" },
   [NEWS_STATUS.Published]: { color: "green", label: "Đã xuất bản" },
   [NEWS_STATUS.Recalled]: { color: "red", label: "Đã thu hồi" },
+  [NEWS_STATUS.Rejected]: { color: "volcano", label: "Đã từ chối" },
 };
 
 export interface AtpAlert {
@@ -109,6 +113,9 @@ export interface AtpAlert {
   recalledById?: string;
   recalledAt?: string;
   recallReason?: string;
+  rejectedById?: string;
+  rejectedAt?: string;
+  rejectedReason?: string;
   isPublic: boolean;
   creationTime: string;
 }
@@ -160,6 +167,9 @@ export interface AtpNews {
   publishedById?: string;
   recalledById?: string;
   recalledAt?: string;
+  rejectedById?: string;
+  rejectedAt?: string;
+  rejectedReason?: string;
   isPublic: boolean;
   isFeatured: boolean;
   source: AlertSource;

@@ -16,6 +16,7 @@ specified level.
 | CSRF / anti-forgery | `BE/FoodSafeHttpApiHostModule.cs` (ConfigureAntiForgery) | Level 3 | All mutation features |
 | Permission definitions | `BE/Permissions/FoodSafePermissions.cs` | Level 3 | All features using permissions |
 | Permission seeder | `BE/Data/FoodSafePermissionDataSeedContributor.cs` | Level 3 | All features using permissions |
+| FE-visible permission list | `BE/Application/Security/CurrentUserContextAppService.cs` → `FoodSafePermissionNames` | Level 3 | All features whose UI gates on `hasPermission` — a permission absent from this array is invisible to the frontend even when granted, so every new permission must be added here |
 
 ### Data Scoping
 
@@ -58,6 +59,16 @@ specified level.
 | Partner aggregates + key material | `BE/Domain/DataIntegration/{PartnerAccount,PartnerApiKey,InboundSubmission}.cs`, `BE/Application/DataIntegration/PartnerKeyMaterial.cs` | Level 2 | F-019f |
 | Partner admin + inbound receive services | `BE/Application/DataIntegration/{PartnerAccountAppService,PartnerInboundAppService}.cs`, `BE/HttpApi/DataIntegration/*` | Level 2 | F-019f (+ re-run `e2e/partner-openapi-contract.spec.ts` and re-align `docs/integration/partner-openapi.yaml` — FR-50-05 published contract) |
 | Partner FE tabs | `FE/src/features/data-integration/components/{PartnersTab,InboundSubmissionsTab}.tsx` | Level 2 | F-019f |
+| Inbound disposition (approve/reject) | `BE/Domain/DataIntegration/InboundSubmission.cs` (`MarkProcessed`/`Reject`), `PartnerAccountAppService.{Process,Reject}SubmissionAsync`, `FE/.../InboundSubmissionsTab.tsx` | Level 2 | F-019h (+ F-019f — the tab and row actions are shared) |
+
+### Alerts & News moderation (YCKT STT 29/30)
+
+| Dependency | Path | Retest | Affected Features |
+|---|---|---|---|
+| Alert/News status enum | `BE/Domain.Shared/AlertsAndTesting/AlertsAndTestingEnums.cs` (`AlertStatus`, `NewsStatus`) | Level 2 | F-016, F-016b, F-033 (public portal renders only Published) |
+| Moderation transitions | `BE/Domain/AlertsAndTesting/{AtpAlert,AtpNews}.cs` (`Publish`/`Reject`/`Recall`), `{AtpAlert,AtpNews}AppService.RejectAsync` | Level 2 | F-016, F-016b |
+| Citizen intake | `BE/Application/Public/{CitizenAlertReport,CitizenNewsReport}AppService.cs` | Level 2 | F-016b, F-033 |
+| Reason modal | `FE/src/components/RevokeModal.tsx` | Level 1 | F-016b + every feature using revoke-with-reason (F-007 through F-012) |
 
 ### API Infrastructure
 

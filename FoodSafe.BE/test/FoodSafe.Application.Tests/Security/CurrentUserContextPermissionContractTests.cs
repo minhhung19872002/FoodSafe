@@ -304,6 +304,9 @@ public sealed class CurrentUserContextPermissionContractTests
             FoodSafePermissions.DataIntegration.Partners.ManageKeys,
             permissions);
         Assert.Contains(
+            FoodSafePermissions.DataIntegration.Partners.Moderate,
+            permissions);
+        Assert.Contains(
             FoodSafePermissions.DataIntegration.ApiSpecs.View,
             permissions);
         Assert.Contains(

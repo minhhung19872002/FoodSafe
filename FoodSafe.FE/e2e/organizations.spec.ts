@@ -115,7 +115,7 @@ test.describe("organization management", () => {
       .getByRole("row")
       .filter({ hasText: `${orgName}-updated` });
     await updatedRow.getByRole("button", { name: /Xóa/ }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await page.getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
     await expect(
       table.getByRole("cell", { name: `${orgName}-updated`, exact: true }),
     ).not.toBeVisible({ timeout: 10_000 });

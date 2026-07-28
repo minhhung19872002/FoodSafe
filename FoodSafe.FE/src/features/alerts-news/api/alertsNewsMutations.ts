@@ -68,6 +68,15 @@ export function useRecallAlert() {
   });
 }
 
+export function useRejectAlert() {
+  const refresh = useAlertRefresh();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      alertApi.reject(id, reason),
+    onSuccess: refresh,
+  });
+}
+
 export function useCreateNews() {
   const refresh = useNewsRefresh();
   return useMutation({
@@ -106,6 +115,15 @@ export function useRecallNews() {
   const refresh = useNewsRefresh();
   return useMutation({
     mutationFn: (id: string) => newsApi.recall(id),
+    onSuccess: refresh,
+  });
+}
+
+export function useRejectNews() {
+  const refresh = useNewsRefresh();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      newsApi.reject(id, reason),
     onSuccess: refresh,
   });
 }

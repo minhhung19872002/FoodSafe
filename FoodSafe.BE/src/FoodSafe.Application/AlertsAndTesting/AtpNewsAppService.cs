@@ -136,6 +136,19 @@ public class AtpNewsAppService : ApplicationService
         return (await ToDtosAsync([article]))[0];
     }
 
+    /// <summary>
+    /// Moderation refusal of a draft news item (STT 30 — "Duyệt tin tức do người dân
+    /// gửi lên"). The record and its reason are kept for audit instead of deleted.
+    /// </summary>
+    [Authorize(FoodSafePermissions.AlertsAndTesting.News.Publish)]
+    public async Task<AtpNewsDto> RejectAsync(Guid id, RejectNewsDto input)
+    {
+        var article = await GetScopedAsync(id, DataScopeOperation.Edit);
+        article.Reject(CurrentUser.GetId(), Clock.Now, input.Reason);
+        await _news.UpdateAsync(article, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return (await ToDtosAsync([article]))[0];
+    }
+
     [Authorize(FoodSafePermissions.AlertsAndTesting.News.Publish)]
     public async Task<AtpNewsDto> RecallAsync(Guid id)
     {
@@ -270,6 +283,9 @@ public class AtpNewsAppService : ApplicationService
             PublishedById = a.PublishedById,
             RecalledById = a.RecalledById,
             RecalledAt = a.RecalledAt,
+            RejectedById = a.RejectedById,
+            RejectedAt = a.RejectedAt,
+            RejectedReason = a.RejectedReason,
             IsPublic = a.IsPublic,
             IsFeatured = a.IsFeatured,
             Source = a.Source,

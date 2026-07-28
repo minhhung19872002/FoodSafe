@@ -158,6 +158,7 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.DataIntegration.Partners.Edit,
         FoodSafePermissions.DataIntegration.Partners.Delete,
         FoodSafePermissions.DataIntegration.Partners.ManageKeys,
+        FoodSafePermissions.DataIntegration.Partners.Moderate,
         FoodSafePermissions.DataIntegration.ApiSpecs.View,
         FoodSafePermissions.DataIntegration.ApiSpecs.Create,
         FoodSafePermissions.DataIntegration.ApiSpecs.Publish,

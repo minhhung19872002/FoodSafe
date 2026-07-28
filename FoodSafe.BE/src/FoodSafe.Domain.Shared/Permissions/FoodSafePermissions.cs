@@ -333,6 +333,9 @@ public static class FoodSafePermissions
             public const string Edit = Default + ".Edit";
             public const string Delete = Default + ".Delete";
             public const string ManageKeys = Default + ".ManageKeys";
+
+            /// <summary>Approve or reject data a partner pushed in (INT-03 disposition).</summary>
+            public const string Moderate = Default + ".Moderate";
         }
 
         /// <summary>Versioned partner-facing API specifications (FR-50-05).</summary>

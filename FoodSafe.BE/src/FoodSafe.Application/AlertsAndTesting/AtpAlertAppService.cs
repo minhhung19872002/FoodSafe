@@ -139,6 +139,20 @@ public class AtpAlertAppService : ApplicationService
         return (await ToDtosAsync([alert]))[0];
     }
 
+    /// <summary>
+    /// Moderation refusal of a draft alert (STT 29 — "Duyệt cảnh báo do người dân
+    /// gửi lên"). Rejecting keeps the record and its reason so the decision is
+    /// auditable, unlike deleting it.
+    /// </summary>
+    [Authorize(FoodSafePermissions.AlertsAndTesting.Alerts.Publish)]
+    public async Task<AtpAlertDto> RejectAsync(Guid id, RejectAlertDto input)
+    {
+        var alert = await GetScopedAsync(id, DataScopeOperation.Edit);
+        alert.Reject(CurrentUser.GetId(), Clock.Now, input.Reason);
+        await _alerts.UpdateAsync(alert, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return (await ToDtosAsync([alert]))[0];
+    }
+
     [Authorize(FoodSafePermissions.AlertsAndTesting.Alerts.Publish)]
     public async Task<AtpAlertDto> RecallAsync(Guid id, RecallAlertDto input)
     {
@@ -247,6 +261,9 @@ public class AtpAlertAppService : ApplicationService
             RecalledById = a.RecalledById,
             RecalledAt = a.RecalledAt,
             RecallReason = a.RecallReason,
+            RejectedById = a.RejectedById,
+            RejectedAt = a.RejectedAt,
+            RejectedReason = a.RejectedReason,
             IsPublic = a.IsPublic,
             CreationTime = a.CreationTime,
         }).ToList();

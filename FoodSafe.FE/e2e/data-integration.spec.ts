@@ -60,7 +60,7 @@ test.describe("data integration management", () => {
     let row = page.getByRole("row").filter({ hasText: endpointName });
     await row.getByRole("button", { name: `Thao tác ${endpointName}` }).click();
     await page.getByRole("menuitem", { name: "Xóa" }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await page.getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
     await expect(page.getByText(endpointName)).not.toBeVisible({
       timeout: 10_000,
     });

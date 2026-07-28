@@ -319,6 +319,7 @@
     "Permission:DataIntegration.Partners.Edit": "Sửa đối tác liên thông",
     "Permission:DataIntegration.Partners.Delete": "Xóa đối tác liên thông",
     "Permission:DataIntegration.Partners.ManageKeys": "Quản lý khóa API đối tác",
+    "Permission:DataIntegration.Partners.Moderate": "Duyệt/từ chối dữ liệu đối tác gửi đến",
     "Permission:DataIntegration.ApiSpecs": "Đặc tả API đối tác",
     "Permission:DataIntegration.ApiSpecs.View": "Xem đặc tả API",
     "Permission:DataIntegration.ApiSpecs.Create": "Tải lên đặc tả API",
@@ -329,6 +330,7 @@
     "FoodSafe:DataIntegration:0001": "Không tìm thấy cấu hình API.",
     "FoodSafe:DataIntegration:0002": "Không tìm thấy lịch sử gọi API.",
     "FoodSafe:DataIntegration:0007": "Không tìm thấy đặc tả API.",
-    "FoodSafe:DataIntegration:0008": "Đã có một phiên bản khác của đặc tả này đang được phát hành."
+    "FoodSafe:DataIntegration:0008": "Đã có một phiên bản khác của đặc tả này đang được phát hành.",
+    "FoodSafe:DataIntegration:0009": "Dữ liệu tiếp nhận này đã được duyệt hoặc từ chối trước đó."
   }
 }
