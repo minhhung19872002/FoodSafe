@@ -271,7 +271,7 @@ jobs:
         run: bash scripts/verify-env-example-complete.sh
 
       - name: Scan repository for secrets and insecure configuration
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -310,7 +310,7 @@ jobs:
         run: bash scripts/verify-prod-frontend.sh
 
       - name: Scan API image
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: foodsafe-api:latest
           trivyignores: .trivyignore
@@ -321,7 +321,7 @@ jobs:
           hide-progress: true
 
       - name: Scan migrator image
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: foodsafe-migrator:latest
           trivyignores: .trivyignore
@@ -332,7 +332,7 @@ jobs:
           hide-progress: true
 
       - name: Scan frontend image
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: foodsafe-frontend:latest
           trivyignores: .trivyignore
