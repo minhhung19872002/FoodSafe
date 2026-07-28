@@ -2,7 +2,7 @@
 
 ## Status: VERIFIED
 
-## Re-verification 2026-07-28 — production-readiness hardening (HEAD `dccac2e` + working tree)
+## Re-verification 2026-07-28 — production-readiness hardening (committed at `983788c`)
 
 Deep FE+BE inspection of `/businesses`; 7 defects found and fixed, all
 re-proven on the freshly rebuilt Docker stack (api + frontend images built
@@ -34,8 +34,7 @@ from this working tree; no API interception):
   default label ("Đồng ý" under vi_VN), while ~20 other in-flight specs from
   the concurrent UI-refactor session still click `"OK"` and will fail the same
   way until updated.
-- Commit stamping deferred to the commit that lands this shared working tree
-  (concurrent session owns unrelated dirty files).
+- Landed in commit `983788c` (guard later extended to self-declarations — see F-007).
 
 - **Feature ID**: F-006
 - **Feature name**: Businesses & Products

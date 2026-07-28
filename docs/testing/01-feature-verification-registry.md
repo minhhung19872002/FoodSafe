@@ -15,8 +15,8 @@
 | F-003 | Organizations                   | DIRTY          | `e2e/organizations.spec.ts`, `e2e/organizations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-004 | Master Catalogs                 | VERIFIED       | `e2e/catalogs.spec.ts`, `e2e/catalogs-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-005 | Geographic Catalogs             | VERIFIED       | `e2e/geography.spec.ts`, `e2e/geography-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts`, `e2e/business-list-filters.spec.ts`, `e2e/business-detail-tabs.spec.ts`, `e2e/business-delete-guard.spec.ts` | `dccac2e`+wt | 2026-07-28 |
-| F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts`, `e2e/business-delete-guard.spec.ts` | `dccac2e`+wt | 2026-07-28 |
+| F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts`, `e2e/business-list-filters.spec.ts`, `e2e/business-detail-tabs.spec.ts`, `e2e/business-delete-guard.spec.ts` | `983788c` | 2026-07-28 |
+| F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts`, `e2e/business-delete-guard.spec.ts` | `983788c` | 2026-07-28 |
 | F-008 | Product Registrations           | DIRTY          | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-009 | Advertisement Registrations     | DIRTY          | `e2e/advertisement-registrations.spec.ts`, `e2e/advertisement-registrations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-010 | Eligibility Certificates        | DIRTY          | `e2e/eligibility-certificates.spec.ts`, `e2e/eligibility-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
@@ -53,8 +53,8 @@
 ## Summary
 
 - Total features: 34
-- VERIFIED: 20 rows (of 39 table rows)
-- DIRTY: **14 rows** (2026-07-28 — default list ordering changed to `CreationTime desc` + server-side column sorting added; see "DIRTY batch" note below and `03-regression-log.md`)
+- VERIFIED: 27 rows (of 39 table rows)
+- DIRTY: **12 rows** (2026-07-28 — default list ordering changed to `CreationTime desc` + server-side column sorting added; see "DIRTY batch" note below and `03-regression-log.md`)
 - READY_FOR_TEST: 0
 - FAILED: 0
 - BLOCKED: 0
@@ -65,7 +65,7 @@
 - Cross-cutting UX change: every admin list now defaults to `CreationTime desc` (newest first); the previous business-field ordering (SampleDate, IssuedDate, InspectionDate, Year, PeriodYear, IssueDate, RegistrationDate, DeclarationDate, Name, Code) is now reachable via server-side column sorting (whitelisted `ApplySorting` per AppService + controlled AntD sorter per page, following the F-006 businesses pattern).
 - DTO constructor `Sorting` defaults that pre-empted the fallback were removed/changed (`BusinessListInput`, `GetOrganizationListInput`, `SelfDeclarationListInput`, `ProductListInput`, 5 Licensing inputs).
 - NOT affected (left as-is): Catalogs (`SortOrder` is a deliberate user-managed display order), FoodPoisoning/Alerts/News/RiskAnalysis/ApiEndpoints/Identity users (already `CreationTime desc`), call/submission logs (`CalledAt`/`ReceivedAt` desc), public portal ordering.
-- Rows marked DIRTY: F-003, F-006, F-007, F-008, F-009, F-010, F-011, F-012, F-013, F-015, F-017, F-019f, F-019g, F-031. Required retest: Level 2 per feature (list default order, header-click sort round-trip, pagination interplay). Build gates at change time: BE compile 0 errors, FE `tsc -b` clean, `oxlint` clean; runtime E2E NOT yet run — e2e specs asserting first-row/newest-first assumptions must be reviewed during retest.
+- Rows marked DIRTY: F-003, F-008, F-009, F-010, F-011, F-012, F-013, F-015, F-017, F-019f, F-019g, F-031. F-006/F-007 were initially marked DIRTY by this batch too, but the concurrent session re-verified them at `dccac2e`+wt against the working tree that already contained the sorting changes, so their VERIFIED stamps stand. Required retest: Level 2 per feature (list default order, header-click sort round-trip, pagination interplay). Build gates at change time: BE compile 0 errors, FE `tsc -b` clean, `oxlint` clean; runtime E2E NOT yet run — e2e specs asserting first-row/newest-first assumptions must be reviewed during retest.
 - **F-006 + F-007 retested and returned to VERIFIED** (2026-07-28, hardening batch): full feature suites + `business-delete-guard.spec.ts` ran **20/20** against a stack rebuilt from the tree containing the sorting changes for these two features (incl. `business-list-filters` sort/pagination spec). Remaining DIRTY rows still owe their Level-2 retest.
 
 ## UI restyle (2026-07-28) — áp bộ nhận diện FoodSafe Quảng Ninh — RE-VERIFIED

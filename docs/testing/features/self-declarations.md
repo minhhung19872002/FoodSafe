@@ -2,7 +2,7 @@
 
 ## Status: VERIFIED
 
-## Re-verification 2026-07-28 — production-readiness hardening (working tree, after `dccac2e`)
+## Re-verification 2026-07-28 — production-readiness hardening (committed at `983788c`)
 
 Deep FE+BE inspection of `/self-declarations`; defects found and fixed, re-proven
 on the rebuilt Docker stack (no API interception):
@@ -22,7 +22,7 @@ on the rebuilt Docker stack (no API interception):
   `business-list-filters`, `business-detail-tabs`) → **20/20 passed**.
 - BE `FoodSafe.Application.Tests` BusinessManagement **35/35**; FE Vitest
   self-declarations **3/3**; `tsc -b` clean.
-- Commit stamping deferred to the commit that lands this shared working tree.
+- Landed in commit `983788c`.
 
 - **Feature ID**: F-007
 - **Feature name**: Self Declarations
