@@ -75,6 +75,8 @@
 2. **Guards**: no/garbage/unprefixed key → 401; expired key → 401; suspended partner → 401 (single generic message across all credential failures); data type outside allow-list → 403 `DataTypeNotAllowed`; unknown segment, stale timestamp (±300s replay window), missing X-Request-Id, missing X-Timestamp, unsupported schemaVersion, empty records → 400.
 3. **Idempotency scope**: same X-Request-Id from two partners → two independent submissions; admin `PartnerAccountId` filter isolates each; anonymous admin surface → 401.
 
+**FR-50-05 contract evidence (2026-07-28, at `0776230` + working-tree spec):** `e2e/partner-openapi-contract.spec.ts` — **1/1** against the running stack (api container rebuilt from HEAD), zero interception. Validates `docs/integration/partner-openapi.yaml` against runtime: every operation exercised (operationId coverage gate), all 7 `dataType` segments accepted, all 10 partner `error.code` values reproduced with documented statuses, response bodies schema-validated, `rawKey` proven absent after issuance, Vietnamese payload stored verbatim. Post-rebuild Level-2 regression: `data-integration-partners.spec.ts` **3/3**. The rebuild closed a runtime mismatch: the previous container predated `adb30eb` and lacked the `InvalidSourceSystem` guard (see regression log).
+
 ## Checklist
 
 | Check | Result |
@@ -100,4 +102,5 @@
 - BE `Domain/DataIntegration/{PartnerAccount,PartnerApiKey,InboundSubmission}.cs`, `Application/DataIntegration/{PartnerAccountAppService,PartnerInboundAppService,PartnerKeyMaterial}.cs`, `HttpApi/DataIntegration/{PartnerAccountController,PartnerInboundController}.cs`
 - FE `src/features/data-integration/components/{PartnersTab,InboundSubmissionsTab}.tsx`
 - Depends on auth/scope/axios (Level 3) + `OutboundUrlValidator` (shared outbound client, hardened this batch)
-- Invalid for commits after `adb30eb` touching these paths
+- Contract spec `docs/integration/partner-openapi.yaml` + `e2e/partner-openapi-contract.spec.ts` (FR-50-05) — retest the contract spec whenever these BE paths change
+- Invalid for commits after `adb30eb` touching these paths (behavioral spec re-run green at `0776230` after api-container rebuild)

@@ -418,7 +418,7 @@ Runtime: `data-integration-verification.spec.ts` F-019 VERIFIED.
 | Req ID | Status | Remaining Issue |
 |---|---|---|
 | FR-50-01..04 | **READY_FOR_PRODUCTION** | CRUD + permission-gated; F-019 VERIFIED |
-| FR-50-05 | **READY_WITH_MINOR_ISSUES** | `TestConnectionAsync` added `0eba6b6` — HEAD probe records latency in `ApiCallLog`. FE "Test" button. Endpoint metadata only; **no machine-readable OpenAPI spec for partners** |
+| FR-50-05 | **PASS_WITH_EXECUTABLE_SPEC_EVIDENCE** | `TestConnectionAsync` added `0eba6b6` — HEAD probe records latency in `ApiCallLog`. FE "Test" button. **2026-07-28 (at `0776230`): partner-facing API specification published** — `docs/integration/partner-api-specification.md` + `partner-openapi.yaml` (Redocly lint: valid) + onboarding guide + examples, all generated from the committed controllers/DTOs. Verified against the running stack by `e2e/partner-openapi-contract.spec.ts` **1/1**: every OpenAPI operation exercised over real HTTP (coverage gate on operationIds), all 7 `dataType` segments accepted, all 10 partner `error.code` values reproduced with documented statuses, response bodies schema-validated, Vietnamese Unicode round-trip confirmed |
 | FR-50-06 | **READY_FOR_PRODUCTION** | Toggle status + excel export; F-019 VERIFIED |
 
 ### STT 51–57 — Lịch sử nhận/chia sẻ dữ liệu (7 data types)

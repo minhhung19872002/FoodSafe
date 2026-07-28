@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0",
+  "records": [
+    {
+      "inspectionCode": "TTKT-2026-0731",
+      "businessName": "Công ty TNHH Thực phẩm Hạ Long Xanh",
+      "businessAddress": "Số 15, đường Trần Hưng Đạo, phường Bạch Đằng, thành phố Hạ Long",
+      "inspectedAt": "2026-07-25",
+      "inspectionUnit": "Đoàn kiểm tra liên ngành — Sở Công thương",
+      "result": "Đạt yêu cầu có khắc phục",
+      "violations": [
+        {
+          "description": "Khu vực sơ chế chưa bố trí lưới chắn côn trùng theo quy định",
+          "regulation": "Nghị định 15/2018/NĐ-CP",
+          "action": "Yêu cầu khắc phục trong 15 ngày"
+        }
+      ],
+      "fineAmountVnd": 4000000
+    }
+  ],
+  "sourceSystem": "Hệ thống thanh kiểm tra — Sở Công thương",
+  "sentAt": "2026-07-28T10:00:00+07:00"
+}

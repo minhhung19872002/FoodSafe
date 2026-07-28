@@ -56,7 +56,7 @@ specified level.
 | Dependency | Path | Retest | Affected Features |
 |---|---|---|---|
 | Partner aggregates + key material | `BE/Domain/DataIntegration/{PartnerAccount,PartnerApiKey,InboundSubmission}.cs`, `BE/Application/DataIntegration/PartnerKeyMaterial.cs` | Level 2 | F-019f |
-| Partner admin + inbound receive services | `BE/Application/DataIntegration/{PartnerAccountAppService,PartnerInboundAppService}.cs`, `BE/HttpApi/DataIntegration/*` | Level 2 | F-019f |
+| Partner admin + inbound receive services | `BE/Application/DataIntegration/{PartnerAccountAppService,PartnerInboundAppService}.cs`, `BE/HttpApi/DataIntegration/*` | Level 2 | F-019f (+ re-run `e2e/partner-openapi-contract.spec.ts` and re-align `docs/integration/partner-openapi.yaml` — FR-50-05 published contract) |
 | Partner FE tabs | `FE/src/features/data-integration/components/{PartnersTab,InboundSubmissionsTab}.tsx` | Level 2 | F-019f |
 
 ### API Infrastructure

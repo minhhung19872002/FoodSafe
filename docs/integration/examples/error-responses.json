@@ -1,0 +1,12 @@
+{
+  "400_UnknownDataType": { "error": { "code": "UnknownDataType", "message": "Unknown data type segment 'unknown'." } },
+  "400_MalformedBody": { "error": { "code": "MalformedBody", "message": "Request body must be a JSON submission envelope." } },
+  "400_MissingRequestId": { "error": { "code": "MissingRequestId", "message": "Header X-Request-Id is required (max 128 chars)." } },
+  "400_MissingTimestamp": { "error": { "code": "MissingTimestamp", "message": "Header X-Timestamp is required (ISO-8601 or unix seconds)." } },
+  "400_StaleTimestamp": { "error": { "code": "StaleTimestamp", "message": "X-Timestamp outside the ±300s replay window." } },
+  "400_UnsupportedSchemaVersion": { "error": { "code": "UnsupportedSchemaVersion", "message": "schemaVersion '9.9' is not supported (expected 1.0)." } },
+  "400_InvalidRecords": { "error": { "code": "InvalidRecords", "message": "records must contain 1..500 items." } },
+  "400_InvalidSourceSystem": { "error": { "code": "InvalidSourceSystem", "message": "sourceSystem must be at most 256 characters." } },
+  "401_InvalidApiKey": { "error": { "code": "InvalidApiKey", "message": "Invalid API key." } },
+  "403_DataTypeNotAllowed": { "error": { "code": "DataTypeNotAllowed", "message": "Partner is not allowed to submit 'product'." } }
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.0",
+  "records": [
+    {
+      "caseName": "Vụ nghi ngộ độc thực phẩm tại bếp ăn tập thể khu công nghiệp Cái Lân",
+      "occurredAt": "2026-07-27T12:15:00+07:00",
+      "location": "Khu công nghiệp Cái Lân, thành phố Hạ Long, tỉnh Quảng Ninh",
+      "affectedCount": 23,
+      "hospitalizedCount": 5,
+      "deathCount": 0,
+      "suspectedFood": "Chả cá chiên, canh chua",
+      "suspectedCause": "Nghi nhiễm vi sinh vật (đang chờ kết quả kiểm nghiệm)",
+      "reportingUnit": "Trung tâm Y tế thành phố Hạ Long",
+      "notes": "Đã lấy 06 mẫu thức ăn lưu và 04 mẫu bệnh phẩm gửi kiểm nghiệm."
+    }
+  ],
+  "sourceSystem": "Hệ thống báo cáo NĐTP — Bộ Y tế",
+  "sentAt": "2026-07-28T08:00:00+07:00"
+}

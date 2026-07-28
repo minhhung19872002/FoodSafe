@@ -1,0 +1,588 @@
+openapi: 3.0.3
+info:
+  title: FoodSafe Partner API (INT-03 / FR-50-05)
+  description: >
+    Inbound partner integration surface of the FoodSafe system (Chi cục An toàn
+    vệ sinh thực phẩm tỉnh Quảng Ninh). Partner systems push data through the
+    receive endpoint authenticated by X-Api-Key; FoodSafe operators manage
+    partner accounts, API keys and received submissions through the admin
+    endpoints (cookie session + CSRF + permissions). Generated from the
+    committed implementation (PartnerInboundController, PartnerAccountController
+    and their DTOs) and verified against the running API by
+    FoodSafe.FE/e2e/partner-openapi-contract.spec.ts.
+  version: "1.0"
+  license:
+    name: Proprietary — Chi cục An toàn vệ sinh thực phẩm tỉnh Quảng Ninh
+servers:
+  - url: http://127.0.0.1:8080
+    description: Local development (docker-compose, nginx in front of the backend)
+  - url: https://{host}
+    description: Production / staging (HTTPS, TLS 1.2+; host assigned at deployment)
+    variables:
+      host:
+        default: foodsafe.example.gov.vn
+        description: Deployment-specific hostname communicated during onboarding
+
+tags:
+  - name: Partner
+    description: Partner-facing endpoints (X-Api-Key authentication, no cookies/CSRF)
+  - name: PartnerAdmin
+    description: >
+      Operator endpoints (authenticated FoodSafe session cookie; write operations
+      additionally require the RequestVerificationToken CSRF header; permission
+      FoodSafe.DataIntegration.Partners.*). Organization-data-scoped.
+
+paths:
+  /api/v1/partner/submissions/{dataType}:
+    post:
+      tags: [Partner]
+      operationId: receiveSubmission
+      summary: Receive one inbound submission envelope from a partner system
+      description: >
+        Anonymous at the session level; every security decision is made from the
+        X-Api-Key header. Request hygiene (headers, envelope shape, replay
+        window) is validated BEFORE credentials, so a 400 does not confirm key
+        validity. Idempotent per (partner, X-Request-Id): a redelivery returns
+        HTTP 200 with duplicate=true and the original submission id.
+      security:
+        - PartnerApiKey: []
+      parameters:
+        - name: dataType
+          in: path
+          required: true
+          description: Data type segment (case-insensitive). Must also be on the partner's allow-list.
+          schema:
+            type: string
+            enum:
+              - alert
+              - inspection-result
+              - food-poisoning
+              - license
+              - product
+              - news
+              - business
+        - name: X-Request-Id
+          in: header
+          required: true
+          description: Partner-chosen idempotency key, 1-128 characters, unique per partner.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+        - name: X-Timestamp
+          in: header
+          required: true
+          description: >
+            Request time as Unix seconds or ISO-8601 (no-offset values are
+            treated as UTC). Must be within ±300 seconds of server time.
+          schema:
+            type: string
+        - name: X-Correlation-Id
+          in: header
+          required: false
+          description: >
+            Optional trace id echoed in the response; longer than 64 characters
+            is truncated to 64. Server-generated (32 hex chars) when absent.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InboundEnvelope'
+      responses:
+        '200':
+          description: >
+            Submission accepted (duplicate=false) or idempotent replay of an
+            already-received X-Request-Id (duplicate=true, original submission
+            echoed).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InboundReceiveResult'
+        '400':
+          description: Request hygiene or envelope validation failure (see error.code).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerError'
+        '401':
+          description: >
+            Credential failure — single generic body (code InvalidApiKey) for
+            missing/malformed/unknown/revoked/expired keys and suspended
+            partners, by design.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerError'
+        '403':
+          description: Authenticated, but the data type is not on the partner's allow-list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerError'
+
+  /api/v1/app/partner-account:
+    get:
+      tags: [PartnerAdmin]
+      operationId: listPartnerAccounts
+      summary: Paged list of partner accounts
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: Filter, in: query, required: false, schema: { type: string }, description: "Matches code, name or external system" }
+        - { name: Status, in: query, required: false, schema: { $ref: '#/components/schemas/PartnerAccountStatus' } }
+        - { name: SkipCount, in: query, required: false, schema: { type: integer } }
+        - { name: MaxResultCount, in: query, required: false, schema: { type: integer } }
+        - { name: Sorting, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Paged result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedPartnerAccountResult'
+        '401': { $ref: '#/components/responses/AdminUnauthorized' }
+        '403': { $ref: '#/components/responses/AdminForbidden' }
+    post:
+      tags: [PartnerAdmin]
+      operationId: createPartnerAccount
+      summary: Create a partner account (permission ...Partners.Create)
+      security: [{ CookieSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePartnerAccount'
+      responses:
+        '200':
+          description: Created partner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerAccount'
+        '400': { description: Validation failure (ABP error envelope) }
+        '401': { $ref: '#/components/responses/AdminUnauthorized' }
+        '403': { $ref: '#/components/responses/AdminForbidden' }
+
+  /api/v1/app/partner-account/{id}:
+    get:
+      tags: [PartnerAdmin]
+      operationId: getPartnerAccount
+      summary: Partner account detail
+      security: [{ CookieSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PartnerId'
+      responses:
+        '200':
+          description: Partner detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerAccount'
+        '401': { $ref: '#/components/responses/AdminUnauthorized' }
+        '403': { $ref: '#/components/responses/AdminForbidden' }
+    put:
+      tags: [PartnerAdmin]
+      operationId: updatePartnerAccount
+      summary: Update a partner account (permission ...Partners.Edit)
+      security: [{ CookieSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PartnerId'
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePartnerAccount'
+      responses:
+        '200':
+          description: Updated partner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerAccount'
+        '400': { description: Validation failure (ABP error envelope) }
+        '401': { $ref: '#/components/responses/AdminUnauthorized' }
+        '403': { $ref: '#/components/responses/AdminForbidden' }
+    delete:
+      tags: [PartnerAdmin]
+      operationId: deletePartnerAccount
+      summary: Soft-delete a partner; revokes all live keys (permission ...Partners.Delete)
+      security: [{ CookieSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PartnerId'
+        - $ref: '#/components/parameters/CsrfToken'
+      responses:
+        '204': { description: Deleted (no content) }
+        '401': { $ref: '#/components/responses/AdminUnauthorized' }
+        '403': { $ref: '#/components/responses/AdminForbidden' }
+
+  /api/v1/app/partner-account/{id}/toggle-status:
+    post:
+      tags: [PartnerAdmin]
+      operationId: togglePartnerStatus
+      summary: Toggle Active/Suspended (permission ...Partners.Edit)
+      security: [{ CookieSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PartnerId'
+        - $ref: '#/components/parameters/CsrfToken'
+      responses:
+        '204': { description: Toggled (no content) }
+        '401': { $ref: '#/components/responses/AdminUnauthorized' }
+        '403': { $ref: '#/components/responses/AdminForbidden' }
+
+  /api/v1/app/partner-account/{id}/keys:
+    get:
+      tags: [PartnerAdmin]
+      operationId: listPartnerKeys
+      summary: Key metadata for a partner — never returns raw keys (permission ...Partners.ManageKeys)
+      security: [{ CookieSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PartnerId'
+      responses:
+        '200':
+          description: Keys, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PartnerApiKey'
+        '401': { $ref: '#/components/responses/AdminUnauthorized' }
+        '403': { $ref: '#/components/responses/AdminForbidden' }
+    post:
+      tags: [PartnerAdmin]
+      operationId: issuePartnerKey
+      summary: Issue a new API key — rawKey is visible in this response ONLY (permission ...Partners.ManageKeys)
+      security: [{ CookieSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PartnerId'
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssuePartnerApiKey'
+      responses:
+        '200':
+          description: Issued key including the one-time rawKey
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuedPartnerApiKey'
+        '401': { $ref: '#/components/responses/AdminUnauthorized' }
+        '403': { $ref: '#/components/responses/AdminForbidden' }
+
+  /api/v1/app/partner-account/{id}/keys/{keyId}:
+    delete:
+      tags: [PartnerAdmin]
+      operationId: revokePartnerKey
+      summary: Revoke a key immediately and irreversibly (permission ...Partners.ManageKeys)
+      security: [{ CookieSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PartnerId'
+        - name: keyId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/CsrfToken'
+      responses:
+        '204': { description: Revoked (no content) }
+        '401': { $ref: '#/components/responses/AdminUnauthorized' }
+        '403': { $ref: '#/components/responses/AdminForbidden' }
+
+  /api/v1/app/partner-account/submissions:
+    get:
+      tags: [PartnerAdmin]
+      operationId: listInboundSubmissions
+      summary: Paged inbound submissions (organization-scoped)
+      security: [{ CookieSession: [] }]
+      parameters:
+        - { name: PartnerAccountId, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: DataType, in: query, required: false, schema: { $ref: '#/components/schemas/SharedDataType' } }
+        - { name: Status, in: query, required: false, schema: { $ref: '#/components/schemas/InboundSubmissionStatus' } }
+        - { name: FromDate, in: query, required: false, schema: { type: string, format: date-time } }
+        - { name: ToDate, in: query, required: false, schema: { type: string, format: date-time } }
+        - { name: SkipCount, in: query, required: false, schema: { type: integer } }
+        - { name: MaxResultCount, in: query, required: false, schema: { type: integer } }
+        - { name: Sorting, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Paged result, newest first
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedInboundSubmissionResult'
+        '401': { $ref: '#/components/responses/AdminUnauthorized' }
+        '403': { $ref: '#/components/responses/AdminForbidden' }
+
+  /api/v1/app/partner-account/submissions/{submissionId}:
+    get:
+      tags: [PartnerAdmin]
+      operationId: getInboundSubmission
+      summary: Submission detail including the verbatim stored payload
+      security: [{ CookieSession: [] }]
+      parameters:
+        - name: submissionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Submission detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InboundSubmissionDetail'
+        '401': { $ref: '#/components/responses/AdminUnauthorized' }
+        '403': { $ref: '#/components/responses/AdminForbidden' }
+
+components:
+  securitySchemes:
+    PartnerApiKey:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: >
+        Raw partner API key "fsp_" + 40 chars [A-Za-z0-9] (44 chars total).
+        Issued once by a FoodSafe operator; only its SHA-256 hash is stored.
+    CookieSession:
+      type: apiKey
+      in: cookie
+      name: .AspNetCore.Identity.Application
+      description: >
+        Authenticated FoodSafe operator session (HTTP-only cookie). Write
+        operations additionally require the RequestVerificationToken header
+        (CSRF) taken from the XSRF-TOKEN cookie.
+
+  parameters:
+    PartnerId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    CsrfToken:
+      name: RequestVerificationToken
+      in: header
+      required: true
+      description: CSRF token from the XSRF-TOKEN cookie (required on POST/PUT/DELETE with a session cookie).
+      schema: { type: string }
+
+  responses:
+    AdminUnauthorized:
+      description: Not authenticated (ABP error envelope)
+    AdminForbidden:
+      description: Authenticated but lacking the required permission or outside the organization data scope (ABP error envelope)
+
+  schemas:
+    SharedDataType:
+      type: integer
+      description: "1=Alert, 2=InspectionResult, 3=FoodPoisoning, 4=License, 5=Product, 6=News, 7=Business"
+      enum: [1, 2, 3, 4, 5, 6, 7]
+
+    PartnerAccountStatus:
+      type: integer
+      description: "1=Active, 2=Suspended"
+      enum: [1, 2]
+
+    InboundSubmissionStatus:
+      type: integer
+      description: "1=Received (awaiting TT 31/2026 business ingestion), 2=Processed, 3=Rejected"
+      enum: [1, 2, 3]
+
+    InboundEnvelope:
+      type: object
+      required: [schemaVersion, records]
+      properties:
+        schemaVersion:
+          type: string
+          description: Must equal "1.0" exactly; anything else → 400 UnsupportedSchemaVersion.
+          enum: ["1.0"]
+        records:
+          type: array
+          description: 1-500 opaque JSON records, stored verbatim until the official TT 31/2026 field mapping is published.
+          minItems: 1
+          maxItems: 500
+          items: {}
+        sourceSystem:
+          type: string
+          maxLength: 256
+          nullable: true
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    InboundReceiveResult:
+      type: object
+      required: [submissionId, correlationId, duplicate, receivedAt]
+      properties:
+        submissionId:
+          type: string
+          format: uuid
+        correlationId:
+          type: string
+          maxLength: 64
+        duplicate:
+          type: boolean
+          description: true when this X-Request-Id was already received; the original submission is echoed.
+        receivedAt:
+          type: string
+          format: date-time
+
+    PartnerError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Stable application error code — branch on this, not on message.
+              enum:
+                - UnknownDataType
+                - MalformedBody
+                - MissingRequestId
+                - MissingTimestamp
+                - StaleTimestamp
+                - UnsupportedSchemaVersion
+                - InvalidRecords
+                - InvalidSourceSystem
+                - InvalidApiKey
+                - DataTypeNotAllowed
+            message:
+              type: string
+              description: English diagnostic text; not part of the stable contract.
+
+    PartnerAccount:
+      type: object
+      required: [id, organizationId, code, name, externalSystem, status, allowedDataTypes, activeKeyCount, creationTime]
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        code: { type: string, maxLength: 64 }
+        name: { type: string, maxLength: 256 }
+        externalSystem: { type: string, maxLength: 256 }
+        description: { type: string, maxLength: 1000, nullable: true }
+        status: { $ref: '#/components/schemas/PartnerAccountStatus' }
+        allowedDataTypes:
+          type: array
+          items: { $ref: '#/components/schemas/SharedDataType' }
+        activeKeyCount: { type: integer }
+        creationTime: { type: string, format: date-time }
+
+    CreatePartnerAccount:
+      type: object
+      required: [code, name, externalSystem, allowedDataTypes]
+      properties:
+        code:
+          type: string
+          maxLength: 64
+          pattern: "^[a-zA-Z0-9_-]+$"
+          description: Stable machine code, unique among live partners.
+        name: { type: string, maxLength: 256 }
+        externalSystem: { type: string, maxLength: 256 }
+        allowedDataTypes:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/SharedDataType' }
+        description: { type: string, maxLength: 1000, nullable: true }
+
+    UpdatePartnerAccount:
+      type: object
+      required: [name, externalSystem, allowedDataTypes]
+      properties:
+        name: { type: string, maxLength: 256 }
+        externalSystem: { type: string, maxLength: 256 }
+        allowedDataTypes:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/SharedDataType' }
+        description: { type: string, maxLength: 1000, nullable: true }
+
+    PartnerApiKey:
+      type: object
+      required: [id, partnerAccountId, keyPrefix, creationTime]
+      properties:
+        id: { type: string, format: uuid }
+        partnerAccountId: { type: string, format: uuid }
+        keyPrefix:
+          type: string
+          description: First 12 characters of the raw key — the only key material ever shown after issuance.
+          minLength: 12
+          maxLength: 12
+        description: { type: string, nullable: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        revokedAt: { type: string, format: date-time, nullable: true }
+        lastUsedAt: { type: string, format: date-time, nullable: true }
+        creationTime: { type: string, format: date-time }
+
+    IssuePartnerApiKey:
+      type: object
+      properties:
+        expiresAt: { type: string, format: date-time, nullable: true }
+        description: { type: string, maxLength: 256, nullable: true }
+
+    IssuedPartnerApiKey:
+      allOf:
+        - $ref: '#/components/schemas/PartnerApiKey'
+        - type: object
+          required: [rawKey]
+          properties:
+            rawKey:
+              type: string
+              pattern: "^fsp_[A-Za-z0-9]{40}$"
+              description: Shown exactly once; never stored and never retrievable again.
+
+    InboundSubmission:
+      type: object
+      required: [id, partnerAccountId, partnerName, organizationId, dataType, schemaVersion, requestId, recordCount, receivedAt, status]
+      properties:
+        id: { type: string, format: uuid }
+        partnerAccountId: { type: string, format: uuid }
+        partnerName: { type: string }
+        organizationId: { type: string, format: uuid }
+        dataType: { $ref: '#/components/schemas/SharedDataType' }
+        schemaVersion: { type: string, maxLength: 16 }
+        requestId: { type: string, maxLength: 128 }
+        correlationId: { type: string, maxLength: 64, nullable: true }
+        recordCount: { type: integer }
+        receivedAt: { type: string, format: date-time }
+        status: { $ref: '#/components/schemas/InboundSubmissionStatus' }
+        rejectReason: { type: string, maxLength: 1000, nullable: true }
+
+    InboundSubmissionDetail:
+      allOf:
+        - $ref: '#/components/schemas/InboundSubmission'
+        - type: object
+          required: [payload]
+          properties:
+            payload:
+              type: string
+              description: The received envelope stored verbatim as JSON text (human-readable Unicode).
+
+    PagedPartnerAccountResult:
+      type: object
+      required: [totalCount, items]
+      properties:
+        totalCount: { type: integer }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/PartnerAccount' }
+
+    PagedInboundSubmissionResult:
+      type: object
+      required: [totalCount, items]
+      properties:
+        totalCount: { type: integer }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/InboundSubmission' }

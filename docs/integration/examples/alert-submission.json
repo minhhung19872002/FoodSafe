@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0",
+  "records": [
+    {
+      "title": "Cảnh báo mất an toàn thực phẩm — sản phẩm bánh trung thu không rõ nguồn gốc",
+      "severity": "High",
+      "issuedAt": "2026-07-28T08:30:00+07:00",
+      "issuedBy": "Cục An toàn thực phẩm — Bộ Y tế",
+      "content": "Phát hiện lô bánh trung thu không rõ nguồn gốc xuất xứ lưu hành tại thành phố Hạ Long. Đề nghị các đơn vị tăng cường kiểm tra, giám sát.",
+      "affectedArea": "Thành phố Hạ Long, tỉnh Quảng Ninh"
+    },
+    {
+      "title": "Cảnh báo dư lượng thuốc bảo vệ thực vật vượt ngưỡng trong rau xanh",
+      "severity": "Medium",
+      "issuedAt": "2026-07-28T09:00:00+07:00",
+      "issuedBy": "Sở Nông nghiệp và Phát triển nông thôn",
+      "content": "Kết quả kiểm nghiệm mẫu rau muống tại chợ Hồng Hà cho thấy dư lượng thuốc bảo vệ thực vật vượt ngưỡng cho phép.",
+      "affectedArea": "Phường Hồng Hà, thành phố Hạ Long"
+    }
+  ],
+  "sourceSystem": "Hệ thống cảnh báo ATTP — Bộ Y tế",
+  "sentAt": "2026-07-28T09:05:00+07:00"
+}
