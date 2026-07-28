@@ -2,6 +2,30 @@
 
 ## Status: VERIFIED
 
+## Re-verification 2026-07-28 — production-readiness hardening
+
+Deep FE+BE inspection of `/documents`; fixes re-proven on the rebuilt Docker
+stack (no API interception). Doubles as the Level-2 retest owed by the sorting
+DIRTY batch.
+
+| # | Defect | Fix |
+|---|---|---|
+| 1 | `CreateAsync` used `scope.OrganizationIds.First()` — global user without an org profile → InvalidOperationException **500** (same class as F-017) | `HomeOrganizationId` first, guarded fallback → localized `DataScope.OrganizationNotFound` |
+| 2 | `DocumentTypeId` never validated — bogus/`Guid.Empty` GUID died as an FK-violation **500** | `EnsureDocumentTypeAsync` (exists + active) on create/update → `FoodSafe:Document:0002`, vi/en localized |
+| 3 | `SetStatus` accepted undefined enum values → DB check-constraint 500 | domain guard → `FoodSafe:Document:0003` |
+| 4 | DTO had no validation attributes | `[Required]`/`[StringLength]` on DocumentNumber/Title/IssuingAuthority |
+| 5 | ApplySorting had no Id tiebreaker (unstable paging) | `.ThenBy(x => x.Id)` on every branch |
+| 6 | Excel export dropped `Sorting`; FE didn't pass `sorting` to export either | BE copies `Sorting`; FE sends `{...filter, sorting}` |
+| 7 | Page used static antd `message` (context warning), hardcoded error toasts, `isLoading` with `keepPreviousData` | `App.useApp()` + `extractApiError` + `isFetching` |
+| 8 | No date-order UX validation (hết hiệu lực trước ban hành nhập được, chỉ chết ở server nếu có rule) | antd validators: hiệu lực ≥ ban hành, hết hiệu lực ≥ hiệu lực |
+| 9 | Spec clicked confirm `"OK"` | `/^(Xóa|Đồng ý|OK)$/` in dialog |
+
+- **Evidence run** (workers=1): `documents.spec.ts` +
+  `documents-verification.spec.ts` → **7/7 passed** (first attempt hit
+  ECONNREFUSED mid-run — the concurrent session restarted the stack; clean
+  re-run green). BE AlertsAndTesting tests **37/37**; FE Vitest documents
+  **4/4**; `tsc -b` clean.
+
 - **Feature ID**: F-031 · **Verified Git commit**: `5444001` (defect fixed before this commit) · **Date**: 2026-07-27
 - **Environment**: Docker Compose full stack at `http://127.0.0.1:8080` · **Database**: real PostgreSQL 15 · **API interception**: **No**
 - **Accounts**: `admin`, `district.staff@foodsafe.local`, `noperm@foodsafe.local`

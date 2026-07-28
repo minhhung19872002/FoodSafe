@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using FoodSafe.AlertsAndTesting;
 using Volo.Abp.Application.Dtos;
 
@@ -24,8 +25,14 @@ public class AdministrativeDocumentDto
 public class CreateUpdateAdministrativeDocumentDto
 {
     public Guid DocumentTypeId { get; set; }
+
+    [Required, StringLength(100)]
     public string DocumentNumber { get; set; } = string.Empty;
+
+    [Required, StringLength(500)]
     public string Title { get; set; } = string.Empty;
+
+    [StringLength(300)]
     public string? IssuingAuthority { get; set; }
     public DateTime IssuedDate { get; set; }
     public DateTime? EffectiveDate { get; set; }

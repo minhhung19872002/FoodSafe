@@ -526,3 +526,9 @@ Record every verification invalidation and retest result here.
 - **Change class**: Level 2 (single feature; only consumes existing shared components).
 - **Environment note**: main working tree was mid-edit by a concurrent session (BE did not compile) — verification ran on an **isolated worktree stack** (`fsra` compose project, port 8180, fresh PostgreSQL + migrations + seed) built from `819b803` + only the F-018 changes.
 - **Result**: PASSED — risk-analysis specs **7/7** (lifecycle 1/1, verification 5/5, publish+public-portal 1/1; workers=1, no interception); Domain `RiskAnalysisTests` 6/6; Vitest risk-analysis 4/4; `FoodSafe.Application` build 0 errors; `tsc --noEmit` clean; browser console clean. F-018 returned to VERIFIED at wt-post-`819b803`.
+
+### 2026-07-28 — F-031 /documents production-readiness hardening
+
+- **Cause**: dedicated FE+BE deep review (same recurring set as F-017 plus feature-specifics): `.First()` org-resolution 500 fixed via `HomeOrganizationId`; `EnsureDocumentTypeAsync` (bogus type GUIDs were FK 500s → `Document:0002`); domain enum guard on `SetStatus` (`Document:0003`); DTO `[Required]`/`[StringLength]`; ApplySorting Id tiebreakers; Excel export honours `Sorting` (BE + FE now passes it); `App.useApp` message + `extractApiError` + `isFetching`; date-order antd validators (hiệu lực/hết hiệu lực); spec confirm-click `/^(Xóa|Đồng ý|OK)$/`. vi/en localization for Document:0002/0003.
+- **Change class**: Level 2. Run doubles as the sorting DIRTY-batch retest for F-031.
+- **Result**: PASSED — documents specs **7/7** at the rebuilt stack (workers=1, no interception; first attempt invalidated by a concurrent stack restart, clean re-run green); BE AlertsAndTesting **37/37**; Vitest documents **4/4**; `tsc -b` clean. F-031 returned to VERIFIED.

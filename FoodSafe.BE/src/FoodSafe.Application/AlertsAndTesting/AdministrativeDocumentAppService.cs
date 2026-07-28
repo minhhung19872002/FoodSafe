@@ -67,7 +67,14 @@ public class AdministrativeDocumentAppService : ApplicationService
     {
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.Create, _cancellationTokens.Token);
-        var orgId = scope.OrganizationIds.First();
+        // Người dùng phạm vi toàn cục có thể không gắn đơn vị — không được để
+        // First() ném InvalidOperationException thành lỗi 500.
+        var orgId = scope.HomeOrganizationId
+            ?? (scope.OrganizationIds.Count > 0
+                ? scope.OrganizationIds.First()
+                : throw new BusinessException(
+                    FoodSafeDomainErrorCodes.DataScope.OrganizationNotFound));
+        await EnsureDocumentTypeAsync(input.DocumentTypeId);
 
         var entity = AdministrativeDocument.Create(
             GuidGenerator.Create(),
@@ -93,6 +100,7 @@ public class AdministrativeDocumentAppService : ApplicationService
         Guid id, CreateUpdateAdministrativeDocumentDto input)
     {
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
+        await EnsureDocumentTypeAsync(input.DocumentTypeId);
 
         entity.Update(
             input.DocumentTypeId,
@@ -130,13 +138,28 @@ public class AdministrativeDocumentAppService : ApplicationService
             .FirstOrDefault()
             ?.ToLowerInvariant();
 
+        // Id tiebreaker keeps paging stable when many rows share the same date.
         return (field, descending) switch
         {
-            ("issueddate", true)    => query.OrderByDescending(x => x.IssuedDate),
-            ("issueddate", false)   => query.OrderBy(x => x.IssuedDate),
-            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
-            _                       => query.OrderByDescending(x => x.CreationTime),
+            ("issueddate", true)    => query.OrderByDescending(x => x.IssuedDate).ThenBy(x => x.Id),
+            ("issueddate", false)   => query.OrderBy(x => x.IssuedDate).ThenBy(x => x.Id),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime).ThenBy(x => x.Id),
+            _                       => query.OrderByDescending(x => x.CreationTime).ThenBy(x => x.Id),
         };
+    }
+
+    /// <summary>
+    /// Trả lỗi nghiệp vụ tiếng Việt thay vì để FK vi phạm thành 500 khi loại
+    /// văn bản không tồn tại hoặc đã ngừng sử dụng.
+    /// </summary>
+    private async Task EnsureDocumentTypeAsync(Guid documentTypeId)
+    {
+        var types = await _documentTypes.GetQueryableAsync();
+        if (!await AsyncExecuter.AnyAsync(
+                types.Where(x => x.Id == documentTypeId && x.IsActive),
+                _cancellationTokens.Token))
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Document.DocumentTypeNotFound);
     }
 
     private async Task<IQueryable<AdministrativeDocument>> ScopedQueryAsync(DataScopeOperation operation)

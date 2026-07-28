@@ -75,7 +75,13 @@ public sealed class AdministrativeDocument : FullAuditedAggregateRoot<Guid>
         Summary = Normalize(summary);
     }
 
-    public void SetStatus(DocumentStatus status) => Status = status;
+    public void SetStatus(DocumentStatus status)
+    {
+        if (!Enum.IsDefined(status))
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Document.InvalidStatus);
+        Status = status;
+    }
 
     public void SetPublic(bool isPublic) => IsPublic = isPublic;
 
