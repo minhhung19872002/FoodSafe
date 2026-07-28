@@ -12,6 +12,7 @@ import { App, Button, Input, Select, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { extractApiError } from "@/lib/apiError";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
@@ -130,10 +131,7 @@ export default function ProductRegistrationPage() {
         void message.success("Đã lưu đăng ký công bố.");
         closeEditor();
       },
-      onError: () =>
-        void message.error(
-          "Không thể lưu. Vui lòng kiểm tra số đăng ký và dữ liệu.",
-        ),
+      onError: (error: unknown) => void message.error(extractApiError(error)),
     };
     if (editing) updateMutation.mutate({ id: editing.id, input }, options);
     else createMutation.mutate(input, options);
@@ -143,12 +141,12 @@ export default function ProductRegistrationPage() {
     {
       title: "Số đăng ký",
       dataIndex: "registrationNumber",
-      width: 155,
+      width: 140,
     },
     {
       title: "Số tiếp nhận",
       dataIndex: "receiptNumber",
-      width: 145,
+      width: 110,
       render: (value?: string) => value || "—",
     },
     { title: "Cơ sở SXKD", dataIndex: "businessName", ellipsis: true },
@@ -156,14 +154,14 @@ export default function ProductRegistrationPage() {
     {
       title: "Ngày đăng ký",
       dataIndex: "registrationDate",
-      width: 125,
+      width: 130,
       sorter: true,
       sortOrder: sortOrderFor("registrationDate"),
       render: (value: string) => new Date(value).toLocaleDateString("vi-VN"),
     },
     {
       title: "Hết hạn",
-      width: 145,
+      width: 130,
       render: (_, item) => (
         <ExpiryTag
           expiryDate={item.expiryDate}
@@ -175,7 +173,7 @@ export default function ProductRegistrationPage() {
     {
       title: "Trạng thái",
       dataIndex: "status",
-      width: 125,
+      width: 110,
       render: (s: number) => <StatusBadge status={s} />,
     },
     {
@@ -203,10 +201,8 @@ export default function ProductRegistrationPage() {
               onClick: () =>
                 pdfMutation.mutate(item.id, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () =>
-                    void message.error(
-                      "Không thể tải bản PDF đăng ký công bố.",
-                    ),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
             {
@@ -241,7 +237,8 @@ export default function ProductRegistrationPage() {
               onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã xóa đăng ký."),
-                  onError: () => void message.error("Không thể xóa đăng ký."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -263,8 +260,8 @@ export default function ProductRegistrationPage() {
               onClick={() =>
                 exportMutation.mutate(queryFilter, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () =>
-                    void message.error("Không thể xuất danh sách."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 })
               }
             >
@@ -291,8 +288,8 @@ export default function ProductRegistrationPage() {
           <Space wrap>
             <Input.Search
               allowClear
-              placeholder="Số đăng ký, tiếp nhận, sản phẩm"
-              style={{ width: 310 }}
+              placeholder="Số đăng ký, tiếp nhận, sản phẩm, nhà sản xuất"
+              style={{ width: 330 }}
               onSearch={(value) => {
                 setFilter(value.trim());
                 pagination.resetToFirstPage();
@@ -348,8 +345,8 @@ export default function ProductRegistrationPage() {
         <Table
           rowKey="id"
           size="middle"
-          scroll={{ x: 1250 }}
-          loading={registrations.isLoading}
+          scroll={{ x: 960 }}
+          loading={registrations.isFetching}
           columns={columns}
           dataSource={registrations.data?.items ?? []}
           onRow={(record) => ({
@@ -444,10 +441,7 @@ export default function ProductRegistrationPage() {
             { id: attachmentsFor.id, file },
             {
               onSuccess: () => void message.success("Đã tải tệp lên."),
-              onError: () =>
-                void message.error(
-                  "Tệp không hợp lệ hoặc không vượt qua kiểm tra an toàn.",
-                ),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}
@@ -457,7 +451,7 @@ export default function ProductRegistrationPage() {
             { id: attachmentsFor.id, attachmentId: attachment.id },
             {
               onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => void message.error("Không thể tải tệp."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}
@@ -467,7 +461,7 @@ export default function ProductRegistrationPage() {
             { id: attachmentsFor.id, attachmentId },
             {
               onSuccess: () => void message.success("Đã xóa tệp."),
-              onError: () => void message.error("Không thể xóa tệp."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}
@@ -487,7 +481,7 @@ export default function ProductRegistrationPage() {
                 void message.success("Đã thu hồi đăng ký.");
                 setRevoking(undefined);
               },
-              onError: () => void message.error("Không thể thu hồi đăng ký."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}

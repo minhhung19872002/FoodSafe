@@ -198,7 +198,10 @@ test.describe("product registration management", () => {
       .getByRole("button", { name: `Thao tác ${registrationNumber}` })
       .click();
     await page.getByRole("menuitem", { name: "Xóa" }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText("Đã xóa đăng ký.")).toBeVisible();
     const duplicate = await request.post("/api/v1/app/product-registration", {
       headers,

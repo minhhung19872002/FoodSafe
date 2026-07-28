@@ -90,6 +90,8 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:ProductRegistration:0004";
         public const string CannotModifyRevoked =
             "FoodSafe:ProductRegistration:0005";
+        public const string InvalidRegistrationDate =
+            "FoodSafe:ProductRegistration:0006";
     }
 
     public static class AdvertisementRegistration

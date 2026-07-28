@@ -134,6 +134,7 @@ export function ProductRegistrationAttachmentsModal(props: Props) {
         loading={props.loading}
         columns={columns}
         dataSource={props.attachments}
+        locale={{ emptyText: "Chưa có tệp đính kèm" }}
         pagination={false}
       />
     </Modal>

@@ -438,7 +438,8 @@ public class ProductRegistrationAppService :
     }
 
     // Honours the client's Sorting request against a whitelist; falls back to
-    // CreationTime descending (newest first).
+    // CreationTime descending (newest first). The Id tiebreaker keeps paging
+    // stable when many rows share the same sort value.
     private static IOrderedQueryable<ProductRegistration> ApplySorting(
         IQueryable<ProductRegistration> query,
         string? sorting)
@@ -448,7 +449,7 @@ public class ProductRegistrationAppService :
             .FirstOrDefault()
             ?.ToLowerInvariant();
 
-        return (field, descending) switch
+        var ordered = (field, descending) switch
         {
             ("registrationdate", true)  => query.OrderByDescending(x => x.RegistrationDate),
             ("registrationdate", false) => query.OrderBy(x => x.RegistrationDate),
@@ -456,6 +457,7 @@ public class ProductRegistrationAppService :
             ("creationtime", false)     => query.OrderBy(x => x.CreationTime),
             _                           => query.OrderByDescending(x => x.CreationTime)
         };
+        return ordered.ThenBy(x => x.Id);
     }
 
     private static IQueryable<ProductRegistration> ApplyStatusFilter(

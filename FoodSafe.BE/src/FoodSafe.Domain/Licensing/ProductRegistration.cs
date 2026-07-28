@@ -6,6 +6,10 @@ namespace FoodSafe.Licensing;
 
 public sealed class ProductRegistration : FullAuditedAggregateRoot<Guid>
 {
+    // Chặn giá trị mặc định 0001-01-01 khi client bỏ trống RegistrationDate.
+    private static readonly DateTime MinimumRegistrationDate = new(1900, 1, 1);
+
+
     public Guid BusinessId { get; private set; }
     public Guid? ProductId { get; private set; }
     public Guid OrganizationId { get; private set; }
@@ -91,6 +95,10 @@ public sealed class ProductRegistration : FullAuditedAggregateRoot<Guid>
         Check.NotNullOrWhiteSpace(productName, nameof(productName), 500);
 
         var normalizedRegistrationDate = registrationDate.Date;
+        if (normalizedRegistrationDate < MinimumRegistrationDate)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.ProductRegistration
+                    .InvalidRegistrationDate);
         var normalizedExpiryDate = expiryDate?.Date;
         if (normalizedExpiryDate.HasValue &&
             normalizedRegistrationDate > normalizedExpiryDate.Value)
