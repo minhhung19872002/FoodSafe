@@ -133,6 +133,11 @@ public class PartnerInboundAppService :
             return Invalid("InvalidRecords",
                 $"records must contain 1..{InboundEnvelopeDto.MaxRecords} items.");
         }
+        if (envelope.SourceSystem is { Length: > InboundEnvelopeDto.MaxSourceSystemLength })
+        {
+            return Invalid("InvalidSourceSystem",
+                $"sourceSystem must be at most {InboundEnvelopeDto.MaxSourceSystemLength} characters.");
+        }
 
         // ── authentication ───────────────────────────────────────────────────
         var rawKey = context.ApiKey;

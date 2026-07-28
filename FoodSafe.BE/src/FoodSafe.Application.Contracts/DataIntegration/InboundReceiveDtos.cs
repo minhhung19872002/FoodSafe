@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
 namespace FoodSafe.DataIntegration;
@@ -9,20 +8,27 @@ namespace FoodSafe.DataIntegration;
 /// until the official TT 31/2026 field mapping is published; they are
 /// validated structurally (array, size caps) and stored verbatim.
 /// </summary>
+/// <remarks>
+/// Deliberately carries NO DataAnnotation attributes. ABP's method-argument
+/// <c>ValidationInterceptor</c> would otherwise throw an
+/// <see cref="Volo.Abp.Validation.AbpValidationException"/> before the
+/// receive path runs; because the inbound controller returns
+/// <see cref="Microsoft.AspNetCore.Mvc.IActionResult"/> (not an object result),
+/// ABP does not wrap that exception and it leaks to the partner as a raw 500
+/// carrying the ABP error shape. Every field is validated in-method by
+/// <see cref="PartnerInboundAppService"/> and surfaced as a mapped
+/// <see cref="InboundReceiveOutcome"/> instead — see
+/// <see cref="MaxSourceSystemLength"/>.
+/// </remarks>
 public class InboundEnvelopeDto
 {
     public const int MaxRecords = 500;
+    public const int MaxSourceSystemLength = 256;
 
-    [Required]
-    [StringLength(InboundSubmissionConsts.MaxSchemaVersionLength)]
     public string SchemaVersion { get; set; } = null!;
 
-    [Required]
-    [MinLength(1, ErrorMessage = "records must contain at least one item.")]
-    [MaxLength(MaxRecords)]
     public List<JsonElement> Records { get; set; } = [];
 
-    [StringLength(256)]
     public string? SourceSystem { get; set; }
 
     public DateTime? SentAt { get; set; }
