@@ -67,25 +67,20 @@ test.describe("identity administration", () => {
     await expect(page.getByText(roleName)).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: roleName });
-    await row
-      .getByRole("button", { name: `Sửa vai trò ${roleName}` })
-      .click();
+    await row.getByRole("button", { name: `Sửa vai trò ${roleName}` }).click();
     const editDialog = page.getByRole("dialog", {
       name: "Cập nhật vai trò",
     });
     await editDialog
       .getByRole("textbox", { name: "Mô tả" })
       .fill("Đã cập nhật mô tả");
-    await editDialog
-      .getByRole("button", { name: "Lưu", exact: true })
-      .click();
+    await editDialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(page.getByText("Đã cập nhật mô tả")).toBeVisible();
 
     row = page.getByRole("row").filter({ hasText: roleName });
-    await row
-      .getByRole("button", { name: `Xóa vai trò ${roleName}` })
-      .click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await row.getByRole("button", { name: `Thao tác ${roleName}` }).click();
+    await page.getByRole("menuitem", { name: "Xóa vai trò" }).click();
+    await page.getByRole("button", { name: "OK" }).click();
     await expect(page.getByText("Đã xóa vai trò")).toBeVisible();
     await expect(
       page.getByRole("row").filter({ hasText: roleName }),

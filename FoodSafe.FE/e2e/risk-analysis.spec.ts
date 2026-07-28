@@ -14,8 +14,7 @@ async function removeStaleAnalyses(
     "/api/v1/app/risk-analysis?Filter=E2E-RA&MaxResultCount=100",
   );
   if (!response.ok()) return;
-  for (const item of ((await response.json()) as { items: ListItem[] })
-    .items) {
+  for (const item of ((await response.json()) as { items: ListItem[] }).items) {
     if (item.title?.startsWith("E2E-RA")) {
       await request.delete(`/api/v1/app/risk-analysis/${item.id}`, {
         headers,
@@ -55,14 +54,13 @@ test.describe("risk analysis management", () => {
     await dialog
       .getByRole("textbox", { name: "Nội dung" })
       .fill("Nội dung phân tích nguy cơ E2E");
-    await dialog
-      .getByRole("button", { name: "Lưu", exact: true })
-      .click();
+    await dialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(page.getByText(title)).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: title });
-    await row.getByRole("button", { name: /Xuất bản/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xuất bản" }).click();
+    await row.getByRole("button", { name: `Thao tác ${title}` }).click();
+    await page.getByRole("menuitem", { name: "Xuất bản" }).click();
+    await page.getByRole("button", { name: "OK" }).click();
 
     row = page.getByRole("row").filter({ hasText: title });
     await expect(row.getByText("Đã xuất bản")).toBeVisible({ timeout: 10_000 });

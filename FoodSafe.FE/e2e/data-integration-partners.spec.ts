@@ -79,13 +79,12 @@ async function issueKeyViaApi(
   partnerId: string,
   expiresAt?: string,
 ): Promise<IssuedKeyDto> {
-  const resp = await page.context().request.post(
-    `${PARTNER_ADMIN_API}/${partnerId}/keys`,
-    {
+  const resp = await page
+    .context()
+    .request.post(`${PARTNER_ADMIN_API}/${partnerId}/keys`, {
       headers: await csrf(page),
       data: { expiresAt, description: `e2e ${RUN}` },
-    },
-  );
+    });
   expect(resp.status(), await resp.text()).toBe(200);
   return (await resp.json()) as IssuedKeyDto;
 }
@@ -113,10 +112,12 @@ async function submit(
   const headers: Record<string, string> = {};
   if (rawKey) headers["X-Api-Key"] = rawKey;
   if (options.requestId !== null)
-    headers["X-Request-Id"] = options.requestId ?? `req-${RUN}-${Math.random()}`;
+    headers["X-Request-Id"] =
+      options.requestId ?? `req-${RUN}-${Math.random()}`;
   if (options.timestamp !== null)
     headers["X-Timestamp"] = options.timestamp ?? new Date().toISOString();
-  if (options.correlationId) headers["X-Correlation-Id"] = options.correlationId;
+  if (options.correlationId)
+    headers["X-Correlation-Id"] = options.correlationId;
 
   return partnerClient.post(
     `${BASE_URL}${RECEIVE_API}/${options.segment ?? "alert"}`,
@@ -166,9 +167,11 @@ test.describe("INT-03 — inbound partner integration", () => {
       await expect(row).toBeVisible();
 
       // Remember the id for cleanup (via the admin API list).
-      const list = await page.context().request.get(
-        `${PARTNER_ADMIN_API}?Filter=${encodeURIComponent(`UI-${RUN}`)}`,
-      );
+      const list = await page
+        .context()
+        .request.get(
+          `${PARTNER_ADMIN_API}?Filter=${encodeURIComponent(`UI-${RUN}`)}`,
+        );
       partnerId = ((await list.json()) as { items: PartnerDto[] }).items[0]?.id;
       expect(partnerId).toBeTruthy();
 
@@ -176,9 +179,7 @@ test.describe("INT-03 — inbound partner integration", () => {
       await row.getByRole("button", { name: "Khóa API" }).click();
       const keysModal = page.getByRole("dialog");
       await keysModal.getByRole("button", { name: "Cấp khóa mới" }).click();
-      await expect(
-        keysModal.getByText(/chỉ hiển thị MỘT LẦN/),
-      ).toBeVisible();
+      await expect(keysModal.getByText(/chỉ hiển thị MỘT LẦN/)).toBeVisible();
       const rawKey = (await keysModal
         .locator("code")
         .first()
@@ -202,9 +203,11 @@ test.describe("INT-03 — inbound partner integration", () => {
       expect(secondBody.submissionId).toBe(firstBody.submissionId);
 
       // Exactly ONE submission persisted for that request id.
-      const submissions = await page.context().request.get(
-        `${PARTNER_ADMIN_API}/submissions?PartnerAccountId=${partnerId}`,
-      );
+      const submissions = await page
+        .context()
+        .request.get(
+          `${PARTNER_ADMIN_API}/submissions?PartnerAccountId=${partnerId}`,
+        );
       const submissionItems = (
         (await submissions.json()) as { items: Array<{ requestId: string }> }
       ).items;
@@ -226,7 +229,9 @@ test.describe("INT-03 — inbound partner integration", () => {
 
       // ── the Inbound call log exists in the history tab ────────────────────
       await page.getByRole("tab", { name: "Lịch sử gọi API" }).click();
-      await page.getByRole("tab", { name: "Cảnh báo ATTP", exact: true }).click();
+      await page
+        .getByRole("tab", { name: "Cảnh báo ATTP", exact: true })
+        .click();
       await expect(
         page
           .getByRole("row", { name: /Bộ Y tế/ })
@@ -256,9 +261,7 @@ test.describe("INT-03 — inbound partner integration", () => {
 
       // ── rotation: a replacement key issued in the same UI takes over ──────
       await keysModal.getByRole("button", { name: "Cấp khóa mới" }).click();
-      await expect(
-        keysModal.getByText(/chỉ hiển thị MỘT LẦN/),
-      ).toBeVisible();
+      await expect(keysModal.getByText(/chỉ hiển thị MỘT LẦN/)).toBeVisible();
       const rotatedKey = (await keysModal
         .locator("code")
         .first()
@@ -273,12 +276,16 @@ test.describe("INT-03 — inbound partner integration", () => {
       expect(withRotated.status(), await withRotated.text()).toBe(200);
 
       // ── disabling the partner through the real UI blocks even live keys ──
-      const partnerRow = page.getByRole("row", { name: new RegExp(`UI-${RUN}`) });
-      await partnerRow.locator("button:has(.anticon-swap)").click();
-      await page
-        .locator(".ant-popover")
-        .getByRole("button", { name: "Tạm ngưng" })
+      const partnerRow = page.getByRole("row", {
+        name: new RegExp(`UI-${RUN}`),
+      });
+      // "Tạm ngưng" is in the ⋯ overflow (position 3); overflow ariaLabel uses the partner code.
+      await partnerRow
+        .getByRole("button", { name: `Thao tác UI-${RUN}` })
         .click();
+      await page.getByRole("menuitem", { name: "Tạm ngưng" }).click();
+      // modal.confirm replaces the former Popconfirm.
+      await page.getByRole("button", { name: "OK" }).click();
       await expect(
         page.getByText("Đã cập nhật trạng thái.", { exact: true }),
       ).toBeVisible();
@@ -307,14 +314,23 @@ test.describe("INT-03 — inbound partner integration", () => {
       // Invalid / unknown keys → 401 with one generic error shape.
       expect((await submit(partnerClient, undefined)).status()).toBe(401);
       expect(
-        (await submit(partnerClient, "fsp_definitelyNotARealKey0000000000000000"))
-          .status(),
+        (
+          await submit(
+            partnerClient,
+            "fsp_definitelyNotARealKey0000000000000000",
+          )
+        ).status(),
       ).toBe(401);
-      expect((await submit(partnerClient, "not-even-prefixed")).status()).toBe(401);
+      expect((await submit(partnerClient, "not-even-prefixed")).status()).toBe(
+        401,
+      );
 
       // Expired key → 401 (issued with an expiry already in the past).
       const expired = await issueKeyViaApi(
-        page, partner.id, new Date(Date.now() - 60_000).toISOString());
+        page,
+        partner.id,
+        new Date(Date.now() - 60_000).toISOString(),
+      );
       expect((await submit(partnerClient, expired.rawKey)).status()).toBe(401);
 
       // Data type outside the allow-list → 403 (partner only allows Alert).
@@ -326,8 +342,9 @@ test.describe("INT-03 — inbound partner integration", () => {
 
       // Unknown segment → 400.
       expect(
-        (await submit(partnerClient, key.rawKey, { segment: "unknown" }))
-          .status(),
+        (
+          await submit(partnerClient, key.rawKey, { segment: "unknown" })
+        ).status(),
       ).toBe(400);
 
       // Replay protection: stale timestamp outside the ±300s window → 400.
@@ -358,10 +375,11 @@ test.describe("INT-03 — inbound partner integration", () => {
       expect(await emptyRecords.text()).toContain("InvalidRecords");
 
       // Suspended partner → 401 even with a live key.
-      const toggle = await page.context().request.post(
-        `${PARTNER_ADMIN_API}/${partner.id}/toggle-status`,
-        { headers: await csrf(page) },
-      );
+      const toggle = await page
+        .context()
+        .request.post(`${PARTNER_ADMIN_API}/${partner.id}/toggle-status`, {
+          headers: await csrf(page),
+        });
       expect([200, 204]).toContain(toggle.status());
       expect((await submit(partnerClient, key.rawKey)).status()).toBe(401);
     } finally {
@@ -401,11 +419,15 @@ test.describe("INT-03 — inbound partner integration", () => {
         [partnerA.id, a.submissionId],
         [partnerB.id, b.submissionId],
       ] as const) {
-        const resp = await page.context().request.get(
-          `${PARTNER_ADMIN_API}/submissions?PartnerAccountId=${partnerId}`,
-        );
+        const resp = await page
+          .context()
+          .request.get(
+            `${PARTNER_ADMIN_API}/submissions?PartnerAccountId=${partnerId}`,
+          );
         const items = (
-          (await resp.json()) as { items: Array<{ id: string; requestId: string }> }
+          (await resp.json()) as {
+            items: Array<{ id: string; requestId: string }>;
+          }
         ).items.filter((s) => s.requestId === sharedRequestId);
         expect(items).toHaveLength(1);
         expect(items[0].id).toBe(expected);
@@ -413,7 +435,9 @@ test.describe("INT-03 — inbound partner integration", () => {
 
       // Unauthenticated admin surface stays closed (sanity).
       const anonAdmin = await partnerClient.get(
-        `${BASE_URL}${PARTNER_ADMIN_API}`, { maxRedirects: 0 });
+        `${BASE_URL}${PARTNER_ADMIN_API}`,
+        { maxRedirects: 0 },
+      );
       expect([401, 302]).toContain(anonAdmin.status());
     } finally {
       await deletePartner(page, partnerA.id);

@@ -7,7 +7,6 @@ import {
   InputNumber,
   message,
   Modal,
-  Popconfirm,
   Select,
   Space,
   Table,
@@ -15,6 +14,7 @@ import {
   Tag,
   type TableColumnsType,
 } from "antd";
+import { RowActions } from "@/components/RowActions";
 import {
   PlusOutlined,
   EditOutlined,
@@ -166,137 +166,119 @@ function NdtpTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 240,
+      width: 96,
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            size="small"
-            icon={<EyeOutlined />}
-            aria-label="Xem chi tiết"
-            onClick={() => setDetailId(record.id)}
-          />
-          <Button
-            size="small"
-            icon={<FileTextOutlined />}
-            aria-label="Xem văn bản"
-            onClick={() => setDocView({ kind: "ndtp", report: record })}
-          />
-          {record.status === REPORT_STATUS.Draft &&
-            hasPermission("FoodSafe.Reporting.NdtpReports.Edit") && (
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => setEditReport(record)}
-              >
-                Sửa
-              </Button>
-            )}
-          {record.status === REPORT_STATUS.Draft &&
-            hasPermission("FoodSafe.Reporting.NdtpReports.Submit") && (
-              <Popconfirm
-                title="Gửi báo cáo này?"
-                okText="Gửi"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  submitMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã gửi"),
-                  })
-                }
-              >
-                <Button size="small" icon={<SendOutlined />}>
-                  Gửi
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status === REPORT_STATUS.Submitted &&
-            hasPermission("FoodSafe.Reporting.NdtpReports.Verify") && (
-              <Popconfirm
-                title="Xác minh báo cáo này?"
-                okText="Xác minh"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  verifyMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã xác minh"),
-                  })
-                }
-              >
-                <Button size="small" icon={<CheckCircleOutlined />}>
-                  Xác minh
-                </Button>
-              </Popconfirm>
-            )}
-          {(record.status === REPORT_STATUS.Submitted ||
-            record.status === REPORT_STATUS.Verified) &&
-            hasPermission("FoodSafe.Reporting.NdtpReports.Return") && (
-              <Button
-                size="small"
-                icon={<RollbackOutlined />}
-                onClick={() => setReturnOpen(record.id)}
-              >
-                Trả lại
-              </Button>
-            )}
-          {record.status === REPORT_STATUS.Verified &&
-            hasPermission("FoodSafe.Reporting.NdtpReports.Complete") && (
-              <Popconfirm
-                title="Hoàn thành báo cáo này?"
-                okText="Hoàn thành"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  completeMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã hoàn thành"),
-                  })
-                }
-              >
-                <Button size="small" icon={<FileDoneOutlined />}>
-                  Hoàn thành
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status === REPORT_STATUS.Returned &&
-            hasPermission("FoodSafe.Reporting.NdtpReports.Edit") && (
-              <Popconfirm
-                title="Chuyển về nháp để sửa?"
-                okText="Chuyển"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  returnToDraftMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã chuyển về nháp"),
-                  })
-                }
-              >
-                <Button size="small" icon={<EditOutlined />}>
-                  Về nháp
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status === REPORT_STATUS.Draft &&
-            hasPermission("FoodSafe.Reporting.NdtpReports.Delete") && (
-              <Popconfirm
-                title="Xóa báo cáo?"
-                okText="Xóa"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  deleteMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã xóa"),
-                  })
-                }
-              >
-                <Button size="small" danger icon={<DeleteOutlined />}>
-                  Xóa
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status !== REPORT_STATUS.Draft && (
-            <Button
-              size="small"
-              icon={<WarningOutlined />}
-              onClick={() => setErrorNotifReport(record)}
-            >
-              Sai sót
-            </Button>
-          )}
-        </Space>
+        <RowActions
+          actions={[
+            {
+              key: "view",
+              label: "Xem chi tiết",
+              ariaLabel: "Xem chi tiết",
+              icon: <EyeOutlined />,
+              onClick: () => setDetailId(record.id),
+            },
+            {
+              key: "doc",
+              label: "Xem văn bản",
+              ariaLabel: "Xem văn bản",
+              icon: <FileTextOutlined />,
+              onClick: () => setDocView({ kind: "ndtp", report: record }),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Draft ||
+                !hasPermission("FoodSafe.Reporting.NdtpReports.Edit"),
+              onClick: () => setEditReport(record),
+            },
+            {
+              key: "submit",
+              label: "Gửi",
+              icon: <SendOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Draft ||
+                !hasPermission("FoodSafe.Reporting.NdtpReports.Submit"),
+              confirm: "Gửi báo cáo này?",
+              onClick: () =>
+                submitMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã gửi"),
+                }),
+            },
+            {
+              key: "verify",
+              label: "Xác minh",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Submitted ||
+                !hasPermission("FoodSafe.Reporting.NdtpReports.Verify"),
+              confirm: "Xác minh báo cáo này?",
+              onClick: () =>
+                verifyMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xác minh"),
+                }),
+            },
+            {
+              key: "return",
+              label: "Trả lại",
+              icon: <RollbackOutlined />,
+              hidden:
+                (record.status !== REPORT_STATUS.Submitted &&
+                  record.status !== REPORT_STATUS.Verified) ||
+                !hasPermission("FoodSafe.Reporting.NdtpReports.Return"),
+              onClick: () => setReturnOpen(record.id),
+            },
+            {
+              key: "complete",
+              label: "Hoàn thành",
+              icon: <FileDoneOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Verified ||
+                !hasPermission("FoodSafe.Reporting.NdtpReports.Complete"),
+              confirm: "Hoàn thành báo cáo này?",
+              onClick: () =>
+                completeMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã hoàn thành"),
+                }),
+            },
+            {
+              key: "return-to-draft",
+              label: "Về nháp",
+              icon: <EditOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Returned ||
+                !hasPermission("FoodSafe.Reporting.NdtpReports.Edit"),
+              confirm: "Chuyển về nháp để sửa?",
+              onClick: () =>
+                returnToDraftMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã chuyển về nháp"),
+                }),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden:
+                record.status !== REPORT_STATUS.Draft ||
+                !hasPermission("FoodSafe.Reporting.NdtpReports.Delete"),
+              confirm: "Xóa báo cáo?",
+              onClick: () =>
+                deleteMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xóa"),
+                }),
+            },
+            {
+              key: "error-notif",
+              label: "Sai sót",
+              icon: <WarningOutlined />,
+              hidden: record.status === REPORT_STATUS.Draft,
+              onClick: () => setErrorNotifReport(record),
+            },
+          ]}
+          overflowAriaLabel={`Thao tác Tháng ${record.periodMonth}/${record.periodYear}`}
+        />
       ),
     },
   ];
@@ -539,137 +521,119 @@ function AtpWorkTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 240,
+      width: 96,
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            size="small"
-            icon={<EyeOutlined />}
-            aria-label="Xem chi tiết"
-            onClick={() => setDetailId(record.id)}
-          />
-          <Button
-            size="small"
-            icon={<FileTextOutlined />}
-            aria-label="Xem văn bản"
-            onClick={() => setDocView({ kind: "atp", report: record })}
-          />
-          {record.status === REPORT_STATUS.Draft &&
-            hasPermission("FoodSafe.Reporting.AtpWorkReports.Edit") && (
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => setEditReport(record)}
-              >
-                Sửa
-              </Button>
-            )}
-          {record.status === REPORT_STATUS.Draft &&
-            hasPermission("FoodSafe.Reporting.AtpWorkReports.Submit") && (
-              <Popconfirm
-                title="Gửi báo cáo này?"
-                okText="Gửi"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  submitMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã gửi"),
-                  })
-                }
-              >
-                <Button size="small" icon={<SendOutlined />}>
-                  Gửi
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status === REPORT_STATUS.Submitted &&
-            hasPermission("FoodSafe.Reporting.AtpWorkReports.Verify") && (
-              <Popconfirm
-                title="Xác minh báo cáo này?"
-                okText="Xác minh"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  verifyMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã xác minh"),
-                  })
-                }
-              >
-                <Button size="small" icon={<CheckCircleOutlined />}>
-                  Xác minh
-                </Button>
-              </Popconfirm>
-            )}
-          {(record.status === REPORT_STATUS.Submitted ||
-            record.status === REPORT_STATUS.Verified) &&
-            hasPermission("FoodSafe.Reporting.AtpWorkReports.Return") && (
-              <Button
-                size="small"
-                icon={<RollbackOutlined />}
-                onClick={() => setReturnOpen(record.id)}
-              >
-                Trả lại
-              </Button>
-            )}
-          {record.status === REPORT_STATUS.Verified &&
-            hasPermission("FoodSafe.Reporting.AtpWorkReports.Complete") && (
-              <Popconfirm
-                title="Hoàn thành báo cáo này?"
-                okText="Hoàn thành"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  completeMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã hoàn thành"),
-                  })
-                }
-              >
-                <Button size="small" icon={<FileDoneOutlined />}>
-                  Hoàn thành
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status === REPORT_STATUS.Returned &&
-            hasPermission("FoodSafe.Reporting.AtpWorkReports.Edit") && (
-              <Popconfirm
-                title="Chuyển về nháp để sửa?"
-                okText="Chuyển"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  returnToDraftMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã chuyển về nháp"),
-                  })
-                }
-              >
-                <Button size="small" icon={<EditOutlined />}>
-                  Về nháp
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status === REPORT_STATUS.Draft &&
-            hasPermission("FoodSafe.Reporting.AtpWorkReports.Delete") && (
-              <Popconfirm
-                title="Xóa báo cáo?"
-                okText="Xóa"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  deleteMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã xóa"),
-                  })
-                }
-              >
-                <Button size="small" danger icon={<DeleteOutlined />}>
-                  Xóa
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status !== REPORT_STATUS.Draft && (
-            <Button
-              size="small"
-              icon={<WarningOutlined />}
-              onClick={() => setErrorNotifReport(record)}
-            >
-              Sai sót
-            </Button>
-          )}
-        </Space>
+        <RowActions
+          actions={[
+            {
+              key: "view",
+              label: "Xem chi tiết",
+              ariaLabel: "Xem chi tiết",
+              icon: <EyeOutlined />,
+              onClick: () => setDetailId(record.id),
+            },
+            {
+              key: "doc",
+              label: "Xem văn bản",
+              ariaLabel: "Xem văn bản",
+              icon: <FileTextOutlined />,
+              onClick: () => setDocView({ kind: "atp", report: record }),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Draft ||
+                !hasPermission("FoodSafe.Reporting.AtpWorkReports.Edit"),
+              onClick: () => setEditReport(record),
+            },
+            {
+              key: "submit",
+              label: "Gửi",
+              icon: <SendOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Draft ||
+                !hasPermission("FoodSafe.Reporting.AtpWorkReports.Submit"),
+              confirm: "Gửi báo cáo này?",
+              onClick: () =>
+                submitMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã gửi"),
+                }),
+            },
+            {
+              key: "verify",
+              label: "Xác minh",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Submitted ||
+                !hasPermission("FoodSafe.Reporting.AtpWorkReports.Verify"),
+              confirm: "Xác minh báo cáo này?",
+              onClick: () =>
+                verifyMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xác minh"),
+                }),
+            },
+            {
+              key: "return",
+              label: "Trả lại",
+              icon: <RollbackOutlined />,
+              hidden:
+                (record.status !== REPORT_STATUS.Submitted &&
+                  record.status !== REPORT_STATUS.Verified) ||
+                !hasPermission("FoodSafe.Reporting.AtpWorkReports.Return"),
+              onClick: () => setReturnOpen(record.id),
+            },
+            {
+              key: "complete",
+              label: "Hoàn thành",
+              icon: <FileDoneOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Verified ||
+                !hasPermission("FoodSafe.Reporting.AtpWorkReports.Complete"),
+              confirm: "Hoàn thành báo cáo này?",
+              onClick: () =>
+                completeMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã hoàn thành"),
+                }),
+            },
+            {
+              key: "return-to-draft",
+              label: "Về nháp",
+              icon: <EditOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Returned ||
+                !hasPermission("FoodSafe.Reporting.AtpWorkReports.Edit"),
+              confirm: "Chuyển về nháp để sửa?",
+              onClick: () =>
+                returnToDraftMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã chuyển về nháp"),
+                }),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden:
+                record.status !== REPORT_STATUS.Draft ||
+                !hasPermission("FoodSafe.Reporting.AtpWorkReports.Delete"),
+              confirm: "Xóa báo cáo?",
+              onClick: () =>
+                deleteMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xóa"),
+                }),
+            },
+            {
+              key: "error-notif",
+              label: "Sai sót",
+              icon: <WarningOutlined />,
+              hidden: record.status === REPORT_STATUS.Draft,
+              onClick: () => setErrorNotifReport(record),
+            },
+          ]}
+          overflowAriaLabel={`Thao tác ${REPORT_PERIOD_TYPE_CONFIG[record.periodType]?.label ?? ""} ${record.periodYear}${record.periodHalf ? ` (Kỳ ${record.periodHalf})` : ""}`}
+        />
       ),
     },
   ];
@@ -943,137 +907,122 @@ function ActionMonthTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 240,
+      width: 96,
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            size="small"
-            icon={<EyeOutlined />}
-            aria-label="Xem chi tiết"
-            onClick={() => setDetailId(record.id)}
-          />
-          <Button
-            size="small"
-            icon={<FileTextOutlined />}
-            aria-label="Xem văn bản"
-            onClick={() => setDocView({ kind: "action-month", report: record })}
-          />
-          {record.status === REPORT_STATUS.Draft &&
-            hasPermission("FoodSafe.Reporting.ActionMonthReports.Edit") && (
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => setEditReport(record)}
-              >
-                Sửa
-              </Button>
-            )}
-          {record.status === REPORT_STATUS.Draft &&
-            hasPermission("FoodSafe.Reporting.ActionMonthReports.Submit") && (
-              <Popconfirm
-                title="Gửi báo cáo này?"
-                okText="Gửi"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  submitMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã gửi"),
-                  })
-                }
-              >
-                <Button size="small" icon={<SendOutlined />}>
-                  Gửi
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status === REPORT_STATUS.Submitted &&
-            hasPermission("FoodSafe.Reporting.ActionMonthReports.Verify") && (
-              <Popconfirm
-                title="Xác minh báo cáo này?"
-                okText="Xác minh"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  verifyMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã xác minh"),
-                  })
-                }
-              >
-                <Button size="small" icon={<CheckCircleOutlined />}>
-                  Xác minh
-                </Button>
-              </Popconfirm>
-            )}
-          {(record.status === REPORT_STATUS.Submitted ||
-            record.status === REPORT_STATUS.Verified) &&
-            hasPermission("FoodSafe.Reporting.ActionMonthReports.Return") && (
-              <Button
-                size="small"
-                icon={<RollbackOutlined />}
-                onClick={() => setReturnOpen(record.id)}
-              >
-                Trả lại
-              </Button>
-            )}
-          {record.status === REPORT_STATUS.Verified &&
-            hasPermission("FoodSafe.Reporting.ActionMonthReports.Complete") && (
-              <Popconfirm
-                title="Hoàn thành báo cáo này?"
-                okText="Hoàn thành"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  completeMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã hoàn thành"),
-                  })
-                }
-              >
-                <Button size="small" icon={<FileDoneOutlined />}>
-                  Hoàn thành
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status === REPORT_STATUS.Returned &&
-            hasPermission("FoodSafe.Reporting.ActionMonthReports.Edit") && (
-              <Popconfirm
-                title="Chuyển về nháp để sửa?"
-                okText="Chuyển"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  returnToDraftMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã chuyển về nháp"),
-                  })
-                }
-              >
-                <Button size="small" icon={<EditOutlined />}>
-                  Về nháp
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status === REPORT_STATUS.Draft &&
-            hasPermission("FoodSafe.Reporting.ActionMonthReports.Delete") && (
-              <Popconfirm
-                title="Xóa báo cáo?"
-                okText="Xóa"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  deleteMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã xóa"),
-                  })
-                }
-              >
-                <Button size="small" danger icon={<DeleteOutlined />}>
-                  Xóa
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status !== REPORT_STATUS.Draft && (
-            <Button
-              size="small"
-              icon={<WarningOutlined />}
-              onClick={() => setErrorNotifReport(record)}
-            >
-              Sai sót
-            </Button>
-          )}
-        </Space>
+        <RowActions
+          actions={[
+            {
+              key: "view",
+              label: "Xem chi tiết",
+              ariaLabel: "Xem chi tiết",
+              icon: <EyeOutlined />,
+              onClick: () => setDetailId(record.id),
+            },
+            {
+              key: "doc",
+              label: "Xem văn bản",
+              ariaLabel: "Xem văn bản",
+              icon: <FileTextOutlined />,
+              onClick: () =>
+                setDocView({ kind: "action-month", report: record }),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Draft ||
+                !hasPermission("FoodSafe.Reporting.ActionMonthReports.Edit"),
+              onClick: () => setEditReport(record),
+            },
+            {
+              key: "submit",
+              label: "Gửi",
+              icon: <SendOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Draft ||
+                !hasPermission("FoodSafe.Reporting.ActionMonthReports.Submit"),
+              confirm: "Gửi báo cáo này?",
+              onClick: () =>
+                submitMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã gửi"),
+                }),
+            },
+            {
+              key: "verify",
+              label: "Xác minh",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Submitted ||
+                !hasPermission("FoodSafe.Reporting.ActionMonthReports.Verify"),
+              confirm: "Xác minh báo cáo này?",
+              onClick: () =>
+                verifyMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xác minh"),
+                }),
+            },
+            {
+              key: "return",
+              label: "Trả lại",
+              icon: <RollbackOutlined />,
+              hidden:
+                (record.status !== REPORT_STATUS.Submitted &&
+                  record.status !== REPORT_STATUS.Verified) ||
+                !hasPermission("FoodSafe.Reporting.ActionMonthReports.Return"),
+              onClick: () => setReturnOpen(record.id),
+            },
+            {
+              key: "complete",
+              label: "Hoàn thành",
+              icon: <FileDoneOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Verified ||
+                !hasPermission(
+                  "FoodSafe.Reporting.ActionMonthReports.Complete",
+                ),
+              confirm: "Hoàn thành báo cáo này?",
+              onClick: () =>
+                completeMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã hoàn thành"),
+                }),
+            },
+            {
+              key: "return-to-draft",
+              label: "Về nháp",
+              icon: <EditOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Returned ||
+                !hasPermission("FoodSafe.Reporting.ActionMonthReports.Edit"),
+              confirm: "Chuyển về nháp để sửa?",
+              onClick: () =>
+                returnToDraftMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã chuyển về nháp"),
+                }),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden:
+                record.status !== REPORT_STATUS.Draft ||
+                !hasPermission("FoodSafe.Reporting.ActionMonthReports.Delete"),
+              confirm: "Xóa báo cáo?",
+              onClick: () =>
+                deleteMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xóa"),
+                }),
+            },
+            {
+              key: "error-notif",
+              label: "Sai sót",
+              icon: <WarningOutlined />,
+              hidden: record.status === REPORT_STATUS.Draft,
+              onClick: () => setErrorNotifReport(record),
+            },
+          ]}
+          overflowAriaLabel={`Thao tác ${record.periodYear}`}
+        />
       ),
     },
   ];

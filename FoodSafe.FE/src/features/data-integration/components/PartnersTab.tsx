@@ -16,6 +16,7 @@ import {
   Typography,
   type TableColumnsType,
 } from "antd";
+import { RowActions } from "@/components/RowActions";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -179,71 +180,72 @@ export function PartnersTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 230,
-      render: (_, record) => (
-        <Space size="small" wrap>
-          {canManageKeys && (
-            <Button
-              size="small"
-              icon={<KeyOutlined />}
-              onClick={() => setKeysPartner(record)}
-            >
-              Khóa API
-            </Button>
-          )}
-          {canEdit && (
-            <>
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => openEdit(record)}
-              >
-                Sửa
-              </Button>
-              <Popconfirm
-                title={
+      width: 96,
+      render: (_, record) => {
+        const toggleLabel =
+          record.status === PARTNER_ACCOUNT_STATUS.Active
+            ? "Tạm ngưng"
+            : "Kích hoạt";
+        return (
+          <RowActions
+            overflowAriaLabel={`Thao tác ${record.code}`}
+            actions={[
+              {
+                key: "keys",
+                label: "Khóa API",
+                ariaLabel: "Khóa API",
+                icon: <KeyOutlined />,
+                hidden: !canManageKeys,
+                onClick: () => setKeysPartner(record),
+              },
+              {
+                key: "edit",
+                label: "Sửa",
+                ariaLabel: `Sửa ${record.name}`,
+                icon: <EditOutlined />,
+                hidden: !canEdit,
+                onClick: () => openEdit(record),
+              },
+              {
+                key: "toggle",
+                label: toggleLabel,
+                ariaLabel: `${toggleLabel} ${record.name}`,
+                icon: <SwapOutlined />,
+                hidden: !canEdit,
+                confirm:
                   record.status === PARTNER_ACCOUNT_STATUS.Active
                     ? "Tạm ngưng đối tác? Mọi khóa API sẽ bị từ chối."
-                    : "Kích hoạt lại đối tác?"
-                }
-                okText={
-                  record.status === PARTNER_ACCOUNT_STATUS.Active
-                    ? "Tạm ngưng"
-                    : "Kích hoạt"
-                }
-                cancelText="Hủy"
-                onConfirm={() =>
+                    : "Kích hoạt lại đối tác?",
+                onClick: () =>
                   toggleMut.mutate(record.id, {
                     onSuccess: () => message.success("Đã cập nhật trạng thái."),
                     onError: (error) =>
                       void message.error(
                         apiErrorMessage(error, "Thao tác thất bại."),
                       ),
-                  })
-                }
-              >
-                <Button size="small" icon={<SwapOutlined />} />
-              </Popconfirm>
-            </>
-          )}
-          {canDelete && (
-            <Popconfirm
-              title="Xóa đối tác? Mọi khóa API sẽ bị thu hồi."
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
-                deleteMut.mutate(record.id, {
-                  onSuccess: () => message.success("Đã xóa đối tác."),
-                  onError: (error) =>
-                    void message.error(apiErrorMessage(error, "Xóa thất bại.")),
-                })
-              }
-            >
-              <Button size="small" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
-          )}
-        </Space>
-      ),
+                  }),
+              },
+              {
+                key: "delete",
+                label: "Xóa đối tác",
+                ariaLabel: `Xóa ${record.name}`,
+                icon: <DeleteOutlined />,
+                danger: true,
+                hidden: !canDelete,
+                confirm: "Xóa đối tác? Mọi khóa API sẽ bị thu hồi.",
+                onClick: () =>
+                  deleteMut.mutate(record.id, {
+                    onSuccess: () => message.success("Đã xóa đối tác."),
+                    onError: (error) =>
+                      void message.error(
+                        apiErrorMessage(error, "Xóa thất bại."),
+                      ),
+                  }),
+              },
+            ]}
+          />
+        );
+      },
     },
   ];
 

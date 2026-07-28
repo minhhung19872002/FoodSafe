@@ -14,8 +14,7 @@ async function removeStaleEndpoints(
     "/api/v1/app/api-endpoint?Filter=E2E-API&MaxResultCount=100",
   );
   if (!response.ok()) return;
-  for (const item of ((await response.json()) as { items: ListItem[] })
-    .items) {
+  for (const item of ((await response.json()) as { items: ListItem[] }).items) {
     if (item.name?.startsWith("E2E-API")) {
       await request.delete(`/api/v1/app/api-endpoint/${item.id}`, {
         headers,
@@ -36,9 +35,7 @@ test.describe("data integration management", () => {
     await removeStaleEndpoints(request, headers);
 
     await page.goto("/data-integration");
-    await expect(
-      page.getByRole("tab", { name: "Cấu hình API" }),
-    ).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Cấu hình API" })).toBeVisible();
 
     const suffix = Date.now().toString().slice(-8);
     const endpointName = `E2E-API-${suffix}`;
@@ -53,28 +50,22 @@ test.describe("data integration management", () => {
       .fill("https://api.example.gov.vn/test");
     await dialog.getByRole("combobox", { name: "Phương thức" }).click();
     await page.getByText("GET", { exact: true }).last().click();
-    await dialog
-      .getByRole("combobox", { name: "Hệ thống" })
-      .click();
+    await dialog.getByRole("combobox", { name: "Hệ thống" }).click();
     await page.getByText("Bộ Y tế", { exact: true }).last().click();
     await dialog.getByRole("combobox", { name: "Xác thực" }).click();
-    await page
-      .getByText("Không xác thực", { exact: true })
-      .last()
-      .click();
-    await dialog
-      .getByRole("button", { name: "Lưu", exact: true })
-      .click();
+    await page.getByText("Không xác thực", { exact: true }).last().click();
+    await dialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(page.getByText(endpointName)).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: endpointName });
-    await row.getByRole("button", { name: /Xóa/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xóa" }).click();
-    await expect(page.getByText(endpointName)).not.toBeVisible({ timeout: 10_000 });
+    await row.getByRole("button", { name: `Thao tác ${endpointName}` }).click();
+    await page.getByRole("menuitem", { name: "Xóa" }).click();
+    await page.getByRole("button", { name: "OK" }).click();
+    await expect(page.getByText(endpointName)).not.toBeVisible({
+      timeout: 10_000,
+    });
 
     await page.getByRole("tab", { name: "Lịch sử gọi API" }).click();
-    await expect(
-      page.getByRole("columnheader", { name: "URL" }),
-    ).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "URL" })).toBeVisible();
   });
 });

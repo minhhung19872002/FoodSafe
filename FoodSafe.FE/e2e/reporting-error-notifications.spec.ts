@@ -28,15 +28,13 @@ async function cleanReports(page: Page, headers: Record<string, string>) {
     "/api/v1/app/ndtp-report?MaxResultCount=1000",
   );
   if (!response.ok()) return;
-  for (const item of ((await response.json()) as { items: ListItem[] })
-    .items) {
+  for (const item of ((await response.json()) as { items: ListItem[] }).items) {
     if (item.periodYear !== YEAR) continue;
     for (const action of ["return", "return-to-draft"]) {
       await request.post(`/api/v1/app/ndtp-report/${item.id}/${action}`, {
         headers,
         maxRedirects: 0,
-        data:
-          action === "return" ? { returnReason: "E2E cleanup" } : undefined,
+        data: action === "return" ? { returnReason: "E2E cleanup" } : undefined,
       });
     }
     await request.delete(`/api/v1/app/ndtp-report/${item.id}`, {
@@ -51,14 +49,16 @@ async function createDraft(
   headers: Record<string, string>,
   month: number,
 ) {
-  const response = await page.context().request.post("/api/v1/app/ndtp-report", {
-    headers,
-    data: {
-      periodYear: YEAR,
-      periodMonth: month,
-      notes: "E2E error-notification report",
-    },
-  });
+  const response = await page
+    .context()
+    .request.post("/api/v1/app/ndtp-report", {
+      headers,
+      data: {
+        periodYear: YEAR,
+        periodMonth: month,
+        notes: "E2E error-notification report",
+      },
+    });
   expect(response.ok(), await response.text()).toBeTruthy();
   return (await response.json()) as { id: string };
 }
@@ -163,10 +163,12 @@ test.describe("report error notifications (FR-33/34/35-05)", () => {
       name: new RegExp(`Tháng 1/${YEAR}`),
     });
     await expect(reportRow).toBeVisible();
-    await reportRow.getByRole("button", { name: "Sai sót" }).click();
-    await expect(
-      page.getByText("Trường sai sót: Số ca ngộ độc"),
-    ).toBeVisible();
+    // When Submitted, "Sai sót" is in overflow (inline slots taken by Xem chi tiết + Xem văn bản).
+    await reportRow
+      .getByRole("button", { name: `Thao tác Tháng 1/${YEAR}` })
+      .click();
+    await page.getByRole("menuitem", { name: "Sai sót" }).click();
+    await expect(page.getByText("Trường sai sót: Số ca ngộ độc")).toBeVisible();
     await expect(page.getByText(/Phản hồi tuyến trên/)).toBeVisible();
 
     await cleanReports(page, headers);
@@ -182,29 +184,35 @@ test.describe("report error notifications (FR-33/34/35-05)", () => {
     };
     await cleanReports(page, headers);
     const report = await createDraft(page, headers, 2);
-    const submit = await page.context().request.post(
-      `/api/v1/app/ndtp-report/${report.id}/submit`,
-      { headers, maxRedirects: 0 },
-    );
+    const submit = await page
+      .context()
+      .request.post(`/api/v1/app/ndtp-report/${report.id}/submit`, {
+        headers,
+        maxRedirects: 0,
+      });
     expect(submit.ok()).toBeTruthy();
 
     const context = await browser.newContext();
     const other = await context.newPage();
     await signIn(other, "noperm@foodsafe.local", TEST_PASSWORD);
     try {
-      const denied = await other.context().request.post(
-        `/api/v1/app/ndtp-report/${report.id}/error-notification`,
-        {
-          maxRedirects: 0,
-          data: { errorFields: "x", correctionDetails: "y" },
-        },
-      );
+      const denied = await other
+        .context()
+        .request.post(
+          `/api/v1/app/ndtp-report/${report.id}/error-notification`,
+          {
+            maxRedirects: 0,
+            data: { errorFields: "x", correctionDetails: "y" },
+          },
+        );
       expect([401, 403]).toContain(denied.status());
 
-      const deniedList = await other.context().request.get(
-        `/api/v1/app/ndtp-report/${report.id}/error-notifications`,
-        { maxRedirects: 0 },
-      );
+      const deniedList = await other
+        .context()
+        .request.get(
+          `/api/v1/app/ndtp-report/${report.id}/error-notifications`,
+          { maxRedirects: 0 },
+        );
       expect([401, 403]).toContain(deniedList.status());
     } finally {
       await context.close();

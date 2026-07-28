@@ -6,7 +6,6 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
   Select,
   Space,
   Table,
@@ -50,6 +49,7 @@ import {
 } from "../types/riskAnalysis.types";
 import type { AlertCategory } from "@/features/alerts-news/types/alertsNews.types";
 import { useTablePagination } from "@/hooks/useTablePagination";
+import { RowActions } from "@/components/RowActions";
 
 export default function RiskAnalysisPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
@@ -126,17 +126,20 @@ export default function RiskAnalysisPage() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 160,
+      width: 96,
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            size="small"
-            aria-label={`In ${record.title}`}
-            icon={<PrinterOutlined />}
-            onClick={() =>
-              printHtml(
-                record.title,
-                `<h3>CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH</h3>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.title}`}
+          actions={[
+            {
+              key: "print",
+              label: "In",
+              ariaLabel: `In ${record.title}`,
+              icon: <PrinterOutlined />,
+              onClick: () =>
+                printHtml(
+                  record.title,
+                  `<h3>CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH</h3>
                  <h2>PHÂN TÍCH MỐI NGUY CƠ AN TOÀN THỰC PHẨM</h2>
                  <h3>${escapeHtml(record.title)}</h3>
                  <p><strong>Danh mục:</strong> ${escapeHtml(ALERT_CATEGORY_LABELS[record.category])}</p>
@@ -147,61 +150,51 @@ export default function RiskAnalysisPage() {
                  <p><strong>Bằng chứng:</strong> ${escapeHtml(record.evidence) || "—"}</p>
                  <p><strong>Khuyến nghị:</strong> ${escapeHtml(record.recommendations) || "—"}</p>
                  ${record.publishedAt ? `<p><strong>Ngày công bố:</strong> ${dayjs(record.publishedAt).format("DD/MM/YYYY")}</p>` : ""}`,
-              )
-            }
-          />
-          {record.status === RISK_ANALYSIS_STATUS.Draft && (
-            <>
-              {hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Edit") && (
-                <Button
-                  size="small"
-                  icon={<EditOutlined />}
-                  onClick={() => openEdit(record)}
-                >
-                  Sửa
-                </Button>
-              )}
-              {hasPermission(
-                "FoodSafe.AlertsAndTesting.RiskAnalyses.Publish",
-              ) && (
-                <Popconfirm
-                  title="Xuất bản phân tích này?"
-                  okText="Xuất bản"
-                  cancelText="Hủy"
-                  onConfirm={() =>
-                    publishMut.mutate(record.id, {
-                      onSuccess: () => message.success("Đã xuất bản"),
-                      onError: () => message.error("Xuất bản thất bại"),
-                    })
-                  }
-                >
-                  <Button size="small" icon={<SendOutlined />}>
-                    Xuất bản
-                  </Button>
-                </Popconfirm>
-              )}
-              {hasPermission(
-                "FoodSafe.AlertsAndTesting.RiskAnalyses.Delete",
-              ) && (
-                <Popconfirm
-                  title="Xóa phân tích?"
-                  okText="Xóa"
-                  cancelText="Hủy"
-                  onConfirm={() =>
-                    deleteMut.mutate(record.id, {
-                      onSuccess: () => message.success("Đã xóa"),
-                      onError: () => message.error("Xóa thất bại"),
-                    })
-                  }
-                >
-                  <Button size="small" danger icon={<DeleteOutlined />}>
-                    Xóa
-                  </Button>
-                </Popconfirm>
-              )}
-            </>
-          )}
-        </Space>
+                ),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: !(
+                record.status === RISK_ANALYSIS_STATUS.Draft &&
+                hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Edit")
+              ),
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "publish",
+              label: "Xuất bản",
+              icon: <SendOutlined />,
+              hidden: !(
+                record.status === RISK_ANALYSIS_STATUS.Draft &&
+                hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Publish")
+              ),
+              confirm: "Xuất bản phân tích này?",
+              onClick: () =>
+                publishMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xuất bản"),
+                  onError: () => message.error("Xuất bản thất bại"),
+                }),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !(
+                record.status === RISK_ANALYSIS_STATUS.Draft &&
+                hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Delete")
+              ),
+              confirm: "Xóa phân tích?",
+              onClick: () =>
+                deleteMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xóa"),
+                  onError: () => message.error("Xóa thất bại"),
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];

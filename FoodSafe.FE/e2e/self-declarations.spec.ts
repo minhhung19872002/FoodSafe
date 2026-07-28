@@ -196,8 +196,9 @@ test.describe("self-declaration management", () => {
 
     row = page.getByRole("row").filter({ hasText: declarationNumber });
     await row
-      .getByRole("button", { name: `Thu hồi ${declarationNumber}` })
+      .getByRole("button", { name: `Thao tác ${declarationNumber}` })
       .click();
+    await page.getByRole("menuitem", { name: "Thu hồi" }).click();
     const revokeDialog = page.getByRole("dialog", {
       name: `Thu hồi hồ sơ ${declarationNumber}`,
     });
@@ -236,7 +237,7 @@ test.describe("self-declaration management", () => {
     expect(blockedUpload.ok()).toBeFalsy();
 
     await row.getByRole("button", { name: `Xóa ${declarationNumber}` }).click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await page.getByRole("button", { name: "OK" }).click();
     await expect(page.getByText("Đã xóa hồ sơ.")).toBeVisible();
 
     const duplicateResponse = await request.post(

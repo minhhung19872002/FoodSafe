@@ -82,6 +82,7 @@ test.describe("inspection violations verification", () => {
     expect(organization, "seeded organization").toBeDefined();
 
     const suffix = Date.now().toString().slice(-8);
+    const businessName = `Cơ sở vi phạm ${suffix}`;
     const businessResponse = await request.post("/api/v1/app/business", {
       headers,
       data: {
@@ -126,7 +127,11 @@ test.describe("inspection violations verification", () => {
         name: new RegExp(`vi phạm ${suffix}`, "i"),
       });
       await expect(row).toBeVisible();
-      await row.getByRole("button", { name: "Sửa" }).click();
+      // Result has violations → "Theo dõi" is visible as inline2, so "Sửa" is in overflow.
+      await row
+        .getByRole("button", { name: `Thao tác ${businessName}` })
+        .click();
+      await page.getByRole("menuitem", { name: "Sửa" }).click();
 
       const dialog = page.getByRole("dialog", {
         name: "Cập nhật kết quả kiểm tra",

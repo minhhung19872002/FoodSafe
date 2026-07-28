@@ -61,12 +61,20 @@ test.describe("P1-1c — admin user-management lifecycle", () => {
     // Đơn vị (required) — single-select, closes on choice.
     await selectFirst(
       page,
-      modal.locator(".ant-form-item").filter({ hasText: "Đơn vị" }).locator(".ant-select").first(),
+      modal
+        .locator(".ant-form-item")
+        .filter({ hasText: "Đơn vị" })
+        .locator(".ant-select")
+        .first(),
     );
     // Vai trò (required) — multi-select stays open; dismiss it via the title.
     await selectFirst(
       page,
-      modal.locator(".ant-form-item").filter({ hasText: "Vai trò" }).locator(".ant-select").first(),
+      modal
+        .locator(".ant-form-item")
+        .filter({ hasText: "Vai trò" })
+        .locator(".ant-select")
+        .first(),
     );
     await modal.locator(".ant-modal-title").click();
     await modal.getByRole("button", { name: "Tạo và gửi hướng dẫn" }).click();
@@ -88,11 +96,14 @@ test.describe("P1-1c — admin user-management lifecycle", () => {
     await expect(page.getByText(email).first()).toBeVisible();
 
     // --- FR-02-07: generate a real random password ---------------------------
+    // "Tạo mật khẩu ngẫu nhiên" is in the ⋯ overflow (position 5).
+    const userRow = page.getByRole("row").filter({ hasText: email });
+    await userRow.getByRole("button", { name: `Thao tác ${email}` }).click();
     await page
-      .getByRole("button", { name: `Tạo mật khẩu ngẫu nhiên ${fullName}` })
+      .getByRole("menuitem", { name: "Tạo mật khẩu ngẫu nhiên" })
       .click();
-    // Popconfirm confirm ("Tạo") — scope to the open popover.
-    await page.locator(".ant-popconfirm").getByRole("button", { name: "Tạo" }).click();
+    // modal.confirm pre-confirmation before the mutation runs.
+    await page.getByRole("button", { name: "OK" }).click();
     await expect(page.locator(".ant-modal-confirm-title")).toContainText(
       "Mật khẩu mới đã được tạo",
     );
@@ -106,11 +117,11 @@ test.describe("P1-1c — admin user-management lifecycle", () => {
     await page.locator(".ant-modal-confirm-btns .ant-btn").first().click();
 
     // --- FR-02-05: delete the throwaway account ------------------------------
-    await page.getByRole("button", { name: `Xóa ${fullName}` }).click();
-    await page
-      .locator(".ant-popconfirm")
-      .getByRole("button", { name: "Xóa", exact: true })
-      .click();
+    // "Xóa tài khoản" is in the ⋯ overflow (position 7).
+    const deleteRow = page.getByRole("row").filter({ hasText: email });
+    await deleteRow.getByRole("button", { name: `Thao tác ${email}` }).click();
+    await page.getByRole("menuitem", { name: "Xóa tài khoản" }).click();
+    await page.getByRole("button", { name: "OK" }).click();
     await expect(page.getByText("Đã xóa tài khoản")).toBeVisible();
 
     // --- It is really gone from the backend ----------------------------------

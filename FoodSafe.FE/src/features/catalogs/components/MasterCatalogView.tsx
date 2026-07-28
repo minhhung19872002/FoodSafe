@@ -4,9 +4,10 @@ import {
   ExportOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { Button, Input, Popconfirm, Space, Table, Tabs, Tag } from "antd";
+import { Button, Input, Table, Tabs, Tag } from "antd";
 import type { TablePaginationConfig } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import { RowActions } from "@/components/RowActions";
 import { catalogDefinitions } from "../types/catalog.types";
 import type { CatalogItem, CatalogKind } from "../types/catalog.types";
 
@@ -83,36 +84,32 @@ function buildColumns({
           {
             title: "Thao tác",
             key: "actions",
-            width: 120,
+            width: 96,
             render: (_: unknown, item: CatalogItem) => (
-              <Space>
-                {canEdit && (
-                  <Button
-                    type="text"
-                    size="small"
-                    aria-label={`Sửa ${item.name}`}
-                    icon={<EditOutlined />}
-                    onClick={() => onEdit(item)}
-                  />
-                )}
-                {canDelete && (
-                  <Popconfirm
-                    title="Xóa dữ liệu này?"
-                    okText="Xóa"
-                    cancelText="Hủy"
-                    onConfirm={() => onDelete(item.id)}
-                  >
-                    <Button
-                      type="text"
-                      danger
-                      size="small"
-                      loading={deleting}
-                      aria-label={`Xóa ${item.name}`}
-                      icon={<DeleteOutlined />}
-                    />
-                  </Popconfirm>
-                )}
-              </Space>
+              <RowActions
+                overflowAriaLabel={`Thao tác ${item.name}`}
+                actions={[
+                  {
+                    key: "edit",
+                    label: "Sửa",
+                    ariaLabel: `Sửa ${item.name}`,
+                    icon: <EditOutlined />,
+                    hidden: !canEdit,
+                    onClick: () => onEdit(item),
+                  },
+                  {
+                    key: "delete",
+                    label: "Xóa",
+                    ariaLabel: `Xóa ${item.name}`,
+                    icon: <DeleteOutlined />,
+                    danger: true,
+                    hidden: !canDelete,
+                    disabled: deleting,
+                    confirm: "Xóa dữ liệu này?",
+                    onClick: () => onDelete(item.id),
+                  },
+                ]}
+              />
             ),
           },
         ]

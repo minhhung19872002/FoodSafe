@@ -8,7 +8,6 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
   Select,
   Space,
   Table,
@@ -17,6 +16,7 @@ import {
   Descriptions,
   type TableColumnsType,
 } from "antd";
+import { RowActions } from "@/components/RowActions";
 import {
   ApiOutlined,
   PlusOutlined,
@@ -156,79 +156,73 @@ function EndpointsTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 200,
+      width: 96,
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            size="small"
-            icon={<ApiOutlined />}
-            loading={testMut.isPending && testMut.variables === record.id}
-            onClick={() =>
-              testMut.mutate(record.id, {
-                onSuccess: (result) =>
-                  result.isSuccess
-                    ? message.success(
-                        `Kết nối thành công (HTTP ${result.statusCode ?? "—"}, ${result.durationMs}ms)`,
-                      )
-                    : message.warning(
-                        `Không kết nối được: ${result.errorMessage ?? "lỗi không xác định"}`,
-                      ),
-                onError: () => message.error("Không thể kiểm tra kết nối."),
-              })
-            }
-          >
-            Test
-          </Button>
-          {canEdit && (
-            <>
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => openEdit(record)}
-              >
-                Sửa
-              </Button>
-              <Popconfirm
-                title={
-                  record.status === API_ENDPOINT_STATUS.Active
-                    ? "Tắt endpoint?"
-                    : "Bật endpoint?"
-                }
-                okText={
-                  record.status === API_ENDPOINT_STATUS.Active ? "Tắt" : "Bật"
-                }
-                cancelText="Hủy"
-                onConfirm={() =>
-                  toggleMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã cập nhật"),
-                    onError: () => message.error("Thao tác thất bại"),
-                  })
-                }
-              >
-                <Button size="small" icon={<SwapOutlined />}>
-                  Bật/Tắt
-                </Button>
-              </Popconfirm>
-            </>
-          )}
-          {canDelete && (
-            <Popconfirm
-              title="Xóa endpoint?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.name}`}
+          actions={[
+            {
+              key: "test",
+              label: "Test kết nối",
+              ariaLabel: `Test kết nối ${record.name}`,
+              icon: <ApiOutlined />,
+              onClick: () =>
+                testMut.mutate(record.id, {
+                  onSuccess: (result) =>
+                    result.isSuccess
+                      ? message.success(
+                          `Kết nối thành công (HTTP ${result.statusCode ?? "—"}, ${result.durationMs}ms)`,
+                        )
+                      : message.warning(
+                          `Không kết nối được: ${result.errorMessage ?? "lỗi không xác định"}`,
+                        ),
+                  onError: () => message.error("Không thể kiểm tra kết nối."),
+                }),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              ariaLabel: `Sửa ${record.name}`,
+              icon: <EditOutlined />,
+              hidden: !canEdit,
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "toggle",
+              label:
+                record.status === API_ENDPOINT_STATUS.Active ? "Tắt" : "Bật",
+              ariaLabel:
+                record.status === API_ENDPOINT_STATUS.Active
+                  ? `Tắt ${record.name}`
+                  : `Bật ${record.name}`,
+              icon: <SwapOutlined />,
+              hidden: !canEdit,
+              confirm:
+                record.status === API_ENDPOINT_STATUS.Active
+                  ? "Tắt endpoint?"
+                  : "Bật endpoint?",
+              onClick: () =>
+                toggleMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã cập nhật"),
+                  onError: () => message.error("Thao tác thất bại"),
+                }),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${record.name}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !canDelete,
+              confirm: "Xóa endpoint?",
+              onClick: () =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa"),
                   onError: () => message.error("Xóa thất bại"),
-                })
-              }
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -557,52 +551,48 @@ function CallHistoryTab() {
     {
       title: "",
       key: "actions",
-      width: 80,
+      width: 96,
       render: (_, record) => (
-        <Space size={4}>
-          <Button
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => setDetailId(record.id)}
-          />
-          {canShare &&
-            !record.isSuccess &&
-            record.direction === API_CALL_DIRECTION.Outbound &&
-            record.endpointId && (
-              <Popconfirm
-                title="Thử lại giao tiếp này?"
-                description="Gửi lại đúng nội dung đã gửi đến điểm kết nối."
-                okText="Thử lại"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  retryMut.mutate(record.id, {
-                    onSuccess: (result) => {
-                      if (result.isSuccess) {
-                        message.success("Đã thử lại thành công.");
-                      } else {
-                        message.warning(
-                          `Đã thử lại nhưng hệ thống nhận vẫn trả lỗi: ${result.errorMessage ?? "không xác định"}`,
-                        );
-                      }
-                    },
-                    onError: (error) =>
-                      void message.error(
-                        apiErrorMessage(error, "Không thể thử lại giao tiếp."),
-                      ),
-                  })
-                }
-              >
-                <Button
-                  size="small"
-                  title="Thử lại"
-                  icon={<RedoOutlined />}
-                  loading={
-                    retryMut.isPending && retryMut.variables === record.id
-                  }
-                />
-              </Popconfirm>
-            )}
-        </Space>
+        <RowActions
+          actions={[
+            {
+              key: "view",
+              label: "Xem chi tiết",
+              ariaLabel: "Xem chi tiết",
+              icon: <EyeOutlined />,
+              onClick: () => setDetailId(record.id),
+            },
+            {
+              key: "retry",
+              label: "Thử lại",
+              ariaLabel: "Thử lại",
+              icon: <RedoOutlined />,
+              hidden: !(
+                canShare &&
+                !record.isSuccess &&
+                record.direction === API_CALL_DIRECTION.Outbound &&
+                record.endpointId
+              ),
+              confirm: "Thử lại giao tiếp này?",
+              onClick: () =>
+                retryMut.mutate(record.id, {
+                  onSuccess: (result) => {
+                    if (result.isSuccess) {
+                      message.success("Đã thử lại thành công.");
+                    } else {
+                      message.warning(
+                        `Đã thử lại nhưng hệ thống nhận vẫn trả lỗi: ${result.errorMessage ?? "không xác định"}`,
+                      );
+                    }
+                  },
+                  onError: (error) =>
+                    void message.error(
+                      apiErrorMessage(error, "Không thể thử lại giao tiếp."),
+                    ),
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];

@@ -54,6 +54,9 @@ const defaults: BusinessHandlerFormValues = {
 
 const optional = (value?: string) => value || undefined;
 
+/** BE trả DateTime ISO ("2026-07-01T00:00:00") — input type="date" cần "YYYY-MM-DD". */
+const toDateInput = (value?: string) => (value ? value.slice(0, 10) : "");
+
 export function BusinessHandlersModal({
   open,
   business,
@@ -75,7 +78,18 @@ export function BusinessHandlersModal({
   });
 
   useEffect(() => {
-    reset(editing ? { ...defaults, ...editing } : defaults);
+    reset(
+      editing
+        ? {
+            ...defaults,
+            ...editing,
+            trainingDate: toDateInput(editing.trainingDate),
+            trainingExpiryDate: toDateInput(editing.trainingExpiryDate),
+            healthCheckDate: toDateInput(editing.healthCheckDate),
+            healthCheckExpiryDate: toDateInput(editing.healthCheckExpiryDate),
+          }
+        : defaults,
+    );
   }, [editing, reset]);
 
   const submit = handleSubmit((values) => {
@@ -228,7 +242,11 @@ export function BusinessHandlersModal({
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item label="Ngày hết hạn tập huấn">
+              <Form.Item
+                label="Ngày hết hạn tập huấn"
+                validateStatus={errors.trainingExpiryDate ? "error" : undefined}
+                help={errors.trainingExpiryDate?.message}
+              >
                 <Controller
                   control={control}
                   name="trainingExpiryDate"
@@ -264,7 +282,13 @@ export function BusinessHandlersModal({
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label="Ngày hết hạn sức khỏe">
+              <Form.Item
+                label="Ngày hết hạn sức khỏe"
+                validateStatus={
+                  errors.healthCheckExpiryDate ? "error" : undefined
+                }
+                help={errors.healthCheckExpiryDate?.message}
+              >
                 <Controller
                   control={control}
                   name="healthCheckExpiryDate"

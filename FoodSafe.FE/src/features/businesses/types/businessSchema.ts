@@ -99,30 +99,60 @@ export const productSchema = z.object({
 
 export type ProductFormValues = z.infer<typeof productSchema>;
 
-export const businessHandlerSchema = z.object({
-  fullName: z.string().trim().min(1, "Vui lòng nhập họ tên").max(200),
-  position: z.string().trim().max(200).optional().or(z.literal("")),
-  idCardNumber: z.string().trim().max(50).optional().or(z.literal("")),
-  trainingCertificateNumber: z
-    .string()
-    .trim()
-    .max(100)
-    .optional()
-    .or(z.literal("")),
-  trainingDate: optionalText,
-  trainingOrganization: z.string().trim().max(300).optional().or(z.literal("")),
-  trainingExpiryDate: optionalText,
-  healthCertificateNumber: z
-    .string()
-    .trim()
-    .max(100)
-    .optional()
-    .or(z.literal("")),
-  healthCheckDate: optionalText,
-  healthCheckFacility: z.string().trim().max(300).optional().or(z.literal("")),
-  healthCheckExpiryDate: optionalText,
-  isActive: z.boolean(),
-  notes: optionalText,
-});
+const isDateOrderValid = (start?: string, end?: string) =>
+  !start || !end || start <= end;
+
+export const businessHandlerSchema = z
+  .object({
+    fullName: z.string().trim().min(1, "Vui lòng nhập họ tên").max(200),
+    position: z.string().trim().max(200).optional().or(z.literal("")),
+    idCardNumber: z.string().trim().max(50).optional().or(z.literal("")),
+    trainingCertificateNumber: z
+      .string()
+      .trim()
+      .max(100)
+      .optional()
+      .or(z.literal("")),
+    trainingDate: optionalText,
+    trainingOrganization: z
+      .string()
+      .trim()
+      .max(300)
+      .optional()
+      .or(z.literal("")),
+    trainingExpiryDate: optionalText,
+    healthCertificateNumber: z
+      .string()
+      .trim()
+      .max(100)
+      .optional()
+      .or(z.literal("")),
+    healthCheckDate: optionalText,
+    healthCheckFacility: z
+      .string()
+      .trim()
+      .max(300)
+      .optional()
+      .or(z.literal("")),
+    healthCheckExpiryDate: optionalText,
+    isActive: z.boolean(),
+    notes: optionalText,
+  })
+  .superRefine((value, context) => {
+    if (!isDateOrderValid(value.trainingDate, value.trainingExpiryDate)) {
+      context.addIssue({
+        code: "custom",
+        path: ["trainingExpiryDate"],
+        message: "Ngày hết hạn tập huấn không được trước ngày tập huấn",
+      });
+    }
+    if (!isDateOrderValid(value.healthCheckDate, value.healthCheckExpiryDate)) {
+      context.addIssue({
+        code: "custom",
+        path: ["healthCheckExpiryDate"],
+        message: "Ngày hết hạn sức khỏe không được trước ngày khám",
+      });
+    }
+  });
 
 export type BusinessHandlerFormValues = z.infer<typeof businessHandlerSchema>;

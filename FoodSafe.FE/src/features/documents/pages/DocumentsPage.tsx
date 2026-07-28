@@ -7,7 +7,6 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
   Select,
   Space,
   Switch,
@@ -44,6 +43,7 @@ import {
   type DocumentStatus,
 } from "../types/document.types";
 import { useTablePagination } from "@/hooks/useTablePagination";
+import { RowActions } from "@/components/RowActions";
 
 export default function DocumentsPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
@@ -146,48 +146,51 @@ export default function DocumentsPage() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 190,
+      width: 96,
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            size="small"
-            aria-label={`In ${record.documentNumber}`}
-            icon={<PrinterOutlined />}
-            onClick={() => printDocument(record)}
-          />
-          <Button
-            size="small"
-            aria-label={`Tệp ${record.documentNumber}`}
-            icon={<PaperClipOutlined />}
-            onClick={() => setAttachmentsDoc(record)}
-          />
-          {hasPermission("FoodSafe.AlertsAndTesting.Documents.Edit") && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {hasPermission("FoodSafe.AlertsAndTesting.Documents.Delete") && (
-            <Popconfirm
-              title="Xóa văn bản?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.documentNumber}`}
+          actions={[
+            {
+              key: "print",
+              label: "In",
+              ariaLabel: `In ${record.documentNumber}`,
+              icon: <PrinterOutlined />,
+              onClick: () => printDocument(record),
+            },
+            {
+              key: "attachments",
+              label: "Tệp",
+              ariaLabel: `Tệp ${record.documentNumber}`,
+              icon: <PaperClipOutlined />,
+              onClick: () => setAttachmentsDoc(record),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: !hasPermission(
+                "FoodSafe.AlertsAndTesting.Documents.Edit",
+              ),
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !hasPermission(
+                "FoodSafe.AlertsAndTesting.Documents.Delete",
+              ),
+              confirm: "Xóa văn bản?",
+              onClick: () =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa"),
                   onError: () => message.error("Xóa thất bại"),
-                })
-              }
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];

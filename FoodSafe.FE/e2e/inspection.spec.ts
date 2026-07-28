@@ -129,14 +129,14 @@ test.describe("inspection management", () => {
     await planDialog
       .getByRole("textbox", { name: "Tên kế hoạch" })
       .fill(planName);
-    await planDialog
-      .getByRole("combobox", { name: "Loại kế hoạch" })
-      .click();
+    await planDialog.getByRole("combobox", { name: "Loại kế hoạch" }).click();
     await page.getByText("Đột xuất", { exact: true }).last().click();
     await planDialog
       .getByRole("spinbutton", { name: "Năm" })
       .fill(String(new Date().getFullYear()));
-    const addBusinessBtn = planDialog.getByRole("button", { name: /Thêm cơ sở/ });
+    const addBusinessBtn = planDialog.getByRole("button", {
+      name: /Thêm cơ sở/,
+    });
     await addBusinessBtn.scrollIntoViewIfNeeded();
     await addBusinessBtn.click();
     const businessSelect = planDialog.locator(".ant-select").last();
@@ -150,22 +150,25 @@ test.describe("inspection management", () => {
     let row = page.getByRole("row").filter({ hasText: planCode });
     await expect(row.getByText("Nháp")).toBeVisible();
 
-    await row.getByRole("button", { name: /Gửi/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Gửi" }).click();
-    await expect(page.getByText("Đã gửi duyệt.")).toBeVisible({ timeout: 10_000 });
+    await row.getByRole("button", { name: `Thao tác ${planCode}` }).click();
+    await page.getByRole("menuitem", { name: "Gửi" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await expect(page.getByText("Đã gửi duyệt.")).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(
       page.getByRole("row").filter({ hasText: planCode }).getByText("Đã gửi"),
     ).toBeVisible({ timeout: 10_000 });
 
     row = page.getByRole("row").filter({ hasText: planCode });
-    await row.getByRole("button", { name: /Duyệt/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Duyệt" }).click();
-    await expect(page.getByText("Đã phê duyệt.")).toBeVisible({ timeout: 10_000 });
+    // At Submitted state: visible=[Tài liệu, Duyệt, Từ chối, Hủy] → Duyệt is inline slot 2.
+    await row.getByRole("button", { name: "Duyệt" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await expect(page.getByText("Đã phê duyệt.")).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(
-      page
-        .getByRole("row")
-        .filter({ hasText: planCode })
-        .getByText("Đã duyệt"),
+      page.getByRole("row").filter({ hasText: planCode }).getByText("Đã duyệt"),
     ).toBeVisible();
 
     await page.getByRole("tab", { name: "Kết quả" }).click();
@@ -176,13 +179,9 @@ test.describe("inspection management", () => {
     await resultDialog.getByRole("combobox", { name: "Cơ sở SXKD" }).click();
     await page.keyboard.type(businessName);
     await page.getByText(businessName, { exact: false }).last().click();
-    await resultDialog
-      .getByRole("combobox", { name: "Loại kiểm tra" })
-      .click();
+    await resultDialog.getByRole("combobox", { name: "Loại kiểm tra" }).click();
     await page.getByText("Đột xuất", { exact: true }).last().click();
-    await resultDialog
-      .getByRole("combobox", { name: "Kết quả chung" })
-      .click();
+    await resultDialog.getByRole("combobox", { name: "Kết quả chung" }).click();
     await page.getByText("Đạt", { exact: true }).last().click();
     await resultDialog
       .getByRole("textbox", { name: "Trưởng đoàn" })
@@ -190,9 +189,7 @@ test.describe("inspection management", () => {
     await resultDialog
       .getByRole("button", { name: "Lưu", exact: true })
       .click();
-    await expect(
-      page.getByText(`Trưởng đoàn E2E-KH-${suffix}`),
-    ).toBeVisible();
+    await expect(page.getByText(`Trưởng đoàn E2E-KH-${suffix}`)).toBeVisible();
 
     await removeStaleArtifacts(request, headers);
     await request.delete(`/api/v1/app/business/${business.id}`, {

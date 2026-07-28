@@ -7,7 +7,7 @@ import {
   PlusOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { App, Button, Input, Popconfirm, Select, Space, Table } from "antd";
+import { App, Button, Input, Select, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { PageHeader } from "@/components/PageHeader";
@@ -15,6 +15,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { RevokeModal } from "@/components/RevokeModal";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
+import { RowActions } from "@/components/RowActions";
 import { saveDownload } from "@/utils/download";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import {
@@ -153,62 +154,55 @@ export default function SelfDeclarationPage() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 160,
+      width: 96,
       render: (_, item) => (
-        <Space size={2}>
-          <Button
-            type="text"
-            size="small"
-            aria-label={`Tệp ${item.declarationNumber}`}
-            icon={<FileTextOutlined />}
-            onClick={() => setAttachmentsFor(item)}
-          />
-          {canEdit && item.status !== LICENSE_STATUS.Revoked && (
-            <>
-              <Button
-                type="text"
-                size="small"
-                aria-label={`Sửa ${item.declarationNumber}`}
-                icon={<EditOutlined />}
-                onClick={() => {
-                  setEditing(item);
-                  setEditorBusinessId(item.businessId);
-                  setEditorOpen(true);
-                }}
-              />
-              <Button
-                type="text"
-                size="small"
-                danger
-                aria-label={`Thu hồi ${item.declarationNumber}`}
-                icon={<StopOutlined />}
-                onClick={() => setRevoking(item)}
-              />
-            </>
-          )}
-          {canDelete && (
-            <Popconfirm
-              title="Xóa hồ sơ này?"
-              description="Số hồ sơ vẫn được giữ trong lịch sử và không thể dùng lại."
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${item.declarationNumber}`}
+          actions={[
+            {
+              key: "files",
+              label: "Tệp",
+              ariaLabel: `Tệp ${item.declarationNumber}`,
+              icon: <FileTextOutlined />,
+              onClick: () => setAttachmentsFor(item),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              ariaLabel: `Sửa ${item.declarationNumber}`,
+              icon: <EditOutlined />,
+              hidden: !canEdit || item.status === LICENSE_STATUS.Revoked,
+              onClick: () => {
+                setEditing(item);
+                setEditorBusinessId(item.businessId);
+                setEditorOpen(true);
+              },
+            },
+            {
+              key: "revoke",
+              label: "Thu hồi",
+              ariaLabel: `Thu hồi ${item.declarationNumber}`,
+              icon: <StopOutlined />,
+              danger: true,
+              hidden: !canEdit || item.status === LICENSE_STATUS.Revoked,
+              onClick: () => setRevoking(item),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${item.declarationNumber}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !canDelete,
+              confirm: "Xóa hồ sơ này?",
+              onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã xóa hồ sơ."),
                   onError: () => void message.error("Không thể xóa hồ sơ."),
-                })
-              }
-            >
-              <Button
-                type="text"
-                size="small"
-                danger
-                aria-label={`Xóa ${item.declarationNumber}`}
-                icon={<DeleteOutlined />}
-              />
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
+  Button,
   Checkbox,
   Col,
   Collapse,
@@ -69,6 +70,11 @@ function optional(value: string | undefined) {
   return value || undefined;
 }
 
+/** BE trả DateTime ISO ("2020-01-01T00:00:00") — input type="date" cần "YYYY-MM-DD". */
+function toDateInput(value?: string) {
+  return value ? value.slice(0, 10) : "";
+}
+
 export function BusinessEditorModal({
   open,
   business,
@@ -110,6 +116,7 @@ export function BusinessEditorModal({
       addressProvinceId: business?.addressProvinceId ?? "",
       addressDistrictId: business?.addressDistrictId ?? "",
       addressCommuneId: business?.addressCommuneId ?? "",
+      establishedDate: toDateInput(business?.establishedDate),
       productGroupIds: business?.productGroupIds ?? [],
     });
   }, [business, open, reset]);
@@ -436,6 +443,22 @@ export function BusinessEditorModal({
               setValue("addressLongitude", lng, { shouldValidate: true });
             }}
           />
+          {latitude !== undefined && (
+            <Button
+              size="small"
+              style={{ marginTop: 8 }}
+              onClick={() => {
+                setValue("addressLatitude", undefined, {
+                  shouldValidate: true,
+                });
+                setValue("addressLongitude", undefined, {
+                  shouldValidate: true,
+                });
+              }}
+            >
+              Xóa tọa độ
+            </Button>
+          )}
         </Form.Item>
         <Row gutter={16}>
           <Col span={8}>

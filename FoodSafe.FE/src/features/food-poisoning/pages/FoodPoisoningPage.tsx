@@ -5,14 +5,13 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
   Select,
-  Space,
   Table,
   Tabs,
   Tag,
   type TableColumnsType,
 } from "antd";
+import { RowActions } from "@/components/RowActions";
 import {
   PlusOutlined,
   EditOutlined,
@@ -185,76 +184,67 @@ function CasesTab() {
     {
       title: "",
       key: "actions",
-      width: 240,
+      width: 96,
       render: (_: unknown, record: FoodPoisoningCase) => (
-        <Space size="small">
-          {record.status !== POISONING_CASE_STATUS.Draft && (
-            <Button
-              size="small"
-              icon={<WarningOutlined />}
-              aria-label={`Sai sót ${record.caseCode}`}
-              onClick={() => setErrorReportCase(record)}
-            />
-          )}
-          {record.status === POISONING_CASE_STATUS.Draft && canEdit && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {record.status === POISONING_CASE_STATUS.Draft && canEdit && (
-            <Popconfirm
-              title="Gửi báo cáo ca ngộ độc này?"
-              okText="Gửi"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await submitMut.mutateAsync(record.id);
-                message.success("Đã gửi báo cáo.");
-              }}
-            >
-              <Button size="small" type="primary" icon={<SendOutlined />}>
-                Gửi
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === POISONING_CASE_STATUS.Reported && canVerify && (
-            <Popconfirm
-              title="Xác minh ca ngộ độc này?"
-              okText="Xác minh"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await verifyMut.mutateAsync(record.id);
-                message.success("Đã xác minh.");
-              }}
-            >
-              <Button
-                size="small"
-                type="primary"
-                icon={<CheckCircleOutlined />}
-              >
-                Xác minh
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === POISONING_CASE_STATUS.Draft && canDelete && (
-            <Popconfirm
-              title="Xóa ca ngộ độc này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await deleteMut.mutateAsync(record.id);
-                message.success("Đã xóa.");
-              }}
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+        <RowActions
+          actions={[
+            {
+              key: "error-report",
+              label: "Sai sót",
+              ariaLabel: `Sai sót ${record.caseCode}`,
+              icon: <WarningOutlined />,
+              hidden: record.status === POISONING_CASE_STATUS.Draft,
+              onClick: () => setErrorReportCase(record),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: record.status !== POISONING_CASE_STATUS.Draft || !canEdit,
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "submit",
+              label: "Gửi",
+              icon: <SendOutlined />,
+              hidden: record.status !== POISONING_CASE_STATUS.Draft || !canEdit,
+              confirm: "Gửi báo cáo ca ngộ độc này?",
+              onClick: () =>
+                submitMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã gửi báo cáo."),
+                  onError: () => message.error("Không thể gửi báo cáo."),
+                }),
+            },
+            {
+              key: "verify",
+              label: "Xác minh",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                record.status !== POISONING_CASE_STATUS.Reported || !canVerify,
+              confirm: "Xác minh ca ngộ độc này?",
+              onClick: () =>
+                verifyMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xác minh."),
+                  onError: () => message.error("Không thể xác minh."),
+                }),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden:
+                record.status !== POISONING_CASE_STATUS.Draft || !canDelete,
+              confirm: "Xóa ca ngộ độc này?",
+              onClick: () =>
+                deleteMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xóa."),
+                  onError: () => message.error("Không thể xóa."),
+                }),
+            },
+          ]}
+          overflowAriaLabel={`Thao tác ${record.caseCode}`}
+        />
       ),
     },
   ];
@@ -532,91 +522,82 @@ function IncidentsTab() {
     {
       title: "",
       key: "actions",
-      width: 280,
+      width: 96,
       render: (_: unknown, record: FoodPoisoningIncident) => (
-        <Space size="small">
-          {record.status !== POISONING_INCIDENT_STATUS.Draft && (
-            <Button
-              size="small"
-              icon={<WarningOutlined />}
-              aria-label={`Sai sót ${record.incidentCode}`}
-              onClick={() => setErrorReportIncident(record)}
-            />
-          )}
-          {record.status === POISONING_INCIDENT_STATUS.Draft && canEdit && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {record.status === POISONING_INCIDENT_STATUS.Draft && canEdit && (
-            <Popconfirm
-              title="Gửi báo cáo vụ ngộ độc này?"
-              okText="Gửi"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await submitMut.mutateAsync(record.id);
-                message.success("Đã gửi báo cáo.");
-              }}
-            >
-              <Button size="small" type="primary" icon={<SendOutlined />}>
-                Gửi
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === POISONING_INCIDENT_STATUS.Reported &&
-            canVerify && (
-              <Popconfirm
-                title="Xác minh vụ ngộ độc này?"
-                okText="Xác minh"
-                cancelText="Hủy"
-                onConfirm={async () => {
-                  await verifyMut.mutateAsync(record.id);
-                  message.success("Đã xác minh.");
-                }}
-              >
-                <Button
-                  size="small"
-                  type="primary"
-                  icon={<CheckCircleOutlined />}
-                >
-                  Xác minh
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status === POISONING_INCIDENT_STATUS.Verified &&
-            canConclude && (
-              <Button
-                size="small"
-                type="primary"
-                icon={<SolutionOutlined />}
-                onClick={() => {
-                  setConcludingId(record.id);
-                  setConcludeOpen(true);
-                }}
-              >
-                Kết luận
-              </Button>
-            )}
-          {record.status === POISONING_INCIDENT_STATUS.Draft && canDelete && (
-            <Popconfirm
-              title="Xóa vụ ngộ độc này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await deleteMut.mutateAsync(record.id);
-                message.success("Đã xóa.");
-              }}
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+        <RowActions
+          actions={[
+            {
+              key: "error-report",
+              label: "Sai sót",
+              ariaLabel: `Sai sót ${record.incidentCode}`,
+              icon: <WarningOutlined />,
+              hidden: record.status === POISONING_INCIDENT_STATUS.Draft,
+              onClick: () => setErrorReportIncident(record),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden:
+                record.status !== POISONING_INCIDENT_STATUS.Draft || !canEdit,
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "submit",
+              label: "Gửi",
+              icon: <SendOutlined />,
+              hidden:
+                record.status !== POISONING_INCIDENT_STATUS.Draft || !canEdit,
+              confirm: "Gửi báo cáo vụ ngộ độc này?",
+              onClick: () =>
+                submitMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã gửi báo cáo."),
+                  onError: () => message.error("Không thể gửi báo cáo."),
+                }),
+            },
+            {
+              key: "verify",
+              label: "Xác minh",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                record.status !== POISONING_INCIDENT_STATUS.Reported ||
+                !canVerify,
+              confirm: "Xác minh vụ ngộ độc này?",
+              onClick: () =>
+                verifyMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xác minh."),
+                  onError: () => message.error("Không thể xác minh."),
+                }),
+            },
+            {
+              key: "conclude",
+              label: "Kết luận",
+              icon: <SolutionOutlined />,
+              hidden:
+                record.status !== POISONING_INCIDENT_STATUS.Verified ||
+                !canConclude,
+              onClick: () => {
+                setConcludingId(record.id);
+                setConcludeOpen(true);
+              },
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden:
+                record.status !== POISONING_INCIDENT_STATUS.Draft || !canDelete,
+              confirm: "Xóa vụ ngộ độc này?",
+              onClick: () =>
+                deleteMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xóa."),
+                  onError: () => message.error("Không thể xóa."),
+                }),
+            },
+          ]}
+          overflowAriaLabel={`Thao tác ${record.incidentCode}`}
+        />
       ),
     },
   ];

@@ -25,6 +25,7 @@ import {
   Tabs,
   Tag,
 } from "antd";
+import { RowActions } from "@/components/RowActions";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -215,129 +216,104 @@ function PlansTab() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 220,
+      width: 96,
       render: (_, item) => (
-        <Space size={2}>
-          <Button
-            size="small"
-            type="text"
-            aria-label={`Tài liệu ${item.planCode}`}
-            icon={<PaperClipOutlined />}
-            onClick={() => setAttachmentsPlan(item)}
-          />
-          {canEdit && item.status === INSPECTION_PLAN_STATUS.Draft && (
-            <>
-              <Button
-                size="small"
-                type="text"
-                icon={<EditOutlined />}
-                onClick={() => {
-                  setEditing(item);
-                  setEditorOpen(true);
-                }}
-              >
-                Sửa
-              </Button>
-              <Popconfirm
-                title="Gửi duyệt kế hoạch này?"
-                okText="Gửi"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  submitMutation.mutate(item.id, {
-                    onSuccess: () => void message.success("Đã gửi duyệt."),
-                    onError: () => void message.error("Không thể gửi duyệt."),
-                  })
-                }
-              >
-                <Button size="small" type="text" icon={<SendOutlined />}>
-                  Gửi
-                </Button>
-              </Popconfirm>
-            </>
-          )}
-          {canApprove && item.status === INSPECTION_PLAN_STATUS.Submitted && (
-            <>
-              <Popconfirm
-                title="Phê duyệt kế hoạch này?"
-                okText="Duyệt"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  approveMutation.mutate(item.id, {
-                    onSuccess: () => void message.success("Đã phê duyệt."),
-                    onError: () => void message.error("Không thể phê duyệt."),
-                  })
-                }
-              >
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<CheckCircleOutlined />}
-                  style={{ color: "#52c41a" }}
-                >
-                  Duyệt
-                </Button>
-              </Popconfirm>
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<CloseCircleOutlined />}
-                onClick={() => setRejecting(item)}
-              >
-                Từ chối
-              </Button>
-            </>
-          )}
-          {canEdit &&
-            (item.status === INSPECTION_PLAN_STATUS.InProgress ||
-              item.status === INSPECTION_PLAN_STATUS.Approved) && (
-              <Popconfirm
-                title="Hoàn thành kế hoạch này?"
-                okText="Hoàn thành"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  completeMutation.mutate(item.id, {
-                    onSuccess: () => void message.success("Đã hoàn thành."),
-                    onError: () => void message.error("Không thể hoàn thành."),
-                  })
-                }
-              >
-                <Button size="small" type="text" icon={<CheckCircleOutlined />}>
-                  Hoàn thành
-                </Button>
-              </Popconfirm>
-            )}
-          {canEdit &&
-            item.status !== INSPECTION_PLAN_STATUS.Completed &&
-            item.status !== INSPECTION_PLAN_STATUS.Cancelled && (
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<StopOutlined />}
-                onClick={() => setCancelling(item)}
-              >
-                Hủy
-              </Button>
-            )}
-          {canDelete && item.status === INSPECTION_PLAN_STATUS.Draft && (
-            <Popconfirm
-              title="Xóa kế hoạch này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          actions={[
+            {
+              key: "attachments",
+              label: "Tài liệu",
+              ariaLabel: `Tài liệu ${item.planCode}`,
+              icon: <PaperClipOutlined />,
+              onClick: () => setAttachmentsPlan(item),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: !canEdit || item.status !== INSPECTION_PLAN_STATUS.Draft,
+              onClick: () => {
+                setEditing(item);
+                setEditorOpen(true);
+              },
+            },
+            {
+              key: "submit",
+              label: "Gửi",
+              icon: <SendOutlined />,
+              hidden: !canEdit || item.status !== INSPECTION_PLAN_STATUS.Draft,
+              confirm: "Gửi duyệt kế hoạch này?",
+              onClick: () =>
+                submitMutation.mutate(item.id, {
+                  onSuccess: () => void message.success("Đã gửi duyệt."),
+                  onError: () => void message.error("Không thể gửi duyệt."),
+                }),
+            },
+            {
+              key: "approve",
+              label: "Duyệt",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                !canApprove || item.status !== INSPECTION_PLAN_STATUS.Submitted,
+              confirm: "Phê duyệt kế hoạch này?",
+              onClick: () =>
+                approveMutation.mutate(item.id, {
+                  onSuccess: () => void message.success("Đã phê duyệt."),
+                  onError: () => void message.error("Không thể phê duyệt."),
+                }),
+            },
+            {
+              key: "reject",
+              label: "Từ chối",
+              icon: <CloseCircleOutlined />,
+              danger: true,
+              hidden:
+                !canApprove || item.status !== INSPECTION_PLAN_STATUS.Submitted,
+              onClick: () => setRejecting(item),
+            },
+            {
+              key: "complete",
+              label: "Hoàn thành",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                !canEdit ||
+                (item.status !== INSPECTION_PLAN_STATUS.InProgress &&
+                  item.status !== INSPECTION_PLAN_STATUS.Approved),
+              confirm: "Hoàn thành kế hoạch này?",
+              onClick: () =>
+                completeMutation.mutate(item.id, {
+                  onSuccess: () => void message.success("Đã hoàn thành."),
+                  onError: () => void message.error("Không thể hoàn thành."),
+                }),
+            },
+            {
+              key: "cancel",
+              label: "Hủy",
+              icon: <StopOutlined />,
+              danger: true,
+              hidden:
+                !canEdit ||
+                item.status === INSPECTION_PLAN_STATUS.Completed ||
+                item.status === INSPECTION_PLAN_STATUS.Cancelled,
+              onClick: () => setCancelling(item),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden:
+                !canDelete || item.status !== INSPECTION_PLAN_STATUS.Draft,
+              confirm: "Xóa kế hoạch này?",
+              onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã xóa kế hoạch."),
                   onError: () => void message.error("Không thể xóa kế hoạch."),
-                })
-              }
-            >
-              <Button size="small" type="text" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+          overflowAriaLabel={`Thao tác ${item.planCode}`}
+        />
       ),
     },
   ];
@@ -723,78 +699,69 @@ function ResultsTab() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 230,
+      width: 96,
       render: (_, item) => (
-        <Space size={2}>
-          <Button
-            size="small"
-            type="text"
-            aria-label={`Tài liệu kết quả ${item.businessName ?? item.id}`}
-            icon={<PaperClipOutlined />}
-            onClick={() => setAttachmentsResult(item)}
+        <Space size={4}>
+          <RowActions
+            actions={[
+              {
+                key: "attachments",
+                label: "Tài liệu",
+                ariaLabel: `Tài liệu kết quả ${item.businessName ?? item.id}`,
+                icon: <PaperClipOutlined />,
+                onClick: () => setAttachmentsResult(item),
+              },
+              {
+                key: "follow-up",
+                label: "Theo dõi",
+                ariaLabel: `Theo dõi khắc phục ${item.businessName ?? item.id}`,
+                icon: <AuditOutlined />,
+                hidden: !item.hasViolation && !item.followUpRequired,
+                onClick: () => setFollowUpResultRow(item),
+              },
+              {
+                key: "edit",
+                label: "Sửa",
+                icon: <EditOutlined />,
+                hidden: !canEdit || item.isFinalized,
+                onClick: () => {
+                  setEditing(item);
+                  setEditorOpen(true);
+                },
+              },
+              {
+                key: "finalize",
+                label: "Chốt",
+                icon: <LockOutlined />,
+                hidden: !canEdit || item.isFinalized,
+                confirm: "Chốt kết quả? Sau khi chốt sẽ không thể chỉnh sửa.",
+                onClick: () =>
+                  finalizeMutation.mutate(item.id, {
+                    onSuccess: () => void message.success("Đã chốt kết quả."),
+                    onError: () =>
+                      void message.error("Không thể chốt kết quả."),
+                  }),
+              },
+              {
+                key: "delete",
+                label: "Xóa",
+                icon: <DeleteOutlined />,
+                danger: true,
+                hidden: !canDelete || item.followUpRequired || item.isFinalized,
+                confirm: "Xóa kết quả này?",
+                onClick: () =>
+                  deleteMutation.mutate(item.id, {
+                    onSuccess: () => void message.success("Đã xóa kết quả."),
+                    onError: () => void message.error("Không thể xóa kết quả."),
+                  }),
+              },
+            ]}
+            overflowAriaLabel={`Thao tác ${item.businessName ?? item.id}`}
           />
-          {(item.hasViolation || item.followUpRequired) && (
-            <Button
-              size="small"
-              type="text"
-              aria-label={`Theo dõi khắc phục ${item.businessName ?? item.id}`}
-              icon={<AuditOutlined />}
-              onClick={() => setFollowUpResultRow(item)}
-            >
-              Theo dõi
-            </Button>
-          )}
-          {canEdit && !item.isFinalized && (
-            <Button
-              size="small"
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => {
-                setEditing(item);
-                setEditorOpen(true);
-              }}
-            >
-              Sửa
-            </Button>
-          )}
-          {canEdit && !item.isFinalized && (
-            <Popconfirm
-              title="Chốt kết quả? Sau khi chốt sẽ không thể chỉnh sửa."
-              okText="Chốt"
-              cancelText="Hủy"
-              onConfirm={() =>
-                finalizeMutation.mutate(item.id, {
-                  onSuccess: () => void message.success("Đã chốt kết quả."),
-                  onError: () => void message.error("Không thể chốt kết quả."),
-                })
-              }
-            >
-              <Button size="small" type="text" icon={<LockOutlined />}>
-                Chốt
-              </Button>
-            </Popconfirm>
-          )}
           {item.isFinalized && (
             <Tag icon={<LockOutlined />} color="default">
               Đã chốt
             </Tag>
-          )}
-          {canDelete && !item.followUpRequired && !item.isFinalized && (
-            <Popconfirm
-              title="Xóa kết quả này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
-                deleteMutation.mutate(item.id, {
-                  onSuccess: () => void message.success("Đã xóa kết quả."),
-                  onError: () => void message.error("Không thể xóa kết quả."),
-                })
-              }
-            >
-              <Button size="small" type="text" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
           )}
         </Space>
       ),

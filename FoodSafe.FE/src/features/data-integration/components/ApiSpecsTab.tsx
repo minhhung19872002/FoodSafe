@@ -6,7 +6,6 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
   Select,
   Space,
   Table,
@@ -16,6 +15,7 @@ import {
   type TableColumnsType,
   type UploadProps,
 } from "antd";
+import { RowActions } from "@/components/RowActions";
 import {
   CloudUploadOutlined,
   DeleteOutlined,
@@ -160,90 +160,75 @@ export function ApiSpecsTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 260,
+      width: 96,
       render: (_, record) => (
-        <Space size="small" wrap>
-          <Button
-            size="small"
-            icon={<DownloadOutlined />}
-            loading={
-              downloadMut.isPending && downloadMut.variables === record.id
-            }
-            onClick={() => download(record)}
-          >
-            Tải
-          </Button>
-          {canPublish &&
-            (record.isPublished ? (
-              <Popconfirm
-                title="Gỡ xuất bản đặc tả này? Đối tác sẽ không tải được nữa."
-                okText="Gỡ"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  unpublishMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã gỡ xuất bản."),
-                    onError: (error) =>
-                      void message.error(
-                        apiErrorMessage(error, "Thao tác thất bại."),
-                      ),
-                  })
-                }
-              >
-                <Button size="small" icon={<StopOutlined />}>
-                  Gỡ
-                </Button>
-              </Popconfirm>
-            ) : (
-              <Popconfirm
-                title="Xuất bản phiên bản này?"
-                description="Phiên bản đang xuất bản của cùng tên (nếu có) sẽ tự động bị thay thế."
-                okText="Xuất bản"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  publishMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã xuất bản."),
-                    onError: (error) =>
-                      void message.error(
-                        apiErrorMessage(error, "Không thể xuất bản."),
-                      ),
-                  })
-                }
-              >
-                <Button
-                  size="small"
-                  type="primary"
-                  icon={<CloudUploadOutlined />}
-                >
-                  Xuất bản
-                </Button>
-              </Popconfirm>
-            ))}
-          {canCreate && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => setEditing(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {canDelete && (
-            <Popconfirm
-              title="Xóa phiên bản đặc tả này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.name}`}
+          actions={[
+            {
+              key: "download",
+              label: "Tải xuống",
+              ariaLabel: `Tải xuống ${record.name}`,
+              icon: <DownloadOutlined />,
+              onClick: () => download(record),
+            },
+            {
+              key: "publish-toggle",
+              label: record.isPublished ? "Gỡ xuất bản" : "Xuất bản",
+              ariaLabel: record.isPublished
+                ? `Gỡ xuất bản ${record.name}`
+                : `Xuất bản ${record.name}`,
+              icon: record.isPublished ? (
+                <StopOutlined />
+              ) : (
+                <CloudUploadOutlined />
+              ),
+              hidden: !canPublish,
+              confirm: record.isPublished
+                ? "Gỡ xuất bản đặc tả này? Đối tác sẽ không tải được nữa."
+                : "Xuất bản phiên bản này?",
+              onClick: () =>
+                record.isPublished
+                  ? unpublishMut.mutate(record.id, {
+                      onSuccess: () => message.success("Đã gỡ xuất bản."),
+                      onError: (error) =>
+                        void message.error(
+                          apiErrorMessage(error, "Thao tác thất bại."),
+                        ),
+                    })
+                  : publishMut.mutate(record.id, {
+                      onSuccess: () => message.success("Đã xuất bản."),
+                      onError: (error) =>
+                        void message.error(
+                          apiErrorMessage(error, "Không thể xuất bản."),
+                        ),
+                    }),
+            },
+            {
+              key: "edit",
+              label: "Sửa mô tả",
+              ariaLabel: `Sửa mô tả ${record.name}`,
+              icon: <EditOutlined />,
+              hidden: !canCreate,
+              onClick: () => setEditing(record),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${record.name}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !canDelete,
+              confirm: "Xóa phiên bản đặc tả này?",
+              onClick: () =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa."),
                   onError: (error) =>
                     void message.error(apiErrorMessage(error, "Xóa thất bại.")),
-                })
-              }
-            >
-              <Button size="small" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];

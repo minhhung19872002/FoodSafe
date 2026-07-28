@@ -1208,6 +1208,12 @@ button {
   border-radius: 16px;
 }
 
+/* Modal cao hơn màn hình: cuộn bên trong body, giữ header + footer cố định */
+.ant-modal .ant-modal-body {
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+}
+
 .ant-modal .ant-modal-header {
   border-radius: 16px 16px 0 0;
 }

@@ -15,8 +15,7 @@ async function removeStaleResults(
     "/api/v1/app/testing-result?Filter=E2E-KN&MaxResultCount=100",
   );
   if (!response.ok()) return;
-  for (const item of ((await response.json()) as { items: ListItem[] })
-    .items) {
+  for (const item of ((await response.json()) as { items: ListItem[] }).items) {
     if (item.sampleCode?.startsWith("E2E-KN")) {
       await request.delete(`/api/v1/app/testing-result/${item.id}`, {
         headers,
@@ -78,35 +77,29 @@ test.describe("testing results management", () => {
     const dialog = page.getByRole("dialog", {
       name: "Nhập kết quả kiểm nghiệm",
     });
-    await dialog
-      .getByRole("textbox", { name: "Mã mẫu" })
-      .fill(sampleCode);
+    await dialog.getByRole("textbox", { name: "Mã mẫu" }).fill(sampleCode);
     await dialog
       .getByRole("textbox", { name: "Tên mẫu" })
       .fill("Mẫu thực phẩm E2E");
-    await dialog
-      .getByRole("combobox", { name: "Cơ sở kiểm nghiệm" })
-      .click();
+    await dialog.getByRole("combobox", { name: "Cơ sở kiểm nghiệm" }).click();
     await page.getByText(centerName, { exact: true }).last().click();
     const dateInput = dialog.getByRole("textbox", { name: "Ngày lấy mẫu" });
     await dateInput.click();
     await dateInput.fill("25/07/2026");
     await dateInput.press("Enter");
     await dateInput.press("Escape");
-    await dialog
-      .getByRole("combobox", { name: "Kết quả" })
-      .click();
+    await dialog.getByRole("combobox", { name: "Kết quả" }).click();
     await page.getByText("Đạt", { exact: true }).last().click();
-    await dialog
-      .getByRole("button", { name: "Lưu", exact: true })
-      .click();
+    await dialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(dialog).not.toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(sampleCode)).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: sampleCode });
     await row.getByRole("button", { name: /Xóa/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xóa" }).click();
-    await expect(page.getByText(sampleCode)).not.toBeVisible({ timeout: 10_000 });
+    await page.getByRole("button", { name: "OK" }).click();
+    await expect(page.getByText(sampleCode)).not.toBeVisible({
+      timeout: 10_000,
+    });
 
     await request.delete(
       `/api/v1/app/master-catalog/${center.id}/testing-center`,

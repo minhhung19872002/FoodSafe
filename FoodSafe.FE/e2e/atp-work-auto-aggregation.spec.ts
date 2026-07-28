@@ -59,9 +59,11 @@ interface AtpStats {
 
 /** Reads the real ATTP auto-calc endpoint for the FullYear/2026 period. */
 async function fetchStats(page: Page): Promise<AtpStats> {
-  const res = await page.context().request.get(
-    `${STATS_ENDPOINT}?PeriodType=${PERIOD_TYPE_FULL_YEAR}&PeriodYear=${YEAR}`,
-  );
+  const res = await page
+    .context()
+    .request.get(
+      `${STATS_ENDPOINT}?PeriodType=${PERIOD_TYPE_FULL_YEAR}&PeriodYear=${YEAR}`,
+    );
   expect(res.ok(), await res.text()).toBeTruthy();
   return (await res.json()) as AtpStats;
 }
@@ -69,11 +71,15 @@ async function fetchStats(page: Page): Promise<AtpStats> {
 /** Opens the ATTP tab and the (single) Draft report's editor. */
 async function openDraftEditor(page: Page): Promise<void> {
   await page.getByRole("tab", { name: "Công tác ATTP" }).click();
-  // With no live ATTP reports, the seeded Draft is the only row → the only "Sửa"
-  // button (AntD prepends the edit icon's aria-label, so match the substring).
-  const edit = page.getByRole("button", { name: "Sửa" });
-  await expect(edit).toHaveCount(1, { timeout: 20_000 });
-  await edit.click();
+  // "Sửa" is in overflow (inline slots are Xem chi tiết + Xem văn bản).
+  // With no other live ATTP reports, this overflow button is the only one on the tab.
+  // FullYear/2026 → overflowAriaLabel = "Thao tác Cả năm 2026".
+  const overflowBtn = page.getByRole("button", {
+    name: `Thao tác Cả năm ${YEAR}`,
+  });
+  await expect(overflowBtn).toHaveCount(1, { timeout: 20_000 });
+  await overflowBtn.click();
+  await page.getByRole("menuitem", { name: "Sửa" }).click();
   await expect(page.getByRole("dialog")).toContainText(
     "Sửa báo cáo Công tác ATTP",
   );
@@ -182,17 +188,23 @@ test.describe("FR-34-10 — ATTP work-report auto-aggregation", () => {
 
       await page.reload();
       await openDraftEditor(page);
-      await expect(page.getByRole("dialog").locator("#totalBusinesses"))
-        .toHaveValue(String(browserStats.totalBusinesses));
+      await expect(
+        page.getByRole("dialog").locator("#totalBusinesses"),
+      ).toHaveValue(String(browserStats.totalBusinesses));
     } finally {
       if (reportId) {
-        await page.context().request
-          .delete(`${ATP_ENDPOINT}/${reportId}`, { headers, maxRedirects: 0 })
+        await page
+          .context()
+          .request.delete(`${ATP_ENDPOINT}/${reportId}`, {
+            headers,
+            maxRedirects: 0,
+          })
           .catch(() => undefined);
       }
       if (businessId) {
-        await page.context().request
-          .delete(`${BUSINESS_ENDPOINT}/${businessId}`, {
+        await page
+          .context()
+          .request.delete(`${BUSINESS_ENDPOINT}/${businessId}`, {
             headers,
             maxRedirects: 0,
           })

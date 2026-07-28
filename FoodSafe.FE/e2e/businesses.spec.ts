@@ -155,10 +155,9 @@ test.describe("business and product management", () => {
     await expect(businessRow).toContainText(updatedBusinessName);
 
     await businessRow
-      .getByRole("button", {
-        name: `Người phụ trách ${updatedBusinessName}`,
-      })
+      .getByRole("button", { name: `Thao tác ${updatedBusinessName}` })
       .click();
+    await page.getByRole("menuitem", { name: "Người phụ trách" }).click();
     await page.getByRole("button", { name: /thêm người phụ trách/i }).click();
     await page
       .getByRole("textbox", { name: "Họ tên người phụ trách" })
@@ -175,9 +174,9 @@ test.describe("business and product management", () => {
     );
     const productExportPath = await productExport.path();
     expect(productExportPath).not.toBeNull();
-    expect(
-      (await readFile(productExportPath!)).subarray(0, 2).toString(),
-    ).toBe("PK");
+    expect((await readFile(productExportPath!)).subarray(0, 2).toString()).toBe(
+      "PK",
+    );
 
     await page.getByRole("button", { name: "Import" }).click();
     const productImportDialog = page.getByRole("dialog", {
@@ -199,9 +198,7 @@ test.describe("business and product management", () => {
     await productImportDialog
       .getByRole("button", { name: /kiểm tra và xem trước/i })
       .click();
-    await expect(
-      productImportDialog.getByText(/Tổng số: 1/),
-    ).toBeVisible();
+    await expect(productImportDialog.getByText(/Tổng số: 1/)).toBeVisible();
     await expect(
       productImportDialog.getByText(/Cơ sở không tồn tại/),
     ).toBeVisible();
@@ -258,9 +255,9 @@ test.describe("business and product management", () => {
     const attachmentDownload = await attachmentDownloadPromise;
     const attachmentPath = await attachmentDownload.path();
     expect(attachmentPath).not.toBeNull();
-    expect(
-      (await readFile(attachmentPath!)).subarray(0, 4).toString(),
-    ).toBe("%PDF");
+    expect((await readFile(attachmentPath!)).subarray(0, 4).toString()).toBe(
+      "%PDF",
+    );
     await attachmentDialog
       .getByRole("button", { name: "Xóa e2e-chung-nhan.pdf" })
       .click();
@@ -269,17 +266,27 @@ test.describe("business and product management", () => {
     await attachmentDialog.getByRole("button", { name: "Close" }).click();
 
     await productRow
-      .getByRole("button", { name: `Xóa ${productName}` })
+      .getByRole("button", { name: `Thao tác ${productName}` })
       .click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Xóa" }).click();
+    // Nhãn nút xác nhận phụ thuộc cấu hình RowActions/locale antd.
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText("Đã xóa sản phẩm")).toBeVisible();
 
     await page.getByRole("tab", { name: "Cơ sở SXKD" }).click();
     businessRow = page.getByRole("row").filter({ hasText: businessCode });
     await businessRow
-      .getByRole("button", { name: `Xóa ${updatedBusinessName}` })
+      .getByRole("button", { name: `Thao tác ${updatedBusinessName}` })
       .click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Xóa" }).click();
+    // Nhãn nút xác nhận phụ thuộc cấu hình RowActions/locale antd.
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText("Đã xóa cơ sở")).toBeVisible();
     await expect(
       page.getByRole("row").filter({ hasText: businessCode }),

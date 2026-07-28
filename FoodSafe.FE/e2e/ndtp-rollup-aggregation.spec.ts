@@ -34,11 +34,14 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test";
-import { requestVerificationToken, signIn, signInAsAdmin } from "./helpers/auth";
+import {
+  requestVerificationToken,
+  signIn,
+  signInAsAdmin,
+} from "./helpers/auth";
 
 const NDTP_ENDPOINT = "/api/v1/app/ndtp-report";
-const AGGREGATION_ENDPOINT =
-  "/api/v1/app/report-calculation/ndtp-aggregation";
+const AGGREGATION_ENDPOINT = "/api/v1/app/report-calculation/ndtp-aggregation";
 const LOWER_TIER_USER = "district.staff@foodsafe.local";
 
 // A per-run unique future period keeps every run on a pristine period and, more
@@ -105,7 +108,10 @@ async function seedSubmittedChildReport(
     data: { periodYear: YEAR, periodMonth: MONTH, notes },
     maxRedirects: 0,
   });
-  expect(create.ok(), `create ndtp failed: ${await create.text()}`).toBeTruthy();
+  expect(
+    create.ok(),
+    `create ndtp failed: ${await create.text()}`,
+  ).toBeTruthy();
   const created = (await create.json()) as SeededNdtp;
   expect(created.status, "seed must start as Draft").toBe(1);
 
@@ -138,7 +144,10 @@ async function createDraftReport(
     data: { periodYear: YEAR, periodMonth: MONTH, notes },
     maxRedirects: 0,
   });
-  expect(create.ok(), `create ndtp failed: ${await create.text()}`).toBeTruthy();
+  expect(
+    create.ok(),
+    `create ndtp failed: ${await create.text()}`,
+  ).toBeTruthy();
   const created = (await create.json()) as SeededNdtp;
   expect(created.status, "province report must start as Draft").toBe(1);
   return created;
@@ -176,7 +185,10 @@ async function teardownSubmitted(
       headers,
       maxRedirects: 0,
     });
-    await request.delete(`${NDTP_ENDPOINT}/${id}`, { headers, maxRedirects: 0 });
+    await request.delete(`${NDTP_ENDPOINT}/${id}`, {
+      headers,
+      maxRedirects: 0,
+    });
   } catch {
     // Non-fatal: baseline-delta assertions are re-run-safe with residue.
   }
@@ -198,15 +210,19 @@ async function openDraftEditor(page: Page): Promise<void> {
   await yearInput.click();
   await yearInput.pressSequentially(String(YEAR));
   await yearInput.press("Enter");
-  const periodRows = page
+  // "Sửa" is in overflow (inline slots are Xem chi tiết + Xem văn bản). Filter to
+  // the Draft row so the overflow button is unambiguous when a Submitted row for
+  // the same period is also visible (district child report).
+  const draftRow = page
     .getByRole("row")
-    .filter({ hasText: `Tháng ${MONTH}/${YEAR}` });
-  // AntD prepends the icon's aria-label to a button's accessible name (e.g.
-  // "edit Sửa"), so match on the substring rather than an exact name. Only the
-  // Draft row carries a "Sửa" button, so this stays unambiguous.
-  const edit = periodRows.getByRole("button", { name: "Sửa" });
-  await expect(edit).toHaveCount(1, { timeout: 20_000 });
-  await edit.click();
+    .filter({ hasText: `Tháng ${MONTH}/${YEAR}` })
+    .filter({ has: page.locator(".ant-tag", { hasText: "Nháp" }) });
+  const overflowBtn = draftRow.getByRole("button", {
+    name: `Thao tác Tháng ${MONTH}/${YEAR}`,
+  });
+  await expect(overflowBtn).toHaveCount(1, { timeout: 20_000 });
+  await overflowBtn.click();
+  await page.getByRole("menuitem", { name: "Sửa" }).click();
   await expect(page.getByRole("dialog")).toContainText(
     `Sửa báo cáo NĐTP — Tháng ${MONTH}/${YEAR}`,
   );

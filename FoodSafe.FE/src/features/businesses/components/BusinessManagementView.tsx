@@ -12,19 +12,10 @@ import {
   TableOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import {
-  Button,
-  Input,
-  Popconfirm,
-  Segmented,
-  Select,
-  Space,
-  Table,
-  Tabs,
-  Tag,
-} from "antd";
+import { Button, Input, Segmented, Select, Table, Tabs, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
+import { RowActions } from "@/components/RowActions";
 import { BusinessLocationMap } from "./BusinessLocationMap";
 import {
   BUSINESS_STATUS,
@@ -181,59 +172,54 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     },
     {
       title: "Thao tác",
-      width: 150,
+      width: 96,
       fixed: "right",
       render: (_: unknown, business) => (
-        <Space size={2}>
-          <Button
-            type="text"
-            size="small"
-            aria-label={`Hồ sơ ${business.name}`}
-            icon={<FolderOpenOutlined />}
-            onClick={() => props.onShowDetail(business)}
-          />
-          <Button
-            type="text"
-            size="small"
-            aria-label={`Người phụ trách ${business.name}`}
-            icon={<TeamOutlined />}
-            onClick={() => props.onManageHandlers(business)}
-          />
-          {business.addressLatitude !== undefined && (
-            <Button
-              type="text"
-              size="small"
-              aria-label={`Bản đồ ${business.name}`}
-              icon={<EnvironmentOutlined />}
-              onClick={() => props.onShowMap(business)}
-            />
-          )}
-          {props.permissions.editBusiness && (
-            <Button
-              type="text"
-              size="small"
-              aria-label={`Sửa ${business.name}`}
-              icon={<EditOutlined />}
-              onClick={() => props.onEditBusiness(business)}
-            />
-          )}
-          {props.permissions.deleteBusiness && (
-            <Popconfirm
-              title="Xóa cơ sở này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() => props.onDeleteBusiness(business.id)}
-            >
-              <Button
-                type="text"
-                size="small"
-                danger
-                aria-label={`Xóa ${business.name}`}
-                icon={<DeleteOutlined />}
-              />
-            </Popconfirm>
-          )}
-        </Space>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${business.name}`}
+          actions={[
+            {
+              key: "detail",
+              label: "Hồ sơ",
+              ariaLabel: `Hồ sơ ${business.name}`,
+              icon: <FolderOpenOutlined />,
+              onClick: () => props.onShowDetail(business),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              ariaLabel: `Sửa ${business.name}`,
+              icon: <EditOutlined />,
+              hidden: !props.permissions.editBusiness,
+              onClick: () => props.onEditBusiness(business),
+            },
+            {
+              key: "handlers",
+              label: "Người phụ trách",
+              ariaLabel: `Người phụ trách ${business.name}`,
+              icon: <TeamOutlined />,
+              onClick: () => props.onManageHandlers(business),
+            },
+            {
+              key: "map",
+              label: "Bản đồ",
+              ariaLabel: `Bản đồ ${business.name}`,
+              icon: <EnvironmentOutlined />,
+              hidden: business.addressLatitude === undefined,
+              onClick: () => props.onShowMap(business),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${business.name}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !props.permissions.deleteBusiness,
+              confirm: "Xóa cơ sở này?",
+              onClick: () => props.onDeleteBusiness(business.id),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -255,43 +241,39 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     },
     {
       title: "Thao tác",
-      width: 110,
+      width: 96,
       fixed: "right",
       render: (_: unknown, product) => (
-        <Space size={2}>
-          <Button
-            type="text"
-            size="small"
-            aria-label={`Tệp đính kèm ${product.name}`}
-            icon={<PaperClipOutlined />}
-            onClick={() => props.onManageProductAttachments(product)}
-          />
-          {props.permissions.editProduct && (
-            <Button
-              type="text"
-              size="small"
-              aria-label={`Sửa ${product.name}`}
-              icon={<EditOutlined />}
-              onClick={() => props.onEditProduct(product)}
-            />
-          )}
-          {props.permissions.deleteProduct && (
-            <Popconfirm
-              title="Xóa sản phẩm này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() => props.onDeleteProduct(product.id)}
-            >
-              <Button
-                type="text"
-                size="small"
-                danger
-                aria-label={`Xóa ${product.name}`}
-                icon={<DeleteOutlined />}
-              />
-            </Popconfirm>
-          )}
-        </Space>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${product.name}`}
+          actions={[
+            {
+              key: "attachments",
+              label: "Tệp đính kèm",
+              ariaLabel: `Tệp đính kèm ${product.name}`,
+              icon: <PaperClipOutlined />,
+              onClick: () => props.onManageProductAttachments(product),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              ariaLabel: `Sửa ${product.name}`,
+              icon: <EditOutlined />,
+              hidden: !props.permissions.editProduct,
+              onClick: () => props.onEditProduct(product),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${product.name}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !props.permissions.deleteProduct,
+              confirm: "Xóa sản phẩm này?",
+              onClick: () => props.onDeleteProduct(product.id),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -426,7 +408,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
           ) : (
             <BusinessLocationMap
               businesses={props.businesses}
-              onSelect={(b) => props.onEditBusiness(b)}
+              onSelect={(b) => props.onShowDetail(b)}
             />
           )}
         </>

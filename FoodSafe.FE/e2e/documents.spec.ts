@@ -15,13 +15,11 @@ async function removeStaleDocuments(
     "/api/v1/app/administrative-document?Filter=E2E-VB&MaxResultCount=100",
   );
   if (!response.ok()) return;
-  for (const item of ((await response.json()) as { items: ListItem[] })
-    .items) {
+  for (const item of ((await response.json()) as { items: ListItem[] }).items) {
     if (item.documentNumber?.startsWith("E2E-VB")) {
-      await request.delete(
-        `/api/v1/app/administrative-document/${item.id}`,
-        { headers },
-      );
+      await request.delete(`/api/v1/app/administrative-document/${item.id}`, {
+        headers,
+      });
     }
   }
 }
@@ -59,29 +57,24 @@ test.describe("documents management", () => {
     const dialog = page.getByRole("dialog", { name: "Thêm văn bản" });
     await dialog.getByRole("combobox", { name: "Loại văn bản" }).click();
     await page.getByText("Thông tư", { exact: true }).last().click();
-    await dialog
-      .getByRole("textbox", { name: "Số văn bản" })
-      .fill(docNumber);
+    await dialog.getByRole("textbox", { name: "Số văn bản" }).fill(docNumber);
     await dialog
       .getByRole("textbox", { name: "Tiêu đề" })
       .fill("Văn bản E2E test");
-    await dialog
-      .getByRole("textbox", { name: "Ngày ban hành" })
-      .click();
+    await dialog.getByRole("textbox", { name: "Ngày ban hành" }).click();
     await dialog
       .getByRole("textbox", { name: "Ngày ban hành" })
       .fill("25/07/2026");
-    await dialog
-      .getByRole("textbox", { name: "Ngày ban hành" })
-      .press("Enter");
-    await dialog
-      .getByRole("button", { name: "Lưu", exact: true })
-      .click();
+    await dialog.getByRole("textbox", { name: "Ngày ban hành" }).press("Enter");
+    await dialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(page.getByText(docNumber)).toBeVisible();
 
-    let row = page.getByRole("row").filter({ hasText: docNumber });
-    await row.getByRole("button", { name: /Xóa/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xóa" }).click();
-    await expect(page.getByText(docNumber)).not.toBeVisible({ timeout: 10_000 });
+    const row = page.getByRole("row").filter({ hasText: docNumber });
+    await row.getByRole("button", { name: `Thao tác ${docNumber}` }).click();
+    await page.getByRole("menuitem", { name: "Xóa" }).click();
+    await page.getByRole("button", { name: "OK" }).click();
+    await expect(page.getByText(docNumber)).not.toBeVisible({
+      timeout: 10_000,
+    });
   });
 });

@@ -1,14 +1,4 @@
-import {
-  Button,
-  Empty,
-  Input,
-  Popconfirm,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Tree,
-} from "antd";
+import { Button, Empty, Input, Select, Space, Table, Tag, Tree } from "antd";
 import type { TablePaginationConfig } from "antd";
 import {
   DeleteOutlined,
@@ -19,6 +9,7 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import type { DataNode } from "antd/es/tree";
+import { RowActions } from "@/components/RowActions";
 import { organizationLevelConfig } from "./organizationConfig";
 import type {
   OrganizationDto,
@@ -168,38 +159,33 @@ export function OrganizationListView({
                 {
                   title: "Thao tác",
                   key: "actions",
-                  width: 130,
+                  width: 96,
+                  fixed: "right" as const,
                   render: (_: unknown, organization: OrganizationDto) => (
-                    <Space>
-                      {canEdit && (
-                        <Button
-                          type="text"
-                          size="small"
-                          aria-label={`Sửa ${organization.name}`}
-                          icon={<EditOutlined />}
-                          onClick={() => onEdit(organization)}
-                        />
-                      )}
-                      {canDelete && (
-                        <Popconfirm
-                          title="Xóa đơn vị?"
-                          description={`Bạn chắc chắn muốn xóa "${organization.name}"?`}
-                          okText="Xóa"
-                          cancelText="Hủy"
-                          okButtonProps={{ danger: true }}
-                          onConfirm={() => onDelete(organization)}
-                        >
-                          <Button
-                            type="text"
-                            danger
-                            size="small"
-                            loading={deletingId === organization.id}
-                            aria-label={`Xóa ${organization.name}`}
-                            icon={<DeleteOutlined />}
-                          />
-                        </Popconfirm>
-                      )}
-                    </Space>
+                    <RowActions
+                      overflowAriaLabel={`Thao tác ${organization.name}`}
+                      actions={[
+                        {
+                          key: "edit",
+                          label: "Sửa",
+                          ariaLabel: `Sửa ${organization.name}`,
+                          icon: <EditOutlined />,
+                          hidden: !canEdit,
+                          onClick: () => onEdit(organization),
+                        },
+                        {
+                          key: "delete",
+                          label: "Xóa",
+                          ariaLabel: `Xóa ${organization.name}`,
+                          icon: <DeleteOutlined />,
+                          danger: true,
+                          hidden: !canDelete,
+                          disabled: deletingId === organization.id,
+                          confirm: "Xóa đơn vị?",
+                          onClick: () => onDelete(organization),
+                        },
+                      ]}
+                    />
                   ),
                 },
               ]

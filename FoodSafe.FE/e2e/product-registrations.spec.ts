@@ -159,8 +159,9 @@ test.describe("product registration management", () => {
     await page.goto("/product-registrations");
     row = page.getByRole("row").filter({ hasText: registrationNumber });
     await row
-      .getByRole("button", { name: `Thu hồi ${registrationNumber}` })
+      .getByRole("button", { name: `Thao tác ${registrationNumber}` })
       .click();
+    await page.getByRole("menuitem", { name: "Thu hồi" }).click();
     const revokeDialog = page.getByRole("dialog", {
       name: `Thu hồi đăng ký ${registrationNumber}`,
     });
@@ -194,9 +195,10 @@ test.describe("product registration management", () => {
 
     row = page.getByRole("row").filter({ hasText: registrationNumber });
     await row
-      .getByRole("button", { name: `Xóa ${registrationNumber}` })
+      .getByRole("button", { name: `Thao tác ${registrationNumber}` })
       .click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Xóa" }).click();
+    await page.getByRole("button", { name: "OK" }).click();
     await expect(page.getByText("Đã xóa đăng ký.")).toBeVisible();
     const duplicate = await request.post("/api/v1/app/product-registration", {
       headers,

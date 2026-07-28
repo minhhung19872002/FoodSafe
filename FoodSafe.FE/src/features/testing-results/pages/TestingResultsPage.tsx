@@ -7,7 +7,6 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
   Select,
   Space,
   Switch,
@@ -44,6 +43,7 @@ import {
   type TestingOutcome,
 } from "../types/testingResult.types";
 import { useTablePagination } from "@/hooks/useTablePagination";
+import { RowActions } from "@/components/RowActions";
 
 const formatDate = (v?: string | null) =>
   v ? dayjs(v).format("DD/MM/YYYY") : null;
@@ -133,36 +133,37 @@ export default function TestingResultsPage() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 100,
+      width: 96,
       render: (_, record) => (
-        <Space size="small">
-          {hasPermission("FoodSafe.AlertsAndTesting.TestingResults.Edit") && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {hasPermission("FoodSafe.AlertsAndTesting.TestingResults.Delete") && (
-            <Popconfirm
-              title="Xóa kết quả kiểm nghiệm?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.sampleCode}`}
+          actions={[
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: !hasPermission(
+                "FoodSafe.AlertsAndTesting.TestingResults.Edit",
+              ),
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !hasPermission(
+                "FoodSafe.AlertsAndTesting.TestingResults.Delete",
+              ),
+              confirm: "Xóa kết quả kiểm nghiệm?",
+              onClick: () =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa"),
                   onError: () => message.error("Xóa thất bại"),
-                })
-              }
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];

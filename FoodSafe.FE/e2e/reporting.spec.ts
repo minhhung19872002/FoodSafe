@@ -21,7 +21,8 @@ async function cleanTestReports(
   const staleItems = (
     (await response.json()) as { items: ListItem[] }
   ).items.filter(
-    (item) => item.periodYear !== undefined && TEST_YEARS.includes(item.periodYear),
+    (item) =>
+      item.periodYear !== undefined && TEST_YEARS.includes(item.periodYear),
   );
   for (const item of staleItems) {
     for (const action of ["return", "return-to-draft"]) {
@@ -80,9 +81,7 @@ test.describe("reporting management", () => {
     const periodLabel = `Tháng ${month}/${year}`;
 
     await page.goto("/reporting");
-    await expect(
-      page.getByRole("tab", { name: "Báo cáo NĐTP" }),
-    ).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Báo cáo NĐTP" })).toBeVisible();
 
     const exportPromise = page.waitForEvent("download");
     await page.getByRole("button", { name: "Xuất Excel" }).first().click();
@@ -139,7 +138,10 @@ test.describe("reporting management", () => {
       .filter({ hasText: "Nháp" });
     await expect(reportRow).toBeVisible({ timeout: 10_000 });
 
-    await reportRow.getByRole("button", { name: /Sửa/ }).click();
+    await reportRow
+      .getByRole("button", { name: `Thao tác ${periodLabel}` })
+      .click();
+    await page.getByRole("menuitem", { name: "Sửa" }).click();
     const editDialog = page.getByRole("dialog", {
       name: /Sửa báo cáo NĐTP/,
     });
@@ -147,23 +149,24 @@ test.describe("reporting management", () => {
       .getByRole("spinbutton", { name: "Số ca" })
       .first()
       .fill("5");
-    await editDialog
-      .getByRole("button", { name: "Lưu", exact: true })
-      .click();
+    await editDialog.getByRole("button", { name: "Lưu", exact: true }).click();
 
     let row = page.getByRole("row").filter({ hasText: periodLabel });
-    await row.getByRole("button", { name: /Gửi/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Gửi" }).click();
+    await row.getByRole("button", { name: `Thao tác ${periodLabel}` }).click();
+    await page.getByRole("menuitem", { name: "Gửi" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
 
     row = page.getByRole("row").filter({ hasText: periodLabel });
     await expect(row.getByText("Đã gửi")).toBeVisible({ timeout: 10_000 });
-    await row.getByRole("button", { name: /Xác minh/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xác minh" }).click();
+    await row.getByRole("button", { name: `Thao tác ${periodLabel}` }).click();
+    await page.getByRole("menuitem", { name: "Xác minh" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
 
     row = page.getByRole("row").filter({ hasText: periodLabel });
     await expect(row.getByText("Đã xác minh")).toBeVisible({ timeout: 10_000 });
-    await row.getByRole("button", { name: /Hoàn thành/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Hoàn thành" }).click();
+    await row.getByRole("button", { name: `Thao tác ${periodLabel}` }).click();
+    await page.getByRole("menuitem", { name: "Hoàn thành" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
 
     row = page.getByRole("row").filter({ hasText: periodLabel });
     await expect(row.getByText("Hoàn thành")).toBeVisible({ timeout: 10_000 });
@@ -213,22 +216,30 @@ test.describe("reporting management", () => {
       await page.keyboard.press("Enter");
 
       let row = page.getByRole("row").filter({ hasText: periodLabel });
-      await expect(row.locator(".ant-tag").filter({ hasText: "Nháp" })).toBeVisible({
+      await expect(
+        row.locator(".ant-tag").filter({ hasText: "Nháp" }),
+      ).toBeVisible({
         timeout: 10_000,
       });
 
-      // Draft → Submitted via the "Gửi" button + its Popconfirm.
-      await row.getByRole("button", { name: /Gửi/ }).click();
+      // Draft → Submitted via the "Gửi" overflow item + modal confirm.
+      await row
+        .getByRole("button", { name: `Thao tác ${periodLabel}` })
+        .click();
+      await page.getByRole("menuitem", { name: "Gửi" }).click();
       await page
-        .locator(".ant-popover:visible")
-        .getByRole("button", { name: "Gửi" })
+        .getByRole("dialog")
+        .getByRole("button", { name: "OK" })
         .click();
       row = page.getByRole("row").filter({ hasText: periodLabel });
       await expect(row.getByText("Đã gửi")).toBeVisible({ timeout: 10_000 });
 
-      // Submitted → Returned via the "Trả lại" button, which opens a modal that
-      // requires a reason (server-enforced) before the "Lưu" submit.
-      await row.getByRole("button", { name: /Trả lại/ }).click();
+      // Submitted → Returned via the "Trả lại" overflow item, which opens a modal
+      // that requires a reason (server-enforced) before the "Lưu" submit.
+      await row
+        .getByRole("button", { name: `Thao tác ${periodLabel}` })
+        .click();
+      await page.getByRole("menuitem", { name: "Trả lại" }).click();
       const returnDialog = page.getByRole("dialog", {
         name: "Trả lại báo cáo",
       });
@@ -244,11 +255,14 @@ test.describe("reporting management", () => {
         row.locator(".ant-tag").filter({ hasText: "Trả lại" }),
       ).toBeVisible({ timeout: 10_000 });
 
-      // Returned → Draft via the "Về nháp" button + its Popconfirm ("Chuyển").
-      await row.getByRole("button", { name: /Về nháp/ }).click();
+      // Returned → Draft via the "Về nháp" overflow item + modal confirm.
+      await row
+        .getByRole("button", { name: `Thao tác ${periodLabel}` })
+        .click();
+      await page.getByRole("menuitem", { name: "Về nháp" }).click();
       await page
-        .locator(".ant-popover:visible")
-        .getByRole("button", { name: "Chuyển" })
+        .getByRole("dialog")
+        .getByRole("button", { name: "OK" })
         .click();
       row = page.getByRole("row").filter({ hasText: periodLabel });
       await expect(

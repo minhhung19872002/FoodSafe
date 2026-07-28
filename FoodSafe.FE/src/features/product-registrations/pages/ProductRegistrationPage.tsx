@@ -8,13 +8,14 @@ import {
   PlusOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { App, Button, Input, Popconfirm, Select, Space, Table } from "antd";
+import { App, Button, Input, Select, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RevokeModal } from "@/components/RevokeModal";
+import { RowActions } from "@/components/RowActions";
 import { StatusBadge } from "@/components/StatusBadge";
 import { saveDownload } from "@/utils/download";
 import { useTablePagination } from "@/hooks/useTablePagination";
@@ -152,76 +153,71 @@ export default function ProductRegistrationPage() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 180,
+      width: 96,
       render: (_, item) => (
-        <Space size={2}>
-          <Button
-            size="small"
-            type="text"
-            aria-label={`Tệp ${item.registrationNumber}`}
-            icon={<FileTextOutlined />}
-            onClick={() => setAttachmentsFor(item)}
-          />
-          <Button
-            size="small"
-            type="text"
-            aria-label={`Tải PDF ${item.registrationNumber}`}
-            icon={<FilePdfOutlined />}
-            loading={pdfMutation.isPending && pdfMutation.variables === item.id}
-            onClick={() =>
-              pdfMutation.mutate(item.id, {
-                onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                onError: () =>
-                  void message.error("Không thể tải bản PDF đăng ký công bố."),
-              })
-            }
-          />
-          {canEdit && item.status !== LICENSE_STATUS.Revoked && (
-            <>
-              <Button
-                size="small"
-                type="text"
-                aria-label={`Sửa ${item.registrationNumber}`}
-                icon={<EditOutlined />}
-                onClick={() => {
-                  setEditing(item);
-                  setEditorBusinessId(item.businessId);
-                  setEditorOpen(true);
-                }}
-              />
-              <Button
-                size="small"
-                type="text"
-                danger
-                aria-label={`Thu hồi ${item.registrationNumber}`}
-                icon={<StopOutlined />}
-                onClick={() => setRevoking(item)}
-              />
-            </>
-          )}
-          {canDelete && (
-            <Popconfirm
-              title="Xóa đăng ký này?"
-              description="Số đăng ký được giữ trong lịch sử và không thể dùng lại."
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${item.registrationNumber}`}
+          actions={[
+            {
+              key: "files",
+              label: "Tệp",
+              ariaLabel: `Tệp ${item.registrationNumber}`,
+              icon: <FileTextOutlined />,
+              onClick: () => setAttachmentsFor(item),
+            },
+            {
+              key: "pdf",
+              label: "Tải PDF",
+              ariaLabel: `Tải PDF ${item.registrationNumber}`,
+              icon: <FilePdfOutlined />,
+              disabled:
+                pdfMutation.isPending && pdfMutation.variables === item.id,
+              onClick: () =>
+                pdfMutation.mutate(item.id, {
+                  onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                  onError: () =>
+                    void message.error(
+                      "Không thể tải bản PDF đăng ký công bố.",
+                    ),
+                }),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              ariaLabel: `Sửa ${item.registrationNumber}`,
+              icon: <EditOutlined />,
+              hidden: !canEdit || item.status === LICENSE_STATUS.Revoked,
+              onClick: () => {
+                setEditing(item);
+                setEditorBusinessId(item.businessId);
+                setEditorOpen(true);
+              },
+            },
+            {
+              key: "revoke",
+              label: "Thu hồi",
+              ariaLabel: `Thu hồi ${item.registrationNumber}`,
+              icon: <StopOutlined />,
+              danger: true,
+              hidden: !canEdit || item.status === LICENSE_STATUS.Revoked,
+              onClick: () => setRevoking(item),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${item.registrationNumber}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !canDelete,
+              confirm: "Xóa đăng ký này?",
+              onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã xóa đăng ký."),
                   onError: () => void message.error("Không thể xóa đăng ký."),
-                })
-              }
-            >
-              <Button
-                size="small"
-                type="text"
-                danger
-                aria-label={`Xóa ${item.registrationNumber}`}
-                icon={<DeleteOutlined />}
-              />
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];

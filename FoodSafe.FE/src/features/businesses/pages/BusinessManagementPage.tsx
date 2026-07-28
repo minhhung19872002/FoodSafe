@@ -3,6 +3,7 @@ import { useTablePagination } from "@/hooks/useTablePagination";
 import { App, Modal, Tag } from "antd";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
+import { extractApiError } from "@/lib/apiError";
 import { saveDownload } from "@/utils/download";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCatalogOptions } from "@/features/catalogs/api/catalogQueries";
@@ -192,7 +193,7 @@ export default function BusinessManagementPage() {
             closeBusinessEditor();
             void message.success("Đã cập nhật cơ sở");
           },
-          onError: () => void message.error("Không thể cập nhật cơ sở"),
+          onError: (error) => void message.error(extractApiError(error)),
         },
       );
       return;
@@ -202,7 +203,7 @@ export default function BusinessManagementPage() {
         closeBusinessEditor();
         void message.success("Đã thêm cơ sở");
       },
-      onError: () => void message.error("Không thể thêm cơ sở"),
+      onError: (error) => void message.error(extractApiError(error)),
     });
   };
 
@@ -215,7 +216,7 @@ export default function BusinessManagementPage() {
             setEditingProduct(undefined);
             void message.success("Đã cập nhật sản phẩm");
           },
-          onError: () => void message.error("Không thể cập nhật sản phẩm"),
+          onError: (error) => void message.error(extractApiError(error)),
         },
       );
       return;
@@ -225,7 +226,7 @@ export default function BusinessManagementPage() {
         setCreatingProduct(false);
         void message.success("Đã thêm sản phẩm");
       },
-      onError: () => void message.error("Không thể thêm sản phẩm"),
+      onError: (error) => void message.error(extractApiError(error)),
     });
   };
 
@@ -249,7 +250,11 @@ export default function BusinessManagementPage() {
         productPagination={productPagination.buildConfig(
           productList.data?.totalCount,
         )}
-        loading={businessList.isLoading || productList.isLoading}
+        loading={
+          activeTab === "businesses"
+            ? businessList.isFetching
+            : productList.isFetching
+        }
         canViewBusinesses={canViewBusinesses}
         canViewProducts={canViewProducts}
         permissions={{
@@ -344,6 +349,11 @@ export default function BusinessManagementPage() {
             {
               filter: businessFilter || undefined,
               status: businessStatus,
+              businessTypeId,
+              businessClassificationId,
+              provinceId,
+              districtId,
+              sorting: businessSorting,
               skipCount: 0,
               maxResultCount: 20,
             },
@@ -384,8 +394,7 @@ export default function BusinessManagementPage() {
         onDeleteBusiness={(id) =>
           deleteBusiness.mutate(id, {
             onSuccess: () => void message.success("Đã xóa cơ sở"),
-            onError: () =>
-              void message.error("Không thể xóa cơ sở đang được sử dụng"),
+            onError: (error) => void message.error(extractApiError(error)),
           })
         }
         onCreateProduct={() => setCreatingProduct(true)}
@@ -393,8 +402,7 @@ export default function BusinessManagementPage() {
         onDeleteProduct={(id) =>
           deleteProduct.mutate(id, {
             onSuccess: () => void message.success("Đã xóa sản phẩm"),
-            onError: () =>
-              void message.error("Không thể xóa sản phẩm đang được sử dụng"),
+            onError: (error) => void message.error(extractApiError(error)),
           })
         }
         onManageProductAttachments={setAttachmentsProduct}
@@ -486,7 +494,8 @@ export default function BusinessManagementPage() {
               setManagingHandlersBusinessId(undefined);
               void message.success("Đã lưu người phụ trách");
             },
-            onError: () => void message.error("Không thể lưu người phụ trách"),
+            onError: (error: unknown) =>
+              void message.error(extractApiError(error)),
           };
           if (handlerId) {
             updateBusinessHandler.mutate(

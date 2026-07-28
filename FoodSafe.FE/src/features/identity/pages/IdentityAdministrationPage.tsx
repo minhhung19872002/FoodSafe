@@ -3,7 +3,6 @@ import {
   App,
   Button,
   Input,
-  Popconfirm,
   Select,
   Space,
   Table,
@@ -12,6 +11,7 @@ import {
   Tooltip,
   Typography,
 } from "antd";
+import { RowActions } from "@/components/RowActions";
 import { PageHeader } from "@/components/PageHeader";
 import {
   AuditOutlined,
@@ -374,106 +374,91 @@ export default function IdentityAdministrationPage() {
             {
               title: "Thao tác",
               fixed: "right",
-              width: 260,
+              width: 96,
               render: (_, user) => {
                 const isSelf = user.id === currentUser?.id;
+                const activateLabel = user.isActive
+                  ? "Vô hiệu hóa"
+                  : "Kích hoạt";
+                const lockLabel = user.isLocked ? "Mở khóa" : "Khóa";
                 return (
-                  <Space wrap>
-                    {hasPermission(permission.editUser) && (
-                      <Tooltip title={userFormBlockedReason ?? "Cập nhật"}>
-                        <Button
-                          size="small"
-                          aria-label={`Sửa ${user.fullName}`}
-                          icon={<EditOutlined />}
-                          disabled={Boolean(userFormBlockedReason)}
-                          onClick={() => {
-                            setEditingUser(user);
-                            setUserModalOpen(true);
-                          }}
-                        />
-                      </Tooltip>
-                    )}
-                    {hasPermission(permission.activateUser) && (
-                      <Tooltip
-                        title={user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
-                      >
-                        <Button
-                          size="small"
-                          aria-label={`${user.isActive ? "Vô hiệu hóa" : "Kích hoạt"} ${user.fullName}`}
-                          disabled={isSelf}
-                          danger={user.isActive}
-                          icon={<StopOutlined />}
-                          loading={
-                            setActivation.isPending &&
-                            setActivation.variables?.id === user.id
-                          }
-                          onClick={() =>
-                            setActivation.mutate(
-                              { id: user.id, isActive: !user.isActive },
-                              {
-                                onSuccess: () =>
-                                  showSuccess("Đã cập nhật trạng thái"),
-                                onError: showError,
-                              },
-                            )
-                          }
-                        />
-                      </Tooltip>
-                    )}
-                    {hasPermission(permission.lockUser) && (
-                      <Tooltip title={user.isLocked ? "Mở khóa" : "Khóa"}>
-                        <Button
-                          size="small"
-                          aria-label={`${user.isLocked ? "Mở khóa" : "Khóa"} ${user.fullName}`}
-                          disabled={isSelf}
-                          icon={
-                            user.isLocked ? (
-                              <UnlockOutlined />
-                            ) : (
-                              <LockOutlined />
-                            )
-                          }
-                          onClick={() =>
-                            setLock.mutate(
-                              { id: user.id, isLocked: !user.isLocked },
-                              {
-                                onSuccess: () =>
-                                  showSuccess("Đã cập nhật khóa tài khoản"),
-                                onError: showError,
-                              },
-                            )
-                          }
-                        />
-                      </Tooltip>
-                    )}
-                    {hasPermission(permission.resetPassword) && (
-                      <Popconfirm
-                        title="Gửi liên kết đặt lại mật khẩu?"
-                        okText="Gửi"
-                        cancelText="Hủy"
-                        onConfirm={() =>
+                  <RowActions
+                    overflowAriaLabel={`Thao tác ${user.userName}`}
+                    actions={[
+                      {
+                        key: "edit",
+                        label: userFormBlockedReason ?? "Cập nhật",
+                        ariaLabel: `Sửa ${user.fullName}`,
+                        icon: <EditOutlined />,
+                        hidden: !hasPermission(permission.editUser),
+                        disabled: Boolean(userFormBlockedReason),
+                        onClick: () => {
+                          setEditingUser(user);
+                          setUserModalOpen(true);
+                        },
+                      },
+                      {
+                        key: "activate",
+                        label: activateLabel,
+                        ariaLabel: `${activateLabel} ${user.fullName}`,
+                        icon: <StopOutlined />,
+                        hidden: !hasPermission(permission.activateUser),
+                        disabled: isSelf,
+                        danger: user.isActive,
+                        onClick: () =>
+                          setActivation.mutate(
+                            { id: user.id, isActive: !user.isActive },
+                            {
+                              onSuccess: () =>
+                                showSuccess("Đã cập nhật trạng thái"),
+                              onError: showError,
+                            },
+                          ),
+                      },
+                      {
+                        key: "lock",
+                        label: lockLabel,
+                        ariaLabel: `${lockLabel} ${user.fullName}`,
+                        icon: user.isLocked ? (
+                          <UnlockOutlined />
+                        ) : (
+                          <LockOutlined />
+                        ),
+                        hidden: !hasPermission(permission.lockUser),
+                        disabled: isSelf,
+                        onClick: () =>
+                          setLock.mutate(
+                            { id: user.id, isLocked: !user.isLocked },
+                            {
+                              onSuccess: () =>
+                                showSuccess("Đã cập nhật khóa tài khoản"),
+                              onError: showError,
+                            },
+                          ),
+                      },
+                      {
+                        key: "reset-password",
+                        label: "Đặt lại mật khẩu",
+                        ariaLabel: `Đặt lại mật khẩu ${user.fullName}`,
+                        icon: <KeyOutlined />,
+                        hidden: !hasPermission(permission.resetPassword),
+                        confirm: "Gửi liên kết đặt lại mật khẩu?",
+                        onClick: () =>
                           sendReset.mutate(user.id, {
                             onSuccess: () =>
                               showSuccess("Đã gửi email đặt lại mật khẩu"),
                             onError: showError,
-                          })
-                        }
-                      >
-                        <Tooltip title="Đặt lại mật khẩu">
-                          <Button
-                            size="small"
-                            aria-label={`Đặt lại mật khẩu ${user.fullName}`}
-                            icon={<KeyOutlined />}
-                          />
-                        </Tooltip>
-                      </Popconfirm>
-                    )}
-                    {hasPermission(permission.resetPassword) && (
-                      <Popconfirm
-                        title="Tạo mật khẩu ngẫu nhiên mới cho tài khoản này?"
-                        okText="Tạo"
-                        cancelText="Hủy"
-                        onConfirm={() =>
+                          }),
+                      },
+                      {
+                        key: "generate-password",
+                        label: "Tạo mật khẩu ngẫu nhiên",
+                        ariaLabel: `Tạo mật khẩu ngẫu nhiên ${user.fullName}`,
+                        icon: <SafetyCertificateOutlined />,
+                        hidden: !hasPermission(permission.resetPassword),
+                        confirm:
+                          "Tạo mật khẩu ngẫu nhiên mới cho tài khoản này?",
+                        onClick: () =>
                           generatePassword.mutate(user.id, {
                             onSuccess: (result) =>
                               modal.success({
@@ -492,61 +477,34 @@ export default function IdentityAdministrationPage() {
                                 ),
                               }),
                             onError: showError,
-                          })
-                        }
-                      >
-                        <Tooltip title="Tạo mật khẩu ngẫu nhiên">
-                          <Button
-                            size="small"
-                            aria-label={`Tạo mật khẩu ngẫu nhiên ${user.fullName}`}
-                            loading={
-                              generatePassword.isPending &&
-                              generatePassword.variables === user.id
-                            }
-                            icon={<SafetyCertificateOutlined />}
-                          />
-                        </Tooltip>
-                      </Popconfirm>
-                    )}
-                    {hasPermission(permission.deleteUser) && (
-                      <Popconfirm
-                        title="Xóa tài khoản này? Hành động không thể hoàn tác."
-                        okText="Xóa"
-                        okButtonProps={{ danger: true }}
-                        cancelText="Hủy"
-                        onConfirm={() =>
+                          }),
+                      },
+                      {
+                        key: "activity",
+                        label: "Nhật ký hoạt động",
+                        ariaLabel: `Hoạt động ${user.fullName}`,
+                        icon: <AuditOutlined />,
+                        hidden: !hasPermission(permission.activity),
+                        onClick: () => setActivityUser(user),
+                      },
+                      {
+                        key: "delete",
+                        label: "Xóa tài khoản",
+                        ariaLabel: `Xóa ${user.fullName}`,
+                        icon: <DeleteOutlined />,
+                        danger: true,
+                        hidden: !hasPermission(permission.deleteUser),
+                        disabled: isSelf,
+                        confirm:
+                          "Xóa tài khoản này? Hành động không thể hoàn tác.",
+                        onClick: () =>
                           deleteUser.mutate(user.id, {
                             onSuccess: () => showSuccess("Đã xóa tài khoản"),
                             onError: showError,
-                          })
-                        }
-                      >
-                        <Tooltip title="Xóa tài khoản">
-                          <Button
-                            size="small"
-                            danger
-                            disabled={isSelf}
-                            aria-label={`Xóa ${user.fullName}`}
-                            loading={
-                              deleteUser.isPending &&
-                              deleteUser.variables === user.id
-                            }
-                            icon={<DeleteOutlined />}
-                          />
-                        </Tooltip>
-                      </Popconfirm>
-                    )}
-                    {hasPermission(permission.activity) && (
-                      <Tooltip title="Nhật ký hoạt động">
-                        <Button
-                          size="small"
-                          aria-label={`Hoạt động ${user.fullName}`}
-                          icon={<AuditOutlined />}
-                          onClick={() => setActivityUser(user)}
-                        />
-                      </Tooltip>
-                    )}
-                  </Space>
+                          }),
+                      },
+                    ]}
+                  />
                 );
               },
             },
@@ -640,77 +598,64 @@ export default function IdentityAdministrationPage() {
             },
             {
               title: "Thao tác",
-              width: 190,
+              fixed: "right",
+              width: 96,
               render: (_, role) => (
-                <Space>
-                  {hasPermission(permission.editRole) && (
-                    <Tooltip title="Cập nhật">
-                      <Button
-                        size="small"
-                        aria-label={`Sửa vai trò ${role.name}`}
-                        icon={<EditOutlined />}
-                        onClick={() => {
-                          setEditingRole(role);
-                          setRoleModalOpen(true);
-                        }}
-                      />
-                    </Tooltip>
-                  )}
-                  {hasPermission(permission.permissions) && (
-                    <Tooltip title="Phân quyền">
-                      <Button
-                        size="small"
-                        aria-label={`Phân quyền ${role.name}`}
-                        icon={<SafetyCertificateOutlined />}
-                        onClick={() => setPermissionRole(role)}
-                      />
-                    </Tooltip>
-                  )}
-                  {canViewUsers && (
-                    <Tooltip title="Xem người dùng được gán">
-                      <Button
-                        size="small"
-                        aria-label={`Người dùng vai trò ${role.name}`}
-                        icon={<TeamOutlined />}
-                        onClick={() => {
-                          setUserFilter((current) => ({
-                            ...current,
-                            roleId: role.id,
-                          }));
-                          usersPagination.resetToFirstPage();
-                          setActiveTab("users");
-                        }}
-                      />
-                    </Tooltip>
-                  )}
-                  {hasPermission(permission.deleteRole) && !role.isStatic && (
-                    <Popconfirm
-                      title={`Xóa vai trò "${role.name}"?`}
-                      description={
-                        role.userCount > 0
-                          ? "Vai trò đang được sử dụng và không thể xóa."
-                          : undefined
-                      }
-                      okText="Xóa"
-                      cancelText="Hủy"
-                      disabled={role.userCount > 0}
-                      onConfirm={() =>
+                <RowActions
+                  overflowAriaLabel={`Thao tác ${role.name}`}
+                  actions={[
+                    {
+                      key: "edit",
+                      label: "Cập nhật",
+                      ariaLabel: `Sửa vai trò ${role.name}`,
+                      icon: <EditOutlined />,
+                      hidden: !hasPermission(permission.editRole),
+                      onClick: () => {
+                        setEditingRole(role);
+                        setRoleModalOpen(true);
+                      },
+                    },
+                    {
+                      key: "permissions",
+                      label: "Phân quyền",
+                      ariaLabel: `Phân quyền ${role.name}`,
+                      icon: <SafetyCertificateOutlined />,
+                      hidden: !hasPermission(permission.permissions),
+                      onClick: () => setPermissionRole(role),
+                    },
+                    {
+                      key: "users",
+                      label: "Xem người dùng",
+                      ariaLabel: `Người dùng vai trò ${role.name}`,
+                      icon: <TeamOutlined />,
+                      hidden: !canViewUsers,
+                      onClick: () => {
+                        setUserFilter((current) => ({
+                          ...current,
+                          roleId: role.id,
+                        }));
+                        usersPagination.resetToFirstPage();
+                        setActiveTab("users");
+                      },
+                    },
+                    {
+                      key: "delete",
+                      label: "Xóa vai trò",
+                      ariaLabel: `Xóa vai trò ${role.name}`,
+                      icon: <DeleteOutlined />,
+                      danger: true,
+                      hidden:
+                        !hasPermission(permission.deleteRole) || role.isStatic,
+                      disabled: role.userCount > 0,
+                      confirm: `Xóa vai trò "${role.name}"?`,
+                      onClick: () =>
                         deleteRole.mutate(role.id, {
                           onSuccess: () => showSuccess("Đã xóa vai trò"),
                           onError: showError,
-                        })
-                      }
-                    >
-                      <Button
-                        size="small"
-                        aria-label={`Xóa vai trò ${role.name}`}
-                        danger
-                        disabled={role.userCount > 0}
-                        icon={<DeleteOutlined />}
-                      />
-                    </Popconfirm>
-                  )}
-                </Space>
+                        }),
+                    },
+                  ]}
+                />
               ),
             },
           ]}

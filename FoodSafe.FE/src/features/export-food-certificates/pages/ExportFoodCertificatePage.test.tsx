@@ -91,13 +91,7 @@ describe("ExportFoodCertificatePage", () => {
         screen.getByRole("button", { name: /Thêm GCN XK/ }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "Sửa XK-001" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "Thu hồi XK-001" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "Xóa XK-001" }),
+        screen.getByRole("button", { name: "Thao tác XK-001" }),
       ).toBeInTheDocument();
     },
   );
@@ -123,10 +117,7 @@ describe("ExportFoodCertificatePage", () => {
       screen.queryByRole("button", { name: /Thêm GCN XK/ }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Sửa XK-001" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Thu hồi XK-001" }),
+      screen.queryByRole("button", { name: "Thao tác XK-001" }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Tệp XK-001" }),

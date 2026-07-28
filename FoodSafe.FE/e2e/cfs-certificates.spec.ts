@@ -132,9 +132,7 @@ test.describe("CFS certificate management", () => {
       .getByText(`${country.code} — ${country.name}`, { exact: false })
       .last()
       .click();
-    await page
-      .getByRole("textbox", { name: "Số CFS" })
-      .fill(certificateNumber);
+    await page.getByRole("textbox", { name: "Số CFS" }).fill(certificateNumber);
     await page
       .getByRole("textbox", { name: "Cơ quan cấp" })
       .fill("Chi cục ATVSTP Quảng Ninh");
@@ -142,9 +140,7 @@ test.describe("CFS certificate management", () => {
     await expect(page.getByText("Đã lưu chứng nhận CFS.")).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: certificateNumber });
-    await row
-      .getByRole("button", { name: `Tệp ${certificateNumber}` })
-      .click();
+    await row.getByRole("button", { name: `Tệp ${certificateNumber}` }).click();
     const fileDialog = page.getByRole("dialog", {
       name: `Tệp CFS — ${certificateNumber}`,
     });
@@ -156,18 +152,14 @@ test.describe("CFS certificate management", () => {
     await fileDialog.getByRole("button", { name: "Tải lên" }).click();
     await expect(page.getByText("Đã tải tệp lên.")).toBeVisible();
     const attachmentDownloadPromise = page.waitForEvent("download");
-    await fileDialog
-      .getByRole("button", { name: "Tải cfs-giay.pdf" })
-      .click();
+    await fileDialog.getByRole("button", { name: "Tải cfs-giay.pdf" }).click();
     const attachmentDownload = await attachmentDownloadPromise;
     expect(
       (await readFile((await attachmentDownload.path())!))
         .subarray(0, 4)
         .toString(),
     ).toBe("%PDF");
-    await fileDialog
-      .getByRole("button", { name: "Xóa cfs-giay.pdf" })
-      .click();
+    await fileDialog.getByRole("button", { name: "Xóa cfs-giay.pdf" }).click();
     await page.getByRole("button", { name: "Xóa", exact: true }).click();
     await expect(page.getByText("Đã xóa tệp.")).toBeVisible();
     await fileDialog.getByRole("button", { name: "Close" }).click();
@@ -177,16 +169,15 @@ test.describe("CFS certificate management", () => {
     await page.getByPlaceholder("Số CFS").fill(certificateNumber);
     await page.getByRole("button", { name: "Tra cứu" }).click();
     await expect(page.getByText(businessName)).toBeVisible();
-    await expect(
-      page.getByText("Chi cục ATVSTP Quảng Ninh"),
-    ).toBeVisible();
+    await expect(page.getByText("Chi cục ATVSTP Quảng Ninh")).toBeVisible();
 
     await signInAsAdmin(page);
     await page.goto("/cfs-certificates");
     row = page.getByRole("row").filter({ hasText: certificateNumber });
     await row
-      .getByRole("button", { name: `Thu hồi ${certificateNumber}` })
+      .getByRole("button", { name: `Thao tác ${certificateNumber}` })
       .click();
+    await page.getByRole("menuitem", { name: "Thu hồi" }).click();
     const revokeDialog = page.getByRole("dialog", {
       name: `Thu hồi CFS ${certificateNumber}`,
     });
@@ -221,9 +212,10 @@ test.describe("CFS certificate management", () => {
 
     row = page.getByRole("row").filter({ hasText: certificateNumber });
     await row
-      .getByRole("button", { name: `Xóa ${certificateNumber}` })
+      .getByRole("button", { name: `Thao tác ${certificateNumber}` })
       .click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Xóa" }).click();
+    await page.getByRole("button", { name: "OK" }).click();
     await expect(page.getByText("Đã xóa chứng nhận CFS.")).toBeVisible();
 
     const duplicate = await request.post("/api/v1/app/cfs-certificate", {

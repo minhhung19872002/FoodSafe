@@ -4,9 +4,7 @@ import {
   Card,
   Input,
   message,
-  Popconfirm,
   Select,
-  Space,
   Table,
   Tabs,
   Tag,
@@ -64,6 +62,7 @@ import {
   type NewsStatus,
 } from "../types/alertsNews.types";
 import { useTablePagination } from "@/hooks/useTablePagination";
+import { RowActions } from "@/components/RowActions";
 
 function AlertsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
@@ -162,65 +161,54 @@ function AlertsTab() {
     {
       title: "",
       key: "actions",
-      width: 200,
+      width: 96,
       render: (_: unknown, record: AtpAlert) => (
-        <Space size="small">
-          {record.status === ALERT_STATUS.Draft && canEdit && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {record.status === ALERT_STATUS.Draft && canPublish && (
-            <Popconfirm
-              title="Xuất bản cảnh báo này?"
-              okText="Xuất bản"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await publishMut.mutateAsync({
-                  id: record.id,
-                  isPublic: true,
-                });
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.title}`}
+          actions={[
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: !(record.status === ALERT_STATUS.Draft && canEdit),
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "publish",
+              label: "Xuất bản",
+              icon: <SendOutlined />,
+              hidden: !(record.status === ALERT_STATUS.Draft && canPublish),
+              confirm: "Xuất bản cảnh báo này?",
+              onClick: async () => {
+                await publishMut.mutateAsync({ id: record.id, isPublic: true });
                 message.success("Đã xuất bản.");
-              }}
-            >
-              <Button size="small" type="primary" icon={<SendOutlined />}>
-                Xuất bản
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === ALERT_STATUS.Published && canPublish && (
-            <Button
-              size="small"
-              danger
-              icon={<UndoOutlined />}
-              onClick={() => {
+              },
+            },
+            {
+              key: "recall",
+              label: "Thu hồi",
+              icon: <UndoOutlined />,
+              danger: true,
+              hidden: !(record.status === ALERT_STATUS.Published && canPublish),
+              onClick: () => {
                 setRecallingId(record.id);
                 setRecallOpen(true);
-              }}
-            >
-              Thu hồi
-            </Button>
-          )}
-          {record.status === ALERT_STATUS.Draft && canDelete && (
-            <Popconfirm
-              title="Xóa cảnh báo này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={async () => {
+              },
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !(record.status === ALERT_STATUS.Draft && canDelete),
+              confirm: "Xóa cảnh báo này?",
+              onClick: async () => {
                 await deleteMut.mutateAsync(record.id);
                 message.success("Đã xóa.");
-              }}
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+              },
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -498,67 +486,55 @@ function NewsTab() {
     {
       title: "",
       key: "actions",
-      width: 200,
+      width: 96,
       render: (_: unknown, record: AtpNews) => (
-        <Space size="small">
-          {record.status === NEWS_STATUS.Draft && canEdit && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {record.status === NEWS_STATUS.Draft && canPublish && (
-            <Popconfirm
-              title="Xuất bản tin tức này?"
-              okText="Xuất bản"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await publishMut.mutateAsync({
-                  id: record.id,
-                  isPublic: true,
-                });
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.title}`}
+          actions={[
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: !(record.status === NEWS_STATUS.Draft && canEdit),
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "publish",
+              label: "Xuất bản",
+              icon: <SendOutlined />,
+              hidden: !(record.status === NEWS_STATUS.Draft && canPublish),
+              confirm: "Xuất bản tin tức này?",
+              onClick: async () => {
+                await publishMut.mutateAsync({ id: record.id, isPublic: true });
                 message.success("Đã xuất bản.");
-              }}
-            >
-              <Button size="small" type="primary" icon={<SendOutlined />}>
-                Xuất bản
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === NEWS_STATUS.Published && canPublish && (
-            <Popconfirm
-              title="Thu hồi tin tức này?"
-              okText="Thu hồi"
-              cancelText="Hủy"
-              onConfirm={async () => {
+              },
+            },
+            {
+              key: "recall",
+              label: "Thu hồi",
+              icon: <UndoOutlined />,
+              danger: true,
+              hidden: !(record.status === NEWS_STATUS.Published && canPublish),
+              confirm: "Thu hồi tin tức này?",
+              onClick: async () => {
                 await recallMut.mutateAsync(record.id);
                 message.success("Đã thu hồi.");
-              }}
-            >
-              <Button size="small" danger icon={<UndoOutlined />}>
-                Thu hồi
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === NEWS_STATUS.Draft && canDelete && (
-            <Popconfirm
-              title="Xóa tin tức này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={async () => {
+              },
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !(record.status === NEWS_STATUS.Draft && canDelete),
+              confirm: "Xóa tin tức này?",
+              onClick: async () => {
                 await deleteMut.mutateAsync(record.id);
                 message.success("Đã xóa.");
-              }}
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+              },
+            },
+          ]}
+        />
       ),
     },
   ];
