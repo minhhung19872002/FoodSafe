@@ -496,11 +496,11 @@ public class SelfDeclarationAppService :
 
         return (field, descending) switch
         {
-            ("declarationdate", true)  => query.OrderByDescending(x => x.DeclarationDate),
+            ("declarationdate", true) => query.OrderByDescending(x => x.DeclarationDate),
             ("declarationdate", false) => query.OrderBy(x => x.DeclarationDate),
-            ("creationtime",    true)  => query.OrderByDescending(x => x.CreationTime),
-            ("creationtime",    false) => query.OrderBy(x => x.CreationTime),
-            _                          => query.OrderByDescending(x => x.CreationTime)
+            ("creationtime", true) => query.OrderByDescending(x => x.CreationTime),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _ => query.OrderByDescending(x => x.CreationTime)
         };
     }
 }

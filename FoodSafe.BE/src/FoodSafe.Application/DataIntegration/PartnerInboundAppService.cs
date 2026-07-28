@@ -333,11 +333,11 @@ public class PartnerInboundAppService :
 
     private static InboundReceiveOperationDto Invalid(
         string code, string message) => new()
-    {
-        Outcome = InboundReceiveOutcome.InvalidRequest,
-        ErrorCode = code,
-        ErrorMessage = message,
-    };
+        {
+            Outcome = InboundReceiveOutcome.InvalidRequest,
+            ErrorCode = code,
+            ErrorMessage = message,
+        };
 
     private static InboundReceiveOperationDto Unauthorized() => new()
     {
@@ -350,16 +350,16 @@ public class PartnerInboundAppService :
 
     private static InboundReceiveOperationDto Duplicate(
         InboundSubmission existing) => new()
-    {
-        Outcome = InboundReceiveOutcome.Duplicate,
-        Result = new InboundReceiveResultDto
         {
-            SubmissionId = existing.Id,
-            CorrelationId = existing.CorrelationId ?? "",
-            Duplicate = true,
-            ReceivedAt = existing.ReceivedAt,
-        },
-    };
+            Outcome = InboundReceiveOutcome.Duplicate,
+            Result = new InboundReceiveResultDto
+            {
+                SubmissionId = existing.Id,
+                CorrelationId = existing.CorrelationId ?? "",
+                Duplicate = true,
+                ReceivedAt = existing.ReceivedAt,
+            },
+        };
 
     private static string? Truncate(string? value, int maximumLength) =>
         value is null || value.Length <= maximumLength

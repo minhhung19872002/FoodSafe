@@ -270,11 +270,11 @@ public class ProductAppService : ApplicationService, IProductAppService
 
         return (field, descending) switch
         {
-            ("name",         true)  => query.OrderByDescending(x => x.Name),
-            ("name",         false) => query.OrderBy(x => x.Name),
-            ("creationtime", true)  => query.OrderByDescending(x => x.CreationTime),
+            ("name", true) => query.OrderByDescending(x => x.Name),
+            ("name", false) => query.OrderBy(x => x.Name),
+            ("creationtime", true) => query.OrderByDescending(x => x.CreationTime),
             ("creationtime", false) => query.OrderBy(x => x.CreationTime),
-            _                       => query.OrderByDescending(x => x.CreationTime)
+            _ => query.OrderByDescending(x => x.CreationTime)
         };
     }
 }

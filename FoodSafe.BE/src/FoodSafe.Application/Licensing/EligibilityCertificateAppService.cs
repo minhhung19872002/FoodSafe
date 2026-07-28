@@ -375,11 +375,11 @@ public class EligibilityCertificateAppService :
 
         return (field, descending) switch
         {
-            ("issuedate", true)    => query.OrderByDescending(x => x.IssueDate),
-            ("issuedate", false)   => query.OrderBy(x => x.IssueDate),
+            ("issuedate", true) => query.OrderByDescending(x => x.IssueDate),
+            ("issuedate", false) => query.OrderBy(x => x.IssueDate),
             ("creationtime", true) => query.OrderByDescending(x => x.CreationTime),
-            ("creationtime", false)=> query.OrderBy(x => x.CreationTime),
-            _                      => query.OrderByDescending(x => x.CreationTime)
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _ => query.OrderByDescending(x => x.CreationTime)
         };
     }
 

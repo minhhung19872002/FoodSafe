@@ -167,10 +167,10 @@ public class TestingResultAppService : ApplicationService
         // Id tiebreaker keeps paging stable when many rows share the same date.
         return (field, descending) switch
         {
-            ("sampledate", true)    => query.OrderByDescending(x => x.SampleDate).ThenBy(x => x.Id),
-            ("sampledate", false)   => query.OrderBy(x => x.SampleDate).ThenBy(x => x.Id),
+            ("sampledate", true) => query.OrderByDescending(x => x.SampleDate).ThenBy(x => x.Id),
+            ("sampledate", false) => query.OrderBy(x => x.SampleDate).ThenBy(x => x.Id),
             ("creationtime", false) => query.OrderBy(x => x.CreationTime).ThenBy(x => x.Id),
-            _                       => query.OrderByDescending(x => x.CreationTime).ThenBy(x => x.Id),
+            _ => query.OrderByDescending(x => x.CreationTime).ThenBy(x => x.Id),
         };
     }
 

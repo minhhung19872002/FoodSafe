@@ -451,11 +451,11 @@ public class ProductRegistrationAppService :
 
         var ordered = (field, descending) switch
         {
-            ("registrationdate", true)  => query.OrderByDescending(x => x.RegistrationDate),
+            ("registrationdate", true) => query.OrderByDescending(x => x.RegistrationDate),
             ("registrationdate", false) => query.OrderBy(x => x.RegistrationDate),
-            ("creationtime", true)      => query.OrderByDescending(x => x.CreationTime),
-            ("creationtime", false)     => query.OrderBy(x => x.CreationTime),
-            _                           => query.OrderByDescending(x => x.CreationTime)
+            ("creationtime", true) => query.OrderByDescending(x => x.CreationTime),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _ => query.OrderByDescending(x => x.CreationTime)
         };
         return ordered.ThenBy(x => x.Id);
     }
