@@ -119,6 +119,10 @@ services:
       Seed__AdminEmail: ${SEED_ADMIN_EMAIL:-admin@foodsafe.local}
       Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD}
       Seed__EnableDemoData: ${SEED_ENABLE_DEMO_DATA:-false}
+      # Required whenever demo/e2e seeding runs outside Development (C-5):
+      # the seeder refuses the built-in development password and the migrator
+      # exits non-zero unless an operator-chosen secret is provided here.
+      Seed__TestPassword: ${SEED_TEST_PASSWORD:-}
     entrypoint: ["dotnet", "/app/migrator/FoodSafe.DbMigrator.dll"]
     depends_on:
       postgres:
