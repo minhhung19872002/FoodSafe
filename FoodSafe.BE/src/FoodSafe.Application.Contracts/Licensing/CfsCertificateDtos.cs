@@ -20,7 +20,6 @@ public sealed class CfsCertificateListInput :
     public CfsCertificateListInput()
     {
         MaxResultCount = 20;
-        Sorting = "IssueDate desc";
     }
 }
 

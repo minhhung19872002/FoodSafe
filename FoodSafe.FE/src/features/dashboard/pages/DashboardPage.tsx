@@ -222,7 +222,12 @@ export default function DashboardPage() {
   const { data: stats, isLoading } = useDashboardStats(filter);
   const compliance = useReportCompliance(filter);
   const expiringLicenses = useExpiringLicenses(filter);
-  const organizationTree = useOrganizationTree();
+  // Cây đơn vị đòi quyền Organizations.View; tài khoản không có quyền vẫn vào
+  // dashboard được nên phải tắt query và ẩn ô lọc, tránh 403 (UIA-005).
+  const canViewOrganizations = hasPermission("FoodSafe.Organizations.View");
+  const organizationTree = useOrganizationTree({
+    enabled: canViewOrganizations,
+  });
   const organizationOptions = useMemo(
     () => flattenOrganizationOptions(organizationTree.data?.items ?? []),
     [organizationTree.data?.items],
@@ -266,16 +271,18 @@ export default function DashboardPage() {
               options={yearOptions}
               style={{ width: 140 }}
             />
-            <Select
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              placeholder="Toàn bộ đơn vị"
-              value={organizationId}
-              onChange={setOrganizationId}
-              options={organizationOptions}
-              style={{ width: 220 }}
-            />
+            {canViewOrganizations && (
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                placeholder="Toàn bộ đơn vị"
+                value={organizationId}
+                onChange={setOrganizationId}
+                options={organizationOptions}
+                style={{ width: 220 }}
+              />
+            )}
           </Space>
         }
       />

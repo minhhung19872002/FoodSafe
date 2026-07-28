@@ -153,6 +153,15 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.DataIntegration.ApiEndpoints.Delete,
         FoodSafePermissions.DataIntegration.CallHistory.View,
         FoodSafePermissions.DataIntegration.Share,
+        FoodSafePermissions.DataIntegration.Partners.View,
+        FoodSafePermissions.DataIntegration.Partners.Create,
+        FoodSafePermissions.DataIntegration.Partners.Edit,
+        FoodSafePermissions.DataIntegration.Partners.Delete,
+        FoodSafePermissions.DataIntegration.Partners.ManageKeys,
+        FoodSafePermissions.DataIntegration.ApiSpecs.View,
+        FoodSafePermissions.DataIntegration.ApiSpecs.Create,
+        FoodSafePermissions.DataIntegration.ApiSpecs.Publish,
+        FoodSafePermissions.DataIntegration.ApiSpecs.Delete,
         FoodSafePermissions.DataScope.All
     ];
 

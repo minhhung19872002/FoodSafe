@@ -64,8 +64,7 @@ public class InspectionResultAppService : ApplicationService
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
 
-        query = query.OrderByDescending(x => x.InspectionDate)
-            .ThenByDescending(x => x.CreationTime);
+        query = ApplySorting(query, input.Sorting);
         query = query.PageBy(input);
 
         var results = await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
@@ -231,6 +230,25 @@ public class InspectionResultAppService : ApplicationService
         var result = await GetScopedAsync(id, DataScopeOperation.Edit);
         result.SetFollowUpResult(input.Result);
         await _results.UpdateAsync(result, autoSave: true, cancellationToken: _cancellationTokens.Token);
+    }
+
+    private static IOrderedQueryable<InspectionResult> ApplySorting(
+        IQueryable<InspectionResult> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("inspectiondate", true) => query.OrderByDescending(x => x.InspectionDate).ThenByDescending(x => x.CreationTime),
+            ("inspectiondate", false) => query.OrderBy(x => x.InspectionDate).ThenByDescending(x => x.CreationTime),
+            ("creationtime", true) => query.OrderByDescending(x => x.CreationTime),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _ => query.OrderByDescending(x => x.CreationTime)
+        };
     }
 
     private async Task<IQueryable<InspectionResult>> ScopedQueryAsync(

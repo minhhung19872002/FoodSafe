@@ -261,8 +261,9 @@ test.describe("advertisement registration management", () => {
     await expect(row).not.toContainText(firstProductName);
     await expect(row).toContainText(secondProductName);
     await row
-      .getByRole("button", { name: `Thu hồi ${registrationNumber}` })
+      .getByRole("button", { name: `Thao tác ${registrationNumber}` })
       .click();
+    await page.getByRole("menuitem", { name: "Thu hồi" }).click();
     const revokeDialog = page.getByRole("dialog", {
       name: `Thu hồi đăng ký ${registrationNumber}`,
     });
@@ -293,7 +294,11 @@ test.describe("advertisement registration management", () => {
     await row
       .getByRole("button", { name: `Xóa ${registrationNumber}` })
       .click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    // Nhãn nút xác nhận phụ thuộc cấu hình RowActions/locale antd.
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText("Đã xóa đăng ký.")).toBeVisible();
     const duplicate = await request.post(
       "/api/v1/app/advertisement-registration",

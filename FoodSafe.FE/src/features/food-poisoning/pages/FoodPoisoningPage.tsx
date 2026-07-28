@@ -5,14 +5,13 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
   Select,
-  Space,
   Table,
   Tabs,
   Tag,
   type TableColumnsType,
 } from "antd";
+import { RowActions } from "@/components/RowActions";
 import {
   PlusOutlined,
   EditOutlined,
@@ -70,8 +69,7 @@ import {
   type TreatmentResult,
   type VictimGender,
 } from "../types/foodPoisoning.types";
-
-const PAGE_SIZE = 15;
+import { useTablePagination } from "@/hooks/useTablePagination";
 
 const formatDate = (v?: string) => (v ? dayjs(v).format("DD/MM/YYYY") : null);
 const formatDateTime = (v?: string) =>
@@ -79,11 +77,13 @@ const formatDateTime = (v?: string) =>
 
 function CasesTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<CaseFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<CaseFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = usePoisoningCases({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = usePoisoningCases(filter);
   const createMut = useCreateCase();
   const updateMut = useUpdateCase();
   const deleteMut = useDeleteCase();
@@ -184,76 +184,67 @@ function CasesTab() {
     {
       title: "",
       key: "actions",
-      width: 240,
+      width: 96,
       render: (_: unknown, record: FoodPoisoningCase) => (
-        <Space size="small">
-          {record.status !== POISONING_CASE_STATUS.Draft && (
-            <Button
-              size="small"
-              icon={<WarningOutlined />}
-              aria-label={`Sai sót ${record.caseCode}`}
-              onClick={() => setErrorReportCase(record)}
-            />
-          )}
-          {record.status === POISONING_CASE_STATUS.Draft && canEdit && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {record.status === POISONING_CASE_STATUS.Draft && canEdit && (
-            <Popconfirm
-              title="Gửi báo cáo ca ngộ độc này?"
-              okText="Gửi"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await submitMut.mutateAsync(record.id);
-                message.success("Đã gửi báo cáo.");
-              }}
-            >
-              <Button size="small" type="primary" icon={<SendOutlined />}>
-                Gửi
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === POISONING_CASE_STATUS.Reported && canVerify && (
-            <Popconfirm
-              title="Xác minh ca ngộ độc này?"
-              okText="Xác minh"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await verifyMut.mutateAsync(record.id);
-                message.success("Đã xác minh.");
-              }}
-            >
-              <Button
-                size="small"
-                type="primary"
-                icon={<CheckCircleOutlined />}
-              >
-                Xác minh
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === POISONING_CASE_STATUS.Draft && canDelete && (
-            <Popconfirm
-              title="Xóa ca ngộ độc này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await deleteMut.mutateAsync(record.id);
-                message.success("Đã xóa.");
-              }}
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+        <RowActions
+          actions={[
+            {
+              key: "error-report",
+              label: "Sai sót",
+              ariaLabel: `Sai sót ${record.caseCode}`,
+              icon: <WarningOutlined />,
+              hidden: record.status === POISONING_CASE_STATUS.Draft,
+              onClick: () => setErrorReportCase(record),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: record.status !== POISONING_CASE_STATUS.Draft || !canEdit,
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "submit",
+              label: "Gửi",
+              icon: <SendOutlined />,
+              hidden: record.status !== POISONING_CASE_STATUS.Draft || !canEdit,
+              confirm: "Gửi báo cáo ca ngộ độc này?",
+              onClick: () =>
+                submitMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã gửi báo cáo."),
+                  onError: () => message.error("Không thể gửi báo cáo."),
+                }),
+            },
+            {
+              key: "verify",
+              label: "Xác minh",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                record.status !== POISONING_CASE_STATUS.Reported || !canVerify,
+              confirm: "Xác minh ca ngộ độc này?",
+              onClick: () =>
+                verifyMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xác minh."),
+                  onError: () => message.error("Không thể xác minh."),
+                }),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden:
+                record.status !== POISONING_CASE_STATUS.Draft || !canDelete,
+              confirm: "Xóa ca ngộ độc này?",
+              onClick: () =>
+                deleteMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xóa."),
+                  onError: () => message.error("Không thể xóa."),
+                }),
+            },
+          ]}
+          overflowAriaLabel={`Thao tác ${record.caseCode}`}
+        />
       ),
     },
   ];
@@ -273,21 +264,19 @@ function CasesTab() {
           allowClear
           placeholder="Tìm theo mã ca, tên nạn nhân..."
           style={{ width: 280 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           allowClear
           placeholder="Trạng thái"
           style={{ width: 150 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(POISONING_CASE_STATUS_CONFIG).map(
             ([value, cfg]) => ({
               value: Number(value),
@@ -325,17 +314,7 @@ function CasesTab() {
           onDoubleClick: () => setDetailCase(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
-          pageSize: PAGE_SIZE,
-          total: data?.totalCount,
-          showSizeChanger: false,
-          onChange: (page) =>
-            setFilter((f) => ({
-              ...f,
-              skipCount: (page - 1) * PAGE_SIZE,
-            })),
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
 
       <CaseEditorModal
@@ -432,11 +411,13 @@ function CasesTab() {
 
 function IncidentsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<IncidentFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<IncidentFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = usePoisoningIncidents({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = usePoisoningIncidents(filter);
   const createMut = useCreateIncident();
   const updateMut = useUpdateIncident();
   const deleteMut = useDeleteIncident();
@@ -541,91 +522,82 @@ function IncidentsTab() {
     {
       title: "",
       key: "actions",
-      width: 280,
+      width: 96,
       render: (_: unknown, record: FoodPoisoningIncident) => (
-        <Space size="small">
-          {record.status !== POISONING_INCIDENT_STATUS.Draft && (
-            <Button
-              size="small"
-              icon={<WarningOutlined />}
-              aria-label={`Sai sót ${record.incidentCode}`}
-              onClick={() => setErrorReportIncident(record)}
-            />
-          )}
-          {record.status === POISONING_INCIDENT_STATUS.Draft && canEdit && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {record.status === POISONING_INCIDENT_STATUS.Draft && canEdit && (
-            <Popconfirm
-              title="Gửi báo cáo vụ ngộ độc này?"
-              okText="Gửi"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await submitMut.mutateAsync(record.id);
-                message.success("Đã gửi báo cáo.");
-              }}
-            >
-              <Button size="small" type="primary" icon={<SendOutlined />}>
-                Gửi
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === POISONING_INCIDENT_STATUS.Reported &&
-            canVerify && (
-              <Popconfirm
-                title="Xác minh vụ ngộ độc này?"
-                okText="Xác minh"
-                cancelText="Hủy"
-                onConfirm={async () => {
-                  await verifyMut.mutateAsync(record.id);
-                  message.success("Đã xác minh.");
-                }}
-              >
-                <Button
-                  size="small"
-                  type="primary"
-                  icon={<CheckCircleOutlined />}
-                >
-                  Xác minh
-                </Button>
-              </Popconfirm>
-            )}
-          {record.status === POISONING_INCIDENT_STATUS.Verified &&
-            canConclude && (
-              <Button
-                size="small"
-                type="primary"
-                icon={<SolutionOutlined />}
-                onClick={() => {
-                  setConcludingId(record.id);
-                  setConcludeOpen(true);
-                }}
-              >
-                Kết luận
-              </Button>
-            )}
-          {record.status === POISONING_INCIDENT_STATUS.Draft && canDelete && (
-            <Popconfirm
-              title="Xóa vụ ngộ độc này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await deleteMut.mutateAsync(record.id);
-                message.success("Đã xóa.");
-              }}
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+        <RowActions
+          actions={[
+            {
+              key: "error-report",
+              label: "Sai sót",
+              ariaLabel: `Sai sót ${record.incidentCode}`,
+              icon: <WarningOutlined />,
+              hidden: record.status === POISONING_INCIDENT_STATUS.Draft,
+              onClick: () => setErrorReportIncident(record),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden:
+                record.status !== POISONING_INCIDENT_STATUS.Draft || !canEdit,
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "submit",
+              label: "Gửi",
+              icon: <SendOutlined />,
+              hidden:
+                record.status !== POISONING_INCIDENT_STATUS.Draft || !canEdit,
+              confirm: "Gửi báo cáo vụ ngộ độc này?",
+              onClick: () =>
+                submitMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã gửi báo cáo."),
+                  onError: () => message.error("Không thể gửi báo cáo."),
+                }),
+            },
+            {
+              key: "verify",
+              label: "Xác minh",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                record.status !== POISONING_INCIDENT_STATUS.Reported ||
+                !canVerify,
+              confirm: "Xác minh vụ ngộ độc này?",
+              onClick: () =>
+                verifyMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xác minh."),
+                  onError: () => message.error("Không thể xác minh."),
+                }),
+            },
+            {
+              key: "conclude",
+              label: "Kết luận",
+              icon: <SolutionOutlined />,
+              hidden:
+                record.status !== POISONING_INCIDENT_STATUS.Verified ||
+                !canConclude,
+              onClick: () => {
+                setConcludingId(record.id);
+                setConcludeOpen(true);
+              },
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden:
+                record.status !== POISONING_INCIDENT_STATUS.Draft || !canDelete,
+              confirm: "Xóa vụ ngộ độc này?",
+              onClick: () =>
+                deleteMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã xóa."),
+                  onError: () => message.error("Không thể xóa."),
+                }),
+            },
+          ]}
+          overflowAriaLabel={`Thao tác ${record.incidentCode}`}
+        />
       ),
     },
   ];
@@ -645,21 +617,19 @@ function IncidentsTab() {
           allowClear
           placeholder="Tìm theo mã vụ, địa điểm..."
           style={{ width: 280 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           allowClear
           placeholder="Trạng thái"
           style={{ width: 150 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(POISONING_INCIDENT_STATUS_CONFIG).map(
             ([value, cfg]) => ({
               value: Number(value),
@@ -697,17 +667,7 @@ function IncidentsTab() {
           onDoubleClick: () => setDetailIncident(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
-          pageSize: PAGE_SIZE,
-          total: data?.totalCount,
-          showSizeChanger: false,
-          onChange: (page) =>
-            setFilter((f) => ({
-              ...f,
-              skipCount: (page - 1) * PAGE_SIZE,
-            })),
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
 
       <IncidentEditorModal
@@ -854,15 +814,21 @@ function ConcludeModal(props: {
   );
 }
 
-function MapTab() {
-  const { data: casesData } = usePoisoningCases({
-    skipCount: 0,
-    maxResultCount: 500,
-  });
-  const { data: incidentsData } = usePoisoningIncidents({
-    skipCount: 0,
-    maxResultCount: 500,
-  });
+function MapTab({
+  showCases,
+  showIncidents,
+}: {
+  showCases: boolean;
+  showIncidents: boolean;
+}) {
+  const { data: casesData } = usePoisoningCases(
+    { skipCount: 0, maxResultCount: 500 },
+    { enabled: showCases },
+  );
+  const { data: incidentsData } = usePoisoningIncidents(
+    { skipCount: 0, maxResultCount: 500 },
+    { enabled: showIncidents },
+  );
 
   return (
     <PoisoningMap
@@ -873,34 +839,47 @@ function MapTab() {
 }
 
 export default function FoodPoisoningPage() {
+  // Route cho vào khi có Cases.View HOẶC Incidents.View (ROUTE_PERMISSIONS.
+  // foodPoisoning) — người chỉ có một quyền không được thấy tab còn lại,
+  // nếu không tab mặc định sẽ gọi API bị 403 (UIA-006).
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const canViewCases = hasPermission("FoodSafe.FoodPoisoning.Cases.View");
+  const canViewIncidents = hasPermission(
+    "FoodSafe.FoodPoisoning.Incidents.View",
+  );
+
+  const tabs = [
+    ...(canViewCases
+      ? [{ key: "cases", label: "Ca ngộ độc nhỏ lẻ", children: <CasesTab /> }]
+      : []),
+    ...(canViewIncidents
+      ? [
+          {
+            key: "incidents",
+            label: "Vụ ngộ độc thực phẩm",
+            children: <IncidentsTab />,
+          },
+        ]
+      : []),
+    {
+      key: "map",
+      label: (
+        <span>
+          <EnvironmentOutlined style={{ marginRight: 4 }} />
+          Bản đồ
+        </span>
+      ),
+      children: (
+        <MapTab showCases={canViewCases} showIncidents={canViewIncidents} />
+      ),
+    },
+  ];
+
   return (
     <div className="page-container">
       <h1 className="page-header-title">Ngộ độc thực phẩm</h1>
       <Card>
-        <Tabs
-          items={[
-            {
-              key: "cases",
-              label: "Ca ngộ độc nhỏ lẻ",
-              children: <CasesTab />,
-            },
-            {
-              key: "incidents",
-              label: "Vụ ngộ độc thực phẩm",
-              children: <IncidentsTab />,
-            },
-            {
-              key: "map",
-              label: (
-                <span>
-                  <EnvironmentOutlined style={{ marginRight: 4 }} />
-                  Bản đồ
-                </span>
-              ),
-              children: <MapTab />,
-            },
-          ]}
-        />
+        <Tabs items={tabs} />
       </Card>
     </div>
   );

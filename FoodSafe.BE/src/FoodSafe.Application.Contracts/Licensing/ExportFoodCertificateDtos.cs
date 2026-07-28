@@ -20,7 +20,6 @@ public sealed class ExportFoodCertificateListInput :
     public ExportFoodCertificateListInput()
     {
         MaxResultCount = 20;
-        Sorting = "IssueDate desc";
     }
 }
 

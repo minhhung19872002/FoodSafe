@@ -95,7 +95,7 @@ describe("SelfDeclarationPage", () => {
         screen.getByRole("button", { name: "Sửa TCB-001" }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "Thu hồi TCB-001" }),
+        screen.getByRole("button", { name: "Thao tác TCB-001" }),
       ).toBeInTheDocument();
     },
   );
@@ -122,7 +122,7 @@ describe("SelfDeclarationPage", () => {
       screen.queryByRole("button", { name: "Sửa TCB-001" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Thu hồi TCB-001" }),
+      screen.queryByRole("button", { name: "Thao tác TCB-001" }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Tệp TCB-001" }),

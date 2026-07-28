@@ -13,6 +13,7 @@ import {
 } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { useCommunes, useDistricts, useProvinces } from "@/hooks/useGeography";
+import { extractApiError } from "@/lib/apiError";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import {
   createGeographicItem,
@@ -95,8 +96,10 @@ export default function GeographicCatalogPage() {
       setModal(undefined);
       void message.success("Đã lưu địa bàn hành chính");
     },
-    onError: () => {
-      void message.error("Không thể lưu. Vui lòng kiểm tra mã và địa bàn cha.");
+    // Hiển thị lý do cụ thể từ máy chủ (mã trùng, địa bàn cha sai...) thay vì
+    // một câu chung chung (UIA-007).
+    onError: (error) => {
+      void message.error(extractApiError(error));
     },
   });
 
@@ -107,8 +110,8 @@ export default function GeographicCatalogPage() {
       await queryClient.invalidateQueries({ queryKey: ["geography"] });
       void message.success("Đã xóa địa bàn hành chính");
     },
-    onError: () => {
-      void message.error("Không thể xóa địa bàn đang được sử dụng.");
+    onError: (error) => {
+      void message.error(extractApiError(error));
     },
   });
 

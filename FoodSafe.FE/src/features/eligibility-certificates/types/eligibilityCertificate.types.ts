@@ -40,6 +40,7 @@ export interface EligibilityCertificateFilter {
   businessId?: string;
   status?: LicenseStatus;
   expiringWithinDays?: number;
+  sorting?: string;
   skipCount?: number;
   maxResultCount?: number;
 }

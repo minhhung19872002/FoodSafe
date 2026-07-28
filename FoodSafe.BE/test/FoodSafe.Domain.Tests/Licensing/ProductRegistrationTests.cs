@@ -33,6 +33,19 @@ public sealed class ProductRegistrationTests
     }
 
     [Fact]
+    public void Registration_should_reject_default_registration_date()
+    {
+        var exception = Should.Throw<BusinessException>(() =>
+            Create(
+                Today.AddYears(1),
+                registrationDate: default(DateTime)));
+
+        exception.Code.ShouldBe(
+            FoodSafeDomainErrorCodes.ProductRegistration
+                .InvalidRegistrationDate);
+    }
+
+    [Fact]
     public void Revoked_registration_should_be_terminal()
     {
         var registration = Create(Today.AddYears(1));

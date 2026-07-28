@@ -38,6 +38,7 @@ public class ProductRegistrationExcelAppService :
                     ProductId = input.ProductId,
                     Status = input.Status,
                     ExpiringWithinDays = input.ExpiringWithinDays,
+                    Sorting = input.Sorting,
                     SkipCount = rows.Count,
                     MaxResultCount = PageSize
                 });

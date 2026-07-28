@@ -39,6 +39,17 @@ export function ProductRegistrationEditorModal(props: Props) {
   const businessId = Form.useWatch("businessId", form);
   const { open, registration, onBusinessChange } = props;
 
+  // Options chỉ chứa cơ sở Active (tối đa 500); khi sửa đăng ký của cơ sở ngoài
+  // danh sách đó vẫn phải hiển thị tên thay vì GUID.
+  const businessOptions =
+    registration &&
+    !props.businesses.some((item) => item.id === registration.businessId)
+      ? [
+          { id: registration.businessId, name: registration.businessName },
+          ...props.businesses,
+        ]
+      : props.businesses;
+
   useEffect(() => {
     if (!open) return;
     const item = registration;
@@ -104,7 +115,8 @@ export function ProductRegistrationEditorModal(props: Props) {
             showSearch
             optionFilterProp="label"
             placeholder="Chọn cơ sở"
-            options={props.businesses.map((item) => ({
+            disabled={Boolean(registration)}
+            options={businessOptions.map((item) => ({
               value: item.id,
               label: item.code ? `${item.code} — ${item.name}` : item.name,
             }))}

@@ -2478,5 +2478,210 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasFilter("correlation_id IS NOT NULL")
                 .HasDatabaseName("idx_di_cl_correlation");
         });
+
+        builder.Entity<PartnerAccount>(entity =>
+        {
+            entity.ToTable("di_partner_accounts");
+            entity.ConfigureByConvention();
+
+            entity.HasKey(x => x.Id).HasName("pk_di_partner_accounts");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id").IsRequired();
+            entity.Property(x => x.Code)
+                .HasColumnName("code")
+                .HasMaxLength(PartnerAccount.MaxCodeLength).IsRequired();
+            entity.Property(x => x.Name)
+                .HasColumnName("name")
+                .HasMaxLength(PartnerAccount.MaxNameLength).IsRequired();
+            entity.Property(x => x.ExternalSystem)
+                .HasColumnName("external_system")
+                .HasMaxLength(PartnerAccount.MaxExternalSystemLength).IsRequired();
+            entity.Property(x => x.Description)
+                .HasColumnName("description")
+                .HasMaxLength(PartnerAccount.MaxDescriptionLength);
+            entity.Property(x => x.Status)
+                .HasColumnName("status").HasConversion<short>().IsRequired();
+            entity.Property(x => x.AllowedDataTypes)
+                .HasColumnName("allowed_data_types")
+                .HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+            entity.Property(x => x.LastModificationTime).HasColumnName("last_modification_time");
+            entity.Property(x => x.LastModifierId).HasColumnName("last_modifier_id");
+            entity.Property(x => x.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
+            entity.Property(x => x.DeletionTime).HasColumnName("deletion_time");
+            entity.Property(x => x.DeleterId).HasColumnName("deleter_id");
+            entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_di_pa_organization")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => x.Code)
+                .IsUnique()
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("uq_di_partner_accounts_code");
+            entity.HasIndex(x => x.OrganizationId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_di_pa_org");
+        });
+
+        builder.Entity<PartnerApiKey>(entity =>
+        {
+            entity.ToTable("di_partner_api_keys");
+            entity.ConfigureByConvention();
+
+            entity.HasKey(x => x.Id).HasName("pk_di_partner_api_keys");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.PartnerAccountId)
+                .HasColumnName("partner_account_id").IsRequired();
+            entity.Property(x => x.KeyPrefix)
+                .HasColumnName("key_prefix")
+                .HasMaxLength(PartnerApiKey.PrefixLength).IsRequired();
+            entity.Property(x => x.KeyHash)
+                .HasColumnName("key_hash")
+                .HasMaxLength(PartnerApiKey.HashLength).IsRequired();
+            entity.Property(x => x.Description)
+                .HasColumnName("description").HasMaxLength(256);
+            entity.Property(x => x.ExpiresAt).HasColumnName("expires_at");
+            entity.Property(x => x.RevokedAt).HasColumnName("revoked_at");
+            entity.Property(x => x.LastUsedAt).HasColumnName("last_used_at");
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+            entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");
+
+            entity.HasOne<PartnerAccount>()
+                .WithMany()
+                .HasForeignKey(x => x.PartnerAccountId)
+                .HasConstraintName("fk_di_pak_partner")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // The prefix is the lookup handle for authentication — must be unique.
+            entity.HasIndex(x => x.KeyPrefix)
+                .IsUnique()
+                .HasDatabaseName("uq_di_partner_api_keys_prefix");
+            entity.HasIndex(x => x.PartnerAccountId)
+                .HasDatabaseName("idx_di_pak_partner");
+        });
+
+        builder.Entity<InboundSubmission>(entity =>
+        {
+            entity.ToTable("di_inbound_submissions");
+            entity.ConfigureByConvention();
+
+            entity.HasKey(x => x.Id).HasName("pk_di_inbound_submissions");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.PartnerAccountId)
+                .HasColumnName("partner_account_id").IsRequired();
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id").IsRequired();
+            entity.Property(x => x.DataType)
+                .HasColumnName("data_type").HasConversion<short>().IsRequired();
+            entity.Property(x => x.SchemaVersion)
+                .HasColumnName("schema_version")
+                .HasMaxLength(InboundSubmission.MaxSchemaVersionLength)
+                .IsRequired();
+            entity.Property(x => x.RequestId)
+                .HasColumnName("request_id")
+                .HasMaxLength(InboundSubmission.MaxRequestIdLength).IsRequired();
+            entity.Property(x => x.CorrelationId)
+                .HasColumnName("correlation_id")
+                .HasMaxLength(InboundSubmission.MaxCorrelationIdLength);
+            entity.Property(x => x.Payload)
+                .HasColumnName("payload").IsRequired();
+            entity.Property(x => x.RecordCount)
+                .HasColumnName("record_count").IsRequired();
+            entity.Property(x => x.ReceivedAt)
+                .HasColumnName("received_at").IsRequired();
+            entity.Property(x => x.Status)
+                .HasColumnName("status").HasConversion<short>().IsRequired();
+            entity.Property(x => x.RejectReason)
+                .HasColumnName("reject_reason")
+                .HasMaxLength(InboundSubmission.MaxRejectReasonLength);
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+            entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");
+
+            entity.HasOne<PartnerAccount>()
+                .WithMany()
+                .HasForeignKey(x => x.PartnerAccountId)
+                .HasConstraintName("fk_di_is_partner")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Database-enforced idempotency: one live row per partner request id.
+            entity.HasIndex(x => new { x.PartnerAccountId, x.RequestId })
+                .IsUnique()
+                .HasDatabaseName("uq_di_is_partner_request");
+            entity.HasIndex(x => new { x.OrganizationId, x.ReceivedAt })
+                .HasDatabaseName("idx_di_is_org_received");
+        });
+
+        builder.Entity<ApiSpecification>(entity =>
+        {
+            entity.ToTable("di_api_specifications");
+            entity.ConfigureByConvention();
+
+            entity.HasKey(x => x.Id).HasName("pk_di_api_specifications");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id").IsRequired();
+            entity.Property(x => x.Name)
+                .HasColumnName("name")
+                .HasMaxLength(ApiSpecification.MaxNameLength).IsRequired();
+            entity.Property(x => x.VersionNumber)
+                .HasColumnName("version_number").IsRequired();
+            entity.Property(x => x.Title)
+                .HasColumnName("title")
+                .HasMaxLength(ApiSpecification.MaxTitleLength).IsRequired();
+            entity.Property(x => x.SpecVersion)
+                .HasColumnName("spec_version")
+                .HasMaxLength(ApiSpecification.MaxSpecVersionLength).IsRequired();
+            entity.Property(x => x.OpenApiVersion)
+                .HasColumnName("openapi_version")
+                .HasMaxLength(ApiSpecification.MaxOpenApiVersionLength).IsRequired();
+            entity.Property(x => x.Format)
+                .HasColumnName("format").HasConversion<short>().IsRequired();
+            entity.Property(x => x.Content)
+                .HasColumnName("content").IsRequired();
+            entity.Property(x => x.SizeBytes)
+                .HasColumnName("size_bytes").IsRequired();
+            entity.Property(x => x.Checksum)
+                .HasColumnName("checksum")
+                .HasMaxLength(ApiSpecification.MaxChecksumLength).IsRequired();
+            entity.Property(x => x.Description)
+                .HasColumnName("description")
+                .HasMaxLength(ApiSpecification.MaxDescriptionLength);
+            entity.Property(x => x.IsPublished)
+                .HasColumnName("is_published").IsRequired();
+            entity.Property(x => x.PublishedAt).HasColumnName("published_at");
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+            entity.Property(x => x.LastModificationTime).HasColumnName("last_modification_time");
+            entity.Property(x => x.LastModifierId).HasColumnName("last_modifier_id");
+            entity.Property(x => x.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
+            entity.Property(x => x.DeletionTime).HasColumnName("deletion_time");
+            entity.Property(x => x.DeleterId).HasColumnName("deleter_id");
+            entity.Property(x => x.ConcurrencyStamp).HasColumnName("concurrency_stamp");
+
+            entity.HasOne<Organization>()
+                .WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .HasConstraintName("fk_di_apispec_organization")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // One row per (org, name, version) — versioning is immutable per upload.
+            entity.HasIndex(x => new { x.OrganizationId, x.Name, x.VersionNumber })
+                .IsUnique()
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("uq_di_apispec_org_name_version");
+            // At most one published version per (org, name).
+            entity.HasIndex(x => new { x.OrganizationId, x.Name })
+                .IsUnique()
+                .HasFilter("is_deleted = FALSE AND is_published = TRUE")
+                .HasDatabaseName("uq_di_apispec_org_name_published");
+        });
     }
 }

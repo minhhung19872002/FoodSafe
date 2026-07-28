@@ -78,7 +78,7 @@ describe("EligibilityCertificatePage", () => {
       screen.getByRole("button", { name: /Cấp giấy/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Sửa DDK-001" }),
+      screen.getByRole("button", { name: "Thao tác DDK-001" }),
     ).toBeInTheDocument();
   });
 

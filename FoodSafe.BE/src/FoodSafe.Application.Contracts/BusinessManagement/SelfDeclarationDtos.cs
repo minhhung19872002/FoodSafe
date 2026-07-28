@@ -18,7 +18,7 @@ public sealed class SelfDeclarationListInput :
     public SelfDeclarationListInput()
     {
         MaxResultCount = 20;
-        Sorting = "DeclarationDate desc";
+        Sorting = "creationTime desc";
     }
 }
 

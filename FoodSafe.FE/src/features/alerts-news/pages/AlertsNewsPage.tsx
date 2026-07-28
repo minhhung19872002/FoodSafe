@@ -4,9 +4,7 @@ import {
   Card,
   Input,
   message,
-  Popconfirm,
   Select,
-  Space,
   Table,
   Tabs,
   Tag,
@@ -63,16 +61,18 @@ import {
   type NewsFilter,
   type NewsStatus,
 } from "../types/alertsNews.types";
-
-const PAGE_SIZE = 15;
+import { useTablePagination } from "@/hooks/useTablePagination";
+import { RowActions } from "@/components/RowActions";
 
 function AlertsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<AlertFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<AlertFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useAlerts({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useAlerts(filter);
   const createMut = useCreateAlert();
   const updateMut = useUpdateAlert();
   const deleteMut = useDeleteAlert();
@@ -161,65 +161,54 @@ function AlertsTab() {
     {
       title: "",
       key: "actions",
-      width: 200,
+      width: 96,
       render: (_: unknown, record: AtpAlert) => (
-        <Space size="small">
-          {record.status === ALERT_STATUS.Draft && canEdit && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {record.status === ALERT_STATUS.Draft && canPublish && (
-            <Popconfirm
-              title="Xuất bản cảnh báo này?"
-              okText="Xuất bản"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await publishMut.mutateAsync({
-                  id: record.id,
-                  isPublic: true,
-                });
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.title}`}
+          actions={[
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: !(record.status === ALERT_STATUS.Draft && canEdit),
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "publish",
+              label: "Xuất bản",
+              icon: <SendOutlined />,
+              hidden: !(record.status === ALERT_STATUS.Draft && canPublish),
+              confirm: "Xuất bản cảnh báo này?",
+              onClick: async () => {
+                await publishMut.mutateAsync({ id: record.id, isPublic: true });
                 message.success("Đã xuất bản.");
-              }}
-            >
-              <Button size="small" type="primary" icon={<SendOutlined />}>
-                Xuất bản
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === ALERT_STATUS.Published && canPublish && (
-            <Button
-              size="small"
-              danger
-              icon={<UndoOutlined />}
-              onClick={() => {
+              },
+            },
+            {
+              key: "recall",
+              label: "Thu hồi",
+              icon: <UndoOutlined />,
+              danger: true,
+              hidden: !(record.status === ALERT_STATUS.Published && canPublish),
+              onClick: () => {
                 setRecallingId(record.id);
                 setRecallOpen(true);
-              }}
-            >
-              Thu hồi
-            </Button>
-          )}
-          {record.status === ALERT_STATUS.Draft && canDelete && (
-            <Popconfirm
-              title="Xóa cảnh báo này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={async () => {
+              },
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !(record.status === ALERT_STATUS.Draft && canDelete),
+              confirm: "Xóa cảnh báo này?",
+              onClick: async () => {
                 await deleteMut.mutateAsync(record.id);
                 message.success("Đã xóa.");
-              }}
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+              },
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -239,21 +228,19 @@ function AlertsTab() {
           allowClear
           placeholder="Tìm theo tiêu đề, số cảnh báo..."
           style={{ width: 280 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           allowClear
           placeholder="Trạng thái"
           style={{ width: 150 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(ALERT_STATUS_CONFIG).map(([value, cfg]) => ({
             value: Number(value),
             label: cfg.label,
@@ -263,9 +250,10 @@ function AlertsTab() {
           allowClear
           placeholder="Mức độ"
           style={{ width: 150 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, severity: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, severity: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(ALERT_SEVERITY_CONFIG).map(
             ([value, cfg]) => ({ value: Number(value), label: cfg.label }),
           )}
@@ -274,9 +262,10 @@ function AlertsTab() {
           allowClear
           placeholder="Nguồn"
           style={{ width: 160 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, source: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, source: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(ALERT_SOURCE_LABELS).map(
             ([value, label]) => ({ value: Number(value), label }),
           )}
@@ -311,17 +300,7 @@ function AlertsTab() {
           onDoubleClick: () => setDetailAlert(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
-          pageSize: PAGE_SIZE,
-          total: data?.totalCount,
-          showSizeChanger: false,
-          onChange: (page) =>
-            setFilter((f) => ({
-              ...f,
-              skipCount: (page - 1) * PAGE_SIZE,
-            })),
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
 
       <AlertEditorModal
@@ -413,11 +392,13 @@ function AlertsTab() {
 
 function NewsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<NewsFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<NewsFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useNews({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useNews(filter);
   const createMut = useCreateNews();
   const updateMut = useUpdateNews();
   const deleteMut = useDeleteNews();
@@ -505,67 +486,55 @@ function NewsTab() {
     {
       title: "",
       key: "actions",
-      width: 200,
+      width: 96,
       render: (_: unknown, record: AtpNews) => (
-        <Space size="small">
-          {record.status === NEWS_STATUS.Draft && canEdit && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {record.status === NEWS_STATUS.Draft && canPublish && (
-            <Popconfirm
-              title="Xuất bản tin tức này?"
-              okText="Xuất bản"
-              cancelText="Hủy"
-              onConfirm={async () => {
-                await publishMut.mutateAsync({
-                  id: record.id,
-                  isPublic: true,
-                });
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.title}`}
+          actions={[
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: !(record.status === NEWS_STATUS.Draft && canEdit),
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "publish",
+              label: "Xuất bản",
+              icon: <SendOutlined />,
+              hidden: !(record.status === NEWS_STATUS.Draft && canPublish),
+              confirm: "Xuất bản tin tức này?",
+              onClick: async () => {
+                await publishMut.mutateAsync({ id: record.id, isPublic: true });
                 message.success("Đã xuất bản.");
-              }}
-            >
-              <Button size="small" type="primary" icon={<SendOutlined />}>
-                Xuất bản
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === NEWS_STATUS.Published && canPublish && (
-            <Popconfirm
-              title="Thu hồi tin tức này?"
-              okText="Thu hồi"
-              cancelText="Hủy"
-              onConfirm={async () => {
+              },
+            },
+            {
+              key: "recall",
+              label: "Thu hồi",
+              icon: <UndoOutlined />,
+              danger: true,
+              hidden: !(record.status === NEWS_STATUS.Published && canPublish),
+              confirm: "Thu hồi tin tức này?",
+              onClick: async () => {
                 await recallMut.mutateAsync(record.id);
                 message.success("Đã thu hồi.");
-              }}
-            >
-              <Button size="small" danger icon={<UndoOutlined />}>
-                Thu hồi
-              </Button>
-            </Popconfirm>
-          )}
-          {record.status === NEWS_STATUS.Draft && canDelete && (
-            <Popconfirm
-              title="Xóa tin tức này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={async () => {
+              },
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !(record.status === NEWS_STATUS.Draft && canDelete),
+              confirm: "Xóa tin tức này?",
+              onClick: async () => {
                 await deleteMut.mutateAsync(record.id);
                 message.success("Đã xóa.");
-              }}
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+              },
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -585,21 +554,19 @@ function NewsTab() {
           allowClear
           placeholder="Tìm theo tiêu đề..."
           style={{ width: 280 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           allowClear
           placeholder="Trạng thái"
           style={{ width: 150 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(NEWS_STATUS_CONFIG).map(([value, cfg]) => ({
             value: Number(value),
             label: cfg.label,
@@ -609,9 +576,10 @@ function NewsTab() {
           allowClear
           placeholder="Nguồn"
           style={{ width: 160 }}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, source: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, source: v }));
+            pagination.resetToFirstPage();
+          }}
           options={Object.entries(ALERT_SOURCE_LABELS).map(
             ([value, label]) => ({ value: Number(value), label }),
           )}
@@ -646,17 +614,7 @@ function NewsTab() {
           onDoubleClick: () => setDetailNews(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          current: Math.floor(filter.skipCount / PAGE_SIZE) + 1,
-          pageSize: PAGE_SIZE,
-          total: data?.totalCount,
-          showSizeChanger: false,
-          onChange: (page) =>
-            setFilter((f) => ({
-              ...f,
-              skipCount: (page - 1) * PAGE_SIZE,
-            })),
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
 
       <NewsEditorModal

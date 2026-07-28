@@ -2,6 +2,28 @@
 
 ## Status: VERIFIED
 
+## Re-verification 2026-07-28 — production-readiness hardening (committed at `983788c`)
+
+Deep FE+BE inspection of `/self-declarations`; defects found and fixed, re-proven
+on the rebuilt Docker stack (no API interception):
+
+| # | Defect | Fix |
+|---|---|---|
+| 1 | Editor allowed changing the owning business when editing — the server always rejects it (`ProductMismatch`) behind a generic toast | Business select disabled in edit mode; when the record's business is outside the Active-500 options window its name (not a GUID) is injected as an option |
+| 2 | Error toasts hardcoded — server reasons (duplicate number, invalid date range, cannot-modify-revoked, already-revoked, export-too-large) never reached the user | `extractApiError` adopted for save/delete/revoke/export |
+| 3 | `loading` used `isLoading` with `keepPreviousData` — filter changes showed stale data with no indicator | switched to `isFetching` |
+| 4 | Deleting a business left its self-declarations orphaned (list rows with empty business name) | F-006 delete guard extended: `FoodSafe:Business:0010` (renamed `BusinessInUse`) now blocks while products **or** self-declarations exist; vi/en messages updated |
+| 5 | `self-declarations.spec.ts` clicked confirm button `"OK"` — RowActions confirm renders the antd vi_VN label ("Đồng ý") | spec clicks `/^(Xóa|Đồng ý|OK)$/` inside the dialog |
+
+- **Evidence run** (workers=1): `self-declarations.spec.ts`,
+  `self-declarations-verification.spec.ts`, `business-delete-guard.spec.ts`
+  (extended with the self-declaration block/unblock scenario), plus the F-006
+  Level-2 retest (`businesses`, `businesses-verification`,
+  `business-list-filters`, `business-detail-tabs`) → **20/20 passed**.
+- BE `FoodSafe.Application.Tests` BusinessManagement **35/35**; FE Vitest
+  self-declarations **3/3**; `tsc -b` clean.
+- Landed in commit `983788c`.
+
 - **Feature ID**: F-007
 - **Feature name**: Self Declarations
 - **Status**: VERIFIED

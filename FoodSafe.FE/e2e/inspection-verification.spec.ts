@@ -18,9 +18,9 @@ async function createDraftPlan(page: Page, planCode: string) {
   const headers = {
     RequestVerificationToken: await requestVerificationToken(page),
   };
-  const response = await page.context().request.post(
-    "/api/v1/app/inspection-plan",
-    {
+  const response = await page
+    .context()
+    .request.post("/api/v1/app/inspection-plan", {
       headers,
       data: {
         planCode,
@@ -29,8 +29,7 @@ async function createDraftPlan(page: Page, planCode: string) {
         year: new Date().getFullYear(),
         items: [],
       },
-    },
-  );
+    });
   expect(response.ok(), await response.text()).toBeTruthy();
   return {
     plan: (await response.json()) as { id: string },
@@ -43,10 +42,12 @@ async function deletePlan(
   planId: string,
   headers: Record<string, string>,
 ) {
-  await page.context().request.delete(
-    `/api/v1/app/inspection-plan/${planId}`,
-    { headers, maxRedirects: 0 },
-  );
+  await page
+    .context()
+    .request.delete(`/api/v1/app/inspection-plan/${planId}`, {
+      headers,
+      maxRedirects: 0,
+    });
 }
 
 test.describe("inspection verification (F-013)", () => {
@@ -66,10 +67,9 @@ test.describe("inspection verification (F-013)", () => {
       "noperm@foodsafe.local",
     );
     try {
-      const response = await page.context().request.get(
-        "/api/v1/app/inspection-plan",
-        { maxRedirects: 0 },
-      );
+      const response = await page
+        .context()
+        .request.get("/api/v1/app/inspection-plan", { maxRedirects: 0 });
       expect([403, 302]).toContain(response.status());
       expect(response.ok()).toBeFalsy();
     } finally {
@@ -91,21 +91,24 @@ test.describe("inspection verification (F-013)", () => {
       "district.staff@foodsafe.local",
     );
     try {
-      const list = await district.page.context().request.get(
-        `/api/v1/app/inspection-plan?Filter=${planCode}&MaxResultCount=10`,
-      );
+      const list = await district.page
+        .context()
+        .request.get(
+          `/api/v1/app/inspection-plan?Filter=${planCode}&MaxResultCount=10`,
+        );
       expect(list.ok(), await list.text()).toBeTruthy();
       const payload = (await list.json()) as {
         items: { planCode?: string }[];
       };
-      expect(
-        payload.items.filter((x) => x.planCode === planCode),
-      ).toHaveLength(0);
-
-      const detail = await district.page.context().request.get(
-        `/api/v1/app/inspection-plan/${plan.id}`,
-        { maxRedirects: 0 },
+      expect(payload.items.filter((x) => x.planCode === planCode)).toHaveLength(
+        0,
       );
+
+      const detail = await district.page
+        .context()
+        .request.get(`/api/v1/app/inspection-plan/${plan.id}`, {
+          maxRedirects: 0,
+        });
       expect([403, 302, 404]).toContain(detail.status());
       expect(detail.ok()).toBeFalsy();
     } finally {
@@ -122,16 +125,20 @@ test.describe("inspection verification (F-013)", () => {
     const planCode = `E2E-KHV-WF-${suffix}`;
     const { plan, headers } = await createDraftPlan(page, planCode);
     try {
-      const approve = await page.context().request.post(
-        `/api/v1/app/inspection-plan/${plan.id}/approve`,
-        { headers, maxRedirects: 0 },
-      );
+      const approve = await page
+        .context()
+        .request.post(`/api/v1/app/inspection-plan/${plan.id}/approve`, {
+          headers,
+          maxRedirects: 0,
+        });
       expect(approve.ok()).toBeFalsy();
 
-      const submitWithoutBusiness = await page.context().request.post(
-        `/api/v1/app/inspection-plan/${plan.id}/submit`,
-        { headers, maxRedirects: 0 },
-      );
+      const submitWithoutBusiness = await page
+        .context()
+        .request.post(`/api/v1/app/inspection-plan/${plan.id}/submit`, {
+          headers,
+          maxRedirects: 0,
+        });
       expect(submitWithoutBusiness.status()).toBe(403);
       expect(await submitWithoutBusiness.text()).toContain(
         "FoodSafe:Inspection:0004",
@@ -146,14 +153,13 @@ test.describe("inspection verification (F-013)", () => {
     const headers = {
       RequestVerificationToken: await requestVerificationToken(page),
     };
-    const response = await page.context().request.post(
-      "/api/v1/app/inspection-plan",
-      {
+    const response = await page
+      .context()
+      .request.post("/api/v1/app/inspection-plan", {
         headers,
         data: { title: "Thiếu mã kế hoạch", planType: 3, year: 2026 },
         maxRedirects: 0,
-      },
-    );
+      });
     expect(response.status()).toBe(400);
   });
 
@@ -174,12 +180,8 @@ test.describe("inspection verification (F-013)", () => {
       name: "Tạo kế hoạch thanh kiểm tra",
     });
     await dialog.getByRole("button", { name: "Lưu", exact: true }).click();
-    await expect(
-      dialog.getByText("Vui lòng nhập mã kế hoạch."),
-    ).toBeVisible();
-    await expect(
-      dialog.getByText("Vui lòng nhập tên kế hoạch."),
-    ).toBeVisible();
+    await expect(dialog.getByText("Vui lòng nhập mã kế hoạch.")).toBeVisible();
+    await expect(dialog.getByText("Vui lòng nhập tên kế hoạch.")).toBeVisible();
 
     await dialog.getByRole("textbox", { name: "Mã kế hoạch" }).fill(planCode);
     await dialog
@@ -210,11 +212,9 @@ test.describe("inspection verification (F-013)", () => {
     await duplicateDialog.getByRole("button", { name: "Hủy" }).click();
 
     const row = page.getByRole("row").filter({ hasText: planCode });
-    await row.getByRole("button", { name: /Xóa/ }).click();
-    await page
-      .locator(".ant-popover:visible")
-      .getByRole("button", { name: "Xóa" })
-      .click();
+    await row.getByRole("button", { name: `Thao tác ${planCode}` }).click();
+    await page.getByRole("menuitem", { name: "Xóa" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
     await expect(page.getByText(planCode)).not.toBeVisible({
       timeout: 10_000,
     });

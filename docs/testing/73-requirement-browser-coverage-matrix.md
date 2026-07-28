@@ -170,7 +170,7 @@ Requirement IDs use the `docs/01-functional-requirements.md` / doc 71 numbering.
 | FR-51..57 (-02) | Outbound send/share (7 data types) | `data-integration-credentials` ✓ (Bearer + API-key share reach a real receiver with auth) + `data-integration-share` ✓ (UI-driven share) | partial | PARTIAL — send/auth engine operational & browser-verified (API + UI) via postman-echo; per-partner TT 31/2026 payload mapping still MISSING (INT-02) |
 | INT-01 | Ministry of Health connectivity | — | none | **MISSING** |
 | INT-02 | TT 31/2026 + NĐ 37/2026 protocol compliance | — | none | **MISSING** |
-| INT-03 | Partner accounts + API sessions | — | none | **MISSING** |
+| INT-03 | Partner accounts + API sessions | `data-integration-partners` ✓ (3/3; DI subset 23/23) | pass | **PASS_WITH_BROWSER_EVIDENCE** *(reclassified from MISSING — Batch F-2, commit `52d35c1`, 2026-07-28)* — partner accounts + hashed API keys (issue/rotate/revoke via real UI, raw key shown once), cookie-less partner POST → 200/duplicate-idempotent/401/403/400 guard matrix, replay window, per-partner data-type authz, Inbound `ApiCallLog` rows, submissions UI + reload persistence. Two defects found+fixed by the run (empty-records 500; escaped payloads) — see regression log. Business ingestion still blocked on TT 31/2026 (INT-02) |
 
 ### Non-functional & security (cross-cutting)
 
@@ -198,7 +198,7 @@ These are grouped estimates aligned to doc 71's per-item counts; the point is th
 | PASS_WITH_BACKEND_ONLY | ~54 | Real HTTP + DB verified; UI render thin (system-settings, statistics, dashboard, several public lookups, inspection results, PDF bytes) |
 | FAILED (full-UI lifecycle) | 6 modules (FR-21, FR-22, FR-23, FR-24, FR-26, FR-27 UI create paths) | API/workflow layer of these PASSED via `-verification`; the end-to-end browser create→upload→revoke flow timed out |
 | IMPLEMENTED_NOT_VERIFIED | ~55 | DOC-ONLY: code added `8fe0320..fe3dbd2`, no spec exercises it |
-| MISSING | 3 | INT-01/02/03 only. *(The 10 FR-4x-03/04 public file-serving items were reclassified to PASS_WITH_BROWSER_EVIDENCE on 2026-07-28 — the anonymous endpoints existed all along; doc 77 §1.)* |
+| MISSING | 2 | INT-01/02 only — both external-dependency-blocked. *(The 10 FR-4x-03/04 public file-serving items were reclassified to PASS_WITH_BROWSER_EVIDENCE on 2026-07-28 — the anonymous endpoints existed all along; doc 77 §1. INT-03 was reclassified to PASS_WITH_BROWSER_EVIDENCE on 2026-07-28 — Batch F-2 delivered + verified at `52d35c1`.)* |
 
 > **Important:** the 6 FAILED modules are **not** "feature broken" — their server-side lifecycle (create, workflow transitions, scope, validation, persistence) passed via the `-verification` specs and my security probes. What FAILED is the **long browser-driven UI lifecycle test** for those modules, on a timeout. The distinction is developed with executable evidence in doc 75.
 

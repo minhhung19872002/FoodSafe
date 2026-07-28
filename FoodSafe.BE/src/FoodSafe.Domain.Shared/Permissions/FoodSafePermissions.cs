@@ -322,6 +322,29 @@ public static class FoodSafePermissions
         }
 
         public const string Share = Default + ".Share";
+
+        /// <summary>Inbound partner accounts, API keys and received submissions (INT-03).</summary>
+        public static class Partners
+        {
+            public const string Default =
+                DataIntegration.Default + ".Partners";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string ManageKeys = Default + ".ManageKeys";
+        }
+
+        /// <summary>Versioned partner-facing API specifications (FR-50-05).</summary>
+        public static class ApiSpecs
+        {
+            public const string Default =
+                DataIntegration.Default + ".ApiSpecs";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Publish = Default + ".Publish";
+            public const string Delete = Default + ".Delete";
+        }
     }
 
     public static class DataScope

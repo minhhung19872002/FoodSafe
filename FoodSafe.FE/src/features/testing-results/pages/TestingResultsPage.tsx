@@ -7,7 +7,6 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
   Select,
   Space,
   Switch,
@@ -15,6 +14,7 @@ import {
   Tag,
   type TableColumnsType,
 } from "antd";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import {
   PlusOutlined,
   EditOutlined,
@@ -43,19 +43,47 @@ import {
   type TestingResultFilter,
   type TestingOutcome,
 } from "../types/testingResult.types";
-
-const PAGE_SIZE = 15;
+import { useTablePagination } from "@/hooks/useTablePagination";
+import { RowActions } from "@/components/RowActions";
 
 const formatDate = (v?: string | null) =>
   v ? dayjs(v).format("DD/MM/YYYY") : null;
 
 export default function TestingResultsPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<TestingResultFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<TestingResultFilter>({});
+  const [sorting, setSorting] = useState<string | undefined>(undefined);
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useTestingResults({
+    ...filter,
+    sorting,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useTestingResults(filter);
+
+  // Server-side sorting: reflect the active sort in the column header and
+  // translate AntD SorterResult into the "<field> <asc|desc>" string the
+  // backend's ApplySorting whitelist parses.
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter: SorterResult<TestingResult> | SorterResult<TestingResult>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
   const testingCenters = useTestingCenterOptions();
   const testingServices = useTestingServiceOptions();
   const createMut = useCreateTestingResult();
@@ -127,41 +155,44 @@ export default function TestingResultsPage() {
       title: "Ngày lấy mẫu",
       dataIndex: "sampleDate",
       width: 110,
+      sorter: true,
+      sortOrder: sortOrderFor("sampleDate"),
       render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
     },
     {
       title: "Thao tác",
       key: "actions",
-      width: 100,
+      width: 96,
       render: (_, record) => (
-        <Space size="small">
-          {hasPermission("FoodSafe.AlertsAndTesting.TestingResults.Edit") && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {hasPermission("FoodSafe.AlertsAndTesting.TestingResults.Delete") && (
-            <Popconfirm
-              title="Xóa kết quả kiểm nghiệm?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.sampleCode}`}
+          actions={[
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: !hasPermission(
+                "FoodSafe.AlertsAndTesting.TestingResults.Edit",
+              ),
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !hasPermission(
+                "FoodSafe.AlertsAndTesting.TestingResults.Delete",
+              ),
+              confirm: "Xóa kết quả kiểm nghiệm?",
+              onClick: () =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa"),
                   onError: () => message.error("Xóa thất bại"),
-                })
-              }
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -173,13 +204,10 @@ export default function TestingResultsPage() {
           placeholder="Mã mẫu, tên mẫu"
           allowClear
           style={{ width: 200 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Kết quả"
@@ -189,9 +217,10 @@ export default function TestingResultsPage() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, outcome: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, outcome: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Button
           icon={<ExportOutlined />}
@@ -221,15 +250,8 @@ export default function TestingResultsPage() {
           onDoubleClick: () => setDetailResult(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
+        onChange={(_, __, sorter) => handleSort(sorter)}
       />
       <RecordDetailDrawer
         title="Chi tiết kết quả kiểm nghiệm"

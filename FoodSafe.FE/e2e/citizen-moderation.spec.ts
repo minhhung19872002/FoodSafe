@@ -80,10 +80,14 @@ async function filterBySourcePublicReport(panel: Locator): Promise<void> {
 
 /** Best-effort API cleanup of any leftover Draft citizen alerts from prior runs. */
 async function cleanupDraftCitizenAlerts(page: Page): Promise<void> {
-  const headers = { RequestVerificationToken: await requestVerificationToken(page) };
-  const response = await page.context().request.get(
-    `/api/v1/app/atp-alert?Filter=${encodeURIComponent(CMOD_PREFIX)}&MaxResultCount=100`,
-  );
+  const headers = {
+    RequestVerificationToken: await requestVerificationToken(page),
+  };
+  const response = await page
+    .context()
+    .request.get(
+      `/api/v1/app/atp-alert?Filter=${encodeURIComponent(CMOD_PREFIX)}&MaxResultCount=100`,
+    );
   if (!response.ok()) return;
   const { items } = (await response.json()) as { items: AlertListItem[] };
   for (const item of items) {
@@ -131,12 +135,9 @@ test.describe("citizen submission moderation", () => {
       row.locator(".ant-tag").filter({ hasText: "Nháp" }),
     ).toBeVisible({ timeout: 10_000 });
 
-    // Approve → publish, confirming the Popconfirm.
+    // Approve → publish, confirming the modal.
     await row.getByRole("button", { name: /Xuất bản/ }).click();
-    await page
-      .locator(".ant-popover:visible")
-      .getByRole("button", { name: "Xuất bản" })
-      .click();
+    await page.getByRole("button", { name: "OK" }).click();
 
     row = page.getByRole("row").filter({ hasText: stamp });
     await expect(
@@ -167,21 +168,23 @@ test.describe("citizen submission moderation", () => {
 
     const stamp = Date.now().toString().slice(-9);
     const title = `${CMOD_PREFIX}-ALERT-${stamp}`;
-    const alertId = await seedCitizenSubmission(page, "/api/v1/public/alert-reports", {
-      title,
-      content: "Phát hiện thực phẩm không đảm bảo vệ sinh tại một điểm bán.",
-      category: 1,
-      captchaToken: "e2e-test-bypass-token",
-    });
+    const alertId = await seedCitizenSubmission(
+      page,
+      "/api/v1/public/alert-reports",
+      {
+        title,
+        content: "Phát hiện thực phẩm không đảm bảo vệ sinh tại một điểm bán.",
+        category: 1,
+        captchaToken: "e2e-test-bypass-token",
+      },
+    );
 
     try {
       await page.goto("/alerts-news");
       // Alerts tab is the default; enter the alert moderation queue.
       const panel = tabPanel(page, "Cảnh báo VSATTP");
       await filterBySourcePublicReport(panel);
-      await panel
-        .getByPlaceholder(/Tìm theo tiêu đề, số cảnh báo/)
-        .fill(title);
+      await panel.getByPlaceholder(/Tìm theo tiêu đề, số cảnh báo/).fill(title);
 
       // The seeded citizen alert appears as a Draft, tagged source "Từ dân".
       const row = page.getByRole("row").filter({ hasText: stamp });
@@ -190,12 +193,10 @@ test.describe("citizen submission moderation", () => {
         row.locator(".ant-tag").filter({ hasText: "Nháp" }),
       ).toBeVisible({ timeout: 10_000 });
 
-      // Reject the submission (Draft-only delete) + confirm the Popconfirm.
-      await row.getByRole("button", { name: /Xóa/ }).click();
-      await page
-        .locator(".ant-popover:visible")
-        .getByRole("button", { name: "Xóa" })
-        .click();
+      // Reject the submission (Draft-only delete) — open overflow then confirm the modal.
+      await row.getByRole("button", { name: `Thao tác ${title}` }).click();
+      await page.getByRole("menuitem", { name: "Xóa" }).click();
+      await page.getByRole("button", { name: "OK" }).click();
 
       // The rejected submission leaves the moderation queue.
       await expect(

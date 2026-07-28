@@ -27,7 +27,8 @@ async function removeStaleArtifacts(
     "/api/v1/app/food-poisoning-incident?Filter=E2E-NDTP&MaxResultCount=100",
   );
   if (incidents.ok()) {
-    for (const item of ((await incidents.json()) as { items: ListItem[] }).items) {
+    for (const item of ((await incidents.json()) as { items: ListItem[] })
+      .items) {
       await request.delete(`/api/v1/app/food-poisoning-incident/${item.id}`, {
         headers,
         maxRedirects: 0,
@@ -89,28 +90,26 @@ test.describe("food poisoning management", () => {
     await caseDialog
       .getByRole("textbox", { name: "Triệu chứng" })
       .fill("Đau bụng, nôn mửa");
-    await caseDialog
-      .getByRole("button", { name: "Lưu", exact: true })
-      .click();
-    await expect(
-      page.getByText("Tạo ca ngộ độc thành công."),
-    ).toBeVisible();
+    await caseDialog.getByRole("button", { name: "Lưu", exact: true }).click();
+    await expect(page.getByText("Tạo ca ngộ độc thành công.")).toBeVisible();
 
     await expect(page.getByText(victimName)).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: victimName });
     await row.getByRole("button", { name: /Gửi/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Gửi" }).click();
-    await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible({ timeout: 10_000 });
+    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible({
+      timeout: 10_000,
+    });
 
     row = page.getByRole("row").filter({ hasText: victimName });
     await row.getByRole("button", { name: /Xác minh/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xác minh" }).click();
-    await expect(page.getByText("Đã xác minh.")).toBeVisible({ timeout: 10_000 });
+    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await expect(page.getByText("Đã xác minh.")).toBeVisible({
+      timeout: 10_000,
+    });
 
-    await page
-      .getByRole("tab", { name: "Vụ ngộ độc thực phẩm" })
-      .click();
+    await page.getByRole("tab", { name: "Vụ ngộ độc thực phẩm" }).click();
     await page.getByRole("button", { name: "Tạo vụ ngộ độc" }).click();
     const incidentDialog = page.getByRole("dialog", {
       name: "Tạo vụ ngộ độc mới",
@@ -133,21 +132,23 @@ test.describe("food poisoning management", () => {
     await incidentDialog
       .getByRole("button", { name: "Lưu", exact: true })
       .click();
-    await expect(
-      page.getByText("Tạo vụ ngộ độc thành công."),
-    ).toBeVisible();
+    await expect(page.getByText("Tạo vụ ngộ độc thành công.")).toBeVisible();
 
     await expect(page.getByText(incidentLocation)).toBeVisible();
 
     row = page.getByRole("row").filter({ hasText: incidentLocation });
     await row.getByRole("button", { name: /Gửi/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Gửi" }).click();
-    await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible({ timeout: 10_000 });
+    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible({
+      timeout: 10_000,
+    });
 
     row = page.getByRole("row").filter({ hasText: incidentLocation });
     await row.getByRole("button", { name: /Xác minh/ }).click();
-    await page.locator(".ant-popover:visible").getByRole("button", { name: "Xác minh" }).click();
-    await expect(page.getByText("Đã xác minh.")).toBeVisible({ timeout: 10_000 });
+    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await expect(page.getByText("Đã xác minh.")).toBeVisible({
+      timeout: 10_000,
+    });
 
     row = page.getByRole("row").filter({ hasText: incidentLocation });
     await row.getByRole("button", { name: /Kết luận/ }).click();
@@ -160,9 +161,7 @@ test.describe("food poisoning management", () => {
     await concludeDialog
       .getByRole("button", { name: "Xác nhận", exact: true })
       .click();
-    await expect(
-      page.getByText("Đã kết luận vụ ngộ độc."),
-    ).toBeVisible();
+    await expect(page.getByText("Đã kết luận vụ ngộ độc.")).toBeVisible();
 
     const mappedIncidentResponse = await request.post(
       "/api/v1/app/food-poisoning-incident",
@@ -186,9 +185,9 @@ test.describe("food poisoning management", () => {
 
     await page.reload();
     await page.getByRole("tab", { name: "Bản đồ" }).click();
-    await expect(
-      page.locator(".leaflet-container"),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator(".leaflet-container")).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(
       page.locator(".leaflet-container path.leaflet-interactive").first(),
     ).toBeVisible({ timeout: 10_000 });

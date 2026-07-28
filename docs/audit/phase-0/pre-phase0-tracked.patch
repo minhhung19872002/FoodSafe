@@ -1,0 +1,10 @@
+diff --git a/.gitignore b/.gitignore
+index 0de31f8..ad1b6ac 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -52,3 +52,4 @@ FoodSafe.BE/backups/
+ 
+ # ABP static libs restored at build time by `abp install-libs` — not source.
+ FoodSafe.BE/src/FoodSafe.HttpApi.Host/wwwroot/libs/
++screenshots
+\ No newline at end of file

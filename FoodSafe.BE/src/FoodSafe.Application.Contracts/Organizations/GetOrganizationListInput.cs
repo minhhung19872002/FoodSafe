@@ -12,6 +12,6 @@ public sealed class GetOrganizationListInput : PagedAndSortedResultRequestDto
     public GetOrganizationListInput()
     {
         MaxResultCount = 50;
-        Sorting = "Code";
+        Sorting = "creationTime desc";
     }
 }

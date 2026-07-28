@@ -3,7 +3,6 @@ import {
   App,
   Button,
   Input,
-  Popconfirm,
   Select,
   Space,
   Table,
@@ -12,6 +11,7 @@ import {
   Tooltip,
   Typography,
 } from "antd";
+import { RowActions } from "@/components/RowActions";
 import { PageHeader } from "@/components/PageHeader";
 import {
   AuditOutlined,
@@ -29,6 +29,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { saveDownload } from "@/utils/download";
 import { identityApi } from "../api/identityApi";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -92,8 +93,6 @@ const userFormPermissions = [
   { name: permission.manageUserScope, label: "Gán phạm vi dữ liệu" },
 ] as const;
 
-const pageSize = 10;
-
 function organizationOptions(
   items: OrganizationTreeNode[],
   depth = 0,
@@ -121,14 +120,12 @@ export default function IdentityAdministrationPage() {
   const userFormBlockedReason = missingUserFormPermissions.length
     ? `Bạn chưa có quyền ${missingUserFormPermissions.join(" và ")}. Liên hệ quản trị viên hệ thống để được cấp quyền.`
     : undefined;
+  const usersPagination = useTablePagination(10);
+  const rolesPagination = useTablePagination(10);
   const [userFilter, setUserFilter] = useState<UserFilter>({
-    skipCount: 0,
-    maxResultCount: pageSize,
     sorting: "UserName",
   });
   const [roleFilter, setRoleFilter] = useState<RoleFilter>({
-    skipCount: 0,
-    maxResultCount: pageSize,
     sorting: "Name",
   });
   const [editingUser, setEditingUser] = useState<AdminUser>();
@@ -140,8 +137,16 @@ export default function IdentityAdministrationPage() {
   const [permissionRole, setPermissionRole] = useState<AdminRole>();
   const [activeTab, setActiveTab] = useState(canViewUsers ? "users" : "roles");
 
-  const users = useAdminUsers(userFilter);
-  const roles = useAdminRoles(roleFilter);
+  const users = useAdminUsers({
+    ...userFilter,
+    skipCount: usersPagination.skipCount,
+    maxResultCount: usersPagination.maxResultCount,
+  });
+  const roles = useAdminRoles({
+    ...roleFilter,
+    skipCount: rolesPagination.skipCount,
+    maxResultCount: rolesPagination.maxResultCount,
+  });
   const roleOptions = useAdminRoles({
     skipCount: 0,
     maxResultCount: 500,
@@ -214,13 +219,13 @@ export default function IdentityAdministrationPage() {
             allowClear
             placeholder="Tên, email hoặc số điện thoại"
             style={{ width: 290 }}
-            onSearch={(filter) =>
+            onSearch={(filter) => {
               setUserFilter((current) => ({
                 ...current,
                 filter: filter || undefined,
-                skipCount: 0,
-              }))
-            }
+              }));
+              usersPagination.resetToFirstPage();
+            }}
           />
           <Select
             aria-label="Lọc vai trò"
@@ -228,13 +233,10 @@ export default function IdentityAdministrationPage() {
             placeholder="Vai trò"
             options={roleSelectOptions}
             style={{ width: 180 }}
-            onChange={(roleId) =>
-              setUserFilter((current) => ({
-                ...current,
-                roleId,
-                skipCount: 0,
-              }))
-            }
+            onChange={(roleId) => {
+              setUserFilter((current) => ({ ...current, roleId }));
+              usersPagination.resetToFirstPage();
+            }}
           />
           <Select
             aria-label="Lọc đơn vị"
@@ -244,13 +246,10 @@ export default function IdentityAdministrationPage() {
             placeholder="Đơn vị"
             options={organizationSelectOptions}
             style={{ width: 210 }}
-            onChange={(organizationId) =>
-              setUserFilter((current) => ({
-                ...current,
-                organizationId,
-                skipCount: 0,
-              }))
-            }
+            onChange={(organizationId) => {
+              setUserFilter((current) => ({ ...current, organizationId }));
+              usersPagination.resetToFirstPage();
+            }}
           />
           <Select
             aria-label="Lọc theo quyền"
@@ -260,13 +259,10 @@ export default function IdentityAdministrationPage() {
             placeholder="Quyền"
             options={permissionSelectOptions}
             style={{ width: 210 }}
-            onChange={(permissionName) =>
-              setUserFilter((current) => ({
-                ...current,
-                permissionName,
-                skipCount: 0,
-              }))
-            }
+            onChange={(permissionName) => {
+              setUserFilter((current) => ({ ...current, permissionName }));
+              usersPagination.resetToFirstPage();
+            }}
           />
           <Select
             aria-label="Lọc trạng thái tài khoản"
@@ -278,7 +274,7 @@ export default function IdentityAdministrationPage() {
               { value: "inactive", label: "Đã vô hiệu hóa" },
               { value: "locked", label: "Đang khóa" },
             ]}
-            onChange={(value) =>
+            onChange={(value) => {
               setUserFilter((current) => ({
                 ...current,
                 isActive:
@@ -288,9 +284,9 @@ export default function IdentityAdministrationPage() {
                       ? false
                       : undefined,
                 isLocked: value === "locked" ? true : undefined,
-                skipCount: 0,
-              }))
-            }
+              }));
+              usersPagination.resetToFirstPage();
+            }}
           />
           <Button
             icon={<ExportOutlined />}
@@ -331,18 +327,7 @@ export default function IdentityAdministrationPage() {
             onDoubleClick: () => setDetailUser(user),
             style: { cursor: "pointer" },
           })}
-          pagination={{
-            total: users.data?.totalCount,
-            current: userFilter.skipCount / pageSize + 1,
-            pageSize,
-            showSizeChanger: false,
-            showTotal: (total) => `${total} bản ghi`,
-            onChange: (page) =>
-              setUserFilter((current) => ({
-                ...current,
-                skipCount: (page - 1) * pageSize,
-              })),
-          }}
+          pagination={usersPagination.buildConfig(users.data?.totalCount)}
           columns={[
             {
               title: "Tài khoản",
@@ -389,106 +374,91 @@ export default function IdentityAdministrationPage() {
             {
               title: "Thao tác",
               fixed: "right",
-              width: 260,
+              width: 96,
               render: (_, user) => {
                 const isSelf = user.id === currentUser?.id;
+                const activateLabel = user.isActive
+                  ? "Vô hiệu hóa"
+                  : "Kích hoạt";
+                const lockLabel = user.isLocked ? "Mở khóa" : "Khóa";
                 return (
-                  <Space wrap>
-                    {hasPermission(permission.editUser) && (
-                      <Tooltip title={userFormBlockedReason ?? "Cập nhật"}>
-                        <Button
-                          size="small"
-                          aria-label={`Sửa ${user.fullName}`}
-                          icon={<EditOutlined />}
-                          disabled={Boolean(userFormBlockedReason)}
-                          onClick={() => {
-                            setEditingUser(user);
-                            setUserModalOpen(true);
-                          }}
-                        />
-                      </Tooltip>
-                    )}
-                    {hasPermission(permission.activateUser) && (
-                      <Tooltip
-                        title={user.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
-                      >
-                        <Button
-                          size="small"
-                          aria-label={`${user.isActive ? "Vô hiệu hóa" : "Kích hoạt"} ${user.fullName}`}
-                          disabled={isSelf}
-                          danger={user.isActive}
-                          icon={<StopOutlined />}
-                          loading={
-                            setActivation.isPending &&
-                            setActivation.variables?.id === user.id
-                          }
-                          onClick={() =>
-                            setActivation.mutate(
-                              { id: user.id, isActive: !user.isActive },
-                              {
-                                onSuccess: () =>
-                                  showSuccess("Đã cập nhật trạng thái"),
-                                onError: showError,
-                              },
-                            )
-                          }
-                        />
-                      </Tooltip>
-                    )}
-                    {hasPermission(permission.lockUser) && (
-                      <Tooltip title={user.isLocked ? "Mở khóa" : "Khóa"}>
-                        <Button
-                          size="small"
-                          aria-label={`${user.isLocked ? "Mở khóa" : "Khóa"} ${user.fullName}`}
-                          disabled={isSelf}
-                          icon={
-                            user.isLocked ? (
-                              <UnlockOutlined />
-                            ) : (
-                              <LockOutlined />
-                            )
-                          }
-                          onClick={() =>
-                            setLock.mutate(
-                              { id: user.id, isLocked: !user.isLocked },
-                              {
-                                onSuccess: () =>
-                                  showSuccess("Đã cập nhật khóa tài khoản"),
-                                onError: showError,
-                              },
-                            )
-                          }
-                        />
-                      </Tooltip>
-                    )}
-                    {hasPermission(permission.resetPassword) && (
-                      <Popconfirm
-                        title="Gửi liên kết đặt lại mật khẩu?"
-                        okText="Gửi"
-                        cancelText="Hủy"
-                        onConfirm={() =>
+                  <RowActions
+                    overflowAriaLabel={`Thao tác ${user.userName}`}
+                    actions={[
+                      {
+                        key: "edit",
+                        label: userFormBlockedReason ?? "Cập nhật",
+                        ariaLabel: `Sửa ${user.fullName}`,
+                        icon: <EditOutlined />,
+                        hidden: !hasPermission(permission.editUser),
+                        disabled: Boolean(userFormBlockedReason),
+                        onClick: () => {
+                          setEditingUser(user);
+                          setUserModalOpen(true);
+                        },
+                      },
+                      {
+                        key: "activate",
+                        label: activateLabel,
+                        ariaLabel: `${activateLabel} ${user.fullName}`,
+                        icon: <StopOutlined />,
+                        hidden: !hasPermission(permission.activateUser),
+                        disabled: isSelf,
+                        danger: user.isActive,
+                        onClick: () =>
+                          setActivation.mutate(
+                            { id: user.id, isActive: !user.isActive },
+                            {
+                              onSuccess: () =>
+                                showSuccess("Đã cập nhật trạng thái"),
+                              onError: showError,
+                            },
+                          ),
+                      },
+                      {
+                        key: "lock",
+                        label: lockLabel,
+                        ariaLabel: `${lockLabel} ${user.fullName}`,
+                        icon: user.isLocked ? (
+                          <UnlockOutlined />
+                        ) : (
+                          <LockOutlined />
+                        ),
+                        hidden: !hasPermission(permission.lockUser),
+                        disabled: isSelf,
+                        onClick: () =>
+                          setLock.mutate(
+                            { id: user.id, isLocked: !user.isLocked },
+                            {
+                              onSuccess: () =>
+                                showSuccess("Đã cập nhật khóa tài khoản"),
+                              onError: showError,
+                            },
+                          ),
+                      },
+                      {
+                        key: "reset-password",
+                        label: "Đặt lại mật khẩu",
+                        ariaLabel: `Đặt lại mật khẩu ${user.fullName}`,
+                        icon: <KeyOutlined />,
+                        hidden: !hasPermission(permission.resetPassword),
+                        confirm: "Gửi liên kết đặt lại mật khẩu?",
+                        onClick: () =>
                           sendReset.mutate(user.id, {
                             onSuccess: () =>
                               showSuccess("Đã gửi email đặt lại mật khẩu"),
                             onError: showError,
-                          })
-                        }
-                      >
-                        <Tooltip title="Đặt lại mật khẩu">
-                          <Button
-                            size="small"
-                            aria-label={`Đặt lại mật khẩu ${user.fullName}`}
-                            icon={<KeyOutlined />}
-                          />
-                        </Tooltip>
-                      </Popconfirm>
-                    )}
-                    {hasPermission(permission.resetPassword) && (
-                      <Popconfirm
-                        title="Tạo mật khẩu ngẫu nhiên mới cho tài khoản này?"
-                        okText="Tạo"
-                        cancelText="Hủy"
-                        onConfirm={() =>
+                          }),
+                      },
+                      {
+                        key: "generate-password",
+                        label: "Tạo mật khẩu ngẫu nhiên",
+                        ariaLabel: `Tạo mật khẩu ngẫu nhiên ${user.fullName}`,
+                        icon: <SafetyCertificateOutlined />,
+                        hidden: !hasPermission(permission.resetPassword),
+                        confirm:
+                          "Tạo mật khẩu ngẫu nhiên mới cho tài khoản này?",
+                        onClick: () =>
                           generatePassword.mutate(user.id, {
                             onSuccess: (result) =>
                               modal.success({
@@ -507,61 +477,34 @@ export default function IdentityAdministrationPage() {
                                 ),
                               }),
                             onError: showError,
-                          })
-                        }
-                      >
-                        <Tooltip title="Tạo mật khẩu ngẫu nhiên">
-                          <Button
-                            size="small"
-                            aria-label={`Tạo mật khẩu ngẫu nhiên ${user.fullName}`}
-                            loading={
-                              generatePassword.isPending &&
-                              generatePassword.variables === user.id
-                            }
-                            icon={<SafetyCertificateOutlined />}
-                          />
-                        </Tooltip>
-                      </Popconfirm>
-                    )}
-                    {hasPermission(permission.deleteUser) && (
-                      <Popconfirm
-                        title="Xóa tài khoản này? Hành động không thể hoàn tác."
-                        okText="Xóa"
-                        okButtonProps={{ danger: true }}
-                        cancelText="Hủy"
-                        onConfirm={() =>
+                          }),
+                      },
+                      {
+                        key: "activity",
+                        label: "Nhật ký hoạt động",
+                        ariaLabel: `Hoạt động ${user.fullName}`,
+                        icon: <AuditOutlined />,
+                        hidden: !hasPermission(permission.activity),
+                        onClick: () => setActivityUser(user),
+                      },
+                      {
+                        key: "delete",
+                        label: "Xóa tài khoản",
+                        ariaLabel: `Xóa ${user.fullName}`,
+                        icon: <DeleteOutlined />,
+                        danger: true,
+                        hidden: !hasPermission(permission.deleteUser),
+                        disabled: isSelf,
+                        confirm:
+                          "Xóa tài khoản này? Hành động không thể hoàn tác.",
+                        onClick: () =>
                           deleteUser.mutate(user.id, {
                             onSuccess: () => showSuccess("Đã xóa tài khoản"),
                             onError: showError,
-                          })
-                        }
-                      >
-                        <Tooltip title="Xóa tài khoản">
-                          <Button
-                            size="small"
-                            danger
-                            disabled={isSelf}
-                            aria-label={`Xóa ${user.fullName}`}
-                            loading={
-                              deleteUser.isPending &&
-                              deleteUser.variables === user.id
-                            }
-                            icon={<DeleteOutlined />}
-                          />
-                        </Tooltip>
-                      </Popconfirm>
-                    )}
-                    {hasPermission(permission.activity) && (
-                      <Tooltip title="Nhật ký hoạt động">
-                        <Button
-                          size="small"
-                          aria-label={`Hoạt động ${user.fullName}`}
-                          icon={<AuditOutlined />}
-                          onClick={() => setActivityUser(user)}
-                        />
-                      </Tooltip>
-                    )}
-                  </Space>
+                          }),
+                      },
+                    ]}
+                  />
                 );
               },
             },
@@ -582,13 +525,13 @@ export default function IdentityAdministrationPage() {
             allowClear
             placeholder="Tên hoặc mô tả vai trò"
             style={{ width: 290 }}
-            onSearch={(filter) =>
+            onSearch={(filter) => {
               setRoleFilter((current) => ({
                 ...current,
                 filter: filter || undefined,
-                skipCount: 0,
-              }))
-            }
+              }));
+              rolesPagination.resetToFirstPage();
+            }}
           />
           <Select
             aria-label="Lọc trạng thái vai trò"
@@ -599,13 +542,10 @@ export default function IdentityAdministrationPage() {
               { value: true, label: "Đang hoạt động" },
               { value: false, label: "Đã vô hiệu hóa" },
             ]}
-            onChange={(isActive) =>
-              setRoleFilter((current) => ({
-                ...current,
-                isActive,
-                skipCount: 0,
-              }))
-            }
+            onChange={(isActive) => {
+              setRoleFilter((current) => ({ ...current, isActive }));
+              rolesPagination.resetToFirstPage();
+            }}
           />
           {hasPermission(permission.createRole) && (
             <Button
@@ -626,18 +566,7 @@ export default function IdentityAdministrationPage() {
           loading={roles.isLoading}
           dataSource={roles.data?.items}
           scroll={{ x: 900 }}
-          pagination={{
-            total: roles.data?.totalCount,
-            current: roleFilter.skipCount / pageSize + 1,
-            pageSize,
-            showSizeChanger: false,
-            showTotal: (total) => `${total} bản ghi`,
-            onChange: (page) =>
-              setRoleFilter((current) => ({
-                ...current,
-                skipCount: (page - 1) * pageSize,
-              })),
-          }}
+          pagination={rolesPagination.buildConfig(roles.data?.totalCount)}
           columns={[
             {
               title: "Vai trò",
@@ -669,77 +598,64 @@ export default function IdentityAdministrationPage() {
             },
             {
               title: "Thao tác",
-              width: 190,
+              fixed: "right",
+              width: 96,
               render: (_, role) => (
-                <Space>
-                  {hasPermission(permission.editRole) && (
-                    <Tooltip title="Cập nhật">
-                      <Button
-                        size="small"
-                        aria-label={`Sửa vai trò ${role.name}`}
-                        icon={<EditOutlined />}
-                        onClick={() => {
-                          setEditingRole(role);
-                          setRoleModalOpen(true);
-                        }}
-                      />
-                    </Tooltip>
-                  )}
-                  {hasPermission(permission.permissions) && (
-                    <Tooltip title="Phân quyền">
-                      <Button
-                        size="small"
-                        aria-label={`Phân quyền ${role.name}`}
-                        icon={<SafetyCertificateOutlined />}
-                        onClick={() => setPermissionRole(role)}
-                      />
-                    </Tooltip>
-                  )}
-                  {canViewUsers && (
-                    <Tooltip title="Xem người dùng được gán">
-                      <Button
-                        size="small"
-                        aria-label={`Người dùng vai trò ${role.name}`}
-                        icon={<TeamOutlined />}
-                        onClick={() => {
-                          setUserFilter((current) => ({
-                            ...current,
-                            roleId: role.id,
-                            skipCount: 0,
-                          }));
-                          setActiveTab("users");
-                        }}
-                      />
-                    </Tooltip>
-                  )}
-                  {hasPermission(permission.deleteRole) && !role.isStatic && (
-                    <Popconfirm
-                      title={`Xóa vai trò "${role.name}"?`}
-                      description={
-                        role.userCount > 0
-                          ? "Vai trò đang được sử dụng và không thể xóa."
-                          : undefined
-                      }
-                      okText="Xóa"
-                      cancelText="Hủy"
-                      disabled={role.userCount > 0}
-                      onConfirm={() =>
+                <RowActions
+                  overflowAriaLabel={`Thao tác ${role.name}`}
+                  actions={[
+                    {
+                      key: "edit",
+                      label: "Cập nhật",
+                      ariaLabel: `Sửa vai trò ${role.name}`,
+                      icon: <EditOutlined />,
+                      hidden: !hasPermission(permission.editRole),
+                      onClick: () => {
+                        setEditingRole(role);
+                        setRoleModalOpen(true);
+                      },
+                    },
+                    {
+                      key: "permissions",
+                      label: "Phân quyền",
+                      ariaLabel: `Phân quyền ${role.name}`,
+                      icon: <SafetyCertificateOutlined />,
+                      hidden: !hasPermission(permission.permissions),
+                      onClick: () => setPermissionRole(role),
+                    },
+                    {
+                      key: "users",
+                      label: "Xem người dùng",
+                      ariaLabel: `Người dùng vai trò ${role.name}`,
+                      icon: <TeamOutlined />,
+                      hidden: !canViewUsers,
+                      onClick: () => {
+                        setUserFilter((current) => ({
+                          ...current,
+                          roleId: role.id,
+                        }));
+                        usersPagination.resetToFirstPage();
+                        setActiveTab("users");
+                      },
+                    },
+                    {
+                      key: "delete",
+                      label: "Xóa vai trò",
+                      ariaLabel: `Xóa vai trò ${role.name}`,
+                      icon: <DeleteOutlined />,
+                      danger: true,
+                      hidden:
+                        !hasPermission(permission.deleteRole) || role.isStatic,
+                      disabled: role.userCount > 0,
+                      confirm: `Xóa vai trò "${role.name}"?`,
+                      onClick: () =>
                         deleteRole.mutate(role.id, {
                           onSuccess: () => showSuccess("Đã xóa vai trò"),
                           onError: showError,
-                        })
-                      }
-                    >
-                      <Button
-                        size="small"
-                        aria-label={`Xóa vai trò ${role.name}`}
-                        danger
-                        disabled={role.userCount > 0}
-                        icon={<DeleteOutlined />}
-                      />
-                    </Popconfirm>
-                  )}
-                </Space>
+                        }),
+                    },
+                  ]}
+                />
               ),
             },
           ]}

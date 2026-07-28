@@ -61,7 +61,7 @@ public class ProductAppService : ApplicationService, IProductAppService
             query,
             _cancellationTokens.Token);
         var items = await AsyncExecuter.ToListAsync(
-            query.OrderBy(x => x.Name)
+            ApplySorting(query, input.Sorting)
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount),
             _cancellationTokens.Token);
@@ -255,5 +255,26 @@ public class ProductAppService : ApplicationService, IProductAppService
             throw new BusinessException(
                     FoodSafeDomainErrorCodes.Product.DuplicateCode)
                 .WithData("Code", normalized);
+    }
+
+    // Honours the client's Sorting request (e.g. "name", "creationTime desc")
+    // against a whitelist. Falls back to CreationTime descending.
+    private static IOrderedQueryable<Product> ApplySorting(
+        IQueryable<Product> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("name",         true)  => query.OrderByDescending(x => x.Name),
+            ("name",         false) => query.OrderBy(x => x.Name),
+            ("creationtime", true)  => query.OrderByDescending(x => x.CreationTime),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _                       => query.OrderByDescending(x => x.CreationTime)
+        };
     }
 }

@@ -2,15 +2,30 @@ import { api } from "@/lib/axios";
 import type {
   ApiEndpoint,
   ApiEndpointFilter,
+  ApiSpecification,
+  ApiSpecificationDownload,
+  ApiSpecificationFilter,
   CreateUpdateApiEndpoint,
   ApiCallLog,
   ApiCallLogDetail,
   ApiCallLogFilter,
+  CreatePartnerAccount,
   FileDownload,
+  InboundSubmission,
+  InboundSubmissionDetail,
+  InboundSubmissionFilter,
+  IssuePartnerApiKeyInput,
+  IssuedPartnerApiKey,
   PagedResult,
+  PartnerAccount,
+  PartnerAccountFilter,
+  PartnerApiKey,
   ShareDataInput,
   ShareDataResult,
   TestConnectionResult,
+  UpdateApiSpecMetadataInput,
+  UpdatePartnerAccount,
+  UploadApiSpecificationInput,
 } from "../types/dataIntegration.types";
 
 function download(data: Blob, contentDisposition?: string): FileDownload {
@@ -82,4 +97,91 @@ export const dataIntegrationApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+
+  getPartners: (params: PartnerAccountFilter) =>
+    api
+      .get<PagedResult<PartnerAccount>>("/v1/app/partner-account", { params })
+      .then((r) => r.data),
+
+  createPartner: (input: CreatePartnerAccount) =>
+    api
+      .post<PartnerAccount>("/v1/app/partner-account", input)
+      .then((r) => r.data),
+
+  updatePartner: (id: string, input: UpdatePartnerAccount) =>
+    api
+      .put<PartnerAccount>(`/v1/app/partner-account/${id}`, input)
+      .then((r) => r.data),
+
+  togglePartnerStatus: (id: string) =>
+    api.post(`/v1/app/partner-account/${id}/toggle-status`),
+
+  deletePartner: (id: string) => api.delete(`/v1/app/partner-account/${id}`),
+
+  getPartnerKeys: (id: string) =>
+    api
+      .get<PartnerApiKey[]>(`/v1/app/partner-account/${id}/keys`)
+      .then((r) => r.data),
+
+  issuePartnerKey: (id: string, input: IssuePartnerApiKeyInput) =>
+    api
+      .post<IssuedPartnerApiKey>(`/v1/app/partner-account/${id}/keys`, input)
+      .then((r) => r.data),
+
+  revokePartnerKey: (id: string, keyId: string) =>
+    api.delete(`/v1/app/partner-account/${id}/keys/${keyId}`),
+
+  getInboundSubmissions: (params: InboundSubmissionFilter) =>
+    api
+      .get<PagedResult<InboundSubmission>>(
+        "/v1/app/partner-account/submissions",
+        { params },
+      )
+      .then((r) => r.data),
+
+  getInboundSubmission: (submissionId: string) =>
+    api
+      .get<InboundSubmissionDetail>(
+        `/v1/app/partner-account/submissions/${submissionId}`,
+      )
+      .then((r) => r.data),
+
+  getApiSpecs: (params: ApiSpecificationFilter) =>
+    api
+      .get<PagedResult<ApiSpecification>>("/v1/app/api-specification", {
+        params,
+      })
+      .then((r) => r.data),
+
+  getApiSpec: (id: string) =>
+    api
+      .get<ApiSpecification>(`/v1/app/api-specification/${id}`)
+      .then((r) => r.data),
+
+  uploadApiSpec: (input: UploadApiSpecificationInput) =>
+    api
+      .post<ApiSpecification>("/v1/app/api-specification", input)
+      .then((r) => r.data),
+
+  updateApiSpecMetadata: (id: string, input: UpdateApiSpecMetadataInput) =>
+    api
+      .put<ApiSpecification>(`/v1/app/api-specification/${id}/metadata`, input)
+      .then((r) => r.data),
+
+  publishApiSpec: (id: string) =>
+    api
+      .post<ApiSpecification>(`/v1/app/api-specification/${id}/publish`)
+      .then((r) => r.data),
+
+  unpublishApiSpec: (id: string) =>
+    api
+      .post<ApiSpecification>(`/v1/app/api-specification/${id}/unpublish`)
+      .then((r) => r.data),
+
+  deleteApiSpec: (id: string) => api.delete(`/v1/app/api-specification/${id}`),
+
+  downloadApiSpec: (id: string) =>
+    api
+      .get<ApiSpecificationDownload>(`/v1/app/api-specification/${id}/download`)
+      .then((r) => r.data),
 };

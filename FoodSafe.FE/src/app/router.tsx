@@ -6,6 +6,7 @@ import { NotFoundPage } from "./NotFoundPage";
 import { PrivateRoute } from "./PrivateRoute";
 import { RouteErrorBoundary } from "./RouteErrorBoundary";
 import { PermissionRoute } from "./PermissionRoute";
+import { ROUTE_PERMISSIONS } from "./routePermissions";
 import {
   ChangePasswordPage,
   ProfilePage,
@@ -241,7 +242,7 @@ const appRoutes: RouteObject[] = [
         path: "organizations",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.Organizations.View">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.organizations}>
               <OrganizationListPage />
             </PermissionRoute>
           </Suspense>
@@ -251,7 +252,7 @@ const appRoutes: RouteObject[] = [
         path: "geography",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.GeographicCatalogs.View">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.geography}>
               <GeographicCatalogPage />
             </PermissionRoute>
           </Suspense>
@@ -261,12 +262,7 @@ const appRoutes: RouteObject[] = [
         path: "businesses",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute
-              permission={[
-                "FoodSafe.BusinessManagement.Businesses.View",
-                "FoodSafe.BusinessManagement.Products.View",
-              ]}
-            >
+            <PermissionRoute permission={ROUTE_PERMISSIONS.businesses}>
               <BusinessManagementPage />
             </PermissionRoute>
           </Suspense>
@@ -276,9 +272,7 @@ const appRoutes: RouteObject[] = [
         path: "self-declarations",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute
-              permission={"FoodSafe.BusinessManagement.SelfDeclarations.View"}
-            >
+            <PermissionRoute permission={ROUTE_PERMISSIONS.selfDeclarations}>
               <SelfDeclarationPage />
             </PermissionRoute>
           </Suspense>
@@ -288,7 +282,9 @@ const appRoutes: RouteObject[] = [
         path: "product-registrations",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.Licensing.ProductRegistrations.View">
+            <PermissionRoute
+              permission={ROUTE_PERMISSIONS.productRegistrations}
+            >
               <ProductRegistrationPage />
             </PermissionRoute>
           </Suspense>
@@ -298,7 +294,7 @@ const appRoutes: RouteObject[] = [
         path: "advertisement-registrations",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.Licensing.AdRegistrations.View">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.adRegistrations}>
               <AdvertisementRegistrationPage />
             </PermissionRoute>
           </Suspense>
@@ -308,7 +304,9 @@ const appRoutes: RouteObject[] = [
         path: "eligibility-certificates",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.Licensing.EligibilityCertificates.View">
+            <PermissionRoute
+              permission={ROUTE_PERMISSIONS.eligibilityCertificates}
+            >
               <EligibilityCertificatePage />
             </PermissionRoute>
           </Suspense>
@@ -318,7 +316,7 @@ const appRoutes: RouteObject[] = [
         path: "cfs-certificates",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.Licensing.CfsCertificates.View">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.cfsCertificates}>
               <CfsCertificatePage />
             </PermissionRoute>
           </Suspense>
@@ -328,7 +326,7 @@ const appRoutes: RouteObject[] = [
         path: "export-food-certificates",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.Licensing.ExportCertificates.View">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.exportCertificates}>
               <ExportFoodCertificatePage />
             </PermissionRoute>
           </Suspense>
@@ -338,12 +336,7 @@ const appRoutes: RouteObject[] = [
         path: "inspection",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute
-              permission={[
-                "FoodSafe.Inspection.Plans.View",
-                "FoodSafe.Inspection.Results.View",
-              ]}
-            >
+            <PermissionRoute permission={ROUTE_PERMISSIONS.inspection}>
               <InspectionPage />
             </PermissionRoute>
           </Suspense>
@@ -353,12 +346,7 @@ const appRoutes: RouteObject[] = [
         path: "alerts-news",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute
-              permission={[
-                "FoodSafe.AlertsAndTesting.Alerts.View",
-                "FoodSafe.AlertsAndTesting.News.View",
-              ]}
-            >
+            <PermissionRoute permission={ROUTE_PERMISSIONS.alertsNews}>
               <AlertsNewsPage />
             </PermissionRoute>
           </Suspense>
@@ -368,7 +356,7 @@ const appRoutes: RouteObject[] = [
         path: "food-poisoning",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.FoodPoisoning.Cases.View">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.foodPoisoning}>
               <FoodPoisoningPage />
             </PermissionRoute>
           </Suspense>
@@ -378,7 +366,7 @@ const appRoutes: RouteObject[] = [
         path: "reporting",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.Reporting.NdtpReports.View">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.reporting}>
               <ReportingPage />
             </PermissionRoute>
           </Suspense>
@@ -388,7 +376,7 @@ const appRoutes: RouteObject[] = [
         path: "risk-analysis",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.AlertsAndTesting.RiskAnalyses.View">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.riskAnalysis}>
               <RiskAnalysisPage />
             </PermissionRoute>
           </Suspense>
@@ -398,7 +386,7 @@ const appRoutes: RouteObject[] = [
         path: "testing-results",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.AlertsAndTesting.TestingResults.View">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.testingResults}>
               <TestingResultsPage />
             </PermissionRoute>
           </Suspense>
@@ -408,7 +396,7 @@ const appRoutes: RouteObject[] = [
         path: "documents",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.AlertsAndTesting.Documents.View">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.documents}>
               <DocumentsPage />
             </PermissionRoute>
           </Suspense>
@@ -418,12 +406,7 @@ const appRoutes: RouteObject[] = [
         path: "data-integration",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute
-              permission={[
-                "FoodSafe.DataIntegration.ApiEndpoints.View",
-                "FoodSafe.DataIntegration.CallHistory.View",
-              ]}
-            >
+            <PermissionRoute permission={ROUTE_PERMISSIONS.dataIntegration}>
               <DataIntegrationPage />
             </PermissionRoute>
           </Suspense>
@@ -441,7 +424,7 @@ const appRoutes: RouteObject[] = [
         path: "catalogs",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.Catalogs.View">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.catalogs}>
               <MasterCatalogPage />
             </PermissionRoute>
           </Suspense>
@@ -451,7 +434,7 @@ const appRoutes: RouteObject[] = [
         path: "administration/audit-logs",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.SystemAdmin.AuditLogs">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.auditLogs}>
               <AuditLogPage />
             </PermissionRoute>
           </Suspense>
@@ -461,7 +444,7 @@ const appRoutes: RouteObject[] = [
         path: "administration/settings",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.SystemAdmin.Settings">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.settings}>
               <SystemSettingsPage />
             </PermissionRoute>
           </Suspense>
@@ -471,7 +454,7 @@ const appRoutes: RouteObject[] = [
         path: "administration/identity",
         element: (
           <Suspense fallback={<RouteLoading />}>
-            <PermissionRoute permission="FoodSafe.SystemAdmin">
+            <PermissionRoute permission={ROUTE_PERMISSIONS.identity}>
               <IdentityAdministrationPage />
             </PermissionRoute>
           </Suspense>

@@ -28,7 +28,9 @@ const RISK_PREFIX = "E2E-RISK";
 
 /** Seeds one Draft risk analysis through the real authenticated admin API. */
 async function seedDraftRiskAnalysis(page: Page, title: string): Promise<void> {
-  const headers = { RequestVerificationToken: await requestVerificationToken(page) };
+  const headers = {
+    RequestVerificationToken: await requestVerificationToken(page),
+  };
   const res = await page.context().request.post(RISK_ENDPOINT, {
     headers,
     data: {
@@ -41,7 +43,10 @@ async function seedDraftRiskAnalysis(page: Page, title: string): Promise<void> {
     },
     maxRedirects: 0,
   });
-  expect(res.ok(), `risk-analysis seed failed: ${await res.text()}`).toBeTruthy();
+  expect(
+    res.ok(),
+    `risk-analysis seed failed: ${await res.text()}`,
+  ).toBeTruthy();
   const body = (await res.json()) as { id: string; status: number };
   expect(body.id).toBeTruthy();
   expect(body.status, "seed must start as Draft").toBe(1);
@@ -69,11 +74,9 @@ test.describe("FR-36-07 / FR-36-08 — risk-analysis publish + public exposure",
       row.locator(".ant-tag").filter({ hasText: "Nháp" }),
     ).toBeVisible({ timeout: 10_000 });
 
-    await row.getByRole("button", { name: /Xuất bản/ }).click();
-    await page
-      .locator(".ant-popover:visible")
-      .getByRole("button", { name: "Xuất bản" })
-      .click();
+    await row.getByRole("button", { name: `Thao tác ${title}` }).click();
+    await page.getByRole("menuitem", { name: "Xuất bản" }).click();
+    await page.getByRole("button", { name: "OK" }).click();
 
     row = page.getByRole("row").filter({ hasText: stamp });
     await expect(

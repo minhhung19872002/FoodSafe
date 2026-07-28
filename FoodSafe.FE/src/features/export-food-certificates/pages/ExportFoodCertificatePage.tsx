@@ -8,8 +8,9 @@ import {
   PlusOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { App, Button, Input, Popconfirm, Select, Space, Table } from "antd";
+import { App, Button, Input, Select, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import {
   useCreateExportFoodCertificate,
@@ -43,9 +44,9 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { RevokeModal } from "@/components/RevokeModal";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
+import { RowActions } from "@/components/RowActions";
 import { saveDownload } from "@/utils/download";
-
-const PAGE_SIZE = 20;
+import { useTablePagination } from "@/hooks/useTablePagination";
 
 export default function ExportFoodCertificatePage() {
   const { message } = App.useApp();
@@ -57,12 +58,13 @@ export default function ExportFoodCertificatePage() {
   const canDelete = hasPermission(
     "FoodSafe.Licensing.ExportCertificates.Delete",
   );
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [businessId, setBusinessId] = useState<string>();
   const [destinationCountryId, setDestinationCountryId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
   const [expiringWithinDays, setExpiringWithinDays] = useState<number>();
+  const [sorting, setSorting] = useState<string>();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<ExportFoodCertificate>();
   const [editorBusinessId, setEditorBusinessId] = useState<string>();
@@ -71,14 +73,38 @@ export default function ExportFoodCertificatePage() {
   const [detailRecord, setDetailRecord] =
     useState<ExportFoodCertificate | null>(null);
 
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter:
+      | SorterResult<ExportFoodCertificate>
+      | SorterResult<ExportFoodCertificate>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
+
   const queryFilter = {
     filter: filter || undefined,
     businessId,
     destinationCountryId,
     status,
     expiringWithinDays,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    sorting,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   };
   const registrations = useExportFoodCertificates(queryFilter);
   const businesses = useExportFoodCertificateBusinesses();
@@ -155,6 +181,8 @@ export default function ExportFoodCertificatePage() {
       title: "Ngày cấp",
       dataIndex: "issueDate",
       width: 125,
+      sorter: true,
+      sortOrder: sortOrderFor("issueDate"),
       render: (value: string) => new Date(value).toLocaleDateString("vi-VN"),
     },
     {
@@ -177,62 +205,64 @@ export default function ExportFoodCertificatePage() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 180,
+      width: 96,
       render: (_, item) => (
-        <Space size={2}>
-          <Button
-            type="text"
-            size="small"
-            aria-label={`Tệp ${item.certificateNumber}`}
-            icon={<FileTextOutlined />}
-            onClick={() => setAttachmentsFor(item)}
-          />
-          <Button
-            type="text"
-            size="small"
-            aria-label={`Tải PDF ${item.certificateNumber}`}
-            icon={<FilePdfOutlined />}
-            loading={pdfMutation.isPending && pdfMutation.variables === item.id}
-            onClick={() =>
-              pdfMutation.mutate(item.id, {
-                onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                onError: () =>
-                  void message.error(
-                    "Không thể tải bản PDF giấy chứng nhận xuất khẩu.",
-                  ),
-              })
-            }
-          />
-          {canEdit && item.status !== LICENSE_STATUS.Revoked && (
-            <>
-              <Button
-                type="text"
-                size="small"
-                aria-label={`Sửa ${item.certificateNumber}`}
-                icon={<EditOutlined />}
-                onClick={() => {
-                  setEditing(item);
-                  setEditorBusinessId(item.businessId);
-                  setEditorOpen(true);
-                }}
-              />
-              <Button
-                type="text"
-                size="small"
-                danger
-                aria-label={`Thu hồi ${item.certificateNumber}`}
-                icon={<StopOutlined />}
-                onClick={() => setRevoking(item)}
-              />
-            </>
-          )}
-          {canDelete && (
-            <Popconfirm
-              title="Xóa giấy chứng nhận xuất khẩu này?"
-              description="Số GCN được giữ trong lịch sử và không thể dùng lại."
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${item.certificateNumber}`}
+          actions={[
+            {
+              key: "files",
+              label: "Tệp",
+              ariaLabel: `Tệp ${item.certificateNumber}`,
+              icon: <FileTextOutlined />,
+              onClick: () => setAttachmentsFor(item),
+            },
+            {
+              key: "pdf",
+              label: "Tải PDF",
+              ariaLabel: `Tải PDF ${item.certificateNumber}`,
+              icon: <FilePdfOutlined />,
+              disabled:
+                pdfMutation.isPending && pdfMutation.variables === item.id,
+              onClick: () =>
+                pdfMutation.mutate(item.id, {
+                  onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                  onError: () =>
+                    void message.error(
+                      "Không thể tải bản PDF giấy chứng nhận xuất khẩu.",
+                    ),
+                }),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              ariaLabel: `Sửa ${item.certificateNumber}`,
+              icon: <EditOutlined />,
+              hidden: !canEdit || item.status === LICENSE_STATUS.Revoked,
+              onClick: () => {
+                setEditing(item);
+                setEditorBusinessId(item.businessId);
+                setEditorOpen(true);
+              },
+            },
+            {
+              key: "revoke",
+              label: "Thu hồi",
+              ariaLabel: `Thu hồi ${item.certificateNumber}`,
+              icon: <StopOutlined />,
+              danger: true,
+              hidden: !canEdit || item.status === LICENSE_STATUS.Revoked,
+              onClick: () => setRevoking(item),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${item.certificateNumber}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !canDelete,
+              confirm: "Xóa giấy chứng nhận xuất khẩu này?",
+              onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () =>
                     void message.success("Đã xóa giấy chứng nhận xuất khẩu."),
@@ -240,19 +270,10 @@ export default function ExportFoodCertificatePage() {
                     void message.error(
                       "Không thể xóa giấy chứng nhận xuất khẩu.",
                     ),
-                })
-              }
-            >
-              <Button
-                type="text"
-                size="small"
-                danger
-                aria-label={`Xóa ${item.certificateNumber}`}
-                icon={<DeleteOutlined />}
-              />
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -302,7 +323,7 @@ export default function ExportFoodCertificatePage() {
               style={{ width: 310 }}
               onSearch={(value) => {
                 setFilter(value.trim());
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -318,7 +339,7 @@ export default function ExportFoodCertificatePage() {
               }))}
               onChange={(value) => {
                 setBusinessId(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -334,7 +355,7 @@ export default function ExportFoodCertificatePage() {
               }))}
               onChange={(value) => {
                 setDestinationCountryId(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -348,7 +369,7 @@ export default function ExportFoodCertificatePage() {
               ]}
               onChange={(value) => {
                 setStatus(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
             <Select
@@ -362,7 +383,7 @@ export default function ExportFoodCertificatePage() {
               ]}
               onChange={(value) => {
                 setExpiringWithinDays(value);
-                setPage(1);
+                pagination.resetToFirstPage();
               }}
             />
           </Space>
@@ -379,14 +400,10 @@ export default function ExportFoodCertificatePage() {
             onDoubleClick: () => setDetailRecord(record),
             style: { cursor: "pointer" },
           })}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: registrations.data?.totalCount ?? 0,
-            showSizeChanger: false,
-            showTotal: (total) => `Tổng ${total} bản ghi`,
-            onChange: setPage,
-          }}
+          onChange={(_, __, sorter) => handleSort(sorter)}
+          pagination={pagination.buildConfig(
+            registrations.data?.totalCount ?? 0,
+          )}
         />
       </div>
 

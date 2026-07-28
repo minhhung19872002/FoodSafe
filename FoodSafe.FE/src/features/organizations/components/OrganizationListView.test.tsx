@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { App } from "antd";
 import { describe, expect, it, vi } from "vitest";
 import { OrganizationListView } from "./OrganizationListView";
 
@@ -10,44 +11,50 @@ describe("OrganizationListView", () => {
     const onEdit = vi.fn();
 
     render(
-      <OrganizationListView
-        items={[
-          {
-            id: "1",
-            parentId: null,
-            code: "QN",
-            name: "Chi cục ATVSTP Quảng Ninh",
-            level: 1,
-            address: null,
-            phone: null,
-            email: null,
-            leaderName: null,
-            provinceId: null,
-            districtId: null,
-            communeId: null,
-            isActive: true,
-          },
-        ]}
-        treeItems={[]}
-        totalCount={1}
-        loading={false}
-        page={1}
-        pageSize={20}
-        filter=""
-        canCreate
-        canEdit
-        canDelete={false}
-        exporting={false}
-        onExport={vi.fn()}
-        onFilterChange={onFilterChange}
-        onLevelChange={vi.fn()}
-        onPageChange={vi.fn()}
-        onRefresh={vi.fn()}
-        onCreate={vi.fn()}
-        onEdit={onEdit}
-        onDelete={vi.fn()}
-        onShowDetail={vi.fn()}
-      />,
+      <App>
+        <OrganizationListView
+          items={[
+            {
+              id: "1",
+              parentId: null,
+              code: "QN",
+              name: "Chi cục ATVSTP Quảng Ninh",
+              level: 1,
+              address: null,
+              phone: null,
+              email: null,
+              leaderName: null,
+              provinceId: null,
+              districtId: null,
+              communeId: null,
+              isActive: true,
+            },
+          ]}
+          treeItems={[]}
+          loading={false}
+          pagination={{
+            current: 1,
+            pageSize: 20,
+            total: 1,
+            showSizeChanger: true,
+            pageSizeOptions: [10, 20, 50, 100],
+            onChange: vi.fn(),
+          }}
+          filter=""
+          canCreate
+          canEdit
+          canDelete={false}
+          exporting={false}
+          onExport={vi.fn()}
+          onFilterChange={onFilterChange}
+          onLevelChange={vi.fn()}
+          onRefresh={vi.fn()}
+          onCreate={vi.fn()}
+          onEdit={onEdit}
+          onDelete={vi.fn()}
+          onShowDetail={vi.fn()}
+        />
+      </App>,
     );
 
     expect(screen.getByText("Chi cục ATVSTP Quảng Ninh")).toBeInTheDocument();

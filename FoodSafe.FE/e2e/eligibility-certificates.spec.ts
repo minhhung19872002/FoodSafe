@@ -181,8 +181,9 @@ test.describe("eligibility certificate management", () => {
     await page.goto("/eligibility-certificates");
     row = page.getByRole("row").filter({ hasText: certificateNumber });
     await row
-      .getByRole("button", { name: `Thu hồi ${certificateNumber}` })
+      .getByRole("button", { name: `Thao tác ${certificateNumber}` })
       .click();
+    await page.getByRole("menuitem", { name: "Thu hồi" }).click();
     const revokeDialog = page.getByRole("dialog", {
       name: `Thu hồi giấy ${certificateNumber}`,
     });
@@ -222,8 +223,11 @@ test.describe("eligibility certificate management", () => {
     expect(businessRow.hasEligibilityCertificate).toBe(false);
 
     row = page.getByRole("row").filter({ hasText: certificateNumber });
-    await row.getByRole("button", { name: `Xóa ${certificateNumber}` }).click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await row
+      .getByRole("button", { name: `Thao tác ${certificateNumber}` })
+      .click();
+    await page.getByRole("menuitem", { name: "Xóa" }).click();
+    await page.getByRole("button", { name: "OK" }).click();
     await expect(page.getByText("Đã xóa giấy chứng nhận.")).toBeVisible();
     const duplicate = await request.post(
       "/api/v1/app/eligibility-certificate",

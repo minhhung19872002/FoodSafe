@@ -1,0 +1,5 @@
+# Generated at audit runtime — keep the repo clean.
+playwright/node_modules
+playwright/.auth/
+playwright/.results/
+screenshots/

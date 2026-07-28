@@ -7,15 +7,19 @@ import {
   PlusOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { App, Button, Input, Popconfirm, Select, Space, Table } from "antd";
+import { App, Button, Input, Select, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { extractApiError } from "@/lib/apiError";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { RevokeModal } from "@/components/RevokeModal";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
+import { RowActions } from "@/components/RowActions";
 import { saveDownload } from "@/utils/download";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   useCreateSelfDeclaration,
   useDeleteSelfDeclaration,
@@ -42,8 +46,6 @@ import {
   type SelfDeclarationInput,
 } from "../types/selfDeclaration.types";
 
-const PAGE_SIZE = 20;
-
 export default function SelfDeclarationPage() {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -56,11 +58,12 @@ export default function SelfDeclarationPage() {
   const canDelete = hasPermission(
     "FoodSafe.BusinessManagement.SelfDeclarations.Delete",
   );
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [businessId, setBusinessId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
   const [expiringWithinDays, setExpiringWithinDays] = useState<number>();
+  const [sorting, setSorting] = useState<string | undefined>(undefined);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<SelfDeclaration>();
   const [editorBusinessId, setEditorBusinessId] = useState<string>();
@@ -75,8 +78,32 @@ export default function SelfDeclarationPage() {
     businessId,
     status,
     expiringWithinDays,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    sorting,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
+  };
+
+  // Server-side sorting: translate column-header clicks into the
+  // "<field> <asc|desc>" string the backend's ApplySorting whitelist parses.
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter: SorterResult<SelfDeclaration> | SorterResult<SelfDeclaration>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
   };
   const declarations = useSelfDeclarations(queryFilter);
   const businesses = useSelfDeclarationBusinesses();
@@ -103,10 +130,7 @@ export default function SelfDeclarationPage() {
         void message.success("Đã lưu hồ sơ tự công bố.");
         closeEditor();
       },
-      onError: () =>
-        void message.error(
-          "Không thể lưu hồ sơ. Vui lòng kiểm tra số hồ sơ và dữ liệu.",
-        ),
+      onError: (error: unknown) => void message.error(extractApiError(error)),
     };
     if (editing) updateMutation.mutate({ id: editing.id, input }, options);
     else createMutation.mutate(input, options);
@@ -132,6 +156,8 @@ export default function SelfDeclarationPage() {
       title: "Ngày công bố",
       dataIndex: "declarationDate",
       width: 120,
+      sorter: true,
+      sortOrder: sortOrderFor("declarationDate"),
       render: (value: string) => new Date(value).toLocaleDateString("vi-VN"),
     },
     {
@@ -154,62 +180,56 @@ export default function SelfDeclarationPage() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 160,
+      width: 96,
       render: (_, item) => (
-        <Space size={2}>
-          <Button
-            type="text"
-            size="small"
-            aria-label={`Tệp ${item.declarationNumber}`}
-            icon={<FileTextOutlined />}
-            onClick={() => setAttachmentsFor(item)}
-          />
-          {canEdit && item.status !== LICENSE_STATUS.Revoked && (
-            <>
-              <Button
-                type="text"
-                size="small"
-                aria-label={`Sửa ${item.declarationNumber}`}
-                icon={<EditOutlined />}
-                onClick={() => {
-                  setEditing(item);
-                  setEditorBusinessId(item.businessId);
-                  setEditorOpen(true);
-                }}
-              />
-              <Button
-                type="text"
-                size="small"
-                danger
-                aria-label={`Thu hồi ${item.declarationNumber}`}
-                icon={<StopOutlined />}
-                onClick={() => setRevoking(item)}
-              />
-            </>
-          )}
-          {canDelete && (
-            <Popconfirm
-              title="Xóa hồ sơ này?"
-              description="Số hồ sơ vẫn được giữ trong lịch sử và không thể dùng lại."
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${item.declarationNumber}`}
+          actions={[
+            {
+              key: "files",
+              label: "Tệp",
+              ariaLabel: `Tệp ${item.declarationNumber}`,
+              icon: <FileTextOutlined />,
+              onClick: () => setAttachmentsFor(item),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              ariaLabel: `Sửa ${item.declarationNumber}`,
+              icon: <EditOutlined />,
+              hidden: !canEdit || item.status === LICENSE_STATUS.Revoked,
+              onClick: () => {
+                setEditing(item);
+                setEditorBusinessId(item.businessId);
+                setEditorOpen(true);
+              },
+            },
+            {
+              key: "revoke",
+              label: "Thu hồi",
+              ariaLabel: `Thu hồi ${item.declarationNumber}`,
+              icon: <StopOutlined />,
+              danger: true,
+              hidden: !canEdit || item.status === LICENSE_STATUS.Revoked,
+              onClick: () => setRevoking(item),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${item.declarationNumber}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !canDelete,
+              confirm: "Xóa hồ sơ này?",
+              onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã xóa hồ sơ."),
-                  onError: () => void message.error("Không thể xóa hồ sơ."),
-                })
-              }
-            >
-              <Button
-                type="text"
-                size="small"
-                danger
-                aria-label={`Xóa ${item.declarationNumber}`}
-                icon={<DeleteOutlined />}
-              />
-            </Popconfirm>
-          )}
-        </Space>
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -227,8 +247,8 @@ export default function SelfDeclarationPage() {
               onClick={() =>
                 exportMutation.mutate(queryFilter, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () =>
-                    void message.error("Không thể xuất danh sách."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 })
               }
             >
@@ -258,7 +278,7 @@ export default function SelfDeclarationPage() {
             style={{ width: 280 }}
             onSearch={(value) => {
               setFilter(value.trim());
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -274,7 +294,7 @@ export default function SelfDeclarationPage() {
             }))}
             onChange={(value) => {
               setBusinessId(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -288,7 +308,7 @@ export default function SelfDeclarationPage() {
             ]}
             onChange={(value) => {
               setStatus(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -302,7 +322,7 @@ export default function SelfDeclarationPage() {
             ]}
             onChange={(value) => {
               setExpiringWithinDays(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
         </div>
@@ -311,21 +331,17 @@ export default function SelfDeclarationPage() {
           rowKey="id"
           size="middle"
           scroll={{ x: 1000 }}
-          loading={declarations.isLoading}
+          loading={declarations.isFetching}
           columns={columns}
           dataSource={declarations.data?.items ?? []}
           onRow={(record) => ({
             onDoubleClick: () => setDetailRecord(record),
             style: { cursor: "pointer" },
           })}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: declarations.data?.totalCount ?? 0,
-            showSizeChanger: false,
-            showTotal: (total) => `${total} bản ghi`,
-            onChange: setPage,
-          }}
+          onChange={(_pagination, _filters, sorter) => handleSort(sorter)}
+          pagination={pagination.buildConfig(
+            declarations.data?.totalCount ?? 0,
+          )}
         />
       </div>
 
@@ -444,7 +460,7 @@ export default function SelfDeclarationPage() {
                 void message.success("Đã thu hồi hồ sơ.");
                 setRevoking(undefined);
               },
-              onError: () => void message.error("Không thể thu hồi hồ sơ."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}

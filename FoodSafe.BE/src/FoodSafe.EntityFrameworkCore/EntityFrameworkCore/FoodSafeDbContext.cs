@@ -96,6 +96,10 @@ public class FoodSafeDbContext :
     public DbSet<ActionMonthReportErrorNotification> ActionMonthReportErrorNotifications { get; set; }
     public DbSet<ApiEndpoint> ApiEndpoints { get; set; }
     public DbSet<ApiCallLog> ApiCallLogs { get; set; }
+    public DbSet<PartnerAccount> PartnerAccounts { get; set; }
+    public DbSet<PartnerApiKey> PartnerApiKeys { get; set; }
+    public DbSet<InboundSubmission> InboundSubmissions { get; set; }
+    public DbSet<ApiSpecification> ApiSpecifications { get; set; }
 
     public FoodSafeDbContext(DbContextOptions<FoodSafeDbContext> options)
         : base(options)

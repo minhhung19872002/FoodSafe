@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { TablePaginationConfig } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -11,19 +12,10 @@ import {
   TableOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import {
-  Button,
-  Input,
-  Popconfirm,
-  Segmented,
-  Select,
-  Space,
-  Table,
-  Tabs,
-  Tag,
-} from "antd";
+import { Button, Input, Segmented, Select, Table, Tabs, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
+import { RowActions } from "@/components/RowActions";
 import { BusinessLocationMap } from "./BusinessLocationMap";
 import {
   BUSINESS_STATUS,
@@ -52,6 +44,7 @@ interface BusinessManagementViewProps {
   provinceId?: string;
   districtId?: string;
   businessSorting?: string;
+  productSorting?: string;
   businessTypeOptions: FilterOption[];
   classificationOptions: FilterOption[];
   provinceOptions: FilterOption[];
@@ -61,12 +54,10 @@ interface BusinessManagementViewProps {
   onProvinceChange: (value?: string) => void;
   onDistrictChange: (value?: string) => void;
   onBusinessSortingChange: (value?: string) => void;
+  onProductSortingChange: (value?: string) => void;
   onShowDetail: (business: Business) => void;
-  businessTotal: number;
-  productTotal: number;
-  businessPage: number;
-  productPage: number;
-  pageSize: number;
+  businessPagination: TablePaginationConfig;
+  productPagination: TablePaginationConfig;
   loading: boolean;
   canViewBusinesses: boolean;
   canViewProducts: boolean;
@@ -85,8 +76,6 @@ interface BusinessManagementViewProps {
   onProductFilterChange: (value: string) => void;
   onBusinessStatusChange: (value?: BusinessStatus) => void;
   onProductStatusChange: (value?: ProductStatus) => void;
-  onBusinessPageChange: (page: number) => void;
-  onProductPageChange: (page: number) => void;
   onCreateBusiness: () => void;
   onImportBusiness: () => void;
   onExportBusiness: () => void;
@@ -134,6 +123,26 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     // actually changed so paging never silently resets to page 1.
     if (next !== props.businessSorting) {
       props.onBusinessSortingChange(next);
+    }
+  };
+
+  const sortOrderForProduct = (field: string): SortOrder => {
+    if (!props.productSorting) return null;
+    const [current, direction] = props.productSorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleProductSort = (
+    sorter: SorterResult<Product> | SorterResult<Product>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== props.productSorting) {
+      props.onProductSortingChange(next);
     }
   };
 
@@ -185,66 +194,67 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     },
     {
       title: "Thao tác",
-      width: 150,
+      width: 96,
       fixed: "right",
       render: (_: unknown, business) => (
-        <Space size={2}>
-          <Button
-            type="text"
-            size="small"
-            aria-label={`Hồ sơ ${business.name}`}
-            icon={<FolderOpenOutlined />}
-            onClick={() => props.onShowDetail(business)}
-          />
-          <Button
-            type="text"
-            size="small"
-            aria-label={`Người phụ trách ${business.name}`}
-            icon={<TeamOutlined />}
-            onClick={() => props.onManageHandlers(business)}
-          />
-          {business.addressLatitude !== undefined && (
-            <Button
-              type="text"
-              size="small"
-              aria-label={`Bản đồ ${business.name}`}
-              icon={<EnvironmentOutlined />}
-              onClick={() => props.onShowMap(business)}
-            />
-          )}
-          {props.permissions.editBusiness && (
-            <Button
-              type="text"
-              size="small"
-              aria-label={`Sửa ${business.name}`}
-              icon={<EditOutlined />}
-              onClick={() => props.onEditBusiness(business)}
-            />
-          )}
-          {props.permissions.deleteBusiness && (
-            <Popconfirm
-              title="Xóa cơ sở này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() => props.onDeleteBusiness(business.id)}
-            >
-              <Button
-                type="text"
-                size="small"
-                danger
-                aria-label={`Xóa ${business.name}`}
-                icon={<DeleteOutlined />}
-              />
-            </Popconfirm>
-          )}
-        </Space>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${business.name}`}
+          actions={[
+            {
+              key: "detail",
+              label: "Hồ sơ",
+              ariaLabel: `Hồ sơ ${business.name}`,
+              icon: <FolderOpenOutlined />,
+              onClick: () => props.onShowDetail(business),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              ariaLabel: `Sửa ${business.name}`,
+              icon: <EditOutlined />,
+              hidden: !props.permissions.editBusiness,
+              onClick: () => props.onEditBusiness(business),
+            },
+            {
+              key: "handlers",
+              label: "Người phụ trách",
+              ariaLabel: `Người phụ trách ${business.name}`,
+              icon: <TeamOutlined />,
+              onClick: () => props.onManageHandlers(business),
+            },
+            {
+              key: "map",
+              label: "Bản đồ",
+              ariaLabel: `Bản đồ ${business.name}`,
+              icon: <EnvironmentOutlined />,
+              hidden: business.addressLatitude === undefined,
+              onClick: () => props.onShowMap(business),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${business.name}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !props.permissions.deleteBusiness,
+              confirm: "Xóa cơ sở này?",
+              onClick: () => props.onDeleteBusiness(business.id),
+            },
+          ]}
+        />
       ),
     },
   ];
 
   const productColumns: ColumnsType<Product> = [
     { title: "Mã", dataIndex: "code", width: 120 },
-    { title: "Tên sản phẩm", dataIndex: "name", ellipsis: true },
+    {
+      title: "Tên sản phẩm",
+      dataIndex: "name",
+      ellipsis: true,
+      sorter: true,
+      sortOrder: sortOrderForProduct("name"),
+    },
     { title: "Thương hiệu", dataIndex: "brandName", ellipsis: true },
     { title: "Nhà sản xuất", dataIndex: "manufacturer", ellipsis: true },
     {
@@ -259,43 +269,39 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     },
     {
       title: "Thao tác",
-      width: 110,
+      width: 96,
       fixed: "right",
       render: (_: unknown, product) => (
-        <Space size={2}>
-          <Button
-            type="text"
-            size="small"
-            aria-label={`Tệp đính kèm ${product.name}`}
-            icon={<PaperClipOutlined />}
-            onClick={() => props.onManageProductAttachments(product)}
-          />
-          {props.permissions.editProduct && (
-            <Button
-              type="text"
-              size="small"
-              aria-label={`Sửa ${product.name}`}
-              icon={<EditOutlined />}
-              onClick={() => props.onEditProduct(product)}
-            />
-          )}
-          {props.permissions.deleteProduct && (
-            <Popconfirm
-              title="Xóa sản phẩm này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() => props.onDeleteProduct(product.id)}
-            >
-              <Button
-                type="text"
-                size="small"
-                danger
-                aria-label={`Xóa ${product.name}`}
-                icon={<DeleteOutlined />}
-              />
-            </Popconfirm>
-          )}
-        </Space>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${product.name}`}
+          actions={[
+            {
+              key: "attachments",
+              label: "Tệp đính kèm",
+              ariaLabel: `Tệp đính kèm ${product.name}`,
+              icon: <PaperClipOutlined />,
+              onClick: () => props.onManageProductAttachments(product),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              ariaLabel: `Sửa ${product.name}`,
+              icon: <EditOutlined />,
+              hidden: !props.permissions.editProduct,
+              onClick: () => props.onEditProduct(product),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${product.name}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !props.permissions.deleteProduct,
+              confirm: "Xóa sản phẩm này?",
+              onClick: () => props.onDeleteProduct(product.id),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -425,18 +431,12 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               onChange={(_pagination, _filters, sorter) =>
                 handleBusinessSort(sorter)
               }
-              pagination={{
-                current: props.businessPage,
-                pageSize: props.pageSize,
-                total: props.businessTotal,
-                showTotal: (total) => `${total} bản ghi`,
-                onChange: props.onBusinessPageChange,
-              }}
+              pagination={props.businessPagination}
             />
           ) : (
             <BusinessLocationMap
               businesses={props.businesses}
-              onSelect={(b) => props.onEditBusiness(b)}
+              onSelect={(b) => props.onShowDetail(b)}
             />
           )}
         </>
@@ -492,13 +492,10 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               style: { cursor: "pointer" },
             })}
             columns={productColumns}
-            pagination={{
-              current: props.productPage,
-              pageSize: props.pageSize,
-              total: props.productTotal,
-              showTotal: (total) => `${total} bản ghi`,
-              onChange: props.onProductPageChange,
-            }}
+            onChange={(_pagination, _filters, sorter) =>
+              handleProductSort(sorter)
+            }
+            pagination={props.productPagination}
           />
         </>
       )}

@@ -8,6 +8,7 @@ import {
   Divider,
   Empty,
   Input,
+  Pagination,
   Row,
   Space,
   Spin,
@@ -16,7 +17,7 @@ import {
   Tabs,
   Typography,
 } from "antd";
-import type { TablePaginationConfig } from "antd";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   ArrowLeftOutlined,
   EyeOutlined,
@@ -37,8 +38,6 @@ import {
   type AlertSeverity,
   type RiskLevel,
 } from "../types/publicPortal.types";
-
-const PAGE_SIZE = 20;
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("vi-VN");
@@ -144,16 +143,16 @@ function NewsListTab() {
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
 
   const { data, isFetching, isError } = usePublicNews({
     Keyword: submittedKeyword || undefined,
-    SkipCount: (page - 1) * PAGE_SIZE,
-    MaxResultCount: PAGE_SIZE,
+    SkipCount: pagination.skipCount,
+    MaxResultCount: pagination.maxResultCount,
   });
 
   const handleSearch = () => {
-    setPage(1);
+    pagination.resetToFirstPage();
     setSubmittedKeyword(keyword);
   };
 
@@ -229,26 +228,10 @@ function NewsListTab() {
             <Empty description="Không có tin tức nào" />
           )}
 
-          {(data?.totalCount ?? 0) > PAGE_SIZE && (
-            <div style={{ textAlign: "center", marginTop: 16 }}>
-              <Button
-                disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
-                style={{ marginRight: 8 }}
-              >
-                Trang trước
-              </Button>
-              <Typography.Text type="secondary">
-                Trang {page} / {Math.ceil((data?.totalCount ?? 0) / PAGE_SIZE)}
-              </Typography.Text>
-              <Button
-                disabled={page * PAGE_SIZE >= (data?.totalCount ?? 0)}
-                onClick={() => setPage((p) => p + 1)}
-                style={{ marginLeft: 8 }}
-              >
-                Trang sau
-              </Button>
-            </div>
+          {(data?.totalCount ?? 0) > 0 && (
+            <Row justify="center" style={{ marginTop: 16 }}>
+              <Pagination {...pagination.buildConfig(data?.totalCount)} />
+            </Row>
           )}
         </>
       )}
@@ -259,16 +242,12 @@ function NewsListTab() {
 // ── Alerts tab ────────────────────────────────────────────────────────────────
 
 function AlertsTab() {
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
 
   const { data, isFetching, isError } = usePublicAlerts({
-    SkipCount: (page - 1) * PAGE_SIZE,
-    MaxResultCount: PAGE_SIZE,
+    SkipCount: pagination.skipCount,
+    MaxResultCount: pagination.maxResultCount,
   });
-
-  const handleTableChange = (pagination: TablePaginationConfig) => {
-    setPage(pagination.current ?? 1);
-  };
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
@@ -280,14 +259,7 @@ function AlertsTab() {
         <Table
           dataSource={data?.items}
           rowKey="id"
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: data?.totalCount ?? 0,
-            showTotal: (total) => `Tổng ${total} cảnh báo`,
-            showSizeChanger: false,
-          }}
-          onChange={handleTableChange}
+          pagination={pagination.buildConfig(data?.totalCount)}
           locale={{ emptyText: <Empty description="Không có cảnh báo nào" /> }}
           size="middle"
           expandable={{
@@ -345,16 +317,12 @@ function AlertsTab() {
 // ── Risk analysis tab ─────────────────────────────────────────────────────────
 
 function RiskAnalysisTab() {
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
 
   const { data, isFetching, isError } = usePublicRiskAnalyses({
-    SkipCount: (page - 1) * PAGE_SIZE,
-    MaxResultCount: PAGE_SIZE,
+    SkipCount: pagination.skipCount,
+    MaxResultCount: pagination.maxResultCount,
   });
-
-  const handleTableChange = (pagination: TablePaginationConfig) => {
-    setPage(pagination.current ?? 1);
-  };
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
@@ -366,14 +334,7 @@ function RiskAnalysisTab() {
         <Table
           dataSource={data?.items}
           rowKey="id"
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: data?.totalCount ?? 0,
-            showTotal: (total) => `Tổng ${total} phân tích`,
-            showSizeChanger: false,
-          }}
-          onChange={handleTableChange}
+          pagination={pagination.buildConfig(data?.totalCount)}
           locale={{ emptyText: <Empty description="Không có dữ liệu" /> }}
           size="middle"
           expandable={{

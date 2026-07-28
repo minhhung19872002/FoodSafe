@@ -187,4 +187,35 @@ public sealed class OutboundUrlValidatorTests
 
         listener.Stop();
     }
+
+    // ---- Outbound-cap regression (redirect + response size) -------------
+    //
+    // These two SSRF caps cannot be exercised end-to-end: the connect guard
+    // refuses every address a test HTTP server could bind to (loopback/private),
+    // so there is no reachable origin to serve a 3xx or an oversized body. The
+    // meaningful regression guard is therefore that the guarded handler/client
+    // is *configured* with the caps — locking them so a future refactor cannot
+    // silently re-enable redirect following or drop the response-size ceiling.
+
+    [Fact]
+    public void GuardedHandler_never_follows_redirects()
+    {
+        using var handler = OutboundUrlValidator.CreateGuardedHandler();
+
+        // A partner 3xx must be recorded as the call outcome, never followed —
+        // following would let a partner response steer the (possibly
+        // credentialed) request to an attacker-chosen host, defeating Validate.
+        handler.AllowAutoRedirect.ShouldBeFalse();
+        handler.ConnectCallback.ShouldNotBeNull(); // connect-time IP guard is wired
+    }
+
+    [Fact]
+    public void GuardedHttpClient_caps_the_buffered_response_size()
+    {
+        using var http = OutboundUrlValidator.CreateGuardedHttpClient(TimeSpan.FromSeconds(5));
+
+        // An oversized partner reply must fail rather than exhaust server memory.
+        http.MaxResponseContentBufferSize.ShouldBe(OutboundUrlValidator.MaxResponseBytes);
+        OutboundUrlValidator.MaxResponseBytes.ShouldBe(2L * 1024 * 1024);
+    }
 }

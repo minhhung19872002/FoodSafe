@@ -49,7 +49,7 @@ public class AdministrativeDocumentAppService : ApplicationService
             query = query.Where(x => x.Status == input.Status.Value);
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
-        query = query.OrderByDescending(x => x.IssuedDate).PageBy(input);
+        query = ApplySorting(query, input.Sorting).PageBy(input);
         var items = await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
         var dtos = await EnrichDtosAsync(items);
 
@@ -116,6 +116,27 @@ public class AdministrativeDocumentAppService : ApplicationService
     {
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
         await _repo.DeleteAsync(entity, cancellationToken: _cancellationTokens.Token);
+    }
+
+    // Honours the client's Sorting request (e.g. "issuedDate desc", "creationTime")
+    // against a whitelist so the list supports column sorting without exposing the
+    // query to dynamic-LINQ injection. Falls back to CreationTime descending.
+    private static IOrderedQueryable<AdministrativeDocument> ApplySorting(
+        IQueryable<AdministrativeDocument> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("issueddate", true)    => query.OrderByDescending(x => x.IssuedDate),
+            ("issueddate", false)   => query.OrderBy(x => x.IssuedDate),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _                       => query.OrderByDescending(x => x.CreationTime),
+        };
     }
 
     private async Task<IQueryable<AdministrativeDocument>> ScopedQueryAsync(DataScopeOperation operation)

@@ -122,7 +122,7 @@ test.describe("audit logs verification (F-021)", () => {
     await expect(rows.first()).toBeVisible({ timeout: 10_000 });
 
     // Pagination summary shows total count
-    await expect(page.getByText(/Tổng:?\s*\d+\s*bản ghi/)).toBeVisible();
+    await expect(page.getByText(/Hiển thị\s*\d+-\d+\/\d+/)).toBeVisible();
 
     // URL filter produces at least one result
     await page.getByPlaceholder("Tìm theo URL").fill("/api/v1/app");

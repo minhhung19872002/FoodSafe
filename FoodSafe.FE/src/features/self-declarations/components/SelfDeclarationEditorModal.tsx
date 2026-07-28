@@ -37,6 +37,17 @@ export function SelfDeclarationEditorModal(props: Props) {
   const businessId = Form.useWatch("businessId", form);
   const { open, declaration, onBusinessChange } = props;
 
+  // Options chỉ chứa cơ sở Active (tối đa 500); khi sửa hồ sơ của cơ sở ngoài
+  // danh sách đó vẫn phải hiển thị tên thay vì GUID.
+  const businessOptions =
+    declaration &&
+    !props.businesses.some((item) => item.id === declaration.businessId)
+      ? [
+          { id: declaration.businessId, name: declaration.businessName },
+          ...props.businesses,
+        ]
+      : props.businesses;
+
   useEffect(() => {
     if (!open) return;
     const item = declaration;
@@ -103,7 +114,8 @@ export function SelfDeclarationEditorModal(props: Props) {
             showSearch
             optionFilterProp="label"
             placeholder="Chọn cơ sở"
-            options={props.businesses.map((item) => ({
+            disabled={Boolean(props.declaration)}
+            options={businessOptions.map((item) => ({
               value: item.id,
               label: item.code ? `${item.code} — ${item.name}` : item.name,
             }))}

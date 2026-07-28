@@ -1,14 +1,5 @@
-import {
-  Button,
-  Empty,
-  Input,
-  Popconfirm,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Tree,
-} from "antd";
+import { Button, Empty, Input, Select, Space, Table, Tag, Tree } from "antd";
+import type { TablePaginationConfig } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -18,6 +9,7 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import type { DataNode } from "antd/es/tree";
+import { RowActions } from "@/components/RowActions";
 import { organizationLevelConfig } from "./organizationConfig";
 import type {
   OrganizationDto,
@@ -28,10 +20,8 @@ import type {
 interface Props {
   items: OrganizationDto[];
   treeItems: OrganizationTreeNode[];
-  totalCount: number;
   loading: boolean;
-  page: number;
-  pageSize: number;
+  pagination: TablePaginationConfig;
   filter: string;
   level?: OrganizationLevel;
   canCreate: boolean;
@@ -42,7 +32,6 @@ interface Props {
   onExport: () => void;
   onFilterChange: (value: string) => void;
   onLevelChange: (value?: OrganizationLevel) => void;
-  onPageChange: (page: number, pageSize: number) => void;
   onRefresh: () => void;
   onCreate: () => void;
   onEdit: (organization: OrganizationDto) => void;
@@ -67,10 +56,8 @@ function toTreeData(items: OrganizationTreeNode[]): DataNode[] {
 export function OrganizationListView({
   items,
   treeItems,
-  totalCount,
   loading,
-  page,
-  pageSize,
+  pagination,
   filter,
   level,
   canCreate,
@@ -81,7 +68,6 @@ export function OrganizationListView({
   onExport,
   onFilterChange,
   onLevelChange,
-  onPageChange,
   onRefresh,
   onCreate,
   onEdit,
@@ -139,14 +125,7 @@ export function OrganizationListView({
           onDoubleClick: () => onShowDetail(organization),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          current: page,
-          pageSize,
-          total: totalCount,
-          showSizeChanger: true,
-          showTotal: (total) => `${total} bản ghi`,
-          onChange: onPageChange,
-        }}
+        pagination={pagination}
         columns={[
           { title: "Mã", dataIndex: "code", width: 130, ellipsis: true },
           { title: "Tên đơn vị", dataIndex: "name", ellipsis: true },
@@ -180,38 +159,33 @@ export function OrganizationListView({
                 {
                   title: "Thao tác",
                   key: "actions",
-                  width: 130,
+                  width: 96,
+                  fixed: "right" as const,
                   render: (_: unknown, organization: OrganizationDto) => (
-                    <Space>
-                      {canEdit && (
-                        <Button
-                          type="text"
-                          size="small"
-                          aria-label={`Sửa ${organization.name}`}
-                          icon={<EditOutlined />}
-                          onClick={() => onEdit(organization)}
-                        />
-                      )}
-                      {canDelete && (
-                        <Popconfirm
-                          title="Xóa đơn vị?"
-                          description={`Bạn chắc chắn muốn xóa "${organization.name}"?`}
-                          okText="Xóa"
-                          cancelText="Hủy"
-                          okButtonProps={{ danger: true }}
-                          onConfirm={() => onDelete(organization)}
-                        >
-                          <Button
-                            type="text"
-                            danger
-                            size="small"
-                            loading={deletingId === organization.id}
-                            aria-label={`Xóa ${organization.name}`}
-                            icon={<DeleteOutlined />}
-                          />
-                        </Popconfirm>
-                      )}
-                    </Space>
+                    <RowActions
+                      overflowAriaLabel={`Thao tác ${organization.name}`}
+                      actions={[
+                        {
+                          key: "edit",
+                          label: "Sửa",
+                          ariaLabel: `Sửa ${organization.name}`,
+                          icon: <EditOutlined />,
+                          hidden: !canEdit,
+                          onClick: () => onEdit(organization),
+                        },
+                        {
+                          key: "delete",
+                          label: "Xóa",
+                          ariaLabel: `Xóa ${organization.name}`,
+                          icon: <DeleteOutlined />,
+                          danger: true,
+                          hidden: !canDelete,
+                          disabled: deletingId === organization.id,
+                          confirm: "Xóa đơn vị?",
+                          onClick: () => onDelete(organization),
+                        },
+                      ]}
+                    />
                   ),
                 },
               ]

@@ -32,3 +32,26 @@ public enum ApiAuthType : short
     BearerToken = 3,
     BasicAuth = 4,
 }
+
+/// <summary>Lifecycle of a registered inbound partner account (INT-03).</summary>
+public enum PartnerAccountStatus : short
+{
+    Active = 1,
+    Suspended = 2,
+}
+
+/// <summary>Lifecycle of one received inbound submission (INT-03).</summary>
+public enum InboundSubmissionStatus : short
+{
+    /// <summary>Persisted and awaiting business ingestion (TT 31/2026 mapping).</summary>
+    Received = 1,
+    Processed = 2,
+    Rejected = 3,
+}
+
+/// <summary>Serialization format of an uploaded partner API specification (FR-50-05).</summary>
+public enum ApiSpecFormat : short
+{
+    Json = 1,
+    Yaml = 2,
+}

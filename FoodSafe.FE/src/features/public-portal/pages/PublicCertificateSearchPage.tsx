@@ -11,7 +11,7 @@ import {
   Typography,
 } from "antd";
 import { FilePdfOutlined } from "@ant-design/icons";
-import type { TablePaginationConfig } from "antd";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { PublicShell } from "../components/PublicShell";
 import {
   usePublicAdRegistrations,
@@ -26,8 +26,6 @@ import type {
   PublicCertificate,
 } from "../types/publicPortal.types";
 
-const PAGE_SIZE = 20;
-
 interface CertSearchPanelProps {
   useHook: (filter: PagedFilter) => {
     data?: { items: PublicCertificate[]; totalCount: number };
@@ -35,35 +33,29 @@ interface CertSearchPanelProps {
     isError: boolean;
   };
   placeholder: string;
-  totalLabel: string;
   pdfPath?: string;
 }
 
 function CertSearchPanel({
   useHook,
   placeholder,
-  totalLabel,
   pdfPath,
 }: CertSearchPanelProps) {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
 
   const filter: PagedFilter = {
     Keyword: submittedKeyword || undefined,
-    SkipCount: (page - 1) * PAGE_SIZE,
-    MaxResultCount: PAGE_SIZE,
+    SkipCount: pagination.skipCount,
+    MaxResultCount: pagination.maxResultCount,
   };
 
   const { data, isFetching, isError } = useHook(filter);
 
   const handleSearch = () => {
-    setPage(1);
+    pagination.resetToFirstPage();
     setSubmittedKeyword(keyword);
-  };
-
-  const handleTableChange = (pagination: TablePaginationConfig) => {
-    setPage(pagination.current ?? 1);
   };
 
   return (
@@ -95,21 +87,16 @@ function CertSearchPanel({
         <Table
           dataSource={data?.items}
           rowKey={(row) => row.number || row.businessName}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: data?.totalCount ?? 0,
-            showTotal: (total) => `Tổng ${total} ${totalLabel}`,
-            showSizeChanger: false,
-          }}
-          onChange={handleTableChange}
+          pagination={pagination.buildConfig(data?.totalCount)}
           locale={{ emptyText: <Empty description="Không có dữ liệu" /> }}
           size="middle"
           scroll={{ x: 900 }}
         >
           <Table.Column
             title="STT"
-            render={(_v, _r, i) => (page - 1) * PAGE_SIZE + i + 1}
+            render={(_v, _r, i) =>
+              (pagination.page - 1) * pagination.pageSize + i + 1
+            }
             width={60}
           />
           <Table.Column title="Số giấy phép" dataIndex="number" width={160} />
@@ -161,7 +148,6 @@ const TAB_ITEMS = [
     key: "eligibility",
     label: "Giấy đủ ĐK ATTP",
     placeholder: "Số giấy phép, tên cơ sở...",
-    totalLabel: "giấy phép",
     useHook: usePublicEligibilityCertificates,
     pdfPath: "eligibility-certificates",
   },
@@ -169,7 +155,6 @@ const TAB_ITEMS = [
     key: "self-declarations",
     label: "Hồ sơ tự công bố",
     placeholder: "Số hồ sơ, tên cơ sở...",
-    totalLabel: "hồ sơ",
     useHook: usePublicSelfDeclarations,
     pdfPath: "self-declarations",
   },
@@ -177,7 +162,6 @@ const TAB_ITEMS = [
     key: "product-registrations",
     label: "Đăng ký công bố sản phẩm",
     placeholder: "Số đăng ký, tên sản phẩm...",
-    totalLabel: "đăng ký",
     useHook: usePublicProductRegistrations,
     pdfPath: "product-registrations",
   },
@@ -185,14 +169,12 @@ const TAB_ITEMS = [
     key: "ad-registrations",
     label: "Đăng ký quảng cáo",
     placeholder: "Số đăng ký, tên cơ sở...",
-    totalLabel: "đăng ký",
     useHook: usePublicAdRegistrations,
   },
   {
     key: "cfs",
     label: "Chứng nhận CFS",
     placeholder: "Số chứng nhận, tên cơ sở...",
-    totalLabel: "chứng nhận",
     useHook: usePublicCfsCertificates,
     pdfPath: "cfs-certificates",
   },
@@ -200,7 +182,6 @@ const TAB_ITEMS = [
     key: "export-food",
     label: "GCN Xuất khẩu thực phẩm",
     placeholder: "Số giấy chứng nhận, tên cơ sở...",
-    totalLabel: "giấy chứng nhận",
     useHook: usePublicExportFoodCertificates,
     pdfPath: "export-food-certificates",
   },
@@ -221,7 +202,6 @@ export default function PublicCertificateSearchPage() {
             <CertSearchPanel
               useHook={tab.useHook}
               placeholder={tab.placeholder}
-              totalLabel={tab.totalLabel}
               pdfPath={"pdfPath" in tab ? tab.pdfPath : undefined}
             />
           ),

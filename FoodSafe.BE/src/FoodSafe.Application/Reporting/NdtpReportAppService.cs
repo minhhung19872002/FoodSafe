@@ -40,9 +40,7 @@ public class NdtpReportAppService : ApplicationService
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
 
-        query = query.OrderByDescending(x => x.PeriodYear)
-            .ThenByDescending(x => x.PeriodMonth);
-        query = query.PageBy(input);
+        query = ApplySorting(query, input.Sorting).PageBy(input);
 
         var items = await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
         return new PagedResultDto<NdtpReportDto>(totalCount, items.Select(ToDto).ToList());
@@ -222,6 +220,28 @@ public class NdtpReportAppService : ApplicationService
             RespondedById = n.RespondedById,
             CreationTime = n.CreationTime
         };
+
+    // Honours the client's Sorting request (e.g. "periodYear desc", "creationTime asc")
+    // against a whitelist. Falls back to CreationTime descending.
+    private static IOrderedQueryable<NdtpReport> ApplySorting(
+        IQueryable<NdtpReport> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("periodYear", true) => query.OrderByDescending(x => x.PeriodYear)
+                .ThenByDescending(x => x.PeriodMonth),
+            ("periodYear", false) => query.OrderBy(x => x.PeriodYear)
+                .ThenBy(x => x.PeriodMonth),
+            ("creationTime", false) => query.OrderBy(x => x.CreationTime),
+            _ => query.OrderByDescending(x => x.CreationTime)
+        };
+    }
 
     private async Task<IQueryable<NdtpReport>> ScopedQueryAsync(DataScopeOperation operation)
     {

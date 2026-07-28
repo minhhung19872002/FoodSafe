@@ -12,10 +12,11 @@ import {
   Tooltip,
 } from "antd";
 import { ExportOutlined } from "@ant-design/icons";
-import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
+import type { ColumnsType } from "antd/es/table";
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { PageHeader } from "@/components/PageHeader";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { saveDownload } from "@/utils/download";
 import { auditLogApi } from "../api/auditLogApi";
 import { useAuditLogs } from "../api/auditLogQueries";
@@ -40,13 +41,15 @@ function statusColor(code?: number) {
 }
 
 export default function AuditLogPage() {
-  const [filter, setFilter] = useState<AuditLogFilter>({
-    skipCount: 0,
-    maxResultCount: 20,
-  });
+  const [filter, setFilter] = useState<AuditLogFilter>({});
+  const pagination = useTablePagination(20);
 
   const [detailId, setDetailId] = useState<string | null>(null);
-  const { data, isLoading } = useAuditLogs(filter);
+  const { data, isLoading } = useAuditLogs({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
+  });
   const exportMut = useMutation({
     mutationFn: (f: AuditLogFilter) => auditLogApi.exportExcel(f),
   });
@@ -120,14 +123,6 @@ export default function AuditLogPage() {
     },
   ];
 
-  const handleTableChange = (pagination: TablePaginationConfig) => {
-    setFilter((prev) => ({
-      ...prev,
-      skipCount: ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 20),
-      maxResultCount: pagination.pageSize ?? 20,
-    }));
-  };
-
   return (
     <div>
       <PageHeader title="Nhật ký hoạt động" />
@@ -137,9 +132,10 @@ export default function AuditLogPage() {
           placeholder="Tìm theo URL"
           allowClear
           style={{ width: 240 }}
-          onSearch={(v) =>
-            setFilter((p) => ({ ...p, filter: v || undefined, skipCount: 0 }))
-          }
+          onSearch={(v) => {
+            setFilter((p) => ({ ...p, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Phương thức"
@@ -149,37 +145,31 @@ export default function AuditLogPage() {
             value: m,
             label: m,
           }))}
-          onChange={(v) =>
-            setFilter((p) => ({
-              ...p,
-              httpMethod: v ?? undefined,
-              skipCount: 0,
-            }))
-          }
+          onChange={(v) => {
+            setFilter((p) => ({ ...p, httpMethod: v ?? undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <RangePicker
           showTime
           format="DD/MM/YYYY HH:mm"
-          onChange={(dates) =>
+          onChange={(dates) => {
             setFilter((p) => ({
               ...p,
               startTime: dates?.[0]?.toISOString(),
               endTime: dates?.[1]?.toISOString(),
-              skipCount: 0,
-            }))
-          }
+            }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Space>
           <span style={{ fontSize: 13 }}>Chỉ lỗi:</span>
           <Switch
             size="small"
-            onChange={(v) =>
-              setFilter((p) => ({
-                ...p,
-                hasException: v || undefined,
-                skipCount: 0,
-              }))
-            }
+            onChange={(v) => {
+              setFilter((p) => ({ ...p, hasException: v || undefined }));
+              pagination.resetToFirstPage();
+            }}
           />
         </Space>
         <Button
@@ -207,14 +197,7 @@ export default function AuditLogPage() {
           onClick: () => setDetailId(record.id),
           style: { cursor: "pointer" },
         })}
-        onChange={handleTableChange}
-        pagination={{
-          total: data?.totalCount ?? 0,
-          current: Math.floor(filter.skipCount / filter.maxResultCount) + 1,
-          pageSize: filter.maxResultCount,
-          showSizeChanger: true,
-          showTotal: (total) => `Tổng: ${total} bản ghi`,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
 
       <AuditLogDetailDrawer

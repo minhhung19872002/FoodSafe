@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { App, Tag } from "antd";
 import { useMutation } from "@tanstack/react-query";
 import { PageHeader } from "@/components/PageHeader";
@@ -23,8 +24,6 @@ import type {
   OrganizationLevel,
   OrganizationTreeNode,
 } from "../types/organization.types";
-
-const pageSizeDefault = 20;
 
 type OrganizationOption = Pick<
   OrganizationDto,
@@ -66,8 +65,7 @@ export default function OrganizationListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const [filter, setFilter] = useState("");
   const [level, setLevel] = useState<OrganizationLevel>();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(pageSizeDefault);
+  const pagination = useTablePagination(20);
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<OrganizationDto>();
   const [detailOrganization, setDetailOrganization] =
@@ -77,10 +75,10 @@ export default function OrganizationListPage() {
     () => ({
       filter: filter || undefined,
       level,
-      skipCount: (page - 1) * pageSize,
-      maxResultCount: pageSize,
+      skipCount: pagination.skipCount,
+      maxResultCount: pagination.maxResultCount,
     }),
-    [filter, level, page, pageSize],
+    [filter, level, pagination.skipCount, pagination.maxResultCount],
   );
 
   const listQuery = useOrganizationList(queryFilter);
@@ -116,10 +114,8 @@ export default function OrganizationListPage() {
         <OrganizationListView
           items={listQuery.data?.items ?? []}
           treeItems={treeQuery.data?.items ?? []}
-          totalCount={listQuery.data?.totalCount ?? 0}
           loading={listQuery.isLoading || treeQuery.isLoading}
-          page={page}
-          pageSize={pageSize}
+          pagination={pagination.buildConfig(listQuery.data?.totalCount)}
           filter={filter}
           level={level}
           canCreate={hasPermission("FoodSafe.Organizations.Create")}
@@ -139,15 +135,11 @@ export default function OrganizationListPage() {
           }
           onFilterChange={(value) => {
             setFilter(value);
-            setPage(1);
+            pagination.resetToFirstPage();
           }}
           onLevelChange={(value) => {
             setLevel(value);
-            setPage(1);
-          }}
-          onPageChange={(nextPage, nextPageSize) => {
-            setPage(nextPage);
-            setPageSize(nextPageSize);
+            pagination.resetToFirstPage();
           }}
           onRefresh={refresh}
           onCreate={() => setCreateOpen(true)}

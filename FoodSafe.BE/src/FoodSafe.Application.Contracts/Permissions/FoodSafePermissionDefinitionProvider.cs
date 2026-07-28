@@ -566,6 +566,39 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
         dataIntegration.AddChild(
             FoodSafePermissions.DataIntegration.Share,
             LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.Share"));
+        var partners = dataIntegration.AddChild(
+            FoodSafePermissions.DataIntegration.Partners.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.Partners"));
+        partners.AddChild(
+            FoodSafePermissions.DataIntegration.Partners.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.Partners.View"));
+        partners.AddChild(
+            FoodSafePermissions.DataIntegration.Partners.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.Partners.Create"));
+        partners.AddChild(
+            FoodSafePermissions.DataIntegration.Partners.Edit,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.Partners.Edit"));
+        partners.AddChild(
+            FoodSafePermissions.DataIntegration.Partners.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.Partners.Delete"));
+        partners.AddChild(
+            FoodSafePermissions.DataIntegration.Partners.ManageKeys,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.Partners.ManageKeys"));
+        var apiSpecs = dataIntegration.AddChild(
+            FoodSafePermissions.DataIntegration.ApiSpecs.Default,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiSpecs"));
+        apiSpecs.AddChild(
+            FoodSafePermissions.DataIntegration.ApiSpecs.View,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiSpecs.View"));
+        apiSpecs.AddChild(
+            FoodSafePermissions.DataIntegration.ApiSpecs.Create,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiSpecs.Create"));
+        apiSpecs.AddChild(
+            FoodSafePermissions.DataIntegration.ApiSpecs.Publish,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiSpecs.Publish"));
+        apiSpecs.AddChild(
+            FoodSafePermissions.DataIntegration.ApiSpecs.Delete,
+            LocalizableString.Create<FoodSafeResource>("Permission:DataIntegration.ApiSpecs.Delete"));
 
         group.AddPermission(
             FoodSafePermissions.DataScope.All,

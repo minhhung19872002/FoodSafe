@@ -1,5 +1,11 @@
 # Functional Audit — Gap Matrix (Steps 2–3)
 
+> **ADDENDUM (2026-07-28, Phase-0 baseline freeze):** this matrix is preserved as written at baseline `78322f2`. Rows superseded by later delivered work:
+> - **INT-03** (§2, "NOT_IMPLEMENTED") — **CLOSED**: delivered at `52d35c1`, VERIFIED as registry F-019f at `adb30eb`.
+> - **FR-50-05** (§2, "PARTIAL") — **CLOSED**: partner spec + OpenAPI published at `0776230`/`aad87c1`; in-app specification management delivered at `5bc0d86`, VERIFIED as registry F-019g.
+> - The Batch F-1 "selected batch" rows (typed payloads, retry, attempt history, time filter) — **CLOSED** at `71f35e2` (registry F-019e).
+> Current per-requirement status now lives in `docs/audit/CURRENT_REQUIREMENT_GAP_ANALYSIS.md` + `CURRENT_REQUIREMENT_TRACEABILITY_MATRIX.md`.
+
 **Baseline**: commit `78322f2` + valid dirty working tree (see [00-audit-baseline.md](00-audit-baseline.md))
 **Date**: 2026-07-28
 **Requirement source of truth**: `docs/Mẫu số 03. YCKT (1).pdf` (42 pages, 469 atomic items — extraction in `docs/audit/60-customer-requirement-baseline.md`; PDF page rendering unavailable in this environment, so the doc-60 extraction + `docs/01-functional-requirements.md` decomposition — cross-checked in `docs/audit/63-yckt-cross-check-findings.md` — serve as the item inventory. No percentage from prior docs was accepted without evidence.)

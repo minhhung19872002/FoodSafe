@@ -75,8 +75,7 @@ public class EligibilityCertificateAppService :
             query,
             _cancellationTokens.Token);
         var rows = await AsyncExecuter.ToListAsync(
-            query.OrderByDescending(x => x.IssueDate)
-                .ThenBy(x => x.CertificateNumber)
+            ApplySorting(query, input.Sorting)
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount),
             _cancellationTokens.Token);
@@ -358,6 +357,27 @@ public class EligibilityCertificateAppService :
                 businesses.GetValueOrDefault(x.BusinessId) ?? string.Empty;
             return dto;
         }).ToList();
+    }
+
+    // Honours the client's Sorting request against a whitelist; falls back to
+    // CreationTime descending (newest first).
+    private static IOrderedQueryable<EligibilityCertificate> ApplySorting(
+        IQueryable<EligibilityCertificate> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("issuedate", true)    => query.OrderByDescending(x => x.IssueDate),
+            ("issuedate", false)   => query.OrderBy(x => x.IssueDate),
+            ("creationtime", true) => query.OrderByDescending(x => x.CreationTime),
+            ("creationtime", false)=> query.OrderBy(x => x.CreationTime),
+            _                      => query.OrderByDescending(x => x.CreationTime)
+        };
     }
 
     private static IQueryable<EligibilityCertificate> ApplyStatusFilter(

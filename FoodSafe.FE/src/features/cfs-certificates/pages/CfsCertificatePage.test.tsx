@@ -83,7 +83,7 @@ describe("CfsCertificatePage", () => {
       screen.getByRole("button", { name: /Thêm CFS/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Sửa CFS-001" }),
+      screen.getByRole("button", { name: "Thao tác CFS-001" }),
     ).toBeInTheDocument();
   });
 
@@ -106,7 +106,7 @@ describe("CfsCertificatePage", () => {
       screen.queryByRole("button", { name: /Thêm CFS/ }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Sửa CFS-001" }),
+      screen.queryByRole("button", { name: "Thao tác CFS-001" }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Tệp CFS-001" }),

@@ -29,7 +29,11 @@
  */
 
 import { test, expect, type Page } from "@playwright/test";
-import { signIn, signInAsAdmin, requestVerificationToken } from "./helpers/auth";
+import {
+  signIn,
+  signInAsAdmin,
+  requestVerificationToken,
+} from "./helpers/auth";
 
 const BASE_URL = "http://127.0.0.1:8080";
 const ECHO_URL = "https://postman-echo.com/post";
@@ -152,7 +156,9 @@ test.describe("FR-51..57 Batch F-1 — typed payload + retry attempt history", (
 
     try {
       const result = await share(page, endpoint.id, alert.id);
-      expect(result.isSuccess, result.errorMessage ?? "share failed").toBe(true);
+      expect(result.isSuccess, result.errorMessage ?? "share failed").toBe(
+        true,
+      );
 
       const detail = await logDetail(page, result.logId);
       // Versioned envelope with EXACTLY the pinned record inside. Parsing the
@@ -203,14 +209,14 @@ test.describe("FR-51..57 Batch F-1 — typed payload + retry attempt history", (
 
       const rows = historyRows(page, endpoint.externalSystem);
       await expect(rows).toHaveCount(1);
-      await expect(rows.first().getByText("Lỗi", { exact: true })).toBeVisible();
+      await expect(
+        rows.first().getByText("Lỗi", { exact: true }),
+      ).toBeVisible();
 
       // --- the real retry action ---
-      await rows.first().locator('button[title="Thử lại"]').click();
-      await page
-        .locator(".ant-popover")
-        .getByRole("button", { name: "Thử lại" })
-        .click();
+      await rows.first().getByRole("button", { name: "Thử lại" }).click();
+      // modal.confirm replaces the former Popconfirm.
+      await page.getByRole("button", { name: "OK" }).click();
       await expect(
         page.getByText(/Đã thử lại nhưng hệ thống nhận vẫn trả lỗi/),
       ).toBeVisible();
@@ -227,9 +233,11 @@ test.describe("FR-51..57 Batch F-1 — typed payload + retry attempt history", (
       expect(originalDetail.attemptNumber).toBe(1);
       expect(originalDetail.isSuccess).toBe(false);
 
-      const list = await page.context().request.get(
-        `${CALL_LOG_API}?Filter=${encodeURIComponent(endpoint.externalSystem)}`,
-      );
+      const list = await page
+        .context()
+        .request.get(
+          `${CALL_LOG_API}?Filter=${encodeURIComponent(endpoint.externalSystem)}`,
+        );
       expect(list.status()).toBe(200);
       const items = ((await list.json()) as { items: CallLogDetail[] }).items;
       expect(items).toHaveLength(2);
@@ -277,10 +285,11 @@ test.describe("FR-51..57 Batch F-1 — typed payload + retry attempt history", (
       expect(ok.isSuccess).toBe(true);
 
       // Workflow guard: only FAILED communications may be retried.
-      const refuse = await page.context().request.post(
-        `${RETRY_API}/${ok.logId}`,
-        { headers: await csrf(page) },
-      );
+      const refuse = await page
+        .context()
+        .request.post(`${RETRY_API}/${ok.logId}`, {
+          headers: await csrf(page),
+        });
       expect(refuse.status()).toBe(403);
       expect(await refuse.text()).toContain(
         "Chỉ có thể thử lại giao tiếp thất bại",
@@ -292,15 +301,14 @@ test.describe("FR-51..57 Batch F-1 — typed payload + retry attempt history", (
       try {
         await noPermPage.goto(BASE_URL);
         await signIn(noPermPage, READONLY_EMAIL, SEED_PASSWORD);
-        const denied = await noPermPage.context().request.post(
-          `${RETRY_API}/${ok.logId}`,
-          {
+        const denied = await noPermPage
+          .context()
+          .request.post(`${RETRY_API}/${ok.logId}`, {
             headers: {
               RequestVerificationToken:
                 await requestVerificationToken(noPermPage),
             },
-          },
-        );
+          });
         expect(denied.status()).toBe(403);
       } finally {
         await context.close();

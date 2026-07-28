@@ -8,7 +8,6 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
   Select,
   Space,
   Table,
@@ -17,6 +16,7 @@ import {
   Descriptions,
   type TableColumnsType,
 } from "antd";
+import { RowActions } from "@/components/RowActions";
 import {
   ApiOutlined,
   PlusOutlined,
@@ -30,8 +30,12 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { saveDownload } from "@/utils/download";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
+import { PartnersTab } from "../components/PartnersTab";
+import { InboundSubmissionsTab } from "../components/InboundSubmissionsTab";
+import { ApiSpecsTab } from "../components/ApiSpecsTab";
 import {
   useApiEndpoints,
   useApiCallLogs,
@@ -67,7 +71,6 @@ import {
   type SharedDataType,
 } from "../types/dataIntegration.types";
 
-const PAGE_SIZE = 15;
 const HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
 const EXTERNAL_SYSTEMS = ["Bộ Y tế", "Sở Nông nghiệp", "Sở Công thương"];
 
@@ -83,11 +86,13 @@ function apiErrorMessage(error: unknown, fallback: string): string {
 
 function EndpointsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<ApiEndpointFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<ApiEndpointFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useApiEndpoints({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useApiEndpoints(filter);
   const createMut = useCreateEndpoint();
   const updateMut = useUpdateEndpoint();
   const toggleMut = useToggleEndpointStatus();
@@ -151,79 +156,73 @@ function EndpointsTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 200,
+      width: 96,
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            size="small"
-            icon={<ApiOutlined />}
-            loading={testMut.isPending && testMut.variables === record.id}
-            onClick={() =>
-              testMut.mutate(record.id, {
-                onSuccess: (result) =>
-                  result.isSuccess
-                    ? message.success(
-                        `Kết nối thành công (HTTP ${result.statusCode ?? "—"}, ${result.durationMs}ms)`,
-                      )
-                    : message.warning(
-                        `Không kết nối được: ${result.errorMessage ?? "lỗi không xác định"}`,
-                      ),
-                onError: () => message.error("Không thể kiểm tra kết nối."),
-              })
-            }
-          >
-            Test
-          </Button>
-          {canEdit && (
-            <>
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => openEdit(record)}
-              >
-                Sửa
-              </Button>
-              <Popconfirm
-                title={
-                  record.status === API_ENDPOINT_STATUS.Active
-                    ? "Tắt endpoint?"
-                    : "Bật endpoint?"
-                }
-                okText={
-                  record.status === API_ENDPOINT_STATUS.Active ? "Tắt" : "Bật"
-                }
-                cancelText="Hủy"
-                onConfirm={() =>
-                  toggleMut.mutate(record.id, {
-                    onSuccess: () => message.success("Đã cập nhật"),
-                    onError: () => message.error("Thao tác thất bại"),
-                  })
-                }
-              >
-                <Button size="small" icon={<SwapOutlined />}>
-                  Bật/Tắt
-                </Button>
-              </Popconfirm>
-            </>
-          )}
-          {canDelete && (
-            <Popconfirm
-              title="Xóa endpoint?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.name}`}
+          actions={[
+            {
+              key: "test",
+              label: "Test kết nối",
+              ariaLabel: `Test kết nối ${record.name}`,
+              icon: <ApiOutlined />,
+              onClick: () =>
+                testMut.mutate(record.id, {
+                  onSuccess: (result) =>
+                    result.isSuccess
+                      ? message.success(
+                          `Kết nối thành công (HTTP ${result.statusCode ?? "—"}, ${result.durationMs}ms)`,
+                        )
+                      : message.warning(
+                          `Không kết nối được: ${result.errorMessage ?? "lỗi không xác định"}`,
+                        ),
+                  onError: () => message.error("Không thể kiểm tra kết nối."),
+                }),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              ariaLabel: `Sửa ${record.name}`,
+              icon: <EditOutlined />,
+              hidden: !canEdit,
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "toggle",
+              label:
+                record.status === API_ENDPOINT_STATUS.Active ? "Tắt" : "Bật",
+              ariaLabel:
+                record.status === API_ENDPOINT_STATUS.Active
+                  ? `Tắt ${record.name}`
+                  : `Bật ${record.name}`,
+              icon: <SwapOutlined />,
+              hidden: !canEdit,
+              confirm:
+                record.status === API_ENDPOINT_STATUS.Active
+                  ? "Tắt endpoint?"
+                  : "Bật endpoint?",
+              onClick: () =>
+                toggleMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã cập nhật"),
+                  onError: () => message.error("Thao tác thất bại"),
+                }),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${record.name}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !canDelete,
+              confirm: "Xóa endpoint?",
+              onClick: () =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa"),
                   onError: () => message.error("Xóa thất bại"),
-                })
-              }
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -235,9 +234,10 @@ function EndpointsTab() {
           placeholder="Tên, URL, hệ thống"
           allowClear
           style={{ width: 240 }}
-          onSearch={(v) =>
-            setFilter((f) => ({ ...f, filter: v || undefined, skipCount: 0 }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Trạng thái"
@@ -247,9 +247,10 @@ function EndpointsTab() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Button
           icon={<ExportOutlined />}
@@ -279,15 +280,7 @@ function EndpointsTab() {
           onDoubleClick: () => setDetailRecord(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
       <RecordDetailDrawer
         title="Chi tiết endpoint"
@@ -469,11 +462,13 @@ function EndpointsTab() {
 
 function CallHistoryTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<ApiCallLogFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<ApiCallLogFilter>({});
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useApiCallLogs({
+    ...filter,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useApiCallLogs(filter);
   const exportMut = useExportCallLogs();
   const shareMut = useShareData();
   const retryMut = useRetryCallLog();
@@ -556,52 +551,48 @@ function CallHistoryTab() {
     {
       title: "",
       key: "actions",
-      width: 80,
+      width: 96,
       render: (_, record) => (
-        <Space size={4}>
-          <Button
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => setDetailId(record.id)}
-          />
-          {canShare &&
-            !record.isSuccess &&
-            record.direction === API_CALL_DIRECTION.Outbound &&
-            record.endpointId && (
-              <Popconfirm
-                title="Thử lại giao tiếp này?"
-                description="Gửi lại đúng nội dung đã gửi đến điểm kết nối."
-                okText="Thử lại"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  retryMut.mutate(record.id, {
-                    onSuccess: (result) => {
-                      if (result.isSuccess) {
-                        message.success("Đã thử lại thành công.");
-                      } else {
-                        message.warning(
-                          `Đã thử lại nhưng hệ thống nhận vẫn trả lỗi: ${result.errorMessage ?? "không xác định"}`,
-                        );
-                      }
-                    },
-                    onError: (error) =>
-                      void message.error(
-                        apiErrorMessage(error, "Không thể thử lại giao tiếp."),
-                      ),
-                  })
-                }
-              >
-                <Button
-                  size="small"
-                  title="Thử lại"
-                  icon={<RedoOutlined />}
-                  loading={
-                    retryMut.isPending && retryMut.variables === record.id
-                  }
-                />
-              </Popconfirm>
-            )}
-        </Space>
+        <RowActions
+          actions={[
+            {
+              key: "view",
+              label: "Xem chi tiết",
+              ariaLabel: "Xem chi tiết",
+              icon: <EyeOutlined />,
+              onClick: () => setDetailId(record.id),
+            },
+            {
+              key: "retry",
+              label: "Thử lại",
+              ariaLabel: "Thử lại",
+              icon: <RedoOutlined />,
+              hidden: !(
+                canShare &&
+                !record.isSuccess &&
+                record.direction === API_CALL_DIRECTION.Outbound &&
+                record.endpointId
+              ),
+              confirm: "Thử lại giao tiếp này?",
+              onClick: () =>
+                retryMut.mutate(record.id, {
+                  onSuccess: (result) => {
+                    if (result.isSuccess) {
+                      message.success("Đã thử lại thành công.");
+                    } else {
+                      message.warning(
+                        `Đã thử lại nhưng hệ thống nhận vẫn trả lỗi: ${result.errorMessage ?? "không xác định"}`,
+                      );
+                    }
+                  },
+                  onError: (error) =>
+                    void message.error(
+                      apiErrorMessage(error, "Không thể thử lại giao tiếp."),
+                    ),
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -611,14 +602,14 @@ function CallHistoryTab() {
       <Tabs
         size="small"
         activeKey={String(filter.dataType ?? "all")}
-        onChange={(key) =>
+        onChange={(key) => {
           setFilter((f) => ({
             ...f,
             dataType:
               key === "all" ? undefined : (Number(key) as SharedDataType),
-            skipCount: 0,
-          }))
-        }
+          }));
+          pagination.resetToFirstPage();
+        }}
         items={[
           { key: "all", label: "Tất cả" },
           ...Object.entries(SHARED_DATA_TYPE_LABELS)
@@ -631,9 +622,10 @@ function CallHistoryTab() {
           placeholder="URL, hệ thống"
           allowClear
           style={{ width: 240 }}
-          onSearch={(v) =>
-            setFilter((f) => ({ ...f, filter: v || undefined, skipCount: 0 }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Hướng"
@@ -643,9 +635,10 @@ function CallHistoryTab() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, direction: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, direction: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Kết quả"
@@ -655,25 +648,22 @@ function CallHistoryTab() {
             { value: true, label: "Thành công" },
             { value: false, label: "Thất bại" },
           ]}
-          onChange={(v) =>
-            setFilter((f) => ({
-              ...f,
-              isSuccess: v as boolean | undefined,
-              skipCount: 0,
-            }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, isSuccess: v as boolean | undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <DatePicker.RangePicker
           placeholder={["Từ ngày", "Đến ngày"]}
           format="DD/MM/YYYY"
-          onChange={(range) =>
+          onChange={(range) => {
             setFilter((f) => ({
               ...f,
               fromDate: range?.[0]?.format("YYYY-MM-DD"),
               toDate: range?.[1]?.format("YYYY-MM-DD"),
-              skipCount: 0,
-            }))
-          }
+            }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Button
           icon={<ExportOutlined />}
@@ -712,15 +702,7 @@ function CallHistoryTab() {
           onDoubleClick: () => setDetailId(record.id),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
       />
       <Modal
         title="Chia sẻ dữ liệu đến hệ thống bên ngoài"
@@ -901,6 +883,12 @@ export default function DataIntegrationPage() {
   const canViewCallHistory = hasPermission(
     "FoodSafe.DataIntegration.CallHistory.View",
   );
+  const canViewPartners = hasPermission(
+    "FoodSafe.DataIntegration.Partners.View",
+  );
+  const canViewApiSpecs = hasPermission(
+    "FoodSafe.DataIntegration.ApiSpecs.View",
+  );
 
   const tabItems = [
     ...(canViewEndpoints
@@ -918,6 +906,29 @@ export default function DataIntegrationPage() {
             key: "history",
             label: "Lịch sử gọi API",
             children: <CallHistoryTab />,
+          },
+        ]
+      : []),
+    ...(canViewPartners
+      ? [
+          {
+            key: "partners",
+            label: "Đối tác liên thông",
+            children: <PartnersTab />,
+          },
+          {
+            key: "inbound",
+            label: "Dữ liệu nhận về",
+            children: <InboundSubmissionsTab />,
+          },
+        ]
+      : []),
+    ...(canViewApiSpecs
+      ? [
+          {
+            key: "api-specs",
+            label: "Đặc tả API",
+            children: <ApiSpecsTab />,
           },
         ]
       : []),

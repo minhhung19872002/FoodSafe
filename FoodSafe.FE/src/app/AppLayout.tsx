@@ -22,6 +22,7 @@ import {
 } from "@ant-design/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
+import { ROUTE_PERMISSIONS } from "./routePermissions";
 import { brandingLogoUrl, useBranding } from "@/hooks/useBranding";
 import {
   SIDEBAR_WIDTH,
@@ -64,7 +65,7 @@ interface NavItem {
   key: string;
   icon: React.ReactNode;
   label: string;
-  permission?: string | string[];
+  permission?: string | readonly string[];
 }
 
 interface NavGroup {
@@ -104,46 +105,43 @@ const NAV_CONFIG: NavEntry[] = [
         key: "/businesses",
         icon: navIcon("🏭"),
         label: "Cơ sở và sản phẩm",
-        permission: [
-          "FoodSafe.BusinessManagement.Businesses.View",
-          "FoodSafe.BusinessManagement.Products.View",
-        ],
+        permission: ROUTE_PERMISSIONS.businesses,
       },
       {
         key: "/self-declarations",
         icon: navIcon("📄"),
         label: "Hồ sơ tự công bố",
-        permission: "FoodSafe.BusinessManagement.SelfDeclarations.View",
+        permission: ROUTE_PERMISSIONS.selfDeclarations,
       },
       {
         key: "/product-registrations",
         icon: navIcon("✅"),
         label: "Đăng ký công bố SP",
-        permission: "FoodSafe.Licensing.ProductRegistrations.View",
+        permission: ROUTE_PERMISSIONS.productRegistrations,
       },
       {
         key: "/advertisement-registrations",
         icon: navIcon("📣"),
         label: "Đăng ký quảng cáo",
-        permission: "FoodSafe.Licensing.AdRegistrations.View",
+        permission: ROUTE_PERMISSIONS.adRegistrations,
       },
       {
         key: "/eligibility-certificates",
         icon: navIcon("📋"),
         label: "Giấy đủ ĐK ATTP",
-        permission: "FoodSafe.Licensing.EligibilityCertificates.View",
+        permission: ROUTE_PERMISSIONS.eligibilityCertificates,
       },
       {
         key: "/cfs-certificates",
         icon: navIcon("🌐"),
         label: "Chứng nhận CFS",
-        permission: "FoodSafe.Licensing.CfsCertificates.View",
+        permission: ROUTE_PERMISSIONS.cfsCertificates,
       },
       {
         key: "/export-food-certificates",
         icon: navIcon("🚢"),
         label: "GCN Xuất khẩu",
-        permission: "FoodSafe.Licensing.ExportCertificates.View",
+        permission: ROUTE_PERMISSIONS.exportCertificates,
       },
     ],
   },
@@ -155,56 +153,43 @@ const NAV_CONFIG: NavEntry[] = [
         key: "/inspection",
         icon: navIcon("🔍"),
         label: "Thanh tra - Kiểm tra",
-        permission: [
-          "FoodSafe.Inspection.Plans.View",
-          "FoodSafe.Inspection.Results.View",
-        ],
+        permission: ROUTE_PERMISSIONS.inspection,
       },
       {
         key: "/food-poisoning",
         icon: navIcon("🚑"),
         label: "Ngộ độc thực phẩm",
-        permission: [
-          "FoodSafe.FoodPoisoning.Cases.View",
-          "FoodSafe.FoodPoisoning.Incidents.View",
-        ],
+        permission: ROUTE_PERMISSIONS.foodPoisoning,
       },
       {
         key: "/alerts-news",
         icon: navIcon("📢"),
         label: "Cảnh báo và Tin tức",
-        permission: [
-          "FoodSafe.AlertsAndTesting.Alerts.View",
-          "FoodSafe.AlertsAndTesting.News.View",
-        ],
+        permission: ROUTE_PERMISSIONS.alertsNews,
       },
       {
         key: "/risk-analysis",
         icon: navIcon("⚖️"),
         label: "Phân tích nguy cơ",
-        permission: "FoodSafe.AlertsAndTesting.RiskAnalyses.View",
+        permission: ROUTE_PERMISSIONS.riskAnalysis,
       },
       {
         key: "/testing-results",
         icon: navIcon("🧪"),
         label: "Kết quả kiểm nghiệm",
-        permission: "FoodSafe.AlertsAndTesting.TestingResults.View",
+        permission: ROUTE_PERMISSIONS.testingResults,
       },
       {
         key: "/documents",
         icon: navIcon("📚"),
         label: "Văn bản pháp quy",
-        permission: "FoodSafe.AlertsAndTesting.Documents.View",
+        permission: ROUTE_PERMISSIONS.documents,
       },
       {
         key: "/reporting",
         icon: navIcon("🗂️"),
         label: "Báo cáo",
-        permission: [
-          "FoodSafe.Reporting.NdtpReports.View",
-          "FoodSafe.Reporting.AtpWorkReports.View",
-          "FoodSafe.Reporting.ActionMonthReports.View",
-        ],
+        permission: ROUTE_PERMISSIONS.reporting,
       },
     ],
   },
@@ -216,46 +201,43 @@ const NAV_CONFIG: NavEntry[] = [
         key: "/administration/identity",
         icon: navIcon("🛡️"),
         label: "Tài khoản và quyền",
-        permission: "FoodSafe.SystemAdmin",
+        permission: ROUTE_PERMISSIONS.identity,
       },
       {
         key: "/organizations",
         icon: navIcon("🏛"),
         label: "Đơn vị",
-        permission: "FoodSafe.Organizations.View",
+        permission: ROUTE_PERMISSIONS.organizations,
       },
       {
         key: "/geography",
         icon: navIcon("🗺️"),
         label: "Địa bàn",
-        permission: "FoodSafe.GeographicCatalogs.View",
+        permission: ROUTE_PERMISSIONS.geography,
       },
       {
         key: "/catalogs",
         icon: navIcon("🗃️"),
         label: "Danh mục dùng chung",
-        permission: "FoodSafe.Catalogs.View",
+        permission: ROUTE_PERMISSIONS.catalogs,
       },
       {
         key: "/data-integration",
         icon: navIcon("🔌"),
         label: "Tích hợp dữ liệu",
-        permission: [
-          "FoodSafe.DataIntegration.ApiEndpoints.View",
-          "FoodSafe.DataIntegration.CallHistory.View",
-        ],
+        permission: ROUTE_PERMISSIONS.dataIntegration,
       },
       {
         key: "/administration/audit-logs",
         icon: navIcon("📝"),
         label: "Nhật ký hoạt động",
-        permission: "FoodSafe.SystemAdmin.AuditLogs",
+        permission: ROUTE_PERMISSIONS.auditLogs,
       },
       {
         key: "/administration/settings",
         icon: navIcon("⚙️"),
         label: "Cấu hình hệ thống",
-        permission: "FoodSafe.SystemAdmin.Settings",
+        permission: ROUTE_PERMISSIONS.settings,
       },
     ],
   },
@@ -270,9 +252,9 @@ function hasItemPermission(
   hasPermission: (p: string) => boolean,
 ): boolean {
   if (!item.permission) return true;
-  if (Array.isArray(item.permission))
-    return item.permission.some(hasPermission);
-  return hasPermission(item.permission);
+  const required =
+    typeof item.permission === "string" ? [item.permission] : item.permission;
+  return required.some(hasPermission);
 }
 
 function buildMenuItems(

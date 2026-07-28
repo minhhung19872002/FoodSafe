@@ -48,7 +48,16 @@ specified level.
 |---|---|---|---|
 | Share/retry engine | `BE/Application/DataIntegration/DataSharingAppService.cs` | Level 2 | F-019, F-019c, F-019d, F-019e |
 | Payload builders | `BE/Application/DataIntegration/SharedDataPayloadBuilders.cs` | Level 2 | F-019e (payload content of every share; readers of the shared entities are unaffected — builders are read-only) |
-| Call-log entity/mapping | `BE/Domain/DataIntegration/ApiCallLog.cs` + its model-creating block | Level 2 | F-019, F-019c, F-019d, F-019e |
+| Call-log entity/mapping | `BE/Domain/DataIntegration/ApiCallLog.cs` + its model-creating block | Level 2 | F-019, F-019c, F-019d, F-019e (+ F-019f — inbound attempts log here) |
+| Guarded outbound HttpClient (SSRF/redirect/size) | `BE/Application/Security/OutboundUrlValidator.cs` | Level 2 | F-019c, F-019d, F-019e (every outbound share/test-connection) |
+
+### Data Integration (inbound partner surface, INT-03)
+
+| Dependency | Path | Retest | Affected Features |
+|---|---|---|---|
+| Partner aggregates + key material | `BE/Domain/DataIntegration/{PartnerAccount,PartnerApiKey,InboundSubmission}.cs`, `BE/Application/DataIntegration/PartnerKeyMaterial.cs` | Level 2 | F-019f |
+| Partner admin + inbound receive services | `BE/Application/DataIntegration/{PartnerAccountAppService,PartnerInboundAppService}.cs`, `BE/HttpApi/DataIntegration/*` | Level 2 | F-019f (+ re-run `e2e/partner-openapi-contract.spec.ts` and re-align `docs/integration/partner-openapi.yaml` — FR-50-05 published contract) |
+| Partner FE tabs | `FE/src/features/data-integration/components/{PartnersTab,InboundSubmissionsTab}.tsx` | Level 2 | F-019f |
 
 ### API Infrastructure
 

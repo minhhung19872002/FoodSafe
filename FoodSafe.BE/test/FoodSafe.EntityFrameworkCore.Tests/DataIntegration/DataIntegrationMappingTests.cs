@@ -48,4 +48,37 @@ public sealed class DataIntegrationMappingTests
                 constraint.Name == "chk_di_cl_attempt")
             .Sql.ShouldBe("attempt_number >= 1");
     }
+
+    [Fact]
+    public void Partner_tables_should_enforce_identity_and_idempotency()
+    {
+        using var context = CreateContext();
+        var model = context.Model;
+
+        var partner = model.FindEntityType(typeof(PartnerAccount))!;
+        partner.GetTableName().ShouldBe("di_partner_accounts");
+        var code = partner.GetIndexes().Single(index =>
+            index.GetDatabaseName() == "uq_di_partner_accounts_code");
+        code.IsUnique.ShouldBeTrue();
+        code.GetFilter().ShouldBe("is_deleted = FALSE");
+
+        var key = model.FindEntityType(typeof(PartnerApiKey))!;
+        key.GetTableName().ShouldBe("di_partner_api_keys");
+        key.FindProperty(nameof(PartnerApiKey.KeyHash))!
+            .GetMaxLength().ShouldBe(PartnerApiKeyConsts.HashLength);
+        key.GetIndexes().Single(index =>
+                index.GetDatabaseName() == "uq_di_partner_api_keys_prefix")
+            .IsUnique.ShouldBeTrue();
+        key.GetForeignKeys().ShouldContain(fk =>
+            fk.GetConstraintName() == "fk_di_pak_partner");
+
+        var submission = model.FindEntityType(typeof(InboundSubmission))!;
+        submission.GetTableName().ShouldBe("di_inbound_submissions");
+        // Database-enforced idempotency: one live row per partner request id.
+        submission.GetIndexes().Single(index =>
+                index.GetDatabaseName() == "uq_di_is_partner_request")
+            .IsUnique.ShouldBeTrue();
+        submission.GetForeignKeys().ShouldContain(fk =>
+            fk.GetConstraintName() == "fk_di_is_partner");
+    }
 }

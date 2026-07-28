@@ -11,7 +11,7 @@ import {
   Tag,
   Typography,
 } from "antd";
-import type { TablePaginationConfig } from "antd";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { PublicShell } from "../components/PublicShell";
 import {
   usePublicBusinessSearch,
@@ -21,8 +21,6 @@ import {
   BUSINESS_STATUS_CONFIG,
   type BusinessStatus,
 } from "../types/publicPortal.types";
-
-const PAGE_SIZE = 20;
 
 /** Từ khóa chuyển sang từ ô tra cứu ngoài trang chủ: /tra-cuu-chung?q=... */
 function useInitialKeyword(): string {
@@ -34,23 +32,19 @@ function BusinessSearchTab() {
   const initialKeyword = useInitialKeyword();
   const [keyword, setKeyword] = useState(initialKeyword);
   const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
 
   const filter = {
     Keyword: submittedKeyword || undefined,
-    SkipCount: (page - 1) * PAGE_SIZE,
-    MaxResultCount: PAGE_SIZE,
+    SkipCount: pagination.skipCount,
+    MaxResultCount: pagination.maxResultCount,
   };
 
   const { data, isFetching, isError } = usePublicBusinessSearch(filter);
 
   const handleSearch = () => {
-    setPage(1);
+    pagination.resetToFirstPage();
     setSubmittedKeyword(keyword);
-  };
-
-  const handleTableChange = (pagination: TablePaginationConfig) => {
-    setPage(pagination.current ?? 1);
   };
 
   return (
@@ -82,20 +76,15 @@ function BusinessSearchTab() {
         <Table
           dataSource={data?.items}
           rowKey={(row) => row.code || row.name}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: data?.totalCount ?? 0,
-            showTotal: (total) => `Tổng ${total} cơ sở`,
-            showSizeChanger: false,
-          }}
-          onChange={handleTableChange}
+          pagination={pagination.buildConfig(data?.totalCount)}
           locale={{ emptyText: <Empty description="Không có dữ liệu" /> }}
           size="middle"
         >
           <Table.Column
             title="STT"
-            render={(_v, _r, i) => (page - 1) * PAGE_SIZE + i + 1}
+            render={(_v, _r, i) =>
+              (pagination.page - 1) * pagination.pageSize + i + 1
+            }
             width={60}
           />
           <Table.Column title="Tên cơ sở" dataIndex="name" />
@@ -145,23 +134,19 @@ function ProductSearchTab() {
   const initialKeyword = useInitialKeyword();
   const [keyword, setKeyword] = useState(initialKeyword);
   const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
 
   const filter = {
     Keyword: submittedKeyword || undefined,
-    SkipCount: (page - 1) * PAGE_SIZE,
-    MaxResultCount: PAGE_SIZE,
+    SkipCount: pagination.skipCount,
+    MaxResultCount: pagination.maxResultCount,
   };
 
   const { data, isFetching, isError } = usePublicProductSearch(filter);
 
   const handleSearch = () => {
-    setPage(1);
+    pagination.resetToFirstPage();
     setSubmittedKeyword(keyword);
-  };
-
-  const handleTableChange = (pagination: TablePaginationConfig) => {
-    setPage(pagination.current ?? 1);
   };
 
   return (
@@ -193,20 +178,15 @@ function ProductSearchTab() {
         <Table
           dataSource={data?.items}
           rowKey={(row) => row.code || row.name}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: data?.totalCount ?? 0,
-            showTotal: (total) => `Tổng ${total} sản phẩm`,
-            showSizeChanger: false,
-          }}
-          onChange={handleTableChange}
+          pagination={pagination.buildConfig(data?.totalCount)}
           locale={{ emptyText: <Empty description="Không có dữ liệu" /> }}
           size="middle"
         >
           <Table.Column
             title="STT"
-            render={(_v, _r, i) => (page - 1) * PAGE_SIZE + i + 1}
+            render={(_v, _r, i) =>
+              (pagination.page - 1) * pagination.pageSize + i + 1
+            }
             width={60}
           />
           <Table.Column title="Tên sản phẩm" dataIndex="name" />

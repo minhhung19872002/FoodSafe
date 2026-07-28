@@ -7,7 +7,6 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
   Select,
   Space,
   Switch,
@@ -15,6 +14,7 @@ import {
   Tag,
   type TableColumnsType,
 } from "antd";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import {
   PlusOutlined,
   EditOutlined,
@@ -43,16 +43,44 @@ import {
   type DocumentFilter,
   type DocumentStatus,
 } from "../types/document.types";
-
-const PAGE_SIZE = 15;
+import { useTablePagination } from "@/hooks/useTablePagination";
+import { RowActions } from "@/components/RowActions";
 
 export default function DocumentsPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const [filter, setFilter] = useState<DocumentFilter>({
-    skipCount: 0,
-    maxResultCount: PAGE_SIZE,
+  const [filter, setFilter] = useState<DocumentFilter>({});
+  const [sorting, setSorting] = useState<string | undefined>(undefined);
+  const pagination = useTablePagination(15);
+  const { data, isLoading } = useDocuments({
+    ...filter,
+    sorting,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
-  const { data, isLoading } = useDocuments(filter);
+
+  // Server-side sorting: reflect the active sort in the column header and
+  // translate AntD SorterResult into the "<field> <asc|desc>" string the
+  // backend's ApplySorting whitelist parses.
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter: SorterResult<AdministrativeDocument> | SorterResult<AdministrativeDocument>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
   const { data: documentTypes, isLoading: docTypesLoading } =
     useDocumentTypes();
   const createMut = useCreateDocument();
@@ -131,6 +159,8 @@ export default function DocumentsPage() {
       title: "Ngày ban hành",
       dataIndex: "issuedDate",
       width: 120,
+      sorter: true,
+      sortOrder: sortOrderFor("issuedDate"),
       render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
     },
     {
@@ -145,48 +175,51 @@ export default function DocumentsPage() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 190,
+      width: 96,
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            size="small"
-            aria-label={`In ${record.documentNumber}`}
-            icon={<PrinterOutlined />}
-            onClick={() => printDocument(record)}
-          />
-          <Button
-            size="small"
-            aria-label={`Tệp ${record.documentNumber}`}
-            icon={<PaperClipOutlined />}
-            onClick={() => setAttachmentsDoc(record)}
-          />
-          {hasPermission("FoodSafe.AlertsAndTesting.Documents.Edit") && (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(record)}
-            >
-              Sửa
-            </Button>
-          )}
-          {hasPermission("FoodSafe.AlertsAndTesting.Documents.Delete") && (
-            <Popconfirm
-              title="Xóa văn bản?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${record.documentNumber}`}
+          actions={[
+            {
+              key: "print",
+              label: "In",
+              ariaLabel: `In ${record.documentNumber}`,
+              icon: <PrinterOutlined />,
+              onClick: () => printDocument(record),
+            },
+            {
+              key: "attachments",
+              label: "Tệp",
+              ariaLabel: `Tệp ${record.documentNumber}`,
+              icon: <PaperClipOutlined />,
+              onClick: () => setAttachmentsDoc(record),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: !hasPermission(
+                "FoodSafe.AlertsAndTesting.Documents.Edit",
+              ),
+              onClick: () => openEdit(record),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !hasPermission(
+                "FoodSafe.AlertsAndTesting.Documents.Delete",
+              ),
+              confirm: "Xóa văn bản?",
+              onClick: () =>
                 deleteMut.mutate(record.id, {
                   onSuccess: () => message.success("Đã xóa"),
                   onError: () => message.error("Xóa thất bại"),
-                })
-              }
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -198,13 +231,10 @@ export default function DocumentsPage() {
           placeholder="Số VB, tiêu đề"
           allowClear
           style={{ width: 200 }}
-          onSearch={(v) =>
-            setFilter((f) => ({
-              ...f,
-              filter: v || undefined,
-              skipCount: 0,
-            }))
-          }
+          onSearch={(v) => {
+            setFilter((f) => ({ ...f, filter: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Select
           placeholder="Trạng thái"
@@ -214,9 +244,10 @@ export default function DocumentsPage() {
             value: Number(k),
             label: v.label,
           }))}
-          onChange={(v) =>
-            setFilter((f) => ({ ...f, status: v, skipCount: 0 }))
-          }
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
         />
         <Button
           icon={<ExportOutlined />}
@@ -246,15 +277,8 @@ export default function DocumentsPage() {
           onDoubleClick: () => setDetailDoc(record),
           style: { cursor: "pointer" },
         })}
-        pagination={{
-          total: data?.totalCount,
-          pageSize: PAGE_SIZE,
-          current: (filter.skipCount ?? 0) / PAGE_SIZE + 1,
-          onChange: (page) =>
-            setFilter((f) => ({ ...f, skipCount: (page - 1) * PAGE_SIZE })),
-          showTotal: (total) => `Tổng: ${total}`,
-          showSizeChanger: false,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount)}
+        onChange={(_, __, sorter) => handleSort(sorter)}
       />
       <Modal
         title={editing ? "Sửa văn bản" : "Thêm văn bản"}

@@ -14,8 +14,7 @@ async function removeStaleAlerts(
     "/api/v1/app/atp-alert?Filter=E2E-ALERT&MaxResultCount=100",
   );
   if (!response.ok()) return;
-  for (const item of ((await response.json()) as { items: ListItem[] })
-    .items) {
+  for (const item of ((await response.json()) as { items: ListItem[] }).items) {
     if (item.title?.startsWith("E2E-ALERT")) {
       await request.delete(`/api/v1/app/atp-alert/${item.id}`, { headers });
     }
@@ -47,33 +46,24 @@ test.describe("alerts and news management", () => {
     const alertDialog = page.getByRole("dialog", {
       name: "Tạo cảnh báo mới",
     });
-    await alertDialog
-      .getByRole("textbox", { name: "Tiêu đề" })
-      .fill(title);
-    await alertDialog
-      .getByRole("combobox", { name: "Loại cảnh báo" })
-      .click();
+    await alertDialog.getByRole("textbox", { name: "Tiêu đề" }).fill(title);
+    await alertDialog.getByRole("combobox", { name: "Loại cảnh báo" }).click();
     await page.getByTitle("Sinh học").click();
-    await alertDialog
-      .getByRole("combobox", { name: "Mức độ" })
-      .click();
+    await alertDialog.getByRole("combobox", { name: "Mức độ" }).click();
     await page.getByTitle("Cao").click();
     await alertDialog
       .getByRole("textbox", { name: "Nội dung" })
       .fill("Nội dung cảnh báo E2E test");
-    await alertDialog
-      .getByRole("button", { name: "Lưu", exact: true })
-      .click();
+    await alertDialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(page.getByText(title)).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: title });
     await row.getByRole("button", { name: /Xuất bản/ }).click();
-    await page
-      .getByRole("button", { name: "Xuất bản", exact: true })
-      .click();
+    await page.getByRole("button", { name: "OK" }).click();
 
     row = page.getByRole("row").filter({ hasText: title });
-    await row.getByRole("button", { name: /Thu hồi/ }).click();
+    await row.getByRole("button", { name: `Thao tác ${title}` }).click();
+    await page.getByRole("menuitem", { name: "Thu hồi" }).click();
     const recallDialog = page.getByRole("dialog", {
       name: "Thu hồi cảnh báo",
     });

@@ -127,9 +127,7 @@ test.describe("export food certificate management", () => {
     ).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: certificateNumber });
-    await row
-      .getByRole("button", { name: `Tệp ${certificateNumber}` })
-      .click();
+    await row.getByRole("button", { name: `Tệp ${certificateNumber}` }).click();
     const fileDialog = page.getByRole("dialog", {
       name: `Tệp GCN XK — ${certificateNumber}`,
     });
@@ -159,9 +157,7 @@ test.describe("export food certificate management", () => {
 
     await page.context().clearCookies();
     await page.goto("/tra-cuu-gcn-xuat-khau");
-    await page
-      .getByPlaceholder("Số GCN xuất khẩu")
-      .fill(certificateNumber);
+    await page.getByPlaceholder("Số GCN xuất khẩu").fill(certificateNumber);
     await page.getByRole("button", { name: "Tra cứu" }).click();
     await expect(page.getByText(businessName)).toBeVisible();
     await expect(page.getByText(lotNumber)).toBeVisible();
@@ -171,8 +167,9 @@ test.describe("export food certificate management", () => {
     await page.goto("/export-food-certificates");
     row = page.getByRole("row").filter({ hasText: certificateNumber });
     await row
-      .getByRole("button", { name: `Thu hồi ${certificateNumber}` })
+      .getByRole("button", { name: `Thao tác ${certificateNumber}` })
       .click();
+    await page.getByRole("menuitem", { name: "Thu hồi" }).click();
     const revokeDialog = page.getByRole("dialog", {
       name: `Thu hồi GCN XK ${certificateNumber}`,
     });
@@ -209,9 +206,10 @@ test.describe("export food certificate management", () => {
 
     row = page.getByRole("row").filter({ hasText: certificateNumber });
     await row
-      .getByRole("button", { name: `Xóa ${certificateNumber}` })
+      .getByRole("button", { name: `Thao tác ${certificateNumber}` })
       .click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Xóa" }).click();
+    await page.getByRole("button", { name: "OK" }).click();
     await expect(
       page.getByText("Đã xóa giấy chứng nhận xuất khẩu."),
     ).toBeVisible();

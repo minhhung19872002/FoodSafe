@@ -12,26 +12,28 @@
 |-------|---------------------------------|----------------|-----------------------------------------------|-----------------|------------|
 | F-001 | Authentication (Login)          | VERIFIED       | `e2e/auth.spec.ts`, `e2e/auth-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-002 | Password Management             | VERIFIED       | `e2e/password-management-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-003 | Organizations                   | VERIFIED       | `e2e/organizations.spec.ts`, `e2e/organizations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-003 | Organizations                   | DIRTY          | `e2e/organizations.spec.ts`, `e2e/organizations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-004 | Master Catalogs                 | VERIFIED       | `e2e/catalogs.spec.ts`, `e2e/catalogs-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-005 | Geographic Catalogs             | VERIFIED       | `e2e/geography.spec.ts`, `e2e/geography-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-008 | Product Registrations           | VERIFIED       | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-009 | Advertisement Registrations     | VERIFIED       | `e2e/advertisement-registrations.spec.ts`, `e2e/advertisement-registrations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-010 | Eligibility Certificates        | VERIFIED       | `e2e/eligibility-certificates.spec.ts`, `e2e/eligibility-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-011 | CFS Certificates                | VERIFIED       | `e2e/cfs-certificates.spec.ts`, `e2e/cfs-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-012 | Export Food Certificates        | VERIFIED       | `e2e/export-food-certificates.spec.ts`, `e2e/export-food-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-013 | Inspection Plans & Results      | VERIFIED       | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts`, `e2e/business-list-filters.spec.ts`, `e2e/business-detail-tabs.spec.ts`, `e2e/business-delete-guard.spec.ts` | `983788c` | 2026-07-28 |
+| F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts`, `e2e/business-delete-guard.spec.ts` | `983788c` | 2026-07-28 |
+| F-008 | Product Registrations           | VERIFIED       | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `8e7840e` | 2026-07-28 |
+| F-009 | Advertisement Registrations     | VERIFIED       | `e2e/advertisement-registrations.spec.ts`, `e2e/advertisement-registrations-verification.spec.ts` | wt-post-`a3c7ad7` | 2026-07-28 |
+| F-010 | Eligibility Certificates        | DIRTY          | `e2e/eligibility-certificates.spec.ts`, `e2e/eligibility-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-011 | CFS Certificates                | VERIFIED       | `e2e/cfs-certificates.spec.ts`, `e2e/cfs-certificates-verification.spec.ts` | wt-post-`b1b8898` | 2026-07-28 |
+| F-012 | Export Food Certificates        | DIRTY          | `e2e/export-food-certificates.spec.ts`, `e2e/export-food-certificates-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-013 | Inspection Plans & Results      | DIRTY          | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-014 | Food Poisoning Cases            | VERIFIED       | `e2e/food-poisoning.spec.ts`, `e2e/food-poisoning-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-015 | Reporting (NDTP/ATP/Action)     | VERIFIED       | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-015 | Reporting (NDTP/ATP/Action)     | DIRTY          | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-016 | Alerts & News                   | VERIFIED       | `e2e/alerts-news.spec.ts`, `e2e/alerts-news-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-017 | Testing Results                 | VERIFIED       | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-017 | Testing Results                 | DIRTY          | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-018 | Risk Analysis                   | VERIFIED       | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-019 | Data Integration                | VERIFIED       | `e2e/data-integration.spec.ts`, `e2e/data-integration-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-019c | Data Integration — Outbound Auth Credentials (P0-2, FR-50/51) | VERIFIED | `e2e/data-integration-credentials.spec.ts` (6/6) | `8be91bc` | 2026-07-28 |
 | F-019d | Data Integration — Outbound Share via UI + history persistence (P1-3, FR-51) | VERIFIED | `e2e/data-integration-share.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
 | F-019e | Data Integration — Typed share payloads + retry attempt history (Batch F-1, FR-51..57) | VERIFIED | `e2e/data-integration-retry.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
+| F-019f | Data Integration — Inbound partner surface: accounts, API keys, receive endpoint (Batch F-2, INT-03) | DIRTY | `e2e/data-integration-partners.spec.ts` (3/3; full DI subset 20/20); FR-50-05 contract spec `e2e/partner-openapi-contract.spec.ts` (1/1 at `0776230`) | `adb30eb` | 2026-07-28 |
+| F-019g | Data Integration — Partner API Specification management (FR-50-05: upload/validate/version/publish/anonymous partner download/metadata) + ApiSpecs route permission (G-02) | DIRTY | `e2e/api-specification-management.spec.ts` (5/5, no interception; adds the ApiSpecs-only route-admission scenario) | `17149f6` | 2026-07-28 |
 | F-020 | Identity Administration         | VERIFIED       | `e2e/identity-administration.spec.ts`, `e2e/identity-administration-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-021 | Audit Logs                      | VERIFIED       | `e2e/audit-logs.spec.ts`, `e2e/audit-logs-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-022 | Dashboard                       | VERIFIED       | `e2e/dashboard.spec.ts`, `e2e/dashboard-verification.spec.ts` | `8be91bc` | 2026-07-28 |
@@ -43,7 +45,7 @@
 | F-028 | Public Lookup — CFS             | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-029 | Public Lookup — Export Food     | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-030 | Public Lookup — Ad Registration | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-031 | Documents                       | DIRTY          | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-034 | Certificate PDF Download (incl. anonymous citizen path) | VERIFIED | `e2e/certificate-pdf-verification.spec.ts` (5/5, cookie-less ctx) | `8be91bc` | 2026-07-28 |
@@ -51,11 +53,20 @@
 ## Summary
 
 - Total features: 34
-- VERIFIED: **34** (ALL features — see `features/*.md`)
+- VERIFIED: 27 rows (of 39 table rows)
+- DIRTY: **12 rows** (2026-07-28 — default list ordering changed to `CreationTime desc` + server-side column sorting added; see "DIRTY batch" note below and `03-regression-log.md`)
 - READY_FOR_TEST: 0
 - FAILED: 0
 - BLOCKED: 0
 - NOT_STARTED: 0
+
+## DIRTY batch (2026-07-28) — default list sort → CreationTime desc, sortable columns
+
+- Cross-cutting UX change: every admin list now defaults to `CreationTime desc` (newest first); the previous business-field ordering (SampleDate, IssuedDate, InspectionDate, Year, PeriodYear, IssueDate, RegistrationDate, DeclarationDate, Name, Code) is now reachable via server-side column sorting (whitelisted `ApplySorting` per AppService + controlled AntD sorter per page, following the F-006 businesses pattern).
+- DTO constructor `Sorting` defaults that pre-empted the fallback were removed/changed (`BusinessListInput`, `GetOrganizationListInput`, `SelfDeclarationListInput`, `ProductListInput`, 5 Licensing inputs).
+- NOT affected (left as-is): Catalogs (`SortOrder` is a deliberate user-managed display order), FoodPoisoning/Alerts/News/RiskAnalysis/ApiEndpoints/Identity users (already `CreationTime desc`), call/submission logs (`CalledAt`/`ReceivedAt` desc), public portal ordering.
+- Rows marked DIRTY: F-003, F-008, F-010, F-012, F-013, F-015, F-017, F-019f, F-019g, F-031. F-006/F-007 were initially marked DIRTY by this batch too, but the concurrent session re-verified them at `dccac2e`+wt against the working tree that already contained the sorting changes, so their VERIFIED stamps stand. F-009 likewise retested (hardening batch, 6/6) and returned to VERIFIED. Required retest: Level 2 per feature (list default order, header-click sort round-trip, pagination interplay). Build gates at change time: BE compile 0 errors, FE `tsc -b` clean, `oxlint` clean; runtime E2E NOT yet run — e2e specs asserting first-row/newest-first assumptions must be reviewed during retest.
+- **F-006 + F-007 retested and returned to VERIFIED** (2026-07-28, hardening batch): full feature suites + `business-delete-guard.spec.ts` ran **20/20** against a stack rebuilt from the tree containing the sorting changes for these two features (incl. `business-list-filters` sort/pagination spec). Remaining DIRTY rows still owe their Level-2 retest.
 
 ## UI restyle (2026-07-28) — áp bộ nhận diện FoodSafe Quảng Ninh — RE-VERIFIED
 
@@ -83,6 +94,26 @@
 - `e2e/data-integration-retry.spec.ts` **3/3** (6.4s, no interception): parsed request body of an entityId-pinned share = versioned envelope with the seeded alert (recordCount 1, exact title/id) + receiver reflection contains the record; UI retry of a failed share (postman-echo /status/503) → linked `#2` row, identical body+checksum, original untouched, persists after reload; date-range filter narrows table; guards (successful→403 VN error, readonly→403).
 - **F-019c re-verified at `71f35e2`** — its spec setup now pins one seeded record per share (the typed payload otherwise pushes the echo reflection past the 4000-char response truncation, hiding the reflected auth headers); assertions unchanged, **6/6**. DataIntegration subset **20/20**; cross-module smoke (businesses+auth) **13/13**; BE **621/621**.
 - **Full suite post-batch: 282/282 passed, 0 failed/flaky/skipped (306s)** — first fully-green full run on record (covers the impact-map Level-3 migration obligation). Baseline runs the same day: 278/1 (the 1 = `reporting-error-notifications` load-contention flake, green in isolation, 2.1s).
+
+## Test Run (2026-07-28) — Batch F-2: INT-03 inbound partner surface (F-019f)
+
+- Commit `52d35c1`. Partner accounts (org-scoped, per-partner data-type allow-list, Active/Suspended), API keys (SHA-256 hash + prefix lookup only — raw key shown exactly once at issuance, fixed-time verification, expiry/revocation/last-used), inbound receive endpoint `POST /api/v1/partner/submissions/{dataType}` (X-Api-Key auth, ±300s replay window, schemaVersion gate, DB-enforced idempotency via unique `(partner_account_id, request_id)`, every attributable attempt an Inbound `ApiCallLog` row), admin submissions browser. Migration `20260728064640` confirmed applied (di_partner_accounts / di_partner_api_keys / di_inbound_submissions live in the real DB).
+- `e2e/data-integration-partners.spec.ts` **3/3** (8.0s + guards, no interception; partner calls from a cookie-less `request` fixture → auth is provably the X-Api-Key header alone): UI lifecycle (create partner → issue key, raw key visible once → real partner POST 200 → duplicate delivery returns the ORIGINAL submission id with `duplicate:true` and exactly one persisted row → submission + Vietnamese payload visible in UI and after reload → Inbound row in call history → UI revoke → 401 → UI-issued replacement key works (rotation) → UI suspend → 401); guards (missing/garbage/unprefixed key → 401, expired key → 401, disallowed data type → 403 `DataTypeNotAllowed`, unknown segment / stale timestamp / missing X-Request-Id / missing X-Timestamp / schemaVersion 9.9 / empty records → 400); idempotency scoped per partner (same request id from two partners = two submissions; admin filter isolates each).
+- **Two product defects found by the run and fixed in the same commit**: (1) `records: []` returned **500** — ABP method-argument validation fired ahead of the service body and, through the `IActionResult` controller, bypassed ABP's exception→status mapping, leaking the ABP error shape to partners; validation is now in-method (`[DisableValidation]` + null-safe envelope guards) so every outcome maps to 400/401/403 as designed — pinned by contract test and an e2e assertion on the `InvalidRecords` error code. (2) Stored payloads were `\uXXXX`-escaped, rendering Vietnamese content unreadable in the officer UI — now stored human-readable (`UnsafeRelaxedJsonEscaping`; payload is rendered as a text node, no HTML sink).
+- Regression owed for the shared `OutboundUrlValidator` hardening (AllowAutoRedirect=false + 2 MB response cap) executed: **full DataIntegration subset 23/23** (F-019 7/7 + credentials 6/6 + share 3/3 + retry 3/3 + partners 3/3 + UI lifecycle 1/1). BE: DataIntegration contract **27/27**, EF mapping **2/2**, OutboundUrlValidator **58/58**. `tsc --noEmit` clean; existing FE unit tests for the feature 5/5.
+
+## Test Run (2026-07-28) — FR-50-05: partner OpenAPI contract verified against the running API
+
+- Working tree at `0776230`. Deliverables: `docs/integration/partner-api-specification.md`, `partner-openapi.yaml` (OpenAPI 3.0.3, Redocly lint valid), `partner-onboarding-guide.md`, `examples/` — all generated from the committed INT-03 implementation.
+- `e2e/partner-openapi-contract.spec.ts` **1/1** (3.3s, no interception; cookie-less partner client): every OpenAPI operation exercised (operationId coverage gate), all 7 `dataType` segments accepted by an allow-all partner, all 10 partner `error.code` values reproduced with documented statuses, success/error bodies validated against the spec schemas, `rawKey` proven absent after issuance, idempotent replay echoes the original submission, Vietnamese Unicode payload stored verbatim.
+- Runtime-mismatch caught by the run: the live `api` container predated `adb30eb` and lacked the `InvalidSourceSystem` guard; rebuilt from HEAD, then Level-2 regression `data-integration-partners.spec.ts` **3/3**. Details in `03-regression-log.md`.
+
+## Test Run (2026-07-28) — FR-50-05: partner API specification management (F-019g)
+
+- Commit `5bc0d86`. New in-app feature to manage the versioned partner API specification (distinct from the F-019f/`0776230` published contract): admin uploads an OpenAPI **JSON or YAML** document, the server parses + validates it with the official `Microsoft.OpenApi.Readers` (title / spec version / OpenAPI version extracted, SHA-256 checksum computed, ≤2 MB), stores it as a draft, then publish/unpublish gates an **anonymous** partner download at `GET /api/v1/partner/api-spec/{name}`. Migration `20260728081422_AddApiSpecification` (`di_api_specifications`) confirmed applied to the live DB; 5 `ApiSpecs` permissions seeded to role `admin`.
+- `e2e/api-specification-management.spec.ts` **4/4** (~6.5s, no interception, real Docker stack + real login): (1) unauthenticated management API → 401/302; (2) `noperm@foodsafe.local` → 403/302; (3) full UI lifecycle — upload a real file through the `Upload.Dragger` → row shows server-parsed title/version/`Nháp` → authenticated list confirms persisted `title/specVersion/openApiVersion/format=Json/checksum=/^[a-f0-9]{64}$/`, `isPublished=false` → **partner GET before publish 404** → publish via UI → **cookie-less partner GET 200** (content-type `application/json`, `content-disposition: attachment`, body carries title+version) → authenticated management download DTO → unpublish → **partner GET 404 again** → persistence after `page.reload()` → delete; (4) well-formed-but-invalid OpenAPI JSON → server rejects, FE surfaces the error and keeps the modal open, `totalCount=0` (nothing persisted).
+- **Product defect found by the run and fixed in the same commit**: the four `ApiSpecs` permissions were granted server-side and exposed in app-config `grantedPolicies`, but were **absent from `CurrentUserContextAppService.FoodSafePermissionNames`** — the hardcoded allowlist the FE reads via `/api/v1/app/current-user-context` to populate `user.permissions`. Result: `hasPermission("…ApiSpecs.View")` returned false and the "Đặc tả API" tab **silently never rendered** (same class as the historic `Users.Delete` invisible-control bug). Fixed additively by appending the four constants; guarded by a new backend contract test `Frontend_permission_projection_includes_data_integration` (see `03-regression-log.md`).
+- Backend: Domain `ApiSpecificationTests` **6/6** + Application `ApiSpecificationContractTests`/`OpenApiSpecValidatorTests` + the projection contract tests — affected `FoodSafe.Application.Tests` filtered subset **22/22** green after the projection edit. The `CurrentUserContextAppService` change is a Level-3 shared dependency but purely additive, so **no previously VERIFIED feature was invalidated**.
 
 ## Test Run (2026-07-28) — SEC-04 password-expiry server-side enforcement (P0-1)
 
@@ -236,3 +267,22 @@ Even the 8 passing tests do not qualify for VERIFIED status because:
 - `BLOCKED` means no test exists and cannot proceed without writing one
 - Previous `READY_FOR_TEST` status for all 32 features was incorrect — tests had never been run against the real stack
 
+
+---
+
+## Freeze certification — 2026-07-28, commit `17149f6` (Phase 0, BASE-001..004)
+
+The working tree was frozen into commit `17149f6e1af41e62dbdb606a00fd866bfd399e31` (`chore(baseline): freeze verified implementation baseline`) after the full gate ran green **on exactly this tree**:
+
+| Gate | Result |
+|---|---|
+| Backend build | 0 errors |
+| Backend tests | **663/663** (Domain 215, HttpApi.Host 71, Application 357, EFCore 20) |
+| EF model drift | none (`has-pending-model-changes` clean) |
+| Migration checks | clean-apply to empty DB ✓, upgrade from `20260728064640` ✓, rollback of `20260728081422_AddApiSpecification` ✓ (disposable DBs on the real PostgreSQL 15 container) |
+| FE type-check / lint | tsc 0 errors, oxlint clean |
+| FE unit (Vitest — not acceptance evidence) | **116/116** |
+| FE production build | ✓ |
+| Full Playwright suite | **292/292 passed, 0 failed, 0 flaky, 0 skipped** (5.2 m, workers=1, real Docker stack rebuilt from this tree, zero API interception) — includes the new ApiSpecs-only route-permission scenario and the previously flaky `reporting-error-notifications` |
+
+Row-stamp policy: rows stamped `8be91bc`/`adb30eb`/`5bc0d86` keep their historical stamps — their features were **not modified** between those commits and `17149f6`, and the 292/292 run at the freeze re-exercised all of them (this section is the citation). The only row re-stamped is **F-019g** (its spec gained the BASE-002 scenario at the freeze). Registry notes: the pre-`8be91bc` "Systemic Gaps / Priority Blockers" sections further above are **historical** (from the 0-VERIFIED era) and are superseded by the row table and this certification.

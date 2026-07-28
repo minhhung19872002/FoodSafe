@@ -17,6 +17,7 @@ import {
   Line,
 } from "recharts";
 import { PageHeader } from "@/components/PageHeader";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { PoisoningMap } from "@/features/food-poisoning/components/PoisoningMap";
 import {
   usePoisoningCases,
@@ -85,15 +86,26 @@ function hasChartData(items: ReadonlyArray<{ count: number }>): boolean {
   return items.some((item) => item.count > 0);
 }
 
-function PoisoningMapSection() {
-  const { data: casesData } = usePoisoningCases({
-    skipCount: 0,
-    maxResultCount: 500,
-  });
-  const { data: incidentsData } = usePoisoningIncidents({
-    skipCount: 0,
-    maxResultCount: 500,
-  });
+/**
+ * Trang thống kê mở cho mọi tài khoản đã đăng nhập (API [Authorize] không đòi
+ * quyền riêng), nhưng dữ liệu bản đồ đòi quyền xem ngộ độc — chỉ tải phần
+ * người dùng được phép để không phát sinh 403 (UIA-005).
+ */
+function PoisoningMapSection({
+  showCases,
+  showIncidents,
+}: {
+  showCases: boolean;
+  showIncidents: boolean;
+}) {
+  const { data: casesData } = usePoisoningCases(
+    { skipCount: 0, maxResultCount: 500 },
+    { enabled: showCases },
+  );
+  const { data: incidentsData } = usePoisoningIncidents(
+    { skipCount: 0, maxResultCount: 500 },
+    { enabled: showIncidents },
+  );
   return (
     <PoisoningMap
       cases={casesData?.items ?? []}
@@ -122,7 +134,17 @@ export default function StatisticsPage() {
   );
   const { data, isLoading } = useStatistics(filter);
   const stats = data ?? EMPTY_STATS;
-  const organizationTree = useOrganizationTree();
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const canViewOrganizations = hasPermission("FoodSafe.Organizations.View");
+  const canViewPoisoningCases = hasPermission(
+    "FoodSafe.FoodPoisoning.Cases.View",
+  );
+  const canViewPoisoningIncidents = hasPermission(
+    "FoodSafe.FoodPoisoning.Incidents.View",
+  );
+  const organizationTree = useOrganizationTree({
+    enabled: canViewOrganizations,
+  });
   const organizationOptions = useMemo(
     () => flattenOrganizationOptions(organizationTree.data?.items ?? []),
     [organizationTree.data?.items],
@@ -140,17 +162,19 @@ export default function StatisticsPage() {
               options={yearOptions}
               style={{ width: 140 }}
             />
-            <Select
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              placeholder="Toàn bộ đơn vị"
-              value={organizationId}
-              onChange={setOrganizationId}
-              options={organizationOptions}
-              loading={organizationTree.isLoading}
-              style={{ width: 220 }}
-            />
+            {canViewOrganizations && (
+              <Select
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                placeholder="Toàn bộ đơn vị"
+                value={organizationId}
+                onChange={setOrganizationId}
+                options={organizationOptions}
+                loading={organizationTree.isLoading}
+                style={{ width: 220 }}
+              />
+            )}
           </Space>
         }
       />
@@ -369,11 +393,16 @@ export default function StatisticsPage() {
             </ChartCard>
           </Col>
 
-          <Col xs={24}>
-            <Card title="Bản đồ tình hình ngộ độc thực phẩm" size="small">
-              <PoisoningMapSection />
-            </Card>
-          </Col>
+          {(canViewPoisoningCases || canViewPoisoningIncidents) && (
+            <Col xs={24}>
+              <Card title="Bản đồ tình hình ngộ độc thực phẩm" size="small">
+                <PoisoningMapSection
+                  showCases={canViewPoisoningCases}
+                  showIncidents={canViewPoisoningIncidents}
+                />
+              </Card>
+            </Col>
+          )}
         </Row>
       )}
 

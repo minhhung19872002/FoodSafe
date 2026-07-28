@@ -81,8 +81,7 @@ public class ProductRegistrationAppService :
             query,
             _cancellationTokens.Token);
         var rows = await AsyncExecuter.ToListAsync(
-            query.OrderByDescending(x => x.RegistrationDate)
-                .ThenBy(x => x.RegistrationNumber)
+            ApplySorting(query, input.Sorting)
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount),
             _cancellationTokens.Token);
@@ -436,6 +435,29 @@ public class ProductRegistrationAppService :
                 : null;
             return dto;
         }).ToList();
+    }
+
+    // Honours the client's Sorting request against a whitelist; falls back to
+    // CreationTime descending (newest first). The Id tiebreaker keeps paging
+    // stable when many rows share the same sort value.
+    private static IOrderedQueryable<ProductRegistration> ApplySorting(
+        IQueryable<ProductRegistration> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        var ordered = (field, descending) switch
+        {
+            ("registrationdate", true)  => query.OrderByDescending(x => x.RegistrationDate),
+            ("registrationdate", false) => query.OrderBy(x => x.RegistrationDate),
+            ("creationtime", true)      => query.OrderByDescending(x => x.CreationTime),
+            ("creationtime", false)     => query.OrderBy(x => x.CreationTime),
+            _                           => query.OrderByDescending(x => x.CreationTime)
+        };
+        return ordered.ThenBy(x => x.Id);
     }
 
     private static IQueryable<ProductRegistration> ApplyStatusFilter(

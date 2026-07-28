@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import { App, Tag } from "antd";
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
@@ -8,6 +9,7 @@ import {
   type DetailField,
 } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
+import { extractApiError } from "@/lib/apiError";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { exportTestingServices } from "../api/catalogApi";
 import { useDeleteCatalog, useSaveCatalog } from "../api/catalogMutations";
@@ -20,15 +22,13 @@ import type {
   CatalogKind,
 } from "../types/catalog.types";
 
-const defaultPageSize = 20;
 const riskLevelLabels = ["", "Cao", "Trung bình", "Thấp"];
 
 export default function MasterCatalogPage() {
   const { message } = App.useApp();
   const [kind, setKind] = useState<CatalogKind>("country");
   const [filter, setFilter] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(defaultPageSize);
+  const pagination = useTablePagination(20);
   const [productGroupSearch, setProductGroupSearch] = useState("");
   const [testingCenterSearch, setTestingCenterSearch] = useState("");
   const [editing, setEditing] = useState<CatalogItem | null | undefined>();
@@ -45,8 +45,8 @@ export default function MasterCatalogPage() {
 
   const catalog = useCatalog(kind, {
     filter: filter || undefined,
-    skipCount: (page - 1) * pageSize,
-    maxResultCount: pageSize,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   });
   const productGroups = useCatalogOptions("product-group", productGroupSearch);
   const testingCenters = useCatalogOptions(
@@ -73,10 +73,9 @@ export default function MasterCatalogPage() {
           closeEditor();
           void message.success("Đã lưu dữ liệu danh mục");
         },
-        onError: () =>
-          void message.error(
-            "Không thể lưu. Vui lòng kiểm tra mã và dữ liệu liên quan.",
-          ),
+        // Máy chủ trả về lý do cụ thể ("Mã danh mục đã tồn tại."...) — hiển
+        // thị nguyên văn thay vì một câu chung chung (UIA-007).
+        onError: (error) => void message.error(extractApiError(error)),
       },
     );
   };
@@ -84,8 +83,7 @@ export default function MasterCatalogPage() {
   const handleDelete = (id: string) => {
     deleteCatalog.mutate(id, {
       onSuccess: () => void message.success("Đã xóa dữ liệu danh mục"),
-      onError: () =>
-        void message.error("Không thể xóa dữ liệu đang được sử dụng."),
+      onError: (error) => void message.error(extractApiError(error)),
     });
   };
 
@@ -189,9 +187,7 @@ export default function MasterCatalogPage() {
           kind={kind}
           filter={filter}
           items={catalog.data?.items ?? []}
-          totalCount={catalog.data?.totalCount ?? 0}
-          page={page}
-          pageSize={pageSize}
+          pagination={pagination.buildConfig(catalog.data?.totalCount)}
           loading={catalog.isFetching}
           deleting={deleteCatalog.isPending}
           canCreate={canCreate}
@@ -200,17 +196,13 @@ export default function MasterCatalogPage() {
           onKindChange={(nextKind) => {
             setKind(nextKind);
             setFilter("");
-            setPage(1);
+            pagination.resetToFirstPage();
             setDetailItem(null);
           }}
           exporting={exportServices.isPending}
           onFilterChange={(nextFilter) => {
             setFilter(nextFilter);
-            setPage(1);
-          }}
-          onPageChange={(nextPage, nextPageSize) => {
-            setPage(nextPage);
-            setPageSize(nextPageSize);
+            pagination.resetToFirstPage();
           }}
           onCreate={() => setEditing(null)}
           onEdit={setEditing}

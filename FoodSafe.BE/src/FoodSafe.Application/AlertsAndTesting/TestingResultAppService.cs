@@ -60,7 +60,7 @@ public class TestingResultAppService : ApplicationService
             query = query.Where(x => x.Outcome == input.Outcome.Value);
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
-        query = query.OrderByDescending(x => x.SampleDate).PageBy(input);
+        query = ApplySorting(query, input.Sorting).PageBy(input);
         var items = await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
         var dtos = await EnrichDtosAsync(items);
 
@@ -136,6 +136,27 @@ public class TestingResultAppService : ApplicationService
     {
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
         await _repo.DeleteAsync(entity, cancellationToken: _cancellationTokens.Token);
+    }
+
+    // Honours the client's Sorting request (e.g. "sampleDate desc", "creationTime")
+    // against a whitelist so the list supports column sorting without exposing the
+    // query to dynamic-LINQ injection. Falls back to CreationTime descending.
+    private static IOrderedQueryable<TestingResult> ApplySorting(
+        IQueryable<TestingResult> query,
+        string? sorting)
+    {
+        var descending = sorting?.Contains("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var field = sorting?.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+
+        return (field, descending) switch
+        {
+            ("sampledate", true)    => query.OrderByDescending(x => x.SampleDate),
+            ("sampledate", false)   => query.OrderBy(x => x.SampleDate),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
+            _                       => query.OrderByDescending(x => x.CreationTime),
+        };
     }
 
     private async Task<IQueryable<TestingResult>> ScopedQueryAsync(DataScopeOperation operation)

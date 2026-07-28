@@ -20,7 +20,6 @@ public sealed class AdvertisementRegistrationListInput :
     public AdvertisementRegistrationListInput()
     {
         MaxResultCount = 20;
-        Sorting = "RegistrationDate desc";
     }
 }
 

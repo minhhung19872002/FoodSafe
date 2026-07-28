@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   AuditOutlined,
   CheckCircleOutlined,
@@ -24,7 +25,9 @@ import {
   Tabs,
   Tag,
 } from "antd";
+import { RowActions } from "@/components/RowActions";
 import type { ColumnsType } from "antd/es/table";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { PageHeader } from "@/components/PageHeader";
@@ -77,8 +80,6 @@ import {
   type InspectionType,
 } from "../types/inspection.types";
 
-const PAGE_SIZE = 20;
-
 const formatDate = (value?: string) =>
   value ? dayjs(value).format("DD/MM/YYYY") : null;
 
@@ -117,11 +118,12 @@ function PlansTab() {
   const canDelete = hasPermission("FoodSafe.Inspection.Plans.Delete");
   const canApprove = hasPermission("FoodSafe.Inspection.Plans.Approve");
 
-  const [page, setPage] = useState(1);
+  const planPagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<InspectionPlanStatus>();
   const [planTypeFilter, setPlanTypeFilter] = useState<InspectionPlanType>();
   const [yearFilter, setYearFilter] = useState<number>();
+  const [planSorting, setPlanSorting] = useState<string | undefined>(undefined);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<InspectionPlan>();
   const [rejecting, setRejecting] = useState<InspectionPlan>();
@@ -134,10 +136,32 @@ function PlansTab() {
     status: statusFilter,
     planType: planTypeFilter,
     year: yearFilter,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    sorting: planSorting,
+    skipCount: planPagination.skipCount,
+    maxResultCount: planPagination.maxResultCount,
   };
   const plans = useInspectionPlans(queryFilter);
+
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!planSorting) return null;
+    const [current, direction] = planSorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handlePlanSort = (
+    sorter: SorterResult<InspectionPlan> | SorterResult<InspectionPlan>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== planSorting) {
+      setPlanSorting(next);
+      planPagination.resetToFirstPage();
+    }
+  };
   const [businessSearch, setBusinessSearch] = useState("");
   const businesses = useInspectionBusinesses(businessSearch);
 
@@ -198,7 +222,13 @@ function PlansTab() {
       width: 120,
       render: (v: InspectionPlanType) => INSPECTION_PLAN_TYPE_LABELS[v] ?? v,
     },
-    { title: "Năm", dataIndex: "year", width: 70 },
+    {
+      title: "Năm",
+      dataIndex: "year",
+      width: 70,
+      sorter: true,
+      sortOrder: sortOrderFor("year"),
+    },
     {
       title: "Tiến độ",
       width: 100,
@@ -216,129 +246,104 @@ function PlansTab() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 220,
+      width: 96,
       render: (_, item) => (
-        <Space size={2}>
-          <Button
-            size="small"
-            type="text"
-            aria-label={`Tài liệu ${item.planCode}`}
-            icon={<PaperClipOutlined />}
-            onClick={() => setAttachmentsPlan(item)}
-          />
-          {canEdit && item.status === INSPECTION_PLAN_STATUS.Draft && (
-            <>
-              <Button
-                size="small"
-                type="text"
-                icon={<EditOutlined />}
-                onClick={() => {
-                  setEditing(item);
-                  setEditorOpen(true);
-                }}
-              >
-                Sửa
-              </Button>
-              <Popconfirm
-                title="Gửi duyệt kế hoạch này?"
-                okText="Gửi"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  submitMutation.mutate(item.id, {
-                    onSuccess: () => void message.success("Đã gửi duyệt."),
-                    onError: () => void message.error("Không thể gửi duyệt."),
-                  })
-                }
-              >
-                <Button size="small" type="text" icon={<SendOutlined />}>
-                  Gửi
-                </Button>
-              </Popconfirm>
-            </>
-          )}
-          {canApprove && item.status === INSPECTION_PLAN_STATUS.Submitted && (
-            <>
-              <Popconfirm
-                title="Phê duyệt kế hoạch này?"
-                okText="Duyệt"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  approveMutation.mutate(item.id, {
-                    onSuccess: () => void message.success("Đã phê duyệt."),
-                    onError: () => void message.error("Không thể phê duyệt."),
-                  })
-                }
-              >
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<CheckCircleOutlined />}
-                  style={{ color: "#52c41a" }}
-                >
-                  Duyệt
-                </Button>
-              </Popconfirm>
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<CloseCircleOutlined />}
-                onClick={() => setRejecting(item)}
-              >
-                Từ chối
-              </Button>
-            </>
-          )}
-          {canEdit &&
-            (item.status === INSPECTION_PLAN_STATUS.InProgress ||
-              item.status === INSPECTION_PLAN_STATUS.Approved) && (
-              <Popconfirm
-                title="Hoàn thành kế hoạch này?"
-                okText="Hoàn thành"
-                cancelText="Hủy"
-                onConfirm={() =>
-                  completeMutation.mutate(item.id, {
-                    onSuccess: () => void message.success("Đã hoàn thành."),
-                    onError: () => void message.error("Không thể hoàn thành."),
-                  })
-                }
-              >
-                <Button size="small" type="text" icon={<CheckCircleOutlined />}>
-                  Hoàn thành
-                </Button>
-              </Popconfirm>
-            )}
-          {canEdit &&
-            item.status !== INSPECTION_PLAN_STATUS.Completed &&
-            item.status !== INSPECTION_PLAN_STATUS.Cancelled && (
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<StopOutlined />}
-                onClick={() => setCancelling(item)}
-              >
-                Hủy
-              </Button>
-            )}
-          {canDelete && item.status === INSPECTION_PLAN_STATUS.Draft && (
-            <Popconfirm
-              title="Xóa kế hoạch này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          actions={[
+            {
+              key: "attachments",
+              label: "Tài liệu",
+              ariaLabel: `Tài liệu ${item.planCode}`,
+              icon: <PaperClipOutlined />,
+              onClick: () => setAttachmentsPlan(item),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              icon: <EditOutlined />,
+              hidden: !canEdit || item.status !== INSPECTION_PLAN_STATUS.Draft,
+              onClick: () => {
+                setEditing(item);
+                setEditorOpen(true);
+              },
+            },
+            {
+              key: "submit",
+              label: "Gửi",
+              icon: <SendOutlined />,
+              hidden: !canEdit || item.status !== INSPECTION_PLAN_STATUS.Draft,
+              confirm: "Gửi duyệt kế hoạch này?",
+              onClick: () =>
+                submitMutation.mutate(item.id, {
+                  onSuccess: () => void message.success("Đã gửi duyệt."),
+                  onError: () => void message.error("Không thể gửi duyệt."),
+                }),
+            },
+            {
+              key: "approve",
+              label: "Duyệt",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                !canApprove || item.status !== INSPECTION_PLAN_STATUS.Submitted,
+              confirm: "Phê duyệt kế hoạch này?",
+              onClick: () =>
+                approveMutation.mutate(item.id, {
+                  onSuccess: () => void message.success("Đã phê duyệt."),
+                  onError: () => void message.error("Không thể phê duyệt."),
+                }),
+            },
+            {
+              key: "reject",
+              label: "Từ chối",
+              icon: <CloseCircleOutlined />,
+              danger: true,
+              hidden:
+                !canApprove || item.status !== INSPECTION_PLAN_STATUS.Submitted,
+              onClick: () => setRejecting(item),
+            },
+            {
+              key: "complete",
+              label: "Hoàn thành",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                !canEdit ||
+                (item.status !== INSPECTION_PLAN_STATUS.InProgress &&
+                  item.status !== INSPECTION_PLAN_STATUS.Approved),
+              confirm: "Hoàn thành kế hoạch này?",
+              onClick: () =>
+                completeMutation.mutate(item.id, {
+                  onSuccess: () => void message.success("Đã hoàn thành."),
+                  onError: () => void message.error("Không thể hoàn thành."),
+                }),
+            },
+            {
+              key: "cancel",
+              label: "Hủy",
+              icon: <StopOutlined />,
+              danger: true,
+              hidden:
+                !canEdit ||
+                item.status === INSPECTION_PLAN_STATUS.Completed ||
+                item.status === INSPECTION_PLAN_STATUS.Cancelled,
+              onClick: () => setCancelling(item),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden:
+                !canDelete || item.status !== INSPECTION_PLAN_STATUS.Draft,
+              confirm: "Xóa kế hoạch này?",
+              onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã xóa kế hoạch."),
                   onError: () => void message.error("Không thể xóa kế hoạch."),
-                })
-              }
-            >
-              <Button size="small" type="text" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
-          )}
-        </Space>
+                }),
+            },
+          ]}
+          overflowAriaLabel={`Thao tác ${item.planCode}`}
+        />
       ),
     },
   ];
@@ -361,7 +366,7 @@ function PlansTab() {
           style={{ width: 260 }}
           onSearch={(v) => {
             setFilter(v.trim());
-            setPage(1);
+            planPagination.resetToFirstPage();
           }}
         />
         <Select
@@ -373,7 +378,7 @@ function PlansTab() {
           )}
           onChange={(v) => {
             setPlanTypeFilter(v);
-            setPage(1);
+            planPagination.resetToFirstPage();
           }}
         />
         <Select
@@ -385,7 +390,7 @@ function PlansTab() {
           )}
           onChange={(v) => {
             setStatusFilter(v);
-            setPage(1);
+            planPagination.resetToFirstPage();
           }}
         />
         <InputNumber
@@ -395,7 +400,7 @@ function PlansTab() {
           max={2099}
           onChange={(v) => {
             setYearFilter(v ?? undefined);
-            setPage(1);
+            planPagination.resetToFirstPage();
           }}
         />
         <div style={{ flex: 1 }} />
@@ -431,15 +436,9 @@ function PlansTab() {
           onDoubleClick: () => setDetailPlan(record),
           style: { cursor: "pointer" },
         })}
+        onChange={(_pag, _filters, sorter) => handlePlanSort(sorter)}
         dataSource={plans.data?.items ?? []}
-        pagination={{
-          current: page,
-          pageSize: PAGE_SIZE,
-          total: plans.data?.totalCount ?? 0,
-          showSizeChanger: false,
-          showTotal: (total) => `Tổng ${total} bản ghi`,
-          onChange: setPage,
-        }}
+        pagination={planPagination.buildConfig(plans.data?.totalCount)}
       />
       <InspectionPlanEditorModal
         open={editorOpen}
@@ -625,10 +624,11 @@ function ResultsTab() {
   const canEdit = hasPermission("FoodSafe.Inspection.Results.Edit");
   const canDelete = hasPermission("FoodSafe.Inspection.Results.Delete");
 
-  const [page, setPage] = useState(1);
+  const resultsPagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [inspectionType, setInspectionType] = useState<InspectionType>();
   const [overallResult, setOverallResult] = useState<InspectionOverallResult>();
+  const [resultSorting, setResultSorting] = useState<string | undefined>(undefined);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<InspectionResult>();
   const [attachmentsResult, setAttachmentsResult] =
@@ -642,10 +642,32 @@ function ResultsTab() {
     filter: filter || undefined,
     inspectionType,
     overallResult,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    sorting: resultSorting,
+    skipCount: resultsPagination.skipCount,
+    maxResultCount: resultsPagination.maxResultCount,
   };
   const results = useInspectionResults(queryFilter);
+
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!resultSorting) return null;
+    const [current, direction] = resultSorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleResultSort = (
+    sorter: SorterResult<InspectionResult> | SorterResult<InspectionResult>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== resultSorting) {
+      setResultSorting(next);
+      resultsPagination.resetToFirstPage();
+    }
+  };
   const [businessSearch, setBusinessSearch] = useState("");
   const businesses = useInspectionBusinesses(businessSearch);
   // Results may be attached to an approved plan; the server then advances the
@@ -691,6 +713,8 @@ function ResultsTab() {
       title: "Ngày KT",
       dataIndex: "inspectionDate",
       width: 115,
+      sorter: true,
+      sortOrder: sortOrderFor("inspectionDate"),
       render: (v: string) => new Date(v).toLocaleDateString("vi-VN"),
     },
     { title: "Cơ sở SXKD", dataIndex: "businessName", ellipsis: true },
@@ -731,78 +755,69 @@ function ResultsTab() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 230,
+      width: 96,
       render: (_, item) => (
-        <Space size={2}>
-          <Button
-            size="small"
-            type="text"
-            aria-label={`Tài liệu kết quả ${item.businessName ?? item.id}`}
-            icon={<PaperClipOutlined />}
-            onClick={() => setAttachmentsResult(item)}
+        <Space size={4}>
+          <RowActions
+            actions={[
+              {
+                key: "attachments",
+                label: "Tài liệu",
+                ariaLabel: `Tài liệu kết quả ${item.businessName ?? item.id}`,
+                icon: <PaperClipOutlined />,
+                onClick: () => setAttachmentsResult(item),
+              },
+              {
+                key: "follow-up",
+                label: "Theo dõi",
+                ariaLabel: `Theo dõi khắc phục ${item.businessName ?? item.id}`,
+                icon: <AuditOutlined />,
+                hidden: !item.hasViolation && !item.followUpRequired,
+                onClick: () => setFollowUpResultRow(item),
+              },
+              {
+                key: "edit",
+                label: "Sửa",
+                icon: <EditOutlined />,
+                hidden: !canEdit || item.isFinalized,
+                onClick: () => {
+                  setEditing(item);
+                  setEditorOpen(true);
+                },
+              },
+              {
+                key: "finalize",
+                label: "Chốt",
+                icon: <LockOutlined />,
+                hidden: !canEdit || item.isFinalized,
+                confirm: "Chốt kết quả? Sau khi chốt sẽ không thể chỉnh sửa.",
+                onClick: () =>
+                  finalizeMutation.mutate(item.id, {
+                    onSuccess: () => void message.success("Đã chốt kết quả."),
+                    onError: () =>
+                      void message.error("Không thể chốt kết quả."),
+                  }),
+              },
+              {
+                key: "delete",
+                label: "Xóa",
+                icon: <DeleteOutlined />,
+                danger: true,
+                hidden: !canDelete || item.followUpRequired || item.isFinalized,
+                confirm: "Xóa kết quả này?",
+                onClick: () =>
+                  deleteMutation.mutate(item.id, {
+                    onSuccess: () => void message.success("Đã xóa kết quả."),
+                    onError: () => void message.error("Không thể xóa kết quả."),
+                  }),
+              },
+            ]}
+            overflowAriaLabel={`Thao tác ${item.businessName ?? item.id}`}
           />
-          {(item.hasViolation || item.followUpRequired) && (
-            <Button
-              size="small"
-              type="text"
-              aria-label={`Theo dõi khắc phục ${item.businessName ?? item.id}`}
-              icon={<AuditOutlined />}
-              onClick={() => setFollowUpResultRow(item)}
-            >
-              Theo dõi
-            </Button>
-          )}
-          {canEdit && !item.isFinalized && (
-            <Button
-              size="small"
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => {
-                setEditing(item);
-                setEditorOpen(true);
-              }}
-            >
-              Sửa
-            </Button>
-          )}
-          {canEdit && !item.isFinalized && (
-            <Popconfirm
-              title="Chốt kết quả? Sau khi chốt sẽ không thể chỉnh sửa."
-              okText="Chốt"
-              cancelText="Hủy"
-              onConfirm={() =>
-                finalizeMutation.mutate(item.id, {
-                  onSuccess: () => void message.success("Đã chốt kết quả."),
-                  onError: () => void message.error("Không thể chốt kết quả."),
-                })
-              }
-            >
-              <Button size="small" type="text" icon={<LockOutlined />}>
-                Chốt
-              </Button>
-            </Popconfirm>
-          )}
           {item.isFinalized && (
             <Tag icon={<LockOutlined />} color="default">
               Đã chốt
             </Tag>
-          )}
-          {canDelete && !item.followUpRequired && !item.isFinalized && (
-            <Popconfirm
-              title="Xóa kết quả này?"
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
-                deleteMutation.mutate(item.id, {
-                  onSuccess: () => void message.success("Đã xóa kết quả."),
-                  onError: () => void message.error("Không thể xóa kết quả."),
-                })
-              }
-            >
-              <Button size="small" type="text" danger icon={<DeleteOutlined />}>
-                Xóa
-              </Button>
-            </Popconfirm>
           )}
         </Space>
       ),
@@ -827,7 +842,7 @@ function ResultsTab() {
           style={{ width: 260 }}
           onSearch={(v) => {
             setFilter(v.trim());
-            setPage(1);
+            resultsPagination.resetToFirstPage();
           }}
         />
         <Select
@@ -839,7 +854,7 @@ function ResultsTab() {
           )}
           onChange={(v) => {
             setInspectionType(v);
-            setPage(1);
+            resultsPagination.resetToFirstPage();
           }}
         />
         <Select
@@ -851,7 +866,7 @@ function ResultsTab() {
           )}
           onChange={(v) => {
             setOverallResult(v);
-            setPage(1);
+            resultsPagination.resetToFirstPage();
           }}
         />
         <div style={{ flex: 1 }} />
@@ -887,15 +902,9 @@ function ResultsTab() {
           onDoubleClick: () => setDetailResult(record),
           style: { cursor: "pointer" },
         })}
+        onChange={(_pag, _filters, sorter) => handleResultSort(sorter)}
         dataSource={results.data?.items ?? []}
-        pagination={{
-          current: page,
-          pageSize: PAGE_SIZE,
-          total: results.data?.totalCount ?? 0,
-          showSizeChanger: false,
-          showTotal: (total) => `Tổng ${total} bản ghi`,
-          onChange: setPage,
-        }}
+        pagination={resultsPagination.buildConfig(results.data?.totalCount)}
       />
       <InspectionResultEditorModal
         open={editorOpen}

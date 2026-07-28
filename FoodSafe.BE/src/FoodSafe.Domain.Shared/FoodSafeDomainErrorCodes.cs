@@ -50,6 +50,7 @@ public static class FoodSafeDomainErrorCodes
         public const string InvalidCoordinates = "FoodSafe:Business:0007";
         public const string InvalidEmployeeCount = "FoodSafe:Business:0008";
         public const string InvalidCertificateDates = "FoodSafe:Business:0009";
+        public const string BusinessInUse = "FoodSafe:Business:0010";
     }
 
     public static class Product
@@ -89,6 +90,8 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:ProductRegistration:0004";
         public const string CannotModifyRevoked =
             "FoodSafe:ProductRegistration:0005";
+        public const string InvalidRegistrationDate =
+            "FoodSafe:ProductRegistration:0006";
     }
 
     public static class AdvertisementRegistration
@@ -249,5 +252,11 @@ public static class FoodSafeDomainErrorCodes
     {
         public const string EndpointNotFound = "FoodSafe:DataIntegration:0001";
         public const string CallLogNotFound = "FoodSafe:DataIntegration:0002";
+        public const string PartnerNotFound = "FoodSafe:DataIntegration:0003";
+        public const string PartnerCodeAlreadyExists = "FoodSafe:DataIntegration:0004";
+        public const string PartnerKeyNotFound = "FoodSafe:DataIntegration:0005";
+        public const string SubmissionNotFound = "FoodSafe:DataIntegration:0006";
+        public const string SpecNotFound = "FoodSafe:DataIntegration:0007";
+        public const string SpecVersionAlreadyPublished = "FoodSafe:DataIntegration:0008";
     }
 }

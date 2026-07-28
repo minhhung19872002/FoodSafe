@@ -79,7 +79,7 @@ describe("ProductRegistrationPage", () => {
       screen.getByRole("button", { name: /Thêm đăng ký/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Sửa DKCB-001" }),
+      screen.getByRole("button", { name: "Thao tác DKCB-001" }),
     ).toBeInTheDocument();
   });
 
@@ -102,7 +102,7 @@ describe("ProductRegistrationPage", () => {
       screen.queryByRole("button", { name: /Thêm đăng ký/ }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Sửa DKCB-001" }),
+      screen.queryByRole("button", { name: "Thao tác DKCB-001" }),
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Tệp DKCB-001" }),

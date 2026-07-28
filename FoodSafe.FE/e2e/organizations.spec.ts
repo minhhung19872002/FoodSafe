@@ -14,8 +14,7 @@ async function removeStaleOrganizations(
     "/api/v1/app/organization?Filter=E2E-ORG&MaxResultCount=100",
   );
   if (!response.ok()) return;
-  for (const item of ((await response.json()) as { items: ListItem[] })
-    .items) {
+  for (const item of ((await response.json()) as { items: ListItem[] }).items) {
     if (item.name?.startsWith("E2E-ORG")) {
       await request.delete(`/api/v1/app/organization/${item.id}`, {
         headers,
@@ -102,9 +101,7 @@ test.describe("organization management", () => {
       .first();
     await nameInput.clear();
     await nameInput.fill(`${orgName}-updated`);
-    await editDialog
-      .getByRole("button", { name: "Lưu", exact: true })
-      .click();
+    await editDialog.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(
       table.getByRole("cell", { name: `${orgName}-updated`, exact: true }),
     ).toBeVisible({ timeout: 10_000 });
@@ -118,7 +115,7 @@ test.describe("organization management", () => {
       .getByRole("row")
       .filter({ hasText: `${orgName}-updated` });
     await updatedRow.getByRole("button", { name: /Xóa/ }).click();
-    await page.getByRole("button", { name: "Xóa", exact: true }).click();
+    await page.getByRole("button", { name: "OK" }).click();
     await expect(
       table.getByRole("cell", { name: `${orgName}-updated`, exact: true }),
     ).not.toBeVisible({ timeout: 10_000 });

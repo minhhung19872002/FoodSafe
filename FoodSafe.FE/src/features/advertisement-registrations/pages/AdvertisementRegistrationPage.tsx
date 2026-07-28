@@ -7,16 +7,20 @@ import {
   PlusOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { App, Button, Input, Popconfirm, Select, Space, Table } from "antd";
+import { App, Button, Input, Select, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { extractApiError } from "@/lib/apiError";
 import { ProductRegistrationAttachmentsModal } from "@/features/product-registrations/components/ProductRegistrationAttachmentsModal";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RevokeModal } from "@/components/RevokeModal";
+import { RowActions } from "@/components/RowActions";
 import { StatusBadge } from "@/components/StatusBadge";
 import { saveDownload } from "@/utils/download";
+import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   useCreateAdvertisementRegistration,
   useDeleteAdvertisementAttachment,
@@ -43,20 +47,19 @@ import {
   type LicenseStatus,
 } from "../types/advertisementRegistration.types";
 
-const PAGE_SIZE = 20;
-
 export default function AdvertisementRegistrationPage() {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canCreate = hasPermission("FoodSafe.Licensing.AdRegistrations.Create");
   const canEdit = hasPermission("FoodSafe.Licensing.AdRegistrations.Edit");
   const canDelete = hasPermission("FoodSafe.Licensing.AdRegistrations.Delete");
-  const [page, setPage] = useState(1);
+  const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
   const [businessId, setBusinessId] = useState<string>();
   const [advertisementTypeId, setAdvertisementTypeId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
   const [expiringWithinDays, setExpiringWithinDays] = useState<number>();
+  const [sorting, setSorting] = useState<string>();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<AdvertisementRegistration>();
   const [editorBusinessId, setEditorBusinessId] = useState<string>();
@@ -66,14 +69,38 @@ export default function AdvertisementRegistrationPage() {
   const [detailRecord, setDetailRecord] =
     useState<AdvertisementRegistration | null>(null);
 
+  const sortOrderFor = (field: string): SortOrder => {
+    if (!sorting) return null;
+    const [current, direction] = sorting.split(" ");
+    if (current !== field) return null;
+    return direction === "desc" ? "descend" : "ascend";
+  };
+
+  const handleSort = (
+    sorter:
+      | SorterResult<AdvertisementRegistration>
+      | SorterResult<AdvertisementRegistration>[],
+  ) => {
+    const active = Array.isArray(sorter) ? sorter[0] : sorter;
+    const next =
+      active?.order && typeof active.field === "string"
+        ? `${active.field} ${active.order === "descend" ? "desc" : "asc"}`
+        : undefined;
+    if (next !== sorting) {
+      setSorting(next);
+      pagination.resetToFirstPage();
+    }
+  };
+
   const queryFilter = {
     filter: filter || undefined,
     businessId,
     advertisementTypeId,
     status,
     expiringWithinDays,
-    skipCount: (page - 1) * PAGE_SIZE,
-    maxResultCount: PAGE_SIZE,
+    sorting,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   };
   const registrations = useAdvertisementRegistrations(queryFilter);
   const businesses = useAdvertisementBusinesses();
@@ -101,8 +128,7 @@ export default function AdvertisementRegistrationPage() {
         void message.success("Đã lưu đăng ký quảng cáo.");
         closeEditor();
       },
-      onError: () =>
-        void message.error("Không thể lưu đăng ký. Vui lòng kiểm tra dữ liệu."),
+      onError: (error: unknown) => void message.error(extractApiError(error)),
     };
     if (editing) updateMutation.mutate({ id: editing.id, input }, options);
     else createMutation.mutate(input, options);
@@ -126,6 +152,8 @@ export default function AdvertisementRegistrationPage() {
       title: "Ngày cấp",
       dataIndex: "registrationDate",
       width: 115,
+      sorter: true,
+      sortOrder: sortOrderFor("registrationDate"),
       render: (value: string) => new Date(value).toLocaleDateString("vi-VN"),
     },
     {
@@ -148,62 +176,56 @@ export default function AdvertisementRegistrationPage() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 180,
+      width: 96,
       render: (_, item) => (
-        <Space size={2}>
-          <Button
-            size="small"
-            type="text"
-            aria-label={`Tệp ${item.registrationNumber}`}
-            icon={<FileTextOutlined />}
-            onClick={() => setAttachmentsFor(item)}
-          />
-          {canEdit && item.status !== LICENSE_STATUS.Revoked && (
-            <>
-              <Button
-                size="small"
-                type="text"
-                aria-label={`Sửa ${item.registrationNumber}`}
-                icon={<EditOutlined />}
-                onClick={() => {
-                  setEditing(item);
-                  setEditorBusinessId(item.businessId);
-                  setEditorOpen(true);
-                }}
-              />
-              <Button
-                size="small"
-                type="text"
-                danger
-                aria-label={`Thu hồi ${item.registrationNumber}`}
-                icon={<StopOutlined />}
-                onClick={() => setRevoking(item)}
-              />
-            </>
-          )}
-          {canDelete && (
-            <Popconfirm
-              title="Xóa đăng ký này?"
-              description="Số đăng ký vẫn được giữ và không thể dùng lại."
-              okText="Xóa"
-              cancelText="Hủy"
-              onConfirm={() =>
+        <RowActions
+          overflowAriaLabel={`Thao tác ${item.registrationNumber}`}
+          actions={[
+            {
+              key: "files",
+              label: "Tệp",
+              ariaLabel: `Tệp ${item.registrationNumber}`,
+              icon: <FileTextOutlined />,
+              onClick: () => setAttachmentsFor(item),
+            },
+            {
+              key: "edit",
+              label: "Sửa",
+              ariaLabel: `Sửa ${item.registrationNumber}`,
+              icon: <EditOutlined />,
+              hidden: !canEdit || item.status === LICENSE_STATUS.Revoked,
+              onClick: () => {
+                setEditing(item);
+                setEditorBusinessId(item.businessId);
+                setEditorOpen(true);
+              },
+            },
+            {
+              key: "revoke",
+              label: "Thu hồi",
+              ariaLabel: `Thu hồi ${item.registrationNumber}`,
+              icon: <StopOutlined />,
+              danger: true,
+              hidden: !canEdit || item.status === LICENSE_STATUS.Revoked,
+              onClick: () => setRevoking(item),
+            },
+            {
+              key: "delete",
+              label: "Xóa",
+              ariaLabel: `Xóa ${item.registrationNumber}`,
+              icon: <DeleteOutlined />,
+              danger: true,
+              hidden: !canDelete,
+              confirm: "Xóa đăng ký này?",
+              onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã xóa đăng ký."),
-                  onError: () => void message.error("Không thể xóa đăng ký."),
-                })
-              }
-            >
-              <Button
-                size="small"
-                type="text"
-                danger
-                aria-label={`Xóa ${item.registrationNumber}`}
-                icon={<DeleteOutlined />}
-              />
-            </Popconfirm>
-          )}
-        </Space>
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
+                }),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -221,8 +243,8 @@ export default function AdvertisementRegistrationPage() {
               onClick={() =>
                 exportMutation.mutate(queryFilter, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () =>
-                    void message.error("Không thể xuất danh sách."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 })
               }
             >
@@ -248,7 +270,7 @@ export default function AdvertisementRegistrationPage() {
             style={{ width: 300 }}
             onSearch={(value) => {
               setFilter(value.trim());
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -263,7 +285,7 @@ export default function AdvertisementRegistrationPage() {
             }))}
             onChange={(value) => {
               setBusinessId(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -276,7 +298,7 @@ export default function AdvertisementRegistrationPage() {
             }))}
             onChange={(value) => {
               setAdvertisementTypeId(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -290,7 +312,7 @@ export default function AdvertisementRegistrationPage() {
             ]}
             onChange={(value) => {
               setStatus(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
           <Select
@@ -303,7 +325,7 @@ export default function AdvertisementRegistrationPage() {
             }))}
             onChange={(value) => {
               setExpiringWithinDays(value);
-              setPage(1);
+              pagination.resetToFirstPage();
             }}
           />
         </div>
@@ -311,21 +333,17 @@ export default function AdvertisementRegistrationPage() {
           rowKey="id"
           size="middle"
           scroll={{ x: 1250 }}
-          loading={registrations.isLoading}
+          loading={registrations.isFetching}
           columns={columns}
           dataSource={registrations.data?.items ?? []}
           onRow={(record) => ({
             onDoubleClick: () => setDetailRecord(record),
             style: { cursor: "pointer" },
           })}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total: registrations.data?.totalCount ?? 0,
-            showSizeChanger: false,
-            showTotal: (total) => `${total} bản ghi`,
-            onChange: setPage,
-          }}
+          onChange={(_, __, sorter) => handleSort(sorter)}
+          pagination={pagination.buildConfig(
+            registrations.data?.totalCount ?? 0,
+          )}
         />
       </div>
       <RecordDetailDrawer
@@ -432,7 +450,7 @@ export default function AdvertisementRegistrationPage() {
                 void message.success("Đã thu hồi đăng ký.");
                 setRevoking(undefined);
               },
-              onError: () => void message.error("Không thể thu hồi."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}

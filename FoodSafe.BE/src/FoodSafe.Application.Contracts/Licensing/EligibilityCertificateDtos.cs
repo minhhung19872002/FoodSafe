@@ -18,7 +18,6 @@ public sealed class EligibilityCertificateListInput :
     public EligibilityCertificateListInput()
     {
         MaxResultCount = 20;
-        Sorting = "IssueDate desc";
     }
 }
 
