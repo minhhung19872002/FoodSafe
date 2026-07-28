@@ -71,7 +71,9 @@ export default function DocumentsPage() {
   };
 
   const handleSort = (
-    sorter: SorterResult<AdministrativeDocument> | SorterResult<AdministrativeDocument>[],
+    sorter:
+      | SorterResult<AdministrativeDocument>
+      | SorterResult<AdministrativeDocument>[],
   ) => {
     const active = Array.isArray(sorter) ? sorter[0] : sorter;
     const next =
@@ -260,8 +262,7 @@ export default function DocumentsPage() {
               { ...filter, sorting },
               {
                 onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                onError: (error) =>
-                  void message.error(extractApiError(error)),
+                onError: (error) => void message.error(extractApiError(error)),
               },
             )
           }
@@ -369,8 +370,7 @@ export default function DocumentsPage() {
                 ({ getFieldValue }) => ({
                   validator(_, value?: dayjs.Dayjs) {
                     const issued = getFieldValue("issuedDate") as
-                      | dayjs.Dayjs
-                      | undefined;
+                      dayjs.Dayjs | undefined;
                     if (!value || !issued || !value.isBefore(issued, "day"))
                       return Promise.resolve();
                     return Promise.reject(
@@ -393,8 +393,7 @@ export default function DocumentsPage() {
                   validator(_, value?: dayjs.Dayjs) {
                     const start =
                       (getFieldValue("effectiveDate") as
-                        | dayjs.Dayjs
-                        | undefined) ??
+                        dayjs.Dayjs | undefined) ??
                       (getFieldValue("issuedDate") as dayjs.Dayjs | undefined);
                     if (!value || !start || !value.isBefore(start, "day"))
                       return Promise.resolve();

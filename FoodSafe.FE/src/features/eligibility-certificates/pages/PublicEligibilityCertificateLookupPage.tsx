@@ -76,7 +76,9 @@ export default function PublicEligibilityCertificateLookupPage() {
               {formatDate(result.issueDate)}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày hết hạn">
-              {result.expiryDate ? formatDate(result.expiryDate) : "Không thời hạn"}
+              {result.expiryDate
+                ? formatDate(result.expiryDate)
+                : "Không thời hạn"}
             </Descriptions.Item>
           </Descriptions>
         </Card>

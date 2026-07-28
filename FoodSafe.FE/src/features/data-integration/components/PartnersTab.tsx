@@ -14,8 +14,6 @@ import {
   Table,
   Tag,
   Typography,
-
-
   type TableColumnsType,
 } from "antd";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";

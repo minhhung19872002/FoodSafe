@@ -82,8 +82,7 @@ export default function ProductRegistrationPage() {
 
   const handleSort = (
     sorter:
-      | SorterResult<ProductRegistration>
-      | SorterResult<ProductRegistration>[],
+      SorterResult<ProductRegistration> | SorterResult<ProductRegistration>[],
   ) => {
     const active = Array.isArray(sorter) ? sorter[0] : sorter;
     const next =

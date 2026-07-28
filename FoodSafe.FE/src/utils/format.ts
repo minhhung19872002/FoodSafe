@@ -5,9 +5,7 @@ export function formatBytes(value: number): string {
 }
 
 /** Ngày theo định dạng Việt Nam có số 0 đệm, ví dụ "28/07/2026". */
-export function formatDate(
-  value: string | Date | null | undefined,
-): string {
+export function formatDate(value: string | Date | null | undefined): string {
   if (!value) return "";
   const date = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return "";

@@ -84,7 +84,10 @@ export function InspectionResultEditorModal(props: Props) {
   for (const it of planItems)
     businessOptionMap.set(it.businessId, it.businessName ?? it.businessId);
   if (item)
-    businessOptionMap.set(item.businessId, item.businessName ?? item.businessId);
+    businessOptionMap.set(
+      item.businessId,
+      item.businessName ?? item.businessId,
+    );
   for (const x of props.businesses)
     businessOptionMap.set(x.id, x.code ? `${x.code} — ${x.name}` : x.name);
   const businessOptions = [...businessOptionMap].map(([value, label]) => ({
@@ -213,7 +216,11 @@ export function InspectionResultEditorModal(props: Props) {
           <Form.Item
             name="planId"
             label="Thuộc kế hoạch thanh tra"
-            extra={item ? "Không thể đổi kế hoạch của kết quả đã ghi nhận." : undefined}
+            extra={
+              item
+                ? "Không thể đổi kế hoạch của kết quả đã ghi nhận."
+                : undefined
+            }
           >
             <Select
               allowClear
@@ -307,7 +314,12 @@ export function InspectionResultEditorModal(props: Props) {
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
         >
-          <Form.Item name="hasViolation" valuePropName="checked" label=" " colon={false}>
+          <Form.Item
+            name="hasViolation"
+            valuePropName="checked"
+            label=" "
+            colon={false}
+          >
             <Checkbox>Có vi phạm</Checkbox>
           </Form.Item>
           <Form.Item name="fineAmount" label="Số tiền phạt (VND)">

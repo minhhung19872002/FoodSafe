@@ -277,8 +277,7 @@ export default function TestingResultsPage() {
               { ...filter, sorting },
               {
                 onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                onError: (error) =>
-                  void message.error(extractApiError(error)),
+                onError: (error) => void message.error(extractApiError(error)),
               },
             )
           }

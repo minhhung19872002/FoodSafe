@@ -12,8 +12,6 @@ import {
   Tag,
   Typography,
   Upload,
-
-
   type TableColumnsType,
   type UploadProps,
 } from "antd";

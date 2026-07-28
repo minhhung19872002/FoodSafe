@@ -297,7 +297,8 @@ function PlansTab() {
               onClick: () =>
                 submitMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã gửi duyệt."),
-                  onError: (error) => void message.error(extractApiError(error)),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
             {
@@ -310,7 +311,8 @@ function PlansTab() {
               onClick: () =>
                 approveMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã phê duyệt."),
-                  onError: (error) => void message.error(extractApiError(error)),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
             {
@@ -334,7 +336,8 @@ function PlansTab() {
               onClick: () =>
                 completeMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã hoàn thành."),
-                  onError: (error) => void message.error(extractApiError(error)),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
             {
@@ -359,7 +362,8 @@ function PlansTab() {
               onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã xóa kế hoạch."),
-                  onError: (error) => void message.error(extractApiError(error)),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -647,7 +651,9 @@ function ResultsTab() {
   const [filter, setFilter] = useState("");
   const [inspectionType, setInspectionType] = useState<InspectionType>();
   const [overallResult, setOverallResult] = useState<InspectionOverallResult>();
-  const [resultSorting, setResultSorting] = useState<string | undefined>(undefined);
+  const [resultSorting, setResultSorting] = useState<string | undefined>(
+    undefined,
+  );
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<InspectionResult>();
   const [attachmentsResult, setAttachmentsResult] =

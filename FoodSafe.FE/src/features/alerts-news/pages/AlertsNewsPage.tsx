@@ -130,10 +130,10 @@ function AlertsTab() {
 
   const hasActiveFilter = Boolean(
     filter.filter ||
-      filter.category ||
-      filter.severity ||
-      filter.source ||
-      filter.status,
+    filter.category ||
+    filter.severity ||
+    filter.source ||
+    filter.status,
   );
 
   function openCreate() {
@@ -149,7 +149,9 @@ function AlertsTab() {
     const options = {
       onSuccess: () => {
         void message.success(
-          editing ? "Cập nhật cảnh báo thành công." : "Tạo cảnh báo thành công.",
+          editing
+            ? "Cập nhật cảnh báo thành công."
+            : "Tạo cảnh báo thành công.",
         );
         setEditorOpen(false);
       },
@@ -717,9 +719,10 @@ function NewsTab() {
               setFilter((f) => ({ ...f, status: v }));
               pagination.resetToFirstPage();
             }}
-            options={Object.entries(NEWS_STATUS_CONFIG).map(
-              ([value, cfg]) => ({ value: Number(value), label: cfg.label }),
-            )}
+            options={Object.entries(NEWS_STATUS_CONFIG).map(([value, cfg]) => ({
+              value: Number(value),
+              label: cfg.label,
+            }))}
           />
           <Select
             allowClear
