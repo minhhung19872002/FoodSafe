@@ -50,3 +50,54 @@
 - FE `src/features/data-integration/**`; BE `Application/DataIntegration/ApiEndpointAppService.cs`, `Application/DataIntegration/ApiCallLogAppService.cs`, `Domain/DataIntegration/ApiEndpoint.cs`, `Domain/DataIntegration/ApiCallLog.cs`
 - Depends on auth/scope/axios (Level 3)
 - Invalid for commits after `11a6537` touching these paths
+
+---
+
+# F-019f — Inbound partner surface (Batch F-2, INT-03)
+
+## Status: VERIFIED
+
+- **Feature ID**: F-019f · **Verified Git commit**: `52d35c1` · **Date**: 2026-07-28
+- **Environment**: Docker Compose full stack at `http://127.0.0.1:8080` (api + migrator rebuilt from the working tree; migration `20260728064640` applied) · **Database**: real PostgreSQL 15 · **API interception**: **No**
+- **Accounts**: `admin` (real login); partner calls use a **cookie-less** Playwright `request` context — no session, X-Api-Key only
+- **Frontend route**: `/data-integration` (new tabs: Đối tác liên thông / Dữ liệu nhận về)
+- **Endpoints**:
+  - `GET/POST /api/v1/app/partner-account`, `GET/PUT/DELETE /api/v1/app/partner-account/{id}`, `POST .../toggle-status`
+  - `GET/POST /api/v1/app/partner-account/{id}/keys`, `DELETE .../keys/{keyId}`
+  - `GET /api/v1/app/partner-account/submissions[/{submissionId}]`
+  - `POST /api/v1/partner/submissions/{dataType}` (partner-facing, anonymous at ASP.NET level, X-Api-Key-authenticated in-service)
+
+## Evidence
+
+`e2e/data-integration-partners.spec.ts` — 3/3 (subset run 23/23 at `52d35c1`):
+
+1. **Lifecycle via real UI**: create partner (dialog) → issue key (raw `fsp_…` key rendered exactly once) → cookie-less partner POST → 200 + submissionId → duplicate X-Request-Id → `duplicate:true` + original id + exactly one DB row → submission row + Vietnamese payload visible in UI, survive reload → Inbound row in call history → UI revoke → 401 → UI rotation (new key authenticates) → UI suspend (popconfirm) → 401.
+2. **Guards**: no/garbage/unprefixed key → 401; expired key → 401; suspended partner → 401 (single generic message across all credential failures); data type outside allow-list → 403 `DataTypeNotAllowed`; unknown segment, stale timestamp (±300s replay window), missing X-Request-Id, missing X-Timestamp, unsupported schemaVersion, empty records → 400.
+3. **Idempotency scope**: same X-Request-Id from two partners → two independent submissions; admin `PartnerAccountId` filter isolates each; anonymous admin surface → 401.
+
+## Checklist
+
+| Check | Result |
+|---|---|
+| Unauthenticated (partner API, admin API) | PASS (401 both) |
+| Key auth: revoked/expired/suspended/unknown | PASS — uniform 401, no state leak |
+| Per-partner data-type authorization | PASS (403) |
+| Replay window + required headers + schema gate | PASS (400 each) |
+| Idempotency (DB unique index, per-partner scope) | PASS |
+| Create / edit / suspend / delete partner; issue / rotate / revoke key | PASS (UI) |
+| Submissions list/filter/detail; Inbound ApiCallLog rows | PASS (UI) |
+| Persistence after reload | PASS |
+| Org scope | PASS structurally — same `ScopedQueryAsync`/data-scope-provider pattern as the rest of the module (province-level permissions) |
+
+## Notes
+
+- Two product defects were found by this run and fixed at `52d35c1`: empty-records 500 (ABP arg-validation vs. the data-outcome contract; now `[DisableValidation]` + in-method checks) and `\uXXXX`-escaped stored payloads (now human-readable).
+- Raw API keys are never persisted or retrievable: storage is SHA-256 hash + 12-char prefix; verification is fixed-time.
+- Business ingestion of received payloads stays EXTERNALLY_BLOCKED on the TT 31/2026 field mapping (INT-02); submissions persist verbatim with status `Received`.
+
+## Paths & dependencies
+
+- BE `Domain/DataIntegration/{PartnerAccount,PartnerApiKey,InboundSubmission}.cs`, `Application/DataIntegration/{PartnerAccountAppService,PartnerInboundAppService,PartnerKeyMaterial}.cs`, `HttpApi/DataIntegration/{PartnerAccountController,PartnerInboundController}.cs`
+- FE `src/features/data-integration/components/{PartnersTab,InboundSubmissionsTab}.tsx`
+- Depends on auth/scope/axios (Level 3) + `OutboundUrlValidator` (shared outbound client, hardened this batch)
+- Invalid for commits after `52d35c1` touching these paths
