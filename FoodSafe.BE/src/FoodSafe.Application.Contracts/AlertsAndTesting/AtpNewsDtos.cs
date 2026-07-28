@@ -20,6 +20,9 @@ public class AtpNewsDto : EntityDto<Guid>
     public Guid? PublishedById { get; set; }
     public Guid? RecalledById { get; set; }
     public DateTime? RecalledAt { get; set; }
+    public Guid? RejectedById { get; set; }
+    public DateTime? RejectedAt { get; set; }
+    public string? RejectedReason { get; set; }
     public bool IsPublic { get; set; }
     public bool IsFeatured { get; set; }
     public AlertSource Source { get; set; }
@@ -71,6 +74,14 @@ public class AtpNewsFilterDto : PagedAndSortedResultRequestDto
 public class PublishNewsDto
 {
     public bool IsPublic { get; set; } = true;
+}
+
+/// <summary>Moderation refusal of a draft news item — the reason is kept for audit.</summary>
+public class RejectNewsDto
+{
+    [Required]
+    [StringLength(1000, MinimumLength = 3)]
+    public string Reason { get; set; } = string.Empty;
 }
 
 public class AlertOptionDto

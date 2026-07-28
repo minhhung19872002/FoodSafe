@@ -304,6 +304,7 @@
     "Permission:DataIntegration.Partners.Edit": "Edit integration partners",
     "Permission:DataIntegration.Partners.Delete": "Delete integration partners",
     "Permission:DataIntegration.Partners.ManageKeys": "Manage partner API keys",
+    "Permission:DataIntegration.Partners.Moderate": "Approve/reject inbound partner data",
     "Permission:DataIntegration.ApiSpecs": "Partner API specifications",
     "Permission:DataIntegration.ApiSpecs.View": "View API specifications",
     "Permission:DataIntegration.ApiSpecs.Create": "Upload API specifications",
@@ -314,6 +315,7 @@
     "FoodSafe:DataIntegration:0001": "API endpoint not found.",
     "FoodSafe:DataIntegration:0002": "API call log not found.",
     "FoodSafe:DataIntegration:0007": "API specification not found.",
-    "FoodSafe:DataIntegration:0008": "Another version of this specification is already published."
+    "FoodSafe:DataIntegration:0008": "Another version of this specification is already published.",
+    "FoodSafe:DataIntegration:0009": "This inbound submission has already been approved or rejected."
   }
 }

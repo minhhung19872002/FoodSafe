@@ -103,10 +103,14 @@ test.describe("P1-1c — admin user-management lifecycle", () => {
       .getByRole("menuitem", { name: "Tạo mật khẩu ngẫu nhiên" })
       .click();
     // modal.confirm pre-confirmation before the mutation runs.
-    await page.getByRole("button", { name: "OK" }).click();
-    await expect(page.locator(".ant-modal-confirm-title")).toContainText(
-      "Mật khẩu mới đã được tạo",
-    );
+    await page.getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
+    // The confirm modal fades out while the result modal opens, so both titles
+    // can be attached briefly — assert on the result title specifically.
+    await expect(
+      page
+        .locator(".ant-modal-confirm-title")
+        .filter({ hasText: "Mật khẩu mới đã được tạo" }),
+    ).toBeVisible();
     const generated = page.locator(".ant-modal-confirm-content code").first();
     await expect(generated).toBeVisible();
     expect(
@@ -121,7 +125,7 @@ test.describe("P1-1c — admin user-management lifecycle", () => {
     const deleteRow = page.getByRole("row").filter({ hasText: email });
     await deleteRow.getByRole("button", { name: `Thao tác ${email}` }).click();
     await page.getByRole("menuitem", { name: "Xóa tài khoản" }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await page.getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
     await expect(page.getByText("Đã xóa tài khoản")).toBeVisible();
 
     // --- It is really gone from the backend ----------------------------------

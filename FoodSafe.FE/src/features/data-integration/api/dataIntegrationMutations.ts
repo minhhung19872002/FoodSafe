@@ -204,3 +204,32 @@ export function useDownloadApiSpec() {
     mutationFn: (id: string) => dataIntegrationApi.downloadApiSpec(id),
   });
 }
+
+/** Officer disposition of partner data received through the inbound API (INT-03). */
+export function useProcessInboundSubmission() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (submissionId: string) =>
+      dataIntegrationApi.processInboundSubmission(submissionId),
+    onSuccess: () => invalidateInboundSubmissions(qc),
+  });
+}
+
+export function useRejectInboundSubmission() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      submissionId,
+      reason,
+    }: {
+      submissionId: string;
+      reason: string;
+    }) => dataIntegrationApi.rejectInboundSubmission(submissionId, reason),
+    onSuccess: () => invalidateInboundSubmissions(qc),
+  });
+}
+
+function invalidateInboundSubmissions(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: ["inbound-submissions"] });
+  void qc.invalidateQueries({ queryKey: ["inbound-submission"] });
+}

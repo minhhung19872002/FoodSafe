@@ -143,12 +143,12 @@
 ```
    CREATE (Internal)  ──► ┌───────┐   Publish()   ┌──────────┐
    CREATE (From Public) ► │ Draft │ ──────────────► │Published │
-                          └───────┘                └────┬─────┘
-                                                        │ Recall()
-                                                        ▼
-                                                   ┌──────────┐
-                                                   │ Recalled │ (trạng thái cuối)
-                                                   └──────────┘
+                          └───┬───┘                └────┬─────┘
+                              │ Reject(reason)          │ Recall()
+                              ▼                         ▼
+                        ┌──────────┐              ┌──────────┐
+                        │ Rejected │ (cuối)       │ Recalled │ (trạng thái cuối)
+                        └──────────┘              └──────────┘
 ```
 
 ### Transition Rules:
@@ -156,11 +156,17 @@
 | From | To | Method | Actor | Condition |
 |------|----|--------|-------|-----------|
 | Draft | Published | Publish() | Cán bộ có quyền | |
+| Draft | Rejected | Reject() | Cán bộ có quyền (Alerts.Publish) | reason required |
 | Published | Recalled | Recall() | Cán bộ có quyền | recall_reason required |
 
 ### Business Rules:
-- **Public submissions** (STT 49) tạo ra `PublicAlertSubmission`, không phải `AtpAlert` trực tiếp
-- Cán bộ xét duyệt `PublicAlertSubmission` → Nếu hợp lệ → Tạo `AtpAlert` từ submission
+- **Public submissions** (STT 29/49) được tiếp nhận trực tiếp thành `AtpAlert` ở trạng thái
+  `Draft` với `source = PublicReport` — đây là hàng đợi kiểm duyệt của cán bộ
+- Cán bộ xét duyệt (STT 29 "Duyệt cảnh báo do người dân gửi lên"):
+  - Hợp lệ → `Publish()` → công khai
+  - Không hợp lệ → `Reject(reason)` → **giữ lại bản ghi kèm lý do** để phục vụ tra cứu/audit,
+    không xóa cứng; `is_public = false` vĩnh viễn. Xóa cứng chỉ dành cho spam.
+- Đã `Rejected` là trạng thái cuối — không `Publish()` lại được (phải tạo cảnh báo mới)
 - Khi Publish: `is_public = true` → hiển thị trên cổng công khai
 - Khi Recall: xóa khỏi cổng công khai, ghi reason
 - Domain Event `AlertPublishedEvent` → trigger DataIntegration module gửi alert cho Bộ Y tế
@@ -171,9 +177,12 @@
 
 ```
    CREATE ──► │ Draft │ ─── Publish() ──► │ Published │ ─── Recall() ──► │ Recalled │
+                  │
+                  └────── Reject(reason) ──► │ Rejected │ (trạng thái cuối)
 ```
 
-*(Đơn giản hơn Alert — chỉ 3 trạng thái, không có pending)*
+*(Giống Alert nhưng không có `recall_reason`; nhánh `Reject` phục vụ STT 30
+"Duyệt tin tức do người dân gửi lên" với cùng quy tắc giữ-lại-kèm-lý-do)*
 
 ---
 
@@ -268,6 +277,42 @@
 
 ---
 
+## 10. Inbound Partner Submission Disposition (INT-03, STT 51–57 "nhận dữ liệu")
+
+```
+   PARTNER POST /api/v1/partner/submissions/{type}   (xác thực bằng X-Api-Key)
+                            │
+                            ▼
+                      ┌──────────┐  MarkProcessed(actor, at)  ┌────────────┐
+                      │ Received │ ─────────────────────────► │ Processed  │ (cuối)
+                      │ (Đã nhận)│                            └────────────┘
+                      └────┬─────┘
+                           │ Reject(actor, at, reason)
+                           ▼
+                      ┌──────────┐
+                      │ Rejected │ (cuối)
+                      └──────────┘
+```
+
+### Transition Rules:
+
+| From | To | Method | Actor | Condition |
+|------|----|--------|-------|-----------|
+| (none) | Received | `InboundSubmission.Create()` | Đối tác (API key) | idempotent theo (partner_id, request_id) |
+| Received | Processed | `MarkProcessed()` | Cán bộ có `Partners.Moderate` | |
+| Received | Rejected | `Reject()` | Cán bộ có `Partners.Moderate` | reason bắt buộc |
+
+### Business Rules:
+- Cả hai nhánh đều là **trạng thái cuối**: một bản ghi đã có quyết định thì không được
+  quyết định lại (double-click, retry request) — domain ném
+  `FoodSafe:DataIntegration:0009`, HTTP 403
+- Mỗi quyết định ghi lại `processed_by_id` + `processed_at`; từ chối bắt buộc `reject_reason`
+- Ràng buộc DB `chk_di_is_disposition` bảo đảm bản ghi đã quyết định luôn có người + thời điểm
+- Dữ liệu vẫn lưu nguyên văn (`payload`) chờ ánh xạ nghiệp vụ theo TT 31/2026 —
+  duyệt/từ chối là quyết định tiếp nhận, chưa phải ingest vào bảng nghiệp vụ
+
+---
+
 ## Tổng hợp Domain Events và Handlers
 
 | Event | Publisher | Handler (Background Job) |
@@ -294,5 +339,7 @@
 | Report.Return() | ✗ | ✓ | ✓ | ✓ |
 | Report.Complete() | ✗ | ✓ | ✓ | ✓ |
 | Alert.Publish() | ✗ | ✓ | ✓ | ✓ |
+| Alert.Reject() / News.Reject() | ✗ | ✓ | ✓ | ✓ |
 | Plan.Approve() | ✗ | ✓ (duyệt của huyện) | ✓ | ✓ |
 | Case.Verify() | ✗ | ✓ | ✓ | ✓ |
+| InboundSubmission.MarkProcessed() / Reject() | ✗ | ✓ (trong phạm vi đơn vị) | ✓ | ✓ |

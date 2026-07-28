@@ -119,6 +119,52 @@ public class AtpAlertTests
     }
 
     [Fact]
+    public void Reject_Should_Set_Rejected_Status_With_Reason()
+    {
+        var alert = CreateAlert(source: AlertSource.PublicReport);
+
+        alert.Reject(UserId, Now, "  Thông tin không đủ căn cứ  ");
+
+        alert.Status.ShouldBe(AlertStatus.Rejected);
+        alert.RejectedById.ShouldBe(UserId);
+        alert.RejectedAt.ShouldBe(Now);
+        alert.RejectedReason.ShouldBe("Thông tin không đủ căn cứ");
+        alert.IsPublic.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Reject_Should_Require_A_Reason()
+    {
+        var alert = CreateAlert(source: AlertSource.PublicReport);
+
+        Should.Throw<ArgumentException>(() => alert.Reject(UserId, Now, "  "));
+        alert.Status.ShouldBe(AlertStatus.Draft);
+    }
+
+    [Fact]
+    public void Reject_Should_Refuse_Non_Draft()
+    {
+        var alert = CreateAlert();
+        alert.Publish(UserId, Now);
+
+        Should.Throw<BusinessException>(
+                () => alert.Reject(UserId, Now, "Đổi ý"))
+            .Code.ShouldBe(FoodSafeDomainErrorCodes.Alert.InvalidStatusTransition);
+        alert.Status.ShouldBe(AlertStatus.Published);
+    }
+
+    [Fact]
+    public void Publish_Should_Refuse_A_Rejected_Alert()
+    {
+        var alert = CreateAlert(source: AlertSource.PublicReport);
+        alert.Reject(UserId, Now, "Không đủ căn cứ");
+
+        Should.Throw<BusinessException>(() => alert.Publish(UserId, Now))
+            .Code.ShouldBe(FoodSafeDomainErrorCodes.Alert.InvalidStatusTransition);
+        alert.IsPublic.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Recall_Should_Set_Recalled_Status()
     {
         var alert = CreateAlert();

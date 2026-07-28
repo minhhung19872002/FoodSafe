@@ -5,6 +5,10 @@ interface RevokeModalProps {
   open: boolean;
   title: string;
   confirmLoading?: boolean;
+  /** Defaults to the revoke wording; override for other reason-bearing actions. */
+  okText?: string;
+  description?: string;
+  placeholder?: string;
   onCancel: () => void;
   onConfirm: (reason: string) => void;
 }
@@ -13,6 +17,9 @@ export function RevokeModal({
   open,
   title,
   confirmLoading,
+  okText = "Thu hồi",
+  description = "Hồ sơ đã thu hồi không thể chỉnh sửa lại. Vui lòng ghi rõ lý do.",
+  placeholder = "Lý do thu hồi",
   onCancel,
   onConfirm,
 }: RevokeModalProps) {
@@ -34,7 +41,7 @@ export function RevokeModal({
     <Modal
       open={open}
       title={title}
-      okText="Thu hồi"
+      okText={okText}
       okButtonProps={{ danger: true, disabled: !reason.trim() }}
       cancelText="Hủy"
       confirmLoading={confirmLoading}
@@ -42,15 +49,13 @@ export function RevokeModal({
       onOk={handleOk}
       destroyOnHidden
     >
-      <Typography.Paragraph>
-        Hồ sơ đã thu hồi không thể chỉnh sửa lại. Vui lòng ghi rõ lý do.
-      </Typography.Paragraph>
+      <Typography.Paragraph>{description}</Typography.Paragraph>
       <Input.TextArea
         rows={4}
         maxLength={2000}
         showCount
         value={reason}
-        placeholder="Lý do thu hồi"
+        placeholder={placeholder}
         onChange={(e) => setReason(e.target.value)}
       />
     </Modal>

@@ -17,6 +17,39 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-28 — Workflow completion batch (F-019h, F-016b) + six stale-spec repairs
+
+- **Cause**: Implemented the two remaining project workflows — inbound partner submission
+  disposition (INT-03 / STT 51–57, gap G-04) and citizen-moderation refusal with a persisted
+  reason (YCKT STT 29/30, gap G-09). Touched shared surfaces: a new permission
+  (`DataIntegration.Partners.Moderate`, incl. `CurrentUserContextAppService.FoodSafePermissionNames`),
+  `AlertStatus`/`NewsStatus` enums, the shared `RevokeModal` (new optional `okText`/`description`/
+  `placeholder` props, defaults unchanged), and migration `20260728144116_AddWorkflowDispositionFields`.
+- **Commit**: `17a29c6`
+- **Affected features**: F-019h, F-016b (new); F-019f and F-016 touched (shared tab row actions,
+  alert/news status rendering); `RevokeModal` consumers F-007..F-012 at Level 1.
+- **Retest level**: 3 (shared permission list + shared modal) — executed as a **full** suite run.
+- **Result**: **PASSED** — BE 690/690, EF drift none, `tsc` clean, `oxlint` clean,
+  **full Playwright 304/304, 0 failed, 0 flaky** (7.0 min, workers=1, no interception).
+- **Details**: Rebuilding the frontend image revealed the previously running container had been
+  built from older source, masking six stale-spec failures already present at `b31cc11`. All were
+  repaired in this batch: (1) eight specs clicked a confirm button named `"OK"` although the app
+  runs the AntD Vietnamese locale ("Đồng ý") — switched to the locale-tolerant
+  `/^(Đồng ý|OK)$/` used elsewhere in the suite; (2) `api-specification-management` still targeted
+  `.ant-popconfirm-buttons` and an inline delete button, but `RowActions` now confirms via
+  `modal.confirm` and moves delete into the overflow menu; (3) `identity-user-lifecycle` hit a
+  strict-mode violation asserting on `.ant-modal-confirm-title` while the confirm modal was still
+  fading out; (4) `statistics-chart-download` posted `location` instead of the required
+  `locationDescription`; (5) `ndtp-rollup-aggregation` signed the seeded `district.staff` fixture
+  in with the admin password; (6) `pagination-page-size` depended on ambient data volume (needed
+  >20 businesses, environment has exactly 20) and now seeds its own cohort. One further selector
+  break *was* caused by this batch: `data-integration-partners` used a bare
+  `row.getByRole("button")` that became ambiguous once the disposition buttons were added.
+- **Environment note**: `npm test` (Vitest) cannot boot locally — `jsdom@29.1.1` →
+  `html-encoding-sniffer@6.0.0` `require()`s the ESM-only `@exodus/bytes`, which needs Node ≥22.12;
+  the local runtime is 22.11.0 while CI pins `node-version: 22` (latest 22.x). No dependency files
+  were changed. Vitest is not acceptance evidence under the test policy.
+
 ### 2026-07-28 — F-015 reporting production-readiness hardening
 
 - **Cause**: Full LOGIC/UI/UX audit of `/reporting` (real browser + API probes + code review; F-015 was DIRTY from the sorting batch `4a4af68`). Found 15 issues (4 LOGIC, 7 UX, 4 STYLE): (L1) ApplySorting case-mismatch made server-side sorting unreachable; (L2) duplicate period → raw 500 from DB unique index; (L3) `OrganizationIds.First()` non-deterministic HashSet iteration; (L4) `TotalAffected` miscalculation counted cases not people; (M1) `ReturnToDraft` threw wrong error code; (M5) API error showed empty table instead of error state; (M6) actor names displayed as GUIDs; (M7) document header hardcoded; (M8) editor modals gave no success feedback; (M9) E2E OK button locale mismatch; (S1/S2) export error handling; (S3) year filter unbounded; (S4) partial-save error handling; (S5) missing creationTime sorter + NDTP month filter.

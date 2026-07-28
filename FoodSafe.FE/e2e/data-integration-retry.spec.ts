@@ -216,7 +216,7 @@ test.describe("FR-51..57 Batch F-1 — typed payload + retry attempt history", (
       // --- the real retry action ---
       await rows.first().getByRole("button", { name: "Thử lại" }).click();
       // modal.confirm replaces the former Popconfirm.
-      await page.getByRole("button", { name: "OK" }).click();
+      await page.getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
       await expect(
         page.getByText(/Đã thử lại nhưng hệ thống nhận vẫn trả lỗi/),
       ).toBeVisible();

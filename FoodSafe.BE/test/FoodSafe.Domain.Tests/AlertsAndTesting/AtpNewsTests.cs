@@ -105,6 +105,51 @@ public class AtpNewsTests
     }
 
     [Fact]
+    public void Reject_Should_Set_Rejected_Status_With_Reason()
+    {
+        var news = CreateNews();
+
+        news.Reject(UserId, Now, "  Nội dung trùng lặp  ");
+
+        news.Status.ShouldBe(NewsStatus.Rejected);
+        news.RejectedById.ShouldBe(UserId);
+        news.RejectedAt.ShouldBe(Now);
+        news.RejectedReason.ShouldBe("Nội dung trùng lặp");
+        news.IsPublic.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Reject_Should_Require_A_Reason()
+    {
+        var news = CreateNews();
+
+        Should.Throw<ArgumentException>(() => news.Reject(UserId, Now, " "));
+        news.Status.ShouldBe(NewsStatus.Draft);
+    }
+
+    [Fact]
+    public void Reject_Should_Refuse_Non_Draft()
+    {
+        var news = CreateNews();
+        news.Publish(UserId, Now);
+
+        Should.Throw<BusinessException>(() => news.Reject(UserId, Now, "Đổi ý"))
+            .Code.ShouldBe(FoodSafeDomainErrorCodes.News.InvalidStatusTransition);
+        news.Status.ShouldBe(NewsStatus.Published);
+    }
+
+    [Fact]
+    public void Publish_Should_Refuse_A_Rejected_Article()
+    {
+        var news = CreateNews();
+        news.Reject(UserId, Now, "Nội dung trùng lặp");
+
+        Should.Throw<BusinessException>(() => news.Publish(UserId, Now))
+            .Code.ShouldBe(FoodSafeDomainErrorCodes.News.InvalidStatusTransition);
+        news.IsPublic.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Recall_Should_Set_Recalled_Status()
     {
         var news = CreateNews();

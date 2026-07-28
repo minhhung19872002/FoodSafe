@@ -29,14 +29,20 @@ public enum AlertStatus : short
 {
     Draft = 1,
     Published = 2,
-    Recalled = 3
+    Recalled = 3,
+
+    /// <summary>Moderation outcome: the draft (typically a citizen report) was refused with a reason.</summary>
+    Rejected = 4
 }
 
 public enum NewsStatus : short
 {
     Draft = 1,
     Published = 2,
-    Recalled = 3
+    Recalled = 3,
+
+    /// <summary>Moderation outcome: the draft (typically a citizen report) was refused with a reason.</summary>
+    Rejected = 4
 }
 
 public enum RiskLevel : short

@@ -21,6 +21,8 @@ public sealed class AlertsAndTestingApplicationContractTests
         FoodSafePermissions.AlertsAndTesting.Alerts.Publish)]
     [InlineData(typeof(AtpAlertAppService), "RecallAsync",
         FoodSafePermissions.AlertsAndTesting.Alerts.Publish)]
+    [InlineData(typeof(AtpAlertAppService), "RejectAsync",
+        FoodSafePermissions.AlertsAndTesting.Alerts.Publish)]
     [InlineData(typeof(AtpNewsAppService), "GetListAsync", null)]
     [InlineData(typeof(AtpNewsAppService), "GetAsync", null)]
     [InlineData(typeof(AtpNewsAppService), "GetAlertOptionsAsync", null)]
@@ -33,6 +35,8 @@ public sealed class AlertsAndTestingApplicationContractTests
     [InlineData(typeof(AtpNewsAppService), "PublishAsync",
         FoodSafePermissions.AlertsAndTesting.News.Publish)]
     [InlineData(typeof(AtpNewsAppService), "RecallAsync",
+        FoodSafePermissions.AlertsAndTesting.News.Publish)]
+    [InlineData(typeof(AtpNewsAppService), "RejectAsync",
         FoodSafePermissions.AlertsAndTesting.News.Publish)]
     [InlineData(typeof(RiskAnalysisAppService), "GetListAsync", null)]
     [InlineData(typeof(RiskAnalysisAppService), "GetAsync", null)]

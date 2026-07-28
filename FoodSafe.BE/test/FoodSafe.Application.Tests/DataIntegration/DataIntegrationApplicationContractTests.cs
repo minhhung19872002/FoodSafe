@@ -109,6 +109,10 @@ public sealed class DataIntegrationApplicationContractTests
     [InlineData("RevokeKeyAsync", FoodSafePermissions.DataIntegration.Partners.ManageKeys)]
     [InlineData("GetSubmissionsAsync", null)]
     [InlineData("GetSubmissionAsync", null)]
+    [InlineData("ProcessSubmissionAsync",
+        FoodSafePermissions.DataIntegration.Partners.Moderate)]
+    [InlineData("RejectSubmissionAsync",
+        FoodSafePermissions.DataIntegration.Partners.Moderate)]
     public void Partner_admin_operations_should_use_least_privilege(
         string methodName, string? expectedPermission)
     {

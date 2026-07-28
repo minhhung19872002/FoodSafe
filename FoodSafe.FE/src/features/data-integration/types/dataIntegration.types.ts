@@ -269,6 +269,8 @@ export interface InboundSubmission {
   receivedAt: string;
   status: InboundSubmissionStatus;
   rejectReason?: string;
+  processedById?: string;
+  processedAt?: string;
 }
 
 export interface InboundSubmissionDetail extends InboundSubmission {

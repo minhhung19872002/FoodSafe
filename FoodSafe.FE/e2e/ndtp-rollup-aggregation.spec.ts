@@ -43,6 +43,8 @@ import {
 const NDTP_ENDPOINT = "/api/v1/app/ndtp-report";
 const AGGREGATION_ENDPOINT = "/api/v1/app/report-calculation/ndtp-aggregation";
 const LOWER_TIER_USER = "district.staff@foodsafe.local";
+const TEST_USER_PASSWORD =
+  process.env.E2E_TEST_USER_PASSWORD ?? "Admin@2026!";
 
 // A per-run unique future period keeps every run on a pristine period and, more
 // importantly, avoids colliding with the unique {org, year, month} index if a
@@ -255,7 +257,8 @@ test.describe("FR-33-02 — NDTP roll-up from lower-tier reports", () => {
     try {
       // 2) A genuine lower-tier account seeds + submits one report.
       const districtPage = await districtCtx.newPage();
-      await signIn(districtPage, LOWER_TIER_USER, password as string);
+      // Seeded fixture accounts use the E2E test-user password, not the admin one.
+      await signIn(districtPage, LOWER_TIER_USER, TEST_USER_PASSWORD);
       districtRequest = districtPage.context().request;
       districtToken = await requestVerificationToken(districtPage);
       child = await seedSubmittedChildReport(

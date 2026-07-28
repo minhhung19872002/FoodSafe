@@ -28,6 +28,10 @@ public sealed class AtpAlert : FullAuditedAggregateRoot<Guid>
     public string? RecallReason { get; private set; }
     public bool IsPublic { get; private set; }
 
+    public Guid? RejectedById { get; private set; }
+    public DateTime? RejectedAt { get; private set; }
+    public string? RejectedReason { get; private set; }
+
     private AtpAlert() { }
 
     private AtpAlert(Guid id) : base(id) { }
@@ -112,6 +116,24 @@ public sealed class AtpAlert : FullAuditedAggregateRoot<Guid>
         PublishedById = publisherId;
         PublishedAt = publishedAt;
         IsPublic = isPublic;
+    }
+
+    /// <summary>
+    /// Moderation refusal of a draft — used for citizen reports that do not warrant
+    /// an official alert (FR-29-06). The record is kept with its reason instead of
+    /// being deleted, so the decision stays auditable and never becomes public.
+    /// </summary>
+    public void Reject(Guid rejecterId, DateTime rejectedAt, string reason)
+    {
+        EnsureDraft();
+
+        Check.NotNullOrWhiteSpace(reason, nameof(reason), 1000);
+
+        Status = AlertStatus.Rejected;
+        RejectedById = rejecterId;
+        RejectedAt = rejectedAt;
+        RejectedReason = reason.Trim();
+        IsPublic = false;
     }
 
     public void Recall(Guid recallerId, DateTime recalledAt, string reason)

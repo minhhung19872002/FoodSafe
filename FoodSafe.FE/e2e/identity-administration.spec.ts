@@ -80,7 +80,7 @@ test.describe("identity administration", () => {
     row = page.getByRole("row").filter({ hasText: roleName });
     await row.getByRole("button", { name: `Thao tác ${roleName}` }).click();
     await page.getByRole("menuitem", { name: "Xóa vai trò" }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await page.getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
     await expect(page.getByText("Đã xóa vai trò")).toBeVisible();
     await expect(
       page.getByRole("row").filter({ hasText: roleName }),

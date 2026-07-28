@@ -278,5 +278,6 @@ public static class FoodSafeDomainErrorCodes
         public const string SubmissionNotFound = "FoodSafe:DataIntegration:0006";
         public const string SpecNotFound = "FoodSafe:DataIntegration:0007";
         public const string SpecVersionAlreadyPublished = "FoodSafe:DataIntegration:0008";
+        public const string SubmissionAlreadyDisposed = "FoodSafe:DataIntegration:0009";
     }
 }

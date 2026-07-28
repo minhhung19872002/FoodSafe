@@ -80,5 +80,12 @@ public sealed class DataIntegrationMappingTests
             .IsUnique.ShouldBeTrue();
         submission.GetForeignKeys().ShouldContain(fk =>
             fk.GetConstraintName() == "fk_di_is_partner");
+        // Officer disposition columns (INT-03 approve/reject). The matching
+        // chk_di_is_disposition check constraint lives in the migration — check
+        // constraints are not part of the read-optimized runtime model.
+        submission.FindProperty(nameof(InboundSubmission.ProcessedById))!
+            .GetColumnName().ShouldBe("processed_by_id");
+        submission.FindProperty(nameof(InboundSubmission.ProcessedAt))!
+            .GetColumnName().ShouldBe("processed_at");
     }
 }

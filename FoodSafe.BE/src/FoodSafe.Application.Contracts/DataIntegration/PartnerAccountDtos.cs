@@ -103,6 +103,16 @@ public class InboundSubmissionDto : EntityDto<Guid>
     public DateTime ReceivedAt { get; set; }
     public InboundSubmissionStatus Status { get; set; }
     public string? RejectReason { get; set; }
+    public Guid? ProcessedById { get; set; }
+    public DateTime? ProcessedAt { get; set; }
+}
+
+/// <summary>Officer disposition of an inbound submission — rejection needs a reason.</summary>
+public class RejectInboundSubmissionDto
+{
+    [Required]
+    [StringLength(InboundSubmissionConsts.MaxRejectReasonLength, MinimumLength = 3)]
+    public string Reason { get; set; } = null!;
 }
 
 public class InboundSubmissionDetailDto : InboundSubmissionDto
@@ -134,4 +144,7 @@ public interface IPartnerAccountAppService : IApplicationService
 
     Task<PagedResultDto<InboundSubmissionDto>> GetSubmissionsAsync(InboundSubmissionFilterDto input);
     Task<InboundSubmissionDetailDto> GetSubmissionAsync(Guid submissionId);
+    Task<InboundSubmissionDto> ProcessSubmissionAsync(Guid submissionId);
+    Task<InboundSubmissionDto> RejectSubmissionAsync(
+        Guid submissionId, RejectInboundSubmissionDto input);
 }

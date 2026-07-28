@@ -1,24 +1,35 @@
 import { useState } from "react";
 import {
+  App,
   Button,
   DatePicker,
   Descriptions,
+  Form,
+  Input,
   Modal,
+  Popconfirm,
   Select,
   Space,
   Table,
   Tag,
+  Tooltip,
   Typography,
   type TableColumnsType,
 } from "antd";
-import { EyeOutlined } from "@ant-design/icons";
+import { CheckOutlined, CloseOutlined, EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   useInboundSubmissionDetail,
   useInboundSubmissions,
 } from "../api/dataIntegrationQueries";
-import { useTablePagination } from "@/hooks/useTablePagination";
 import {
+  useProcessInboundSubmission,
+  useRejectInboundSubmission,
+} from "../api/dataIntegrationMutations";
+import { useTablePagination } from "@/hooks/useTablePagination";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import {
+  INBOUND_SUBMISSION_STATUS,
   INBOUND_SUBMISSION_STATUS_CONFIG,
   SHARED_DATA_TYPE,
   SHARED_DATA_TYPE_LABELS,
@@ -28,8 +39,16 @@ import {
   type SharedDataType,
 } from "../types/dataIntegration.types";
 
-/** Read-only view of the data partners pushed in through the inbound API (INT-03, STT 51-57 "nhận"). */
+interface RejectFormValues {
+  reason: string;
+}
+
+/**
+ * Data partners pushed in through the inbound API (INT-03, STT 51-57 "nhận"),
+ * plus the officer disposition flow: Đã nhận → Đã xử lý / Từ chối (kèm lý do).
+ */
 export function InboundSubmissionsTab() {
+  const { message } = App.useApp();
   const [filter, setFilter] = useState<InboundSubmissionFilter>({});
   const pagination = useTablePagination(15);
   const { data, isLoading } = useInboundSubmissions({
@@ -39,6 +58,39 @@ export function InboundSubmissionsTab() {
   });
   const [detailId, setDetailId] = useState<string>();
   const detail = useInboundSubmissionDetail(detailId);
+
+  const canModerate = useAuthStore((s) => s.hasPermission)(
+    "FoodSafe.DataIntegration.Partners.Moderate",
+  );
+  const processMutation = useProcessInboundSubmission();
+  const rejectMutation = useRejectInboundSubmission();
+  const [rejectTarget, setRejectTarget] = useState<InboundSubmission>();
+  const [rejectForm] = Form.useForm<RejectFormValues>();
+
+  const handleProcess = async (record: InboundSubmission) => {
+    try {
+      await processMutation.mutateAsync(record.id);
+      message.success("Đã duyệt dữ liệu tiếp nhận.");
+    } catch {
+      /* the global error interceptor already surfaced the reason */
+    }
+  };
+
+  const handleReject = async () => {
+    const values = await rejectForm.validateFields();
+    if (!rejectTarget) return;
+    try {
+      await rejectMutation.mutateAsync({
+        submissionId: rejectTarget.id,
+        reason: values.reason,
+      });
+      message.success("Đã từ chối dữ liệu tiếp nhận.");
+      setRejectTarget(undefined);
+      rejectForm.resetFields();
+    } catch {
+      /* the global error interceptor already surfaced the reason */
+    }
+  };
 
   const columns: TableColumnsType<InboundSubmission> = [
     { title: "Đối tác", dataIndex: "partnerName", ellipsis: true },
@@ -79,14 +131,54 @@ export function InboundSubmissionsTab() {
     {
       title: "",
       key: "actions",
-      width: 50,
-      render: (_, record) => (
-        <Button
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => setDetailId(record.id)}
-        />
-      ),
+      width: canModerate ? 130 : 50,
+      render: (_, record) => {
+        const awaitingDisposition =
+          record.status === INBOUND_SUBMISSION_STATUS.Received;
+        return (
+          <Space size={4}>
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              aria-label="Xem chi tiết"
+              onClick={() => setDetailId(record.id)}
+            />
+            {canModerate && awaitingDisposition && (
+              <>
+                <Popconfirm
+                  title="Duyệt dữ liệu tiếp nhận này?"
+                  okText="Duyệt"
+                  cancelText="Hủy"
+                  onConfirm={() => handleProcess(record)}
+                >
+                  <Tooltip title="Duyệt">
+                    <Button
+                      size="small"
+                      type="primary"
+                      ghost
+                      icon={<CheckOutlined />}
+                      aria-label="Duyệt"
+                      loading={processMutation.isPending}
+                    />
+                  </Tooltip>
+                </Popconfirm>
+                <Tooltip title="Từ chối">
+                  <Button
+                    size="small"
+                    danger
+                    icon={<CloseOutlined />}
+                    aria-label="Từ chối"
+                    onClick={() => {
+                      rejectForm.resetFields();
+                      setRejectTarget(record);
+                    }}
+                  />
+                </Tooltip>
+              </>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
@@ -175,6 +267,20 @@ export function InboundSubmissionsTab() {
             <Descriptions.Item label="Số bản ghi">
               {detail.data.recordCount}
             </Descriptions.Item>
+            <Descriptions.Item label="Trạng thái">
+              <Tag
+                color={
+                  INBOUND_SUBMISSION_STATUS_CONFIG[detail.data.status].color
+                }
+              >
+                {INBOUND_SUBMISSION_STATUS_CONFIG[detail.data.status].label}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Xử lý lúc">
+              {detail.data.processedAt
+                ? dayjs(detail.data.processedAt).format("DD/MM/YYYY HH:mm:ss")
+                : "—"}
+            </Descriptions.Item>
             {detail.data.rejectReason && (
               <Descriptions.Item label="Lý do từ chối" span={2}>
                 <span style={{ color: "#ff4d4f" }}>
@@ -197,6 +303,35 @@ export function InboundSubmissionsTab() {
             </Descriptions.Item>
           </Descriptions>
         )}
+      </Modal>
+      <Modal
+        title="Từ chối dữ liệu tiếp nhận"
+        open={Boolean(rejectTarget)}
+        okText="Từ chối"
+        cancelText="Hủy"
+        okButtonProps={{ danger: true, loading: rejectMutation.isPending }}
+        onOk={handleReject}
+        onCancel={() => setRejectTarget(undefined)}
+        destroyOnHidden
+      >
+        <Form form={rejectForm} layout="vertical" requiredMark>
+          <Form.Item
+            name="reason"
+            label="Lý do từ chối"
+            rules={[
+              { required: true, message: "Vui lòng nhập lý do từ chối." },
+              { min: 3, message: "Lý do phải có ít nhất 3 ký tự." },
+              { max: 500, message: "Lý do tối đa 500 ký tự." },
+            ]}
+          >
+            <Input.TextArea
+              rows={4}
+              maxLength={500}
+              showCount
+              placeholder="Nêu rõ lý do không tiếp nhận dữ liệu này"
+            />
+          </Form.Item>
+        </Form>
       </Modal>
     </>
   );

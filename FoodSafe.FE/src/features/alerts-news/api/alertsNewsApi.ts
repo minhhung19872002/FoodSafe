@@ -51,6 +51,12 @@ export const alertApi = {
       await api.post<AtpAlert>(`${alertEndpoint}/${id}/recall`, { reason })
     ).data;
   },
+  /** Moderation refusal of a draft (STT 29) — keeps the record with its reason. */
+  async reject(id: string, reason: string): Promise<AtpAlert> {
+    return (
+      await api.post<AtpAlert>(`${alertEndpoint}/${id}/reject`, { reason })
+    ).data;
+  },
   async exportExcel(filter: AlertFilter): Promise<FileDownload> {
     const response = await api.get<Blob>(`${alertEndpoint}/excel/export`, {
       params: filter,
@@ -85,6 +91,11 @@ export const newsApi = {
   },
   async recall(id: string): Promise<AtpNews> {
     return (await api.post<AtpNews>(`${newsEndpoint}/${id}/recall`)).data;
+  },
+  /** Moderation refusal of a draft (STT 30) — keeps the record with its reason. */
+  async reject(id: string, reason: string): Promise<AtpNews> {
+    return (await api.post<AtpNews>(`${newsEndpoint}/${id}/reject`, { reason }))
+      .data;
   },
   async alertOptions(filter?: string): Promise<AlertOption[]> {
     return (

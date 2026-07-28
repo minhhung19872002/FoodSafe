@@ -139,7 +139,7 @@ test.describe("FR-39-09 — statistics chart PNG download", () => {
       data: {
         reportDate: new Date().toISOString().slice(0, 10),
         victimName: `Nạn nhân biểu đồ ${STAMP}`,
-        location: "Địa điểm kiểm chứng biểu đồ E2E",
+        locationDescription: "Địa điểm kiểm chứng biểu đồ E2E",
         suspectedFood: "Thực phẩm kiểm chứng",
       },
     });

@@ -108,7 +108,7 @@ FoodSafe
 │   │   ├── Alerts.Create
 │   │   ├── Alerts.Edit
 │   │   ├── Alerts.Delete
-│   │   ├── Alerts.Publish
+│   │   ├── Alerts.Publish        (duyệt/xuất bản + từ chối phản ánh của dân — STT 29)
 │   │   └── Alerts.Recall
 │   ├── News.*
 │   ├── RiskAnalyses.*
@@ -120,6 +120,13 @@ FoodSafe
 │
 └── DataIntegration
     ├── ApiSpecs.*
+    ├── Partners
+    │   ├── Partners.View
+    │   ├── Partners.Create
+    │   ├── Partners.Edit
+    │   ├── Partners.Delete
+    │   ├── Partners.ManageKeys
+    │   └── Partners.Moderate     (duyệt/từ chối dữ liệu đối tác gửi đến — INT-03, STT 51–57)
     └── DataSharingHistories.View
 ```
 
