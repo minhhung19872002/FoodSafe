@@ -20,15 +20,44 @@ public sealed class InspectionResultTests
     }
 
     [Fact]
-    public void Create_should_reject_mismatched_plan_fields()
+    public void Create_should_reject_plan_without_item()
     {
-        Should.Throw<ArgumentException>(() =>
-            InspectionResult.Create(
-                Guid.NewGuid(), Guid.NewGuid(), OrgId,
-                planId: Guid.NewGuid(), planItemId: null,
-                Today, InspectionType.Scheduled,
-                null, null, InspectionOverallResult.Pass,
-                false, null, null, null, null, false, null, null, null));
+        Should.Throw<BusinessException>(() =>
+                InspectionResult.Create(
+                    Guid.NewGuid(), Guid.NewGuid(), OrgId,
+                    planId: Guid.NewGuid(), planItemId: null,
+                    Today, InspectionType.Scheduled,
+                    null, null, InspectionOverallResult.Pass,
+                    false, null, null, null, null, false, null, null, null))
+            .Code.ShouldBe(FoodSafeDomainErrorCodes.Inspection.PlanItemWithoutPlan);
+    }
+
+    [Fact]
+    public void Create_should_reject_item_without_plan()
+    {
+        Should.Throw<BusinessException>(() =>
+                InspectionResult.Create(
+                    Guid.NewGuid(), Guid.NewGuid(), OrgId,
+                    planId: null, planItemId: Guid.NewGuid(),
+                    Today, InspectionType.Scheduled,
+                    null, null, InspectionOverallResult.Pass,
+                    false, null, null, null, null, false, null, null, null))
+            .Code.ShouldBe(FoodSafeDomainErrorCodes.Inspection.PlanItemWithoutPlan);
+    }
+
+    [Fact]
+    public void Explicit_fine_total_should_survive_itemised_violations()
+    {
+        var result = InspectionResult.Create(
+            Guid.NewGuid(), Guid.NewGuid(), OrgId,
+            null, null, Today, InspectionType.Scheduled,
+            null, null, InspectionOverallResult.Fail,
+            true, null, 5_000_000m, null, null, false, null, null, null);
+
+        result.AddViolation(Guid.NewGuid(), "V01", "Vi phạm", null, null, null, null);
+
+        result.FineAmount.ShouldBe(5_000_000m);
+        result.HasViolation.ShouldBeTrue();
     }
 
     [Fact]

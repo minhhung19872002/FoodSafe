@@ -89,6 +89,21 @@ public sealed class InspectionPlan : FullAuditedAggregateRoot<Guid>
         return item;
     }
 
+    public InspectionPlanItem UpdateBusinessDetails(
+        Guid businessId,
+        int sequenceNumber,
+        DateTime? plannedDate,
+        Guid? assignedInspectorId,
+        string? notes)
+    {
+        EnsureDraft();
+
+        var item = _items.FirstOrDefault(i => i.BusinessId == businessId)
+            ?? throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.BusinessNotInPlan);
+        item.UpdateDetails(sequenceNumber, plannedDate, assignedInspectorId, notes);
+        return item;
+    }
+
     public void RemoveBusiness(Guid businessId)
     {
         EnsureDraft();

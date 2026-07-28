@@ -24,7 +24,9 @@ import {
   Table,
   Tabs,
   Tag,
+  Tooltip,
 } from "antd";
+import { extractApiError } from "@/lib/apiError";
 import { RowActions } from "@/components/RowActions";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
@@ -165,6 +167,17 @@ function PlansTab() {
   const [businessSearch, setBusinessSearch] = useState("");
   const businesses = useInspectionBusinesses(businessSearch);
 
+  // Committing on blur/Enter (instead of per keystroke) avoids one list query
+  // per typed digit.
+  const commitYearFilter = (raw: string) => {
+    const year = raw.trim() === "" ? undefined : Number(raw);
+    const next = year !== undefined && Number.isFinite(year) ? year : undefined;
+    if (next !== yearFilter) {
+      setYearFilter(next);
+      planPagination.resetToFirstPage();
+    }
+  };
+
   const createMutation = useCreateInspectionPlan();
   const updateMutation = useUpdateInspectionPlan();
   const deleteMutation = useDeleteInspectionPlan();
@@ -190,7 +203,7 @@ function PlansTab() {
           setDetailPlan(updated as InspectionPlan);
           void message.success("Đã cập nhật trạng thái cơ sở.");
         },
-        onError: () => void message.error("Không thể cập nhật trạng thái."),
+        onError: (error) => void message.error(extractApiError(error)),
       },
     );
   };
@@ -206,8 +219,7 @@ function PlansTab() {
         void message.success("Đã lưu kế hoạch.");
         closeEditor();
       },
-      onError: () =>
-        void message.error("Không thể lưu kế hoạch. Kiểm tra dữ liệu."),
+      onError: (error: unknown) => void message.error(extractApiError(error)),
     };
     if (editing) updateMutation.mutate({ id: editing.id, input }, options);
     else createMutation.mutate(input, options);
@@ -237,10 +249,19 @@ function PlansTab() {
     {
       title: "Trạng thái",
       dataIndex: "status",
-      width: 140,
-      render: (v: InspectionPlanStatus) => {
+      width: 165,
+      render: (v: InspectionPlanStatus, item) => {
         const cfg = INSPECTION_PLAN_STATUS_CONFIG[v];
-        return <Tag color={cfg.color}>{cfg.label}</Tag>;
+        return (
+          <>
+            <Tag color={cfg.color}>{cfg.label}</Tag>
+            {v === INSPECTION_PLAN_STATUS.Draft && item.rejectedReason && (
+              <Tooltip title={`Lý do từ chối: ${item.rejectedReason}`}>
+                <Tag color="orange">Bị từ chối</Tag>
+              </Tooltip>
+            )}
+          </>
+        );
       },
     },
     {
@@ -276,7 +297,7 @@ function PlansTab() {
               onClick: () =>
                 submitMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã gửi duyệt."),
-                  onError: () => void message.error("Không thể gửi duyệt."),
+                  onError: (error) => void message.error(extractApiError(error)),
                 }),
             },
             {
@@ -289,7 +310,7 @@ function PlansTab() {
               onClick: () =>
                 approveMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã phê duyệt."),
-                  onError: () => void message.error("Không thể phê duyệt."),
+                  onError: (error) => void message.error(extractApiError(error)),
                 }),
             },
             {
@@ -313,7 +334,7 @@ function PlansTab() {
               onClick: () =>
                 completeMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã hoàn thành."),
-                  onError: () => void message.error("Không thể hoàn thành."),
+                  onError: (error) => void message.error(extractApiError(error)),
                 }),
             },
             {
@@ -338,7 +359,7 @@ function PlansTab() {
               onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () => void message.success("Đã xóa kế hoạch."),
-                  onError: () => void message.error("Không thể xóa kế hoạch."),
+                  onError: (error) => void message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -398,10 +419,8 @@ function PlansTab() {
           style={{ width: 100 }}
           min={2020}
           max={2099}
-          onChange={(v) => {
-            setYearFilter(v ?? undefined);
-            planPagination.resetToFirstPage();
-          }}
+          onBlur={(e) => commitYearFilter(e.target.value)}
+          onPressEnter={(e) => commitYearFilter(e.currentTarget.value)}
         />
         <div style={{ flex: 1 }} />
         <Button
@@ -410,7 +429,7 @@ function PlansTab() {
           onClick={() =>
             exportMutation.mutate(queryFilter, {
               onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => void message.error("Không thể xuất danh sách."),
+              onError: (error) => void message.error(extractApiError(error)),
             })
           }
         >
@@ -430,7 +449,7 @@ function PlansTab() {
         size="middle"
         rowKey="id"
         scroll={{ x: 1000 }}
-        loading={plans.isLoading}
+        loading={plans.isFetching}
         columns={columns}
         onRow={(record) => ({
           onDoubleClick: () => setDetailPlan(record),
@@ -582,7 +601,7 @@ function PlansTab() {
                 void message.success("Đã từ chối kế hoạch.");
                 setRejecting(undefined);
               },
-              onError: () => void message.error("Không thể từ chối."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}
@@ -608,7 +627,7 @@ function PlansTab() {
                 void message.success("Đã hủy kế hoạch.");
                 setCancelling(undefined);
               },
-              onError: () => void message.error("Không thể hủy."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}
@@ -701,8 +720,7 @@ function ResultsTab() {
         void message.success("Đã lưu kết quả.");
         closeEditor();
       },
-      onError: () =>
-        void message.error("Không thể lưu kết quả. Kiểm tra dữ liệu."),
+      onError: (error: unknown) => void message.error(extractApiError(error)),
     };
     if (editing) updateMutation.mutate({ id: editing.id, input }, options);
     else createMutation.mutate(input, options);
@@ -715,7 +733,7 @@ function ResultsTab() {
       width: 115,
       sorter: true,
       sortOrder: sortOrderFor("inspectionDate"),
-      render: (v: string) => new Date(v).toLocaleDateString("vi-VN"),
+      render: (v: string) => formatDate(v),
     },
     { title: "Cơ sở SXKD", dataIndex: "businessName", ellipsis: true },
     {
@@ -794,8 +812,8 @@ function ResultsTab() {
                 onClick: () =>
                   finalizeMutation.mutate(item.id, {
                     onSuccess: () => void message.success("Đã chốt kết quả."),
-                    onError: () =>
-                      void message.error("Không thể chốt kết quả."),
+                    onError: (error) =>
+                      void message.error(extractApiError(error)),
                   }),
               },
               {
@@ -808,7 +826,8 @@ function ResultsTab() {
                 onClick: () =>
                   deleteMutation.mutate(item.id, {
                     onSuccess: () => void message.success("Đã xóa kết quả."),
-                    onError: () => void message.error("Không thể xóa kết quả."),
+                    onError: (error) =>
+                      void message.error(extractApiError(error)),
                   }),
               },
             ]}
@@ -838,7 +857,7 @@ function ResultsTab() {
       >
         <Input.Search
           allowClear
-          placeholder="Trưởng đoàn, số QĐ"
+          placeholder="Cơ sở, trưởng đoàn, số QĐ"
           style={{ width: 260 }}
           onSearch={(v) => {
             setFilter(v.trim());
@@ -876,7 +895,7 @@ function ResultsTab() {
           onClick={() =>
             exportMutation.mutate(queryFilter, {
               onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => void message.error("Không thể xuất danh sách."),
+              onError: (error) => void message.error(extractApiError(error)),
             })
           }
         >
@@ -896,7 +915,7 @@ function ResultsTab() {
         size="middle"
         rowKey="id"
         scroll={{ x: 1000 }}
-        loading={results.isLoading}
+        loading={results.isFetching}
         columns={columns}
         onRow={(record) => ({
           onDoubleClick: () => setDetailResult(record),

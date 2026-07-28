@@ -7,6 +7,7 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { extractApiError } from "@/lib/apiError";
 import { saveDownload } from "@/utils/download";
 import {
   inspectionPlanAttachmentApi,
@@ -55,13 +56,13 @@ export function InspectionAttachmentsModal({
       refresh();
       void message.success("Đã tải lên tài liệu.");
     },
-    onError: () => void message.error("Không thể tải lên tài liệu."),
+    onError: (error) => void message.error(extractApiError(error)),
   });
   const download = useMutation({
     mutationFn: (attachmentId: string) =>
       attachmentApi.download(ownerId!, attachmentId),
     onSuccess: (file) => saveDownload(file.blob, file.fileName),
-    onError: () => void message.error("Không thể tải tài liệu."),
+    onError: (error) => void message.error(extractApiError(error)),
   });
   const remove = useMutation({
     mutationFn: (attachmentId: string) =>
@@ -70,7 +71,7 @@ export function InspectionAttachmentsModal({
       refresh();
       void message.success("Đã xóa tài liệu.");
     },
-    onError: () => void message.error("Không thể xóa tài liệu."),
+    onError: (error) => void message.error(extractApiError(error)),
   });
 
   const columns: ColumnsType<InspectionAttachment> = [

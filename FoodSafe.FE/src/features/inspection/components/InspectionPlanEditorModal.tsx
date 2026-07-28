@@ -8,6 +8,7 @@ import {
   Modal,
   Select,
   Table,
+  theme,
 } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
@@ -55,10 +56,12 @@ interface Props {
 export function InspectionPlanEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
   const [items, setItems] = useState<ItemRow[]>([]);
+  const [itemsError, setItemsError] = useState<string>();
   const { open, item } = props;
 
   useEffect(() => {
     if (!open) return;
+    setItemsError(undefined);
     if (item) {
       form.setFieldsValue({
         planCode: item.planCode,
@@ -88,10 +91,25 @@ export function InspectionPlanEditorModal(props: Props) {
     }
   }, [form, open, item]);
 
+  const validateItems = (): boolean => {
+    if (items.some((row) => !row.businessId)) {
+      setItemsError("Vui lòng chọn cơ sở cho tất cả các dòng.");
+      return false;
+    }
+    const uniqueBusinessIds = new Set(items.map((row) => row.businessId));
+    if (uniqueBusinessIds.size < items.length) {
+      setItemsError("Cơ sở bị trùng trong danh sách.");
+      return false;
+    }
+    setItemsError(undefined);
+    return true;
+  };
+
   const handleSubmit = () => {
     form
       .validateFields()
       .then((values) => {
+        if (!validateItems()) return;
         const planItems: CreateUpdatePlanItemInput[] = items.map(
           (row, idx) => ({
             businessId: row.businessId,
@@ -206,7 +224,11 @@ export function InspectionPlanEditorModal(props: Props) {
       <PlanItemsEditor
         businesses={props.businesses}
         items={items}
-        onChange={setItems}
+        error={itemsError}
+        onChange={(next) => {
+          setItems(next);
+          setItemsError(undefined);
+        }}
         onBusinessSearch={props.onBusinessSearch}
       />
     </Modal>
@@ -216,14 +238,17 @@ export function InspectionPlanEditorModal(props: Props) {
 function PlanItemsEditor({
   businesses,
   items,
+  error,
   onChange,
   onBusinessSearch,
 }: {
   businesses: BusinessOption[];
   items: ItemRow[];
+  error?: string;
   onChange: (items: ItemRow[]) => void;
   onBusinessSearch?: (value: string) => void;
 }) {
+  const { token } = theme.useToken();
   const addItem = () => {
     onChange([
       ...items,
@@ -258,6 +283,7 @@ function PlanItemsEditor({
           showSearch
           optionFilterProp="label"
           value={value || undefined}
+          status={error && !value ? "error" : undefined}
           style={{ width: "100%" }}
           placeholder="Chọn cơ sở"
           options={businesses.map((x) => ({
@@ -266,6 +292,21 @@ function PlanItemsEditor({
           }))}
           onSearch={onBusinessSearch}
           onChange={(v) => updateItem(row.key, "businessId", v)}
+        />
+      ),
+    },
+    {
+      title: "Ngày dự kiến",
+      dataIndex: "plannedDate",
+      width: 150,
+      render: (value: string | undefined, row) => (
+        <DatePicker
+          format="DD/MM/YYYY"
+          style={{ width: "100%" }}
+          value={value ? dayjs(value) : undefined}
+          onChange={(d) =>
+            updateItem(row.key, "plannedDate", d?.format("YYYY-MM-DD"))
+          }
         />
       ),
     },
@@ -324,6 +365,11 @@ function PlanItemsEditor({
         pagination={false}
         locale={{ emptyText: "Chưa có cơ sở nào" }}
       />
+      {error && (
+        <div role="alert" style={{ color: token.colorError, marginTop: 8 }}>
+          {error}
+        </div>
+      )}
     </div>
   );
 }

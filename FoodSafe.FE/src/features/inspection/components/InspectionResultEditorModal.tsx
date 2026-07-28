@@ -8,6 +8,7 @@ import {
   InputNumber,
   Modal,
   Select,
+  theme,
 } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
@@ -66,12 +67,30 @@ interface Props {
   onBusinessSearch?: (value: string) => void;
 }
 
+const groupThousands = (value: string) =>
+  value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
 export function InspectionResultEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
+  const { token } = theme.useToken();
   const { open, item } = props;
   const selectedPlanId = Form.useWatch("planId", form);
-  const planItems =
-    props.plans.find((p) => p.id === selectedPlanId)?.items ?? [];
+  const selectedPlan = props.plans.find((p) => p.id === selectedPlanId);
+  const planItems = selectedPlan?.items ?? [];
+
+  // The business select's option list is search-limited; make sure the value
+  // set by editing or by picking a plan item always has a visible label.
+  const businessOptionMap = new Map<string, string>();
+  for (const it of planItems)
+    businessOptionMap.set(it.businessId, it.businessName ?? it.businessId);
+  if (item)
+    businessOptionMap.set(item.businessId, item.businessName ?? item.businessId);
+  for (const x of props.businesses)
+    businessOptionMap.set(x.id, x.code ? `${x.code} — ${x.name}` : x.name);
+  const businessOptions = [...businessOptionMap].map(([value, label]) => ({
+    value,
+    label,
+  }));
 
   useEffect(() => {
     if (!open) return;
@@ -183,10 +202,7 @@ export function InspectionResultEditorModal(props: Props) {
             showSearch
             optionFilterProp="label"
             disabled={Boolean(item)}
-            options={props.businesses.map((x) => ({
-              value: x.id,
-              label: x.code ? `${x.code} — ${x.name}` : x.name,
-            }))}
+            options={businessOptions}
             onSearch={props.onBusinessSearch}
           />
         </Form.Item>
@@ -194,11 +210,16 @@ export function InspectionResultEditorModal(props: Props) {
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
         >
-          <Form.Item name="planId" label="Thuộc kế hoạch thanh tra">
+          <Form.Item
+            name="planId"
+            label="Thuộc kế hoạch thanh tra"
+            extra={item ? "Không thể đổi kế hoạch của kết quả đã ghi nhận." : undefined}
+          >
             <Select
               allowClear
               showSearch
               optionFilterProp="label"
+              disabled={Boolean(item)}
               placeholder="Không thuộc kế hoạch"
               onChange={() => form.setFieldValue("planItemId", undefined)}
               options={props.plans.map((p) => ({
@@ -207,15 +228,29 @@ export function InspectionResultEditorModal(props: Props) {
               }))}
             />
           </Form.Item>
-          <Form.Item name="planItemId" label="Cơ sở trong kế hoạch">
+          <Form.Item
+            name="planItemId"
+            label="Cơ sở trong kế hoạch"
+            rules={[
+              {
+                required: Boolean(selectedPlanId),
+                message: "Vui lòng chọn cơ sở trong kế hoạch.",
+              },
+            ]}
+          >
             <Select
               allowClear
               showSearch
               optionFilterProp="label"
-              disabled={!selectedPlanId}
+              disabled={Boolean(item) || !selectedPlanId}
               placeholder={
                 selectedPlanId ? "Chọn cơ sở" : "Chọn kế hoạch trước"
               }
+              onChange={(planItemId?: string) => {
+                const planItem = planItems.find((it) => it.id === planItemId);
+                if (planItem)
+                  form.setFieldValue("businessId", planItem.businessId);
+              }}
               options={planItems.map((it) => ({
                 value: it.id,
                 label: it.businessName ?? it.businessId,
@@ -232,7 +267,11 @@ export function InspectionResultEditorModal(props: Props) {
             label="Ngày kiểm tra"
             rules={[{ required: true, message: "Vui lòng chọn ngày." }]}
           >
-            <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
+            <DatePicker
+              format="DD/MM/YYYY"
+              style={{ width: "100%" }}
+              disabledDate={(d) => d.isAfter(dayjs(), "day")}
+            />
           </Form.Item>
           <Form.Item
             name="inspectionType"
@@ -251,7 +290,7 @@ export function InspectionResultEditorModal(props: Props) {
           <Form.Item
             name="overallResult"
             label="Kết quả chung"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Vui lòng chọn kết quả." }]}
           >
             <Select
               options={Object.entries(INSPECTION_OVERALL_RESULT_CONFIG).map(
@@ -268,14 +307,15 @@ export function InspectionResultEditorModal(props: Props) {
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
         >
-          <Form.Item name="hasViolation" valuePropName="checked">
+          <Form.Item name="hasViolation" valuePropName="checked" label=" " colon={false}>
             <Checkbox>Có vi phạm</Checkbox>
           </Form.Item>
           <Form.Item name="fineAmount" label="Số tiền phạt (VND)">
-            <InputNumber
+            <InputNumber<number>
               min={0}
               style={{ width: "100%" }}
-              formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              formatter={(v) => groupThousands(`${v ?? ""}`)}
+              parser={(v) => Number((v ?? "").replace(/,/g, ""))}
             />
           </Form.Item>
         </div>
@@ -307,7 +347,7 @@ export function InspectionResultEditorModal(props: Props) {
               </div>
 
               {fields.length === 0 ? (
-                <div style={{ color: "rgba(0,0,0,0.45)" }}>
+                <div style={{ color: token.colorTextTertiary }}>
                   Chưa có vi phạm chi tiết nào.
                 </div>
               ) : null}
@@ -316,8 +356,8 @@ export function InspectionResultEditorModal(props: Props) {
                 <div
                   key={field.key}
                   style={{
-                    border: "1px solid #f0f0f0",
-                    borderRadius: 8,
+                    border: `1px solid ${token.colorBorderSecondary}`,
+                    borderRadius: token.borderRadiusLG,
                     padding: 12,
                     marginBottom: 12,
                   }}
@@ -416,7 +456,12 @@ export function InspectionResultEditorModal(props: Props) {
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
         >
-          <Form.Item name="followUpRequired" valuePropName="checked">
+          <Form.Item
+            name="followUpRequired"
+            valuePropName="checked"
+            label=" "
+            colon={false}
+          >
             <Checkbox>Yêu cầu tái kiểm tra</Checkbox>
           </Form.Item>
           <Form.Item name="followUpDate" label="Ngày tái kiểm tra">

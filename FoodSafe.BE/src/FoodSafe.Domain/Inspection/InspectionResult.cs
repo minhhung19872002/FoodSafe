@@ -29,6 +29,11 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
     public Guid? FinalizedById { get; private set; }
     public DateTime? FinalizedAt { get; private set; }
 
+    // Request-scoped only (not persisted): remember what the caller explicitly
+    // supplied in SetCoreFields so recalculation never overrides user input.
+    private bool _fineAmountExplicit;
+    private bool _hasViolationInput;
+
     private readonly List<InspectionViolation> _violations = new();
     public IReadOnlyList<InspectionViolation> Violations => _violations.AsReadOnly();
 
@@ -60,8 +65,10 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         string? recommendations,
         string? notes)
     {
-        if ((planItemId.HasValue) != (planId.HasValue))
-            throw new ArgumentException("PlanId and PlanItemId must both be set or both be null.");
+        // The schema enforces this pairing too (chk_ir_plan_tuple).
+        if (planItemId.HasValue != planId.HasValue)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Inspection.PlanItemWithoutPlan);
 
         var result = new InspectionResult(id)
         {
@@ -137,6 +144,16 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         return violation;
     }
 
+    /// <summary>
+    /// Drops every itemised violation without touching HasViolation/FineAmount —
+    /// callers must follow up with <see cref="Update"/> to reset those fields.
+    /// </summary>
+    public void ClearViolations()
+    {
+        EnsureMutable();
+        _violations.Clear();
+    }
+
     public void RemoveViolation(Guid violationId)
     {
         EnsureMutable();
@@ -191,8 +208,10 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         TeamLeader = Normalize(teamLeader);
         TeamMembersText = Normalize(teamMembersText);
         OverallResult = overallResult;
-        HasViolation = hasViolation;
+        _hasViolationInput = hasViolation;
+        HasViolation = hasViolation || _violations.Count > 0;
         ViolationDescription = Normalize(violationDescription);
+        _fineAmountExplicit = fineAmount.HasValue;
         FineAmount = fineAmount;
         AdminDecisionNumber = Normalize(adminDecisionNumber);
         AdminDecisionDate = adminDecisionDate?.Date;
@@ -202,11 +221,19 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         Notes = Normalize(notes);
     }
 
+    // The user's explicit inputs win: itemised violations force HasViolation on,
+    // and the itemised total only fills FineAmount when no total was entered.
     private void RecalculateViolationState()
     {
-        HasViolation = _violations.Count > 0;
-        FineAmount = _violations.Where(v => v.FineAmount.HasValue).Sum(v => v.FineAmount!.Value);
-        if (FineAmount == 0) FineAmount = null;
+        HasViolation = _hasViolationInput || _violations.Count > 0;
+
+        if (!_fineAmountExplicit)
+        {
+            var itemisedTotal = _violations
+                .Where(v => v.FineAmount.HasValue)
+                .Sum(v => v.FineAmount!.Value);
+            FineAmount = itemisedTotal > 0 ? itemisedTotal : null;
+        }
     }
 
     private static string? Normalize(string? value) =>
