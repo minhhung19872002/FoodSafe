@@ -215,7 +215,11 @@ test.describe("CFS certificate management", () => {
       .getByRole("button", { name: `Thao tác ${certificateNumber}` })
       .click();
     await page.getByRole("menuitem", { name: "Xóa" }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    // Nhãn nút xác nhận phụ thuộc cấu hình RowActions/locale antd.
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText("Đã xóa chứng nhận CFS.")).toBeVisible();
 
     const duplicate = await request.post("/api/v1/app/cfs-certificate", {

@@ -12,6 +12,7 @@ import { App, Button, Input, Select, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { extractApiError } from "@/lib/apiError";
 import {
   useCreateCfsCertificate,
   useDeleteCfsCertificate,
@@ -126,10 +127,7 @@ export default function CfsCertificatePage() {
         void message.success("Đã lưu chứng nhận CFS.");
         closeEditor();
       },
-      onError: () =>
-        void message.error(
-          "Không thể lưu. Vui lòng kiểm tra số CFS và dữ liệu.",
-        ),
+      onError: (error: unknown) => void message.error(extractApiError(error)),
     };
     if (editing) updateMutation.mutate({ id: editing.id, input }, options);
     else createMutation.mutate(input, options);
@@ -240,8 +238,8 @@ export default function CfsCertificatePage() {
                 deleteMutation.mutate(item.id, {
                   onSuccess: () =>
                     void message.success("Đã xóa chứng nhận CFS."),
-                  onError: () =>
-                    void message.error("Không thể xóa chứng nhận CFS."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -263,8 +261,8 @@ export default function CfsCertificatePage() {
               onClick={() =>
                 exportMutation.mutate(queryFilter, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () =>
-                    void message.error("Không thể xuất danh sách."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 })
               }
             >
@@ -365,7 +363,7 @@ export default function CfsCertificatePage() {
           rowKey="id"
           size="middle"
           scroll={{ x: 1350 }}
-          loading={registrations.isLoading}
+          loading={registrations.isFetching}
           columns={columns}
           dataSource={registrations.data?.items ?? []}
           onRow={(record) => ({
@@ -487,8 +485,7 @@ export default function CfsCertificatePage() {
                 void message.success("Đã thu hồi chứng nhận CFS.");
                 setRevoking(undefined);
               },
-              onError: () =>
-                void message.error("Không thể thu hồi chứng nhận CFS."),
+              onError: (error) => void message.error(extractApiError(error)),
             },
           );
         }}

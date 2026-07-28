@@ -38,6 +38,17 @@ export function CfsCertificateEditorModal(props: Props) {
   const businessId = Form.useWatch("businessId", form);
   const { open, registration, onBusinessChange } = props;
 
+  // Options chỉ chứa cơ sở Active (tối đa 500); khi sửa CFS của cơ sở ngoài
+  // danh sách đó vẫn phải hiển thị tên thay vì GUID.
+  const businessOptions =
+    registration &&
+    !props.businesses.some((item) => item.id === registration.businessId)
+      ? [
+          { id: registration.businessId, name: registration.businessName },
+          ...props.businesses,
+        ]
+      : props.businesses;
+
   useEffect(() => {
     if (!open) return;
     form.setFieldsValue(
@@ -99,7 +110,8 @@ export function CfsCertificateEditorModal(props: Props) {
               <Select
                 showSearch
                 optionFilterProp="label"
-                options={props.businesses.map((item) => ({
+                disabled={Boolean(registration)}
+                options={businessOptions.map((item) => ({
                   value: item.id,
                   label: item.code ? `${item.code} — ${item.name}` : item.name,
                 }))}

@@ -487,3 +487,9 @@ Record every verification invalidation and retest result here.
 - **Change class**: Level 2 (single feature). Run doubles as the sorting DIRTY-batch retest for F-009 (default `CreationTime desc` + sortable Ngày cấp column exercised in the real UI).
 - **Result**: PASSED — ads specs **6/6** at rebuilt stack (workers=1, no interception); BE Licensing tests **48/48**; Vitest ads **4/4**; `tsc -b` clean. F-009 returned to VERIFIED.
 - **Architecture debt noted (pre-existing)**: `ProductRegistrationAttachmentsModal` imported across feature folders by ads/cfs/eligibility/export-food — should be promoted to `src/components/`; deferred to avoid touching 5 features mid-flight.
+
+### 2026-07-28 — F-011 /cfs-certificates production-readiness hardening
+
+- **Cause**: dedicated FE+BE deep review (same recurring defect set as F-007/F-009): business select disabled on edit + name fallback; `extractApiError` for save/delete/revoke/export; `isFetching` loading; BE Excel export honours `Sorting`; spec confirm-click `/^(Xóa|Đồng ý|OK)$/`.
+- **Change class**: Level 2 (single feature). Run doubles as the sorting DIRTY-batch retest for F-011.
+- **Result**: PASSED — CFS specs **6/6** at rebuilt stack (workers=1, no interception); Vitest cfs **4/4**; BE build 0 errors; `tsc -b` clean. F-011 returned to VERIFIED.

@@ -39,6 +39,7 @@ public class CfsCertificateExcelAppService :
                     DestinationCountryId = input.DestinationCountryId,
                     Status = input.Status,
                     ExpiringWithinDays = input.ExpiringWithinDays,
+                    Sorting = input.Sorting,
                     SkipCount = rows.Count,
                     MaxResultCount = PageSize
                 });
