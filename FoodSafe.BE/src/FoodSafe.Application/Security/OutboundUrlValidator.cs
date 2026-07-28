@@ -78,7 +78,24 @@ public static class OutboundUrlValidator
 
     public static HttpClient CreateGuardedHttpClient(TimeSpan timeout)
     {
-        var handler = new SocketsHttpHandler
+        return new HttpClient(CreateGuardedHandler(), disposeHandler: true)
+        {
+            Timeout = timeout,
+            // Cap how much partner response is buffered (oversized replies fail).
+            MaxResponseContentBufferSize = MaxResponseBytes
+        };
+    }
+
+    /// <summary>
+    /// Builds the hardened <see cref="SocketsHttpHandler"/> used by
+    /// <see cref="CreateGuardedHttpClient"/>. Exposed to the test project so the
+    /// redirect and DNS-lifetime SSRF caps can be locked by regression tests
+    /// without a reachable server (the connect guard blocks every address a test
+    /// listener could bind to).
+    /// </summary>
+    internal static SocketsHttpHandler CreateGuardedHandler()
+    {
+        return new SocketsHttpHandler
         {
             // Bound how long a stale DNS answer can be reused before re-resolution.
             PooledConnectionLifetime = TimeSpan.FromMinutes(2),
@@ -87,13 +104,6 @@ public static class OutboundUrlValidator
             // is recorded as the call outcome instead.
             AllowAutoRedirect = false,
             ConnectCallback = GuardedConnectAsync
-        };
-
-        return new HttpClient(handler, disposeHandler: true)
-        {
-            Timeout = timeout,
-            // Cap how much partner response is buffered (oversized replies fail).
-            MaxResponseContentBufferSize = MaxResponseBytes
         };
     }
 
