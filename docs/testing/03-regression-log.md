@@ -518,3 +518,11 @@ Record every verification invalidation and retest result here.
 - **Localization debt closed**: `TestingResult:0002–0007` + **`SelfDeclaration:0001–0006`** vi/en entries added (F-007's duplicate-number toast previously fell back to ABP default text).
 - **Change class**: Level 2. Run doubles as the sorting DIRTY-batch retest for F-017.
 - **Result**: PASSED — testing-results specs **6/6** at rebuilt stack (workers=1, no interception); BE AlertsAndTesting **37/37**; Vitest **7/7**; `tsc -b` clean. F-017 returned to VERIFIED.
+
+### 2026-07-28 — F-018 /risk-analysis production-readiness hardening
+
+- **Cause**: dedicated FE+BE deep review with a real-browser recon pass first (same series as F-006..F-017). Confirmed live: all invalid-input POSTs returned **500** ("An internal error occurred") because `CreateUpdateRiskAnalysisDto` had zero DataAnnotations — empty/501-char title and whitespace content died in `Check.*` (ArgumentException), out-of-range enums fell through to the DB check constraint `chk_ra_category` (PostgresException 23514).
+- **Fixes**: DTO `[Required]/[StringLength(500)]/[EnumDataType]` (mirrors `CreateUpdateAtpAlertDto`) → 4/4 probes now 400; `DeleteAsync` scope op `Edit`→`Delete` (`CanDelete` profile flag was bypassed); `extractApiError` on all toasts (edit-after-publish now shows "Chỉ được sửa phân tích nguy cơ ở trạng thái Nháp." — proven in the real UI); `isFetching` + `keepPreviousData`; title maxLength/showCount; Chuyên mục filter exposed; `PageHeader` + page-card layout (was a bare Card); FE↔Excel↔Print label consistency ("Vừa"/"Đã xuất bản"/"Chuyên mục") + Excel "Ngày công bố" column; spec placeholder + confirm-regex updates.
+- **Change class**: Level 2 (single feature; only consumes existing shared components).
+- **Environment note**: main working tree was mid-edit by a concurrent session (BE did not compile) — verification ran on an **isolated worktree stack** (`fsra` compose project, port 8180, fresh PostgreSQL + migrations + seed) built from `819b803` + only the F-018 changes.
+- **Result**: PASSED — risk-analysis specs **7/7** (lifecycle 1/1, verification 5/5, publish+public-portal 1/1; workers=1, no interception); Domain `RiskAnalysisTests` 6/6; Vitest risk-analysis 4/4; `FoodSafe.Application` build 0 errors; `tsc --noEmit` clean; browser console clean. F-018 returned to VERIFIED at wt-post-`819b803`.

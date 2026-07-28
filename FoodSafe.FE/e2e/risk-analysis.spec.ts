@@ -60,7 +60,7 @@ test.describe("risk analysis management", () => {
     let row = page.getByRole("row").filter({ hasText: title });
     await row.getByRole("button", { name: `Thao tác ${title}` }).click();
     await page.getByRole("menuitem", { name: "Xuất bản" }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await page.getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ }).click();
 
     row = page.getByRole("row").filter({ hasText: title });
     await expect(row.getByText("Đã xuất bản")).toBeVisible({ timeout: 10_000 });

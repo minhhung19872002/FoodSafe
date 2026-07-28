@@ -27,7 +27,7 @@
 | F-015 | Reporting (NDTP/ATP/Action)     | DIRTY          | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-016 | Alerts & News                   | VERIFIED       | `e2e/alerts-news.spec.ts`, `e2e/alerts-news-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-017 | Testing Results                 | VERIFIED       | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | wt-post-`66e4e7e` | 2026-07-28 |
-| F-018 | Risk Analysis                   | DIRTY          | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-018 | Risk Analysis                   | VERIFIED       | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts`, `e2e/risk-analysis-publish.spec.ts` | wt-post-`819b803` | 2026-07-28 |
 | F-019 | Data Integration                | VERIFIED       | `e2e/data-integration.spec.ts`, `e2e/data-integration-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-019c | Data Integration — Outbound Auth Credentials (P0-2, FR-50/51) | VERIFIED | `e2e/data-integration-credentials.spec.ts` (6/6) | `8be91bc` | 2026-07-28 |
 | F-019d | Data Integration — Outbound Share via UI + history persistence (P1-3, FR-51) | VERIFIED | `e2e/data-integration-share.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
@@ -53,8 +53,8 @@
 ## Summary
 
 - Total features: 34
-- VERIFIED: 27 rows (of 39 table rows)
-- DIRTY: **12 rows** (2026-07-28 — default list ordering changed to `CreationTime desc` + server-side column sorting added; see "DIRTY batch" note below and `03-regression-log.md`)
+- VERIFIED: 32 rows (of 39 table rows)
+- DIRTY: **7 rows** (2026-07-28 — remnants of the `CreationTime desc` sorting DIRTY batch; see "DIRTY batch" note below and `03-regression-log.md`)
 - READY_FOR_TEST: 0
 - FAILED: 0
 - BLOCKED: 0

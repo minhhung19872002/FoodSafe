@@ -100,7 +100,7 @@ public class RiskAnalysisAppService : ApplicationService
     [Authorize(FoodSafePermissions.AlertsAndTesting.RiskAnalyses.Delete)]
     public async Task DeleteAsync(Guid id)
     {
-        var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
+        var entity = await GetScopedAsync(id, DataScopeOperation.Delete);
         if (entity.Status != RiskAnalysisStatus.Draft)
             throw new BusinessException(FoodSafeDomainErrorCodes.RiskAnalysis.CannotModifyNonDraft);
         await _repo.DeleteAsync(entity, cancellationToken: _cancellationTokens.Token);
