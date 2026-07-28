@@ -1944,6 +1944,11 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasDatabaseName("idx_fpi_org_status");
             entity.HasIndex(x => x.OccurrenceDate)
                 .HasDatabaseName("idx_fpi_occurrence_date");
+            // Lọc is_deleted: bản ghi soft-deleted trước fix có thể đã trùng mã.
+            entity.HasIndex(x => new { x.OrganizationId, x.IncidentCode })
+                .IsUnique()
+                .HasDatabaseName("uq_fpi_org_code")
+                .HasFilter("is_deleted = false");
 
             entity.HasMany(x => x.ErrorReports)
                 .WithOne()
@@ -2047,6 +2052,11 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasDatabaseName("idx_fpc_incident");
             entity.HasIndex(x => x.ReportDate)
                 .HasDatabaseName("idx_fpc_report_date");
+            // Lọc is_deleted: bản ghi soft-deleted trước fix có thể đã trùng mã.
+            entity.HasIndex(x => new { x.OrganizationId, x.CaseCode })
+                .IsUnique()
+                .HasDatabaseName("uq_fpc_org_code")
+                .HasFilter("is_deleted = false");
 
             entity.HasMany(x => x.ErrorReports)
                 .WithOne()

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Alert,
   Button,
   Card,
   Form,
@@ -31,6 +32,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { extractApiError } from "@/lib/apiError";
 import { saveDownload } from "@/utils/download";
 import { NdtpReportEditorModal } from "../components/NdtpReportEditorModal";
 import { AtpWorkReportEditorModal } from "../components/AtpWorkReportEditorModal";
@@ -98,12 +100,36 @@ function StatusTag({ status }: { status: ReportStatus }) {
   return <Tag color={cfg.color}>{cfg.label}</Tag>;
 }
 
+/** Phân biệt lỗi tải danh sách với trạng thái "không có dữ liệu". */
+function ListErrorAlert({
+  visible,
+  onRetry,
+}: {
+  visible: boolean;
+  onRetry: () => void;
+}) {
+  if (!visible) return null;
+  return (
+    <Alert
+      type="error"
+      showIcon
+      style={{ marginBottom: 16 }}
+      message="Không thể tải danh sách báo cáo."
+      action={
+        <Button size="small" onClick={onRetry}>
+          Thử lại
+        </Button>
+      }
+    />
+  );
+}
+
 function NdtpTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<NdtpReportFilter>({});
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
-  const { data, isLoading } = useNdtpReports({
+  const { data, isLoading, isError, refetch } = useNdtpReports({
     ...filter,
     sorting,
     skipCount: pagination.skipCount,
@@ -188,6 +214,8 @@ function NdtpTab() {
       title: "Ngày tạo",
       dataIndex: "creationTime",
       width: 120,
+      sorter: true,
+      sortOrder: sortOrderFor("creationTime"),
       render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
     },
     {
@@ -350,9 +378,21 @@ function NdtpTab() {
         />
         <InputNumber<number>
           placeholder="Năm"
+          min={2020}
+          max={2100}
           style={{ width: 100 }}
           onChange={(v) => {
             setFilter((f) => ({ ...f, periodYear: v ?? undefined }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <Select
+          placeholder="Tháng"
+          allowClear
+          style={{ width: 110 }}
+          options={MONTHS}
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, periodMonth: v ?? undefined }));
             pagination.resetToFirstPage();
           }}
         />
@@ -360,10 +400,13 @@ function NdtpTab() {
           icon={<ExportOutlined />}
           loading={exportMut.isPending}
           onClick={() =>
-            exportMut.mutate(filter, {
-              onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => message.error("Không thể xuất danh sách."),
-            })
+            exportMut.mutate(
+              { ...filter, sorting },
+              {
+                onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                onError: (error) => message.error(extractApiError(error)),
+              },
+            )
           }
         >
           Xuất Excel
@@ -385,6 +428,7 @@ function NdtpTab() {
           </Button>
         )}
       </Space>
+      <ListErrorAlert visible={isError} onRetry={() => void refetch()} />
       <Table
         rowKey="id"
         columns={columns}
@@ -421,13 +465,17 @@ function NdtpTab() {
             });
           }}
         >
-          <Form.Item name="periodYear" label="Năm" rules={[{ required: true }]}>
-            <InputNumber style={{ width: "100%" }} />
+          <Form.Item
+            name="periodYear"
+            label="Năm"
+            rules={[{ required: true, message: "Vui lòng nhập năm" }]}
+          >
+            <InputNumber min={2020} max={2100} style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item
             name="periodMonth"
             label="Tháng"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Vui lòng chọn tháng" }]}
           >
             <Select options={MONTHS} />
           </Form.Item>
@@ -482,7 +530,7 @@ function AtpWorkTab() {
   const [filter, setFilter] = useState<AtpWorkReportFilter>({});
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
-  const { data, isLoading } = useAtpWorkReports({
+  const { data, isLoading, isError, refetch } = useAtpWorkReports({
     ...filter,
     sorting,
     skipCount: pagination.skipCount,
@@ -570,6 +618,8 @@ function AtpWorkTab() {
       title: "Ngày tạo",
       dataIndex: "creationTime",
       width: 120,
+      sorter: true,
+      sortOrder: sortOrderFor("creationTime"),
       render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
     },
     {
@@ -743,14 +793,27 @@ function AtpWorkTab() {
             pagination.resetToFirstPage();
           }}
         />
+        <InputNumber<number>
+          placeholder="Năm"
+          min={2020}
+          max={2100}
+          style={{ width: 100 }}
+          onChange={(v) => {
+            setFilter((f) => ({ ...f, periodYear: v ?? undefined }));
+            pagination.resetToFirstPage();
+          }}
+        />
         <Button
           icon={<ExportOutlined />}
           loading={exportMut.isPending}
           onClick={() =>
-            exportMut.mutate(filter, {
-              onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => message.error("Không thể xuất danh sách."),
-            })
+            exportMut.mutate(
+              { ...filter, sorting },
+              {
+                onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                onError: (error) => message.error(extractApiError(error)),
+              },
+            )
           }
         >
           Xuất Excel
@@ -773,6 +836,7 @@ function AtpWorkTab() {
           </Button>
         )}
       </Space>
+      <ListErrorAlert visible={isError} onRetry={() => void refetch()} />
       <Table
         rowKey="id"
         columns={columns}
@@ -812,7 +876,7 @@ function AtpWorkTab() {
           <Form.Item
             name="periodType"
             label="Loại kỳ"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Vui lòng chọn loại kỳ" }]}
           >
             <Select
               options={Object.entries(REPORT_PERIOD_TYPE_CONFIG).map(
@@ -820,8 +884,12 @@ function AtpWorkTab() {
               )}
             />
           </Form.Item>
-          <Form.Item name="periodYear" label="Năm" rules={[{ required: true }]}>
-            <InputNumber style={{ width: "100%" }} />
+          <Form.Item
+            name="periodYear"
+            label="Năm"
+            rules={[{ required: true, message: "Vui lòng nhập năm" }]}
+          >
+            <InputNumber min={2020} max={2100} style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item
             noStyle
@@ -832,7 +900,9 @@ function AtpWorkTab() {
                 <Form.Item
                   name="periodHalf"
                   label="Kỳ"
-                  rules={[{ required: true }]}
+                  rules={[
+                    { required: true, message: "Vui lòng chọn kỳ báo cáo" },
+                  ]}
                 >
                   <Select
                     options={[
@@ -895,7 +965,7 @@ function ActionMonthTab() {
   const [filter, setFilter] = useState<ActionMonthReportFilter>({});
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
-  const { data, isLoading } = useActionMonthReports({
+  const { data, isLoading, isError, refetch } = useActionMonthReports({
     ...filter,
     sorting,
     skipCount: pagination.skipCount,
@@ -982,6 +1052,8 @@ function ActionMonthTab() {
       title: "Ngày tạo",
       dataIndex: "creationTime",
       width: 120,
+      sorter: true,
+      sortOrder: sortOrderFor("creationTime"),
       render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
     },
     {
@@ -1151,6 +1223,8 @@ function ActionMonthTab() {
         />
         <InputNumber<number>
           placeholder="Năm"
+          min={2020}
+          max={2100}
           style={{ width: 100 }}
           onChange={(v) => {
             setFilter((f) => ({ ...f, periodYear: v ?? undefined }));
@@ -1161,10 +1235,13 @@ function ActionMonthTab() {
           icon={<ExportOutlined />}
           loading={exportMut.isPending}
           onClick={() =>
-            exportMut.mutate(filter, {
-              onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => message.error("Không thể xuất danh sách."),
-            })
+            exportMut.mutate(
+              { ...filter, sorting },
+              {
+                onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                onError: (error) => message.error(extractApiError(error)),
+              },
+            )
           }
         >
           Xuất Excel
@@ -1183,6 +1260,7 @@ function ActionMonthTab() {
           </Button>
         )}
       </Space>
+      <ListErrorAlert visible={isError} onRetry={() => void refetch()} />
       <Table
         rowKey="id"
         columns={columns}
@@ -1220,8 +1298,12 @@ function ActionMonthTab() {
             });
           }}
         >
-          <Form.Item name="periodYear" label="Năm" rules={[{ required: true }]}>
-            <InputNumber style={{ width: "100%" }} />
+          <Form.Item
+            name="periodYear"
+            label="Năm"
+            rules={[{ required: true, message: "Vui lòng nhập năm" }]}
+          >
+            <InputNumber min={2020} max={2100} style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item name="actionMonthTheme" label="Chủ đề">
             <Input />

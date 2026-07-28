@@ -1,3 +1,4 @@
+using Volo.Abp;
 using Volo.Abp.Domain.Entities;
 
 namespace FoodSafe.Inspection;
@@ -32,6 +33,18 @@ public sealed class InspectionPlanItem : Entity<Guid>
         Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
     }
 
+    internal void UpdateDetails(
+        int sequenceNumber,
+        DateTime? plannedDate,
+        Guid? assignedInspectorId,
+        string? notes)
+    {
+        SequenceNumber = sequenceNumber;
+        PlannedDate = plannedDate?.Date;
+        AssignedInspectorId = assignedInspectorId;
+        Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+    }
+
     public void MarkInProgress()
     {
         if (Status != InspectionPlanItemStatus.Pending)
@@ -41,6 +54,11 @@ public sealed class InspectionPlanItem : Entity<Guid>
 
     public void MarkCompleted()
     {
+        if (Status == InspectionPlanItemStatus.Completed)
+            return;
+        if (Status == InspectionPlanItemStatus.Skipped)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Inspection.InvalidStatusTransition);
         Status = InspectionPlanItemStatus.Completed;
     }
 

@@ -25,9 +25,9 @@ async function createDraftAnalysis(
   headers: Record<string, string>,
   title: string,
 ) {
-  const response = await page.context().request.post(
-    "/api/v1/app/risk-analysis",
-    {
+  const response = await page
+    .context()
+    .request.post("/api/v1/app/risk-analysis", {
       headers,
       data: {
         title,
@@ -35,8 +35,7 @@ async function createDraftAnalysis(
         category: 4,
         riskLevel: 3,
       },
-    },
-  );
+    });
   expect(response.ok(), await response.text()).toBeTruthy();
   return (await response.json()) as { id: string };
 }
@@ -71,10 +70,9 @@ test.describe("risk analysis verification (F-018)", () => {
       "noperm@foodsafe.local",
     );
     try {
-      const response = await page.context().request.get(
-        "/api/v1/app/risk-analysis",
-        { maxRedirects: 0 },
-      );
+      const response = await page
+        .context()
+        .request.get("/api/v1/app/risk-analysis", { maxRedirects: 0 });
       expect([403, 302]).toContain(response.status());
       expect(response.ok()).toBeFalsy();
     } finally {
@@ -139,14 +137,13 @@ test.describe("risk analysis verification (F-018)", () => {
   test("server-side validation rejects incomplete input", async ({ page }) => {
     await signInAsAdmin(page);
     const headers = await csrfHeaders(page);
-    const response = await page.context().request.post(
-      "/api/v1/app/risk-analysis",
-      {
+    const response = await page
+      .context()
+      .request.post("/api/v1/app/risk-analysis", {
         headers,
         maxRedirects: 0,
         data: { content: "Thiếu tiêu đề", category: 4, riskLevel: 3 },
-      },
-    );
+      });
     expect(response.ok()).toBeFalsy();
   });
 
@@ -159,28 +156,25 @@ test.describe("risk analysis verification (F-018)", () => {
 
     try {
       await page.goto("/risk-analysis");
-      const search = page.getByPlaceholder("Tìm kiếm...");
+      const search = page.getByPlaceholder("Tìm theo tiêu đề");
       await search.fill(title);
       await page.keyboard.press("Enter");
       await expect(page.getByText(title)).toBeVisible({ timeout: 10_000 });
 
       await page.reload();
-      await page.getByPlaceholder("Tìm kiếm...").fill(title);
+      await page.getByPlaceholder("Tìm theo tiêu đề").fill(title);
       await page.keyboard.press("Enter");
       await expect(page.getByText(title)).toBeVisible({ timeout: 10_000 });
 
       await page
-        .getByPlaceholder("Tìm kiếm...")
+        .getByPlaceholder("Tìm theo tiêu đề")
         .fill("KHONG-TON-TAI-XYZ-99999");
       await page.keyboard.press("Enter");
       await expect(
-        page
-          .locator(".ant-empty-description", { hasText: "Trống" })
-          .first(),
+        page.locator(".ant-empty-description", { hasText: "Trống" }).first(),
       ).toBeVisible({ timeout: 10_000 });
     } finally {
       await deleteAnalysis(page, headers, analysis.id);
     }
   });
 });
-

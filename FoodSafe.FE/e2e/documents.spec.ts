@@ -72,7 +72,11 @@ test.describe("documents management", () => {
     const row = page.getByRole("row").filter({ hasText: docNumber });
     await row.getByRole("button", { name: `Thao tác ${docNumber}` }).click();
     await page.getByRole("menuitem", { name: "Xóa" }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    // Nhãn nút xác nhận phụ thuộc cấu hình RowActions/locale antd.
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText(docNumber)).not.toBeVisible({
       timeout: 10_000,
     });

@@ -37,6 +37,7 @@ public class AdministrativeDocumentExcelAppService :
                     Filter = input.Filter,
                     DocumentTypeId = input.DocumentTypeId,
                     Status = input.Status,
+                    Sorting = input.Sorting,
                     SkipCount = rows.Count,
                     MaxResultCount = PageSize
                 });

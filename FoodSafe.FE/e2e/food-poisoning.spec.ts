@@ -97,14 +97,20 @@ test.describe("food poisoning management", () => {
 
     let row = page.getByRole("row").filter({ hasText: victimName });
     await row.getByRole("button", { name: /Gửi/ }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible({
       timeout: 10_000,
     });
 
     row = page.getByRole("row").filter({ hasText: victimName });
     await row.getByRole("button", { name: /Xác minh/ }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText("Đã xác minh.")).toBeVisible({
       timeout: 10_000,
     });
@@ -114,6 +120,10 @@ test.describe("food poisoning management", () => {
     const incidentDialog = page.getByRole("dialog", {
       name: "Tạo vụ ngộ độc mới",
     });
+    await incidentDialog
+      .getByRole("textbox", { name: "Thời điểm xảy ra" })
+      .fill("27/07/2026 18:00");
+    await page.keyboard.press("Enter");
     await incidentDialog
       .getByRole("textbox", { name: "Địa điểm xảy ra" })
       .fill(incidentLocation);
@@ -138,14 +148,20 @@ test.describe("food poisoning management", () => {
 
     row = page.getByRole("row").filter({ hasText: incidentLocation });
     await row.getByRole("button", { name: /Gửi/ }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible({
       timeout: 10_000,
     });
 
     row = page.getByRole("row").filter({ hasText: incidentLocation });
     await row.getByRole("button", { name: /Xác minh/ }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText("Đã xác minh.")).toBeVisible({
       timeout: 10_000,
     });
@@ -168,6 +184,7 @@ test.describe("food poisoning management", () => {
       {
         headers,
         data: {
+          occurrenceDate: "2026-07-27T11:00:00Z",
           locationDescription: `E2E-NDTP Bản đồ ${suffix}`,
           locationLatitude: 21.0064,
           locationLongitude: 107.2925,

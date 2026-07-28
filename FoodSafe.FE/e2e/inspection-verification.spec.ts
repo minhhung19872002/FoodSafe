@@ -51,6 +51,9 @@ async function deletePlan(
 }
 
 test.describe("inspection verification (F-013)", () => {
+  // Server error toasts are localized by Accept-Language; assert the VN texts.
+  test.use({ locale: "vi-VN" });
+
   test.setTimeout(90_000);
 
   test("unauthenticated API access is rejected", async ({ request }) => {
@@ -207,14 +210,17 @@ test.describe("inspection verification (F-013)", () => {
       .getByRole("button", { name: "Lưu", exact: true })
       .click();
     await expect(
-      page.getByText("Không thể lưu kế hoạch. Kiểm tra dữ liệu."),
+      page.getByText("Mã kế hoạch đã tồn tại."),
     ).toBeVisible({ timeout: 10_000 });
     await duplicateDialog.getByRole("button", { name: "Hủy" }).click();
 
     const row = page.getByRole("row").filter({ hasText: planCode });
     await row.getByRole("button", { name: `Thao tác ${planCode}` }).click();
     await page.getByRole("menuitem", { name: "Xóa" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText(planCode)).not.toBeVisible({
       timeout: 10_000,
     });

@@ -78,7 +78,10 @@ public class CreateUpdateInspectionResultDto
 
     public bool HasViolation { get; set; }
     public string? ViolationDescription { get; set; }
+
+    [Range(0, double.MaxValue)]
     public decimal? FineAmount { get; set; }
+
     public string? AdminDecisionNumber { get; set; }
     public DateTime? AdminDecisionDate { get; set; }
     public bool FollowUpRequired { get; set; }
@@ -97,7 +100,10 @@ public class CreateUpdateViolationDto
     public string Description { get; set; } = string.Empty;
 
     public string? RegulationReference { get; set; }
+
+    [Range(0, double.MaxValue)]
     public decimal? FineAmount { get; set; }
+
     public string? RemedyRequired { get; set; }
     public DateTime? RemedyDeadline { get; set; }
 }

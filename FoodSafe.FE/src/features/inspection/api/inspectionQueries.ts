@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { inspectionPlanApi, inspectionResultApi } from "./inspectionApi";
 import type {
   InspectionPlanFilter,
@@ -23,6 +23,7 @@ export function useInspectionPlans(filter: InspectionPlanFilter) {
   return useQuery({
     queryKey: inspectionPlanKeys.list(filter),
     queryFn: () => inspectionPlanApi.list(filter),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -38,5 +39,6 @@ export function useInspectionResults(filter: InspectionResultFilter) {
   return useQuery({
     queryKey: inspectionResultKeys.list(filter),
     queryFn: () => inspectionResultApi.list(filter),
+    placeholderData: keepPreviousData,
   });
 }

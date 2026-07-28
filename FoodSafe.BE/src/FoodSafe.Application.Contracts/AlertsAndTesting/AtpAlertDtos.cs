@@ -57,8 +57,14 @@ public class CreateUpdateAtpAlertDto
     public string? AffectedArea { get; set; }
     public string? AffectedProducts { get; set; }
     public Guid? BusinessId { get; set; }
+
+    [StringLength(200)]
     public string? ReporterName { get; set; }
+
+    [StringLength(20)]
     public string? ReporterPhone { get; set; }
+
+    [StringLength(200)]
     public string? ReporterEmail { get; set; }
 }
 

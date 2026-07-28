@@ -96,7 +96,11 @@ test.describe("testing results management", () => {
 
     let row = page.getByRole("row").filter({ hasText: sampleCode });
     await row.getByRole("button", { name: /Xóa/ }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    // Nhãn nút xác nhận phụ thuộc cấu hình RowActions/locale antd.
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ })
+      .click();
     await expect(page.getByText(sampleCode)).not.toBeVisible({
       timeout: 10_000,
     });

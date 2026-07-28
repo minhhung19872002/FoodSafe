@@ -37,6 +37,7 @@ public class InspectionPlanExcelAppService :
                     PlanType = input.PlanType,
                     Status = input.Status,
                     Year = input.Year,
+                    Sorting = input.Sorting,
                     SkipCount = rows.Count,
                     MaxResultCount = PageSize
                 });

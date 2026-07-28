@@ -152,7 +152,7 @@ test.describe("inspection management", () => {
 
     await row.getByRole("button", { name: `Thao tác ${planCode}` }).click();
     await page.getByRole("menuitem", { name: "Gửi" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ }).click();
     await expect(page.getByText("Đã gửi duyệt.")).toBeVisible({
       timeout: 10_000,
     });
@@ -163,7 +163,7 @@ test.describe("inspection management", () => {
     row = page.getByRole("row").filter({ hasText: planCode });
     // At Submitted state: visible=[Tài liệu, Duyệt, Từ chối, Hủy] → Duyệt is inline slot 2.
     await row.getByRole("button", { name: "Duyệt" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ }).click();
     await expect(page.getByText("Đã phê duyệt.")).toBeVisible({
       timeout: 10_000,
     });

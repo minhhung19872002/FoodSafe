@@ -1,4 +1,4 @@
-using Volo.Abp;
+﻿using Volo.Abp;
 
 namespace FoodSafe.Reporting;
 
@@ -97,7 +97,7 @@ public sealed class ActionMonthReport : BaseReport
         string correctionDetails, Guid creatorId)
     {
         if (Status != ReportStatus.Submitted && Status != ReportStatus.Verified)
-            throw new BusinessException(FoodSafeDomainErrorCodes.Report.CanOnlyNotifyErrorOnVerified);
+            throw new BusinessException(FoodSafeDomainErrorCodes.Report.CanOnlyNotifyErrorOnSubmittedOrVerified);
 
         _errorNotifications.Add(new ActionMonthReportErrorNotification(
             id, Id, fromOrganizationId, errorFields, correctionDetails, creatorId));

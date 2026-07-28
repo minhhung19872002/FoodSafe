@@ -8,7 +8,7 @@ import {
   PlusOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { App, Button, Input, Select, Space, Table } from "antd";
+import { App, Button, Empty, Input, Select, Space, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -19,7 +19,9 @@ import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RevokeModal } from "@/components/RevokeModal";
 import { RowActions } from "@/components/RowActions";
 import { StatusBadge } from "@/components/StatusBadge";
+import { extractApiError } from "@/lib/apiError";
 import { saveDownload } from "@/utils/download";
+import { formatDate } from "@/utils/format";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   useCreateEligibilityCertificate,
@@ -127,8 +129,7 @@ export default function EligibilityCertificatePage() {
         void message.success("Đã lưu giấy chứng nhận.");
         closeEditor();
       },
-      onError: () =>
-        void message.error("Không thể lưu giấy chứng nhận. Kiểm tra dữ liệu."),
+      onError: (error: unknown) => void message.error(extractApiError(error)),
     };
     if (editing) updateMutation.mutate({ id: editing.id, input }, options);
     else createMutation.mutate(input, options);
@@ -136,14 +137,22 @@ export default function EligibilityCertificatePage() {
 
   const columns: ColumnsType<EligibilityCertificate> = [
     { title: "Số giấy", dataIndex: "certificateNumber", width: 160 },
-    { title: "Cơ sở SXKD", dataIndex: "businessName", ellipsis: true },
+    {
+      title: "Cơ sở SXKD",
+      dataIndex: "businessName",
+      ellipsis: true,
+      render: (value?: string) =>
+        value || (
+          <Typography.Text type="secondary">(Cơ sở đã xóa)</Typography.Text>
+        ),
+    },
     {
       title: "Ngày cấp",
       dataIndex: "issueDate",
       width: 115,
       sorter: true,
       sortOrder: sortOrderFor("issueDate"),
-      render: (value: string) => new Date(value).toLocaleDateString("vi-VN"),
+      render: (value: string) => formatDate(value),
     },
     {
       title: "Hết hạn",
@@ -193,10 +202,8 @@ export default function EligibilityCertificatePage() {
               onClick: () =>
                 pdfMutation.mutate(item.id, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () =>
-                    void message.error(
-                      "Không thể tải bản PDF giấy chứng nhận.",
-                    ),
+                  onError: (error: unknown) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
             {
@@ -226,13 +233,13 @@ export default function EligibilityCertificatePage() {
               icon: <DeleteOutlined />,
               danger: true,
               hidden: !canDelete,
-              confirm: "Xóa giấy chứng nhận này?",
+              confirm: `Xóa giấy chứng nhận ${item.certificateNumber}?`,
               onClick: () =>
                 deleteMutation.mutate(item.id, {
                   onSuccess: () =>
                     void message.success("Đã xóa giấy chứng nhận."),
-                  onError: () =>
-                    void message.error("Không thể xóa giấy chứng nhận."),
+                  onError: (error: unknown) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -254,8 +261,8 @@ export default function EligibilityCertificatePage() {
               onClick={() =>
                 exportMutation.mutate(queryFilter, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
-                  onError: () =>
-                    void message.error("Không thể xuất danh sách."),
+                  onError: (error: unknown) =>
+                    void message.error(extractApiError(error)),
                 })
               }
             >
@@ -333,6 +340,18 @@ export default function EligibilityCertificatePage() {
           scroll={{ x: 1100 }}
           loading={certificates.isLoading}
           columns={columns}
+          locale={{
+            emptyText: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  filter || businessId || status || expiringWithinDays
+                    ? "Không tìm thấy giấy chứng nhận phù hợp với bộ lọc"
+                    : "Chưa có giấy chứng nhận đủ điều kiện nào"
+                }
+              />
+            ),
+          }}
           dataSource={certificates.data?.items ?? []}
           onRow={(record) => ({
             onDoubleClick: () => setDetailRecord(record),
@@ -354,17 +373,18 @@ export default function EligibilityCertificatePage() {
             label: "Trạng thái",
             render: (r) => <StatusBadge status={r.status} />,
           },
-          { label: "Cơ sở SXKD", render: (r) => r.businessName, span: 2 },
+          {
+            label: "Cơ sở SXKD",
+            render: (r) => r.businessName || "(Cơ sở đã xóa)",
+            span: 2,
+          },
           {
             label: "Ngày cấp",
-            render: (r) => new Date(r.issueDate).toLocaleDateString("vi-VN"),
+            render: (r) => formatDate(r.issueDate),
           },
           {
             label: "Ngày hết hạn",
-            render: (r) =>
-              r.expiryDate
-                ? new Date(r.expiryDate).toLocaleDateString("vi-VN")
-                : null,
+            render: (r) => (r.expiryDate ? formatDate(r.expiryDate) : null),
           },
           {
             label: "Cơ quan cấp",
@@ -379,10 +399,7 @@ export default function EligibilityCertificatePage() {
           { label: "Lý do thu hồi", render: (r) => r.revokeReason, span: 2 },
           {
             label: "Ngày thu hồi",
-            render: (r) =>
-              r.revokedAt
-                ? new Date(r.revokedAt).toLocaleDateString("vi-VN")
-                : null,
+            render: (r) => (r.revokedAt ? formatDate(r.revokedAt) : null),
             span: 2,
           },
           { label: "Ghi chú", render: (r) => r.notes, span: 2 },
@@ -410,8 +427,8 @@ export default function EligibilityCertificatePage() {
             { id: attachmentsFor.id, file },
             {
               onSuccess: () => void message.success("Đã tải tệp lên."),
-              onError: () =>
-                void message.error("Tệp không vượt qua kiểm tra an toàn."),
+              onError: (error: unknown) =>
+                void message.error(extractApiError(error)),
             },
           );
         }}
@@ -421,7 +438,8 @@ export default function EligibilityCertificatePage() {
             { id: attachmentsFor.id, attachmentId: attachment.id },
             {
               onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => void message.error("Không thể tải tệp."),
+              onError: (error: unknown) =>
+                void message.error(extractApiError(error)),
             },
           );
         }}
@@ -431,7 +449,8 @@ export default function EligibilityCertificatePage() {
             { id: attachmentsFor.id, attachmentId },
             {
               onSuccess: () => void message.success("Đã xóa tệp."),
-              onError: () => void message.error("Không thể xóa tệp."),
+              onError: (error: unknown) =>
+                void message.error(extractApiError(error)),
             },
           );
         }}
@@ -450,7 +469,8 @@ export default function EligibilityCertificatePage() {
                 void message.success("Đã thu hồi giấy chứng nhận.");
                 setRevoking(undefined);
               },
-              onError: () => void message.error("Không thể thu hồi."),
+              onError: (error: unknown) =>
+                void message.error(extractApiError(error)),
             },
           );
         }}

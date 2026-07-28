@@ -41,6 +41,7 @@ public class InspectionResultExcelAppService :
                     HasViolation = input.HasViolation,
                     FromDate = input.FromDate,
                     ToDate = input.ToDate,
+                    Sorting = input.Sorting,
                     SkipCount = rows.Count,
                     MaxResultCount = PageSize
                 });

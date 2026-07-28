@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Card, Descriptions, Input, Space, Typography } from "antd";
 import { StatusBadge } from "@/components/StatusBadge";
+import { formatDate } from "@/utils/format";
 import { eligibilityCertificateApi } from "../api/eligibilityCertificateApi";
 import type { PublicEligibilityCertificate } from "../types/eligibilityCertificate.types";
 
@@ -63,7 +64,7 @@ export default function PublicEligibilityCertificateLookupPage() {
               <StatusBadge status={result.status} />
             </Descriptions.Item>
             <Descriptions.Item label="Cơ sở SXKD">
-              {result.businessName}
+              {result.businessName || "(Cơ sở đã ngừng quản lý)"}
             </Descriptions.Item>
             <Descriptions.Item label="Cơ quan cấp">
               {result.certifyingAuthority || "—"}
@@ -72,12 +73,10 @@ export default function PublicEligibilityCertificateLookupPage() {
               {result.certificationScope || "—"}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày cấp">
-              {new Date(result.issueDate).toLocaleDateString("vi-VN")}
+              {formatDate(result.issueDate)}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày hết hạn">
-              {result.expiryDate
-                ? new Date(result.expiryDate).toLocaleDateString("vi-VN")
-                : "Không thời hạn"}
+              {result.expiryDate ? formatDate(result.expiryDate) : "Không thời hạn"}
             </Descriptions.Item>
           </Descriptions>
         </Card>

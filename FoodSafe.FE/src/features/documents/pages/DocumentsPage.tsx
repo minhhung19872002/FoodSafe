@@ -1,11 +1,11 @@
 import { useState } from "react";
 import {
+  App,
   Button,
   Card,
   DatePicker,
   Form,
   Input,
-  message,
   Modal,
   Select,
   Space,
@@ -25,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { extractApiError } from "@/lib/apiError";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
 import { escapeHtml, printHtml } from "@/utils/printHtml";
@@ -47,11 +48,12 @@ import { useTablePagination } from "@/hooks/useTablePagination";
 import { RowActions } from "@/components/RowActions";
 
 export default function DocumentsPage() {
+  const { message } = App.useApp();
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<DocumentFilter>({});
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
-  const { data, isLoading } = useDocuments({
+  const documents = useDocuments({
     ...filter,
     sorting,
     skipCount: pagination.skipCount,
@@ -214,8 +216,9 @@ export default function DocumentsPage() {
               confirm: "Xóa văn bản?",
               onClick: () =>
                 deleteMut.mutate(record.id, {
-                  onSuccess: () => message.success("Đã xóa"),
-                  onError: () => message.error("Xóa thất bại"),
+                  onSuccess: () => void message.success("Đã xóa"),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -253,10 +256,14 @@ export default function DocumentsPage() {
           icon={<ExportOutlined />}
           loading={exportMut.isPending}
           onClick={() =>
-            exportMut.mutate(filter, {
-              onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => void message.error("Không thể xuất danh sách."),
-            })
+            exportMut.mutate(
+              { ...filter, sorting },
+              {
+                onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                onError: (error) =>
+                  void message.error(extractApiError(error)),
+              },
+            )
           }
         >
           Xuất Excel
@@ -270,14 +277,14 @@ export default function DocumentsPage() {
       <Table
         rowKey="id"
         columns={columns}
-        dataSource={data?.items}
-        loading={isLoading}
+        dataSource={documents.data?.items}
+        loading={documents.isFetching}
         size="small"
         onRow={(record) => ({
           onDoubleClick: () => setDetailDoc(record),
           style: { cursor: "pointer" },
         })}
-        pagination={pagination.buildConfig(data?.totalCount)}
+        pagination={pagination.buildConfig(documents.data?.totalCount)}
         onChange={(_, __, sorter) => handleSort(sorter)}
       />
       <Modal
@@ -302,25 +309,18 @@ export default function DocumentsPage() {
               effectiveDate: values.effectiveDate?.toISOString(),
               expiryDate: values.expiryDate?.toISOString(),
             };
+            const options = {
+              onSuccess: () => {
+                void message.success(editing ? "Đã cập nhật" : "Đã tạo");
+                setEditorOpen(false);
+              },
+              onError: (error: unknown) =>
+                void message.error(extractApiError(error)),
+            };
             if (editing) {
-              updateMut.mutate(
-                { id: editing.id, input: payload },
-                {
-                  onSuccess: () => {
-                    message.success("Đã cập nhật");
-                    setEditorOpen(false);
-                  },
-                  onError: () => message.error("Cập nhật thất bại"),
-                },
-              );
+              updateMut.mutate({ id: editing.id, input: payload }, options);
             } else {
-              createMut.mutate(payload, {
-                onSuccess: () => {
-                  message.success("Đã tạo");
-                  setEditorOpen(false);
-                },
-                onError: () => message.error("Tạo thất bại"),
-              });
+              createMut.mutate(payload, options);
             }
           }}
         >
@@ -361,10 +361,52 @@ export default function DocumentsPage() {
             >
               <DatePicker format="DD/MM/YYYY" />
             </Form.Item>
-            <Form.Item name="effectiveDate" label="Ngày hiệu lực">
+            <Form.Item
+              name="effectiveDate"
+              label="Ngày hiệu lực"
+              dependencies={["issuedDate"]}
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(_, value?: dayjs.Dayjs) {
+                    const issued = getFieldValue("issuedDate") as
+                      | dayjs.Dayjs
+                      | undefined;
+                    if (!value || !issued || !value.isBefore(issued, "day"))
+                      return Promise.resolve();
+                    return Promise.reject(
+                      new Error(
+                        "Ngày hiệu lực không được trước ngày ban hành.",
+                      ),
+                    );
+                  },
+                }),
+              ]}
+            >
               <DatePicker format="DD/MM/YYYY" />
             </Form.Item>
-            <Form.Item name="expiryDate" label="Ngày hết hiệu lực">
+            <Form.Item
+              name="expiryDate"
+              label="Ngày hết hiệu lực"
+              dependencies={["effectiveDate", "issuedDate"]}
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(_, value?: dayjs.Dayjs) {
+                    const start =
+                      (getFieldValue("effectiveDate") as
+                        | dayjs.Dayjs
+                        | undefined) ??
+                      (getFieldValue("issuedDate") as dayjs.Dayjs | undefined);
+                    if (!value || !start || !value.isBefore(start, "day"))
+                      return Promise.resolve();
+                    return Promise.reject(
+                      new Error(
+                        "Ngày hết hiệu lực không được trước ngày hiệu lực.",
+                      ),
+                    );
+                  },
+                }),
+              ]}
+            >
               <DatePicker format="DD/MM/YYYY" />
             </Form.Item>
           </Space>

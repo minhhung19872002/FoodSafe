@@ -1,10 +1,9 @@
 import { useState } from "react";
 import {
+  App,
   Button,
-  Card,
   Form,
   Input,
-  message,
   Modal,
   Select,
   Space,
@@ -22,7 +21,10 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
+import { RowActions } from "@/components/RowActions";
+import { extractApiError } from "@/lib/apiError";
 import { saveDownload } from "@/utils/download";
 import { escapeHtml, printHtml } from "@/utils/printHtml";
 import {
@@ -42,6 +44,7 @@ import {
   RISK_LEVEL_CONFIG,
   RISK_ANALYSIS_STATUS,
   RISK_ANALYSIS_STATUS_CONFIG,
+  type CreateUpdateRiskAnalysisInput,
   type RiskAnalysis,
   type RiskAnalysisFilter,
   type RiskAnalysisStatus,
@@ -49,13 +52,26 @@ import {
 } from "../types/riskAnalysis.types";
 import type { AlertCategory } from "@/features/alerts-news/types/alertsNews.types";
 import { useTablePagination } from "@/hooks/useTablePagination";
-import { RowActions } from "@/components/RowActions";
+
+const TITLE_MAX_LENGTH = 500;
 
 export default function RiskAnalysisPage() {
+  const { message } = App.useApp();
   const hasPermission = useAuthStore((s) => s.hasPermission);
+  const canCreate = hasPermission(
+    "FoodSafe.AlertsAndTesting.RiskAnalyses.Create",
+  );
+  const canEdit = hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Edit");
+  const canPublish = hasPermission(
+    "FoodSafe.AlertsAndTesting.RiskAnalyses.Publish",
+  );
+  const canDelete = hasPermission(
+    "FoodSafe.AlertsAndTesting.RiskAnalyses.Delete",
+  );
+
   const [filter, setFilter] = useState<RiskAnalysisFilter>({});
   const pagination = useTablePagination(15);
-  const { data, isLoading } = useRiskAnalyses({
+  const listQuery = useRiskAnalyses({
     ...filter,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
@@ -70,6 +86,11 @@ export default function RiskAnalysisPage() {
   const [editing, setEditing] = useState<RiskAnalysis | null>(null);
   const [detailRecord, setDetailRecord] = useState<RiskAnalysis | null>(null);
   const [form] = Form.useForm();
+
+  const applyFilter = (patch: Partial<RiskAnalysisFilter>) => {
+    setFilter((current) => ({ ...current, ...patch }));
+    pagination.resetToFirstPage();
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -87,6 +108,34 @@ export default function RiskAnalysisPage() {
     setEditorOpen(true);
   };
 
+  const save = (values: CreateUpdateRiskAnalysisInput) => {
+    const options = {
+      onSuccess: () => {
+        void message.success("Đã lưu phân tích nguy cơ.");
+        setEditorOpen(false);
+      },
+      onError: (error: unknown) => void message.error(extractApiError(error)),
+    };
+    if (editing) updateMut.mutate({ id: editing.id, input: values }, options);
+    else createMut.mutate(values, options);
+  };
+
+  const printRecord = (record: RiskAnalysis) =>
+    printHtml(
+      record.title,
+      `<h3>CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH</h3>
+       <h2>PHÂN TÍCH MỐI NGUY CƠ AN TOÀN THỰC PHẨM</h2>
+       <h3>${escapeHtml(record.title)}</h3>
+       <p><strong>Chuyên mục:</strong> ${escapeHtml(ALERT_CATEGORY_LABELS[record.category])}</p>
+       <p><strong>Mức độ nguy cơ:</strong> ${escapeHtml(RISK_LEVEL_CONFIG[record.riskLevel]?.label)}</p>
+       <p><strong>Sản phẩm liên quan:</strong> ${escapeHtml(record.relatedProducts) || "—"}</p>
+       <p><strong>Nội dung phân tích:</strong></p>
+       <p>${escapeHtml(record.content)}</p>
+       <p><strong>Bằng chứng:</strong> ${escapeHtml(record.evidence) || "—"}</p>
+       <p><strong>Khuyến nghị:</strong> ${escapeHtml(record.recommendations) || "—"}</p>
+       ${record.publishedAt ? `<p><strong>Ngày công bố:</strong> ${dayjs(record.publishedAt).format("DD/MM/YYYY")}</p>` : ""}`,
+    );
+
   const columns: TableColumnsType<RiskAnalysis> = [
     {
       title: "Tiêu đề",
@@ -96,7 +145,7 @@ export default function RiskAnalysisPage() {
     {
       title: "Chuyên mục",
       dataIndex: "category",
-      width: 130,
+      width: 160,
       render: (c: AlertCategory) => ALERT_CATEGORY_LABELS[c],
     },
     {
@@ -136,61 +185,51 @@ export default function RiskAnalysisPage() {
               label: "In",
               ariaLabel: `In ${record.title}`,
               icon: <PrinterOutlined />,
-              onClick: () =>
-                printHtml(
-                  record.title,
-                  `<h3>CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH</h3>
-                 <h2>PHÂN TÍCH MỐI NGUY CƠ AN TOÀN THỰC PHẨM</h2>
-                 <h3>${escapeHtml(record.title)}</h3>
-                 <p><strong>Danh mục:</strong> ${escapeHtml(ALERT_CATEGORY_LABELS[record.category])}</p>
-                 <p><strong>Mức độ nguy cơ:</strong> ${escapeHtml(RISK_LEVEL_CONFIG[record.riskLevel]?.label)}</p>
-                 <p><strong>Sản phẩm liên quan:</strong> ${escapeHtml(record.relatedProducts) || "—"}</p>
-                 <p><strong>Nội dung phân tích:</strong></p>
-                 <p>${escapeHtml(record.content)}</p>
-                 <p><strong>Bằng chứng:</strong> ${escapeHtml(record.evidence) || "—"}</p>
-                 <p><strong>Khuyến nghị:</strong> ${escapeHtml(record.recommendations) || "—"}</p>
-                 ${record.publishedAt ? `<p><strong>Ngày công bố:</strong> ${dayjs(record.publishedAt).format("DD/MM/YYYY")}</p>` : ""}`,
-                ),
+              onClick: () => printRecord(record),
             },
             {
               key: "edit",
               label: "Sửa",
+              ariaLabel: `Sửa ${record.title}`,
               icon: <EditOutlined />,
               hidden: !(
-                record.status === RISK_ANALYSIS_STATUS.Draft &&
-                hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Edit")
+                record.status === RISK_ANALYSIS_STATUS.Draft && canEdit
               ),
               onClick: () => openEdit(record),
             },
             {
               key: "publish",
               label: "Xuất bản",
+              ariaLabel: `Xuất bản ${record.title}`,
               icon: <SendOutlined />,
               hidden: !(
-                record.status === RISK_ANALYSIS_STATUS.Draft &&
-                hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Publish")
+                record.status === RISK_ANALYSIS_STATUS.Draft && canPublish
               ),
               confirm: "Xuất bản phân tích này?",
               onClick: () =>
                 publishMut.mutate(record.id, {
-                  onSuccess: () => message.success("Đã xuất bản"),
-                  onError: () => message.error("Xuất bản thất bại"),
+                  onSuccess: () =>
+                    void message.success("Đã xuất bản phân tích nguy cơ."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
             {
               key: "delete",
               label: "Xóa",
+              ariaLabel: `Xóa ${record.title}`,
               icon: <DeleteOutlined />,
               danger: true,
               hidden: !(
-                record.status === RISK_ANALYSIS_STATUS.Draft &&
-                hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Delete")
+                record.status === RISK_ANALYSIS_STATUS.Draft && canDelete
               ),
               confirm: "Xóa phân tích?",
               onClick: () =>
                 deleteMut.mutate(record.id, {
-                  onSuccess: () => message.success("Đã xóa"),
-                  onError: () => message.error("Xóa thất bại"),
+                  onSuccess: () =>
+                    void message.success("Đã xóa phân tích nguy cơ."),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
                 }),
             },
           ]}
@@ -200,72 +239,104 @@ export default function RiskAnalysisPage() {
   ];
 
   return (
-    <Card>
-      <Space style={{ marginBottom: 16 }} wrap>
-        <Input.Search
-          placeholder="Tìm kiếm..."
-          allowClear
-          style={{ width: 220 }}
-          onSearch={(v) => {
-            setFilter((f) => ({ ...f, filter: v || undefined }));
-            pagination.resetToFirstPage();
-          }}
-        />
-        <Select
-          placeholder="Trạng thái"
-          allowClear
-          style={{ width: 140 }}
-          options={Object.entries(RISK_ANALYSIS_STATUS_CONFIG).map(
-            ([k, v]) => ({ value: Number(k), label: v.label }),
-          )}
-          onChange={(v) => {
-            setFilter((f) => ({ ...f, status: v }));
-            pagination.resetToFirstPage();
-          }}
-        />
-        <Select
-          placeholder="Mức độ"
-          allowClear
-          style={{ width: 140 }}
-          options={Object.entries(RISK_LEVEL_CONFIG).map(([k, v]) => ({
-            value: Number(k),
-            label: v.label,
-          }))}
-          onChange={(v) => {
-            setFilter((f) => ({ ...f, riskLevel: v }));
-            pagination.resetToFirstPage();
-          }}
-        />
-        <Button
-          icon={<ExportOutlined />}
-          loading={exportMut.isPending}
-          onClick={() =>
-            exportMut.mutate(filter, {
-              onSuccess: (file) => saveDownload(file.blob, file.fileName),
-              onError: () => void message.error("Không thể xuất danh sách."),
-            })
-          }
-        >
-          Xuất Excel
-        </Button>
-        {hasPermission("FoodSafe.AlertsAndTesting.RiskAnalyses.Create") && (
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-            Tạo phân tích
-          </Button>
-        )}
-      </Space>
-      <Table
-        rowKey="id"
-        columns={columns}
-        dataSource={data?.items}
-        loading={isLoading}
-        size="small"
-        onRow={(record) => ({
-          onDoubleClick: () => setDetailRecord(record),
-          style: { cursor: "pointer" },
-        })}
-        pagination={pagination.buildConfig(data?.totalCount)}
+    <div className="page-container">
+      <PageHeader
+        title="Phân tích nguy cơ"
+        subtitle="Phân tích mối nguy cơ an toàn thực phẩm và công bố kết quả"
+        actions={
+          <Space>
+            <Button
+              icon={<ExportOutlined />}
+              loading={exportMut.isPending}
+              onClick={() =>
+                exportMut.mutate(filter, {
+                  onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                  onError: (error) =>
+                    void message.error(extractApiError(error)),
+                })
+              }
+            >
+              Xuất Excel
+            </Button>
+            {canCreate && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={openCreate}
+              >
+                Tạo phân tích
+              </Button>
+            )}
+          </Space>
+        }
       />
+
+      <div className="page-card">
+        <div className="filter-toolbar" style={{ marginBottom: 16 }}>
+          <Space wrap>
+            <Input.Search
+              placeholder="Tìm theo tiêu đề"
+              allowClear
+              style={{ width: 220 }}
+              onSearch={(value) =>
+                applyFilter({ filter: value.trim() || undefined })
+              }
+            />
+            <Select
+              placeholder="Chuyên mục"
+              allowClear
+              style={{ width: 170 }}
+              options={Object.entries(ALERT_CATEGORY_LABELS).map(
+                ([value, label]) => ({ value: Number(value), label }),
+              )}
+              onChange={(value: AlertCategory | undefined) =>
+                applyFilter({ category: value })
+              }
+            />
+            <Select
+              placeholder="Trạng thái"
+              allowClear
+              style={{ width: 140 }}
+              options={Object.entries(RISK_ANALYSIS_STATUS_CONFIG).map(
+                ([value, config]) => ({
+                  value: Number(value),
+                  label: config.label,
+                }),
+              )}
+              onChange={(value: RiskAnalysisStatus | undefined) =>
+                applyFilter({ status: value })
+              }
+            />
+            <Select
+              placeholder="Mức độ"
+              allowClear
+              style={{ width: 140 }}
+              options={Object.entries(RISK_LEVEL_CONFIG).map(
+                ([value, config]) => ({
+                  value: Number(value),
+                  label: config.label,
+                }),
+              )}
+              onChange={(value: RiskLevel | undefined) =>
+                applyFilter({ riskLevel: value })
+              }
+            />
+          </Space>
+        </div>
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={listQuery.data?.items}
+          loading={listQuery.isFetching}
+          size="middle"
+          onRow={(record) => ({
+            onDoubleClick: () => setDetailRecord(record),
+            style: { cursor: "pointer" },
+          })}
+          pagination={pagination.buildConfig(listQuery.data?.totalCount)}
+        />
+      </div>
+
       <Modal
         title={editing ? "Sửa phân tích nguy cơ" : "Tạo phân tích nguy cơ"}
         open={editorOpen}
@@ -277,35 +348,13 @@ export default function RiskAnalysisPage() {
         cancelText="Hủy"
         confirmLoading={createMut.isPending || updateMut.isPending}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          preserve={false}
-          onFinish={(values) => {
-            if (editing) {
-              updateMut.mutate(
-                { id: editing.id, input: values },
-                {
-                  onSuccess: () => {
-                    message.success("Đã cập nhật");
-                    setEditorOpen(false);
-                  },
-                  onError: () => message.error("Cập nhật thất bại"),
-                },
-              );
-            } else {
-              createMut.mutate(values, {
-                onSuccess: () => {
-                  message.success("Đã tạo");
-                  setEditorOpen(false);
-                },
-                onError: () => message.error("Tạo thất bại"),
-              });
-            }
-          }}
-        >
-          <Form.Item name="title" label="Tiêu đề" rules={[{ required: true }]}>
-            <Input />
+        <Form form={form} layout="vertical" preserve={false} onFinish={save}>
+          <Form.Item
+            name="title"
+            label="Tiêu đề"
+            rules={[{ required: true }, { max: TITLE_MAX_LENGTH }]}
+          >
+            <Input maxLength={TITLE_MAX_LENGTH} showCount />
           </Form.Item>
           <Space style={{ width: "100%" }}>
             <Form.Item
@@ -316,7 +365,7 @@ export default function RiskAnalysisPage() {
               <Select
                 style={{ width: 180 }}
                 options={Object.entries(ALERT_CATEGORY_LABELS).map(
-                  ([k, v]) => ({ value: Number(k), label: v }),
+                  ([value, label]) => ({ value: Number(value), label }),
                 )}
               />
             </Form.Item>
@@ -327,10 +376,12 @@ export default function RiskAnalysisPage() {
             >
               <Select
                 style={{ width: 180 }}
-                options={Object.entries(RISK_LEVEL_CONFIG).map(([k, v]) => ({
-                  value: Number(k),
-                  label: v.label,
-                }))}
+                options={Object.entries(RISK_LEVEL_CONFIG).map(
+                  ([value, config]) => ({
+                    value: Number(value),
+                    label: config.label,
+                  }),
+                )}
               />
             </Form.Item>
           </Space>
@@ -352,6 +403,7 @@ export default function RiskAnalysisPage() {
           </Form.Item>
         </Form>
       </Modal>
+
       <RecordDetailDrawer
         title="Chi tiết phân tích nguy cơ"
         record={detailRecord}
@@ -399,6 +451,6 @@ export default function RiskAnalysisPage() {
           },
         ]}
       />
-    </Card>
+    </div>
   );
 }

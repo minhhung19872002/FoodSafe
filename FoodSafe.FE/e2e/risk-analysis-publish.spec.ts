@@ -66,8 +66,8 @@ test.describe("FR-36-07 / FR-36-08 — risk-analysis publish + public exposure",
 
     // ── FR-36-07: officer publishes the Draft through the real UI ──────────────
     await page.goto("/risk-analysis");
-    await page.getByPlaceholder("Tìm kiếm...").fill(title);
-    await page.getByPlaceholder("Tìm kiếm...").press("Enter");
+    await page.getByPlaceholder("Tìm theo tiêu đề").fill(title);
+    await page.getByPlaceholder("Tìm theo tiêu đề").press("Enter");
 
     let row = page.getByRole("row").filter({ hasText: stamp });
     await expect(
@@ -76,7 +76,7 @@ test.describe("FR-36-07 / FR-36-08 — risk-analysis publish + public exposure",
 
     await row.getByRole("button", { name: `Thao tác ${title}` }).click();
     await page.getByRole("menuitem", { name: "Xuất bản" }).click();
-    await page.getByRole("button", { name: "OK" }).click();
+    await page.getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ }).click();
 
     row = page.getByRole("row").filter({ hasText: stamp });
     await expect(
@@ -85,8 +85,8 @@ test.describe("FR-36-07 / FR-36-08 — risk-analysis publish + public exposure",
 
     // Persistence: the published status must survive a full reload.
     await page.reload();
-    await page.getByPlaceholder("Tìm kiếm...").fill(title);
-    await page.getByPlaceholder("Tìm kiếm...").press("Enter");
+    await page.getByPlaceholder("Tìm theo tiêu đề").fill(title);
+    await page.getByPlaceholder("Tìm theo tiêu đề").press("Enter");
     row = page.getByRole("row").filter({ hasText: stamp });
     await expect(
       row.locator(".ant-tag").filter({ hasText: "Đã xuất bản" }),

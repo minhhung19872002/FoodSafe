@@ -54,7 +54,8 @@ public abstract class BaseReport : FullAuditedAggregateRoot<Guid>
         if (Status != ReportStatus.Submitted && Status != ReportStatus.Verified)
             throw new BusinessException(FoodSafeDomainErrorCodes.Report.CannotReturnNonSubmittedOrVerified);
 
-        Check.NotNullOrWhiteSpace(returnReason, nameof(returnReason));
+        if (string.IsNullOrWhiteSpace(returnReason))
+            throw new BusinessException(FoodSafeDomainErrorCodes.Report.ReturnReasonRequired);
 
         ReturnedById = returnerId;
         ReturnedAt = returnedAt;
@@ -75,7 +76,7 @@ public abstract class BaseReport : FullAuditedAggregateRoot<Guid>
     public void ReturnToDraft()
     {
         if (Status != ReportStatus.Returned)
-            throw new BusinessException(FoodSafeDomainErrorCodes.Report.CannotSubmitNonDraft);
+            throw new BusinessException(FoodSafeDomainErrorCodes.Report.CannotReturnToDraftNonReturned);
 
         Status = ReportStatus.Draft;
     }

@@ -3,9 +3,10 @@ using Volo.Abp.Application.Dtos;
 
 namespace FoodSafe.Reporting;
 
-public class AtpWorkReportDto : EntityDto<Guid>
+public class AtpWorkReportDto : EntityDto<Guid>, IReportActorsDto
 {
     public Guid OrganizationId { get; set; }
+    public string? OrganizationName { get; set; }
     public ReportPeriodType PeriodType { get; set; }
     public int PeriodYear { get; set; }
     public int? PeriodHalf { get; set; }
@@ -47,13 +48,17 @@ public class AtpWorkReportDto : EntityDto<Guid>
     public ReportStatus Status { get; set; }
     public short SubmissionVersion { get; set; }
     public Guid? SubmittedById { get; set; }
+    public string? SubmittedByName { get; set; }
     public DateTime? SubmittedAt { get; set; }
     public Guid? VerifiedById { get; set; }
+    public string? VerifiedByName { get; set; }
     public DateTime? VerifiedAt { get; set; }
     public Guid? ReturnedById { get; set; }
+    public string? ReturnedByName { get; set; }
     public DateTime? ReturnedAt { get; set; }
     public string? ReturnReason { get; set; }
     public Guid? CompletedById { get; set; }
+    public string? CompletedByName { get; set; }
     public DateTime? CompletedAt { get; set; }
     public string? Notes { get; set; }
     public DateTime CreationTime { get; set; }
@@ -64,6 +69,7 @@ public class CreateAtpWorkReportDto
     [Required]
     public ReportPeriodType PeriodType { get; set; }
     [Required]
+    [Range(2020, 2100)]
     public int PeriodYear { get; set; }
     public int? PeriodHalf { get; set; }
     public string? Notes { get; set; }
@@ -112,7 +118,6 @@ public class UpdateAtpWorkReportNarrativeDto
 
 public class AtpWorkReportFilterDto : PagedAndSortedResultRequestDto
 {
-    public string? Filter { get; set; }
     public ReportStatus? Status { get; set; }
     public ReportPeriodType? PeriodType { get; set; }
     public int? PeriodYear { get; set; }

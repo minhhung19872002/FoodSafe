@@ -149,8 +149,7 @@ public class ReportCalculationAppService : ApplicationService
             .Where(x =>
                 x.ReportDate >= startDate && x.ReportDate < endDateExclusive);
         dto.PoisoningCaseCount = await AsyncExecuter.CountAsync(caseQ, ct);
-        dto.TotalAffected = dto.PoisoningCaseCount;
-        dto.TotalDeaths = await AsyncExecuter.CountAsync(
+        var caseDeaths = await AsyncExecuter.CountAsync(
             caseQ.Where(c => c.TreatmentResult == TreatmentResult.Deceased),
             ct);
 
@@ -160,6 +159,14 @@ public class ReportCalculationAppService : ApplicationService
                 x.CreationTime >= start && x.CreationTime < endExclusive);
         dto.PoisoningIncidentCount = await AsyncExecuter.CountAsync(
             incidentQ, ct);
+        var incidentAffected = await AsyncExecuter.SumAsync(
+            incidentQ.Select(i => (int?)i.AffectedCount), ct) ?? 0;
+        var incidentDeaths = await AsyncExecuter.SumAsync(
+            incidentQ.Select(i => (int?)i.DeathCount), ct) ?? 0;
+
+        // Ca nhỏ lẻ = 1 người mắc; vụ ngộ độc đóng góp theo AffectedCount/DeathCount.
+        dto.TotalAffected = dto.PoisoningCaseCount + incidentAffected;
+        dto.TotalDeaths = caseDeaths + incidentDeaths;
 
         return dto;
     }

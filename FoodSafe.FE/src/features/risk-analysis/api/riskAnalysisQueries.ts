@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { riskAnalysisApi } from "./riskAnalysisApi";
 import type { RiskAnalysisFilter } from "../types/riskAnalysis.types";
 
@@ -13,6 +13,7 @@ export function useRiskAnalyses(filter: RiskAnalysisFilter) {
   return useQuery({
     queryKey: raKeys.list(filter),
     queryFn: () => riskAnalysisApi.list(filter),
+    placeholderData: keepPreviousData,
   });
 }
 

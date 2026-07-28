@@ -162,8 +162,9 @@ public class EligibilityCertificateAppService :
             id,
             DataScopeOperation.Edit);
         if (input.BusinessId != certificate.BusinessId)
-            throw new UserFriendlyException(
-                "Không thể chuyển giấy chứng nhận sang cơ sở khác.");
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.EligibilityCertificate
+                    .CannotChangeBusiness);
         var business = await GetScopedBusinessAsync(
             certificate.BusinessId,
             DataScopeOperation.Edit);
@@ -191,14 +192,15 @@ public class EligibilityCertificateAppService :
         var certificate = await GetScopedAsync(
             id,
             DataScopeOperation.Delete);
-        var business = await GetScopedBusinessAsync(
+        var business = await GetScopedBusinessForCleanupAsync(
             certificate.BusinessId,
             DataScopeOperation.Delete);
         await _certificates.DeleteAsync(
             certificate,
             autoSave: true,
             cancellationToken: _cancellationTokens.Token);
-        await SynchronizeBusinessFlagAsync(business);
+        if (business != null)
+            await SynchronizeBusinessFlagAsync(business);
     }
 
     [Authorize(
@@ -267,30 +269,31 @@ public class EligibilityCertificateAppService :
                    "The business is outside the current user's data scope.");
     }
 
-    private async Task<IQueryable<Guid>> AllowedBusinessIdsAsync(
-        CurrentDataScope scope)
+    // Hồ sơ mồ côi (cơ sở đã xóa mềm trước khi có guard chặn) vẫn phải dọn
+    // được: trả về null khi cơ sở đã xóa để bỏ qua đồng bộ cờ, nhưng vẫn chặn
+    // đúng khi cơ sở tồn tại mà nằm ngoài phạm vi dữ liệu.
+    private async Task<Business?> GetScopedBusinessForCleanupAsync(
+        Guid id,
+        DataScopeOperation operation)
     {
-        var businesses = await _businesses.GetQueryableAsync();
-        var links = await _businessProductGroups.GetQueryableAsync();
-        var businessIds = scope.BusinessIds ?? new HashSet<Guid>();
-        var businessTypeIds = scope.BusinessTypeIds ?? new HashSet<Guid>();
-        var productGroupIds = scope.ProductGroupIds ?? new HashSet<Guid>();
-        return businesses.Where(x =>
-                scope.OrganizationIds.Contains(x.OrganizationId) ||
-                businessIds.Contains(x.Id) ||
-                (x.BusinessTypeId.HasValue &&
-                 businessTypeIds.Contains(x.BusinessTypeId.Value)) ||
-                (x.AddressProvinceId.HasValue &&
-                 scope.ProvinceIds.Contains(x.AddressProvinceId.Value)) ||
-                (x.AddressDistrictId.HasValue &&
-                 scope.DistrictIds.Contains(x.AddressDistrictId.Value)) ||
-                (x.AddressCommuneId.HasValue &&
-                 scope.CommuneIds.Contains(x.AddressCommuneId.Value)) ||
-                links.Any(link =>
-                    link.BusinessId == x.Id &&
-                    productGroupIds.Contains(link.ProductGroupId)))
-            .Select(x => x.Id);
+        using (DataFilter.Disable<ISoftDelete>())
+        {
+            var query = await _businesses.GetQueryableAsync();
+            var business = await AsyncExecuter.FirstOrDefaultAsync(
+                query.Where(x => x.Id == id),
+                _cancellationTokens.Token);
+            if (business == null || business.IsDeleted)
+                return null;
+        }
+        return await GetScopedBusinessAsync(id, operation);
     }
+
+    private async Task<IQueryable<Guid>> AllowedBusinessIdsAsync(
+        CurrentDataScope scope) =>
+        EligibilityCertificateScope.AllowedBusinessIds(
+            await _businesses.GetQueryableAsync(),
+            await _businessProductGroups.GetQueryableAsync(),
+            scope);
 
     private async Task EnsureUniqueNumberAsync(
         string number,

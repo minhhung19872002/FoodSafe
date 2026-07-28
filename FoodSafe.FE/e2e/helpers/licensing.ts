@@ -275,9 +275,12 @@ export function defineLicensingVerificationSuite(
           .getByPlaceholder(config.searchPlaceholder)
           .fill("KHONG-TON-TAI-XYZ-99999");
         await page.keyboard.press("Enter");
+        // "Trống" là empty state mặc định của antd; các trang đã tùy biến
+        // hiển thị "Không tìm thấy ... phù hợp với bộ lọc".
         await expect(
           page
-            .locator(".ant-empty-description", { hasText: "Trống" })
+            .locator(".ant-empty-description")
+            .filter({ hasText: /Trống|Không tìm thấy/ })
             .first(),
         ).toBeVisible({ timeout: 10_000 });
       } finally {

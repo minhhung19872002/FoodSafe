@@ -122,6 +122,8 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:EligibilityCertificate:0003";
         public const string CannotModifyRevoked =
             "FoodSafe:EligibilityCertificate:0004";
+        public const string CannotChangeBusiness =
+            "FoodSafe:EligibilityCertificate:0005";
     }
 
     public static class CfsCertificate
@@ -154,6 +156,8 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:ExportFoodCertificate:0005";
         public const string CountryNotFound =
             "FoodSafe:ExportFoodCertificate:0006";
+        public const string InvalidIssueDate =
+            "FoodSafe:ExportFoodCertificate:0007";
     }
 
     public static class Inspection
@@ -176,6 +180,9 @@ public static class FoodSafeDomainErrorCodes
         public const string ResultAlreadyFinalized = "FoodSafe:Inspection:0016";
         public const string CannotModifyFinalizedResult =
             "FoodSafe:Inspection:0017";
+        public const string PlanItemWithoutPlan = "FoodSafe:Inspection:0018";
+        public const string ResultBusinessMismatch = "FoodSafe:Inspection:0019";
+        public const string FutureInspectionDate = "FoodSafe:Inspection:0020";
     }
 
     public static class Report
@@ -187,8 +194,10 @@ public static class FoodSafeDomainErrorCodes
         public const string CannotCompleteNonVerified = "FoodSafe:Report:0005";
         public const string CannotModifyNonDraft = "FoodSafe:Report:0006";
         public const string ReturnReasonRequired = "FoodSafe:Report:0007";
-        public const string CanOnlyNotifyErrorOnVerified = "FoodSafe:Report:0008";
+        public const string CanOnlyNotifyErrorOnSubmittedOrVerified = "FoodSafe:Report:0008";
         public const string InvalidPeriod = "FoodSafe:Report:0009";
+        public const string DuplicatePeriod = "FoodSafe:Report:0010";
+        public const string CannotReturnToDraftNonReturned = "FoodSafe:Report:0011";
     }
 
     public static class Catalog
@@ -211,6 +220,8 @@ public static class FoodSafeDomainErrorCodes
         public const string CanOnlyReportErrorOnVerified = "FoodSafe:FoodPoisoning:0004";
         public const string ConclusionRequired = "FoodSafe:FoodPoisoning:0005";
         public const string CannotModifyNonDraft = "FoodSafe:FoodPoisoning:0006";
+        public const string ErrorReportNotFound = "FoodSafe:FoodPoisoning:0007";
+        public const string ErrorReportAlreadyProcessed = "FoodSafe:FoodPoisoning:0008";
     }
 
     public static class Alert
@@ -219,6 +230,7 @@ public static class FoodSafeDomainErrorCodes
         public const string InvalidStatusTransition = "FoodSafe:Alert:0002";
         public const string CanOnlyRecallPublished = "FoodSafe:Alert:0003";
         public const string CannotModifyNonDraft = "FoodSafe:Alert:0004";
+        public const string BusinessNotAccessible = "FoodSafe:Alert:0005";
     }
 
     public static class News
@@ -229,6 +241,7 @@ public static class FoodSafeDomainErrorCodes
         public const string CannotModifyNonDraft = "FoodSafe:News:0004";
         public const string DuplicateLinkedAlert = "FoodSafe:News:0005";
         public const string LinkedAlertNotFound = "FoodSafe:News:0006";
+        public const string LinkedAlertNotAccessible = "FoodSafe:News:0007";
     }
 
     public static class RiskAnalysis
@@ -241,11 +254,18 @@ public static class FoodSafeDomainErrorCodes
     {
         public const string NotFound = "FoodSafe:TestingResult:0001";
         public const string TestingCenterRequired = "FoodSafe:TestingResult:0002";
+        public const string TestingCenterNotFound = "FoodSafe:TestingResult:0003";
+        public const string TestingServiceNotFound = "FoodSafe:TestingResult:0004";
+        public const string BusinessOutOfScope = "FoodSafe:TestingResult:0005";
+        public const string ProductMismatch = "FoodSafe:TestingResult:0006";
+        public const string InspectionResultMismatch = "FoodSafe:TestingResult:0007";
     }
 
     public static class Document
     {
         public const string NotFound = "FoodSafe:Document:0001";
+        public const string DocumentTypeNotFound = "FoodSafe:Document:0002";
+        public const string InvalidStatus = "FoodSafe:Document:0003";
     }
 
     public static class DataIntegration

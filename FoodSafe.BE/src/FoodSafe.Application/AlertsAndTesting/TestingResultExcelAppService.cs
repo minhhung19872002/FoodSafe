@@ -38,6 +38,7 @@ public class TestingResultExcelAppService :
                     BusinessId = input.BusinessId,
                     TestingCenterId = input.TestingCenterId,
                     Outcome = input.Outcome,
+                    Sorting = input.Sorting,
                     SkipCount = rows.Count,
                     MaxResultCount = PageSize
                 });

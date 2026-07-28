@@ -89,7 +89,7 @@ test.describe("business delete guard & filtered export (F-006)", () => {
       .getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ })
       .click();
     await expect(
-      page.getByText(/Cơ sở vẫn còn sản phẩm trực thuộc/),
+      page.getByText(/Cơ sở vẫn còn dữ liệu trực thuộc/),
     ).toBeVisible();
     await expect(row).toContainText(businessName);
 

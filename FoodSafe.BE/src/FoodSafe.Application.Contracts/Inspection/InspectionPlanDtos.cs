@@ -63,6 +63,7 @@ public class CreateUpdateInspectionPlanDto
     public InspectionPlanType PlanType { get; set; }
 
     [Required]
+    [Range(2000, 2100)]
     public int Year { get; set; }
 
     public DateTime? StartDate { get; set; }

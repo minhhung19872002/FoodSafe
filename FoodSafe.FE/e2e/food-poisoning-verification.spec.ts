@@ -25,14 +25,14 @@ async function createDraftCase(page: Page, victimName: string) {
       data: {
         reportDate: "2026-07-27",
         victimName,
-        location: "Địa điểm kiểm chứng E2E",
+        locationDescription: "Địa điểm kiểm chứng E2E",
         suspectedFood: "Thực phẩm kiểm chứng",
       },
     },
   );
   expect(response.ok(), await response.text()).toBeTruthy();
   return {
-    caseItem: (await response.json()) as { id: string },
+    caseItem: (await response.json()) as { id: string; caseCode: string },
     headers,
   };
 }
@@ -152,10 +152,12 @@ test.describe("food poisoning verification (F-014)", () => {
           data: {
             reportDate: "2026-07-27",
             victimName: "Sửa sau khi gửi",
+            locationDescription: "Địa điểm kiểm chứng E2E",
           },
         },
       );
       expect(editSubmitted.ok()).toBeFalsy();
+      expect(await editSubmitted.text()).toContain("FoodSafe:FoodPoisoning");
     } finally {
       await deleteCase(page, caseItem.id, headers);
     }
@@ -174,10 +176,71 @@ test.describe("food poisoning verification (F-014)", () => {
         data: {
           reportDate: "2026-07-27",
           victimName: "A".repeat(201),
+          locationDescription: "Địa điểm kiểm chứng E2E",
         },
       },
     );
     expect(response.status()).toBe(400);
+  });
+
+  test("server-side validation requires victim name, location and occurrence date", async ({
+    page,
+  }) => {
+    await signInAsAdmin(page);
+    const headers = {
+      RequestVerificationToken: await requestVerificationToken(page),
+    };
+
+    const emptyCase = await page.context().request.post(
+      "/api/v1/app/food-poisoning-case",
+      { headers, maxRedirects: 0, data: { reportDate: "2026-07-27" } },
+    );
+    expect(emptyCase.status()).toBe(400);
+    expect(await emptyCase.text()).toContain("validationErrors");
+
+    const emptyIncident = await page.context().request.post(
+      "/api/v1/app/food-poisoning-incident",
+      { headers, maxRedirects: 0, data: {} },
+    );
+    expect(emptyIncident.status()).toBe(400);
+    expect(await emptyIncident.text()).toContain("validationErrors");
+
+    const negativeStats = await page.context().request.post(
+      "/api/v1/app/food-poisoning-incident",
+      {
+        headers,
+        maxRedirects: 0,
+        data: {
+          occurrenceDate: "2026-07-27T10:00:00Z",
+          locationDescription: "Địa điểm kiểm chứng E2E",
+          exposedCount: -1,
+          affectedCount: 0,
+          hospitalizedCount: 0,
+          deathCount: 0,
+        },
+      },
+    );
+    expect(negativeStats.status()).toBe(400);
+  });
+
+  test("case code is not reused after deleting a draft", async ({ page }) => {
+    await signInAsAdmin(page);
+    const suffix = Date.now().toString().slice(-8);
+    const first = await createDraftCase(page, `E2E-NDTPV-CODE-A-${suffix}`);
+    const second = await createDraftCase(page, `E2E-NDTPV-CODE-B-${suffix}`);
+    try {
+      await deleteCase(page, second.caseItem.id, second.headers);
+
+      const third = await createDraftCase(page, `E2E-NDTPV-CODE-C-${suffix}`);
+      try {
+        expect(third.caseItem.caseCode).not.toBe(second.caseItem.caseCode);
+        expect(third.caseItem.caseCode).not.toBe(first.caseItem.caseCode);
+      } finally {
+        await deleteCase(page, third.caseItem.id, third.headers);
+      }
+    } finally {
+      await deleteCase(page, first.caseItem.id, first.headers);
+    }
   });
 
   test("persistence after reload and empty state", async ({ page }) => {

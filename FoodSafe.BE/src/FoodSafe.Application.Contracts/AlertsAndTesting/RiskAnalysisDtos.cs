@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using FoodSafe.AlertsAndTesting;
 using Volo.Abp.Application.Dtos;
 
@@ -23,10 +24,21 @@ public class RiskAnalysisDto
 
 public class CreateUpdateRiskAnalysisDto
 {
+    [Required]
+    [StringLength(500)]
     public string Title { get; set; } = string.Empty;
+
+    [Required]
     public string Content { get; set; } = string.Empty;
+
+    [Required]
+    [EnumDataType(typeof(AlertCategory))]
     public AlertCategory Category { get; set; }
+
+    [Required]
+    [EnumDataType(typeof(RiskLevel))]
     public RiskLevel RiskLevel { get; set; }
+
     public string? RelatedProducts { get; set; }
     public string? Evidence { get; set; }
     public string? Recommendations { get; set; }

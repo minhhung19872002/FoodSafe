@@ -136,8 +136,19 @@ public class InspectionPlanAppService : ApplicationService
         foreach (var businessId in existingBusinessIds.Except(inputBusinessIds))
             plan.RemoveBusiness(businessId);
 
-        foreach (var item in input.Items.Where(i => !existingBusinessIds.Contains(i.BusinessId)))
+        foreach (var item in input.Items)
         {
+            if (existingBusinessIds.Contains(item.BusinessId))
+            {
+                plan.UpdateBusinessDetails(
+                    item.BusinessId,
+                    item.SequenceNumber,
+                    item.PlannedDate,
+                    item.AssignedInspectorId,
+                    item.Notes);
+                continue;
+            }
+
             await EnsureBusinessInScopeAsync(item.BusinessId, scope);
             plan.AddBusiness(
                 GuidGenerator.Create(),
@@ -255,11 +266,13 @@ public class InspectionPlanAppService : ApplicationService
 
         return (field, descending) switch
         {
-            ("year", true) => query.OrderByDescending(x => x.Year).ThenByDescending(x => x.CreationTime),
-            ("year", false) => query.OrderBy(x => x.Year).ThenByDescending(x => x.CreationTime),
-            ("creationtime", true) => query.OrderByDescending(x => x.CreationTime),
-            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
-            _ => query.OrderByDescending(x => x.CreationTime)
+            ("year", true) => query.OrderByDescending(x => x.Year)
+                .ThenByDescending(x => x.CreationTime).ThenBy(x => x.Id),
+            ("year", false) => query.OrderBy(x => x.Year)
+                .ThenByDescending(x => x.CreationTime).ThenBy(x => x.Id),
+            ("creationtime", true) => query.OrderByDescending(x => x.CreationTime).ThenBy(x => x.Id),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime).ThenBy(x => x.Id),
+            _ => query.OrderByDescending(x => x.CreationTime).ThenBy(x => x.Id)
         };
     }
 

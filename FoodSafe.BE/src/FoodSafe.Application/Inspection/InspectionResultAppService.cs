@@ -43,9 +43,16 @@ public class InspectionResultAppService : ApplicationService
         if (!input.Filter.IsNullOrWhiteSpace())
         {
             var filter = input.Filter!.Trim();
+            var businessQuery = await _businesses.GetQueryableAsync();
+            var matchingBusinessIds = await AsyncExecuter.ToListAsync(
+                businessQuery
+                    .Where(b => b.Name.Contains(filter))
+                    .Select(b => b.Id),
+                _cancellationTokens.Token);
             query = query.Where(x =>
                 (x.TeamLeader != null && x.TeamLeader.Contains(filter)) ||
-                (x.AdminDecisionNumber != null && x.AdminDecisionNumber.Contains(filter)));
+                (x.AdminDecisionNumber != null && x.AdminDecisionNumber.Contains(filter)) ||
+                matchingBusinessIds.Contains(x.BusinessId));
         }
         if (input.BusinessId.HasValue)
             query = query.Where(x => x.BusinessId == input.BusinessId.Value);
@@ -89,12 +96,9 @@ public class InspectionResultAppService : ApplicationService
         var orgId = scope.OrganizationIds.First();
 
         await EnsureBusinessInScopeAsync(input.BusinessId, scope);
+        EnsureInspectionDateNotInFuture(input.InspectionDate);
 
-        if (input.PlanId.HasValue)
-        {
-            await EnsurePlanApprovedAsync(input.PlanId.Value, scope);
-            await AutoTransitionPlanToInProgress(input.PlanId.Value, scope);
-        }
+        var plan = await GetValidatedLinkedPlanAsync(input, scope);
 
         var result = InspectionResult.Create(
             GuidGenerator.Create(),
@@ -137,8 +141,14 @@ public class InspectionResultAppService : ApplicationService
 
         await _results.InsertAsync(result, autoSave: true, cancellationToken: _cancellationTokens.Token);
 
-        if (input.PlanItemId.HasValue)
-            await MarkPlanItemCompleted(input.PlanId!.Value, input.PlanItemId.Value, scope);
+        if (plan is not null)
+        {
+            if (plan.Status == InspectionPlanStatus.Approved)
+                plan.MarkInProgress();
+            if (input.PlanItemId.HasValue)
+                plan.Items.First(i => i.Id == input.PlanItemId.Value).MarkCompleted();
+            await _plans.UpdateAsync(plan, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        }
 
         return (await ToDtosAsync([result]))[0];
     }
@@ -149,7 +159,9 @@ public class InspectionResultAppService : ApplicationService
         CreateUpdateInspectionResultDto input)
     {
         var result = await GetScopedAsync(id, DataScopeOperation.Edit);
+        EnsureInspectionDateNotInFuture(input.InspectionDate);
 
+        result.ClearViolations();
         result.Update(
             input.InspectionDate,
             input.InspectionType,
@@ -165,10 +177,6 @@ public class InspectionResultAppService : ApplicationService
             input.FollowUpDate,
             input.Recommendations,
             input.Notes);
-
-        var existingIds = result.Violations.Select(v => v.Id).ToHashSet();
-        foreach (var vid in existingIds)
-            result.RemoveViolation(vid);
 
         foreach (var v in input.Violations)
         {
@@ -243,11 +251,13 @@ public class InspectionResultAppService : ApplicationService
 
         return (field, descending) switch
         {
-            ("inspectiondate", true) => query.OrderByDescending(x => x.InspectionDate).ThenByDescending(x => x.CreationTime),
-            ("inspectiondate", false) => query.OrderBy(x => x.InspectionDate).ThenByDescending(x => x.CreationTime),
-            ("creationtime", true) => query.OrderByDescending(x => x.CreationTime),
-            ("creationtime", false) => query.OrderBy(x => x.CreationTime),
-            _ => query.OrderByDescending(x => x.CreationTime)
+            ("inspectiondate", true) => query.OrderByDescending(x => x.InspectionDate)
+                .ThenByDescending(x => x.CreationTime).ThenBy(x => x.Id),
+            ("inspectiondate", false) => query.OrderBy(x => x.InspectionDate)
+                .ThenByDescending(x => x.CreationTime).ThenBy(x => x.Id),
+            ("creationtime", true) => query.OrderByDescending(x => x.CreationTime).ThenBy(x => x.Id),
+            ("creationtime", false) => query.OrderBy(x => x.CreationTime).ThenBy(x => x.Id),
+            _ => query.OrderByDescending(x => x.CreationTime).ThenBy(x => x.Id)
         };
     }
 
@@ -286,48 +296,50 @@ public class InspectionResultAppService : ApplicationService
             throw new AbpAuthorizationException("Business is outside the current user's data scope.");
     }
 
-    private async Task EnsurePlanApprovedAsync(Guid planId, CurrentDataScope scope)
+    private void EnsureInspectionDateNotInFuture(DateTime inspectionDate)
     {
-        var query = await _plans.GetQueryableAsync();
-        if (!scope.HasGlobalAccess)
-            query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
-        var plan = await AsyncExecuter.FirstOrDefaultAsync(
-            query.Where(x => x.Id == planId),
-            _cancellationTokens.Token);
-        if (plan is null)
-            throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.PlanNotFound);
-        if (plan.Status is not (InspectionPlanStatus.Approved or InspectionPlanStatus.InProgress))
-            throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.PlanNotApproved);
+        if (inspectionDate.Date > Clock.Now.Date)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Inspection.FutureInspectionDate);
     }
 
-    private async Task AutoTransitionPlanToInProgress(Guid planId, CurrentDataScope scope)
+    /// <summary>
+    /// Validates the plan/plan-item link of a result being created: the plan must be
+    /// in scope and approved, the item must belong to the plan, and the item's
+    /// business must match the result's business. Returns the tracked plan (with
+    /// items) so the caller can advance its workflow state, or null when unlinked.
+    /// </summary>
+    private async Task<InspectionPlan?> GetValidatedLinkedPlanAsync(
+        CreateUpdateInspectionResultDto input, CurrentDataScope scope)
     {
-        var query = await _plans.GetQueryableAsync();
-        if (!scope.HasGlobalAccess)
-            query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
-        var plan = await AsyncExecuter.FirstOrDefaultAsync(
-            query.Where(x => x.Id == planId && x.Status == InspectionPlanStatus.Approved),
-            _cancellationTokens.Token);
-        if (plan is not null)
-        {
-            plan.MarkInProgress();
-            await _plans.UpdateAsync(plan, autoSave: true, cancellationToken: _cancellationTokens.Token);
-        }
-    }
+        if (input.PlanId.HasValue != input.PlanItemId.HasValue)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Inspection.PlanItemWithoutPlan);
+        if (!input.PlanId.HasValue)
+            return null;
 
-    private async Task MarkPlanItemCompleted(Guid planId, Guid planItemId, CurrentDataScope scope)
-    {
         var planQuery = await _plans.WithDetailsAsync(x => x.Items);
         if (!scope.HasGlobalAccess)
             planQuery = planQuery.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
         var plan = await AsyncExecuter.FirstOrDefaultAsync(
-            planQuery.Where(x => x.Id == planId),
-            _cancellationTokens.Token);
-        if (plan is null) return;
+                       planQuery.Where(x => x.Id == input.PlanId.Value),
+                       _cancellationTokens.Token)
+                   ?? throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.PlanNotFound);
 
-        var item = plan.Items.FirstOrDefault(i => i.Id == planItemId);
-        item?.MarkCompleted();
-        await _plans.UpdateAsync(plan, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        if (plan.Status is not (InspectionPlanStatus.Approved or InspectionPlanStatus.InProgress))
+            throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.PlanNotApproved);
+
+        if (input.PlanItemId.HasValue)
+        {
+            var item = plan.Items.FirstOrDefault(i => i.Id == input.PlanItemId.Value)
+                ?? throw new BusinessException(
+                    FoodSafeDomainErrorCodes.Inspection.BusinessNotInPlan);
+            if (item.BusinessId != input.BusinessId)
+                throw new BusinessException(
+                    FoodSafeDomainErrorCodes.Inspection.ResultBusinessMismatch);
+        }
+
+        return plan;
     }
 
     private async Task<List<InspectionResultDto>> ToDtosAsync(

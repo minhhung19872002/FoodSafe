@@ -76,6 +76,7 @@ public sealed class AtpAlert : FullAuditedAggregateRoot<Guid>
         string content,
         AlertCategory category,
         AlertSeverity severity,
+        AlertSource source,
         string? alertNumber,
         string? affectedArea,
         string? affectedProducts,
@@ -94,6 +95,7 @@ public sealed class AtpAlert : FullAuditedAggregateRoot<Guid>
         Content = content.Trim();
         Category = category;
         Severity = severity;
+        Source = source;
         AffectedArea = Normalize(affectedArea);
         AffectedProducts = Normalize(affectedProducts);
         BusinessId = businessId;

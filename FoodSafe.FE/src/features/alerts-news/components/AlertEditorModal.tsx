@@ -88,6 +88,9 @@ export function AlertEditorModal(props: Props) {
             category: values.category,
             severity: values.severity,
             source: values.source,
+            // Form chưa có ô chọn cơ sở — giữ nguyên cơ sở đã gắn (ví dụ từ
+            // phản ánh của dân) để việc sửa không âm thầm xóa liên kết.
+            businessId: item?.businessId,
             alertNumber: values.alertNumber?.trim() || undefined,
             affectedArea: values.affectedArea?.trim() || undefined,
             affectedProducts: values.affectedProducts?.trim() || undefined,

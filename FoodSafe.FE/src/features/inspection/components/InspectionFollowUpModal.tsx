@@ -11,6 +11,7 @@ import {
 import { CheckOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
+import { extractApiError } from "@/lib/apiError";
 import {
   useMarkViolationRemedied,
   useSetFollowUpResult,
@@ -79,8 +80,8 @@ export function InspectionFollowUpModal({ result, canEdit, onClose }: Props) {
                       {
                         onSuccess: () =>
                           void message.success("Đã ghi nhận khắc phục."),
-                        onError: () =>
-                          void message.error("Không thể cập nhật."),
+                        onError: (error) =>
+                          void message.error(extractApiError(error)),
                       },
                     )
                   }
@@ -137,7 +138,8 @@ export function InspectionFollowUpModal({ result, canEdit, onClose }: Props) {
                         void message.success(
                           "Đã cập nhật kết quả tái kiểm tra.",
                         ),
-                      onError: () => void message.error("Không thể cập nhật."),
+                      onError: (error) =>
+                        void message.error(extractApiError(error)),
                     },
                   )
                 }

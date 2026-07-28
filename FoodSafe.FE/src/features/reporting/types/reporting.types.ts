@@ -41,16 +41,21 @@ export interface PagedResult<T> {
 interface BaseReportFields {
   id: string;
   organizationId: string;
+  organizationName: string | null;
   status: ReportStatus;
   submissionVersion: number;
   submittedById: string | null;
+  submittedByName: string | null;
   submittedAt: string | null;
   verifiedById: string | null;
+  verifiedByName: string | null;
   verifiedAt: string | null;
   returnedById: string | null;
+  returnedByName: string | null;
   returnedAt: string | null;
   returnReason: string | null;
   completedById: string | null;
+  completedByName: string | null;
   completedAt: string | null;
   notes: string | null;
   creationTime: string;
@@ -229,7 +234,6 @@ export interface ReturnReportInput {
 }
 
 export interface NdtpReportFilter {
-  filter?: string;
   status?: ReportStatus;
   periodYear?: number;
   periodMonth?: number;
@@ -239,7 +243,6 @@ export interface NdtpReportFilter {
 }
 
 export interface AtpWorkReportFilter {
-  filter?: string;
   status?: ReportStatus;
   periodType?: ReportPeriodType;
   periodYear?: number;
@@ -249,7 +252,6 @@ export interface AtpWorkReportFilter {
 }
 
 export interface ActionMonthReportFilter {
-  filter?: string;
   status?: ReportStatus;
   periodYear?: number;
   skipCount?: number;

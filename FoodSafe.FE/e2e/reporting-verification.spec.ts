@@ -268,4 +268,50 @@ test.describe("reporting verification (F-015)", () => {
       );
     }
   });
+
+  test("server-side sorting is honoured and duplicate periods are rejected", async ({
+    page,
+  }) => {
+    await signInAsAdmin(page);
+    const headers = {
+      RequestVerificationToken: await requestVerificationToken(page),
+    };
+    await cleanVerificationReports(page, headers);
+    const request = page.context().request;
+
+    const first = await createDraftReport(page, headers, 10);
+    const second = await createDraftReport(page, headers, 11);
+    try {
+      // Duplicate (org, year, month) must be refused with the dedicated code,
+      // not a raw 500 from the database unique index.
+      const duplicate = await request.post("/api/v1/app/ndtp-report", {
+        headers,
+        data: { periodYear: VERIFICATION_YEAR, periodMonth: 10 },
+      });
+      expect(duplicate.ok()).toBeFalsy();
+      expect(duplicate.status()).toBeLessThan(500);
+      expect(await duplicate.text()).toContain("FoodSafe:Report:0010");
+
+      // periodYear asc/desc must produce opposite orders (regression for the
+      // case-mismatch that made the sorting whitelist unreachable).
+      const listUrl = (direction: string) =>
+        `/api/v1/app/ndtp-report?Sorting=periodYear%20${direction}` +
+        `&PeriodYear=${VERIFICATION_YEAR}&MaxResultCount=10`;
+      const asc = await request.get(listUrl("asc"));
+      const desc = await request.get(listUrl("desc"));
+      const months = async (response: typeof asc) =>
+        (((await response.json()) as { items: ListItem[] }).items ?? []).map(
+          (item) => item.periodMonth,
+        );
+      expect((await months(asc))[0]).toBe(10);
+      expect((await months(desc))[0]).toBe(11);
+    } finally {
+      for (const report of [first, second]) {
+        await request.delete(`/api/v1/app/ndtp-report/${report.id}`, {
+          headers,
+          maxRedirects: 0,
+        });
+      }
+    }
+  });
 });

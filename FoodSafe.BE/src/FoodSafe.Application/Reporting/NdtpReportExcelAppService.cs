@@ -31,7 +31,6 @@ public class NdtpReportExcelAppService :
             var page = await _reports.GetListAsync(
                 new NdtpReportFilterDto
                 {
-                    Filter = input.Filter,
                     Status = input.Status,
                     PeriodYear = input.PeriodYear,
                     PeriodMonth = input.PeriodMonth,

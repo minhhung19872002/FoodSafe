@@ -59,9 +59,9 @@ public class RiskAnalysisExcelAppService :
         var sheet = workbook.Worksheets.Add("Phân tích nguy cơ");
         var headers = new[]
         {
-            "Tiêu đề", "Danh mục", "Mức nguy cơ",
-            "Sản phẩm liên quan", "Kiến nghị",
-            "Trạng thái", "Công khai", "Ngày tạo"
+            "Tiêu đề", "Chuyên mục", "Mức nguy cơ",
+            "Sản phẩm liên quan", "Khuyến nghị",
+            "Trạng thái", "Công khai", "Ngày tạo", "Ngày công bố"
         };
         for (var i = 0; i < headers.Length; i++)
             sheet.Cell(1, i + 1).Value = headers[i];
@@ -78,6 +78,11 @@ public class RiskAnalysisExcelAppService :
             sheet.Cell(row, 7).Value = item.IsPublic ? "Có" : "Không";
             sheet.Cell(row, 8).Value = item.CreationTime;
             sheet.Cell(row, 8).Style.DateFormat.Format = "dd/MM/yyyy";
+            if (item.PublishedAt.HasValue)
+            {
+                sheet.Cell(row, 9).Value = item.PublishedAt.Value;
+                sheet.Cell(row, 9).Style.DateFormat.Format = "dd/MM/yyyy";
+            }
             row++;
         }
 
@@ -89,8 +94,8 @@ public class RiskAnalysisExcelAppService :
 
     private static string CategoryLabel(AlertCategory c) => c switch
     {
-        AlertCategory.FoodSafety => "An toàn TP",
-        AlertCategory.Contamination => "Ô nhiễm",
+        AlertCategory.FoodSafety => "An toàn thực phẩm",
+        AlertCategory.Contamination => "Nhiễm bẩn",
         AlertCategory.Chemical => "Hóa chất",
         AlertCategory.Biological => "Sinh học",
         AlertCategory.Physical => "Vật lý",
@@ -101,7 +106,7 @@ public class RiskAnalysisExcelAppService :
     private static string RiskLabel(RiskLevel r) => r switch
     {
         RiskLevel.Low => "Thấp",
-        RiskLevel.Medium => "Trung bình",
+        RiskLevel.Medium => "Vừa",
         RiskLevel.High => "Cao",
         RiskLevel.Critical => "Nghiêm trọng",
         _ => r.ToString()
@@ -110,7 +115,7 @@ public class RiskAnalysisExcelAppService :
     private static string StatusLabel(RiskAnalysisStatus s) => s switch
     {
         RiskAnalysisStatus.Draft => "Nháp",
-        RiskAnalysisStatus.Published => "Đã phát hành",
+        RiskAnalysisStatus.Published => "Đã xuất bản",
         _ => s.ToString()
     };
 

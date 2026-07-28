@@ -96,7 +96,7 @@ export function ReportDocumentViewModal({ document: doc, onClose }: Props) {
         >
           <div style={{ textAlign: "center", marginBottom: 16 }}>
             <p style={{ margin: 0 }}>
-              CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH
+              {doc.report.organizationName?.toUpperCase() ?? ""}
             </p>
             <Typography.Title level={4} style={{ marginTop: 12 }}>
               {documentTitle(doc)}

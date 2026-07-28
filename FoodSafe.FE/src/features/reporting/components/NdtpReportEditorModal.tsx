@@ -95,16 +95,24 @@ export function NdtpReportEditorModal({ report, onClose }: Props) {
       },
     });
 
-    await updateNarrative.mutateAsync({
-      id: report.id,
-      input: {
-        preventionActivities: values.preventionActivities,
-        riskFactors: values.riskFactors,
-        recommendations: values.recommendations,
-        notes: values.notes,
-      },
-    });
+    try {
+      await updateNarrative.mutateAsync({
+        id: report.id,
+        input: {
+          preventionActivities: values.preventionActivities,
+          riskFactors: values.riskFactors,
+          recommendations: values.recommendations,
+          notes: values.notes,
+        },
+      });
+    } catch (error) {
+      void message.error(
+        "Đã lưu số liệu nhưng lưu phần thuyết minh thất bại. Vui lòng lưu lại lần nữa.",
+      );
+      throw error;
+    }
 
+    void message.success("Đã lưu báo cáo.");
     onClose();
   };
 

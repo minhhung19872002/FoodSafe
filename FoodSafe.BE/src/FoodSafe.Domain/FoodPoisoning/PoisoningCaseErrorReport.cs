@@ -1,3 +1,4 @@
+using Volo.Abp;
 using Volo.Abp.Domain.Entities;
 
 namespace FoodSafe.FoodPoisoning;
@@ -37,14 +38,23 @@ public sealed class PoisoningCaseErrorReport : Entity<Guid>
 
     public void Acknowledge()
     {
+        if (Status != ErrorReportStatus.Pending)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.FoodPoisoning.ErrorReportAlreadyProcessed);
+
         Status = ErrorReportStatus.Acknowledged;
     }
 
     public void MarkCorrected(Guid responderId, string response)
     {
+        if (Status == ErrorReportStatus.Corrected)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.FoodPoisoning.ErrorReportAlreadyProcessed);
+        Check.NotNullOrWhiteSpace(response, nameof(response));
+
         Status = ErrorReportStatus.Corrected;
         RespondedById = responderId;
         RespondedAt = DateTime.UtcNow;
-        Response = response?.Trim();
+        Response = response.Trim();
     }
 }

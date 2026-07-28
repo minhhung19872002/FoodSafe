@@ -71,6 +71,7 @@ public class AtpAlertTests
         alert.Update(
             "Updated Title", "Updated Content",
             AlertCategory.Contamination, AlertSeverity.Critical,
+            AlertSource.PublicReport,
             "NEW-001", "Hà Nội", "Sữa bột",
             null, "Reporter", "0901234567", "test@test.com");
 
@@ -78,6 +79,7 @@ public class AtpAlertTests
         alert.Content.ShouldBe("Updated Content");
         alert.Category.ShouldBe(AlertCategory.Contamination);
         alert.Severity.ShouldBe(AlertSeverity.Critical);
+        alert.Source.ShouldBe(AlertSource.PublicReport);
         alert.AlertNumber.ShouldBe("NEW-001");
     }
 
@@ -89,7 +91,7 @@ public class AtpAlertTests
 
         Should.Throw<BusinessException>(() =>
             alert.Update("X", "Y", AlertCategory.Other, AlertSeverity.Low,
-                null, null, null, null, null, null, null))
+                AlertSource.Internal, null, null, null, null, null, null, null))
             .Code.ShouldBe(FoodSafeDomainErrorCodes.Alert.InvalidStatusTransition);
     }
 

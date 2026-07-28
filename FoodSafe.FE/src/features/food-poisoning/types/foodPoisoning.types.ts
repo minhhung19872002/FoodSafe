@@ -162,14 +162,14 @@ export interface CreateUpdateCaseInput {
   incidentId?: string;
   notes?: string;
 
-  locationDescription?: string;
+  locationDescription: string;
   locationCommuneId?: string;
   locationDistrictId?: string;
   locationProvinceId?: string;
   locationLatitude?: number;
   locationLongitude?: number;
 
-  victimName?: string;
+  victimName: string;
   victimAge?: number;
   victimGender?: VictimGender;
   victimPhone?: string;
@@ -246,11 +246,11 @@ export interface FoodPoisoningIncident {
 }
 
 export interface CreateUpdateIncidentInput {
-  occurrenceDate?: string;
+  occurrenceDate: string;
   endDate?: string;
   notes?: string;
 
-  locationDescription?: string;
+  locationDescription: string;
   locationCommuneId?: string;
   locationDistrictId?: string;
   locationProvinceId?: string;

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { alertApi, newsApi } from "./alertsNewsApi";
 import type { AlertFilter, NewsFilter } from "../types/alertsNews.types";
 
@@ -22,6 +22,7 @@ export function useAlerts(filter: AlertFilter) {
   return useQuery({
     queryKey: alertKeys.list(filter),
     queryFn: () => alertApi.list(filter),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -29,6 +30,7 @@ export function useNews(filter: NewsFilter) {
   return useQuery({
     queryKey: newsKeys.list(filter),
     queryFn: () => newsApi.list(filter),
+    placeholderData: keepPreviousData,
   });
 }
 
