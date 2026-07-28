@@ -69,6 +69,14 @@ export function useShareData() {
   });
 }
 
+export function useRetryCallLog() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (logId: string) => dataIntegrationApi.retryCallLog(logId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-call-logs"] }),
+  });
+}
+
 export function useExportCallLogs() {
   return useMutation({
     mutationFn: (filter: ApiCallLogFilter) =>

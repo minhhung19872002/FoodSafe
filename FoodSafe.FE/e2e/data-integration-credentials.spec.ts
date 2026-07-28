@@ -95,13 +95,49 @@ async function updateEndpoint(
   return (await resp.json()) as EndpointDto;
 }
 
+/**
+ * Shares ONE pinned alert record. Since Batch F-1 the share payload carries the
+ * real records of the data type; an unpinned share of the accumulated alert list
+ * makes postman-echo's reflection exceed the call-log's 4000-char response
+ * truncation, cutting off the reflected headers this spec asserts on. Pinning
+ * entityId keeps the envelope (and thus the reflection) small WITHOUT changing
+ * any assertion — the injection proof is identical.
+ */
 async function share(page: Page, endpointId: string): Promise<ShareResult> {
-  const resp = await page.context().request.post(SHARE_API, {
+  const alertResp = await page.context().request.post("/api/v1/app/atp-alert", {
     headers: { RequestVerificationToken: await requestVerificationToken(page) },
-    data: { endpointId, dataType: DATA_TYPE_ALERT, note: `p02-${RUN}` },
+    data: {
+      title: `P02 payload ${RUN}`,
+      content: "Bản ghi chia sẻ kiểm chứng P0-2",
+      category: 1,
+      severity: 2,
+      source: 1,
+    },
   });
-  expect(resp.status(), await resp.text()).toBe(200);
-  return (await resp.json()) as ShareResult;
+  expect(alertResp.ok(), await alertResp.text()).toBeTruthy();
+  const alert = (await alertResp.json()) as { id: string };
+
+  try {
+    const resp = await page.context().request.post(SHARE_API, {
+      headers: {
+        RequestVerificationToken: await requestVerificationToken(page),
+      },
+      data: {
+        endpointId,
+        dataType: DATA_TYPE_ALERT,
+        entityId: alert.id,
+        note: `p02-${RUN}`,
+      },
+    });
+    expect(resp.status(), await resp.text()).toBe(200);
+    return (await resp.json()) as ShareResult;
+  } finally {
+    await page.context().request.delete(`/api/v1/app/atp-alert/${alert.id}`, {
+      headers: {
+        RequestVerificationToken: await requestVerificationToken(page),
+      },
+    });
+  }
 }
 
 async function callLogDetail(

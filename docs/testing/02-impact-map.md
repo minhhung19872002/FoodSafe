@@ -42,6 +42,14 @@ specified level.
 | Model creating | `BE/EntityFrameworkCore/FoodSafeDbContextModelCreatingExtensions.cs` | Level 3 | Features with affected entities |
 | Migrations | `BE/Migrations/` | Level 3 | All features |
 
+### Data Integration (outbound share engine)
+
+| Dependency | Path | Retest | Affected Features |
+|---|---|---|---|
+| Share/retry engine | `BE/Application/DataIntegration/DataSharingAppService.cs` | Level 2 | F-019, F-019c, F-019d, F-019e |
+| Payload builders | `BE/Application/DataIntegration/SharedDataPayloadBuilders.cs` | Level 2 | F-019e (payload content of every share; readers of the shared entities are unaffected — builders are read-only) |
+| Call-log entity/mapping | `BE/Domain/DataIntegration/ApiCallLog.cs` + its model-creating block | Level 2 | F-019, F-019c, F-019d, F-019e |
+
 ### API Infrastructure
 
 | Dependency | Path | Retest | Affected Features |

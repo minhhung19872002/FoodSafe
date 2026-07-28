@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   Checkbox,
+  DatePicker,
   Form,
   Input,
   message,
@@ -24,6 +25,7 @@ import {
   SwapOutlined,
   EyeOutlined,
   ExportOutlined,
+  RedoOutlined,
   ShareAltOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -42,6 +44,7 @@ import {
   useDeleteEndpoint,
   useExportEndpoints,
   useExportCallLogs,
+  useRetryCallLog,
   useShareData,
   useTestConnection,
 } from "../api/dataIntegrationMutations";
@@ -50,6 +53,7 @@ import {
   API_ENDPOINT_STATUS_CONFIG,
   API_AUTH_TYPE,
   API_AUTH_TYPE_LABELS,
+  API_CALL_DIRECTION,
   API_CALL_DIRECTION_CONFIG,
   SHARED_DATA_TYPE,
   SHARED_DATA_TYPE_LABELS,
@@ -66,6 +70,16 @@ import {
 const PAGE_SIZE = 15;
 const HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
 const EXTERNAL_SYSTEMS = ["Bộ Y tế", "Sở Nông nghiệp", "Sở Công thương"];
+
+/** Surfaces the server's Vietnamese business message when one exists. */
+function apiErrorMessage(error: unknown, fallback: string): string {
+  const serverMessage = (
+    error as {
+      response?: { data?: { error?: { message?: string } } };
+    }
+  )?.response?.data?.error?.message;
+  return serverMessage || fallback;
+}
 
 function EndpointsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
@@ -462,6 +476,7 @@ function CallHistoryTab() {
   const { data, isLoading } = useApiCallLogs(filter);
   const exportMut = useExportCallLogs();
   const shareMut = useShareData();
+  const retryMut = useRetryCallLog();
   const [detailId, setDetailId] = useState<string>();
   const [shareOpen, setShareOpen] = useState(false);
   const [shareForm] = Form.useForm();
@@ -525,15 +540,62 @@ function CallHistoryTab() {
       ),
     },
     {
+      title: "Lần",
+      dataIndex: "attemptNumber",
+      width: 60,
+      align: "center",
+      render: (attempt: number) =>
+        attempt > 1 ? <Tag color="orange">#{attempt}</Tag> : attempt,
+    },
+    {
       title: "",
       key: "actions",
-      width: 50,
+      width: 80,
       render: (_, record) => (
-        <Button
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => setDetailId(record.id)}
-        />
+        <Space size={4}>
+          <Button
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => setDetailId(record.id)}
+          />
+          {canShare &&
+            !record.isSuccess &&
+            record.direction === API_CALL_DIRECTION.Outbound &&
+            record.endpointId && (
+              <Popconfirm
+                title="Thử lại giao tiếp này?"
+                description="Gửi lại đúng nội dung đã gửi đến điểm kết nối."
+                okText="Thử lại"
+                cancelText="Hủy"
+                onConfirm={() =>
+                  retryMut.mutate(record.id, {
+                    onSuccess: (result) => {
+                      if (result.isSuccess) {
+                        message.success("Đã thử lại thành công.");
+                      } else {
+                        message.warning(
+                          `Đã thử lại nhưng hệ thống nhận vẫn trả lỗi: ${result.errorMessage ?? "không xác định"}`,
+                        );
+                      }
+                    },
+                    onError: (error) =>
+                      void message.error(
+                        apiErrorMessage(error, "Không thể thử lại giao tiếp."),
+                      ),
+                  })
+                }
+              >
+                <Button
+                  size="small"
+                  title="Thử lại"
+                  icon={<RedoOutlined />}
+                  loading={
+                    retryMut.isPending && retryMut.variables === record.id
+                  }
+                />
+              </Popconfirm>
+            )}
+        </Space>
       ),
     },
   ];
@@ -591,6 +653,18 @@ function CallHistoryTab() {
             setFilter((f) => ({
               ...f,
               isSuccess: v as boolean | undefined,
+              skipCount: 0,
+            }))
+          }
+        />
+        <DatePicker.RangePicker
+          placeholder={["Từ ngày", "Đến ngày"]}
+          format="DD/MM/YYYY"
+          onChange={(range) =>
+            setFilter((f) => ({
+              ...f,
+              fromDate: range?.[0]?.format("YYYY-MM-DD"),
+              toDate: range?.[1]?.format("YYYY-MM-DD"),
               skipCount: 0,
             }))
           }
@@ -744,6 +818,15 @@ function CallHistoryTab() {
             </Descriptions.Item>
             <Descriptions.Item label="Thời gian xử lý">
               {detail.data.durationMs} ms
+            </Descriptions.Item>
+            <Descriptions.Item label="Lần gửi">
+              #{detail.data.attemptNumber}
+              {detail.data.correlationId ? " (thử lại)" : ""}
+            </Descriptions.Item>
+            <Descriptions.Item label="Checksum nội dung">
+              <span style={{ fontSize: 12, wordBreak: "break-all" }}>
+                {detail.data.payloadChecksum ?? "—"}
+              </span>
             </Descriptions.Item>
             {detail.data.errorMessage && (
               <Descriptions.Item label="Lỗi" span={2}>

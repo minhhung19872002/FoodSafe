@@ -142,12 +142,17 @@ export interface ApiCallLog {
   errorMessage?: string;
   dataType: SharedDataType;
   creationTime: string;
+  endpointId?: string;
+  /** Id of the envelope's original attempt; absent on the original itself. */
+  correlationId?: string;
+  attemptNumber: number;
 }
 
 export interface ApiCallLogDetail extends ApiCallLog {
   requestHeaders?: string;
   requestBody?: string;
   responseBody?: string;
+  payloadChecksum?: string;
 }
 
 export interface ApiCallLogFilter {

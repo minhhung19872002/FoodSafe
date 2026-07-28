@@ -1,6 +1,8 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -13,11 +15,15 @@ using Volo.Abp.Threading;
 namespace FoodSafe.DataIntegration;
 
 /// <summary>
-/// Outbound data-sharing engine (STT 51-57). Sends a typed payload to a
-/// configured partner endpoint and records the exchange in
-/// di_api_call_logs with its DataType so per-type share history can be
-/// browsed. Partner-specific payload contracts (TT 31/2026) are applied
-/// on top of this envelope once partner specifications are available.
+/// Outbound data-sharing engine (STT 51-57). Builds a typed payload carrying
+/// the real records of the selected <see cref="SharedDataType"/> (via the
+/// per-type <see cref="ISharedDataPayloadBuilder"/> strategies), sends it to a
+/// configured partner endpoint, and records each attempt immutably in
+/// di_api_call_logs. Failed attempts can be retried; a retry re-sends the
+/// stored payload verbatim and appends a new attempt row — it never rewrites
+/// the evidence of a previous attempt. The exact TT 31/2026 partner field
+/// mapping is applied on top of this envelope once the official partner
+/// schema is published.
 /// </summary>
 [RemoteService(IsEnabled = false)]
 [Authorize(FoodSafePermissions.DataIntegration.Share)]
@@ -29,24 +35,33 @@ public class DataSharingAppService :
     private static readonly HttpClient SharedClient =
         OutboundUrlValidator.CreateGuardedHttpClient(TimeSpan.FromSeconds(30));
 
+    private static readonly JsonSerializerOptions PayloadJsonOptions =
+        new(JsonSerializerDefaults.Web)
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
+
     private readonly IRepository<ApiEndpoint, Guid> _endpoints;
     private readonly IRepository<ApiCallLog, Guid> _logs;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
     private readonly IStringEncryptionService _encryption;
+    private readonly IEnumerable<ISharedDataPayloadBuilder> _payloadBuilders;
 
     public DataSharingAppService(
         IRepository<ApiEndpoint, Guid> endpoints,
         IRepository<ApiCallLog, Guid> logs,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens,
-        IStringEncryptionService encryption)
+        IStringEncryptionService encryption,
+        IEnumerable<ISharedDataPayloadBuilder> payloadBuilders)
     {
         _endpoints = endpoints;
         _logs = logs;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
         _encryption = encryption;
+        _payloadBuilders = payloadBuilders;
     }
 
     public async Task<ShareDataResultDto> ShareAsync(ShareDataInput input)
@@ -54,9 +69,62 @@ public class DataSharingAppService :
         var ct = _cancellationTokens.Token;
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.View, ct);
-        var endpoint = await _endpoints.GetAsync(input.EndpointId, cancellationToken: ct);
-        if (!scope.HasGlobalAccess &&
-            !scope.OrganizationIds.Contains(endpoint.OrganizationId))
+        var endpoint = await GetActiveScopedEndpointAsync(input.EndpointId, scope, ct);
+
+        var builder = _payloadBuilders
+            .SingleOrDefault(b => b.DataType == input.DataType);
+        IReadOnlyList<object> records = builder is null
+            ? Array.Empty<object>()
+            : await builder.BuildRecordsAsync(input.EntityId, scope, ct);
+
+        var payload = JsonSerializer.Serialize(new
+        {
+            schemaVersion = "1.0",
+            dataType = input.DataType.ToString(),
+            note = input.Note,
+            organizationId = endpoint.OrganizationId,
+            sharedAt = Clock.Now,
+            source = "FoodSafe.QuangNinh",
+            recordCount = records.Count,
+            records
+        }, PayloadJsonOptions);
+
+        return await SendAndLogAsync(
+            endpoint, payload, input.DataType,
+            correlationId: null, attemptNumber: 1, ct);
+    }
+
+    public async Task<ShareDataResultDto> RetryAsync(Guid logId)
+    {
+        var ct = _cancellationTokens.Token;
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.View, ct);
+        var original = await _logs.GetAsync(logId, cancellationToken: ct);
+        if (!scope.IncludesOrganization(original.OrganizationId))
+        {
+            throw new Volo.Abp.Authorization.AbpAuthorizationException(
+                "The call log is outside the current user's data scope.");
+        }
+        if (original.Direction != ApiCallDirection.Outbound)
+        {
+            throw new UserFriendlyException(
+                "Chỉ có thể thử lại giao tiếp gửi đi.");
+        }
+        if (original.IsSuccess)
+        {
+            throw new UserFriendlyException(
+                "Chỉ có thể thử lại giao tiếp thất bại.");
+        }
+        if (original.EndpointId is null || original.RequestBody is null)
+        {
+            throw new UserFriendlyException(
+                "Bản ghi không còn đủ thông tin gửi để thử lại.");
+        }
+        var endpoint = await _endpoints.FindAsync(
+            original.EndpointId.Value, cancellationToken: ct)
+            ?? throw new UserFriendlyException(
+                "Điểm kết nối của giao tiếp này đã bị xóa nên không thể thử lại.");
+        if (!scope.IncludesOrganization(endpoint.OrganizationId))
         {
             throw new Volo.Abp.Authorization.AbpAuthorizationException(
                 "The endpoint is outside the current user's data scope.");
@@ -67,19 +135,47 @@ public class DataSharingAppService :
                 "Điểm kết nối đang ngừng hoạt động. Kích hoạt trước khi chia sẻ.");
         }
 
+        // Attempts of one logical envelope chain to its original send.
+        var rootId = original.CorrelationId ?? original.Id;
+        var logsQuery = (await _logs.GetQueryableAsync())
+            .Where(x => x.Id == rootId || x.CorrelationId == rootId)
+            .Select(x => x.AttemptNumber);
+        var attempts = await AsyncExecuter.ToListAsync(logsQuery, ct);
+        var nextAttempt = (attempts.Count == 0 ? 1 : attempts.Max()) + 1;
+
+        return await SendAndLogAsync(
+            endpoint, original.RequestBody, original.DataType,
+            correlationId: rootId, attemptNumber: nextAttempt, ct);
+    }
+
+    private async Task<ApiEndpoint> GetActiveScopedEndpointAsync(
+        Guid endpointId, CurrentDataScope scope, CancellationToken ct)
+    {
+        var endpoint = await _endpoints.GetAsync(endpointId, cancellationToken: ct);
+        if (!scope.IncludesOrganization(endpoint.OrganizationId))
+        {
+            throw new Volo.Abp.Authorization.AbpAuthorizationException(
+                "The endpoint is outside the current user's data scope.");
+        }
+        if (endpoint.Status != ApiEndpointStatus.Active)
+        {
+            throw new UserFriendlyException(
+                "Điểm kết nối đang ngừng hoạt động. Kích hoạt trước khi chia sẻ.");
+        }
+        return endpoint;
+    }
+
+    private async Task<ShareDataResultDto> SendAndLogAsync(
+        ApiEndpoint endpoint,
+        string payload,
+        SharedDataType dataType,
+        Guid? correlationId,
+        int attemptNumber,
+        CancellationToken ct)
+    {
         // Reject internal/reserved targets before sending (B-5). The guarded
         // client additionally re-checks the resolved IP at connect time.
         var target = OutboundUrlValidator.Validate(endpoint.Url);
-
-        var payload = JsonSerializer.Serialize(new
-        {
-            dataType = input.DataType.ToString(),
-            entityId = input.EntityId,
-            note = input.Note,
-            organizationId = endpoint.OrganizationId,
-            sharedAt = Clock.Now,
-            source = "FoodSafe.QuangNinh"
-        });
 
         var stopwatch = Stopwatch.StartNew();
         int? statusCode = null;
@@ -126,7 +222,13 @@ public class DataSharingAppService :
             responseStatusCode: statusCode,
             responseBody: responseBody,
             errorMessage: errorMessage,
-            dataType: input.DataType);
+            dataType: dataType,
+            endpointId: endpoint.Id,
+            correlationId: correlationId,
+            attemptNumber: attemptNumber,
+            payloadChecksum: Convert.ToHexString(
+                SHA256.HashData(Encoding.UTF8.GetBytes(payload)))
+                .ToLowerInvariant());
         await _logs.InsertAsync(log, autoSave: true, cancellationToken: ct);
 
         return new ShareDataResultDto

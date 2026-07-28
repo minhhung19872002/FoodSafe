@@ -70,6 +70,11 @@ export const dataIntegrationApi = {
       .post<ShareDataResult>("/v1/app/data-sharing/share", input)
       .then((r) => r.data),
 
+  retryCallLog: (logId: string) =>
+    api
+      .post<ShareDataResult>(`/v1/app/data-sharing/retry/${logId}`)
+      .then((r) => r.data),
+
   exportCallLogs: async (filter: ApiCallLogFilter): Promise<FileDownload> => {
     const response = await api.get<Blob>("/v1/app/api-call-log/excel/export", {
       params: filter,

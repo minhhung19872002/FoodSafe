@@ -87,9 +87,13 @@ public class ApiCallLogAppService : ApplicationService
             IsSuccess = entity.IsSuccess,
             ErrorMessage = entity.ErrorMessage,
             CreationTime = entity.CreationTime,
+            EndpointId = entity.EndpointId,
+            CorrelationId = entity.CorrelationId,
+            AttemptNumber = entity.AttemptNumber,
             RequestHeaders = entity.RequestHeaders,
             RequestBody = entity.RequestBody,
             ResponseBody = entity.ResponseBody,
+            PayloadChecksum = entity.PayloadChecksum,
         };
     }
 
@@ -119,5 +123,8 @@ public class ApiCallLogAppService : ApplicationService
         ErrorMessage = e.ErrorMessage,
         DataType = e.DataType,
         CreationTime = e.CreationTime,
+        EndpointId = e.EndpointId,
+        CorrelationId = e.CorrelationId,
+        AttemptNumber = e.AttemptNumber,
     };
 }

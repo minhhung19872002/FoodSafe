@@ -3,6 +3,12 @@ using Volo.Abp.Domain.Entities.Auditing;
 
 namespace FoodSafe.DataIntegration;
 
+/// <summary>
+/// One immutable communication attempt with a partner system (STT 51-57).
+/// A logical exchange (envelope) is the original attempt plus its retries:
+/// retries append new rows pointing at the root via <see cref="CorrelationId"/>
+/// and never overwrite the evidence of a previous attempt.
+/// </summary>
 public class ApiCallLog : CreationAuditedAggregateRoot<Guid>
 {
     public Guid OrganizationId { get; private set; }
@@ -19,6 +25,18 @@ public class ApiCallLog : CreationAuditedAggregateRoot<Guid>
     public bool IsSuccess { get; private set; }
     public string? ErrorMessage { get; private set; }
     public SharedDataType DataType { get; private set; } = SharedDataType.Other;
+
+    /// <summary>Endpoint used for the call, so failed attempts can be retried.</summary>
+    public Guid? EndpointId { get; private set; }
+
+    /// <summary>Id of the envelope's original attempt; null on the original itself.</summary>
+    public Guid? CorrelationId { get; private set; }
+
+    /// <summary>1 for the original send, incremented per retry of the same envelope.</summary>
+    public int AttemptNumber { get; private set; } = 1;
+
+    /// <summary>SHA-256 hex of the request body, proving retries re-sent the same payload.</summary>
+    public string? PayloadChecksum { get; private set; }
 
     private ApiCallLog() { }
 
@@ -37,11 +55,16 @@ public class ApiCallLog : CreationAuditedAggregateRoot<Guid>
         int? responseStatusCode = null,
         string? responseBody = null,
         string? errorMessage = null,
-        SharedDataType dataType = SharedDataType.Other)
+        SharedDataType dataType = SharedDataType.Other,
+        Guid? endpointId = null,
+        Guid? correlationId = null,
+        int attemptNumber = 1,
+        string? payloadChecksum = null)
     {
         Check.NotNullOrWhiteSpace(externalSystemName, nameof(externalSystemName));
         Check.NotNullOrWhiteSpace(endpointUrl, nameof(endpointUrl));
         Check.NotNullOrWhiteSpace(httpMethod, nameof(httpMethod));
+        Check.Positive(attemptNumber, nameof(attemptNumber));
 
         return new ApiCallLog
         {
@@ -60,6 +83,10 @@ public class ApiCallLog : CreationAuditedAggregateRoot<Guid>
             ResponseBody = responseBody,
             ErrorMessage = errorMessage,
             DataType = dataType,
+            EndpointId = endpointId,
+            CorrelationId = correlationId,
+            AttemptNumber = attemptNumber,
+            PayloadChecksum = payloadChecksum,
         };
     }
 }
