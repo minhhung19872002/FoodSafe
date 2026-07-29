@@ -4,7 +4,6 @@ import {
   Layout,
   Menu,
   Avatar,
-  Badge,
   Dropdown,
   Breadcrumb,
   Drawer,
@@ -15,11 +14,11 @@ import {
   UserOutlined,
   LogoutOutlined,
   KeyOutlined,
-  BellOutlined,
   MenuOutlined,
   DownOutlined,
 } from "@ant-design/icons";
 import { GlobalSearchBox } from "@/features/global-search/components/GlobalSearchBox";
+import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
 import { ROUTE_PERMISSIONS } from "./routePermissions";
@@ -459,19 +458,7 @@ export function AppLayout() {
           <div className="app-header-actions">
             <GlobalSearchBox />
 
-            <Badge dot color={brand.red} offset={[-2, 3]}>
-              <Button
-                type="text"
-                icon={<BellOutlined />}
-                aria-label="Thông báo"
-                style={{
-                  background: brand.bgHead,
-                  width: 34,
-                  height: 34,
-                  borderRadius: 9,
-                }}
-              />
-            </Badge>
+            <NotificationBell />
 
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <div className="app-header-user">

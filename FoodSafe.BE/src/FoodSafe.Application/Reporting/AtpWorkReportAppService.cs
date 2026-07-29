@@ -1,3 +1,4 @@
+using FoodSafe.Notifications;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -5,6 +6,7 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.EventBus.Local;
 using Volo.Abp.Threading;
 using Volo.Abp.Users;
 
@@ -17,17 +19,20 @@ public class AtpWorkReportAppService : ApplicationService
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
     private readonly ReportNameEnricher _nameEnricher;
+    private readonly ILocalEventBus _localEventBus;
 
     public AtpWorkReportAppService(
         IRepository<AtpWorkReport, Guid> reports,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens,
-        ReportNameEnricher nameEnricher)
+        ReportNameEnricher nameEnricher,
+        ILocalEventBus localEventBus)
     {
         _reports = reports;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
         _nameEnricher = nameEnricher;
+        _localEventBus = localEventBus;
     }
 
     public async Task<PagedResultDto<AtpWorkReportDto>> GetListAsync(AtpWorkReportFilterDto input)
@@ -156,6 +161,14 @@ public class AtpWorkReportAppService : ApplicationService
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
         entity.Submit(CurrentUser.GetId(), Clock.Now);
         await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        await _localEventBus.PublishAsync(new ReportSubmittedEto
+        {
+            ReportId = entity.Id,
+            ReportEntityType = NotificationEntityTypes.AtpWorkReport,
+            ReportDisplayName = BuildAtpDisplayName(entity),
+            OrganizationId = entity.OrganizationId,
+            SubmittedById = entity.SubmittedById!.Value,
+        });
         return ToDto(entity);
     }
 
@@ -165,6 +178,14 @@ public class AtpWorkReportAppService : ApplicationService
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
         entity.Verify(CurrentUser.GetId(), Clock.Now);
         await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        await _localEventBus.PublishAsync(new ReportVerifiedEto
+        {
+            ReportId = entity.Id,
+            ReportEntityType = NotificationEntityTypes.AtpWorkReport,
+            ReportDisplayName = BuildAtpDisplayName(entity),
+            OrganizationId = entity.OrganizationId,
+            SubmittedById = entity.SubmittedById,
+        });
         return ToDto(entity);
     }
 
@@ -174,6 +195,15 @@ public class AtpWorkReportAppService : ApplicationService
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
         entity.Return(CurrentUser.GetId(), Clock.Now, input.ReturnReason);
         await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        await _localEventBus.PublishAsync(new ReportReturnedEto
+        {
+            ReportId = entity.Id,
+            ReportEntityType = NotificationEntityTypes.AtpWorkReport,
+            ReportDisplayName = BuildAtpDisplayName(entity),
+            OrganizationId = entity.OrganizationId,
+            SubmittedById = entity.SubmittedById,
+            ReturnReason = input.ReturnReason,
+        });
         return ToDto(entity);
     }
 
@@ -212,14 +242,22 @@ public class AtpWorkReportAppService : ApplicationService
         var entity = await GetScopedWithNotificationsAsync(id, DataScopeOperation.Edit);
 
         var notificationId = GuidGenerator.Create();
+        var fromOrgId = scope.HomeOrganizationId ?? entity.OrganizationId;
         entity.AddErrorNotification(
             notificationId,
-            scope.HomeOrganizationId ?? entity.OrganizationId,
+            fromOrgId,
             input.ErrorFields,
             input.CorrectionDetails,
             CurrentUser.GetId());
 
         await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        await _localEventBus.PublishAsync(new ReportErrorNotificationSentEto
+        {
+            ReportId = entity.Id,
+            ReportEntityType = NotificationEntityTypes.AtpWorkReport,
+            ReportDisplayName = BuildAtpDisplayName(entity),
+            OrganizationId = entity.OrganizationId,
+        });
         return ToNotificationDto(
             entity.ErrorNotifications.First(n => n.Id == notificationId));
     }
@@ -245,6 +283,13 @@ public class AtpWorkReportAppService : ApplicationService
             ?? throw new BusinessException(FoodSafeDomainErrorCodes.Report.NotFound);
         notification.MarkCorrected(CurrentUser.GetId(), input.Response);
         await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        await _localEventBus.PublishAsync(new ReportErrorNotificationRespondedEto
+        {
+            ReportId = entity.Id,
+            ReportEntityType = NotificationEntityTypes.AtpWorkReport,
+            ReportDisplayName = BuildAtpDisplayName(entity),
+            SentByOrganizationId = notification.FromOrganizationId,
+        });
         return ToNotificationDto(notification);
     }
 
@@ -274,8 +319,14 @@ public class AtpWorkReportAppService : ApplicationService
             CreationTime = n.CreationTime
         };
 
-    // Honours the client's Sorting request (e.g. "periodYear desc", "creationTime asc")
-    // against a whitelist. Falls back to CreationTime descending.
+    private static string BuildAtpDisplayName(AtpWorkReport e)
+    {
+        var period = e.PeriodType == ReportPeriodType.HalfYear
+            ? $"{(e.PeriodHalf == 1 ? "6 tháng đầu" : "6 tháng cuối")} năm {e.PeriodYear}"
+            : $"năm {e.PeriodYear}";
+        return $"Báo cáo công tác ATTP {period}";
+    }
+
     private static IOrderedQueryable<AtpWorkReport> ApplySorting(
         IQueryable<AtpWorkReport> query,
         string? sorting)

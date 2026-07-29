@@ -21,6 +21,7 @@ using FoodSafe.AlertsAndTesting;
 using FoodSafe.FoodPoisoning;
 using FoodSafe.Reporting;
 using FoodSafe.DataIntegration;
+using FoodSafe.Notifications;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -100,6 +101,7 @@ public class FoodSafeDbContext :
     public DbSet<PartnerApiKey> PartnerApiKeys { get; set; }
     public DbSet<InboundSubmission> InboundSubmissions { get; set; }
     public DbSet<ApiSpecification> ApiSpecifications { get; set; }
+    public DbSet<AppNotification> AppNotifications { get; set; }
 
     public FoodSafeDbContext(DbContextOptions<FoodSafeDbContext> options)
         : base(options)

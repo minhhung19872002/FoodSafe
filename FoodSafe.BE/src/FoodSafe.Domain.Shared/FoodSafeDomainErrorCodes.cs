@@ -285,4 +285,9 @@ public static class FoodSafeDomainErrorCodes
         public const string SpecVersionAlreadyPublished = "FoodSafe:DataIntegration:0008";
         public const string SubmissionAlreadyDisposed = "FoodSafe:DataIntegration:0009";
     }
+
+    public static class Notification
+    {
+        public const string NotFound = "FoodSafe:Notification:0001";
+    }
 }

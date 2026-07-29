@@ -13,6 +13,7 @@ using FoodSafe.AlertsAndTesting;
 using FoodSafe.FoodPoisoning;
 using FoodSafe.Reporting;
 using FoodSafe.DataIntegration;
+using FoodSafe.Notifications;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -32,6 +33,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
         ConfigureFoodPoisoning(builder);
         ConfigureReporting(builder);
         ConfigureDataIntegration(builder);
+        ConfigureNotifications(builder);
 
         builder.Entity<Organization>(entity =>
         {
@@ -2737,6 +2739,44 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .IsUnique()
                 .HasFilter("is_deleted = FALSE AND is_published = TRUE")
                 .HasDatabaseName("uq_di_apispec_org_name_published");
+        });
+    }
+
+    private static void ConfigureNotifications(ModelBuilder builder)
+    {
+        builder.Entity<AppNotification>(entity =>
+        {
+            entity.ToTable("app_notifications");
+            entity.ConfigureByConvention();
+
+            entity.HasKey(x => x.Id).HasName("pk_app_notifications");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.RecipientUserId).HasColumnName("recipient_user_id").IsRequired();
+            entity.Property(x => x.RecipientOrganizationId).HasColumnName("recipient_organization_id").IsRequired();
+            entity.Property(x => x.Type).HasColumnName("type").HasConversion<short>();
+            entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.Message).HasColumnName("message").HasMaxLength(AppNotification.MaxMessageLength).IsRequired();
+            entity.Property(x => x.EntityType).HasColumnName("entity_type").HasMaxLength(100);
+            entity.Property(x => x.EntityId).HasColumnName("entity_id");
+            entity.Property(x => x.IsRead).HasColumnName("is_read").HasDefaultValue(false);
+            entity.Property(x => x.ReadAt).HasColumnName("read_at");
+            entity.Property(x => x.CreationTime).HasColumnName("creation_time");
+            entity.Property(x => x.CreatorId).HasColumnName("creator_id");
+            entity.Property(x => x.ExtraProperties)
+                .HasColumnName("extra_properties")
+                .HasColumnType("jsonb");
+            entity.Property(x => x.ConcurrencyStamp)
+                .HasColumnName("concurrency_stamp")
+                .HasMaxLength(40);
+
+            entity.HasIndex(x => new { x.RecipientUserId, x.IsRead })
+                .HasDatabaseName("idx_notifications_user_read");
+            entity.HasIndex(x => new { x.RecipientUserId, x.CreationTime })
+                .IsDescending(false, true)
+                .HasDatabaseName("idx_notifications_user_time");
+            entity.HasIndex(x => new { x.RecipientUserId, x.Type, x.EntityId })
+                .HasFilter("entity_id IS NOT NULL")
+                .HasDatabaseName("idx_notifications_user_type_entity");
         });
     }
 }
