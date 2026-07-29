@@ -9,12 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Vietnamese overrides for ABP's own account emails. -->
-    <EmbeddedResource Include="Localization\Account\*.json" />
-    <Content Remove="Localization\Account\*.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\FoodSafe.Domain\FoodSafe.Domain.csproj" />
     <ProjectReference Include="..\FoodSafe.Application.Contracts\FoodSafe.Application.Contracts.csproj" />
   </ItemGroup>

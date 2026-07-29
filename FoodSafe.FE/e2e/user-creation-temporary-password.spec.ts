@@ -37,7 +37,12 @@ async function createUser(page: Page, email: string, userName?: string) {
   const response = await page
     .context()
     .request.post("/api/v1/administration/users", {
-      headers: { RequestVerificationToken: token },
+      headers: {
+        RequestVerificationToken: token,
+        // The app's axios client pins this; the Playwright request context does
+        // not go through axios, so send it here to exercise the same path.
+        "Accept-Language": "vi",
+      },
       failOnStatusCode: false,
       data: {
         // Login name is independent of the mailbox: staff without a work email
@@ -129,6 +134,31 @@ test.describe("Account creation hands over a temporary password", () => {
       .request.get(`/api/v1/administration/users/${created.user.id}`);
     expect(fetched.status()).toBe(200);
     expect(((await fetched.json()) as { email: string }).email).toBe(email);
+
+    await deleteUser(page, created.user.id);
+  });
+
+  test("rejects a duplicate email with a reason the administrator can act on", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await signInAsAdmin(page);
+
+    const email = `e2e-dup-${Date.now()}@foodsafe.local`;
+    const first = await createUser(page, email);
+    expect(first.status(), await first.text()).toBe(200);
+    const created = (await first.json()) as CreatedUser;
+
+    const second = await createUser(page, email);
+    expect(second.status()).toBeGreaterThanOrEqual(400);
+    expect(second.status()).toBeLessThan(500);
+
+    // The body must name the conflict, in Vietnamese. A bare status leaves the
+    // admin with nothing to fix — which is exactly how this hit production.
+    const body = await second.text();
+    console.log("DUPLICATE EMAIL RESPONSE:", body.slice(0, 500));
+    expect(body).toContain(email);
+    expect(body).toContain("đã được sử dụng");
 
     await deleteUser(page, created.user.id);
   });

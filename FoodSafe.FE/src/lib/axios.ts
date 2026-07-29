@@ -8,6 +8,10 @@ export const api = axios.create({
   xsrfHeaderName: "RequestVerificationToken",
   headers: {
     "Content-Type": "application/json",
+    // The interface is Vietnamese-only, so server messages must be too. Without
+    // this the culture follows the browser and an English-locale Chrome gets
+    // English business errors back.
+    "Accept-Language": "vi",
   },
 });
 
