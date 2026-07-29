@@ -8,7 +8,7 @@ public class ChangeOwnPasswordDto
     public string CurrentPassword { get; set; } = string.Empty;
 
     [Required]
-    [StringLength(128, MinimumLength = 8)]
+    [StringLength(256, MinimumLength = 1)]
     public string NewPassword { get; set; } = string.Empty;
 }
 
@@ -31,7 +31,7 @@ public sealed class CompletePasswordResetDto
     public string ResetToken { get; set; } = string.Empty;
 
     [Required]
-    [StringLength(128, MinimumLength = 8)]
+    [StringLength(256, MinimumLength = 1)]
     public string Password { get; set; } = string.Empty;
 }
 

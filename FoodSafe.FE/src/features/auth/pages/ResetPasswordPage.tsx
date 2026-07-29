@@ -16,25 +16,27 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  DEFAULT_PASSWORD_POLICY,
+  describePasswordPolicy,
+  passwordPolicySchema,
+  usePasswordPolicy,
+} from "@/hooks/usePasswordPolicy";
 import { authApi } from "../api/authApi";
 
-const schema = z
-  .object({
-    password: z
-      .string()
-      .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
-      .regex(/[a-z]/, "Mật khẩu phải có chữ thường")
-      .regex(/[A-Z]/, "Mật khẩu phải có chữ hoa")
-      .regex(/[0-9]/, "Mật khẩu phải có chữ số")
-      .regex(/[^A-Za-z0-9]/, "Mật khẩu phải có ký tự đặc biệt"),
-    confirmation: z.string(),
-  })
-  .refine((value) => value.password === value.confirmation, {
-    path: ["confirmation"],
-    message: "Mật khẩu xác nhận không khớp",
-  });
+function buildSchema(policy: ReturnType<typeof usePasswordPolicy>["data"]) {
+  return z
+    .object({
+      password: passwordPolicySchema(policy ?? DEFAULT_PASSWORD_POLICY),
+      confirmation: z.string(),
+    })
+    .refine((value) => value.password === value.confirmation, {
+      path: ["confirmation"],
+      message: "Mật khẩu xác nhận không khớp",
+    });
+}
 
-type FormData = z.infer<typeof schema>;
+type FormData = z.infer<ReturnType<typeof buildSchema>>;
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -49,6 +51,9 @@ export default function ResetPasswordPage() {
     () => /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(userId) && resetToken.length > 0,
     [resetToken, userId],
   );
+  const { data: policy } = usePasswordPolicy();
+  const effectivePolicy = policy ?? DEFAULT_PASSWORD_POLICY;
+  const schema = useMemo(() => buildSchema(policy), [policy]);
   const {
     control,
     handleSubmit,
@@ -116,7 +121,7 @@ export default function ResetPasswordPage() {
             <Alert
               type="info"
               showIcon
-              message="Dùng ít nhất 8 ký tự gồm chữ hoa, chữ thường, số và ký tự đặc biệt."
+              message={describePasswordPolicy(effectivePolicy)}
             />
             <Form
               layout="vertical"

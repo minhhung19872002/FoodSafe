@@ -128,3 +128,13 @@ public sealed class PublicBrandingDto
     public bool HasLogo { get; set; }
     public bool HasLoginBackground { get; set; }
 }
+
+public sealed class PublicPasswordPolicyDto
+{
+    public int RequiredLength { get; set; }
+    public int MaxLength { get; set; }
+    public bool RequireDigit { get; set; }
+    public bool RequireLowercase { get; set; }
+    public bool RequireUppercase { get; set; }
+    public bool RequireNonAlphanumeric { get; set; }
+}

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
@@ -8,6 +9,7 @@ using Volo.Abp.Guids;
 using Volo.Abp.Identity;
 using Volo.Abp.Threading;
 using Volo.Abp.Users;
+using IdentityOptions = Microsoft.AspNetCore.Identity.IdentityOptions;
 using IdentityUser = Volo.Abp.Identity.IdentityUser;
 
 namespace FoodSafe.Security;
@@ -28,6 +30,7 @@ public class AccountSecurityAppService :
     private readonly IRepository<AppUserProfile, Guid> _profiles;
     private readonly IGuidGenerator _guidGenerator;
     private readonly ICancellationTokenProvider _cancellationTokens;
+    private readonly IOptions<IdentityOptions> _identityOptions;
 
     public AccountSecurityAppService(
         ICurrentUser currentUser,
@@ -36,7 +39,8 @@ public class AccountSecurityAppService :
         IRepository<AppUserProfile, Guid> profiles,
         IGuidGenerator guidGenerator,
         ICancellationTokenProvider cancellationTokens,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IOptions<IdentityOptions> identityOptions)
     {
         _currentUser = currentUser;
         _userManager = userManager;
@@ -44,6 +48,7 @@ public class AccountSecurityAppService :
         _profiles = profiles;
         _guidGenerator = guidGenerator;
         _cancellationTokens = cancellationTokens;
+        _identityOptions = identityOptions;
 
         var validityDays = configuration.GetValue(
             "Security:PasswordValidityDays",
@@ -124,6 +129,8 @@ public class AccountSecurityAppService :
         var histories = await GetPasswordHistoryAsync(user.Id);
         EnsurePasswordIsNotReused(user, input.Password, histories);
 
+        await _identityOptions.SetAsync();
+
         var replacedPasswordHash = user.PasswordHash;
         var result = await _userManager.ResetPasswordAsync(
             user,
@@ -155,6 +162,8 @@ public class AccountSecurityAppService :
 
         var histories = await GetPasswordHistoryAsync(user.Id);
         EnsurePasswordIsNotReused(user, newPassword, histories);
+
+        await _identityOptions.SetAsync();
 
         var replacedPasswordHash = user.PasswordHash;
         var result = await _userManager.ChangePasswordAsync(

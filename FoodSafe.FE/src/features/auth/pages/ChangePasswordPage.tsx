@@ -1,27 +1,29 @@
+import { useMemo } from "react";
 import { Card, Form, Input, Button, Typography, Space, Alert } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import {
+  DEFAULT_PASSWORD_POLICY,
+  passwordPolicySchema,
+  usePasswordPolicy,
+} from "@/hooks/usePasswordPolicy";
 import { useChangePassword } from "../api/authMutations";
 
-const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Vui lòng nhập mật khẩu hiện tại"),
-    newPassword: z
-      .string()
-      .min(8, "Mật khẩu tối thiểu 8 ký tự")
-      .regex(
-        /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])/,
-        "Mật khẩu phải có chữ, số và ký tự đặc biệt",
-      ),
-    confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
-  })
-  .refine((d) => d.newPassword === d.confirmPassword, {
-    message: "Mật khẩu xác nhận không khớp",
-    path: ["confirmPassword"],
-  });
+function buildSchema(policy: ReturnType<typeof usePasswordPolicy>["data"]) {
+  return z
+    .object({
+      currentPassword: z.string().min(1, "Vui lòng nhập mật khẩu hiện tại"),
+      newPassword: passwordPolicySchema(policy ?? DEFAULT_PASSWORD_POLICY),
+      confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
+    })
+    .refine((d) => d.newPassword === d.confirmPassword, {
+      message: "Mật khẩu xác nhận không khớp",
+      path: ["confirmPassword"],
+    });
+}
 
-type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+type ChangePasswordFormData = z.infer<ReturnType<typeof buildSchema>>;
 
 interface Props {
   isExpired?: boolean;
@@ -29,13 +31,15 @@ interface Props {
 
 export default function ChangePasswordPage({ isExpired }: Props) {
   const changeMutation = useChangePassword();
+  const { data: policy } = usePasswordPolicy();
+  const schema = useMemo(() => buildSchema(policy), [policy]);
 
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm<ChangePasswordFormData>({
-    resolver: zodResolver(changePasswordSchema),
+    resolver: zodResolver(schema),
   });
 
   const onSubmit = (data: ChangePasswordFormData) => {
@@ -91,11 +95,7 @@ export default function ChangePasswordPage({ isExpired }: Props) {
                 name="newPassword"
                 control={control}
                 render={({ field }) => (
-                  <Input.Password
-                    {...field}
-                    placeholder="Tối thiểu 8 ký tự, có chữ + số + ký tự đặc biệt"
-                    autoComplete="new-password"
-                  />
+                  <Input.Password {...field} autoComplete="new-password" />
                 )}
               />
             </Form.Item>
