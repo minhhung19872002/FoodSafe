@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Drawer, Table, Tabs, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useQuery } from "@tanstack/react-query";
@@ -8,7 +9,10 @@ import type {
   BusinessInspectionRecord,
   BusinessRelatedRecord,
   BusinessTestingRecord,
+  Product,
 } from "../types/business.types";
+import { PRODUCT_STATUS } from "../types/business.types";
+import { useProductList } from "../api/businessQueries";
 import { BusinessVsattpCommitmentsTab } from "./BusinessVsattpCommitmentsTab";
 
 interface Props {
@@ -183,6 +187,50 @@ function InspectionTable({ businessId }: { businessId: string }) {
   );
 }
 
+const productColumns: ColumnsType<Product> = [
+  { title: "Mã", dataIndex: "code", width: 120, render: (v?: string) => v ?? "—" },
+  { title: "Tên sản phẩm", dataIndex: "name", ellipsis: true },
+  { title: "Thương hiệu", dataIndex: "brandName", ellipsis: true, render: (v?: string) => v ?? "—" },
+  { title: "Nhà sản xuất", dataIndex: "manufacturer", ellipsis: true, render: (v?: string) => v ?? "—" },
+  {
+    title: "Trạng thái",
+    dataIndex: "status",
+    width: 140,
+    render: (status: number) => (
+      <Tag color={status === PRODUCT_STATUS.Active ? "success" : "default"}>
+        {status === PRODUCT_STATUS.Active ? "Đang kinh doanh" : "Ngừng"}
+      </Tag>
+    ),
+  },
+];
+
+function ProductTable({ businessId }: { businessId: string }) {
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const { data, isLoading } = useProductList({
+    businessId,
+    skipCount: (page - 1) * pageSize,
+    maxResultCount: pageSize,
+  });
+  return (
+    <Table
+      rowKey="id"
+      size="small"
+      loading={isLoading}
+      columns={productColumns}
+      dataSource={data?.items}
+      pagination={{
+        current: page,
+        pageSize,
+        total: data?.totalCount,
+        onChange: setPage,
+        showTotal: (total) => `${total} sản phẩm`,
+        showSizeChanger: false,
+      }}
+    />
+  );
+}
+
 export function BusinessDetailDrawer({ business, onClose }: Props) {
   return (
     <Drawer
@@ -195,6 +243,11 @@ export function BusinessDetailDrawer({ business, onClose }: Props) {
       {business && (
         <Tabs
           items={[
+            {
+              key: "products",
+              label: "Sản phẩm",
+              children: <ProductTable businessId={business.id} />,
+            },
             {
               key: "self-declarations",
               label: "Tự công bố",
