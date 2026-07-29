@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Button,
   Card,
@@ -879,9 +880,7 @@ function MapTab({
 }
 
 export default function FoodPoisoningPage() {
-  // Route cho vào khi có Cases.View HOẶC Incidents.View (ROUTE_PERMISSIONS.
-  // foodPoisoning) — người chỉ có một quyền không được thấy tab còn lại,
-  // nếu không tab mặc định sẽ gọi API bị 403 (UIA-006).
+  const [searchParams, setSearchParams] = useSearchParams();
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const canViewCases = hasPermission("FoodSafe.FoodPoisoning.Cases.View");
   const canViewIncidents = hasPermission(
@@ -915,11 +914,21 @@ export default function FoodPoisoningPage() {
     },
   ];
 
+  const requestedTab = searchParams.get("tab");
+  const activeKey =
+    requestedTab && tabs.some((t) => t.key === requestedTab)
+      ? requestedTab
+      : tabs[0]?.key;
+
   return (
     <div className="page-container">
       <h1 className="page-header-title">Ngộ độc thực phẩm</h1>
       <Card>
-        <Tabs items={tabs} />
+        <Tabs
+          activeKey={activeKey}
+          items={tabs}
+          onChange={(key) => setSearchParams({ tab: key }, { replace: true })}
+        />
       </Card>
     </div>
   );

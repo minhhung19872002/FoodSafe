@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Alert,
   Button,
@@ -1448,9 +1449,7 @@ function ActionMonthTab() {
 }
 
 export default function ReportingPage() {
-  // Route cho vào khi có quyền xem BẤT KỲ loại báo cáo nào (ROUTE_PERMISSIONS.
-  // reporting) — chỉ hiện tab tương ứng quyền, tránh tab mặc định gọi API bị
-  // 403 với người chỉ có quyền một loại (UIA-006).
+  const [searchParams, setSearchParams] = useSearchParams();
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const tabs = [
     ...(hasPermission("FoodSafe.Reporting.NdtpReports.View")
@@ -1470,9 +1469,19 @@ export default function ReportingPage() {
       : []),
   ];
 
+  const requestedTab = searchParams.get("tab");
+  const activeKey =
+    requestedTab && tabs.some((t) => t.key === requestedTab)
+      ? requestedTab
+      : tabs[0]?.key;
+
   return (
     <Card>
-      <Tabs items={tabs} />
+      <Tabs
+        activeKey={activeKey}
+        items={tabs}
+        onChange={(key) => setSearchParams({ tab: key }, { replace: true })}
+      />
     </Card>
   );
 }

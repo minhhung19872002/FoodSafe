@@ -3,18 +3,18 @@ import dayjs from "dayjs";
 import type { Notification } from "../types/notification.types";
 
 const ENTITY_ROUTES: Record<string, string> = {
-  NdtpReport: "/reporting",
-  AtpWorkReport: "/reporting",
-  ActionMonthReport: "/reporting",
-  FoodPoisoningCase: "/food-poisoning",
-  FoodPoisoningIncident: "/food-poisoning",
+  NdtpReport: "/reporting?tab=ndtp",
+  AtpWorkReport: "/reporting?tab=atp-work",
+  ActionMonthReport: "/reporting?tab=action-month",
+  FoodPoisoningCase: "/food-poisoning?tab=cases",
+  FoodPoisoningIncident: "/food-poisoning?tab=incidents",
   EligibilityCertificate: "/eligibility-certificates",
   ProductRegistration: "/product-registrations",
   AdvertisementRegistration: "/advertisement-registrations",
   CfsCertificate: "/cfs-certificates",
   ExportFoodCertificate: "/export-food-certificates",
-  AtpAlert: "/alerts-news",
-  AtpNews: "/alerts-news",
+  AtpAlert: "/alerts-news?tab=alerts",
+  AtpNews: "/alerts-news?tab=news",
 };
 
 export function getEntityRoute(entityType?: string): string | null {
