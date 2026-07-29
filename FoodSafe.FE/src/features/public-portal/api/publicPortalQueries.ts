@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { publicPortalApi } from "./publicPortalApi";
-import type { PagedFilter } from "../types/publicPortal.types";
+import type {
+  PagedFilter,
+  PublicAlertFilter,
+  PublicNewsFilter,
+  PublicRiskAnalysisFilter,
+} from "../types/publicPortal.types";
 
 const QK = "public-portal" as const;
 
@@ -60,7 +65,7 @@ export function usePublicExportFoodCertificates(filter: PagedFilter) {
   });
 }
 
-export function usePublicNews(filter: PagedFilter) {
+export function usePublicNews(filter: PublicNewsFilter) {
   return useQuery({
     queryKey: [QK, "news", filter],
     queryFn: () => publicPortalApi.listNews(filter),
@@ -75,7 +80,7 @@ export function usePublicNewsDetail(id: string) {
   });
 }
 
-export function usePublicAlerts(filter: PagedFilter) {
+export function usePublicAlerts(filter: PublicAlertFilter) {
   return useQuery({
     queryKey: [QK, "alerts", filter],
     queryFn: () => publicPortalApi.listAlerts(filter),
@@ -96,7 +101,7 @@ export function usePublicDocuments(filter: PagedFilter) {
   });
 }
 
-export function usePublicRiskAnalyses(filter: PagedFilter) {
+export function usePublicRiskAnalyses(filter: PublicRiskAnalysisFilter) {
   return useQuery({
     queryKey: [QK, "risk-analyses", filter],
     queryFn: () => publicPortalApi.listRiskAnalyses(filter),

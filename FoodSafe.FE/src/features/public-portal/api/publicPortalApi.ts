@@ -6,14 +6,17 @@ import type {
   PagedFilter,
   PagedResult,
   PublicAlert,
+  PublicAlertFilter,
   PublicBusiness,
   PublicCertificate,
   PublicDocument,
   PublicInspectionResult,
   PublicNewsDetail,
+  PublicNewsFilter,
   PublicNewsItem,
   PublicProduct,
   PublicRiskAnalysis,
+  PublicRiskAnalysisFilter,
   PublicTestingResult,
   PublicWarnedBusiness,
 } from "../types/publicPortal.types";
@@ -101,7 +104,7 @@ export const publicPortalApi = {
       .then((r) => r.data);
   },
 
-  listNews(filter: PagedFilter): Promise<PagedResult<PublicNewsItem>> {
+  listNews(filter: PublicNewsFilter): Promise<PagedResult<PublicNewsItem>> {
     return api
       .get<PagedResult<PublicNewsItem>>("/v1/public/news", { params: filter })
       .then((r) => r.data);
@@ -113,7 +116,7 @@ export const publicPortalApi = {
       .then((r) => r.data);
   },
 
-  listAlerts(filter: PagedFilter): Promise<PagedResult<PublicAlert>> {
+  listAlerts(filter: PublicAlertFilter): Promise<PagedResult<PublicAlert>> {
     return api
       .get<PagedResult<PublicAlert>>("/v1/public/alerts", { params: filter })
       .then((r) => r.data);
@@ -138,7 +141,7 @@ export const publicPortalApi = {
   },
 
   listRiskAnalyses(
-    filter: PagedFilter,
+    filter: PublicRiskAnalysisFilter,
   ): Promise<PagedResult<PublicRiskAnalysis>> {
     return api
       .get<PagedResult<PublicRiskAnalysis>>("/v1/public/risk-analyses", {

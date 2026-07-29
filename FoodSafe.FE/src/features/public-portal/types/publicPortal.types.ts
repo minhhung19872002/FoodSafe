@@ -53,6 +53,10 @@ export const ALERT_SEVERITY_CONFIG: Record<
   [ALERT_SEVERITY.Critical]: { color: "purple", label: "Nghiêm trọng" },
 };
 
+export interface PublicAlertFilter extends PagedFilter {
+  Categories?: AlertCategory[];
+}
+
 // ── Risk level ───────────────────────────────────────────────────────────────
 
 export const RISK_LEVEL = {
@@ -146,6 +150,19 @@ export interface PublicAlert {
   content: string;
 }
 
+export const NEWS_CATEGORIES = [
+  "Hoạt động ATTP",
+  "Cảnh báo",
+  "Văn bản pháp luật",
+  "Tuyên truyền",
+  "Phản ánh người dân",
+  "Khác",
+] as const;
+
+export interface PublicNewsFilter extends PagedFilter {
+  Categories?: string[];
+}
+
 export interface PublicNewsItem {
   id: string;
   title: string;
@@ -159,6 +176,10 @@ export interface PublicNewsItem {
 export interface PublicNewsDetail extends PublicNewsItem {
   content: string;
   linkedAlerts: PublicAlert[];
+}
+
+export interface PublicRiskAnalysisFilter extends PagedFilter {
+  Categories?: AlertCategory[];
 }
 
 export interface PublicRiskAnalysis {

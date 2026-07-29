@@ -10,6 +10,7 @@ import {
   Input,
   Pagination,
   Row,
+  Select,
   Space,
   Spin,
   Table,
@@ -34,6 +35,7 @@ import {
 import {
   ALERT_CATEGORY_CONFIG,
   ALERT_SEVERITY_CONFIG,
+  NEWS_CATEGORIES,
   RISK_LEVEL_CONFIG,
   type AlertCategory,
   type AlertSeverity,
@@ -133,14 +135,18 @@ function NewsDetailView({ id }: { id: string }) {
 
 // ── News list tab ─────────────────────────────────────────────────────────────
 
+const CATEGORY_OPTIONS = NEWS_CATEGORIES.map((c) => ({ value: c, label: c }));
+
 function NewsListTab() {
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
   const pagination = useTablePagination(20);
 
   const { data, isFetching, isError } = usePublicNews({
     Keyword: submittedKeyword || undefined,
+    Categories: categories.length > 0 ? categories : undefined,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   });
@@ -150,22 +156,36 @@ function NewsListTab() {
     setSubmittedKeyword(keyword);
   };
 
+  const handleCategoryChange = (values: string[]) => {
+    setCategories(values);
+    pagination.resetToFirstPage();
+  };
+
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space.Compact style={{ width: "100%", maxWidth: 500 }}>
+      <Space wrap>
         <Input
           value={keyword}
           placeholder="Tìm kiếm tin tức..."
           onChange={(e) => setKeyword(e.target.value)}
           onPressEnter={handleSearch}
           allowClear
+          style={{ width: 260 }}
         />
-        <Input.Search
-          enterButton="Tìm"
-          loading={isFetching}
-          onSearch={handleSearch}
+        <Select
+          mode="multiple"
+          allowClear
+          placeholder="Chọn chuyên mục"
+          value={categories}
+          onChange={handleCategoryChange}
+          options={CATEGORY_OPTIONS}
+          style={{ minWidth: 220 }}
+          maxTagCount="responsive"
         />
-      </Space.Compact>
+        <Button type="primary" loading={isFetching} onClick={handleSearch}>
+          Tìm
+        </Button>
+      </Space>
 
       {isError && (
         <Alert type="error" message="Không thể tải dữ liệu." showIcon />
@@ -235,13 +255,19 @@ function NewsListTab() {
 
 // ── Alerts tab ────────────────────────────────────────────────────────────────
 
+const ALERT_CATEGORY_OPTIONS = Object.entries(ALERT_CATEGORY_CONFIG).map(
+  ([value, cfg]) => ({ value: Number(value), label: cfg.label }),
+);
+
 function AlertsTab() {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
+  const [alertCategories, setAlertCategories] = useState<AlertCategory[]>([]);
   const pagination = useTablePagination(20);
 
   const { data, isFetching, isError } = usePublicAlerts({
     Keyword: submittedKeyword || undefined,
+    Categories: alertCategories.length > 0 ? alertCategories : undefined,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   });
@@ -251,22 +277,36 @@ function AlertsTab() {
     setSubmittedKeyword(keyword);
   };
 
+  const handleCategoryChange = (values: AlertCategory[]) => {
+    setAlertCategories(values);
+    pagination.resetToFirstPage();
+  };
+
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space.Compact style={{ width: "100%", maxWidth: 500 }}>
+      <Space wrap>
         <Input
           value={keyword}
           placeholder="Tìm kiếm cảnh báo..."
           onChange={(e) => setKeyword(e.target.value)}
           onPressEnter={handleSearch}
           allowClear
+          style={{ width: 260 }}
         />
-        <Input.Search
-          enterButton="Tìm"
-          loading={isFetching}
-          onSearch={handleSearch}
+        <Select
+          mode="multiple"
+          allowClear
+          placeholder="Loại cảnh báo"
+          value={alertCategories}
+          onChange={handleCategoryChange}
+          options={ALERT_CATEGORY_OPTIONS}
+          style={{ minWidth: 200 }}
+          maxTagCount="responsive"
         />
-      </Space.Compact>
+        <Button type="primary" loading={isFetching} onClick={handleSearch}>
+          Tìm
+        </Button>
+      </Space>
 
       {isError && (
         <Alert type="error" message="Không thể tải dữ liệu." showIcon />
@@ -336,10 +376,12 @@ function AlertsTab() {
 function RiskAnalysisTab() {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
+  const [riskCategories, setRiskCategories] = useState<AlertCategory[]>([]);
   const pagination = useTablePagination(20);
 
   const { data, isFetching, isError } = usePublicRiskAnalyses({
     Keyword: submittedKeyword || undefined,
+    Categories: riskCategories.length > 0 ? riskCategories : undefined,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   });
@@ -349,22 +391,36 @@ function RiskAnalysisTab() {
     setSubmittedKeyword(keyword);
   };
 
+  const handleCategoryChange = (values: AlertCategory[]) => {
+    setRiskCategories(values);
+    pagination.resetToFirstPage();
+  };
+
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space.Compact style={{ width: "100%", maxWidth: 500 }}>
+      <Space wrap>
         <Input
           value={keyword}
           placeholder="Tìm kiếm phân tích nguy cơ..."
           onChange={(e) => setKeyword(e.target.value)}
           onPressEnter={handleSearch}
           allowClear
+          style={{ width: 260 }}
         />
-        <Input.Search
-          enterButton="Tìm"
-          loading={isFetching}
-          onSearch={handleSearch}
+        <Select
+          mode="multiple"
+          allowClear
+          placeholder="Chọn chuyên mục"
+          value={riskCategories}
+          onChange={handleCategoryChange}
+          options={ALERT_CATEGORY_OPTIONS}
+          style={{ minWidth: 220 }}
+          maxTagCount="responsive"
         />
-      </Space.Compact>
+        <Button type="primary" loading={isFetching} onClick={handleSearch}>
+          Tìm
+        </Button>
+      </Space>
 
       {isError && (
         <Alert type="error" message="Không thể tải dữ liệu." showIcon />
