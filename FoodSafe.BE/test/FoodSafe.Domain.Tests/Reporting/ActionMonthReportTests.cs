@@ -68,6 +68,7 @@ public sealed class ActionMonthReportTests
     public void All_Update_Methods_Reject_Submitted()
     {
         var r = CreateDraft();
+        r.InternallyApprove();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
 
         Should.Throw<BusinessException>(() => r.UpdateHeader("a", "b"));
@@ -81,6 +82,7 @@ public sealed class ActionMonthReportTests
     public void Full_Lifecycle_Submit_Verify_Complete()
     {
         var r = CreateDraft();
+        r.InternallyApprove();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
         r.Verify(Guid.NewGuid(), DateTime.UtcNow);
         r.Complete(Guid.NewGuid(), DateTime.UtcNow);
@@ -91,10 +93,12 @@ public sealed class ActionMonthReportTests
     public void Full_Lifecycle_Submit_Return_Fix_Resubmit()
     {
         var r = CreateDraft();
+        r.InternallyApprove();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
         r.Return(Guid.NewGuid(), DateTime.UtcNow, "Thiếu số liệu");
         r.ReturnToDraft();
         r.UpdateCommunicationStats(5, 3, 10, 300, 500, 2000);
+        r.InternallyApprove();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
         r.SubmissionVersion.ShouldBe((short)2);
     }
@@ -103,6 +107,7 @@ public sealed class ActionMonthReportTests
     public void AddErrorNotification_Works_When_Verified()
     {
         var r = CreateDraft();
+        r.InternallyApprove();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
         r.Verify(Guid.NewGuid(), DateTime.UtcNow);
         r.AddErrorNotification(Guid.NewGuid(), Guid.NewGuid(), "stats", "recount", Guid.NewGuid());
@@ -114,6 +119,7 @@ public sealed class ActionMonthReportTests
     public void AddErrorNotification_Works_When_Submitted()
     {
         var r = CreateDraft();
+        r.InternallyApprove();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
         r.AddErrorNotification(Guid.NewGuid(), Guid.NewGuid(), "f", "d", Guid.NewGuid());
         r.ErrorNotifications.Count.ShouldBe(1);

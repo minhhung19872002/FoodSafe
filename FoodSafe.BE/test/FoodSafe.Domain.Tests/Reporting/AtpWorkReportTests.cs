@@ -107,6 +107,7 @@ public sealed class AtpWorkReportTests
     public void All_Update_Methods_Reject_Submitted()
     {
         var r = CreateHalfYear();
+        r.InternallyApprove();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
 
         Should.Throw<BusinessException>(() => r.UpdateBusinessStats(1, 1, 1, 1));
@@ -121,6 +122,7 @@ public sealed class AtpWorkReportTests
     public void Full_Workflow_Submit_Verify_Complete()
     {
         var r = CreateHalfYear();
+        r.InternallyApprove();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
         r.Verify(Guid.NewGuid(), DateTime.UtcNow);
         r.Complete(Guid.NewGuid(), DateTime.UtcNow);
@@ -131,10 +133,12 @@ public sealed class AtpWorkReportTests
     public void Full_Workflow_Submit_Return_Resubmit()
     {
         var r = CreateHalfYear();
+        r.InternallyApprove();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
         r.Return(Guid.NewGuid(), DateTime.UtcNow, "Fix numbers");
         r.ReturnToDraft();
         r.UpdateBusinessStats(100, 5, 2, 80);
+        r.InternallyApprove();
         r.Submit(Guid.NewGuid(), DateTime.UtcNow);
         r.SubmissionVersion.ShouldBe((short)2);
         r.Status.ShouldBe(ReportStatus.Submitted);
