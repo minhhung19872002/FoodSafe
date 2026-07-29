@@ -4,6 +4,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "./AppLayout";
 import { NotFoundPage } from "./NotFoundPage";
 import { PrivateRoute } from "./PrivateRoute";
+import { PublicGuard } from "./PublicGuard";
 import { RouteErrorBoundary } from "./RouteErrorBoundary";
 import { PermissionRoute } from "./PermissionRoute";
 import { ROUTE_PERMISSIONS } from "./routePermissions";
@@ -217,33 +218,41 @@ const appRoutes: RouteObject[] = [
   {
     path: "/login",
     element: (
-      <Suspense fallback={<RouteLoading />}>
-        <LoginPage />
-      </Suspense>
+      <PublicGuard>
+        <Suspense fallback={<RouteLoading />}>
+          <LoginPage />
+        </Suspense>
+      </PublicGuard>
     ),
   },
   {
     path: "/account/forgot-password",
     element: (
-      <Suspense fallback={<RouteLoading />}>
-        <ForgotPasswordPage />
-      </Suspense>
+      <PublicGuard>
+        <Suspense fallback={<RouteLoading />}>
+          <ForgotPasswordPage />
+        </Suspense>
+      </PublicGuard>
     ),
   },
   {
     path: "/account/reset-password",
     element: (
-      <Suspense fallback={<RouteLoading />}>
-        <ResetPasswordPage />
-      </Suspense>
+      <PublicGuard>
+        <Suspense fallback={<RouteLoading />}>
+          <ResetPasswordPage />
+        </Suspense>
+      </PublicGuard>
     ),
   },
   {
     path: "/account/complete-password-change",
     element: (
-      <Suspense fallback={<RouteLoading />}>
-        <CompleteInitialPasswordChangePage />
-      </Suspense>
+      <PublicGuard>
+        <Suspense fallback={<RouteLoading />}>
+          <CompleteInitialPasswordChangePage />
+        </Suspense>
+      </PublicGuard>
     ),
   },
   {

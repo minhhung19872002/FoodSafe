@@ -3,7 +3,7 @@ import {
   useQueryClient,
   type QueryClient,
 } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { message } from "antd";
 import { describeApiError } from "@/lib/apiError";
 import { authApi } from "./authApi";
@@ -117,6 +117,7 @@ function describeLoginFailure(error: unknown): string {
 
 export function useLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const setAuth = useAuthStore((s) => s.setAuth);
 
@@ -150,7 +151,9 @@ export function useLogin() {
       if (user.passwordMustChange) {
         navigate("/account/change-password");
       } else {
-        navigate("/");
+        const from =
+          (location.state as { from?: Location })?.from?.pathname ?? "/";
+        navigate(from, { replace: true });
       }
     },
     onError: (error) => {
