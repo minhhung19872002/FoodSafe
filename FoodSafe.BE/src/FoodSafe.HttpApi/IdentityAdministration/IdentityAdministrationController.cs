@@ -114,4 +114,8 @@ public sealed class IdentityAdministrationController(
         Guid id,
         [FromBody] UpdateRolePermissionsDto input) =>
         service.UpdateRolePermissionsAsync(id, input);
+
+    [HttpGet("all-roles-permissions")]
+    public Task<AllRolesPermissionMatrixDto> GetAllRolesPermissionsAsync() =>
+        service.GetAllRolesPermissionsAsync();
 }
