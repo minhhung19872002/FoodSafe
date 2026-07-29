@@ -1,9 +1,11 @@
 using FoodSafe.AlertsAndTesting;
+using FoodSafe.Notifications;
 using FoodSafe.Organizations;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.EventBus.Local;
 using Volo.Abp.Threading;
 
 namespace FoodSafe.PublicPortal;
@@ -22,15 +24,18 @@ public class CitizenNewsReportAppService :
     private readonly IRepository<AtpNews, Guid> _news;
     private readonly IRepository<Organization, Guid> _organizations;
     private readonly ICancellationTokenProvider _cancellationTokens;
+    private readonly ILocalEventBus _localEventBus;
 
     public CitizenNewsReportAppService(
         IRepository<AtpNews, Guid> news,
         IRepository<Organization, Guid> organizations,
-        ICancellationTokenProvider cancellationTokens)
+        ICancellationTokenProvider cancellationTokens,
+        ILocalEventBus localEventBus)
     {
         _news = news;
         _organizations = organizations;
         _cancellationTokens = cancellationTokens;
+        _localEventBus = localEventBus;
     }
 
     public async Task<CitizenAlertReportResultDto> CreateAsync(
@@ -54,6 +59,13 @@ public class CitizenNewsReportAppService :
 
         await _news.InsertAsync(
             news, autoSave: true, cancellationToken: _cancellationTokens.Token);
+
+        await _localEventBus.PublishAsync(new CitizenNewsSubmittedEto
+        {
+            NewsId = news.Id,
+            Title = news.Title,
+            OrganizationId = rootOrganization.Id,
+        });
 
         return new CitizenAlertReportResultDto
         {

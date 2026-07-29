@@ -17,6 +17,10 @@ public enum NotificationType : short
     FoodPoisoningIncidentConcluded = 25,
     FoodPoisoningErrorReportCreated = 26,
 
+    // Citizen submissions (4x)
+    CitizenAlertSubmitted = 41,
+    CitizenNewsSubmitted = 42,
+
     // License expiry (3x)
     LicenseExpiringSoon = 31,
 

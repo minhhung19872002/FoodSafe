@@ -13,6 +13,8 @@ const ENTITY_ROUTES: Record<string, string> = {
   AdvertisementRegistration: "/advertisement-registrations",
   CfsCertificate: "/cfs-certificates",
   ExportFoodCertificate: "/export-food-certificates",
+  AtpAlert: "/alerts-news",
+  AtpNews: "/alerts-news",
 };
 
 export function getEntityRoute(entityType?: string): string | null {
