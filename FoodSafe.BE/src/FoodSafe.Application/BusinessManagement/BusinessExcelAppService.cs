@@ -334,24 +334,24 @@ public class BusinessExcelAppService : ApplicationService,
             if (duplicateCodes.Contains(candidate.RowNumber))
                 errors.Add(Error(
                     candidate.RowNumber,
-                    "Code",
+                    "Mã cơ sở",
                     "Mã cơ sở bị trùng trong file."));
             else if (candidate.Input.Code is not null &&
                      existingCodes.Contains(candidate.Input.Code))
                 errors.Add(Error(
                     candidate.RowNumber,
-                    "Code",
+                    "Mã cơ sở",
                     "Mã cơ sở đã tồn tại."));
             if (duplicateTaxCodes.Contains(candidate.RowNumber))
                 errors.Add(Error(
                     candidate.RowNumber,
-                    "TaxCode",
+                    "Mã số thuế",
                     "Mã số thuế bị trùng trong file."));
             else if (candidate.Input.TaxCode is not null &&
                      existingTaxCodes.Contains(candidate.Input.TaxCode))
                 errors.Add(Error(
                     candidate.RowNumber,
-                    "TaxCode",
+                    "Mã số thuế",
                     "Mã số thuế đã tồn tại."));
         }
     }
@@ -364,32 +364,32 @@ public class BusinessExcelAppService : ApplicationService,
         if (string.IsNullOrWhiteSpace(row.Name))
             rowErrors.Add(Error(
                 row.RowNumber,
-                "Name",
+                "Tên cơ sở",
                 "Tên cơ sở là bắt buộc."));
         if (string.IsNullOrWhiteSpace(row.Code))
             rowErrors.Add(Error(
                 row.RowNumber,
-                "Code",
+                "Mã cơ sở",
                 "Mã cơ sở là bắt buộc khi import."));
 
         var latitude = ParseOptionalDouble(
             row.Latitude,
             row.RowNumber,
-            "Latitude",
+            "Vĩ độ",
             -90,
             90,
             rowErrors);
         var longitude = ParseOptionalDouble(
             row.Longitude,
             row.RowNumber,
-            "Longitude",
+            "Kinh độ",
             -180,
             180,
             rowErrors);
         if (latitude.HasValue != longitude.HasValue)
             rowErrors.Add(Error(
                 row.RowNumber,
-                "Latitude/Longitude",
+                "Vĩ độ/Kinh độ",
                 "Phải nhập đồng thời vĩ độ và kinh độ."));
 
         var input = new UpsertBusinessDto

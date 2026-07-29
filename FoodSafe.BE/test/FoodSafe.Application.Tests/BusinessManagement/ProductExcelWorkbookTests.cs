@@ -32,11 +32,11 @@ public sealed class ProductExcelWorkbookTests
         content[1].ShouldBe((byte)'K');
         using var workbook = new XLWorkbook(new MemoryStream(content));
         var sheet = workbook.Worksheet("Sản phẩm");
-        sheet.Cell(1, 1).GetString().ShouldBe("Mã cơ sở*");
-        sheet.Cell(1, 2).GetString().ShouldBe("Code*");
-        sheet.Cell(1, 3).GetString().ShouldBe("Name*");
+        sheet.Cell(1, 1).GetString().ShouldBe("Cơ sở*");
+        sheet.Cell(1, 2).GetString().ShouldBe("Mã sản phẩm*");
+        sheet.Cell(1, 3).GetString().ShouldBe("Tên sản phẩm*");
         sheet.Cell(1, 4).GetString().ShouldBe("Nhóm sản phẩm");
-        sheet.Cell(1, 7).GetString().ShouldBe("Quốc gia");
+        sheet.Cell(1, 7).GetString().ShouldBe("Xuất xứ");
         workbook.Worksheet("Hướng dẫn").ShouldNotBeNull();
     }
 
@@ -53,6 +53,8 @@ public sealed class ProductExcelWorkbookTests
         catalog.Cell(3, 1).GetString().ShouldBe("CS-002");
         catalog.Cell(2, 3).GetString().ShouldBe("Thực phẩm tươi sống");
         catalog.Cell(2, 4).GetString().ShouldBe("Việt Nam");
+        catalog.Cell(1, 1).GetString().ShouldBe("Cơ sở (Mã)");
+        catalog.Cell(1, 4).GetString().ShouldBe("Xuất xứ");
     }
 
     [Fact]
@@ -87,7 +89,7 @@ public sealed class ProductExcelWorkbookTests
 
         result.Rows.ShouldBeEmpty();
         result.Errors.ShouldContain(x =>
-            x.RowNumber == 1 && x.Field == "Name*");
+            x.RowNumber == 1 && x.Field == "Tên sản phẩm*");
     }
 
     [Fact]

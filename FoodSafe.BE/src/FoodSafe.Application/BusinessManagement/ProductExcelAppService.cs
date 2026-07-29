@@ -211,8 +211,8 @@ public class ProductExcelAppService : ApplicationService,
         {
             errors.Add(Error(
                 row.RowNumber,
-                "Mã cơ sở",
-                "Mã cơ sở là bắt buộc."));
+                "Cơ sở",
+                "Cơ sở là bắt buộc."));
         }
         else if (businessMap.TryGetValue(row.BusinessCode, out var bizId))
         {
@@ -222,8 +222,8 @@ public class ProductExcelAppService : ApplicationService,
         {
             errors.Add(Error(
                 row.RowNumber,
-                "Mã cơ sở",
-                $"Mã cơ sở \"{row.BusinessCode}\" không tồn tại hoặc nằm ngoài phạm vi dữ liệu."));
+                "Cơ sở",
+                $"Cơ sở \"{row.BusinessCode}\" không tồn tại hoặc nằm ngoài phạm vi dữ liệu."));
         }
 
         if (!string.IsNullOrWhiteSpace(row.ProductGroup))
@@ -244,8 +244,8 @@ public class ProductExcelAppService : ApplicationService,
             else
                 errors.Add(Error(
                     row.RowNumber,
-                    "Quốc gia",
-                    $"Quốc gia \"{row.Country}\" không tồn tại."));
+                    "Xuất xứ",
+                    $"Xuất xứ \"{row.Country}\" không tồn tại."));
         }
     }
 
@@ -286,12 +286,12 @@ public class ProductExcelAppService : ApplicationService,
             if (duplicateRows.Contains(candidate.RowNumber))
                 errors.Add(Error(
                     candidate.RowNumber,
-                    "Code",
+                    "Mã sản phẩm",
                     "Mã sản phẩm bị trùng trong file của cùng cơ sở."));
             else if (existing.Contains(key))
                 errors.Add(Error(
                     candidate.RowNumber,
-                    "Code",
+                    "Mã sản phẩm",
                     "Mã sản phẩm đã tồn tại tại cơ sở."));
         }
     }
@@ -304,12 +304,12 @@ public class ProductExcelAppService : ApplicationService,
         if (string.IsNullOrWhiteSpace(row.Code))
             rowErrors.Add(Error(
                 row.RowNumber,
-                "Code",
+                "Mã sản phẩm",
                 "Mã sản phẩm là bắt buộc khi import."));
         if (string.IsNullOrWhiteSpace(row.Name))
             rowErrors.Add(Error(
                 row.RowNumber,
-                "Name",
+                "Tên sản phẩm",
                 "Tên sản phẩm là bắt buộc."));
         var expiryMonths = ParseOptionalInt(
             row.ExpiryPeriodMonths,

@@ -18,20 +18,20 @@ internal static class ProductExcelWorkbook
     private const int CountryColumn = 7;
     private static readonly string[] Headers =
     [
-        "Mã cơ sở*",
-        "Code*",
-        "Name*",
+        "Cơ sở*",
+        "Mã sản phẩm*",
+        "Tên sản phẩm*",
         "Nhóm sản phẩm",
-        "BrandName",
-        "Manufacturer",
-        "Quốc gia",
-        "NetWeight",
-        "Specifications",
-        "Ingredients",
-        "ExpiryPeriodMonths",
-        "StorageConditions",
-        "UsageInstructions",
-        "Notes"
+        "Thương hiệu",
+        "Nhà sản xuất",
+        "Xuất xứ",
+        "Khối lượng tịnh",
+        "Thông số kỹ thuật",
+        "Thành phần",
+        "Hạn sử dụng (tháng)",
+        "Điều kiện bảo quản",
+        "Hướng dẫn sử dụng",
+        "Ghi chú"
     ];
 
     internal static byte[] CreateTemplate(ProductCatalogData catalogs)
@@ -55,7 +55,7 @@ internal static class ProductExcelWorkbook
         instructions.Cell("A4").Value =
             "Các cột có dấu * là bắt buộc. Xóa dòng mẫu trước khi upload.";
         instructions.Cell("A5").Value =
-            "Mã cơ sở, Nhóm sản phẩm, Quốc gia: chọn từ danh sách thả xuống hoặc xem sheet Danh mục.";
+            "Cơ sở, Nhóm sản phẩm, Xuất xứ: chọn từ danh sách thả xuống hoặc xem sheet Danh mục.";
         instructions.Cell("A6").Value =
             "Không giới hạn số dòng. Tối đa 10 MB.";
         instructions.Columns().AdjustToContents();
@@ -174,10 +174,10 @@ internal static class ProductExcelWorkbook
         ProductCatalogData catalogs)
     {
         var sheet = workbook.Worksheets.Add(CatalogSheetName);
-        sheet.Cell(1, 1).Value = "Mã cơ sở";
-        sheet.Cell(1, 2).Value = "Tên cơ sở";
+        sheet.Cell(1, 1).Value = "Cơ sở (Mã)";
+        sheet.Cell(1, 2).Value = "Cơ sở (Tên)";
         sheet.Cell(1, 3).Value = "Nhóm sản phẩm";
-        sheet.Cell(1, 4).Value = "Quốc gia";
+        sheet.Cell(1, 4).Value = "Xuất xứ";
         var header = sheet.Range(1, 1, 1, 4);
         header.Style.Font.Bold = true;
         header.Style.Font.FontColor = XLColor.White;

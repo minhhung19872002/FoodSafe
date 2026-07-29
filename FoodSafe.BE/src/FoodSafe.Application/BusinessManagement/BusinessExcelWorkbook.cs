@@ -18,16 +18,16 @@ internal static class BusinessExcelWorkbook
     private const int ProductGroupsColumn = 11;
     private static readonly string[] Headers =
     [
-        "Code*",
-        "Name*",
-        "TaxCode",
+        "Mã cơ sở*",
+        "Tên cơ sở*",
+        "Mã số thuế",
         "Loại hình",
         "Phân loại nguy cơ",
-        "Address",
-        "Phone",
+        "Địa chỉ",
+        "Điện thoại",
         "Email",
-        "Latitude",
-        "Longitude",
+        "Vĩ độ",
+        "Kinh độ",
         "Nhóm sản phẩm"
     ];
 

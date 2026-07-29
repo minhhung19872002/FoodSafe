@@ -20,8 +20,8 @@ public sealed class BusinessExcelWorkbookTests
         content[1].ShouldBe((byte)'K');
         using var workbook = new XLWorkbook(new MemoryStream(content));
         var sheet = workbook.Worksheet("Cơ sở");
-        sheet.Cell(1, 1).GetString().ShouldBe("Code*");
-        sheet.Cell(1, 2).GetString().ShouldBe("Name*");
+        sheet.Cell(1, 1).GetString().ShouldBe("Mã cơ sở*");
+        sheet.Cell(1, 2).GetString().ShouldBe("Tên cơ sở*");
         sheet.Cell(1, 4).GetString().ShouldBe("Loại hình");
         sheet.Cell(1, 5).GetString().ShouldBe("Phân loại nguy cơ");
         sheet.Cell(1, 11).GetString().ShouldBe("Nhóm sản phẩm");
@@ -74,7 +74,7 @@ public sealed class BusinessExcelWorkbookTests
 
         result.Rows.ShouldBeEmpty();
         result.Errors.ShouldContain(x =>
-            x.RowNumber == 1 && x.Field == "Name*");
+            x.RowNumber == 1 && x.Field == "Tên cơ sở*");
     }
 
     [Fact]
