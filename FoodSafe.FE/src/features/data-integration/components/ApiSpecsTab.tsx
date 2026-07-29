@@ -22,6 +22,7 @@ import {
   DeleteOutlined,
   DownloadOutlined,
   EditOutlined,
+  ExportOutlined,
   InboxOutlined,
   StopOutlined,
 } from "@ant-design/icons";
@@ -34,6 +35,7 @@ import { useApiSpecs } from "../api/dataIntegrationQueries";
 import {
   useDeleteApiSpec,
   useDownloadApiSpec,
+  useExportApiSpecs,
   usePublishApiSpec,
   useUnpublishApiSpec,
   useUpdateApiSpecMetadata,
@@ -104,6 +106,7 @@ export function ApiSpecsTab() {
   const unpublishMut = useUnpublishApiSpec();
   const deleteMut = useDeleteApiSpec();
   const downloadMut = useDownloadApiSpec();
+  const exportMut = useExportApiSpecs();
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editing, setEditing] = useState<ApiSpecification | null>(null);
@@ -293,6 +296,18 @@ export function ApiSpecsTab() {
             pagination.resetToFirstPage();
           }}
         />
+        <Button
+          icon={<ExportOutlined />}
+          loading={exportMut.isPending}
+          onClick={() =>
+            exportMut.mutate(filter, {
+              onSuccess: (file) => saveDownload(file.blob, file.fileName),
+              onError: () => void message.error("Không thể xuất danh sách."),
+            })
+          }
+        >
+          Xuất Excel
+        </Button>
         {canCreate && (
           <Button
             type="primary"

@@ -12,3 +12,8 @@ public interface IApiCallLogExcelAppService : IApplicationService
 {
     Task<ExcelDownloadDto> ExportAsync(ApiCallLogFilterDto input);
 }
+
+public interface IApiSpecificationExcelAppService : IApplicationService
+{
+    Task<ExcelDownloadDto> ExportAsync(ApiSpecificationFilterDto input);
+}

@@ -3,6 +3,7 @@ import { dataIntegrationApi } from "./dataIntegrationApi";
 import type {
   ApiCallLogFilter,
   ApiEndpointFilter,
+  ApiSpecificationFilter,
   CreatePartnerAccount,
   CreateUpdateApiEndpoint,
   IssuePartnerApiKeyInput,
@@ -202,6 +203,13 @@ export function useDeleteApiSpec() {
 export function useDownloadApiSpec() {
   return useMutation({
     mutationFn: (id: string) => dataIntegrationApi.downloadApiSpec(id),
+  });
+}
+
+export function useExportApiSpecs() {
+  return useMutation({
+    mutationFn: (filter: ApiSpecificationFilter) =>
+      dataIntegrationApi.exportApiSpecs(filter),
   });
 }
 

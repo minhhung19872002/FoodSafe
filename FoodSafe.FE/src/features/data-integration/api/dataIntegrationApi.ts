@@ -199,4 +199,12 @@ export const dataIntegrationApi = {
     api
       .get<ApiSpecificationDownload>(`/v1/app/api-specification/${id}/download`)
       .then((r) => r.data),
+
+  exportApiSpecs: async (filter: ApiSpecificationFilter): Promise<FileDownload> => {
+    const response = await api.get<Blob>("/v1/app/api-specification/excel/export", {
+      params: filter,
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
+  },
 };
