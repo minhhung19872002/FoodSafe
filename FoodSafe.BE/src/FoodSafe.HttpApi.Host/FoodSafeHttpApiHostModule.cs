@@ -760,6 +760,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         app.UseMiddleware<LoginCaptchaMiddleware>();
         app.UseAbpOpenIddictValidation();
         app.UseUnitOfWork();
+        app.UseMiddleware<LoginPasswordVerificationMiddleware>();
         app.UseDynamicClaims();
         app.UseMiddleware<PasswordExpiryMiddleware>();
         app.UseAuthorization();

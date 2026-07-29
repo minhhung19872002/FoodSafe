@@ -370,6 +370,11 @@ public class IdentityAdministrationAppService :
         }
 
         existing.User.SetIsActive(input.IsActive);
+        if (input.IsActive)
+        {
+            (await _userManager.ResetAccessFailedCountAsync(existing.User))
+                .CheckErrors();
+        }
         (await _userManager.UpdateSecurityStampAsync(existing.User)).CheckErrors();
         (await _userManager.UpdateAsync(existing.User)).CheckErrors();
     }
