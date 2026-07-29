@@ -109,7 +109,7 @@ public sealed class DataScopeEnforcementContractTests
         var orgA = Guid.NewGuid();
         var orgB = Guid.NewGuid();
         var scope = new CurrentDataScope(
-            Guid.NewGuid(), orgA, false,
+            Guid.NewGuid(), orgA, false, false,
             new HashSet<Guid> { orgA },
             new HashSet<Guid>(),
             new HashSet<Guid>(),
@@ -123,7 +123,7 @@ public sealed class DataScopeEnforcementContractTests
     public void Null_scope_sets_reject_access()
     {
         var scope = new CurrentDataScope(
-            Guid.NewGuid(), Guid.NewGuid(), false,
+            Guid.NewGuid(), Guid.NewGuid(), false, false,
             new HashSet<Guid> { Guid.NewGuid() },
             new HashSet<Guid>(),
             new HashSet<Guid>(),
@@ -138,7 +138,7 @@ public sealed class DataScopeEnforcementContractTests
     public void Empty_scope_sets_reject_access()
     {
         var scope = new CurrentDataScope(
-            Guid.NewGuid(), Guid.NewGuid(), false,
+            Guid.NewGuid(), Guid.NewGuid(), false, false,
             new HashSet<Guid>(),
             new HashSet<Guid>(),
             new HashSet<Guid>(),

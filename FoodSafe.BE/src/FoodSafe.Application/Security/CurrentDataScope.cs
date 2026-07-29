@@ -15,6 +15,7 @@ public sealed record CurrentDataScope(
     Guid UserId,
     Guid? HomeOrganizationId,
     bool HasGlobalAccess,
+    bool HasRestrictedScope,
     IReadOnlySet<Guid> OrganizationIds,
     IReadOnlySet<Guid> ProvinceIds,
     IReadOnlySet<Guid> CommuneIds,
@@ -37,10 +38,18 @@ public sealed record CurrentDataScope(
         HasGlobalAccess || (ProductGroupIds?.Contains(productGroupId) ?? false);
 }
 
+public sealed record DataScopeBundle(
+    CurrentDataScope View,
+    CurrentDataScope Edit,
+    CurrentDataScope Delete);
+
 public interface ICurrentDataScopeProvider
 {
     Task<CurrentDataScope> GetAsync(
         DataScopeOperation operation,
+        CancellationToken cancellationToken = default);
+
+    Task<DataScopeBundle> GetBundleAsync(
         CancellationToken cancellationToken = default);
 
     Task EnsureOrganizationAccessAsync(
@@ -81,10 +90,50 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
         DataScopeOperation operation,
         CancellationToken cancellationToken = default)
     {
-        if (!_currentUser.IsAuthenticated || !_currentUser.Id.HasValue)
-        {
+        var ctx = await LoadContextAsync(cancellationToken);
+        return ctx is null
+            ? throw new AbpAuthorizationException("Authenticated user is required.")
+            : BuildScope(ctx.Value, operation);
+    }
+
+    public async Task<DataScopeBundle> GetBundleAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var loaded = await LoadContextAsync(cancellationToken);
+        if (loaded is null)
             throw new AbpAuthorizationException("Authenticated user is required.");
+        var ctx = loaded.Value;
+        return new DataScopeBundle(
+            BuildScope(ctx, DataScopeOperation.View),
+            BuildScope(ctx, DataScopeOperation.Edit),
+            BuildScope(ctx, DataScopeOperation.Delete));
+    }
+
+    public async Task EnsureOrganizationAccessAsync(
+        Guid organizationId,
+        DataScopeOperation operation,
+        CancellationToken cancellationToken = default)
+    {
+        var scope = await GetAsync(operation, cancellationToken);
+        if (!scope.IncludesOrganization(organizationId))
+        {
+            throw new AbpAuthorizationException("The resource is outside the current user's data scope.");
         }
+    }
+
+    private readonly record struct ScopeContext(
+        Guid UserId,
+        Guid? HomeOrganizationId,
+        bool IsGlobal,
+        HashSet<Guid> AllowedOrganizationIds,
+        OrganizationScopeNode? Home,
+        bool HasUserSpecificAssignments,
+        IReadOnlyList<ManagementScopeAssignment> Assignments);
+
+    private async Task<ScopeContext?> LoadContextAsync(CancellationToken cancellationToken)
+    {
+        if (!_currentUser.IsAuthenticated || !_currentUser.Id.HasValue)
+            return null;
 
         cancellationToken = ResolveToken(cancellationToken);
         var userId = _currentUser.Id.Value;
@@ -101,37 +150,20 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
                 ? new HashSet<Guid> { homeOrgId.Value }
                 : new HashSet<Guid>();
 
-            return new(
-                userId, homeOrgId, true,
-                orgIds, new HashSet<Guid>(),
-                new HashSet<Guid>(),
-                new HashSet<Guid>(), new HashSet<Guid>(),
-                new HashSet<Guid>());
+            return new ScopeContext(userId, homeOrgId, true, orgIds, null, false, []);
         }
 
         if (profile is null)
-        {
             throw new AbpAuthorizationException("User has no FoodSafe organization assignment.");
-        }
 
         var organizationQuery = await _organizations.GetQueryableAsync();
         var organizations = await AsyncExecuter.ToListAsync(
             organizationQuery.Select(x => new OrganizationScopeNode(
                 x.Id, x.ParentId, x.ProvinceId, x.CommuneId)),
             cancellationToken);
-        var allowedOrganizationIds = OrganizationHierarchyScope.Expand(
-            profile.OrganizationId,
-            organizations);
         var home = organizations.SingleOrDefault(x => x.Id == profile.OrganizationId)
             ?? throw new BusinessException(
                 FoodSafeDomainErrorCodes.DataScope.OrganizationNotFound);
-
-        var provinces = new HashSet<Guid>();
-        var communes = new HashSet<Guid>();
-        var businesses = new HashSet<Guid>();
-        var businessTypes = new HashSet<Guid>();
-        var productGroups = new HashSet<Guid>();
-        AddGeography(home, provinces, communes);
 
         var assignmentQuery = await _assignments.GetQueryableAsync();
         var now = _clock.Now;
@@ -143,7 +175,43 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
                 (!x.ValidTo.HasValue || now < x.ValidTo.Value)),
             cancellationToken);
 
-        foreach (var assignment in assignments.Where(x => x.Allows(operation)))
+        var hasUserSpecific = assignments.Any(x => x.GranteeUserId == userId);
+
+        var allowedOrganizationIds = hasUserSpecific
+            ? new HashSet<Guid>()
+            : OrganizationHierarchyScope.Expand(profile.OrganizationId, organizations);
+
+        return new ScopeContext(
+            userId, profile.OrganizationId, false,
+            allowedOrganizationIds, home, hasUserSpecific, assignments);
+    }
+
+    private static CurrentDataScope BuildScope(ScopeContext ctx, DataScopeOperation operation)
+    {
+        if (ctx.IsGlobal)
+        {
+            return new(
+                ctx.UserId, ctx.HomeOrganizationId, true, false,
+                ctx.AllowedOrganizationIds, new HashSet<Guid>(),
+                new HashSet<Guid>(),
+                new HashSet<Guid>(), new HashSet<Guid>(),
+                new HashSet<Guid>());
+        }
+
+        var provinces = new HashSet<Guid>();
+        var communes = new HashSet<Guid>();
+        var businesses = new HashSet<Guid>();
+        var businessTypes = new HashSet<Guid>();
+        var productGroups = new HashSet<Guid>();
+
+        if (!ctx.HasUserSpecificAssignments && ctx.Home is not null)
+            AddGeography(ctx.Home, provinces, communes);
+
+        var effectiveAssignments = ctx.HasUserSpecificAssignments
+            ? ctx.Assignments.Where(x => x.GranteeUserId == ctx.UserId)
+            : ctx.Assignments;
+
+        foreach (var assignment in effectiveAssignments.Where(x => x.Allows(operation)))
         {
             switch (assignment.ScopeType)
             {
@@ -164,27 +232,16 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
         }
 
         return new(
-            userId,
-            profile.OrganizationId,
+            ctx.UserId,
+            ctx.HomeOrganizationId,
             false,
-            allowedOrganizationIds,
+            ctx.HasUserSpecificAssignments,
+            ctx.AllowedOrganizationIds,
             provinces,
             communes,
             businesses,
             businessTypes,
             productGroups);
-    }
-
-    public async Task EnsureOrganizationAccessAsync(
-        Guid organizationId,
-        DataScopeOperation operation,
-        CancellationToken cancellationToken = default)
-    {
-        var scope = await GetAsync(operation, cancellationToken);
-        if (!scope.IncludesOrganization(organizationId))
-        {
-            throw new AbpAuthorizationException("The resource is outside the current user's data scope.");
-        }
     }
 
     private CancellationToken ResolveToken(CancellationToken supplied) =>

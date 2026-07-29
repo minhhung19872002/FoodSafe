@@ -75,7 +75,11 @@ public class FoodPoisoningCaseAppService : ApplicationService
     {
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.Create, _cancellationTokens.Token);
-        var orgId = scope.OrganizationIds.First();
+        var orgId = (scope.HomeOrganizationId
+            ?? (scope.OrganizationIds.Count > 0
+                ? scope.OrganizationIds.First()
+                : throw new BusinessException(
+                    FoodSafeDomainErrorCodes.DataScope.OrganizationNotFound)));
 
         var caseCode = await GenerateCaseCodeAsync(orgId);
 
@@ -143,7 +147,11 @@ public class FoodPoisoningCaseAppService : ApplicationService
             DataScopeOperation.Edit, _cancellationTokens.Token);
         var entity = await GetScopedWithDetailsAsync(id, DataScopeOperation.Edit);
         var report = entity.AddErrorReport(
-            GuidGenerator.Create(), scope.OrganizationIds.First(),
+            GuidGenerator.Create(), (scope.HomeOrganizationId
+            ?? (scope.OrganizationIds.Count > 0
+                ? scope.OrganizationIds.First()
+                : throw new BusinessException(
+                    FoodSafeDomainErrorCodes.DataScope.OrganizationNotFound))),
             input.ErrorDescription, input.CorrectionRequest, CurrentUser.Id);
         await _cases.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return ToErrorReportDto(report);

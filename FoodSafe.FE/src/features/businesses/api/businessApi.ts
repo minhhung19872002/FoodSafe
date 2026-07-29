@@ -7,6 +7,7 @@ import type {
   BusinessHandlerInput,
   BusinessInput,
   BusinessInspectionRecord,
+  BusinessPagedResult,
   BusinessRelatedRecord,
   BusinessTestingRecord,
   ExcelDownload,
@@ -193,8 +194,8 @@ export const businessRelatedApi = {
 };
 
 export const businessApi = {
-  async list(filter: BusinessFilter): Promise<PagedResult<Business>> {
-    const response = await api.get<PagedResult<Business>>(businessEndpoint, {
+  async list(filter: BusinessFilter): Promise<BusinessPagedResult> {
+    const response = await api.get<BusinessPagedResult>(businessEndpoint, {
       params: filter,
     });
     return {

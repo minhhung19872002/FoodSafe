@@ -93,7 +93,11 @@ public class PartnerAccountAppService :
         var ct = _cancellationTokens.Token;
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.Create, ct);
-        var orgId = scope.OrganizationIds.First();
+        var orgId = scope.HomeOrganizationId
+            ?? (scope.OrganizationIds.Count > 0
+                ? scope.OrganizationIds.First()
+                : throw new BusinessException(
+                    FoodSafeDomainErrorCodes.DataScope.OrganizationNotFound));
 
         if (await _partners.AnyAsync(x => x.Code == input.Code, ct))
         {

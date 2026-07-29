@@ -74,7 +74,11 @@ public class ApiEndpointAppService : ApplicationService
     {
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.Create, _cancellationTokens.Token);
-        var orgId = scope.OrganizationIds.First();
+        var orgId = scope.HomeOrganizationId
+            ?? (scope.OrganizationIds.Count > 0
+                ? scope.OrganizationIds.First()
+                : throw new BusinessException(
+                    FoodSafeDomainErrorCodes.DataScope.OrganizationNotFound));
 
         OutboundUrlValidator.Validate(input.Url);
 

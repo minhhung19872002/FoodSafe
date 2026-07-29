@@ -77,6 +77,8 @@ export interface Business {
   notes?: string;
   productGroupIds: string[];
   handlers: BusinessHandler[];
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export interface BusinessInput {
@@ -212,6 +214,10 @@ export interface ProductBusinessOption {
 export interface PagedResult<T> {
   items: T[];
   totalCount: number;
+}
+
+export interface BusinessPagedResult extends PagedResult<Business> {
+  hasRestrictedScope: boolean;
 }
 
 export interface ExcelDownload {

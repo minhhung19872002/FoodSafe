@@ -219,7 +219,9 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               label: "Sửa",
               ariaLabel: `Sửa ${business.name}`,
               icon: <EditOutlined />,
-              hidden: !props.permissions.editBusiness,
+              hidden:
+                !props.permissions.editBusiness ||
+                business.canEdit === false,
               onClick: () => props.onEditBusiness(business),
             },
             {
@@ -227,6 +229,9 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               label: "Người phụ trách",
               ariaLabel: `Người phụ trách ${business.name}`,
               icon: <TeamOutlined />,
+              hidden:
+                !props.permissions.editBusiness ||
+                business.canEdit === false,
               onClick: () => props.onManageHandlers(business),
             },
             {
@@ -250,7 +255,9 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               ariaLabel: `Xóa ${business.name}`,
               icon: <DeleteOutlined />,
               danger: true,
-              hidden: !props.permissions.deleteBusiness,
+              hidden:
+                !props.permissions.deleteBusiness ||
+                business.canDelete === false,
               confirm: "Xóa cơ sở này?",
               onClick: () => props.onDeleteBusiness(business.id),
             },

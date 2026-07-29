@@ -272,9 +272,9 @@ export default function BusinessManagementPage() {
         canViewBusinesses={canViewBusinesses}
         canViewProducts={canViewProducts}
         permissions={{
-          createBusiness: hasPermission(
-            "FoodSafe.BusinessManagement.Businesses.Create",
-          ),
+          createBusiness:
+            hasPermission("FoodSafe.BusinessManagement.Businesses.Create") &&
+            businessList.data?.hasRestrictedScope === false,
           editBusiness: hasPermission(
             "FoodSafe.BusinessManagement.Businesses.Edit",
           ),
@@ -283,7 +283,8 @@ export default function BusinessManagementPage() {
           ),
           importBusiness:
             hasPermission("FoodSafe.BusinessManagement.Businesses.Import") &&
-            hasPermission("FoodSafe.BusinessManagement.Businesses.Create"),
+            hasPermission("FoodSafe.BusinessManagement.Businesses.Create") &&
+            businessList.data?.hasRestrictedScope === false,
           importProduct:
             hasPermission("FoodSafe.BusinessManagement.Products.Import") &&
             hasPermission("FoodSafe.BusinessManagement.Products.Create"),

@@ -39,6 +39,7 @@ public class OrganizationAuthorizationRulesTests
             Guid.NewGuid(),
             organizationId,
             hasGlobalAccess,
+            false,
             new HashSet<Guid> { organizationId },
             new HashSet<Guid>(),
             new HashSet<Guid>(),

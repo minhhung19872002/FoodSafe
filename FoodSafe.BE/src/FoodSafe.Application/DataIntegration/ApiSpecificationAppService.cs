@@ -83,7 +83,11 @@ public class ApiSpecificationAppService :
     {
         var ct = _cancellationTokens.Token;
         var scope = await _dataScopeProvider.GetAsync(DataScopeOperation.Create, ct);
-        var orgId = scope.OrganizationIds.First();
+        var orgId = scope.HomeOrganizationId
+            ?? (scope.OrganizationIds.Count > 0
+                ? scope.OrganizationIds.First()
+                : throw new BusinessException(
+                    FoodSafeDomainErrorCodes.DataScope.OrganizationNotFound));
 
         // Validates syntax + required info fields; throws AbpValidationException (400) on failure.
         var parsed = OpenApiSpecValidator.Parse(input.Content);

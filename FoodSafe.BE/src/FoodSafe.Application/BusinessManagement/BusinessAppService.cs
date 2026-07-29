@@ -59,13 +59,12 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
         _cancellationTokens = cancellationTokens;
     }
 
-    public async Task<PagedResultDto<BusinessDto>> GetListAsync(
+    public async Task<BusinessPagedResultDto> GetListAsync(
         BusinessListInput input)
     {
-        var scope = await _dataScopeProvider.GetAsync(
-            DataScopeOperation.View,
+        var bundle = await _dataScopeProvider.GetBundleAsync(
             _cancellationTokens.Token);
-        var query = await ScopedQueryAsync(scope);
+        var query = await ScopedQueryAsync(bundle.View);
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
@@ -101,7 +100,32 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount),
             _cancellationTokens.Token);
-        return new(total, ObjectMapper.Map<List<Business>, List<BusinessDto>>(items));
+        var dtos = ObjectMapper.Map<List<Business>, List<BusinessDto>>(items);
+
+        if (bundle.View.HasRestrictedScope)
+        {
+            foreach (var dto in dtos)
+            {
+                dto.CanEdit = MatchesScope(bundle.Edit, dto);
+                dto.CanDelete = MatchesScope(bundle.Delete, dto);
+            }
+        }
+
+        return new BusinessPagedResultDto(total, dtos, bundle.View.HasRestrictedScope);
+    }
+
+    private static bool MatchesScope(CurrentDataScope scope, BusinessDto b)
+    {
+        if (scope.HasGlobalAccess) return true;
+        if (scope.OrganizationIds.Contains(b.OrganizationId)) return true;
+        if (scope.BusinessIds?.Contains(b.Id) ?? false) return true;
+        if (b.BusinessTypeId.HasValue &&
+            (scope.BusinessTypeIds?.Contains(b.BusinessTypeId.Value) ?? false)) return true;
+        if (b.AddressProvinceId.HasValue &&
+            scope.ProvinceIds.Contains(b.AddressProvinceId.Value)) return true;
+        if (b.AddressCommuneId.HasValue &&
+            scope.CommuneIds.Contains(b.AddressCommuneId.Value)) return true;
+        return false;
     }
 
     // Honours the client's Sorting request (e.g. "Name", "Code desc", "Status")

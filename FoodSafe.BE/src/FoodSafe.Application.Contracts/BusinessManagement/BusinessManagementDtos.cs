@@ -50,6 +50,8 @@ public sealed class BusinessDto : FullAuditedEntityDto<Guid>
     public string? Notes { get; set; }
     public IReadOnlyList<Guid> ProductGroupIds { get; set; } = [];
     public IReadOnlyList<BusinessHandlerDto> Handlers { get; set; } = [];
+    public bool CanEdit { get; set; } = true;
+    public bool CanDelete { get; set; } = true;
 }
 
 public class UpsertBusinessDto
@@ -189,9 +191,22 @@ public sealed class BusinessCodeSuggestionDto
     public string Code { get; set; } = string.Empty;
 }
 
+public sealed class BusinessPagedResultDto : PagedResultDto<BusinessDto>
+{
+    public bool HasRestrictedScope { get; set; }
+
+    public BusinessPagedResultDto() { }
+
+    public BusinessPagedResultDto(long totalCount, IReadOnlyList<BusinessDto> items, bool hasRestrictedScope)
+        : base(totalCount, items)
+    {
+        HasRestrictedScope = hasRestrictedScope;
+    }
+}
+
 public interface IBusinessAppService : IApplicationService
 {
-    Task<PagedResultDto<BusinessDto>> GetListAsync(BusinessListInput input);
+    Task<BusinessPagedResultDto> GetListAsync(BusinessListInput input);
     Task<BusinessDto> GetAsync(Guid id);
     Task<BusinessCodeSuggestionDto> GetNextCodeAsync(Guid organizationId);
     Task<BusinessDto> CreateAsync(UpsertBusinessDto input);
