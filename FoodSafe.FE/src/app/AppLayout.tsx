@@ -9,7 +9,6 @@ import {
   Breadcrumb,
   Drawer,
   Button,
-  Input,
   type MenuProps,
 } from "antd";
 import {
@@ -17,10 +16,10 @@ import {
   LogoutOutlined,
   KeyOutlined,
   BellOutlined,
-  SearchOutlined,
   MenuOutlined,
   DownOutlined,
 } from "@ant-design/icons";
+import { GlobalSearchBox } from "@/features/global-search/components/GlobalSearchBox";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/api/authMutations";
 import { ROUTE_PERMISSIONS } from "./routePermissions";
@@ -458,13 +457,7 @@ export function AppLayout() {
           </div>
 
           <div className="app-header-actions">
-            <Input
-              className="app-header-search"
-              allowClear
-              prefix={<SearchOutlined style={{ color: brand.faint }} />}
-              placeholder="Tìm nhanh hồ sơ, cơ sở..."
-              aria-label="Tìm nhanh hồ sơ, cơ sở"
-            />
+            <GlobalSearchBox />
 
             <Badge dot color={brand.red} offset={[-2, 3]}>
               <Button
