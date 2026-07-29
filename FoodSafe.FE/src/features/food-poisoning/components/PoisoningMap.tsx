@@ -1,12 +1,18 @@
 import { useMemo } from "react";
-import { CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
+import {
+  CircleMarker,
+  MapContainer,
+  Popup,
+  TileLayer,
+  Tooltip,
+} from "react-leaflet";
 import { Empty, Tag } from "antd";
 import dayjs from "dayjs";
 import type {
   FoodPoisoningCase,
   FoodPoisoningIncident,
 } from "../types/foodPoisoning.types";
-import { hasValidMapCoordinates } from "./poisoningMapCoordinates";
+import { groupRecordsByCoordinates } from "./poisoningMapCoordinates";
 import {
   POISONING_CASE_STATUS_CONFIG,
   POISONING_INCIDENT_STATUS_CONFIG,
@@ -23,17 +29,23 @@ interface PoisoningMapProps {
 const QUANG_NINH_CENTER: [number, number] = [21.0064, 107.2925];
 
 export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
-  const mappedCases = useMemo(
-    () => cases.filter(hasValidMapCoordinates),
-    [cases],
-  );
+  const caseGroups = useMemo(() => groupRecordsByCoordinates(cases), [cases]);
 
-  const mappedIncidents = useMemo(
-    () => incidents.filter(hasValidMapCoordinates),
+  const incidentGroups = useMemo(
+    () => groupRecordsByCoordinates(incidents),
     [incidents],
   );
 
-  if (mappedCases.length === 0 && mappedIncidents.length === 0) {
+  const mappedCaseCount = caseGroups.reduce(
+    (total, group) => total + group.items.length,
+    0,
+  );
+  const mappedIncidentCount = incidentGroups.reduce(
+    (total, group) => total + group.items.length,
+    0,
+  );
+
+  if (mappedCaseCount === 0 && mappedIncidentCount === 0) {
     return (
       <Empty
         description="Không có ca/vụ ngộ độc nào có tọa độ trên bản đồ"
@@ -57,7 +69,7 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
               verticalAlign: "middle",
             }}
           />
-          Ca nhỏ lẻ ({mappedCases.length})
+          Ca nhỏ lẻ ({mappedCaseCount})
         </span>
         <span>
           <span
@@ -71,7 +83,7 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
               verticalAlign: "middle",
             }}
           />
-          Vụ ngộ độc ({mappedIncidents.length})
+          Vụ ngộ độc ({mappedIncidentCount})
         </span>
       </div>
       <MapContainer
@@ -83,64 +95,91 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {mappedCases.map((c) => (
+        {caseGroups.map((group) => (
           <CircleMarker
-            key={`case-${c.id}`}
-            center={[c.locationLatitude, c.locationLongitude]}
-            radius={7}
+            key={`case-${group.key}`}
+            center={[group.latitude, group.longitude]}
+            radius={group.items.length > 1 ? 10 : 7}
             pathOptions={{
               color: "#faad14",
               fillColor: "#faad14",
               fillOpacity: 0.7,
             }}
           >
+            {group.items.length > 1 && (
+              <Tooltip permanent direction="top" offset={[0, -8]}>
+                {group.items.length} ca
+              </Tooltip>
+            )}
             <Popup>
-              <div style={{ minWidth: 180 }}>
-                <strong>Ca: {c.caseCode}</strong>
-                {c.victimName && <div>Nạn nhân: {c.victimName}</div>}
-                {c.locationDescription && <div>{c.locationDescription}</div>}
-                {c.occurrenceDate && (
-                  <div>
-                    Ngày xảy ra: {dayjs(c.occurrenceDate).format("DD/MM/YYYY")}
-                  </div>
+              <div style={{ minWidth: 220, maxHeight: 320, overflowY: "auto" }}>
+                {group.items.length > 1 && (
+                  <strong>{group.items.length} ca tại cùng vị trí</strong>
                 )}
-                {c.suspectedFood && (
-                  <div>Thực phẩm nghi ngờ: {c.suspectedFood}</div>
-                )}
-                {c.treatmentResult && (
-                  <div>
-                    Kết quả:{" "}
-                    <Tag
-                      color={TREATMENT_RESULT_CONFIG[c.treatmentResult]?.color}
-                    >
-                      {TREATMENT_RESULT_CONFIG[c.treatmentResult]?.label}
-                    </Tag>
-                  </div>
-                )}
-                <div style={{ marginTop: 4 }}>
-                  <Tag
-                    color={
-                      POISONING_CASE_STATUS_CONFIG[
-                        c.status as PoisoningCaseStatus
-                      ]?.color
-                    }
+                {group.items.map((c, index) => (
+                  <div
+                    key={c.id}
+                    style={{
+                      marginTop: group.items.length > 1 ? 8 : 0,
+                      paddingTop: index > 0 ? 8 : 0,
+                      borderTop: index > 0 ? "1px solid #f0f0f0" : undefined,
+                    }}
                   >
-                    {
-                      POISONING_CASE_STATUS_CONFIG[
-                        c.status as PoisoningCaseStatus
-                      ]?.label
-                    }
-                  </Tag>
-                </div>
+                    <strong>Ca: {c.caseCode}</strong>
+                    {c.victimName && <div>Nạn nhân: {c.victimName}</div>}
+                    {c.locationDescription && (
+                      <div>{c.locationDescription}</div>
+                    )}
+                    {c.occurrenceDate && (
+                      <div>
+                        Ngày xảy ra:{" "}
+                        {dayjs(c.occurrenceDate).format("DD/MM/YYYY")}
+                      </div>
+                    )}
+                    {c.suspectedFood && (
+                      <div>Thực phẩm nghi ngờ: {c.suspectedFood}</div>
+                    )}
+                    {c.treatmentResult && (
+                      <div>
+                        Kết quả:{" "}
+                        <Tag
+                          color={
+                            TREATMENT_RESULT_CONFIG[c.treatmentResult]?.color
+                          }
+                        >
+                          {TREATMENT_RESULT_CONFIG[c.treatmentResult]?.label}
+                        </Tag>
+                      </div>
+                    )}
+                    <div style={{ marginTop: 4 }}>
+                      <Tag
+                        color={
+                          POISONING_CASE_STATUS_CONFIG[
+                            c.status as PoisoningCaseStatus
+                          ]?.color
+                        }
+                      >
+                        {
+                          POISONING_CASE_STATUS_CONFIG[
+                            c.status as PoisoningCaseStatus
+                          ]?.label
+                        }
+                      </Tag>
+                    </div>
+                  </div>
+                ))}
               </div>
             </Popup>
           </CircleMarker>
         ))}
-        {mappedIncidents.map((i) => (
+        {incidentGroups.map((group) => (
           <CircleMarker
-            key={`incident-${i.id}`}
-            center={[i.locationLatitude, i.locationLongitude]}
-            radius={Math.min(6 + i.affectedCount, 20)}
+            key={`incident-${group.key}`}
+            center={[group.latitude, group.longitude]}
+            radius={Math.min(
+              6 + Math.max(...group.items.map((item) => item.affectedCount)),
+              20,
+            )}
             pathOptions={{
               color: "#ff4d4f",
               fillColor: "#ff4d4f",
@@ -148,41 +187,63 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
               weight: 2,
             }}
           >
+            {group.items.length > 1 && (
+              <Tooltip permanent direction="top" offset={[0, -8]}>
+                {group.items.length} vụ
+              </Tooltip>
+            )}
             <Popup>
-              <div style={{ minWidth: 200 }}>
-                <strong>Vụ: {i.incidentCode}</strong>
-                {i.locationDescription && <div>{i.locationDescription}</div>}
-                {i.occurrenceDate && (
-                  <div>
-                    Ngày xảy ra: {dayjs(i.occurrenceDate).format("DD/MM/YYYY")}
-                  </div>
+              <div style={{ minWidth: 220, maxHeight: 320, overflowY: "auto" }}>
+                {group.items.length > 1 && (
+                  <strong>{group.items.length} vụ tại cùng vị trí</strong>
                 )}
-                <div>Tiếp xúc: {i.exposedCount}</div>
-                <div>Bị ảnh hưởng: {i.affectedCount}</div>
-                <div>Nhập viện: {i.hospitalizedCount}</div>
-                {i.deathCount > 0 && (
-                  <div style={{ color: "#ff4d4f" }}>
-                    Tử vong: {i.deathCount}
-                  </div>
-                )}
-                {i.suspectedFood && (
-                  <div>Thực phẩm nghi ngờ: {i.suspectedFood}</div>
-                )}
-                <div style={{ marginTop: 4 }}>
-                  <Tag
-                    color={
-                      POISONING_INCIDENT_STATUS_CONFIG[
-                        i.status as PoisoningIncidentStatus
-                      ]?.color
-                    }
+                {group.items.map((i, index) => (
+                  <div
+                    key={i.id}
+                    style={{
+                      marginTop: group.items.length > 1 ? 8 : 0,
+                      paddingTop: index > 0 ? 8 : 0,
+                      borderTop: index > 0 ? "1px solid #f0f0f0" : undefined,
+                    }}
                   >
-                    {
-                      POISONING_INCIDENT_STATUS_CONFIG[
-                        i.status as PoisoningIncidentStatus
-                      ]?.label
-                    }
-                  </Tag>
-                </div>
+                    <strong>Vụ: {i.incidentCode}</strong>
+                    {i.locationDescription && (
+                      <div>{i.locationDescription}</div>
+                    )}
+                    {i.occurrenceDate && (
+                      <div>
+                        Ngày xảy ra:{" "}
+                        {dayjs(i.occurrenceDate).format("DD/MM/YYYY")}
+                      </div>
+                    )}
+                    <div>Tiếp xúc: {i.exposedCount}</div>
+                    <div>Bị ảnh hưởng: {i.affectedCount}</div>
+                    <div>Nhập viện: {i.hospitalizedCount}</div>
+                    {i.deathCount > 0 && (
+                      <div style={{ color: "#ff4d4f" }}>
+                        Tử vong: {i.deathCount}
+                      </div>
+                    )}
+                    {i.suspectedFood && (
+                      <div>Thực phẩm nghi ngờ: {i.suspectedFood}</div>
+                    )}
+                    <div style={{ marginTop: 4 }}>
+                      <Tag
+                        color={
+                          POISONING_INCIDENT_STATUS_CONFIG[
+                            i.status as PoisoningIncidentStatus
+                          ]?.color
+                        }
+                      >
+                        {
+                          POISONING_INCIDENT_STATUS_CONFIG[
+                            i.status as PoisoningIncidentStatus
+                          ]?.label
+                        }
+                      </Tag>
+                    </div>
+                  </div>
+                ))}
               </div>
             </Popup>
           </CircleMarker>
