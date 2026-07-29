@@ -60,20 +60,19 @@ function CertSearchPanel({
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space.Compact style={{ width: "100%", maxWidth: 600 }}>
+      <Space>
         <Input
           value={keyword}
           placeholder={placeholder}
           onChange={(e) => setKeyword(e.target.value)}
           onPressEnter={handleSearch}
           allowClear
+          style={{ width: 350 }}
         />
-        <Input.Search
-          enterButton="Tìm kiếm"
-          loading={isFetching}
-          onSearch={handleSearch}
-        />
-      </Space.Compact>
+        <Button type="primary" loading={isFetching} onClick={handleSearch}>
+          Tìm kiếm
+        </Button>
+      </Space>
 
       {isError && (
         <Alert

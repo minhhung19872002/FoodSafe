@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Empty, Input, Space, Spin, Table, Tag, Typography } from "antd";
+import { Alert, Button, Empty, Input, Space, Spin, Table, Tag, Typography } from "antd";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { PublicShell } from "../components/PublicShell";
 import { usePublicTestingResults } from "../api/publicPortalQueries";
@@ -31,20 +31,19 @@ export default function PublicTestingResultSearchPage() {
       </Typography.Title>
 
       <Space direction="vertical" style={{ width: "100%" }} size="middle">
-        <Space.Compact style={{ width: "100%", maxWidth: 600 }}>
+        <Space>
           <Input
             value={keyword}
             placeholder="Tên hoặc mã mẫu kiểm nghiệm..."
             onChange={(e) => setKeyword(e.target.value)}
             onPressEnter={handleSearch}
             allowClear
+            style={{ width: 350 }}
           />
-          <Input.Search
-            enterButton="Tìm kiếm"
-            loading={isFetching}
-            onSearch={handleSearch}
-          />
-        </Space.Compact>
+          <Button type="primary" loading={isFetching} onClick={handleSearch}>
+            Tìm kiếm
+          </Button>
+        </Space>
 
         {isError && (
           <Alert

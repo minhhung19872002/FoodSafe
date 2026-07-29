@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Alert,
+  Button,
   Empty,
   Input,
   Space,
@@ -66,20 +67,19 @@ function BusinessSearchTab() {
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space.Compact style={{ width: "100%", maxWidth: 600 }}>
+      <Space>
         <Input
           value={keyword}
           placeholder="Tên hoặc mã cơ sở..."
           onChange={(e) => setKeyword(e.target.value)}
           onPressEnter={handleSearch}
           allowClear
+          style={{ width: 350 }}
         />
-        <Input.Search
-          enterButton="Tìm kiếm"
-          loading={isFetching || isMapFetching}
-          onSearch={handleSearch}
-        />
-      </Space.Compact>
+        <Button type="primary" loading={isFetching || isMapFetching} onClick={handleSearch}>
+          Tìm kiếm
+        </Button>
+      </Space>
 
       {isError && (
         <Alert
@@ -199,20 +199,19 @@ function ProductSearchTab() {
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space.Compact style={{ width: "100%", maxWidth: 600 }}>
+      <Space>
         <Input
           value={keyword}
           placeholder="Tên hoặc mã sản phẩm..."
           onChange={(e) => setKeyword(e.target.value)}
           onPressEnter={handleSearch}
           allowClear
+          style={{ width: 350 }}
         />
-        <Input.Search
-          enterButton="Tìm kiếm"
-          loading={isFetching}
-          onSearch={handleSearch}
-        />
-      </Space.Compact>
+        <Button type="primary" loading={isFetching} onClick={handleSearch}>
+          Tìm kiếm
+        </Button>
+      </Space>
 
       {isError && (
         <Alert
@@ -278,20 +277,19 @@ function TestingResultSearchTab() {
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space.Compact style={{ width: "100%", maxWidth: 600 }}>
+      <Space>
         <Input
           value={keyword}
           placeholder="Tên hoặc mã mẫu kiểm nghiệm..."
           onChange={(e) => setKeyword(e.target.value)}
           onPressEnter={handleSearch}
           allowClear
+          style={{ width: 350 }}
         />
-        <Input.Search
-          enterButton="Tìm kiếm"
-          loading={isFetching}
-          onSearch={handleSearch}
-        />
-      </Space.Compact>
+        <Button type="primary" loading={isFetching} onClick={handleSearch}>
+          Tìm kiếm
+        </Button>
+      </Space>
 
       {isError && (
         <Alert
@@ -388,20 +386,19 @@ function InspectionResultSearchTab() {
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space.Compact style={{ width: "100%", maxWidth: 600 }}>
+      <Space>
         <Input
           value={keyword}
           placeholder="Tên cơ sở hoặc địa chỉ..."
           onChange={(e) => setKeyword(e.target.value)}
           onPressEnter={handleSearch}
           allowClear
+          style={{ width: 350 }}
         />
-        <Input.Search
-          enterButton="Tìm kiếm"
-          loading={isFetching}
-          onSearch={handleSearch}
-        />
-      </Space.Compact>
+        <Button type="primary" loading={isFetching} onClick={handleSearch}>
+          Tìm kiếm
+        </Button>
+      </Space>
 
       {isError && (
         <Alert
