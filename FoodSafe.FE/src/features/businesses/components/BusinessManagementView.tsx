@@ -220,8 +220,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               ariaLabel: `Sửa ${business.name}`,
               icon: <EditOutlined />,
               hidden:
-                !props.permissions.editBusiness ||
-                business.canEdit === false,
+                !props.permissions.editBusiness || business.canEdit === false,
               onClick: () => props.onEditBusiness(business),
             },
             {
@@ -230,8 +229,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               ariaLabel: `Người phụ trách ${business.name}`,
               icon: <TeamOutlined />,
               hidden:
-                !props.permissions.editBusiness ||
-                business.canEdit === false,
+                !props.permissions.editBusiness || business.canEdit === false,
               onClick: () => props.onManageHandlers(business),
             },
             {
