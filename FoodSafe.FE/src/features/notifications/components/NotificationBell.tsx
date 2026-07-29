@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Badge, Button, Popover } from "antd";
 import { BellOutlined } from "@ant-design/icons";
 import { useUnreadCount } from "../api/notificationQueries";
+import { useNotificationHub } from "../hooks/useNotificationHub";
 import { NotificationPopover } from "./NotificationPopover";
 import { brand } from "@/theme/themeConfig";
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const { data } = useUnreadCount();
+  useNotificationHub();
   const unreadCount = data?.count ?? 0;
 
   return (

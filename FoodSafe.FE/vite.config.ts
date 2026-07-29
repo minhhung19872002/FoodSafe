@@ -17,6 +17,14 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/signalr': {
+        target: 'http://localhost:5019',
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+        timeout: 0,
+        proxyTimeout: 0,
+      },
     },
   },
   test: {

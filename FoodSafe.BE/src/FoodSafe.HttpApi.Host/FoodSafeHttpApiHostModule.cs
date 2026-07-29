@@ -41,6 +41,9 @@ using Volo.Abp.Swashbuckle;
 using Volo.Abp.Timing;
 using Volo.Abp.TextTemplating;
 using Volo.Abp.Caching.StackExchangeRedis;
+using FoodSafe.Hubs;
+using FoodSafe.Notifications;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Volo.Abp.UI.Navigation.Urls;
 
 namespace FoodSafe;
@@ -118,6 +121,17 @@ public class FoodSafeHttpApiHostModule : AbpModule
         // IHttpClientFactory is needed by MinioReadinessHealthCheck; register it
         // explicitly rather than relying on another feature's typed client.
         context.Services.AddHttpClient();
+
+        context.Services.AddSignalR(options =>
+        {
+            options.EnableDetailedErrors = hostingEnvironment.IsDevelopment();
+            options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+            options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+        });
+        context.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, AbpUserIdProvider>();
+        context.Services.Replace(
+            ServiceDescriptor.Transient<INotificationRealTimeNotifier,
+                SignalRNotificationRealTimeNotifier>());
 
         // SSRF-guarded outbound client for partner data sharing (FUNC-INT-004).
         // The primary handler blocks private/reserved IPs at connect time (B-5).
@@ -541,7 +555,8 @@ public class FoodSafeHttpApiHostModule : AbpModule
                 var previousRedirectToLogin = options.Events.OnRedirectToLogin;
                 options.Events.OnRedirectToLogin = redirectContext =>
                 {
-                    if (redirectContext.Request.Path.StartsWithSegments("/api"))
+                    if (redirectContext.Request.Path.StartsWithSegments("/api")
+                        || redirectContext.Request.Path.StartsWithSegments("/signalr"))
                     {
                         redirectContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         return Task.CompletedTask;
@@ -552,7 +567,8 @@ public class FoodSafeHttpApiHostModule : AbpModule
                 var previousRedirectToAccessDenied = options.Events.OnRedirectToAccessDenied;
                 options.Events.OnRedirectToAccessDenied = redirectContext =>
                 {
-                    if (redirectContext.Request.Path.StartsWithSegments("/api"))
+                    if (redirectContext.Request.Path.StartsWithSegments("/api")
+                        || redirectContext.Request.Path.StartsWithSegments("/signalr"))
                     {
                         redirectContext.Response.StatusCode = StatusCodes.Status403Forbidden;
                         return Task.CompletedTask;
@@ -791,6 +807,8 @@ public class FoodSafeHttpApiHostModule : AbpModule
         });
         app.UseConfiguredEndpoints(endpoints =>
         {
+            endpoints.MapHub<NotificationHub>("/signalr/notifications")
+                .RequireAuthorization();
             // Liveness: is the process up and serving? No dependency checks, so a
             // transient database/MinIO outage never makes the process look dead
             // (which would trigger a needless restart under an orchestrator).
