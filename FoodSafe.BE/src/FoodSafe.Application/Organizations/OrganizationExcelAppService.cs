@@ -80,7 +80,6 @@ public class OrganizationExcelAppService :
             sheet.Cell(rowNumber, 3).Value = item.Level switch
             {
                 OrganizationLevel.Province => "Tỉnh",
-                OrganizationLevel.District => "Huyện/TP",
                 OrganizationLevel.Commune => "Xã/Phường",
                 _ => item.Level.ToString()
             };

@@ -66,7 +66,6 @@ export interface ReportStatisticsDto {
   businessesByType: BusinessBreakdownRow[];
   businessesByRegion: BusinessBreakdownRow[];
   businessesByProvince: BusinessBreakdownRow[];
-  businessesByDistrict: BusinessBreakdownRow[];
   businessesByOrganization: BusinessBreakdownRow[];
 }
 

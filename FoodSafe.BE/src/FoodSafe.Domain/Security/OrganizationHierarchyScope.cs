@@ -4,7 +4,6 @@ public sealed record OrganizationScopeNode(
     Guid Id,
     Guid? ParentId,
     Guid? ProvinceId,
-    Guid? DistrictId,
     Guid? CommuneId);
 
 public static class OrganizationHierarchyScope

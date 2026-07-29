@@ -12,7 +12,7 @@ import {
   Space,
 } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import { useCommunes, useDistricts, useProvinces } from "@/hooks/useGeography";
+import { useCommunesByProvince, useProvinces } from "@/hooks/useGeography";
 import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
 import type {
   AdminRole,
@@ -52,8 +52,7 @@ function ScopeEditor({ value, onChange }: ScopeEditorProps) {
     canDelete: false,
   };
   const provinces = useProvinces();
-  const districts = useDistricts(scope.provinceId ?? "");
-  const communes = useCommunes(scope.districtId ?? "");
+  const communes = useCommunesByProvince(scope.provinceId ?? "");
   const update = (changes: Partial<GeographyScopeInput>) =>
     onChange?.({ ...scope, ...changes });
 
@@ -71,23 +70,7 @@ function ScopeEditor({ value, onChange }: ScopeEditorProps) {
           }))}
           style={{ width: 180 }}
           onChange={(provinceId) =>
-            update({ provinceId, districtId: undefined, communeId: undefined })
-          }
-        />
-        <Select
-          aria-label="Quận, huyện"
-          allowClear
-          placeholder="Quận/huyện"
-          value={scope.districtId}
-          disabled={!scope.provinceId}
-          loading={districts.isLoading}
-          options={districts.data?.items.map((item) => ({
-            value: item.id,
-            label: item.name,
-          }))}
-          style={{ width: 180 }}
-          onChange={(districtId) =>
-            update({ districtId, communeId: undefined })
+            update({ provinceId, communeId: undefined })
           }
         />
         <Select
@@ -95,7 +78,7 @@ function ScopeEditor({ value, onChange }: ScopeEditorProps) {
           allowClear
           placeholder="Phường/xã"
           value={scope.communeId}
-          disabled={!scope.districtId}
+          disabled={!scope.provinceId}
           loading={communes.isLoading}
           options={communes.data?.items.map((item) => ({
             value: item.id,
@@ -167,7 +150,6 @@ export function UserEditorModal({
             roleNames: user.roleNames,
             geographyScopes: user.geographyScopes.map((scope) => ({
               provinceId: scope.provinceId,
-              districtId: scope.districtId,
               communeId: scope.communeId,
               canView: scope.canView,
               canCreate: scope.canCreate,
@@ -207,11 +189,7 @@ export function UserEditorModal({
             ...values,
             geographyScopes: values.geographyScopes.map((scope) => ({
               ...scope,
-              provinceId:
-                !scope.districtId && !scope.communeId
-                  ? scope.provinceId
-                  : undefined,
-              districtId: !scope.communeId ? scope.districtId : undefined,
+              provinceId: !scope.communeId ? scope.provinceId : undefined,
               communeId: scope.communeId,
             })),
             concurrencyStamp: user?.concurrencyStamp,
@@ -334,7 +312,6 @@ export function UserEditorModal({
                       {
                         validator: (_, scope: GeographyScopeInput) =>
                           scope?.provinceId ||
-                          scope?.districtId ||
                           scope?.communeId
                             ? Promise.resolve()
                             : Promise.reject(new Error("Chọn địa bàn")),

@@ -4,7 +4,7 @@ import { Alert, Form, Input, Modal, Select, Switch } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { ORGANIZATION_LEVEL } from "../types/organization.types";
-import { useCommunes, useDistricts, useProvinces } from "@/hooks/useGeography";
+import { useCommunesByProvince, useProvinces } from "@/hooks/useGeography";
 import type {
   OrganizationDto,
   UpdateOrganizationInput,
@@ -16,10 +16,9 @@ const schema = z
   .object({
     code: z.string().trim().min(1, "Vui lòng nhập mã đơn vị").max(50),
     name: z.string().trim().min(1, "Vui lòng nhập tên đơn vị").max(200),
-    level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    level: z.union([z.literal(1), z.literal(2)]),
     parentId: optionalUuid,
     provinceId: optionalUuid,
-    districtId: optionalUuid,
     communeId: optionalUuid,
     address: z.string().max(1000),
     phone: z.string().max(50),
@@ -35,13 +34,6 @@ const schema = z
         message: "Vui lòng chọn tỉnh/thành phố",
       });
     }
-    if (value.level >= ORGANIZATION_LEVEL.District && !value.districtId) {
-      context.addIssue({
-        code: "custom",
-        path: ["districtId"],
-        message: "Vui lòng chọn huyện/quận",
-      });
-    }
     if (value.level === ORGANIZATION_LEVEL.Commune && !value.communeId) {
       context.addIssue({
         code: "custom",
@@ -53,7 +45,7 @@ const schema = z
       context.addIssue({
         code: "custom",
         path: ["parentId"],
-        message: "Cấp huyện/xã phải chọn đơn vị cha",
+        message: "Cấp xã/phường phải chọn đơn vị cha",
       });
     }
   });
@@ -76,7 +68,6 @@ const defaultValues: FormValues = {
   level: ORGANIZATION_LEVEL.Province,
   parentId: "",
   provinceId: "",
-  districtId: "",
   communeId: "",
   address: "",
   phone: "",
@@ -107,10 +98,8 @@ export function OrganizationCreateModal({
   });
   const level = watch("level");
   const provinceId = watch("provinceId");
-  const districtId = watch("districtId");
   const provinces = useProvinces();
-  const districts = useDistricts(provinceId);
-  const communes = useCommunes(districtId);
+  const communes = useCommunesByProvince(provinceId ?? "");
 
   useEffect(() => {
     if (!open) {
@@ -125,7 +114,6 @@ export function OrganizationCreateModal({
             level: organization.level,
             parentId: organization.parentId ?? "",
             provinceId: organization.provinceId ?? "",
-            districtId: organization.districtId ?? "",
             communeId: organization.communeId ?? "",
             address: organization.address ?? "",
             phone: organization.phone ?? "",
@@ -148,7 +136,6 @@ export function OrganizationCreateModal({
       ...values,
       parentId: nullable(values.parentId),
       provinceId: nullable(values.provinceId),
-      districtId: nullable(values.districtId),
       communeId: nullable(values.communeId),
       address: nullable(values.address),
       phone: nullable(values.phone),
@@ -207,8 +194,7 @@ export function OrganizationCreateModal({
                 {...field}
                 options={[
                   { value: 1, label: "Tỉnh" },
-                  { value: 2, label: "Huyện/Thành phố" },
-                  { value: 3, label: "Xã/Phường" },
+                  { value: 2, label: "Xã/Phường" },
                 ]}
               />
             </Form.Item>
@@ -263,43 +249,12 @@ export function OrganizationCreateModal({
                 }))}
                 onChange={(value) => {
                   field.onChange(value);
-                  setValue("districtId", "");
                   setValue("communeId", "");
                 }}
               />
             </Form.Item>
           )}
         />
-        {level >= ORGANIZATION_LEVEL.District && (
-          <Controller
-            name="districtId"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label="Huyện/Quận"
-                required
-                validateStatus={errors.districtId ? "error" : ""}
-                help={errors.districtId?.message}
-              >
-                <Select
-                  {...field}
-                  showSearch
-                  loading={districts.isLoading}
-                  disabled={!provinceId}
-                  optionFilterProp="label"
-                  options={(districts.data?.items ?? []).map((item) => ({
-                    value: item.id,
-                    label: `${item.code} — ${item.name}`,
-                  }))}
-                  onChange={(value) => {
-                    field.onChange(value);
-                    setValue("communeId", "");
-                  }}
-                />
-              </Form.Item>
-            )}
-          />
-        )}
         {level === ORGANIZATION_LEVEL.Commune && (
           <Controller
             name="communeId"
@@ -315,7 +270,7 @@ export function OrganizationCreateModal({
                   {...field}
                   showSearch
                   loading={communes.isLoading}
-                  disabled={!districtId}
+                  disabled={!provinceId}
                   optionFilterProp="label"
                   options={(communes.data?.items ?? []).map((item) => ({
                     value: item.id,

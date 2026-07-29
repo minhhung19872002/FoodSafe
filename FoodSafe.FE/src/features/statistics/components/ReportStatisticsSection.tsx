@@ -205,19 +205,6 @@ export function ReportStatisticsSection({
                       ),
                     },
                     {
-                      key: "district",
-                      label: "Theo địa bàn",
-                      children: (
-                        <Table
-                          rowKey="groupName"
-                          columns={breakdownColumns}
-                          dataSource={data?.businessesByDistrict}
-                          size="small"
-                          pagination={false}
-                        />
-                      ),
-                    },
-                    {
                       key: "organization",
                       label: "Theo đầu mối quản lý",
                       children: (

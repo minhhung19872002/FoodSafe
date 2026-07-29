@@ -184,7 +184,6 @@ public class ProductAppService : ApplicationService, IProductAppService
         var links = await _businessProductGroups.GetQueryableAsync();
         var organizationIds = scope.OrganizationIds;
         var provinceIds = scope.ProvinceIds;
-        var districtIds = scope.DistrictIds;
         var communeIds = scope.CommuneIds;
         var businessIds = scope.BusinessIds ?? new HashSet<Guid>();
         var businessTypeIds = scope.BusinessTypeIds ?? new HashSet<Guid>();
@@ -196,8 +195,6 @@ public class ProductAppService : ApplicationService, IProductAppService
                  businessTypeIds.Contains(x.BusinessTypeId.Value)) ||
                 (x.AddressProvinceId.HasValue &&
                  provinceIds.Contains(x.AddressProvinceId.Value)) ||
-                (x.AddressDistrictId.HasValue &&
-                 districtIds.Contains(x.AddressDistrictId.Value)) ||
                 (x.AddressCommuneId.HasValue &&
                  communeIds.Contains(x.AddressCommuneId.Value)) ||
                 (includeProductGroups && links.Any(link =>

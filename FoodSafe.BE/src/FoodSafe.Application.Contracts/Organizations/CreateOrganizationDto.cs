@@ -28,6 +28,5 @@ public class CreateOrganizationDto
     public string? LeaderName { get; set; }
 
     public Guid? ProvinceId { get; set; }
-    public Guid? DistrictId { get; set; }
     public Guid? CommuneId { get; set; }
 }

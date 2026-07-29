@@ -9,7 +9,7 @@ namespace FoodSafe.Data;
 /// <summary>
 /// Seeds the reference catalogs an operator needs before any facility can be
 /// registered: facility business types, the two-level product-group tree,
-/// facility risk classifications, and the Quảng Ninh district tier.
+/// and facility risk classifications.
 ///
 /// Sources: Nghị định 15/2018/NĐ-CP (phụ lục II–IV — phân công quản lý nhà nước
 /// giữa Bộ Y tế / Bộ NN&amp;PTNT / Bộ Công Thương) for the product groups, and the
@@ -20,13 +20,10 @@ namespace FoodSafe.Data;
 /// </summary>
 public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, ITransientDependency
 {
-    // Shared with E2eTestDataSeedContributor on purpose. Both contributors may
-    // create the province and the Hạ Long district, and contributor execution
-    // order is not guaranteed. Reusing the identifiers keeps whichever runs
-    // second on its existing-record path instead of violating the unique code
-    // index (uq_cat_provinces_code / uq_cat_districts_code).
+    // Shared with E2eTestDataSeedContributor on purpose. Reusing the province
+    // identifier keeps whichever contributor runs second on its existing-record
+    // path instead of violating the unique code index (uq_cat_provinces_code).
     static readonly Guid ProvinceQuangNinhId = Guid.Parse("e2e00000-0000-4000-8001-000000000001");
-    static readonly Guid DistrictHaLongId = Guid.Parse("e2e00000-0000-4000-8002-000000000001");
     static readonly Guid RegionDongBacBoId = Guid.Parse("7e5ccdd0-7eab-4bd4-a10a-e8c39c302002");
 
     // Stable ID for the Quảng Ninh CDC testing centre — used both here and in
@@ -35,7 +32,6 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
 
     private readonly IRepository<Region, Guid> _regions;
     private readonly IRepository<Province, Guid> _provinces;
-    private readonly IRepository<District, Guid> _districts;
     private readonly IRepository<BusinessType, Guid> _businessTypes;
     private readonly IRepository<BusinessClassification, Guid> _classifications;
     private readonly IRepository<ProductGroup, Guid> _productGroups;
@@ -47,7 +43,6 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
     public ReferenceCatalogDataSeedContributor(
         IRepository<Region, Guid> regions,
         IRepository<Province, Guid> provinces,
-        IRepository<District, Guid> districts,
         IRepository<BusinessType, Guid> businessTypes,
         IRepository<BusinessClassification, Guid> classifications,
         IRepository<ProductGroup, Guid> productGroups,
@@ -58,7 +53,6 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
     {
         _regions = regions;
         _provinces = provinces;
-        _districts = districts;
         _businessTypes = businessTypes;
         _classifications = classifications;
         _productGroups = productGroups;
@@ -73,7 +67,6 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
         await SeedBusinessTypesAsync();
         await SeedBusinessClassificationsAsync();
         await SeedProductGroupsAsync();
-        await SeedQuangNinhDistrictsAsync();
         await SeedAdvertisementTypesAsync();
         await SeedTestingCenterAsync();
         await SeedTestingServicesAsync();
@@ -265,43 +258,6 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
         }
     }
 
-    private async Task SeedQuangNinhDistrictsAsync()
-    {
-        await EnsureQuangNinhProvinceAsync();
-
-        // General Statistics Office district codes for province 22 (Quảng Ninh).
-        // Hoành Bồ (204) is intentionally absent: it was merged into Hạ Long in 2020.
-        var seeds = new (string Code, string Name, DistrictType Type, int SortOrder)[]
-        {
-            ("193", "Thành phố Hạ Long", DistrictType.ProvincialCity, 1),
-            ("194", "Thành phố Móng Cái", DistrictType.ProvincialCity, 2),
-            ("195", "Thành phố Cẩm Phả", DistrictType.ProvincialCity, 3),
-            ("196", "Thành phố Uông Bí", DistrictType.ProvincialCity, 4),
-            ("205", "Thành phố Đông Triều", DistrictType.ProvincialCity, 5),
-            ("206", "Thị xã Quảng Yên", DistrictType.Town, 6),
-            ("198", "Huyện Bình Liêu", DistrictType.RuralDistrict, 7),
-            ("199", "Huyện Tiên Yên", DistrictType.RuralDistrict, 8),
-            ("200", "Huyện Đầm Hà", DistrictType.RuralDistrict, 9),
-            ("201", "Huyện Hải Hà", DistrictType.RuralDistrict, 10),
-            ("202", "Huyện Ba Chẽ", DistrictType.RuralDistrict, 11),
-            ("203", "Huyện Vân Đồn", DistrictType.RuralDistrict, 12),
-            ("207", "Huyện Cô Tô", DistrictType.RuralDistrict, 13)
-        };
-
-        foreach (var seed in seeds)
-        {
-            if (await _districts.AnyAsync(x => x.Code == seed.Code))
-            {
-                continue;
-            }
-
-            var id = seed.Code == "193" ? DistrictHaLongId : DeterministicId(0x308, seed.SortOrder);
-            var entity = District.Create(id, seed.Code, seed.Name, ProvinceQuangNinhId, seed.Type, seed.SortOrder);
-            entity.CreationTime = _clock.Now;
-            await _districts.InsertAsync(entity, autoSave: true);
-        }
-    }
-
     private async Task EnsureQuangNinhProvinceAsync()
     {
         if (await _provinces.AnyAsync(x => x.Code == "22"))
@@ -364,7 +320,7 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
             TestingCenterCdcId, Code,
             "Trung tâm Kiểm soát bệnh tật tỉnh Quảng Ninh - Khoa Xét nghiệm",
             "651 Lê Thánh Tông, phường Bạch Đằng, TP Hạ Long",
-            ProvinceQuangNinhId, DistrictHaLongId, communeId: null,
+            ProvinceQuangNinhId, communeId: null,
             contactPerson: "Phụ trách khoa Xét nghiệm",
             phone: "0203 3825 447",
             email: "kiemnghiem@quangninhcdc.vn",

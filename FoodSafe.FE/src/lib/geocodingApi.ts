@@ -3,7 +3,6 @@ import { api } from "@/lib/axios";
 export interface GeocodeAddressInput {
   street?: string;
   provinceId?: string;
-  districtId?: string;
   communeId?: string;
 }
 

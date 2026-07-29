@@ -1,9 +1,8 @@
 import { Col, Form, Row, Select } from "antd";
-import { useProvinces, useDistricts, useCommunes } from "@/hooks/useGeography";
+import { useProvinces, useCommunesByProvince } from "@/hooks/useGeography";
 
 export interface AddressLocation {
   provinceId: string;
-  districtId: string;
   communeId: string;
 }
 
@@ -15,7 +14,6 @@ interface AddressLocationPickerProps {
 
 const EMPTY_LOCATION: AddressLocation = {
   provinceId: "",
-  districtId: "",
   communeId: "",
 };
 
@@ -29,12 +27,11 @@ export function AddressLocationPicker({
   readOnly = false,
 }: AddressLocationPickerProps) {
   const provinces = useProvinces(true);
-  const districts = useDistricts(value.provinceId, true);
-  const communes = useCommunes(value.districtId, true);
+  const communes = useCommunesByProvince(value.provinceId, true);
 
   return (
     <Row gutter={16}>
-      <Col span={8}>
+      <Col span={12}>
         <Form.Item label="Tỉnh/Thành phố">
           <Select
             showSearch
@@ -51,7 +48,6 @@ export function AddressLocationPicker({
               onChange({
                 ...value,
                 provinceId: v ?? "",
-                districtId: "",
                 communeId: "",
               });
             }}
@@ -59,34 +55,14 @@ export function AddressLocationPicker({
           />
         </Form.Item>
       </Col>
-      <Col span={8}>
-        <Form.Item label="Huyện/Quận">
-          <Select
-            showSearch
-            optionFilterProp="label"
-            placeholder="Chọn huyện/quận"
-            value={value.districtId || undefined}
-            disabled={readOnly || !value.provinceId}
-            loading={districts.isLoading}
-            options={districts.data?.items.map((d) => ({
-              value: d.id,
-              label: d.name,
-            }))}
-            onChange={(v) => {
-              onChange({ ...value, districtId: v ?? "", communeId: "" });
-            }}
-            allowClear
-          />
-        </Form.Item>
-      </Col>
-      <Col span={8}>
+      <Col span={12}>
         <Form.Item label="Xã/Phường">
           <Select
             showSearch
             optionFilterProp="label"
             placeholder="Chọn xã/phường"
             value={value.communeId || undefined}
-            disabled={readOnly || !value.districtId}
+            disabled={readOnly || !value.provinceId}
             loading={communes.isLoading}
             options={communes.data?.items.map((c) => ({
               value: c.id,

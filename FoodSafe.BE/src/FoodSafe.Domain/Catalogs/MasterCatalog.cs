@@ -122,7 +122,6 @@ public sealed class TestingCenter : MasterCatalog
 {
     public string Address { get; private set; } = string.Empty;
     public Guid ProvinceId { get; private set; }
-    public Guid? DistrictId { get; private set; }
     public Guid? CommuneId { get; private set; }
     public string? ContactPerson { get; private set; }
     public string? Phone { get; private set; }
@@ -133,23 +132,22 @@ public sealed class TestingCenter : MasterCatalog
 
     private TestingCenter() { }
     public static TestingCenter Create(Guid id, string code, string name, string address, Guid provinceId,
-        Guid? districtId, Guid? communeId, string? contactPerson, string? phone, string? email,
+        Guid? communeId, string? contactPerson, string? phone, string? email,
         string accreditationNumber, string accreditationScope, DateTime accreditationExpiresAt,
         string? description, int sortOrder, bool isActive)
     {
         var item = new TestingCenter { Id = id };
-        item.Update(code, name, address, provinceId, districtId, communeId, contactPerson, phone, email,
+        item.Update(code, name, address, provinceId, communeId, contactPerson, phone, email,
             accreditationNumber, accreditationScope, accreditationExpiresAt, description, sortOrder, isActive);
         return item;
     }
-    public void Update(string code, string name, string address, Guid provinceId, Guid? districtId,
+    public void Update(string code, string name, string address, Guid provinceId,
         Guid? communeId, string? contactPerson, string? phone, string? email, string accreditationNumber,
         string accreditationScope, DateTime accreditationExpiresAt, string? description, int sortOrder, bool isActive)
     {
         SetCommon(code, name, description, sortOrder, isActive);
         Address = Check.NotNullOrWhiteSpace(address, nameof(address), 500).Trim();
         ProvinceId = provinceId;
-        DistrictId = districtId;
         CommuneId = communeId;
         ContactPerson = Normalize(contactPerson);
         Phone = Normalize(phone);

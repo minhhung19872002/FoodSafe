@@ -49,6 +49,5 @@ public class ReportStatisticsDto
     public List<BusinessBreakdownRow> BusinessesByType { get; set; } = [];
     public List<BusinessBreakdownRow> BusinessesByRegion { get; set; } = [];
     public List<BusinessBreakdownRow> BusinessesByProvince { get; set; } = [];
-    public List<BusinessBreakdownRow> BusinessesByDistrict { get; set; } = [];
     public List<BusinessBreakdownRow> BusinessesByOrganization { get; set; } = [];
 }

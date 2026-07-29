@@ -19,7 +19,6 @@ const catalogSchema = z.object({
   riskLevel: z.number().int().min(1).max(3).optional(),
   address: optionalText,
   provinceId: optionalText,
-  districtId: optionalText,
   communeId: optionalText,
   contactPerson: optionalText,
   phone: optionalText,

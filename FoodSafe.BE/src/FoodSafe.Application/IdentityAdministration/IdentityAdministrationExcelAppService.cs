@@ -89,7 +89,6 @@ public class IdentityAdministrationExcelAppService :
             sheet.Cell(rowNumber, 6).Value = item.OrganizationLevel switch
             {
                 OrganizationLevel.Province => "Tỉnh",
-                OrganizationLevel.District => "Huyện/TP",
                 OrganizationLevel.Commune => "Xã/Phường",
                 _ => string.Empty
             };

@@ -59,7 +59,7 @@ public sealed class FoodPoisoningIncidentTests
     public void SetLocation_Works_When_Draft()
     {
         var i = CreateDraft();
-        i.SetLocation("Market", null, null, null, 21.0, 107.0);
+        i.SetLocation("Market", null, null, 21.0, 107.0);
         i.LocationDescription.ShouldBe("Market");
         i.LocationLatitude.ShouldBe(21.0);
     }

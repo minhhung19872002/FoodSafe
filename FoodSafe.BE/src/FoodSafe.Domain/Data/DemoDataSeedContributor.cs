@@ -28,13 +28,10 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
 {
     // --- Fixed GUIDs referencing E2E base data ---
     static readonly Guid ProvinceId = E2eTestDataSeedContributor.ProvinceQuangNinhId;
-    static readonly Guid DistrictId = E2eTestDataSeedContributor.DistrictHaLongId;
     static readonly Guid CommuneId = E2eTestDataSeedContributor.CommuneBachDangId;
     static readonly Guid OrgProvinceId = E2eTestDataSeedContributor.OrgProvinceId;
-    static readonly Guid OrgDistrictId = E2eTestDataSeedContributor.OrgDistrictId;
     static readonly Guid OrgCommuneId = E2eTestDataSeedContributor.OrgCommuneId;
     static readonly Guid ProvinceAdminId = E2eTestDataSeedContributor.UserProvinceAdminId;
-    static readonly Guid DistrictStaffId = E2eTestDataSeedContributor.UserDistrictStaffId;
     static readonly Guid CommuneStaffId = E2eTestDataSeedContributor.UserReadonlyId;
 
     // --- Fixed GUIDs seeded by MasterCatalogDataSeedContributor ---
@@ -161,7 +158,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             DemoTestingCenterId, "TTKN-QN",
             "Trung tâm Kiểm soát bệnh tật tỉnh Quảng Ninh - Khoa Xét nghiệm",
             "651 Lê Thánh Tông, phường Bạch Đằng, TP Hạ Long",
-            ProvinceId, DistrictId, CommuneId,
+            ProvinceId, CommuneId,
             "Nguyễn Thị Lan", "0203 3825 447", "ttkn@quangninhcdc.vn",
             "VILAS 675", "Kiểm nghiệm vi sinh, hóa lý thực phẩm và nước",
             now.AddYears(2), null, 1, true));
@@ -213,12 +210,12 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "5700123456", "Nguyễn Văn Hải", "0203 3826 111",
             "Số 15 đường Trần Quốc Nghiễn", 20.9512, 107.0812,
             now.AddYears(-8), 120, true, false);
-        await SeedBusinessAsync(2, OrgDistrictId, "CS-HL-0002",
+        await SeedBusinessAsync(2, OrgProvinceId, "CS-HL-0002",
             "Cơ sở sản xuất Chả mực Bà Tỵ", TypeManufacturingId, ClassMediumRiskId,
             "5700234567", "Phạm Thị Tỵ", "0912 345 678",
             "Số 82 phố Giếng Đồn", 20.9534, 107.0768,
             now.AddYears(-12), 12, true, false);
-        await SeedBusinessAsync(3, OrgDistrictId, "CS-HL-0003",
+        await SeedBusinessAsync(3, OrgProvinceId, "CS-HL-0003",
             "Nhà hàng Hải sản Biển Xanh", TypeFoodServiceId, ClassMediumRiskId,
             "5700345678", "Trần Văn Long", "0987 654 321",
             "Số 6 đường Hạ Long, khu du lịch Bãi Cháy", 20.9581, 107.0453,
@@ -239,7 +236,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 BusinessId(6), OrgCommuneId, "CS-BD-0006",
                 "Cửa hàng thực phẩm Minh Phương", TypeTradingId, ClassLowRiskId,
                 null, "Vũ Minh Phương", null, "0905 112 233", null, null,
-                "Số 144 đường Lê Thánh Tông", ProvinceId, DistrictId, CommuneId,
+                "Số 144 đường Lê Thánh Tông", ProvinceId, CommuneId,
                 20.9521, 107.0879, now.AddYears(-2), 3, null);
             business.SetStatus(BusinessStatus.Suspended,
                 "Vi phạm điều kiện bảo quản thực phẩm, chờ khắc phục",
@@ -251,7 +248,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "5700567890", "Đỗ Hồng Hạnh", "0203 3835 666",
             "Lô B4, KCN Cái Lân", 20.9701, 107.0335,
             now.AddYears(-10), 60, true, false);
-        await SeedBusinessAsync(8, OrgDistrictId, "CS-HL-0008",
+        await SeedBusinessAsync(8, OrgProvinceId, "CS-HL-0008",
             "Cơ sở Giò chả Ông Toàn", TypeManufacturingId, ClassMediumRiskId,
             null, "Bùi Văn Toàn", "0936 778 899",
             "Số 12 phố Cao Thắng", 20.9556, 107.0921,
@@ -274,13 +271,13 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "Ruốc tôm Hạ Long", GroupSeafoodId, "Hạ Long Xanh", "200g", 9);
         await SeedProductAsync(13, BusinessId(1), OrgProvinceId,
             "Nước mắm sá sùng", GroupCondimentId, "Hạ Long Xanh", "500ml", 24);
-        await SeedProductAsync(21, BusinessId(2), OrgDistrictId,
+        await SeedProductAsync(21, BusinessId(2), OrgProvinceId,
             "Chả mực Bà Tỵ loại đặc biệt", GroupSeafoodId, "Bà Tỵ", "500g", 3);
-        await SeedProductAsync(22, BusinessId(2), OrgDistrictId,
+        await SeedProductAsync(22, BusinessId(2), OrgProvinceId,
             "Chả cá thu", GroupSeafoodId, "Bà Tỵ", "300g", 3);
-        await SeedProductAsync(31, BusinessId(3), OrgDistrictId,
+        await SeedProductAsync(31, BusinessId(3), OrgProvinceId,
             "Hải sản tươi sống chế biến tại chỗ", GroupSeafoodId, "Biển Xanh", null, null);
-        await SeedProductAsync(32, BusinessId(3), OrgDistrictId,
+        await SeedProductAsync(32, BusinessId(3), OrgProvinceId,
             "Nước chấm hải sản đóng chai", GroupCondimentId, "Biển Xanh", "250ml", 6);
         await SeedProductAsync(41, BusinessId(4), OrgProvinceId,
             "Nước mắm Cái Rồng 40 độ đạm", GroupCondimentId, "Cái Rồng", "500ml", 36);
@@ -298,9 +295,9 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "Bánh trung thu Hồng Hạnh", GroupConfectioneryId, "Hồng Hạnh", "800g", 2);
         await SeedProductAsync(72, BusinessId(7), OrgProvinceId,
             "Kẹo lạc truyền thống", GroupConfectioneryId, "Hồng Hạnh", "250g", 8);
-        await SeedProductAsync(81, BusinessId(8), OrgDistrictId,
+        await SeedProductAsync(81, BusinessId(8), OrgProvinceId,
             "Giò lụa", GroupMeatId, "Ông Toàn", "500g", 1);
-        await SeedProductAsync(82, BusinessId(8), OrgDistrictId,
+        await SeedProductAsync(82, BusinessId(8), OrgProvinceId,
             "Chả quế", GroupMeatId, "Ông Toàn", "500g", 1);
 
         await SeedHandlerAsync(1, BusinessId(1), "Nguyễn Văn Hải",
@@ -328,7 +325,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await SeedSelfDeclarationAsync(2, BusinessId(1), OrgProvinceId, ProductId(13),
             "TCB-QN-2026-0016", "Nước mắm sá sùng",
             "Công ty TNHH Thủy sản Hạ Long", now.AddMonths(-7), now.AddMonths(17), now);
-        await SeedSelfDeclarationAsync(3, BusinessId(2), OrgDistrictId, ProductId(21),
+        await SeedSelfDeclarationAsync(3, BusinessId(2), OrgProvinceId, ProductId(21),
             "TCB-QN-2025-0102", "Chả mực Bà Tỵ loại đặc biệt",
             "Cơ sở sản xuất Chả mực Bà Tỵ", now.AddMonths(-11), now.AddMonths(-1), now);
         await SeedSelfDeclarationAsync(4, BusinessId(4), OrgProvinceId, ProductId(41),
@@ -337,10 +334,10 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await SeedSelfDeclarationAsync(5, BusinessId(7), OrgProvinceId, ProductId(71),
             "TCB-QN-2026-0048", "Bánh trung thu Hồng Hạnh",
             "Công ty TNHH Bánh kẹo Hồng Hạnh", now.AddMonths(-3), now.AddMonths(21), now);
-        await InsertWithOwnerAsync(DemoId(0x8020, 6), OrgDistrictId, "self-declaration", () =>
+        await InsertWithOwnerAsync(DemoId(0x8020, 6), OrgProvinceId, "self-declaration", () =>
         {
             var declaration = SelfDeclaration.Create(
-                DemoId(0x8020, 6), BusinessId(8), OrgDistrictId, ProductId(81),
+                DemoId(0x8020, 6), BusinessId(8), OrgProvinceId, ProductId(81),
                 "TCB-QN-2026-0052", now.AddMonths(-2), "Giò lụa",
                 "Cơ sở Giò chả Ông Toàn", null, null, null, now);
             declaration.Revoke(
@@ -362,7 +359,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await SeedProductRegistrationAsync(4, BusinessId(7), OrgProvinceId, ProductId(72),
             "DKSP-QN-2026-0063", "Kẹo lạc truyền thống",
             now.AddMonths(-4), null, now, null);
-        await SeedProductRegistrationAsync(5, BusinessId(2), OrgDistrictId, ProductId(22),
+        await SeedProductRegistrationAsync(5, BusinessId(2), OrgProvinceId, ProductId(22),
             "DKSP-QN-2026-0021", "Chả cá thu",
             now.AddMonths(-6), now.AddMonths(30), now,
             "Hồ sơ công bố có dấu hiệu giả mạo kết quả kiểm nghiệm");
@@ -370,7 +367,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         // Eligibility certificates — valid, expiring soon, expired, revoked
         await SeedEligibilityCertificateAsync(1, BusinessId(1), OrgProvinceId,
             "GCN-ATTP-QN-2026-015", now.AddMonths(-10), now.AddMonths(26), now, null);
-        await SeedEligibilityCertificateAsync(2, BusinessId(2), OrgDistrictId,
+        await SeedEligibilityCertificateAsync(2, BusinessId(2), OrgProvinceId,
             "GCN-ATTP-HL-2025-078", now.AddMonths(-11), now.AddDays(25), now, null);
         await SeedEligibilityCertificateAsync(3, BusinessId(4), OrgProvinceId,
             "GCN-ATTP-QN-2026-023", now.AddMonths(-8), now.AddMonths(28), now, null);
@@ -378,7 +375,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "GCN-ATTP-BD-2025-011", now.AddMonths(-12), now.AddDays(-20), now, null);
         await SeedEligibilityCertificateAsync(5, BusinessId(7), OrgProvinceId,
             "GCN-ATTP-QN-2026-031", now.AddMonths(-6), now.AddMonths(30), now, null);
-        await SeedEligibilityCertificateAsync(6, BusinessId(8), OrgDistrictId,
+        await SeedEligibilityCertificateAsync(6, BusinessId(8), OrgProvinceId,
             "GCN-ATTP-HL-2026-005", now.AddMonths(-9), now.AddMonths(27), now,
             "Cơ sở bị xử phạt vi phạm hành chính lần thứ hai về điều kiện vệ sinh");
 
@@ -402,7 +399,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await SeedExportFoodCertificateAsync(3, BusinessId(7), OrgProvinceId, ProductId(71),
             CountryKoreaId, "GXK-QN-2026-034", now.AddMonths(-1), now.AddMonths(11),
             "LOT-2026-06B", 1800m, "hộp", now);
-        await SeedExportFoodCertificateAsync(4, BusinessId(2), OrgDistrictId, ProductId(21),
+        await SeedExportFoodCertificateAsync(4, BusinessId(2), OrgProvinceId, ProductId(21),
             null, "GXK-QN-2026-027", now.AddMonths(-2), now.AddMonths(10),
             "LOT-2026-05A", 500m, "kg", now);
 
@@ -419,7 +416,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             AdTypeOnlinePressId, "XNQC-QN-2026-012", now.AddMonths(-2), now.AddMonths(22),
             "Quảng cáo bánh trung thu và kẹo lạc truyền thống Hồng Hạnh",
             "Báo điện tử Quảng Ninh, Đài PTTH Quảng Ninh", [ProductId(71), ProductId(72)], now, null);
-        await SeedAdvertisementRegistrationAsync(4, BusinessId(2), OrgDistrictId,
+        await SeedAdvertisementRegistrationAsync(4, BusinessId(2), OrgProvinceId,
             AdTypeSocialMediaId, "XNQC-HL-2026-003", now.AddMonths(-5), now.AddMonths(19),
             "Quảng cáo chả mực Bà Tỵ loại đặc biệt",
             "Facebook", [ProductId(21)], now,
@@ -442,8 +439,8 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 now.AddDays(20), now.AddDays(50),
                 "Kiểm tra các cơ sở sản xuất, kinh doanh bánh kẹo trên địa bàn tỉnh",
                 "Bảo đảm an toàn thực phẩm các sản phẩm phục vụ Tết Trung thu");
-            plan.AddBusiness(DemoId(0x8031, 11), BusinessId(7), 1, now.AddDays(22), DistrictStaffId, null);
-            plan.AddBusiness(DemoId(0x8031, 12), BusinessId(6), 2, now.AddDays(30), DistrictStaffId, null);
+            plan.AddBusiness(DemoId(0x8031, 11), BusinessId(7), 1, now.AddDays(22), ProvinceAdminId, null);
+            plan.AddBusiness(DemoId(0x8031, 12), BusinessId(6), 2, now.AddDays(30), ProvinceAdminId, null);
             plan.AddBusiness(DemoId(0x8031, 13), BusinessId(2), 3, now.AddDays(38), null, null);
             return plan;
         });
@@ -452,16 +449,16 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await InsertIfMissingAsync(DemoId(0x8030, 2), () =>
         {
             var plan = InspectionPlan.Create(
-                DemoId(0x8030, 2), OrgDistrictId, "KH-HL-2026-02",
+                DemoId(0x8030, 2), OrgProvinceId, "KH-HL-2026-02",
                 $"Kế hoạch thanh kiểm tra cơ sở dịch vụ ăn uống TP Hạ Long năm {now.Year}",
                 InspectionPlanType.Annual, now.Year,
                 now.AddDays(-90), now.AddDays(90),
                 "Thanh kiểm tra định kỳ các cơ sở dịch vụ ăn uống, bếp ăn tập thể",
                 "Phòng ngừa ngộ độc thực phẩm tại khu du lịch và trường học");
-            plan.AddBusiness(DemoId(0x8031, 21), BusinessId(3), 1, now.AddDays(-60), DistrictStaffId, null);
-            plan.AddBusiness(DemoId(0x8031, 22), BusinessId(5), 2, now.AddDays(-10), DistrictStaffId, null);
+            plan.AddBusiness(DemoId(0x8031, 21), BusinessId(3), 1, now.AddDays(-60), ProvinceAdminId, null);
+            plan.AddBusiness(DemoId(0x8031, 22), BusinessId(5), 2, now.AddDays(-10), ProvinceAdminId, null);
             plan.AddBusiness(DemoId(0x8031, 23), BusinessId(8), 3, now.AddDays(40), null, null);
-            plan.Submit(DistrictStaffId, now.AddDays(-80));
+            plan.Submit(ProvinceAdminId, now.AddDays(-80));
             plan.Approve(ProvinceAdminId, now.AddDays(-75));
             plan.MarkInProgress();
             plan.Items[0].MarkCompleted();
@@ -473,7 +470,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await InsertIfMissingAsync(DemoId(0x8032, 1), () =>
         {
             var result = InspectionResult.Create(
-                DemoId(0x8032, 1), BusinessId(3), OrgDistrictId,
+                DemoId(0x8032, 1), BusinessId(3), OrgProvinceId,
                 DemoId(0x8030, 2), DemoId(0x8031, 21),
                 now.AddDays(-60), InspectionType.Scheduled,
                 "Trần Thị Huyện", "Trần Thị Huyện, Lê Văn Xem",
@@ -491,7 +488,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 "Tổ chức khám sức khỏe cho toàn bộ nhân viên", now.AddDays(15));
             result.MarkViolationRemedied(DemoId(0x8033, 1), now.AddDays(-25),
                 "Đã cải tạo khu chế biến, nghiệm thu đạt yêu cầu");
-            result.SetInspectors([(DistrictStaffId, true), (CommuneStaffId, false)]);
+            result.SetInspectors([(ProvinceAdminId, true), (CommuneStaffId, false)]);
             result.SetFollowUpResult(FollowUpResult.Passed);
             result.Finalize(ProvinceAdminId, now.AddDays(-15));
             return result;
@@ -507,7 +504,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 InspectionOverallResult.Pass, false, null, null, null, null,
                 false, null,
                 "Duy trì tốt điều kiện sản xuất, khuyến khích áp dụng HACCP", null);
-            result.SetInspectors([(ProvinceAdminId, true), (DistrictStaffId, false)]);
+            result.SetInspectors([(ProvinceAdminId, true), (CommuneStaffId, false)]);
             result.Finalize(ProvinceAdminId, now.AddDays(-95));
             return result;
         });
@@ -537,12 +534,12 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await InsertIfMissingAsync(incidentId, () =>
         {
             var incident = FoodPoisoningIncident.Create(
-                incidentId, OrgDistrictId, "VNĐ-QN-2026-001",
+                incidentId, OrgProvinceId, "VNĐ-QN-2026-001",
                 now.AddDays(-45), now.AddDays(-43),
                 "Vụ ngộ độc tập thể sau tiệc cưới tại nhà hàng hải sản");
             incident.SetLocation(
                 "Nhà hàng Hải sản Biển Xanh, khu du lịch Bãi Cháy",
-                CommuneId, DistrictId, ProvinceId, 20.9581, 107.0453);
+                CommuneId, ProvinceId, 20.9581, 107.0453);
             incident.SetStatistics(120, 32, 9, 1);
             incident.SetFoodInfo("Hàu sống, tôm hấp", "Nhà hàng Hải sản Biển Xanh",
                 "Tiệc cưới");
@@ -552,7 +549,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 "Đoàn điều tra liên ngành Chi cục ATVSTP và Phòng Y tế TP Hạ Long",
                 "Đình chỉ hoạt động nhà hàng, thu hồi thực phẩm nghi ngờ, lấy mẫu kiểm nghiệm",
                 "Tăng cường kiểm tra nguồn gốc hải sản sống tại khu du lịch");
-            incident.Submit(DistrictStaffId, now.AddDays(-44));
+            incident.Submit(ProvinceAdminId, now.AddDays(-44));
             incident.Verify(ProvinceAdminId, now.AddDays(-43));
             incident.Conclude(ProvinceAdminId, now.AddDays(-30),
                 "Nguyên nhân do hàu sống nhiễm Vibrio parahaemolyticus; " +
@@ -560,17 +557,17 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             return incident;
         });
 
-        await SeedPoisoningCaseAsync(1, OrgDistrictId, "CA-QN-2026-001", now.AddDays(-44),
+        await SeedPoisoningCaseAsync(1, OrgProvinceId, "CA-QN-2026-001", now.AddDays(-44),
             now.AddDays(-45), incidentId, "Nguyễn Văn Bình", 34, VictimGender.Male,
             "Hàu sống", "Đau bụng dữ dội, tiêu chảy cấp, sốt cao",
             "Bệnh viện Đa khoa tỉnh Quảng Ninh", TreatmentResult.Hospitalized,
             PoisoningCaseStatus.Verified, now);
-        await SeedPoisoningCaseAsync(2, OrgDistrictId, "CA-QN-2026-002", now.AddDays(-44),
+        await SeedPoisoningCaseAsync(2, OrgProvinceId, "CA-QN-2026-002", now.AddDays(-44),
             now.AddDays(-45), incidentId, "Trần Thị Thu", 29, VictimGender.Female,
             "Hàu sống, tôm hấp", "Buồn nôn, tiêu chảy, mất nước nhẹ",
             "Trạm Y tế Phường Bạch Đằng", TreatmentResult.Recovered,
             PoisoningCaseStatus.Verified, now);
-        await SeedPoisoningCaseAsync(3, OrgDistrictId, "CA-QN-2026-003", now.AddDays(-44),
+        await SeedPoisoningCaseAsync(3, OrgProvinceId, "CA-QN-2026-003", now.AddDays(-44),
             now.AddDays(-45), incidentId, "Phạm Văn Cường", 68, VictimGender.Male,
             "Hàu sống", "Tiêu chảy cấp, sốc nhiễm khuẩn trên nền bệnh gan mạn",
             "Bệnh viện Đa khoa tỉnh Quảng Ninh", TreatmentResult.Deceased,
@@ -598,14 +595,14 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await InsertIfMissingAsync(DemoId(0x8050, 1), () =>
         {
             var report = NdtpReport.Create(
-                DemoId(0x8050, 1), OrgDistrictId, lastMonth.Year, lastMonth.Month);
+                DemoId(0x8050, 1), OrgProvinceId, lastMonth.Year, lastMonth.Month);
             report.UpdateStats(3, 3, 2, 1, 1, 32, 9, 1);
             report.UpdateNarrative(
                 "Tuyên truyền phòng chống ngộ độc hải sản sống tại khu du lịch; " +
                 "giám sát bếp ăn trường học đầu năm học",
                 "Thói quen ăn hải sản sống của khách du lịch; thức ăn đường phố trước cổng trường",
                 "Đề nghị tăng cường kiểm tra đột xuất các nhà hàng hải sản trong mùa du lịch");
-            report.Submit(DistrictStaffId, now.AddDays(-12));
+            report.Submit(ProvinceAdminId, now.AddDays(-12));
             report.Verify(ProvinceAdminId, now.AddDays(-10));
             return report;
         });
@@ -644,7 +641,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await InsertIfMissingAsync(DemoId(0x8051, 2), () =>
         {
             var report = AtpWorkReport.Create(
-                DemoId(0x8051, 2), OrgDistrictId,
+                DemoId(0x8051, 2), OrgProvinceId,
                 ReportPeriodType.HalfYear, now.Year, 1);
             report.UpdateBusinessStats(320, 22, 8, 240);
             report.UpdateLicensingStats(12, 58, 6, 24, 2, 4);
@@ -655,7 +652,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 $"Báo cáo công tác ATTP 6 tháng đầu năm {now.Year} của TP Hạ Long",
                 "Xử lý kịp thời vụ ngộ độc tập thể tại khu du lịch Bãi Cháy",
                 "Một số cơ sở nhỏ lẻ chưa chấp hành khám sức khỏe định kỳ", null, null);
-            report.Submit(DistrictStaffId, now.AddDays(-20));
+            report.Submit(ProvinceAdminId, now.AddDays(-20));
             return report;
         });
 
@@ -803,7 +800,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             return document;
         });
         await InsertIfMissingAsync(DemoId(0x8062, 3), () => AdministrativeDocument.Create(
-            DemoId(0x8062, 3), OrgDistrictId, DocTypeDispatchId,
+            DemoId(0x8062, 3), OrgProvinceId, DocTypeDispatchId,
             "245/CV-PYT",
             "Công văn tăng cường phòng chống ngộ độc thực phẩm mùa nắng nóng",
             now.AddMonths(-1), "Phòng Y tế TP Hạ Long",
@@ -836,7 +833,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             relatedProducts: "Ngao, hàu, tu hài nuôi tại Vân Đồn"));
 
         await InsertIfMissingAsync(DemoId(0x8064, 1), () => TestingResult.Create(
-            DemoId(0x8064, 1), OrgDistrictId, "MAU-2026-0152",
+            DemoId(0x8064, 1), OrgProvinceId, "MAU-2026-0152",
             "Mẫu chả mực", DemoTestingCenterId, now.AddDays(-70),
             TestingResultOutcome.Fail,
             description: "Mẫu giám sát định kỳ lấy tại cơ sở sản xuất",
@@ -846,7 +843,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await InsertIfMissingAsync(DemoId(0x8064, 2), () =>
         {
             var testingResult = TestingResult.Create(
-                DemoId(0x8064, 2), OrgDistrictId, "MAU-2026-0153",
+                DemoId(0x8064, 2), OrgProvinceId, "MAU-2026-0153",
                 "Mẫu hàu sống", DemoTestingCenterId, now.AddDays(-60),
                 TestingResultOutcome.Fail,
                 description: "Mẫu lấy trong đợt thanh kiểm tra nhà hàng hải sản",
@@ -998,7 +995,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             var business = Business.Create(
                 id, organizationId, code, name, businessTypeId, classificationId,
                 taxCode, representativeName, null, contactPhone, null, null,
-                street, ProvinceId, DistrictId, CommuneId, latitude, longitude,
+                street, ProvinceId, CommuneId, latitude, longitude,
                 establishedDate, employeeCount, null);
             business.SetCertificateFlags(hasEligibilityCertificate, hasVsattpCommitment);
             return business;
@@ -1151,7 +1148,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 DateOnly.FromDateTime(reportDate), occurrenceDate, incidentId);
             poisoningCase.SetLocation(
                 "Phường Bạch Đằng, TP Hạ Long",
-                CommuneId, DistrictId, ProvinceId, 20.951, 107.082);
+                CommuneId, ProvinceId, 20.951, 107.082);
             poisoningCase.SetVictimInfo(victimName, victimAge, victimGender, null, null);
             poisoningCase.SetFoodInfo(suspectedFood, null,
                 DateOnly.FromDateTime(occurrenceDate), symptoms,
@@ -1161,7 +1158,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             poisoningCase.SetReporterInfo("Trần Thị Huyện", "0912 000 111",
                 "Phòng Y tế TP Hạ Long", "Cán bộ tiếp nhận");
             if (targetStatus >= PoisoningCaseStatus.Reported)
-                poisoningCase.Submit(DistrictStaffId, reportDate.AddHours(2));
+                poisoningCase.Submit(ProvinceAdminId, reportDate.AddHours(2));
             if (targetStatus >= PoisoningCaseStatus.Verified)
                 poisoningCase.Verify(ProvinceAdminId, reportDate.AddDays(1));
             return poisoningCase;

@@ -17,7 +17,6 @@ public sealed record CurrentDataScope(
     bool HasGlobalAccess,
     IReadOnlySet<Guid> OrganizationIds,
     IReadOnlySet<Guid> ProvinceIds,
-    IReadOnlySet<Guid> DistrictIds,
     IReadOnlySet<Guid> CommuneIds,
     IReadOnlySet<Guid>? BusinessIds = null,
     IReadOnlySet<Guid>? BusinessTypeIds = null,
@@ -105,7 +104,7 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
             return new(
                 userId, homeOrgId, true,
                 orgIds, new HashSet<Guid>(),
-                new HashSet<Guid>(), new HashSet<Guid>(),
+                new HashSet<Guid>(),
                 new HashSet<Guid>(), new HashSet<Guid>(),
                 new HashSet<Guid>());
         }
@@ -118,7 +117,7 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
         var organizationQuery = await _organizations.GetQueryableAsync();
         var organizations = await AsyncExecuter.ToListAsync(
             organizationQuery.Select(x => new OrganizationScopeNode(
-                x.Id, x.ParentId, x.ProvinceId, x.DistrictId, x.CommuneId)),
+                x.Id, x.ParentId, x.ProvinceId, x.CommuneId)),
             cancellationToken);
         var allowedOrganizationIds = OrganizationHierarchyScope.Expand(
             profile.OrganizationId,
@@ -128,12 +127,11 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
                 FoodSafeDomainErrorCodes.DataScope.OrganizationNotFound);
 
         var provinces = new HashSet<Guid>();
-        var districts = new HashSet<Guid>();
         var communes = new HashSet<Guid>();
         var businesses = new HashSet<Guid>();
         var businessTypes = new HashSet<Guid>();
         var productGroups = new HashSet<Guid>();
-        AddGeography(home, provinces, districts, communes);
+        AddGeography(home, provinces, communes);
 
         var assignmentQuery = await _assignments.GetQueryableAsync();
         var now = _clock.Now;
@@ -151,7 +149,6 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
             {
                 case ManagementScopeType.Geography:
                     if (assignment.ProvinceId.HasValue) provinces.Add(assignment.ProvinceId.Value);
-                    if (assignment.DistrictId.HasValue) districts.Add(assignment.DistrictId.Value);
                     if (assignment.CommuneId.HasValue) communes.Add(assignment.CommuneId.Value);
                     break;
                 case ManagementScopeType.Business when assignment.BusinessId.HasValue:
@@ -172,7 +169,6 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
             false,
             allowedOrganizationIds,
             provinces,
-            districts,
             communes,
             businesses,
             businessTypes,
@@ -197,11 +193,9 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
     private static void AddGeography(
         OrganizationScopeNode organization,
         ISet<Guid> provinces,
-        ISet<Guid> districts,
         ISet<Guid> communes)
     {
         if (organization.ProvinceId.HasValue) provinces.Add(organization.ProvinceId.Value);
-        if (organization.DistrictId.HasValue) districts.Add(organization.DistrictId.Value);
         if (organization.CommuneId.HasValue) communes.Add(organization.CommuneId.Value);
     }
 }

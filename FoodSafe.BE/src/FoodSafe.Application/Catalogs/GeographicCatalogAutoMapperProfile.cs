@@ -9,7 +9,6 @@ public sealed class GeographicCatalogAutoMapperProfile : Profile
         CreateMap<Country, CountryDto>().MaxDepth(8);
         CreateMap<Region, RegionDto>().MaxDepth(8);
         CreateMap<Province, ProvinceDto>().MaxDepth(8);
-        CreateMap<District, DistrictDto>().MaxDepth(8);
         CreateMap<Commune, CommuneDto>().MaxDepth(8);
     }
 }

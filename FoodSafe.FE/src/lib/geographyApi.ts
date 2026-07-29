@@ -8,41 +8,24 @@ export interface GeographicItem {
   sortOrder: number;
 }
 
-export interface DistrictItem extends GeographicItem {
-  provinceId: string;
-  type: number;
-}
-
 export interface CommuneItem extends GeographicItem {
-  districtId: string;
+  provinceId: string;
   type: number;
 }
 
 export interface GeographicUpsert {
   code: string;
   name: string;
-  sortOrder: number;
+  sortOrder?: number;
   isActive: boolean;
   provinceId?: string;
-  districtId?: string;
   type?: number;
 }
 
+export type GeographicKind = "province" | "commune";
+
 export interface ListResult<T> {
   items: T[];
-}
-
-export interface ImportGeographyErrorDto {
-  rowNumber: number;
-  field: string;
-  message: string;
-}
-
-export interface ImportGeographyResultDto {
-  importedDistricts: number;
-  importedCommunes: number;
-  skippedRows: number;
-  errors: ImportGeographyErrorDto[];
 }
 
 const endpoint = "/v1/app/geographic-catalog";
@@ -56,8 +39,19 @@ export async function getGeographicItems<
   return response.data;
 }
 
+export async function getCommunesByProvince(
+  provinceId: string,
+  activeOnly = true,
+) {
+  const response = await api.get<ListResult<CommuneItem>>(
+    `${endpoint}/communes-by-province/${provinceId}`,
+    { params: { activeOnly } },
+  );
+  return response.data;
+}
+
 export async function createGeographicItem<T extends GeographicItem>(
-  kind: "province" | "district" | "commune",
+  kind: GeographicKind,
   input: GeographicUpsert,
 ) {
   const response = await api.post<T>(`${endpoint}/${kind}`, input);
@@ -65,7 +59,7 @@ export async function createGeographicItem<T extends GeographicItem>(
 }
 
 export async function updateGeographicItem<T extends GeographicItem>(
-  kind: "province" | "district" | "commune",
+  kind: GeographicKind,
   id: string,
   input: GeographicUpsert,
 ) {
@@ -73,23 +67,6 @@ export async function updateGeographicItem<T extends GeographicItem>(
   return response.data;
 }
 
-export async function deleteGeographicItem(
-  kind: "province" | "district" | "commune",
-  id: string,
-) {
+export async function deleteGeographicItem(kind: GeographicKind, id: string) {
   await api.delete(`${endpoint}/${id}/${kind}`);
-}
-
-export async function importGeographyFromExcel(
-  provinceId: string,
-  file: File,
-): Promise<ImportGeographyResultDto> {
-  const form = new FormData();
-  form.append("provinceId", provinceId);
-  form.append("file", file);
-  const response = await api.post<ImportGeographyResultDto>(
-    `${endpoint}/excel/import`,
-    form,
-  );
-  return response.data;
 }

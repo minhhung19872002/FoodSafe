@@ -142,7 +142,6 @@ public sealed class UpdateAdminUserDto : IHasConcurrencyStamp
 public sealed class GeographyScopeAssignmentInput
 {
     public Guid? ProvinceId { get; set; }
-    public Guid? DistrictId { get; set; }
     public Guid? CommuneId { get; set; }
     public bool CanView { get; set; } = true;
     public bool CanCreate { get; set; }
@@ -155,7 +154,6 @@ public sealed class GeographyScopeAssignmentInput
 public sealed class GeographyScopeAssignmentDto : EntityDto<Guid>
 {
     public Guid? ProvinceId { get; set; }
-    public Guid? DistrictId { get; set; }
     public Guid? CommuneId { get; set; }
     public bool CanView { get; set; }
     public bool CanCreate { get; set; }

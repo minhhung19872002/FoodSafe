@@ -16,17 +16,14 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
     // --- Fixed GUIDs for deterministic data (RFC 4122 v4 compliant) ---
     // Administrative areas (internal: referenced by DemoDataSeedContributor)
     internal static readonly Guid ProvinceQuangNinhId = Guid.Parse("e2e00000-0000-4000-8001-000000000001");
-    internal static readonly Guid DistrictHaLongId = Guid.Parse("e2e00000-0000-4000-8002-000000000001");
     internal static readonly Guid CommuneBachDangId = Guid.Parse("e2e00000-0000-4000-8003-000000000001");
 
     // Organizations (internal: referenced by DemoDataSeedContributor)
     internal static readonly Guid OrgProvinceId = Guid.Parse("e2e00000-0000-4000-8010-000000000001");
-    internal static readonly Guid OrgDistrictId = Guid.Parse("e2e00000-0000-4000-8010-000000000002");
     internal static readonly Guid OrgCommuneId = Guid.Parse("e2e00000-0000-4000-8010-000000000003");
 
     // Test users (not admin — admin is created by ABP)
     internal static readonly Guid UserProvinceAdminId = Guid.Parse("e2e00000-0000-4000-8020-000000000001");
-    internal static readonly Guid UserDistrictStaffId = Guid.Parse("e2e00000-0000-4000-8020-000000000002");
     internal static readonly Guid UserReadonlyId = Guid.Parse("e2e00000-0000-4000-8020-000000000003");
     static readonly Guid UserNoPermId = Guid.Parse("e2e00000-0000-4000-8020-000000000004");
     // Deterministic user whose password is already expired (SEC-04 enforcement test).
@@ -35,7 +32,6 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
     // AppUserProfile IDs
     static readonly Guid ProfileAdminId = Guid.Parse("e2e00000-0000-4000-8030-000000000000");
     static readonly Guid ProfileProvinceAdminId = Guid.Parse("e2e00000-0000-4000-8030-000000000001");
-    static readonly Guid ProfileDistrictStaffId = Guid.Parse("e2e00000-0000-4000-8030-000000000002");
     static readonly Guid ProfileReadonlyId = Guid.Parse("e2e00000-0000-4000-8030-000000000003");
     static readonly Guid ProfileNoPermId = Guid.Parse("e2e00000-0000-4000-8030-000000000004");
     static readonly Guid ProfileExpiredPasswordId = Guid.Parse("e2e00000-0000-4000-8030-000000000005");
@@ -51,7 +47,6 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
 
     private readonly IRepository<Region, Guid> _regions;
     private readonly IRepository<Province, Guid> _provinces;
-    private readonly IRepository<District, Guid> _districts;
     private readonly IRepository<Commune, Guid> _communes;
     private readonly IRepository<Organization, Guid> _organizations;
     private readonly IRepository<AppUserProfile, Guid> _profiles;
@@ -64,7 +59,6 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
     public E2eTestDataSeedContributor(
         IRepository<Region, Guid> regions,
         IRepository<Province, Guid> provinces,
-        IRepository<District, Guid> districts,
         IRepository<Commune, Guid> communes,
         IRepository<Organization, Guid> organizations,
         IRepository<AppUserProfile, Guid> profiles,
@@ -76,7 +70,6 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
     {
         _regions = regions;
         _provinces = provinces;
-        _districts = districts;
         _communes = communes;
         _organizations = organizations;
         _profiles = profiles;
@@ -150,20 +143,11 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
             await _provinces.InsertAsync(province, autoSave: true);
         }
 
-        if (!await _districts.AnyAsync(x => x.Id == DistrictHaLongId))
-        {
-            var district = District.Create(
-                DistrictHaLongId, "193", "Thành phố Hạ Long",
-                ProvinceQuangNinhId, DistrictType.ProvincialCity, 1);
-            district.CreationTime = now;
-            await _districts.InsertAsync(district, autoSave: true);
-        }
-
         if (!await _communes.AnyAsync(x => x.Id == CommuneBachDangId))
         {
             var commune = Commune.Create(
                 CommuneBachDangId, "06547", "Phường Bạch Đằng",
-                DistrictHaLongId, CommuneType.Ward, 1);
+                ProvinceQuangNinhId, CommuneType.Ward, 1);
             commune.CreationTime = now;
             await _communes.InsertAsync(commune, autoSave: true);
         }
@@ -179,20 +163,6 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
                 OrganizationLevel.Province,
                 parentId: null,
                 provinceId: ProvinceQuangNinhId,
-                districtId: null,
-                communeId: null);
-            await _organizations.InsertAsync(org, autoSave: true);
-        }
-
-        if (!await _organizations.AnyAsync(x => x.Id == OrgDistrictId))
-        {
-            var org = Organization.Create(
-                OrgDistrictId, "PYT-HL",
-                "Phòng Y tế TP Hạ Long",
-                OrganizationLevel.District,
-                parentId: OrgProvinceId,
-                provinceId: ProvinceQuangNinhId,
-                districtId: DistrictHaLongId,
                 communeId: null);
             await _organizations.InsertAsync(org, autoSave: true);
         }
@@ -203,9 +173,8 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
                 OrgCommuneId, "TYT-BD",
                 "Trạm Y tế Phường Bạch Đằng",
                 OrganizationLevel.Commune,
-                parentId: OrgDistrictId,
+                parentId: OrgProvinceId,
                 provinceId: ProvinceQuangNinhId,
-                districtId: DistrictHaLongId,
                 communeId: CommuneBachDangId);
             await _organizations.InsertAsync(org, autoSave: true);
         }
@@ -235,11 +204,6 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
             UserProvinceAdminId, "province.admin@foodsafe.local",
             "Nguyễn Văn Tỉnh", OrgProvinceId,
             ProfileProvinceAdminId, ["ProvinceAdmin"], now);
-
-        await EnsureTestUserAsync(
-            UserDistrictStaffId, "district.staff@foodsafe.local",
-            "Trần Thị Huyện", OrgDistrictId,
-            ProfileDistrictStaffId, ["DistrictStaff"], now);
 
         await EnsureTestUserAsync(
             UserReadonlyId, "readonly@foodsafe.local",

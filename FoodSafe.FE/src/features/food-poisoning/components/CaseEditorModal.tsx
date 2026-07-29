@@ -112,7 +112,6 @@ export function CaseEditorModal(props: Props) {
       });
       setLocation({
         provinceId: item.locationProvinceId ?? "",
-        districtId: item.locationDistrictId ?? "",
         communeId: item.locationCommuneId ?? "",
       });
     } else {
@@ -146,7 +145,6 @@ export function CaseEditorModal(props: Props) {
             notes: values.notes?.trim() || undefined,
             locationDescription: street,
             locationProvinceId: location.provinceId || undefined,
-            locationDistrictId: location.districtId || undefined,
             locationCommuneId: location.communeId || undefined,
             victimName: values.victimName.trim(),
             victimAge: values.victimAge,

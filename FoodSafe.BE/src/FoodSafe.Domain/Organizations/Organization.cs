@@ -14,7 +14,6 @@ public class Organization : FullAuditedAggregateRoot<Guid>
     public string? Email { get; private set; }
     public string? LeaderName { get; private set; }
     public Guid? ProvinceId { get; private set; }
-    public Guid? DistrictId { get; private set; }
     public Guid? CommuneId { get; private set; }
     public bool IsActive { get; private set; }
 
@@ -34,7 +33,6 @@ public class Organization : FullAuditedAggregateRoot<Guid>
         OrganizationLevel level,
         Guid? parentId,
         Guid? provinceId,
-        Guid? districtId,
         Guid? communeId,
         string? address = null,
         string? phone = null,
@@ -43,7 +41,7 @@ public class Organization : FullAuditedAggregateRoot<Guid>
     {
         var organization = new Organization(id);
         organization.SetDetails(
-            code, name, level, parentId, provinceId, districtId, communeId,
+            code, name, level, parentId, provinceId, communeId,
             address, phone, email, leaderName);
         organization.IsActive = true;
         return organization;
@@ -55,7 +53,6 @@ public class Organization : FullAuditedAggregateRoot<Guid>
         OrganizationLevel level,
         Guid? parentId,
         Guid? provinceId,
-        Guid? districtId,
         Guid? communeId,
         string? address,
         string? phone,
@@ -64,7 +61,7 @@ public class Organization : FullAuditedAggregateRoot<Guid>
         bool isActive)
     {
         SetDetails(
-            code, name, level, parentId, provinceId, districtId, communeId,
+            code, name, level, parentId, provinceId, communeId,
             address, phone, email, leaderName);
         IsActive = isActive;
     }
@@ -75,7 +72,6 @@ public class Organization : FullAuditedAggregateRoot<Guid>
         OrganizationLevel level,
         Guid? parentId,
         Guid? provinceId,
-        Guid? districtId,
         Guid? communeId,
         string? address,
         string? phone,
@@ -85,14 +81,13 @@ public class Organization : FullAuditedAggregateRoot<Guid>
         Check.NotNullOrWhiteSpace(code, nameof(code), 50);
         Check.NotNullOrWhiteSpace(name, nameof(name), 200);
         OrganizationHierarchyRules.ValidateShape(
-            level, parentId, provinceId, districtId, communeId);
+            level, parentId, provinceId, communeId);
 
         Code = code.Trim().ToUpperInvariant();
         Name = name.Trim();
         Level = level;
         ParentId = parentId;
         ProvinceId = provinceId;
-        DistrictId = districtId;
         CommuneId = communeId;
         Address = Normalize(address);
         Phone = Normalize(phone);

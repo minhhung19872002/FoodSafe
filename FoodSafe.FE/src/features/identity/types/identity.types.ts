@@ -5,7 +5,6 @@ export interface PagedResult<T> {
 
 export interface GeographyScopeInput {
   provinceId?: string;
-  districtId?: string;
   communeId?: string;
   canView: boolean;
   canCreate: boolean;

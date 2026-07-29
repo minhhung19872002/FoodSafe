@@ -127,7 +127,6 @@ public sealed class DataScopeEnforcementContractTests
             new HashSet<Guid> { Guid.NewGuid() },
             new HashSet<Guid>(),
             new HashSet<Guid>(),
-            new HashSet<Guid>(),
             null, null, null);
 
         scope.IncludesBusiness(Guid.NewGuid()).ShouldBeFalse();
@@ -140,7 +139,6 @@ public sealed class DataScopeEnforcementContractTests
     {
         var scope = new CurrentDataScope(
             Guid.NewGuid(), Guid.NewGuid(), false,
-            new HashSet<Guid>(),
             new HashSet<Guid>(),
             new HashSet<Guid>(),
             new HashSet<Guid>(),

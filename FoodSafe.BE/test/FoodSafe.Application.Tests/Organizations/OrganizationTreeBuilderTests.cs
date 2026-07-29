@@ -9,20 +9,22 @@ public class OrganizationTreeBuilderTests
     public void Build_Should_Nest_Children_And_Order_By_Code()
     {
         var provinceId = Guid.NewGuid();
-        var districtId = Guid.NewGuid();
+        var commune1Id = Guid.NewGuid();
+        var commune2Id = Guid.NewGuid();
         var items = new List<OrganizationDto>
         {
-            Create(districtId, provinceId, "02", OrganizationLevel.District),
+            Create(commune2Id, provinceId, "03", OrganizationLevel.Commune),
             Create(provinceId, null, "01", OrganizationLevel.Province),
-            Create(Guid.NewGuid(), districtId, "03", OrganizationLevel.Commune)
+            Create(commune1Id, provinceId, "02", OrganizationLevel.Commune)
         };
 
         var tree = OrganizationTreeBuilder.Build(items);
 
         tree.Count.ShouldBe(1);
         tree[0].Id.ShouldBe(provinceId);
-        tree[0].Children.Single().Id.ShouldBe(districtId);
-        tree[0].Children.Single().Children.Count.ShouldBe(1);
+        tree[0].Children.Count.ShouldBe(2);
+        tree[0].Children[0].Id.ShouldBe(commune1Id);
+        tree[0].Children[0].Children.ShouldBeEmpty();
     }
 
     private static OrganizationDto Create(

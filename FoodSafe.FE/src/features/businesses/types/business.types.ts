@@ -64,7 +64,6 @@ export interface Business {
   contactWebsite?: string;
   addressStreet?: string;
   addressProvinceId?: string;
-  addressDistrictId?: string;
   addressCommuneId?: string;
   addressLatitude?: number;
   addressLongitude?: number;
@@ -94,7 +93,6 @@ export interface BusinessInput {
   contactWebsite?: string;
   addressStreet?: string;
   addressProvinceId?: string;
-  addressDistrictId?: string;
   addressCommuneId?: string;
   addressLatitude?: number;
   addressLongitude?: number;
@@ -120,7 +118,6 @@ export interface BusinessFilter {
   status?: BusinessStatus;
   hasEligibilityCertificate?: boolean;
   provinceId?: string;
-  districtId?: string;
   communeId?: string;
   sorting?: string;
   skipCount: number;

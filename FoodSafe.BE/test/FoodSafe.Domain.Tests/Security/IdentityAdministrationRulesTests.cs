@@ -24,16 +24,16 @@ public sealed class IdentityAdministrationRulesTests
     {
         Should.NotThrow(() =>
             IdentityAdministrationRules.EnsureRoleCanBeAssigned(
-                "DistrictStaff",
+                "CommuneStaff",
                 false,
-                OrganizationLevel.District,
+                OrganizationLevel.Commune,
                 true));
 
         var exception = Should.Throw<BusinessException>(() =>
             IdentityAdministrationRules.EnsureRoleCanBeAssigned(
                 "ProvinceAdmin",
                 false,
-                OrganizationLevel.District,
+                OrganizationLevel.Commune,
                 true));
         exception.Code.ShouldBe(
             FoodSafeDomainErrorCodes.IdentityAdministration.IncompatibleRole);
@@ -58,9 +58,9 @@ public sealed class IdentityAdministrationRulesTests
     {
         var exception = Should.Throw<BusinessException>(() =>
             IdentityAdministrationRules.EnsureRoleCanBeAssigned(
-                "DistrictStaff",
+                "CommuneStaff",
                 true,
-                OrganizationLevel.District,
+                OrganizationLevel.Commune,
                 false));
 
         exception.Code.ShouldBe(

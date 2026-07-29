@@ -12,7 +12,6 @@ const nullableKeys = [
   "contactWebsite",
   "addressStreet",
   "addressProvinceId",
-  "addressDistrictId",
   "addressCommuneId",
   "addressLatitude",
   "addressLongitude",

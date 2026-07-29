@@ -64,8 +64,6 @@ public sealed class AdvertisementRegistrationDataScopeChecker(
                  businessTypeIds.Contains(x.BusinessTypeId.Value)) ||
                 (x.AddressProvinceId.HasValue &&
                  scope.ProvinceIds.Contains(x.AddressProvinceId.Value)) ||
-                (x.AddressDistrictId.HasValue &&
-                 scope.DistrictIds.Contains(x.AddressDistrictId.Value)) ||
                 (x.AddressCommuneId.HasValue &&
                  scope.CommuneIds.Contains(x.AddressCommuneId.Value)))
             .Select(x => x.Id);

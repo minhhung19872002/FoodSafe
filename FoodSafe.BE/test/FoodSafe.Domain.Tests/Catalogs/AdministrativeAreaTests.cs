@@ -24,18 +24,6 @@ public class AdministrativeAreaTests
     }
 
     [Fact]
-    public void District_Should_Reject_Unknown_Type()
-    {
-        Should.Throw<BusinessException>(() =>
-            District.Create(
-                Guid.NewGuid(),
-                "001",
-                "Hạ Long",
-                Guid.NewGuid(),
-                (DistrictType)99));
-    }
-
-    [Fact]
     public void Commune_Should_Normalize_Common_Fields()
     {
         var commune = Commune.Create(

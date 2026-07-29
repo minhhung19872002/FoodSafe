@@ -14,7 +14,6 @@ public sealed class GeocodeAddressInput
     public string? Street { get; set; }
 
     public Guid? ProvinceId { get; set; }
-    public Guid? DistrictId { get; set; }
     public Guid? CommuneId { get; set; }
 }
 

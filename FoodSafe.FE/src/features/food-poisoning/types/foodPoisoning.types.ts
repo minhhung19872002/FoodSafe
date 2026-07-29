@@ -121,7 +121,6 @@ export interface FoodPoisoningCase {
 
   locationDescription?: string;
   locationCommuneId?: string;
-  locationDistrictId?: string;
   locationProvinceId?: string;
   locationLatitude?: number;
   locationLongitude?: number;
@@ -164,7 +163,6 @@ export interface CreateUpdateCaseInput {
 
   locationDescription: string;
   locationCommuneId?: string;
-  locationDistrictId?: string;
   locationProvinceId?: string;
   locationLatitude?: number;
   locationLongitude?: number;
@@ -210,7 +208,6 @@ export interface FoodPoisoningIncident {
 
   locationDescription?: string;
   locationCommuneId?: string;
-  locationDistrictId?: string;
   locationProvinceId?: string;
   locationLatitude?: number;
   locationLongitude?: number;
@@ -252,7 +249,6 @@ export interface CreateUpdateIncidentInput {
 
   locationDescription: string;
   locationCommuneId?: string;
-  locationDistrictId?: string;
   locationProvinceId?: string;
   locationLatitude?: number;
   locationLongitude?: number;

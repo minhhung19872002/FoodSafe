@@ -22,7 +22,6 @@ public class GeographicCatalogMappingTests
         using var context = CreateContext();
 
         context.Model.FindEntityType(typeof(Province))!.GetTableName().ShouldBe("cat_provinces");
-        context.Model.FindEntityType(typeof(District))!.GetTableName().ShouldBe("cat_districts");
         context.Model.FindEntityType(typeof(Commune))!.GetTableName().ShouldBe("cat_communes");
     }
 
@@ -36,22 +35,17 @@ public class GeographicCatalogMappingTests
             .ToList();
 
         constraintNames.ShouldContain("fk_organizations_province");
-        constraintNames.ShouldContain("fk_organizations_district_province");
-        constraintNames.ShouldContain("fk_organizations_commune_district");
+        constraintNames.ShouldContain("fk_organizations_commune_province");
     }
 
     [Fact]
-    public void District_And_Commune_Should_Expose_Composite_Alternate_Keys()
+    public void Commune_Should_Expose_Composite_Alternate_Key()
     {
         using var context = CreateContext();
-        var district = context.Model.FindEntityType(typeof(District))!;
         var commune = context.Model.FindEntityType(typeof(Commune))!;
 
-        district.GetKeys().ShouldContain(key =>
-            key.Properties.Select(x => x.Name).SequenceEqual(
-                new[] { nameof(District.Id), nameof(District.ProvinceId) }));
         commune.GetKeys().ShouldContain(key =>
             key.Properties.Select(x => x.Name).SequenceEqual(
-                new[] { nameof(Commune.Id), nameof(Commune.DistrictId) }));
+                new[] { nameof(Commune.Id), nameof(Commune.ProvinceId) }));
     }
 }

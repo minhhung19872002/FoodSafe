@@ -1,7 +1,6 @@
 export const ORGANIZATION_LEVEL = {
   Province: 1,
-  District: 2,
-  Commune: 3,
+  Commune: 2,
 } as const;
 
 export type OrganizationLevel =
@@ -18,7 +17,6 @@ export interface OrganizationDto {
   email: string | null;
   leaderName: string | null;
   provinceId: string | null;
-  districtId: string | null;
   communeId: string | null;
   isActive: boolean;
 }
@@ -60,7 +58,6 @@ export interface CreateOrganizationInput {
   email: string | null;
   leaderName: string | null;
   provinceId: string | null;
-  districtId: string | null;
   communeId: string | null;
 }
 

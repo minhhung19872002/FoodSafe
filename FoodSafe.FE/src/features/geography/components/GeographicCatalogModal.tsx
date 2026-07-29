@@ -1,21 +1,19 @@
 import { useEffect } from "react";
-import { Form, Input, InputNumber, Modal, Select, Switch } from "antd";
+import { Form, Input, Modal, Select, Switch } from "antd";
 import type {
   CommuneItem,
-  DistrictItem,
   GeographicItem,
   GeographicUpsert,
 } from "@/lib/geographyApi";
 
-export type GeographicKind = "province" | "district" | "commune";
+export type GeographicKind = "province" | "commune";
 
-type EditableItem = GeographicItem | DistrictItem | CommuneItem;
+type EditableItem = GeographicItem | CommuneItem;
 
 interface FormValues {
   code: string;
   name: string;
   type?: number;
-  sortOrder: number;
   isActive: boolean;
 }
 
@@ -23,7 +21,8 @@ interface Props {
   open: boolean;
   kind: GeographicKind;
   item?: EditableItem;
-  parentId?: string;
+  provinceId?: string;
+  provinceName?: string;
   submitting: boolean;
   onCancel: () => void;
   onSubmit: (input: GeographicUpsert) => void;
@@ -31,35 +30,21 @@ interface Props {
 
 const labels: Record<GeographicKind, string> = {
   province: "tỉnh/thành phố",
-  district: "huyện/quận",
   commune: "xã/phường",
 };
 
-const typeOptions: Record<
-  Exclude<GeographicKind, "province">,
-  Array<{
-    value: number;
-    label: string;
-  }>
-> = {
-  district: [
-    { value: 1, label: "Huyện" },
-    { value: 2, label: "Quận" },
-    { value: 3, label: "Thị xã" },
-    { value: 4, label: "Thành phố" },
-  ],
-  commune: [
-    { value: 1, label: "Xã" },
-    { value: 2, label: "Phường" },
-    { value: 3, label: "Thị trấn" },
-  ],
-};
+const communeTypeOptions = [
+  { value: 1, label: "Xã" },
+  { value: 2, label: "Phường" },
+  { value: 3, label: "Thị trấn" },
+];
 
 export function GeographicCatalogModal({
   open,
   kind,
   item,
-  parentId,
+  provinceId,
+  provinceName,
   submitting,
   onCancel,
   onSubmit,
@@ -75,10 +60,7 @@ export function GeographicCatalogModal({
       code: item?.code ?? "",
       name: item?.name ?? "",
       type:
-        "type" in (item ?? {})
-          ? (item as DistrictItem | CommuneItem).type
-          : undefined,
-      sortOrder: item?.sortOrder ?? 0,
+        "type" in (item ?? {}) ? (item as CommuneItem).type : undefined,
       isActive: item?.isActive ?? true,
     });
   }, [form, item, open]);
@@ -88,8 +70,7 @@ export function GeographicCatalogModal({
       ...values,
       code: values.code.trim(),
       name: values.name.trim(),
-      ...(kind === "district" ? { provinceId: parentId } : {}),
-      ...(kind === "commune" ? { districtId: parentId } : {}),
+      ...(kind === "commune" ? { provinceId } : {}),
     });
   };
 
@@ -108,7 +89,7 @@ export function GeographicCatalogModal({
         form={form}
         layout="vertical"
         onFinish={submit}
-        initialValues={{ sortOrder: 0, isActive: true }}
+        initialValues={{ isActive: true }}
       >
         <Form.Item
           name="code"
@@ -130,18 +111,22 @@ export function GeographicCatalogModal({
         >
           <Input />
         </Form.Item>
-        {kind !== "province" && (
-          <Form.Item
-            name="type"
-            label="Loại địa bàn"
-            rules={[{ required: true, message: "Vui lòng chọn loại địa bàn" }]}
-          >
-            <Select options={typeOptions[kind]} />
-          </Form.Item>
+        {kind === "commune" && (
+          <>
+            <Form.Item label="Thuộc tỉnh/thành phố">
+              <Input value={provinceName ?? ""} disabled />
+            </Form.Item>
+            <Form.Item
+              name="type"
+              label="Loại địa bàn"
+              rules={[
+                { required: true, message: "Vui lòng chọn loại địa bàn" },
+              ]}
+            >
+              <Select options={communeTypeOptions} />
+            </Form.Item>
+          </>
         )}
-        <Form.Item name="sortOrder" label="Thứ tự">
-          <InputNumber min={0} precision={0} style={{ width: "100%" }} />
-        </Form.Item>
         <Form.Item name="isActive" label="Trạng thái" valuePropName="checked">
           <Switch
             checkedChildren="Hoạt động"

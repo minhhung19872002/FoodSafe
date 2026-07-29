@@ -18,7 +18,7 @@ import {
   Typography,
 } from "antd";
 import { AimOutlined } from "@ant-design/icons";
-import { useCommunes, useDistricts, useProvinces } from "@/hooks/useGeography";
+import { useCommunesByProvince, useProvinces } from "@/hooks/useGeography";
 import { extractApiError } from "@/lib/apiError";
 import { useGeocodeAddress } from "@/hooks/useGeocodeAddress";
 import { useSuggestBusinessCode } from "../api/businessMutations";
@@ -62,7 +62,6 @@ const defaults: BusinessFormValues = {
   contactWebsite: "",
   addressStreet: "",
   addressProvinceId: "",
-  addressDistrictId: "",
   addressCommuneId: "",
   establishedDate: "",
   notes: "",
@@ -106,15 +105,13 @@ export function BusinessEditorModal({
   });
   const { message } = App.useApp();
   const provinceId = useWatch({ control, name: "addressProvinceId" });
-  const districtId = useWatch({ control, name: "addressDistrictId" });
   const communeId = useWatch({ control, name: "addressCommuneId" });
   const street = useWatch({ control, name: "addressStreet" });
   const status = useWatch({ control, name: "status" });
   const latitude = useWatch({ control, name: "addressLatitude" });
   const longitude = useWatch({ control, name: "addressLongitude" });
   const provinces = useProvinces(true);
-  const districts = useDistricts(provinceId ?? "", true);
-  const communes = useCommunes(districtId ?? "", true);
+  const communes = useCommunesByProvince(provinceId ?? "", true);
   const geocode = useGeocodeAddress();
   const {
     isPending: isSuggestingCode,
@@ -124,7 +121,7 @@ export function BusinessEditorModal({
   const [matchedAddress, setMatchedAddress] = useState<string>();
 
   const canGeocode = Boolean(
-    street?.trim() || provinceId || districtId || communeId,
+    street?.trim() || provinceId || communeId,
   );
 
   /**
@@ -138,7 +135,6 @@ export function BusinessEditorModal({
       {
         street: street?.trim() || undefined,
         provinceId: provinceId || undefined,
-        districtId: districtId || undefined,
         communeId: communeId || undefined,
       },
       {
@@ -175,7 +171,6 @@ export function BusinessEditorModal({
       businessTypeId: business?.businessTypeId ?? "",
       businessClassificationId: business?.businessClassificationId ?? "",
       addressProvinceId: business?.addressProvinceId ?? "",
-      addressDistrictId: business?.addressDistrictId ?? "",
       addressCommuneId: business?.addressCommuneId ?? "",
       establishedDate: toDateInput(business?.establishedDate),
       productGroupIds: business?.productGroupIds ?? [],
@@ -198,7 +193,6 @@ export function BusinessEditorModal({
       contactWebsite: optional(values.contactWebsite),
       addressStreet: optional(values.addressStreet),
       addressProvinceId: optional(values.addressProvinceId),
-      addressDistrictId: optional(values.addressDistrictId),
       addressCommuneId: optional(values.addressCommuneId),
       establishedDate: optional(values.establishedDate),
       notes: optional(values.notes),
@@ -461,7 +455,7 @@ export function BusinessEditorModal({
           />
         </Form.Item>
         <Row gutter={16}>
-          <Col span={8}>
+          <Col span={12}>
             <Form.Item label="Tỉnh/Thành phố">
               <Controller
                 control={control}
@@ -474,7 +468,6 @@ export function BusinessEditorModal({
                     optionFilterProp="label"
                     onChange={(value) => {
                       field.onChange(value ?? "");
-                      setValue("addressDistrictId", "");
                       setValue("addressCommuneId", "");
                     }}
                     options={(provinces.data?.items ?? []).map((item) => ({
@@ -486,29 +479,7 @@ export function BusinessEditorModal({
               />
             </Form.Item>
           </Col>
-          <Col span={8}>
-            <Form.Item label="Huyện/Quận">
-              <Controller
-                control={control}
-                name="addressDistrictId"
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    allowClear
-                    onChange={(value) => {
-                      field.onChange(value ?? "");
-                      setValue("addressCommuneId", "");
-                    }}
-                    options={(districts.data?.items ?? []).map((item) => ({
-                      value: item.id,
-                      label: item.name,
-                    }))}
-                  />
-                )}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
+          <Col span={12}>
             <Form.Item label="Xã/Phường">
               <Controller
                 control={control}
@@ -517,6 +488,8 @@ export function BusinessEditorModal({
                   <Select
                     {...field}
                     allowClear
+                    showSearch
+                    optionFilterProp="label"
                     options={(communes.data?.items ?? []).map((item) => ({
                       value: item.id,
                       label: item.name,

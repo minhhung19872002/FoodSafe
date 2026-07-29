@@ -14,7 +14,6 @@ public sealed class FoodPoisoningCase : FullAuditedAggregateRoot<Guid>
     // Location (flattened)
     public string? LocationDescription { get; private set; }
     public Guid? LocationCommuneId { get; private set; }
-    public Guid? LocationDistrictId { get; private set; }
     public Guid? LocationProvinceId { get; private set; }
     public double? LocationLatitude { get; private set; }
     public double? LocationLongitude { get; private set; }
@@ -97,7 +96,6 @@ public sealed class FoodPoisoningCase : FullAuditedAggregateRoot<Guid>
     public void SetLocation(
         string? description,
         Guid? communeId,
-        Guid? districtId,
         Guid? provinceId,
         double? latitude,
         double? longitude)
@@ -105,7 +103,6 @@ public sealed class FoodPoisoningCase : FullAuditedAggregateRoot<Guid>
         EnsureDraft();
         LocationDescription = Normalize(description);
         LocationCommuneId = communeId;
-        LocationDistrictId = districtId;
         LocationProvinceId = provinceId;
         LocationLatitude = latitude;
         LocationLongitude = longitude;

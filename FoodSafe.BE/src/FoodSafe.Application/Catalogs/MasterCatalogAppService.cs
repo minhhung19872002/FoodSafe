@@ -16,7 +16,6 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
     private readonly IRepository<Country, Guid> _countries;
     private readonly IRepository<Region, Guid> _regions;
     private readonly IRepository<Province, Guid> _provinces;
-    private readonly IRepository<District, Guid> _districts;
     private readonly IRepository<Commune, Guid> _communes;
     private readonly IRepository<ProductGroup, Guid> _productGroups;
     private readonly IRepository<BusinessType, Guid> _businessTypes;
@@ -30,7 +29,7 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
 
     public MasterCatalogAppService(
         IRepository<Country, Guid> countries, IRepository<Region, Guid> regions,
-        IRepository<Province, Guid> provinces, IRepository<District, Guid> districts,
+        IRepository<Province, Guid> provinces,
         IRepository<Commune, Guid> communes, IRepository<ProductGroup, Guid> productGroups,
         IRepository<BusinessType, Guid> businessTypes,
         IRepository<BusinessClassification, Guid> classifications,
@@ -41,7 +40,7 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
         IRepository<ManagementScopeAssignment, Guid> scopeAssignments,
         ICancellationTokenProvider cancellationTokens)
     {
-        _countries = countries; _regions = regions; _provinces = provinces; _districts = districts;
+        _countries = countries; _regions = regions; _provinces = provinces;
         _communes = communes; _productGroups = productGroups; _businessTypes = businessTypes;
         _classifications = classifications; _advertisementTypes = advertisementTypes;
         _documentTypes = documentTypes; _testingCenters = testingCenters;
@@ -219,10 +218,10 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
     [Authorize(FoodSafePermissions.Catalogs.Create)]
     public async Task<TestingCenterDto> CreateTestingCenterAsync(UpsertTestingCenterDto input)
     {
-        await ValidateGeographyAsync(input.ProvinceId, input.DistrictId, input.CommuneId);
+        await ValidateGeographyAsync(input.ProvinceId, input.CommuneId);
         await EnsureMasterCodeAsync(_testingCenters, input.Code, null);
         var item = TestingCenter.Create(GuidGenerator.Create(), input.Code, input.Name, input.Address, input.ProvinceId,
-            input.DistrictId, input.CommuneId, input.ContactPerson, input.Phone, input.Email,
+            input.CommuneId, input.ContactPerson, input.Phone, input.Email,
             input.AccreditationNumber, input.AccreditationScope, input.AccreditationExpiresAt,
             input.Description, input.SortOrder, input.IsActive);
         await _testingCenters.InsertAsync(item, true, _cancellationTokens.Token);
@@ -231,10 +230,10 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
     [Authorize(FoodSafePermissions.Catalogs.Edit)]
     public async Task<TestingCenterDto> UpdateTestingCenterAsync(Guid id, UpsertTestingCenterDto input)
     {
-        await ValidateGeographyAsync(input.ProvinceId, input.DistrictId, input.CommuneId);
+        await ValidateGeographyAsync(input.ProvinceId, input.CommuneId);
         await EnsureMasterCodeAsync(_testingCenters, input.Code, id);
         var item = await _testingCenters.GetAsync(id, cancellationToken: _cancellationTokens.Token);
-        item.Update(input.Code, input.Name, input.Address, input.ProvinceId, input.DistrictId, input.CommuneId,
+        item.Update(input.Code, input.Name, input.Address, input.ProvinceId, input.CommuneId,
             input.ContactPerson, input.Phone, input.Email, input.AccreditationNumber, input.AccreditationScope,
             input.AccreditationExpiresAt, input.Description, input.SortOrder, input.IsActive);
         await _testingCenters.UpdateAsync(item, true, _cancellationTokens.Token);
@@ -368,19 +367,13 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
         }
     }
 
-    private async Task ValidateGeographyAsync(Guid provinceId, Guid? districtId, Guid? communeId)
+    private async Task ValidateGeographyAsync(Guid provinceId, Guid? communeId)
     {
         await _provinces.GetAsync(provinceId, cancellationToken: _cancellationTokens.Token);
-        if (districtId.HasValue)
-        {
-            var district = await _districts.GetAsync(districtId.Value, cancellationToken: _cancellationTokens.Token);
-            if (district.ProvinceId != provinceId) throw new BusinessException(FoodSafeDomainErrorCodes.Organization.InvalidGeography);
-        }
         if (communeId.HasValue)
         {
-            if (!districtId.HasValue) throw new BusinessException(FoodSafeDomainErrorCodes.Organization.InvalidGeography);
             var commune = await _communes.GetAsync(communeId.Value, cancellationToken: _cancellationTokens.Token);
-            if (commune.DistrictId != districtId) throw new BusinessException(FoodSafeDomainErrorCodes.Organization.InvalidGeography);
+            if (commune.ProvinceId != provinceId) throw new BusinessException(FoodSafeDomainErrorCodes.Organization.InvalidGeography);
         }
     }
 

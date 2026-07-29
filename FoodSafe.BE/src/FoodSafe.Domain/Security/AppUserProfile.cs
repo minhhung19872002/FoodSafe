@@ -112,7 +112,6 @@ public sealed class ManagementScopeAssignment : Entity<Guid>, IAggregateRoot<Gui
     public Guid? GranteeUserId { get; private set; }
     public ManagementScopeType ScopeType { get; private set; }
     public Guid? ProvinceId { get; private set; }
-    public Guid? DistrictId { get; private set; }
     public Guid? CommuneId { get; private set; }
     public Guid? BusinessId { get; private set; }
     public Guid? BusinessTypeId { get; private set; }
@@ -133,7 +132,6 @@ public sealed class ManagementScopeAssignment : Entity<Guid>, IAggregateRoot<Gui
         Guid granteeOrganizationId,
         Guid? granteeUserId,
         Guid? provinceId,
-        Guid? districtId,
         Guid? communeId,
         bool canView,
         bool canCreate,
@@ -144,7 +142,7 @@ public sealed class ManagementScopeAssignment : Entity<Guid>, IAggregateRoot<Gui
         DateTime now,
         Guid? creatorId)
     {
-        if (new[] { provinceId, districtId, communeId }.Count(x => x.HasValue) != 1)
+        if (new[] { provinceId, communeId }.Count(x => x.HasValue) != 1)
         {
             throw new BusinessException(
                 FoodSafeDomainErrorCodes.DataScope.ExactlyOneGeographyRequired);
@@ -163,7 +161,6 @@ public sealed class ManagementScopeAssignment : Entity<Guid>, IAggregateRoot<Gui
             GranteeUserId = granteeUserId,
             ScopeType = ManagementScopeType.Geography,
             ProvinceId = provinceId,
-            DistrictId = districtId,
             CommuneId = communeId,
             CanView = canView,
             CanCreate = canCreate,

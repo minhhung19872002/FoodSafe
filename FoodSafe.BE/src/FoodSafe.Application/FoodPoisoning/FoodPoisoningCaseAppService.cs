@@ -246,7 +246,6 @@ public class FoodPoisoningCaseAppService : ApplicationService
                 {
                     Street = input.LocationDescription,
                     ProvinceId = input.LocationProvinceId,
-                    DistrictId = input.LocationDistrictId,
                     CommuneId = input.LocationCommuneId,
                 },
                 _cancellationTokens.Token);
@@ -260,7 +259,7 @@ public class FoodPoisoningCaseAppService : ApplicationService
 
         entity.SetLocation(
             input.LocationDescription, input.LocationCommuneId,
-            input.LocationDistrictId, input.LocationProvinceId,
+            input.LocationProvinceId,
             lat, lng);
 
         entity.SetVictimInfo(
@@ -281,7 +280,6 @@ public class FoodPoisoningCaseAppService : ApplicationService
 
     private static bool HasAddressInfo(CreateUpdateFoodPoisoningCaseDto input) =>
         input.LocationProvinceId.HasValue
-        || input.LocationDistrictId.HasValue
         || input.LocationCommuneId.HasValue
         || !string.IsNullOrWhiteSpace(input.LocationDescription);
 
@@ -295,7 +293,6 @@ public class FoodPoisoningCaseAppService : ApplicationService
         OccurrenceDate = e.OccurrenceDate,
         LocationDescription = e.LocationDescription,
         LocationCommuneId = e.LocationCommuneId,
-        LocationDistrictId = e.LocationDistrictId,
         LocationProvinceId = e.LocationProvinceId,
         LocationLatitude = e.LocationLatitude,
         LocationLongitude = e.LocationLongitude,

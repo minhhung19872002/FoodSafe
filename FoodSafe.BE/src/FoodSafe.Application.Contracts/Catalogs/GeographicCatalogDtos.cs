@@ -46,15 +46,9 @@ public sealed class ProvinceDto : GeographicCatalogDto
     public string? NameShort { get; set; }
 }
 
-public sealed class DistrictDto : GeographicCatalogDto
-{
-    public Guid ProvinceId { get; set; }
-    public DistrictType Type { get; set; }
-}
-
 public sealed class CommuneDto : GeographicCatalogDto
 {
-    public Guid DistrictId { get; set; }
+    public Guid ProvinceId { get; set; }
     public CommuneType Type { get; set; }
 }
 
@@ -98,58 +92,23 @@ public sealed class UpsertProvinceDto : UpsertGeographicCatalogDto
     public string? NameShort { get; set; }
 }
 
-public sealed class UpsertDistrictDto : UpsertGeographicCatalogDto
-{
-    protected override int CodeMaxLength => 10;
-
-    public Guid ProvinceId { get; set; }
-    [EnumDataType(typeof(DistrictType))]
-    public DistrictType Type { get; set; }
-}
-
 public sealed class UpsertCommuneDto : UpsertGeographicCatalogDto
 {
     protected override int CodeMaxLength => 10;
 
-    public Guid DistrictId { get; set; }
+    public Guid ProvinceId { get; set; }
     [EnumDataType(typeof(CommuneType))]
     public CommuneType Type { get; set; }
-}
-
-public sealed class ImportGeographyFromExcelInput
-{
-    public Guid ProvinceId { get; set; }
-    public byte[] ExcelBytes { get; set; } = [];
-}
-
-public sealed class ImportGeographyErrorDto
-{
-    public int RowNumber { get; set; }
-    public string Field { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-}
-
-public sealed class ImportGeographyResultDto
-{
-    public int ImportedDistricts { get; set; }
-    public int ImportedCommunes { get; set; }
-    public int SkippedRows { get; set; }
-    public IReadOnlyList<ImportGeographyErrorDto> Errors { get; set; } = [];
 }
 
 public interface IGeographicCatalogAppService : IApplicationService
 {
     Task<ListResultDto<ProvinceDto>> GetProvincesAsync(bool activeOnly = true);
-    Task<ListResultDto<DistrictDto>> GetDistrictsAsync(Guid provinceId, bool activeOnly = true);
-    Task<ListResultDto<CommuneDto>> GetCommunesAsync(Guid districtId, bool activeOnly = true);
+    Task<ListResultDto<CommuneDto>> GetCommunesByProvinceAsync(Guid provinceId, bool activeOnly = true);
     Task<ProvinceDto> CreateProvinceAsync(UpsertProvinceDto input);
     Task<ProvinceDto> UpdateProvinceAsync(Guid id, UpsertProvinceDto input);
     Task DeleteProvinceAsync(Guid id);
-    Task<DistrictDto> CreateDistrictAsync(UpsertDistrictDto input);
-    Task<DistrictDto> UpdateDistrictAsync(Guid id, UpsertDistrictDto input);
-    Task DeleteDistrictAsync(Guid id);
     Task<CommuneDto> CreateCommuneAsync(UpsertCommuneDto input);
     Task<CommuneDto> UpdateCommuneAsync(Guid id, UpsertCommuneDto input);
     Task DeleteCommuneAsync(Guid id);
-    Task<ImportGeographyResultDto> ImportDistrictsAndCommunesFromExcelAsync(ImportGeographyFromExcelInput input);
 }

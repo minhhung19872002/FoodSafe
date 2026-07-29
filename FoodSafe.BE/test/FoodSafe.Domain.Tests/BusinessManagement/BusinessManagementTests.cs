@@ -142,7 +142,7 @@ public sealed class BusinessManagementTests
         double? longitude = 107.2925) =>
         Business.Create(
             Guid.NewGuid(), organizationId, code, "Cơ sở kiểm thử", null, null,
-            taxCode, null, null, null, null, null, "Hạ Long", null, null, null,
+            taxCode, null, null, null, null, null, "Hạ Long", null, null,
             latitude, longitude, null, null, null);
 
     private static SelfDeclaration CreateSelfDeclaration(

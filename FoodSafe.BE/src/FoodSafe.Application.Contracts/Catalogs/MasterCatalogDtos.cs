@@ -74,7 +74,6 @@ public sealed class TestingCenterDto : MasterCatalogDto
 {
     public string Address { get; set; } = string.Empty;
     public Guid ProvinceId { get; set; }
-    public Guid? DistrictId { get; set; }
     public Guid? CommuneId { get; set; }
     public string? ContactPerson { get; set; }
     public string? Phone { get; set; }
@@ -88,7 +87,6 @@ public sealed class UpsertTestingCenterDto : UpsertMasterCatalogDto
 {
     [Required, StringLength(500)] public string Address { get; set; } = string.Empty;
     public Guid ProvinceId { get; set; }
-    public Guid? DistrictId { get; set; }
     public Guid? CommuneId { get; set; }
     [StringLength(200)] public string? ContactPerson { get; set; }
     [StringLength(50)] public string? Phone { get; set; }

@@ -94,7 +94,7 @@ describe("InspectionPage", () => {
       email: "viewer@foodsafe.local",
       organizationId: null,
       organizationName: null,
-      roles: ["DistrictStaff"],
+      roles: ["CommuneStaff"],
       permissions: ["FoodSafe.Inspection.Plans.View"],
     });
     renderPage();

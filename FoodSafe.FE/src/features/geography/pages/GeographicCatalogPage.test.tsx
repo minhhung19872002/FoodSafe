@@ -14,12 +14,6 @@ function mockApis() {
         items: [{ id: "p-1", code: "22", name: "Quảng Ninh", isActive: true }],
       }),
     ),
-    http.get("*/api/v1/app/geographic-catalog/districts", () =>
-      HttpResponse.json({ items: [] }),
-    ),
-    http.get("*/api/v1/app/geographic-catalog/communes", () =>
-      HttpResponse.json({ items: [] }),
-    ),
   );
 }
 

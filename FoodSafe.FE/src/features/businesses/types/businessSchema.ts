@@ -37,7 +37,6 @@ export const businessSchema = z
       .or(z.literal("")),
     addressStreet: optionalText,
     addressProvinceId: optionalGuid,
-    addressDistrictId: optionalGuid,
     addressCommuneId: optionalGuid,
     addressLatitude: z.number().min(-90).max(90).optional(),
     addressLongitude: z.number().min(-180).max(180).optional(),

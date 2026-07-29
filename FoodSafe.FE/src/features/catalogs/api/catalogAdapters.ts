@@ -30,7 +30,6 @@ function toCatalogItem(item: CatalogItem): CatalogItem {
     riskLevel: nullableToUndefined(item.riskLevel),
     address: nullableToUndefined(item.address),
     provinceId: nullableToUndefined(item.provinceId),
-    districtId: nullableToUndefined(item.districtId),
     communeId: nullableToUndefined(item.communeId),
     contactPerson: nullableToUndefined(item.contactPerson),
     phone: nullableToUndefined(item.phone),

@@ -13,7 +13,6 @@ public sealed class OrganizationDto : FullAuditedEntityDto<Guid>
     public string? Email { get; set; }
     public string? LeaderName { get; set; }
     public Guid? ProvinceId { get; set; }
-    public Guid? DistrictId { get; set; }
     public Guid? CommuneId { get; set; }
     public bool IsActive { get; set; }
 }

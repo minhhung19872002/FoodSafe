@@ -209,7 +209,7 @@ public static class FoodSafeDomainErrorCodes
         public const string DuplicateCode = "FoodSafe:Catalog:0001";
         public const string InUse = "FoodSafe:Catalog:0002";
         public const string InvalidCountryCode = "FoodSafe:Catalog:0003";
-        public const string InvalidDistrictType = "FoodSafe:Catalog:0004";
+
         public const string InvalidCommuneType = "FoodSafe:Catalog:0005";
         public const string InvalidRiskLevel = "FoodSafe:Catalog:0006";
         public const string InvalidProductGroupHierarchy = "FoodSafe:Catalog:0007";

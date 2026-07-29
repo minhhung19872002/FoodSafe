@@ -18,7 +18,6 @@ public sealed class Business : FullAuditedAggregateRoot<Guid>
     public string? ContactWebsite { get; private set; }
     public string? AddressStreet { get; private set; }
     public Guid? AddressProvinceId { get; private set; }
-    public Guid? AddressDistrictId { get; private set; }
     public Guid? AddressCommuneId { get; private set; }
     public double? AddressLatitude { get; private set; }
     public double? AddressLongitude { get; private set; }
@@ -54,7 +53,6 @@ public sealed class Business : FullAuditedAggregateRoot<Guid>
         string? contactWebsite,
         string? addressStreet,
         Guid? addressProvinceId,
-        Guid? addressDistrictId,
         Guid? addressCommuneId,
         double? addressLatitude,
         double? addressLongitude,
@@ -67,7 +65,7 @@ public sealed class Business : FullAuditedAggregateRoot<Guid>
             code, name, businessTypeId, businessClassificationId, taxCode,
             representativeName, representativeIdCard, contactPhone,
             contactEmail, contactWebsite, addressStreet, addressProvinceId,
-            addressDistrictId, addressCommuneId, addressLatitude,
+            addressCommuneId, addressLatitude,
             addressLongitude, establishedDate, employeeCount, notes);
         business.SetStatus(BusinessStatus.Active, null, null);
         return business;
@@ -86,7 +84,6 @@ public sealed class Business : FullAuditedAggregateRoot<Guid>
         string? contactWebsite,
         string? addressStreet,
         Guid? addressProvinceId,
-        Guid? addressDistrictId,
         Guid? addressCommuneId,
         double? addressLatitude,
         double? addressLongitude,
@@ -95,7 +92,7 @@ public sealed class Business : FullAuditedAggregateRoot<Guid>
         string? notes)
     {
         Check.NotNullOrWhiteSpace(name, nameof(name), 500);
-        ValidateAddress(addressProvinceId, addressDistrictId, addressCommuneId);
+        ValidateAddress(addressProvinceId, addressCommuneId);
         ValidateCoordinates(addressLatitude, addressLongitude);
         if (employeeCount < 0)
             throw new BusinessException(FoodSafeDomainErrorCodes.Business.InvalidEmployeeCount);
@@ -112,7 +109,6 @@ public sealed class Business : FullAuditedAggregateRoot<Guid>
         ContactWebsite = Normalize(contactWebsite);
         AddressStreet = Normalize(addressStreet);
         AddressProvinceId = addressProvinceId;
-        AddressDistrictId = addressDistrictId;
         AddressCommuneId = addressCommuneId;
         AddressLatitude = addressLatitude;
         AddressLongitude = addressLongitude;
@@ -156,11 +152,9 @@ public sealed class Business : FullAuditedAggregateRoot<Guid>
 
     private static void ValidateAddress(
         Guid? provinceId,
-        Guid? districtId,
         Guid? communeId)
     {
-        if ((districtId.HasValue && !provinceId.HasValue) ||
-            (communeId.HasValue && !districtId.HasValue))
+        if (communeId.HasValue && !provinceId.HasValue)
             throw new BusinessException(FoodSafeDomainErrorCodes.Business.InvalidGeography);
     }
 

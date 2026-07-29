@@ -24,7 +24,6 @@ public class ReportStatisticsAppService : ApplicationService
     private readonly IRepository<BusinessType, Guid> _businessTypes;
     private readonly IRepository<Region, Guid> _regions;
     private readonly IRepository<Province, Guid> _provinces;
-    private readonly IRepository<District, Guid> _districts;
     private readonly IRepository<Organization, Guid> _organizations;
     private readonly IRepository<SelfDeclaration, Guid> _selfDeclarations;
     private readonly IRepository<ProductRegistration, Guid> _productRegistrations;
@@ -44,7 +43,6 @@ public class ReportStatisticsAppService : ApplicationService
         IRepository<BusinessType, Guid> businessTypes,
         IRepository<Region, Guid> regions,
         IRepository<Province, Guid> provinces,
-        IRepository<District, Guid> districts,
         IRepository<Organization, Guid> organizations,
         IRepository<SelfDeclaration, Guid> selfDeclarations,
         IRepository<ProductRegistration, Guid> productRegistrations,
@@ -63,7 +61,6 @@ public class ReportStatisticsAppService : ApplicationService
         _businessTypes = businessTypes;
         _regions = regions;
         _provinces = provinces;
-        _districts = districts;
         _organizations = organizations;
         _selfDeclarations = selfDeclarations;
         _productRegistrations = productRegistrations;
@@ -198,10 +195,10 @@ public class ReportStatisticsAppService : ApplicationService
             .Where(x => x.ReportDate.Year == year);
 
         var grouped = await AsyncExecuter.ToListAsync(
-            caseQ.GroupBy(x => x.LocationDistrictId)
+            caseQ.GroupBy(x => x.LocationProvinceId)
                 .Select(g => new
                 {
-                    DistrictId = g.Key,
+                    ProvinceId = g.Key,
                     CaseCount = g.Count(),
                     HospitalizedCount = g.Count(x =>
                         x.TreatmentResult == TreatmentResult.Hospitalized),
@@ -209,18 +206,18 @@ public class ReportStatisticsAppService : ApplicationService
                         x.TreatmentResult == TreatmentResult.Deceased)
                 }), ct);
 
-        var districtIds = grouped.Where(g => g.DistrictId.HasValue)
-            .Select(g => g.DistrictId!.Value).ToList();
-        var districtQ = await _districts.GetQueryableAsync();
-        var districtNames = await AsyncExecuter.ToListAsync(
-            districtQ.Where(d => districtIds.Contains(d.Id))
-                .Select(d => new { d.Id, d.Name }), ct);
+        var provinceIds = grouped.Where(g => g.ProvinceId.HasValue)
+            .Select(g => g.ProvinceId!.Value).ToList();
+        var provinceQ = await _provinces.GetQueryableAsync();
+        var provinceNames = await AsyncExecuter.ToListAsync(
+            provinceQ.Where(p => provinceIds.Contains(p.Id))
+                .Select(p => new { p.Id, p.Name }), ct);
 
         dto.PoisoningByArea = grouped
             .Select(g => new PoisoningByAreaRow
             {
-                AreaName = g.DistrictId.HasValue
-                    ? districtNames.FirstOrDefault(d => d.Id == g.DistrictId.Value)?.Name
+                AreaName = g.ProvinceId.HasValue
+                    ? provinceNames.FirstOrDefault(p => p.Id == g.ProvinceId.Value)?.Name
                       ?? "Không xác định"
                     : "Không xác định",
                 CaseCount = g.CaseCount,
@@ -296,9 +293,6 @@ public class ReportStatisticsAppService : ApplicationService
         var byProvince = await AsyncExecuter.ToListAsync(
             bizQ.GroupBy(b => b.AddressProvinceId)
                 .Select(g => new { Key = g.Key, Count = g.Count() }), ct);
-        var byDistrict = await AsyncExecuter.ToListAsync(
-            bizQ.GroupBy(b => b.AddressDistrictId)
-                .Select(g => new { Key = g.Key, Count = g.Count() }), ct);
         var byOrganization = await AsyncExecuter.ToListAsync(
             bizQ.GroupBy(b => b.OrganizationId)
                 .Select(g => new { Key = (Guid?)g.Key, Count = g.Count() }), ct);
@@ -318,13 +312,6 @@ public class ReportStatisticsAppService : ApplicationService
         var regionQ = await _regions.GetQueryableAsync();
         var regionNames = await AsyncExecuter.ToListAsync(
             regionQ.Select(r => new { r.Id, r.Name }), ct);
-
-        var districtIds = byDistrict.Where(x => x.Key.HasValue)
-            .Select(x => x.Key!.Value).ToList();
-        var districtQ = await _districts.GetQueryableAsync();
-        var districtNames = await AsyncExecuter.ToListAsync(
-            districtQ.Where(d => districtIds.Contains(d.Id))
-                .Select(d => new { d.Id, d.Name }), ct);
 
         var organizationIds = byOrganization.Where(x => x.Key.HasValue)
             .Select(x => x.Key!.Value).ToList();
@@ -369,9 +356,6 @@ public class ReportStatisticsAppService : ApplicationService
                     ? regionNames.FirstOrDefault(r => r.Id == regionId.Value)?.Name
                     : null;
             });
-        dto.BusinessesByDistrict = Build(
-            byDistrict.Select(x => (x.Key, x.Count)),
-            id => districtNames.FirstOrDefault(d => d.Id == id)?.Name);
         dto.BusinessesByOrganization = Build(
             byOrganization.Select(x => (x.Key, x.Count)),
             id => orgNames.FirstOrDefault(o => o.Id == id)?.Name);

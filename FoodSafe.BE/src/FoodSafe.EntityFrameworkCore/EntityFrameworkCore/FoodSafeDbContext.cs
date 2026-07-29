@@ -43,7 +43,6 @@ public class FoodSafeDbContext :
     public DbSet<Country> Countries { get; set; }
     public DbSet<Region> Regions { get; set; }
     public DbSet<Province> Provinces { get; set; }
-    public DbSet<District> Districts { get; set; }
     public DbSet<Commune> Communes { get; set; }
     public DbSet<ProductGroup> ProductGroups { get; set; }
     public DbSet<BusinessType> BusinessTypes { get; set; }

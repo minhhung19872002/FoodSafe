@@ -69,9 +69,6 @@ public sealed class SelfDeclarationDataScopeChecker(
                 (x.AddressProvinceId.HasValue &&
                  scope.ProvinceIds.Contains(
                      x.AddressProvinceId.Value)) ||
-                (x.AddressDistrictId.HasValue &&
-                 scope.DistrictIds.Contains(
-                     x.AddressDistrictId.Value)) ||
                 (x.AddressCommuneId.HasValue &&
                  scope.CommuneIds.Contains(
                      x.AddressCommuneId.Value)))

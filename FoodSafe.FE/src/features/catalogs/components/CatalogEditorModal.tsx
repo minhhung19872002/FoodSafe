@@ -11,7 +11,7 @@ import {
   Switch,
 } from "antd";
 import dayjs from "dayjs";
-import { useCommunes, useDistricts, useProvinces } from "@/hooks/useGeography";
+import { useCommunesByProvince, useProvinces } from "@/hooks/useGeography";
 import { createCatalogSchema } from "../types/catalogSchema";
 import type {
   CatalogInput,
@@ -63,11 +63,9 @@ export function CatalogEditorModal({
     defaultValues: emptyCatalog,
   });
   const provinceId = useWatch({ control, name: "provinceId" });
-  const districtId = useWatch({ control, name: "districtId" });
   const level = useWatch({ control, name: "level" });
   const provinces = useProvinces(true);
-  const districts = useDistricts(provinceId ?? "", true);
-  const communes = useCommunes(districtId ?? "", true);
+  const communes = useCommunesByProvince(provinceId ?? "", true);
 
   useEffect(() => {
     if (open) reset({ ...emptyCatalog, ...item });
@@ -321,23 +319,6 @@ export function CatalogEditorModal({
                     options={(provinces.data?.items ?? []).map((province) => ({
                       value: province.id,
                       label: province.name,
-                    }))}
-                  />
-                </Form.Item>
-              )}
-            />
-            <Controller
-              control={control}
-              name="districtId"
-              render={({ field }) => (
-                <Form.Item label="Huyện/Quận">
-                  <Select
-                    {...field}
-                    value={field.value || undefined}
-                    allowClear
-                    options={(districts.data?.items ?? []).map((district) => ({
-                      value: district.id,
-                      label: district.name,
                     }))}
                   />
                 </Form.Item>

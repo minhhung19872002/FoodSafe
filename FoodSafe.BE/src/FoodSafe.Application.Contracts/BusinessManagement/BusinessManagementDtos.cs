@@ -13,7 +13,6 @@ public sealed class BusinessListInput : PagedAndSortedResultRequestDto
     public BusinessStatus? Status { get; set; }
     public bool? HasEligibilityCertificate { get; set; }
     public Guid? ProvinceId { get; set; }
-    public Guid? DistrictId { get; set; }
     public Guid? CommuneId { get; set; }
 
     public BusinessListInput()
@@ -38,7 +37,6 @@ public sealed class BusinessDto : FullAuditedEntityDto<Guid>
     public string? ContactWebsite { get; set; }
     public string? AddressStreet { get; set; }
     public Guid? AddressProvinceId { get; set; }
-    public Guid? AddressDistrictId { get; set; }
     public Guid? AddressCommuneId { get; set; }
     public double? AddressLatitude { get; set; }
     public double? AddressLongitude { get; set; }
@@ -69,7 +67,6 @@ public class UpsertBusinessDto
     [Url, StringLength(500)] public string? ContactWebsite { get; set; }
     public string? AddressStreet { get; set; }
     public Guid? AddressProvinceId { get; set; }
-    public Guid? AddressDistrictId { get; set; }
     public Guid? AddressCommuneId { get; set; }
     [Range(-90, 90)] public double? AddressLatitude { get; set; }
     [Range(-180, 180)] public double? AddressLongitude { get; set; }

@@ -10,20 +10,20 @@ public class DataScopeTests
     public void Hierarchy_Scope_Should_Contain_Only_Root_And_Descendants()
     {
         var province = Guid.NewGuid();
-        var district = Guid.NewGuid();
+        var branch = Guid.NewGuid();
         var commune = Guid.NewGuid();
         var otherProvince = Guid.NewGuid();
         var nodes = new[]
         {
-            new OrganizationScopeNode(province, null, null, null, null),
-            new OrganizationScopeNode(district, province, null, null, null),
-            new OrganizationScopeNode(commune, district, null, null, null),
-            new OrganizationScopeNode(otherProvince, null, null, null, null)
+            new OrganizationScopeNode(province, null, null, null),
+            new OrganizationScopeNode(branch, province, null, null),
+            new OrganizationScopeNode(commune, branch, null, null),
+            new OrganizationScopeNode(otherProvince, null, null, null)
         };
 
-        var scope = OrganizationHierarchyScope.Expand(district, nodes);
+        var scope = OrganizationHierarchyScope.Expand(branch, nodes);
 
-        scope.SetEquals([district, commune]).ShouldBeTrue();
+        scope.SetEquals([branch, commune]).ShouldBeTrue();
         scope.ShouldNotContain(province);
         scope.ShouldNotContain(otherProvince);
     }
@@ -35,8 +35,8 @@ public class DataScopeTests
         var second = Guid.NewGuid();
         var nodes = new[]
         {
-            new OrganizationScopeNode(first, second, null, null, null),
-            new OrganizationScopeNode(second, first, null, null, null)
+            new OrganizationScopeNode(first, second, null, null),
+            new OrganizationScopeNode(second, first, null, null)
         };
 
         OrganizationHierarchyScope.Expand(first, nodes).SetEquals([first, second]).ShouldBeTrue();
@@ -49,7 +49,6 @@ public class DataScopeTests
             ManagementScopeAssignment.CreateGeography(
                 Guid.NewGuid(),
                 Guid.NewGuid(),
-                null,
                 Guid.NewGuid(),
                 Guid.NewGuid(),
                 null,
@@ -73,11 +72,11 @@ public class DataScopeTests
         var leafB = Guid.NewGuid();
         var nodes = new[]
         {
-            new OrganizationScopeNode(root, null, null, null, null),
-            new OrganizationScopeNode(branchA, root, null, null, null),
-            new OrganizationScopeNode(branchB, root, null, null, null),
-            new OrganizationScopeNode(leafA, branchA, null, null, null),
-            new OrganizationScopeNode(leafB, branchB, null, null, null)
+            new OrganizationScopeNode(root, null, null, null),
+            new OrganizationScopeNode(branchA, root, null, null),
+            new OrganizationScopeNode(branchB, root, null, null),
+            new OrganizationScopeNode(leafA, branchA, null, null),
+            new OrganizationScopeNode(leafB, branchB, null, null)
         };
 
         var scopeA = OrganizationHierarchyScope.Expand(branchA, nodes);
@@ -97,9 +96,9 @@ public class DataScopeTests
         var leaf = Guid.NewGuid();
         var nodes = new[]
         {
-            new OrganizationScopeNode(root, null, null, null, null),
-            new OrganizationScopeNode(middle, root, null, null, null),
-            new OrganizationScopeNode(leaf, middle, null, null, null)
+            new OrganizationScopeNode(root, null, null, null),
+            new OrganizationScopeNode(middle, root, null, null),
+            new OrganizationScopeNode(leaf, middle, null, null)
         };
 
         var scope = OrganizationHierarchyScope.Expand(leaf, nodes);
@@ -114,7 +113,7 @@ public class DataScopeTests
         var existing = Guid.NewGuid();
         var nodes = new[]
         {
-            new OrganizationScopeNode(existing, null, null, null, null)
+            new OrganizationScopeNode(existing, null, null, null)
         };
 
         Should.Throw<InvalidOperationException>(

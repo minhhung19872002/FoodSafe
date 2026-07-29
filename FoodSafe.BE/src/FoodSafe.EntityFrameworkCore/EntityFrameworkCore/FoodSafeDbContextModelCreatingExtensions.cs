@@ -49,7 +49,6 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.Email).HasColumnName("email").HasMaxLength(200);
             entity.Property(x => x.LeaderName).HasColumnName("leader_name").HasMaxLength(200);
             entity.Property(x => x.ProvinceId).HasColumnName("province_id");
-            entity.Property(x => x.DistrictId).HasColumnName("district_id");
             entity.Property(x => x.CommuneId).HasColumnName("commune_id");
             entity.Property(x => x.IsActive).HasColumnName("is_active");
             entity.Property(x => x.ExtraProperties).HasColumnName("extra_properties");
@@ -73,18 +72,12 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasForeignKey(x => x.ProvinceId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_organizations_province");
-            entity.HasOne<District>()
-                .WithMany()
-                .HasForeignKey(x => new { x.DistrictId, x.ProvinceId })
-                .HasPrincipalKey(x => new { DistrictId = x.Id, x.ProvinceId })
-                .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("fk_organizations_district_province");
             entity.HasOne<Commune>()
                 .WithMany()
-                .HasForeignKey(x => new { x.CommuneId, x.DistrictId })
-                .HasPrincipalKey(x => new { CommuneId = x.Id, x.DistrictId })
+                .HasForeignKey(x => new { x.CommuneId, x.ProvinceId })
+                .HasPrincipalKey(x => new { CommuneId = x.Id, x.ProvinceId })
                 .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("fk_organizations_commune_district");
+                .HasConstraintName("fk_organizations_commune_province");
 
             entity.HasIndex(x => x.Code)
                 .IsUnique()
@@ -105,8 +98,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 table.HasCheckConstraint("chk_businesses_status", "status IN (1, 2, 3)");
                 table.HasCheckConstraint(
                     "chk_businesses_address_chain",
-                    "(address_commune_id IS NULL OR address_district_id IS NOT NULL) AND " +
-                    "(address_district_id IS NULL OR address_province_id IS NOT NULL)");
+                    "address_commune_id IS NULL OR address_province_id IS NOT NULL");
                 table.HasCheckConstraint(
                     "chk_businesses_coordinates",
                     "(address_latitude IS NULL AND address_longitude IS NULL) OR " +
@@ -132,7 +124,6 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.ContactWebsite).HasColumnName("contact_website").HasMaxLength(500);
             entity.Property(x => x.AddressStreet).HasColumnName("address_street");
             entity.Property(x => x.AddressProvinceId).HasColumnName("address_province_id");
-            entity.Property(x => x.AddressDistrictId).HasColumnName("address_district_id");
             entity.Property(x => x.AddressCommuneId).HasColumnName("address_commune_id");
             entity.Property(x => x.AddressLatitude).HasColumnName("address_latitude");
             entity.Property(x => x.AddressLongitude).HasColumnName("address_longitude");
@@ -154,14 +145,10 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_classification");
             entity.HasOne<Province>().WithMany().HasForeignKey(x => x.AddressProvinceId)
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_province");
-            entity.HasOne<District>().WithMany()
-                .HasForeignKey(x => new { x.AddressDistrictId, x.AddressProvinceId })
-                .HasPrincipalKey(x => new { AddressDistrictId = x.Id, AddressProvinceId = x.ProvinceId })
-                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_district_province");
             entity.HasOne<Commune>().WithMany()
-                .HasForeignKey(x => new { x.AddressCommuneId, x.AddressDistrictId })
-                .HasPrincipalKey(x => new { AddressCommuneId = x.Id, AddressDistrictId = x.DistrictId })
-                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_commune_district");
+                .HasForeignKey(x => new { x.AddressCommuneId, x.AddressProvinceId })
+                .HasPrincipalKey(x => new { AddressCommuneId = x.Id, AddressProvinceId = x.ProvinceId })
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_commune_province");
 
             entity.HasAlternateKey(x => new { x.Id, x.OrganizationId })
                 .HasName("uq_businesses_id_org");
@@ -182,8 +169,6 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasDatabaseName("idx_businesses_status");
             entity.HasIndex(x => x.AddressProvinceId).HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("idx_businesses_province");
-            entity.HasIndex(x => x.AddressDistrictId).HasFilter("is_deleted = FALSE")
-                .HasDatabaseName("idx_businesses_district");
             entity.HasIndex(x => x.AddressCommuneId).HasFilter("is_deleted = FALSE")
                 .HasDatabaseName("idx_businesses_commune");
         });
@@ -1345,7 +1330,6 @@ public static class FoodSafeDbContextModelCreatingExtensions
             ConfigureMasterCatalog(entity);
             entity.Property(x => x.Address).HasColumnName("address_street").HasMaxLength(500).IsRequired();
             entity.Property(x => x.ProvinceId).HasColumnName("address_province_id");
-            entity.Property(x => x.DistrictId).HasColumnName("address_district_id");
             entity.Property(x => x.CommuneId).HasColumnName("address_commune_id");
             entity.Property(x => x.ContactPerson).HasColumnName("contact_person").HasMaxLength(200);
             entity.Property(x => x.Phone).HasColumnName("phone").HasMaxLength(50);
@@ -1355,12 +1339,9 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.AccreditationExpiresAt).HasColumnName("accreditation_expiry");
             entity.HasOne<Province>().WithMany().HasForeignKey(x => x.ProvinceId)
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_testing_centers_province");
-            entity.HasOne<District>().WithMany().HasForeignKey(x => new { x.DistrictId, x.ProvinceId })
-                .HasPrincipalKey(x => new { DistrictId = x.Id, x.ProvinceId })
-                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_testing_centers_district_province");
-            entity.HasOne<Commune>().WithMany().HasForeignKey(x => new { x.CommuneId, x.DistrictId })
-                .HasPrincipalKey(x => new { CommuneId = x.Id, x.DistrictId })
-                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_testing_centers_commune_district");
+            entity.HasOne<Commune>().WithMany().HasForeignKey(x => new { x.CommuneId, x.ProvinceId })
+                .HasPrincipalKey(x => new { CommuneId = x.Id, x.ProvinceId })
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_testing_centers_commune_province");
             entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("uq_testing_centers_code");
         });
 
@@ -1418,22 +1399,6 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("uq_cat_provinces_code");
         });
 
-        builder.Entity<District>(entity =>
-        {
-            entity.ToTable("cat_districts", table =>
-                table.HasCheckConstraint("chk_cat_districts_type", "type IN (1, 2, 3, 4)"));
-            ConfigureAdministrativeArea(entity);
-            entity.HasKey(x => x.Id).HasName("pk_cat_districts");
-            entity.Property(x => x.Code).HasMaxLength(10);
-            entity.Property(x => x.ProvinceId).HasColumnName("province_id");
-            entity.Property(x => x.Type).HasColumnName("type").HasConversion<short>();
-            entity.HasOne<Province>().WithMany().HasForeignKey(x => x.ProvinceId)
-                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_cat_districts_province");
-            entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("uq_cat_districts_code");
-            entity.HasAlternateKey(x => new { x.Id, x.ProvinceId })
-                .HasName("uq_cat_districts_id_province");
-        });
-
         builder.Entity<Commune>(entity =>
         {
             entity.ToTable("cat_communes", table =>
@@ -1441,13 +1406,13 @@ public static class FoodSafeDbContextModelCreatingExtensions
             ConfigureAdministrativeArea(entity);
             entity.HasKey(x => x.Id).HasName("pk_cat_communes");
             entity.Property(x => x.Code).HasMaxLength(10);
-            entity.Property(x => x.DistrictId).HasColumnName("district_id");
+            entity.Property(x => x.ProvinceId).HasColumnName("province_id");
             entity.Property(x => x.Type).HasColumnName("type").HasConversion<short>();
-            entity.HasOne<District>().WithMany().HasForeignKey(x => x.DistrictId)
-                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_cat_communes_district");
+            entity.HasOne<Province>().WithMany().HasForeignKey(x => x.ProvinceId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_cat_communes_province");
             entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("uq_cat_communes_code");
-            entity.HasAlternateKey(x => new { x.Id, x.DistrictId })
-                .HasName("uq_cat_communes_id_district");
+            entity.HasAlternateKey(x => new { x.Id, x.ProvinceId })
+                .HasName("uq_cat_communes_id_province");
         });
     }
 
@@ -1503,15 +1468,15 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 table.HasCheckConstraint(
                     "chk_msa_one_target",
                     "(scope_type = 1 AND business_id IS NULL AND business_type_id IS NULL" +
-                    " AND product_group_id IS NULL AND num_nonnulls(province_id, district_id, commune_id) = 1)" +
+                    " AND product_group_id IS NULL AND num_nonnulls(province_id, commune_id) = 1)" +
                     " OR (scope_type = 2 AND business_id IS NOT NULL AND province_id IS NULL" +
-                    " AND district_id IS NULL AND commune_id IS NULL AND business_type_id IS NULL" +
+                    " AND commune_id IS NULL AND business_type_id IS NULL" +
                     " AND product_group_id IS NULL)" +
                     " OR (scope_type = 3 AND business_type_id IS NOT NULL AND province_id IS NULL" +
-                    " AND district_id IS NULL AND commune_id IS NULL AND business_id IS NULL" +
+                    " AND commune_id IS NULL AND business_id IS NULL" +
                     " AND product_group_id IS NULL)" +
                     " OR (scope_type = 4 AND product_group_id IS NOT NULL AND province_id IS NULL" +
-                    " AND district_id IS NULL AND commune_id IS NULL AND business_id IS NULL" +
+                    " AND commune_id IS NULL AND business_id IS NULL" +
                     " AND business_type_id IS NULL)");
             });
             entity.HasKey(x => x.Id).HasName("pk_management_scope_assignments");
@@ -1520,7 +1485,6 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.GranteeUserId).HasColumnName("grantee_user_id");
             entity.Property(x => x.ScopeType).HasColumnName("scope_type").HasConversion<short>();
             entity.Property(x => x.ProvinceId).HasColumnName("province_id");
-            entity.Property(x => x.DistrictId).HasColumnName("district_id");
             entity.Property(x => x.CommuneId).HasColumnName("commune_id");
             entity.Property(x => x.BusinessId).HasColumnName("business_id");
             entity.Property(x => x.BusinessTypeId).HasColumnName("business_type_id");
@@ -1537,8 +1501,6 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_grantee_org");
             entity.HasOne<Province>().WithMany().HasForeignKey(x => x.ProvinceId)
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_province");
-            entity.HasOne<District>().WithMany().HasForeignKey(x => x.DistrictId)
-                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_district");
             entity.HasOne<Commune>().WithMany().HasForeignKey(x => x.CommuneId)
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_commune");
             entity.HasOne<BusinessType>().WithMany().HasForeignKey(x => x.BusinessTypeId)
@@ -1955,7 +1917,6 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             entity.Property(x => x.LocationDescription).HasColumnName("location_description");
             entity.Property(x => x.LocationCommuneId).HasColumnName("location_commune_id");
-            entity.Property(x => x.LocationDistrictId).HasColumnName("location_district_id");
             entity.Property(x => x.LocationProvinceId).HasColumnName("location_province_id");
             entity.Property(x => x.LocationLatitude).HasColumnName("location_latitude");
             entity.Property(x => x.LocationLongitude).HasColumnName("location_longitude");
@@ -2012,12 +1973,6 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasConstraintName("fk_fpi_commune")
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne<District>()
-                .WithMany()
-                .HasForeignKey(x => x.LocationDistrictId)
-                .HasConstraintName("fk_fpi_district")
-                .OnDelete(DeleteBehavior.Restrict);
-
             entity.HasOne<Province>()
                 .WithMany()
                 .HasForeignKey(x => x.LocationProvinceId)
@@ -2056,7 +2011,6 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             entity.Property(x => x.LocationDescription).HasColumnName("location_description");
             entity.Property(x => x.LocationCommuneId).HasColumnName("location_commune_id");
-            entity.Property(x => x.LocationDistrictId).HasColumnName("location_district_id");
             entity.Property(x => x.LocationProvinceId).HasColumnName("location_province_id");
             entity.Property(x => x.LocationLatitude).HasColumnName("location_latitude");
             entity.Property(x => x.LocationLongitude).HasColumnName("location_longitude");
@@ -2116,12 +2070,6 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .WithMany()
                 .HasForeignKey(x => x.LocationCommuneId)
                 .HasConstraintName("fk_fpc_commune")
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne<District>()
-                .WithMany()
-                .HasForeignKey(x => x.LocationDistrictId)
-                .HasConstraintName("fk_fpc_district")
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne<Province>()

@@ -150,54 +150,28 @@ public sealed class Province : AdministrativeArea
     }
 }
 
-public sealed class District : AdministrativeArea
+public sealed class Commune : AdministrativeArea
 {
     public Guid ProvinceId { get; private set; }
-    public DistrictType Type { get; private set; }
+    public CommuneType Type { get; private set; }
 
-    private District() { }
+    private Commune() { }
 
-    public static District Create(Guid id, string code, string name, Guid provinceId, DistrictType type, int sortOrder = 0)
+    public static Commune Create(Guid id, string code, string name, Guid provinceId, CommuneType type, int sortOrder = 0)
     {
-        var item = new District();
+        var item = new Commune();
         item.Id = id;
         item.Update(code, name, provinceId, type, sortOrder, true);
         return item;
     }
 
-    public void Update(string code, string name, Guid provinceId, DistrictType type, int sortOrder, bool isActive)
-    {
-        Check.NotNullOrWhiteSpace(code, nameof(code), 10);
-        if (!Enum.IsDefined(type))
-            throw new BusinessException(FoodSafeDomainErrorCodes.Catalog.InvalidDistrictType);
-        base.Update(code, name, sortOrder, isActive);
-        ProvinceId = provinceId;
-        Type = type;
-    }
-}
-
-public sealed class Commune : AdministrativeArea
-{
-    public Guid DistrictId { get; private set; }
-    public CommuneType Type { get; private set; }
-
-    private Commune() { }
-
-    public static Commune Create(Guid id, string code, string name, Guid districtId, CommuneType type, int sortOrder = 0)
-    {
-        var item = new Commune();
-        item.Id = id;
-        item.Update(code, name, districtId, type, sortOrder, true);
-        return item;
-    }
-
-    public void Update(string code, string name, Guid districtId, CommuneType type, int sortOrder, bool isActive)
+    public void Update(string code, string name, Guid provinceId, CommuneType type, int sortOrder, bool isActive)
     {
         Check.NotNullOrWhiteSpace(code, nameof(code), 10);
         if (!Enum.IsDefined(type))
             throw new BusinessException(FoodSafeDomainErrorCodes.Catalog.InvalidCommuneType);
         base.Update(code, name, sortOrder, isActive);
-        DistrictId = districtId;
+        ProvinceId = provinceId;
         Type = type;
     }
 }

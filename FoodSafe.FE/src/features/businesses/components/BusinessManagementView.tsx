@@ -49,18 +49,15 @@ interface BusinessManagementViewProps {
   businessTypeId?: string;
   businessClassificationId?: string;
   provinceId?: string;
-  districtId?: string;
   businessSorting?: string;
   productSorting?: string;
   businessTypeOptions: FilterOption[];
   classificationOptions: FilterOption[];
   classificationItems?: ClassificationItem[];
   provinceOptions: FilterOption[];
-  districtOptions: FilterOption[];
   onBusinessTypeChange: (value?: string) => void;
   onClassificationChange: (value?: string) => void;
   onProvinceChange: (value?: string) => void;
-  onDistrictChange: (value?: string) => void;
   onBusinessSortingChange: (value?: string) => void;
   onProductSortingChange: (value?: string) => void;
   onShowDetail: (business: Business) => void;
@@ -389,17 +386,6 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               onChange={props.onProvinceChange}
               style={{ width: 160 }}
               options={props.provinceOptions}
-            />
-            <Select
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              placeholder="Địa bàn"
-              value={props.districtId}
-              onChange={props.onDistrictChange}
-              style={{ width: 160 }}
-              options={props.districtOptions}
-              disabled={!props.provinceId}
             />
             {props.permissions.createBusiness && (
               <Button

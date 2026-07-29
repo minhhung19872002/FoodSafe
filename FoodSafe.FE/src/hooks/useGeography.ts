@@ -1,18 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import {
+  getCommunesByProvince,
   getGeographicItems,
-  type CommuneItem,
-  type DistrictItem,
 } from "@/lib/geographyApi";
 
 const keys = {
   all: ["geography"] as const,
   provinces: (activeOnly: boolean) =>
     [...keys.all, "provinces", activeOnly] as const,
-  districts: (provinceId: string, activeOnly: boolean) =>
-    [...keys.all, "districts", provinceId, activeOnly] as const,
-  communes: (districtId: string, activeOnly: boolean) =>
-    [...keys.all, "communes", districtId, activeOnly] as const,
+  communesByProvince: (provinceId: string, activeOnly: boolean) =>
+    [...keys.all, "communes-by-province", provinceId, activeOnly] as const,
 };
 
 export function useProvinces(activeOnly = true) {
@@ -22,24 +19,10 @@ export function useProvinces(activeOnly = true) {
   });
 }
 
-export function useDistricts(provinceId: string, activeOnly = true) {
+export function useCommunesByProvince(provinceId: string, activeOnly = true) {
   return useQuery({
-    queryKey: keys.districts(provinceId, activeOnly),
-    // provinceId is a route segment per ABP convention: GET /districts/{provinceId}
-    queryFn: () =>
-      getGeographicItems<DistrictItem>(`districts/${provinceId}`, {
-        activeOnly,
-      }),
+    queryKey: keys.communesByProvince(provinceId, activeOnly),
+    queryFn: () => getCommunesByProvince(provinceId, activeOnly),
     enabled: provinceId.length > 0,
-  });
-}
-
-export function useCommunes(districtId: string, activeOnly = true) {
-  return useQuery({
-    queryKey: keys.communes(districtId, activeOnly),
-    // districtId is a route segment per ABP convention: GET /communes/{districtId}
-    queryFn: () =>
-      getGeographicItems<CommuneItem>(`communes/${districtId}`, { activeOnly }),
-    enabled: districtId.length > 0,
   });
 }

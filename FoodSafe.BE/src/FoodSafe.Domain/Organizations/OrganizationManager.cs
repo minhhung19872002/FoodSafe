@@ -20,7 +20,6 @@ public class OrganizationManager : DomainService
         OrganizationLevel level,
         Guid? parentId,
         Guid? provinceId,
-        Guid? districtId,
         Guid? communeId,
         string? address,
         string? phone,
@@ -31,7 +30,7 @@ public class OrganizationManager : DomainService
         await EnsureCodeIsUniqueAsync(code, null, cancellationToken);
 
         var organization = Organization.Create(
-            id, code, name, level, parentId, provinceId, districtId, communeId,
+            id, code, name, level, parentId, provinceId, communeId,
             address, phone, email, leaderName);
 
         var parent = await GetParentAsync(parentId, cancellationToken);
@@ -46,7 +45,6 @@ public class OrganizationManager : DomainService
         OrganizationLevel level,
         Guid? parentId,
         Guid? provinceId,
-        Guid? districtId,
         Guid? communeId,
         string? address,
         string? phone,
@@ -59,7 +57,7 @@ public class OrganizationManager : DomainService
         await EnsureNoCycleAsync(organization.Id, parentId, cancellationToken);
 
         organization.Update(
-            code, name, level, parentId, provinceId, districtId, communeId,
+            code, name, level, parentId, provinceId, communeId,
             address, phone, email, leaderName, isActive);
 
         var parent = await GetParentAsync(parentId, cancellationToken);

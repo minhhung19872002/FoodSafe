@@ -61,7 +61,7 @@ public sealed class FoodPoisoningCaseTests
         var c = CreateDraft();
         c.Submit(Guid.NewGuid(), DateTime.UtcNow);
         Should.Throw<BusinessException>(() =>
-            c.SetLocation("addr", null, null, null, null, null));
+            c.SetLocation("addr", null, null, null, null));
     }
 
     [Fact]

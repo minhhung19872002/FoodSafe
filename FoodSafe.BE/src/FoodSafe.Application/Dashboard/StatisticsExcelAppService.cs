@@ -94,7 +94,6 @@ public class StatisticsExcelAppService :
         AddBreakdownSheet(workbook, "Theo loại hình", data.BusinessesByType);
         AddBreakdownSheet(workbook, "Theo vùng", data.BusinessesByRegion);
         AddBreakdownSheet(workbook, "Theo tỉnh-TP", data.BusinessesByProvince);
-        AddBreakdownSheet(workbook, "Theo địa bàn", data.BusinessesByDistrict);
         AddBreakdownSheet(workbook, "Theo đầu mối quản lý",
             data.BusinessesByOrganization);
         using var output = new MemoryStream();

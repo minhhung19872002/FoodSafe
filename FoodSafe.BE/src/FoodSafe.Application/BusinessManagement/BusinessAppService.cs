@@ -90,8 +90,6 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
                 x.HasEligibilityCertificate == input.HasEligibilityCertificate);
         if (input.ProvinceId.HasValue)
             query = query.Where(x => x.AddressProvinceId == input.ProvinceId);
-        if (input.DistrictId.HasValue)
-            query = query.Where(x => x.AddressDistrictId == input.DistrictId);
         if (input.CommuneId.HasValue)
             query = query.Where(x => x.AddressCommuneId == input.CommuneId);
 
@@ -185,7 +183,7 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
             input.BusinessTypeId, input.BusinessClassificationId, input.TaxCode,
             input.RepresentativeName, input.RepresentativeIdCard,
             input.ContactPhone, input.ContactEmail, input.ContactWebsite,
-            input.AddressStreet, input.AddressProvinceId, input.AddressDistrictId,
+            input.AddressStreet, input.AddressProvinceId,
             input.AddressCommuneId, input.AddressLatitude, input.AddressLongitude,
             input.EstablishedDate, input.EmployeeCount, input.Notes);
         await _businesses.InsertAsync(
@@ -212,7 +210,7 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
             input.BusinessClassificationId, input.TaxCode,
             input.RepresentativeName, input.RepresentativeIdCard,
             input.ContactPhone, input.ContactEmail, input.ContactWebsite,
-            input.AddressStreet, input.AddressProvinceId, input.AddressDistrictId,
+            input.AddressStreet, input.AddressProvinceId,
             input.AddressCommuneId, input.AddressLatitude, input.AddressLongitude,
             input.EstablishedDate, input.EmployeeCount, input.Notes);
         business.SetStatus(
@@ -330,7 +328,6 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
         var productGroupQuery = await _businessProductGroups.GetQueryableAsync();
         var organizationIds = scope.OrganizationIds;
         var provinceIds = scope.ProvinceIds;
-        var districtIds = scope.DistrictIds;
         var communeIds = scope.CommuneIds;
         var businessIds = scope.BusinessIds ?? new HashSet<Guid>();
         var businessTypeIds = scope.BusinessTypeIds ?? new HashSet<Guid>();
@@ -343,8 +340,6 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
              businessTypeIds.Contains(x.BusinessTypeId.Value)) ||
             (x.AddressProvinceId.HasValue &&
              provinceIds.Contains(x.AddressProvinceId.Value)) ||
-            (x.AddressDistrictId.HasValue &&
-             districtIds.Contains(x.AddressDistrictId.Value)) ||
             (x.AddressCommuneId.HasValue &&
              communeIds.Contains(x.AddressCommuneId.Value)) ||
             productGroupQuery.Any(link =>

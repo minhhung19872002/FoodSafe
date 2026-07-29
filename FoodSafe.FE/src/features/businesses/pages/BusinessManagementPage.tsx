@@ -42,7 +42,7 @@ import {
   useProductList,
   useProductAttachments,
 } from "../api/businessQueries";
-import { useDistricts, useProvinces } from "@/hooks/useGeography";
+import { useProvinces } from "@/hooks/useGeography";
 import { BusinessDetailDrawer } from "../components/BusinessDetailDrawer";
 import { BusinessEditorModal } from "../components/BusinessEditorModal";
 import { BusinessHandlersModal } from "../components/BusinessHandlersModal";
@@ -77,7 +77,6 @@ function flattenOrganizations(
       email: null,
       leaderName: null,
       provinceId: null,
-      districtId: null,
       communeId: null,
     },
     ...flattenOrganizations(node.children),
@@ -106,7 +105,6 @@ export default function BusinessManagementPage() {
   const [businessClassificationId, setBusinessClassificationId] =
     useState<string>();
   const [provinceId, setProvinceId] = useState<string>();
-  const [districtId, setDistrictId] = useState<string>();
   const [businessSorting, setBusinessSorting] = useState<string>();
   const [productSorting, setProductSorting] = useState<string | undefined>(
     undefined,
@@ -135,7 +133,6 @@ export default function BusinessManagementPage() {
       businessTypeId,
       businessClassificationId,
       provinceId,
-      districtId,
       sorting: businessSorting,
       skipCount: businessPagination.skipCount,
       maxResultCount: businessPagination.maxResultCount,
@@ -188,7 +185,6 @@ export default function BusinessManagementPage() {
     [organizations.data?.items],
   );
   const provinces = useProvinces();
-  const districts = useDistricts(provinceId ?? "");
 
   const closeBusinessEditor = () => {
     setCreatingBusiness(false);
@@ -317,7 +313,6 @@ export default function BusinessManagementPage() {
         businessTypeId={businessTypeId}
         businessClassificationId={businessClassificationId}
         provinceId={provinceId}
-        districtId={districtId}
         businessSorting={businessSorting}
         onBusinessSortingChange={(value) => {
           setBusinessSorting(value);
@@ -340,10 +335,6 @@ export default function BusinessManagementPage() {
           value: item.id,
           label: item.name,
         }))}
-        districtOptions={(districts.data?.items ?? []).map((item) => ({
-          value: item.id,
-          label: item.name,
-        }))}
         onBusinessTypeChange={(value) => {
           setBusinessTypeId(value);
           businessPagination.resetToFirstPage();
@@ -354,11 +345,6 @@ export default function BusinessManagementPage() {
         }}
         onProvinceChange={(value) => {
           setProvinceId(value);
-          setDistrictId(undefined);
-          businessPagination.resetToFirstPage();
-        }}
-        onDistrictChange={(value) => {
-          setDistrictId(value);
           businessPagination.resetToFirstPage();
         }}
         onShowDetail={setDetailBusiness}
@@ -376,7 +362,6 @@ export default function BusinessManagementPage() {
               businessTypeId,
               businessClassificationId,
               provinceId,
-              districtId,
               sorting: businessSorting,
               skipCount: 0,
               maxResultCount: 20,

@@ -90,7 +90,7 @@ describe("EligibilityCertificatePage", () => {
       email: "viewer@foodsafe.local",
       organizationId: null,
       organizationName: null,
-      roles: ["DistrictStaff"],
+      roles: ["CommuneStaff"],
       permissions: ["FoodSafe.Licensing.EligibilityCertificates.View"],
     });
     renderPage();

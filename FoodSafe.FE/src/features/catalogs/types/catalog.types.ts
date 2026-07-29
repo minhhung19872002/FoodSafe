@@ -26,7 +26,6 @@ export interface CatalogItem {
   riskLevel?: number;
   address?: string;
   provinceId?: string;
-  districtId?: string;
   communeId?: string;
   contactPerson?: string;
   phone?: string;

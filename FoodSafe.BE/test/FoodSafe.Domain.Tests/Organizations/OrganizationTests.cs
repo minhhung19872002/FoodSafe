@@ -16,7 +16,6 @@ public class OrganizationTests
             OrganizationLevel.Province,
             null,
             Guid.NewGuid(),
-            null,
             null);
 
         organization.Code.ShouldBe("QN");
@@ -35,42 +34,44 @@ public class OrganizationTests
                 OrganizationLevel.Commune,
                 Guid.NewGuid(),
                 Guid.NewGuid(),
-                Guid.NewGuid(),
                 null));
 
         exception.Code.ShouldBe(FoodSafeDomainErrorCodes.Organization.InvalidGeography);
     }
 
     [Fact]
-    public void ValidateParent_Should_Reject_Skipped_Level()
+    public void ValidateParent_Should_Reject_Commune_With_Wrong_Province()
     {
-        var provinceId = Guid.NewGuid();
-        var province = Organization.Create(
-            Guid.NewGuid(), "T", "Tỉnh", OrganizationLevel.Province,
-            null, provinceId, null, null);
+        var province1Id = Guid.NewGuid();
+        var province2Id = Guid.NewGuid();
+        var province1 = Organization.Create(
+            Guid.NewGuid(), "T1", "Tỉnh 1", OrganizationLevel.Province,
+            null, province1Id, null);
+        var province2 = Organization.Create(
+            Guid.NewGuid(), "T2", "Tỉnh 2", OrganizationLevel.Province,
+            null, province2Id, null);
         var commune = Organization.Create(
             Guid.NewGuid(), "X", "Xã", OrganizationLevel.Commune,
-            province.Id, provinceId, Guid.NewGuid(), Guid.NewGuid());
+            province1.Id, province1Id, Guid.NewGuid());
 
         var exception = Should.Throw<BusinessException>(() =>
-            OrganizationHierarchyRules.ValidateParent(commune, province));
+            OrganizationHierarchyRules.ValidateParent(commune, province2));
 
-        exception.Code.ShouldBe(FoodSafeDomainErrorCodes.Organization.InvalidParent);
+        exception.Code.ShouldBe(FoodSafeDomainErrorCodes.Organization.InvalidGeography);
     }
 
     [Fact]
-    public void ValidateParent_Should_Accept_Matching_District()
+    public void ValidateParent_Should_Accept_Commune_Under_Province()
     {
         var provinceId = Guid.NewGuid();
-        var districtId = Guid.NewGuid();
         var province = Organization.Create(
             Guid.NewGuid(), "T", "Tỉnh", OrganizationLevel.Province,
-            null, provinceId, null, null);
-        var district = Organization.Create(
-            Guid.NewGuid(), "H", "Huyện", OrganizationLevel.District,
-            province.Id, provinceId, districtId, null);
+            null, provinceId, null);
+        var commune = Organization.Create(
+            Guid.NewGuid(), "X", "Xã", OrganizationLevel.Commune,
+            province.Id, provinceId, Guid.NewGuid());
 
         Should.NotThrow(() =>
-            OrganizationHierarchyRules.ValidateParent(district, province));
+            OrganizationHierarchyRules.ValidateParent(commune, province));
     }
 }

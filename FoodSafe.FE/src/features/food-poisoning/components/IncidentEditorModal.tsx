@@ -76,7 +76,6 @@ export function IncidentEditorModal(props: Props) {
       });
       setLocation({
         provinceId: item.locationProvinceId ?? "",
-        districtId: item.locationDistrictId ?? "",
         communeId: item.locationCommuneId ?? "",
       });
     } else {
@@ -114,7 +113,6 @@ export function IncidentEditorModal(props: Props) {
             notes: values.notes?.trim() || undefined,
             locationDescription: street,
             locationProvinceId: location.provinceId || undefined,
-            locationDistrictId: location.districtId || undefined,
             locationCommuneId: location.communeId || undefined,
             exposedCount: values.exposedCount,
             affectedCount: values.affectedCount,

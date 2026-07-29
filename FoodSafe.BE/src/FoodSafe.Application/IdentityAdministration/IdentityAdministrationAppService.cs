@@ -930,11 +930,6 @@ public class IdentityAdministrationAppService :
             .Select(organization => organization.ProvinceId!.Value)
             .Concat(scope.ProvinceIds)
             .ToHashSet();
-        var districtIds = organizations
-            .Where(organization => organization.DistrictId.HasValue)
-            .Select(organization => organization.DistrictId!.Value)
-            .Concat(scope.DistrictIds)
-            .ToHashSet();
         var communeIds = organizations
             .Where(organization => organization.CommuneId.HasValue)
             .Select(organization => organization.CommuneId!.Value)
@@ -946,8 +941,6 @@ public class IdentityAdministrationAppService :
             var isAllowed =
                 (assignment.ProvinceId.HasValue &&
                  provinceIds.Contains(assignment.ProvinceId.Value)) ||
-                (assignment.DistrictId.HasValue &&
-                 districtIds.Contains(assignment.DistrictId.Value)) ||
                 (assignment.CommuneId.HasValue &&
                  communeIds.Contains(assignment.CommuneId.Value));
             if (!isAllowed)
@@ -982,7 +975,6 @@ public class IdentityAdministrationAppService :
                 organizationId,
                 userId,
                 input.ProvinceId,
-                input.DistrictId,
                 input.CommuneId,
                 input.CanView,
                 input.CanCreate,
@@ -1022,7 +1014,6 @@ public class IdentityAdministrationAppService :
             {
                 Id = assignment.Id,
                 ProvinceId = assignment.ProvinceId,
-                DistrictId = assignment.DistrictId,
                 CommuneId = assignment.CommuneId,
                 CanView = assignment.CanView,
                 CanCreate = assignment.CanCreate,

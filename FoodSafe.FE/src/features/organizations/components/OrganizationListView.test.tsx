@@ -25,7 +25,6 @@ describe("OrganizationListView", () => {
               email: null,
               leaderName: null,
               provinceId: null,
-              districtId: null,
               communeId: null,
               isActive: true,
             },

@@ -24,7 +24,6 @@ public interface ILocationResolver
 public class LocationResolver : ILocationResolver, ITransientDependency
 {
     private readonly IRepository<Province, Guid> _provinces;
-    private readonly IRepository<District, Guid> _districts;
     private readonly IRepository<Commune, Guid> _communes;
     private readonly IAddressGeocoder _geocoder;
     private readonly IDistributedCache<GeocodeCacheItem, string> _cache;
@@ -32,14 +31,12 @@ public class LocationResolver : ILocationResolver, ITransientDependency
 
     public LocationResolver(
         IRepository<Province, Guid> provinces,
-        IRepository<District, Guid> districts,
         IRepository<Commune, Guid> communes,
         IAddressGeocoder geocoder,
         IDistributedCache<GeocodeCacheItem, string> cache,
         IOptions<GeocodingOptions> options)
     {
         _provinces = provinces;
-        _districts = districts;
         _communes = communes;
         _geocoder = geocoder;
         _cache = cache;
@@ -106,7 +103,6 @@ public class LocationResolver : ILocationResolver, ITransientDependency
         GeocodeAddressInput input, CancellationToken cancellationToken)
     {
         string? commune = null;
-        string? district = null;
         string? province = null;
 
         if (input.CommuneId.HasValue)
@@ -114,13 +110,6 @@ public class LocationResolver : ILocationResolver, ITransientDependency
             var entity = await _communes.FindAsync(
                 input.CommuneId.Value, cancellationToken: cancellationToken);
             commune = entity is null ? null : Prefix(entity.Type) + entity.Name;
-        }
-
-        if (input.DistrictId.HasValue)
-        {
-            var entity = await _districts.FindAsync(
-                input.DistrictId.Value, cancellationToken: cancellationToken);
-            district = entity is null ? null : Prefix(entity.Type) + entity.Name;
         }
 
         if (input.ProvinceId.HasValue)
@@ -143,8 +132,7 @@ public class LocationResolver : ILocationResolver, ITransientDependency
                 candidates.Add(GeocodeQuery.Road(street, province));
         }
 
-        AddText(commune, district, province);
-        AddText(district, province);
+        AddText(commune, province);
         AddText(province);
 
         return candidates
@@ -180,13 +168,5 @@ public class LocationResolver : ILocationResolver, ITransientDependency
         CommuneType.Ward => "Phường ",
         CommuneType.Township => "Thị trấn ",
         _ => "Xã "
-    };
-
-    private static string Prefix(DistrictType type) => type switch
-    {
-        DistrictType.UrbanDistrict => "Quận ",
-        DistrictType.Town => "Thị xã ",
-        DistrictType.ProvincialCity => "Thành phố ",
-        _ => "Huyện "
     };
 }

@@ -85,7 +85,6 @@ public static class IdentityAdministrationRules
         roleName.ToUpperInvariant() switch
         {
             "PROVINCEADMIN" or "PROVINCESTAFF" => OrganizationLevel.Province,
-            "DISTRICTADMIN" or "DISTRICTSTAFF" => OrganizationLevel.District,
             "COMMUNEADMIN" or "COMMUNESTAFF" => OrganizationLevel.Commune,
             _ => null
         };

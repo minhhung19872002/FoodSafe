@@ -13,7 +13,6 @@ public class FoodPoisoningCaseDto : EntityDto<Guid>
 
     public string? LocationDescription { get; set; }
     public Guid? LocationCommuneId { get; set; }
-    public Guid? LocationDistrictId { get; set; }
     public Guid? LocationProvinceId { get; set; }
     public double? LocationLatitude { get; set; }
     public double? LocationLongitude { get; set; }
@@ -60,7 +59,6 @@ public class CreateUpdateFoodPoisoningCaseDto
     [StringLength(500)]
     public string LocationDescription { get; set; } = string.Empty;
     public Guid? LocationCommuneId { get; set; }
-    public Guid? LocationDistrictId { get; set; }
     public Guid? LocationProvinceId { get; set; }
     public double? LocationLatitude { get; set; }
     public double? LocationLongitude { get; set; }

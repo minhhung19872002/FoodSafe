@@ -11,25 +11,17 @@ import {
   Tabs,
   Tag,
 } from "antd";
-import {
-  DeleteOutlined,
-  EditOutlined,
-  ImportOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
-import { useCommunes, useDistricts, useProvinces } from "@/hooks/useGeography";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { useCommunesByProvince, useProvinces } from "@/hooks/useGeography";
 import { extractApiError } from "@/lib/apiError";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import {
   createGeographicItem,
   deleteGeographicItem,
-  importGeographyFromExcel,
   updateGeographicItem,
   type CommuneItem,
-  type DistrictItem,
   type GeographicItem,
   type GeographicUpsert,
-  type ImportGeographyResultDto,
 } from "@/lib/geographyApi";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
@@ -37,21 +29,13 @@ import {
   GeographicCatalogModal,
   type GeographicKind,
 } from "../components/GeographicCatalogModal";
-import { GeographyImportModal } from "../components/GeographyImportModal";
 
-type CatalogItem = GeographicItem | DistrictItem | CommuneItem;
+type CatalogItem = GeographicItem | CommuneItem;
 
 interface ModalState {
   kind: GeographicKind;
   item?: CatalogItem;
 }
-
-const districtTypes: Record<number, string> = {
-  1: "Huyện",
-  2: "Quận",
-  3: "Thị xã",
-  4: "Thành phố",
-};
 
 const communeTypes: Record<number, string> = {
   1: "Xã",
@@ -67,16 +51,12 @@ export default function GeographicCatalogPage() {
   );
   const provinces = useProvinces(false);
   const [provinceId, setProvinceId] = useState("");
-  const districts = useDistricts(provinceId, false);
-  const [districtId, setDistrictId] = useState("");
-  const communes = useCommunes(districtId, false);
+  const communes = useCommunesByProvince(provinceId, false);
   const [modal, setModal] = useState<ModalState>();
   const [detail, setDetail] = useState<{
     kind: GeographicKind;
     item: CatalogItem;
   } | null>(null);
-  const [importOpen, setImportOpen] = useState(false);
-  const [importResult, setImportResult] = useState<ImportGeographyResultDto>();
 
   useEffect(() => {
     const items = provinces.data?.items ?? [];
@@ -84,13 +64,6 @@ export default function GeographicCatalogPage() {
       setProvinceId(items[0]?.id ?? "");
     }
   }, [provinceId, provinces.data?.items]);
-
-  useEffect(() => {
-    const items = districts.data?.items ?? [];
-    if (!items.some((item) => item.id === districtId)) {
-      setDistrictId(items[0]?.id ?? "");
-    }
-  }, [districtId, districts.data?.items]);
 
   const saveMutation = useMutation({
     mutationFn: (input: GeographicUpsert) => {
@@ -106,8 +79,6 @@ export default function GeographicCatalogPage() {
       setModal(undefined);
       void message.success("Đã lưu địa bàn hành chính");
     },
-    // Hiển thị lý do cụ thể từ máy chủ (mã trùng, địa bàn cha sai...) thay vì
-    // một câu chung chung (UIA-007).
     onError: (error) => {
       void message.error(extractApiError(error));
     },
@@ -124,34 +95,6 @@ export default function GeographicCatalogPage() {
       void message.error(extractApiError(error));
     },
   });
-
-  const importMutation = useMutation({
-    mutationFn: ({ pid, file }: { pid: string; file: File }) =>
-      importGeographyFromExcel(pid, file),
-    onSuccess: async (result) => {
-      setImportResult(result);
-      await queryClient.invalidateQueries({ queryKey: ["geography"] });
-      if (result.errors.length === 0) {
-        void message.success(
-          `Nhập thành công ${result.importedDistricts} huyện, ${result.importedCommunes} xã`,
-        );
-      } else {
-        void message.warning(
-          `Hoàn thành với ${result.errors.length} lỗi — kiểm tra chi tiết trong cửa sổ nhập`,
-        );
-      }
-    },
-    onError: (error) => {
-      void message.error(extractApiError(error));
-    },
-  });
-
-  const parentId =
-    modal?.kind === "district"
-      ? provinceId
-      : modal?.kind === "commune"
-        ? districtId
-        : undefined;
 
   const table = (
     kind: GeographicKind,
@@ -172,18 +115,16 @@ export default function GeographicCatalogPage() {
       columns={[
         { title: "Mã", dataIndex: "code", width: 130 },
         { title: "Tên địa bàn", dataIndex: "name" },
-        ...(kind === "province"
-          ? []
-          : [
+        ...(kind === "commune"
+          ? [
               {
                 title: "Loại",
                 dataIndex: "type",
                 width: 140,
-                render: (type: number) =>
-                  (kind === "district" ? districtTypes : communeTypes)[type] ??
-                  type,
+                render: (type: number) => communeTypes[type] ?? type,
               },
-            ]),
+            ]
+          : []),
         {
           title: "Trạng thái",
           dataIndex: "isActive",
@@ -244,7 +185,7 @@ export default function GeographicCatalogPage() {
     <div className="page-container">
       <PageHeader
         title="Địa bàn hành chính"
-        subtitle="Quản lý danh mục tỉnh/thành, quận/huyện, xã/phường"
+        subtitle="Quản lý danh mục tỉnh/thành, xã/phường"
       />
       <div className="page-card">
         <Tabs
@@ -276,61 +217,6 @@ export default function GeographicCatalogPage() {
               ),
             },
             {
-              key: "districts",
-              label: "Huyện/Quận",
-              children: (
-                <Space
-                  direction="vertical"
-                  size="middle"
-                  style={{ width: "100%" }}
-                >
-                  <Space wrap>
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      placeholder="Chọn tỉnh/thành phố"
-                      value={provinceId || undefined}
-                      onChange={(value) => {
-                        setProvinceId(value);
-                        setDistrictId("");
-                      }}
-                      style={{ width: 320 }}
-                      options={(provinces.data?.items ?? []).map((item) => ({
-                        value: item.id,
-                        label: `${item.code} — ${item.name}`,
-                      }))}
-                    />
-                    {canManage && (
-                      <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        disabled={!provinceId}
-                        onClick={() => setModal({ kind: "district" })}
-                      >
-                        Thêm huyện/quận
-                      </Button>
-                    )}
-                    {canManage && (
-                      <Button
-                        icon={<ImportOutlined />}
-                        onClick={() => {
-                          setImportResult(undefined);
-                          setImportOpen(true);
-                        }}
-                      >
-                        Nhập từ Excel
-                      </Button>
-                    )}
-                  </Space>
-                  {table(
-                    "district",
-                    districts.data?.items ?? [],
-                    districts.isLoading,
-                  )}
-                </Space>
-              ),
-            },
-            {
               key: "communes",
               label: "Xã/Phường",
               children: (
@@ -345,25 +231,9 @@ export default function GeographicCatalogPage() {
                       optionFilterProp="label"
                       placeholder="Chọn tỉnh/thành phố"
                       value={provinceId || undefined}
-                      onChange={(value) => {
-                        setProvinceId(value);
-                        setDistrictId("");
-                      }}
-                      style={{ width: 280 }}
+                      onChange={setProvinceId}
+                      style={{ width: 320 }}
                       options={(provinces.data?.items ?? []).map((item) => ({
-                        value: item.id,
-                        label: `${item.code} — ${item.name}`,
-                      }))}
-                    />
-                    <Select
-                      showSearch
-                      optionFilterProp="label"
-                      placeholder="Chọn huyện/quận"
-                      value={districtId || undefined}
-                      disabled={!provinceId}
-                      onChange={setDistrictId}
-                      style={{ width: 280 }}
-                      options={(districts.data?.items ?? []).map((item) => ({
                         value: item.id,
                         label: `${item.code} — ${item.name}`,
                       }))}
@@ -372,7 +242,7 @@ export default function GeographicCatalogPage() {
                       <Button
                         type="primary"
                         icon={<PlusOutlined />}
-                        disabled={!districtId}
+                        disabled={!provinceId}
                         onClick={() => setModal({ kind: "commune" })}
                       >
                         Thêm xã/phường
@@ -398,20 +268,15 @@ export default function GeographicCatalogPage() {
         fields={[
           { label: "Mã", render: (r) => r.code },
           { label: "Tên địa bàn", render: (r) => r.name },
-          ...(detail && detail.kind !== "province"
+          ...(detail && detail.kind === "commune"
             ? [
                 {
                   label: "Loại",
                   render: (r: CatalogItem) =>
-                    "type" in r
-                      ? ((detail.kind === "district"
-                          ? districtTypes
-                          : communeTypes)[r.type] ?? r.type)
-                      : null,
+                    "type" in r ? (communeTypes[r.type] ?? r.type) : null,
                 },
               ]
             : []),
-          { label: "Thứ tự", render: (r) => r.sortOrder },
           {
             label: "Trạng thái",
             render: (r) => (
@@ -428,7 +293,10 @@ export default function GeographicCatalogPage() {
           open
           kind={modal.kind}
           item={modal.item}
-          parentId={parentId}
+          provinceId={provinceId}
+          provinceName={
+            provinces.data?.items.find((p) => p.id === provinceId)?.name
+          }
           submitting={saveMutation.isPending}
           onCancel={() => {
             saveMutation.reset();
@@ -437,19 +305,6 @@ export default function GeographicCatalogPage() {
           onSubmit={(input) => saveMutation.mutate(input)}
         />
       )}
-
-      <GeographyImportModal
-        open={importOpen}
-        importing={importMutation.isPending}
-        provinces={provinces.data?.items ?? []}
-        result={importResult}
-        onCancel={() => {
-          setImportOpen(false);
-          setImportResult(undefined);
-          importMutation.reset();
-        }}
-        onImport={(pid, file) => importMutation.mutate({ pid, file })}
-      />
     </div>
   );
 }
