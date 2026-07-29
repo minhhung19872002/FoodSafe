@@ -11,6 +11,13 @@ export const api = axios.create({
   },
 });
 
+api.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    config.headers.set("Content-Type", false);
+  }
+  return config;
+});
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
