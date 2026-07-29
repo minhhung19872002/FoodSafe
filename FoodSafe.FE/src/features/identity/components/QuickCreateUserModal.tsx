@@ -38,6 +38,7 @@ export function QuickCreateUserModal({
   onSubmit,
 }: QuickCreateUserModalProps) {
   const [form] = Form.useForm<{
+    userName: string;
     fullName: string;
     email: string;
     organizationId: string;
@@ -57,24 +58,47 @@ export function QuickCreateUserModal({
       okText="Tạo tài khoản"
       cancelText="Hủy"
       confirmLoading={loading}
-      destroyOnClose
+      destroyOnHidden
       onCancel={onCancel}
-      onOk={() =>
-        form.validateFields().then((values) =>
+      onOk={() => form.submit()}
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        preserve={false}
+        onFinish={(values) =>
           onSubmit({
             ...values,
             geographyScopes: [],
-          }),
-        )
-      }
-    >
-      <Form form={form} layout="vertical" preserve={false}>
+          })
+        }
+      >
         <Form.Item
           name="fullName"
           label="Họ và tên"
-          rules={[{ required: true, message: "Vui lòng nhập họ và tên" }]}
+          rules={[
+            {
+              required: true,
+              whitespace: true,
+              message: "Vui lòng nhập họ và tên",
+            },
+          ]}
         >
-          <Input placeholder="Nguyễn Văn A" />
+          <Input placeholder="Nguyễn Văn A" maxLength={200} autoFocus />
+        </Form.Item>
+        <Form.Item
+          name="userName"
+          label="Tên đăng nhập"
+          extra="Chữ không dấu, số và các ký tự . _ -"
+          rules={[
+            { required: true, message: "Vui lòng nhập tên đăng nhập" },
+            {
+              pattern: /^[A-Za-z0-9._-]{3,50}$/,
+              message: "Từ 3 đến 50 ký tự, chỉ gồm chữ không dấu, số và . _ -",
+            },
+          ]}
+        >
+          <Input placeholder="nguyenvana" maxLength={50} />
         </Form.Item>
         <Form.Item
           name="email"
@@ -84,7 +108,7 @@ export function QuickCreateUserModal({
             { type: "email", message: "Email không hợp lệ" },
           ]}
         >
-          <Input placeholder="example@quangninh.gov.vn" />
+          <Input placeholder="example@quangninh.gov.vn" maxLength={256} />
         </Form.Item>
         <Form.Item
           name="organizationId"
