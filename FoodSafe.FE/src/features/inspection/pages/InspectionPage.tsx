@@ -269,7 +269,7 @@ function PlansTab() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 96,
+      width: 120,
       render: (_, item) => (
         <RowActions
           actions={[
@@ -782,7 +782,7 @@ function ResultsTab() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 96,
+      width: 120,
       render: (_, item) => (
         <Space size={4}>
           <RowActions

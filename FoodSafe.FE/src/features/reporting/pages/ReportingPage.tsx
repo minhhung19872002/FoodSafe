@@ -226,7 +226,7 @@ function NdtpTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 96,
+      width: 120,
       render: (_, record) => (
         <RowActions
           actions={[
@@ -644,7 +644,7 @@ function AtpWorkTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 96,
+      width: 120,
       render: (_, record) => (
         <RowActions
           actions={[
@@ -1092,7 +1092,7 @@ function ActionMonthTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 96,
+      width: 120,
       render: (_, record) => (
         <RowActions
           actions={[

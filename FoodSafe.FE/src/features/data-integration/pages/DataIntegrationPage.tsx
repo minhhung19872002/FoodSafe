@@ -156,7 +156,7 @@ function EndpointsTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 96,
+      width: 120,
       render: (_, record) => (
         <RowActions
           overflowAriaLabel={`Thao tác ${record.name}`}
@@ -551,7 +551,7 @@ function CallHistoryTab() {
     {
       title: "",
       key: "actions",
-      width: 96,
+      width: 120,
       render: (_, record) => (
         <RowActions
           actions={[

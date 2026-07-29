@@ -179,7 +179,7 @@ export default function DocumentsPage() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 96,
+      width: 120,
       render: (_, record) => (
         <RowActions
           overflowAriaLabel={`Thao tác ${record.documentNumber}`}

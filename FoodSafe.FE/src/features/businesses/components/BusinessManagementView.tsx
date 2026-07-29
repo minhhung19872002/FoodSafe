@@ -169,6 +169,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
       ellipsis: true,
       sorter: true,
       sortOrder: sortOrderFor("name"),
+      showSorterTooltip: false,
     },
     { title: "Địa chỉ", dataIndex: "addressStreet", ellipsis: true },
     {
@@ -203,7 +204,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     },
     {
       title: "Thao tác",
-      width: 96,
+      width: 120,
       fixed: "right",
       render: (_: unknown, business) => (
         <RowActions
@@ -270,6 +271,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
       ellipsis: true,
       sorter: true,
       sortOrder: sortOrderForProduct("name"),
+      showSorterTooltip: false,
     },
     { title: "Thương hiệu", dataIndex: "brandName", ellipsis: true },
     { title: "Nhà sản xuất", dataIndex: "manufacturer", ellipsis: true },
@@ -285,7 +287,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     },
     {
       title: "Thao tác",
-      width: 96,
+      width: 120,
       fixed: "right",
       render: (_: unknown, product) => (
         <RowActions

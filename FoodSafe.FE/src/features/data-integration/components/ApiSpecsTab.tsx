@@ -134,6 +134,7 @@ export function ApiSpecsTab() {
       ellipsis: true,
       sorter: true,
       sortOrder: sortOrderFor("name"),
+      showSorterTooltip: false,
     },
     {
       title: "Phiên bản",
@@ -191,7 +192,7 @@ export function ApiSpecsTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 96,
+      width: 120,
       render: (_, record) => (
         <RowActions
           overflowAriaLabel={`Thao tác ${record.name}`}

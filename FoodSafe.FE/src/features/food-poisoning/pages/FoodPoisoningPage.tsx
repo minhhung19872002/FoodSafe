@@ -191,7 +191,7 @@ function CasesTab() {
     {
       title: "",
       key: "actions",
-      width: 96,
+      width: 120,
       render: (_: unknown, record: FoodPoisoningCase) => (
         <RowActions
           actions={[
@@ -541,7 +541,7 @@ function IncidentsTab() {
     {
       title: "",
       key: "actions",
-      width: 96,
+      width: 120,
       render: (_: unknown, record: FoodPoisoningIncident) => (
         <RowActions
           actions={[

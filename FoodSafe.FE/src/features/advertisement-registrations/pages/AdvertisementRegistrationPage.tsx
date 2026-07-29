@@ -176,7 +176,7 @@ export default function AdvertisementRegistrationPage() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 96,
+      width: 120,
       render: (_, item) => (
         <RowActions
           overflowAriaLabel={`Thao tác ${item.registrationNumber}`}

@@ -180,7 +180,7 @@ export default function RiskAnalysisPage() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 96,
+      width: 120,
       render: (_, record) => (
         <RowActions
           overflowAriaLabel={`Thao tác ${record.title}`}

@@ -179,7 +179,7 @@ export default function CfsCertificatePage() {
     {
       title: "Thao tác",
       fixed: "right",
-      width: 96,
+      width: 120,
       render: (_, item) => (
         <RowActions
           overflowAriaLabel={`Thao tác ${item.certificateNumber}`}

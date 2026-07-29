@@ -173,6 +173,7 @@ export function PartnersTab() {
       ellipsis: true,
       sorter: true,
       sortOrder: sortOrderFor("name"),
+      showSorterTooltip: false,
     },
     {
       title: "Hệ thống",
@@ -210,7 +211,7 @@ export function PartnersTab() {
     {
       title: "Thao tác",
       key: "actions",
-      width: 96,
+      width: 120,
       render: (_, record) => {
         const toggleLabel =
           record.status === PARTNER_ACCOUNT_STATUS.Active

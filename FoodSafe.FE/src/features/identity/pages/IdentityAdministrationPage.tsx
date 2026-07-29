@@ -374,7 +374,7 @@ export default function IdentityAdministrationPage() {
             {
               title: "Thao tác",
               fixed: "right",
-              width: 96,
+              width: 120,
               render: (_, user) => {
                 const isSelf = user.id === currentUser?.id;
                 const activateLabel = user.isActive
@@ -599,7 +599,7 @@ export default function IdentityAdministrationPage() {
             {
               title: "Thao tác",
               fixed: "right",
-              width: 96,
+              width: 120,
               render: (_, role) => (
                 <RowActions
                   overflowAriaLabel={`Thao tác ${role.name}`}

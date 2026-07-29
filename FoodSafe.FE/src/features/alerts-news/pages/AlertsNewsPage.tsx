@@ -176,6 +176,7 @@ function AlertsTab() {
       width: 280,
       sorter: true,
       sortOrder: sortOrderFor("title"),
+      showSorterTooltip: false,
     },
     {
       title: "Loại",
@@ -221,7 +222,7 @@ function AlertsTab() {
       title: "Thao tác",
       key: "actions",
       fixed: "right",
-      width: 96,
+      width: 120,
       render: (_: unknown, record: AtpAlert) => (
         <RowActions
           overflowAriaLabel={`Thao tác ${record.title}`}
@@ -608,6 +609,7 @@ function NewsTab() {
       ellipsis: true,
       width: 280,
       sorter: true,
+      showSorterTooltip: false,
       sortOrder: sortOrderFor("title"),
     },
     {
@@ -661,7 +663,7 @@ function NewsTab() {
       title: "Thao tác",
       key: "actions",
       fixed: "right",
-      width: 96,
+      width: 120,
       render: (_: unknown, record: AtpNews) => (
         <RowActions
           overflowAriaLabel={`Thao tác ${record.title}`}
