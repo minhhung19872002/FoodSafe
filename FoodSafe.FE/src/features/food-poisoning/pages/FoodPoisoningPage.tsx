@@ -47,6 +47,7 @@ import {
   useSubmitIncident,
   useVerifyIncident,
   useConcludeIncident,
+  useDownloadIncidentPdf,
   useExportIncidents,
 } from "../api/foodPoisoningMutations";
 import { CaseEditorModal } from "../components/CaseEditorModal";
@@ -444,6 +445,7 @@ function IncidentsTab() {
   const verifyMut = useVerifyIncident();
   const concludeMut = useConcludeIncident();
   const exportMut = useExportIncidents();
+  const downloadPdfMut = useDownloadIncidentPdf();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<FoodPoisoningIncident | undefined>();
@@ -599,6 +601,18 @@ function IncidentsTab() {
                 setConcludingId(record.id);
                 setConcludeOpen(true);
               },
+            },
+            {
+              key: "pdf",
+              label: "Tải phiếu kết thúc",
+              icon: <FilePdfOutlined />,
+              hidden:
+                record.status !== POISONING_INCIDENT_STATUS.Concluded,
+              onClick: () =>
+                downloadPdfMut.mutate(record.id, {
+                  onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                  onError: (error) => message.error(extractApiError(error)),
+                }),
             },
             {
               key: "delete",

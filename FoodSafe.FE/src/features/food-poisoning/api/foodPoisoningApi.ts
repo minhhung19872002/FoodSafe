@@ -204,4 +204,10 @@ export const poisoningIncidentApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+  async downloadPdf(id: string): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${incidentEndpoint}/${id}/pdf`, {
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
+  },
 };

@@ -226,6 +226,7 @@ public static class FoodSafeDomainErrorCodes
         public const string CannotModifyNonDraft = "FoodSafe:FoodPoisoning:0006";
         public const string ErrorReportNotFound = "FoodSafe:FoodPoisoning:0007";
         public const string ErrorReportAlreadyProcessed = "FoodSafe:FoodPoisoning:0008";
+        public const string IncidentNotConcluded = "FoodSafe:FoodPoisoning:0009";
     }
 
     public static class Alert
