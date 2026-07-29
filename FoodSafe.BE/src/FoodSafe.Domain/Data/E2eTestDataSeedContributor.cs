@@ -57,6 +57,31 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
             "TYT-UB", "Trạm Y tế Phường Uông Bí")
     ];
 
+    private const string ScopedParentOrganizationCode = "KH-NC-01";
+
+    private static readonly (
+        Guid OrganizationId,
+        string OrganizationCode,
+        string OrganizationName,
+        string CommuneCode)[] ScopedManagingOrganizations =
+    [
+        (
+            Guid.Parse("e2e00000-0000-4000-8010-000000000009"),
+            "KH-HG-01", "Đơn vị quản lý Hồng Gai", "E2E-HG"),
+        (
+            Guid.Parse("e2e00000-0000-4000-8010-000000000010"),
+            "KH-BC-01", "Đơn vị quản lý Bãi Cháy", "E2E-BC"),
+        (
+            Guid.Parse("e2e00000-0000-4000-8010-000000000011"),
+            "KH-CP-01", "Đơn vị quản lý Cẩm Phả", "E2E-CP"),
+        (
+            Guid.Parse("e2e00000-0000-4000-8010-000000000012"),
+            "KH-MC-01", "Đơn vị quản lý Móng Cái", "E2E-MC"),
+        (
+            Guid.Parse("e2e00000-0000-4000-8010-000000000013"),
+            "KH-UB-01", "Đơn vị quản lý Uông Bí", "E2E-UB")
+    ];
+
     // Test users (not admin — admin is created by ABP)
     internal static readonly Guid UserProvinceAdminId = Guid.Parse("e2e00000-0000-4000-8020-000000000001");
     internal static readonly Guid UserReadonlyId = Guid.Parse("e2e00000-0000-4000-8020-000000000003");
@@ -251,6 +276,36 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
                 OrganizationLevel.Commune,
                 parentId: OrgProvinceId,
                 provinceId: ProvinceQuangNinhId,
+                communeId: commune.Id);
+            await _organizations.InsertAsync(organization, autoSave: true);
+        }
+
+        var scopedParent = await _organizations.FirstOrDefaultAsync(
+            x => x.Code == ScopedParentOrganizationCode);
+        if (scopedParent?.ProvinceId is not Guid scopedProvinceId ||
+            scopedParent.Level != OrganizationLevel.Province)
+            return;
+
+        foreach (var seed in ScopedManagingOrganizations)
+        {
+            if (await _organizations.AnyAsync(x =>
+                    x.Id == seed.OrganizationId ||
+                    x.Code == seed.OrganizationCode))
+                continue;
+
+            var commune = await _communes.FirstOrDefaultAsync(
+                x => x.Code == seed.CommuneCode);
+            if (commune is null || commune.ProvinceId != scopedProvinceId)
+                throw new InvalidOperationException(
+                    $"Commune {seed.CommuneCode} must belong to the parent province before organization {seed.OrganizationCode} is seeded.");
+
+            var organization = Organization.Create(
+                seed.OrganizationId,
+                seed.OrganizationCode,
+                seed.OrganizationName,
+                OrganizationLevel.Commune,
+                parentId: scopedParent.Id,
+                provinceId: scopedProvinceId,
                 communeId: commune.Id);
             await _organizations.InsertAsync(organization, autoSave: true);
         }
