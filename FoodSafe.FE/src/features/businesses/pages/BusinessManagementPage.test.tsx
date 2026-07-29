@@ -99,6 +99,9 @@ describe("BusinessManagementPage", () => {
     expect(
       screen.getByRole("button", { name: /thêm cơ sở/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("radio", { name: "Bản đồ" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /import/i })).toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: "Sản phẩm" }));
     expect(await screen.findByText("Sản phẩm kiểm thử")).toBeInTheDocument();
