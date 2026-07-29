@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   DatePicker,
@@ -268,6 +268,22 @@ function PlanItemsEditor({
     onChange(items.map((i) => (i.key === key ? { ...i, [field]: value } : i)));
   };
 
+  const optionsByRow = useMemo(() => {
+    const selected = new Set(items.map((i) => i.businessId).filter(Boolean));
+    const all = businesses.map((x) => ({
+      value: x.id,
+      label: x.code ? `${x.code} — ${x.name}` : x.name,
+    }));
+    const map = new Map<string, typeof all>();
+    for (const item of items) {
+      map.set(
+        item.key,
+        all.filter((o) => o.value === item.businessId || !selected.has(o.value)),
+      );
+    }
+    return map;
+  }, [items, businesses]);
+
   const columns: ColumnsType<ItemRow> = [
     {
       title: "STT",
@@ -286,10 +302,7 @@ function PlanItemsEditor({
           status={error && !value ? "error" : undefined}
           style={{ width: "100%" }}
           placeholder="Chọn cơ sở"
-          options={businesses.map((x) => ({
-            value: x.id,
-            label: x.code ? `${x.code} — ${x.name}` : x.name,
-          }))}
+          options={optionsByRow.get(row.key)}
           onSearch={onBusinessSearch}
           onChange={(v) => updateItem(row.key, "businessId", v)}
         />
