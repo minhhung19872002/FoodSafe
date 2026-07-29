@@ -31,9 +31,9 @@ public class DataSharingAppService :
     ApplicationService,
     IDataSharingAppService
 {
-    // SSRF-guarded: the connect callback refuses private/reserved IPs (B-5).
-    private static readonly HttpClient SharedClient =
-        OutboundUrlValidator.CreateGuardedHttpClient(TimeSpan.FromSeconds(30));
+    /// <summary>Named <see cref="IHttpClientFactory"/> key for the SSRF-guarded + Polly-resilient
+    /// partner outbound client registered in the host module (FUNC-INT-004).</summary>
+    public const string OutboundHttpClientName = "DataIntegrationOutbound";
 
     private static readonly JsonSerializerOptions PayloadJsonOptions =
         new(JsonSerializerDefaults.Web)
@@ -47,6 +47,7 @@ public class DataSharingAppService :
     private readonly ICancellationTokenProvider _cancellationTokens;
     private readonly IStringEncryptionService _encryption;
     private readonly IEnumerable<ISharedDataPayloadBuilder> _payloadBuilders;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public DataSharingAppService(
         IRepository<ApiEndpoint, Guid> endpoints,
@@ -54,7 +55,8 @@ public class DataSharingAppService :
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens,
         IStringEncryptionService encryption,
-        IEnumerable<ISharedDataPayloadBuilder> payloadBuilders)
+        IEnumerable<ISharedDataPayloadBuilder> payloadBuilders,
+        IHttpClientFactory httpClientFactory)
     {
         _endpoints = endpoints;
         _logs = logs;
@@ -62,6 +64,7 @@ public class DataSharingAppService :
         _cancellationTokens = cancellationTokens;
         _encryption = encryption;
         _payloadBuilders = payloadBuilders;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<ShareDataResultDto> ShareAsync(ShareDataInput input)
@@ -191,7 +194,8 @@ public class DataSharingAppService :
                     payload, Encoding.UTF8, "application/json")
             };
             ApplyAuthHeader(request, endpoint);
-            using var response = await SharedClient.SendAsync(request, ct);
+            var client = _httpClientFactory.CreateClient(OutboundHttpClientName);
+            using var response = await client.SendAsync(request, ct);
             statusCode = (int)response.StatusCode;
             responseBody = Truncate(
                 await response.Content.ReadAsStringAsync(ct), 4000);

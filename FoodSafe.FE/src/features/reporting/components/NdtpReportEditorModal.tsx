@@ -9,12 +9,14 @@ import {
   Divider,
   Row,
   Col,
+  Space,
 } from "antd";
-import { CalculatorOutlined } from "@ant-design/icons";
+import { CalculatorOutlined, SyncOutlined } from "@ant-design/icons";
 import { reportCalculationApi } from "../api/reportingApi";
 import {
   useUpdateNdtpStats,
   useUpdateNdtpNarrative,
+  usePopulateNdtpFromPoisoning,
 } from "../api/reportingMutations";
 import type { NdtpReport } from "../types/reporting.types";
 
@@ -24,11 +26,37 @@ interface Props {
 }
 
 export function NdtpReportEditorModal({ report, onClose }: Props) {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const [form] = Form.useForm();
   const [aggregating, setAggregating] = useState(false);
   const updateStats = useUpdateNdtpStats();
   const updateNarrative = useUpdateNdtpNarrative();
+  const populateMut = usePopulateNdtpFromPoisoning();
+
+  const handlePopulateFromPoisoningData = () => {
+    if (!report) return;
+    modal.confirm({
+      title: "Tự động tổng hợp số liệu",
+      content:
+        "Tự động điền số liệu từ dữ liệu ngộ độc trong kỳ báo cáo. Các giá trị hiện tại sẽ bị ghi đè. Tiếp tục?",
+      okText: "Tiếp tục",
+      cancelText: "Hủy",
+      onOk: async () => {
+        const updated = await populateMut.mutateAsync(report.id);
+        form.setFieldsValue({
+          caseCount: updated.caseCount,
+          caseAffected: updated.caseAffected,
+          caseHospitalized: updated.caseHospitalized,
+          caseDeaths: updated.caseDeaths,
+          incidentCount: updated.incidentCount,
+          incidentAffected: updated.incidentAffected,
+          incidentHospitalized: updated.incidentHospitalized,
+          incidentDeaths: updated.incidentDeaths,
+        });
+        void message.success("Đã tự động tổng hợp số liệu từ dữ liệu ngộ độc.");
+      },
+    });
+  };
 
   const aggregateFromLowerLevel = async () => {
     if (!report) return;
@@ -128,14 +156,22 @@ export function NdtpReportEditorModal({ report, onClose }: Props) {
       confirmLoading={updateStats.isPending || updateNarrative.isPending}
       destroyOnHidden
     >
-      <Button
-        icon={<CalculatorOutlined />}
-        loading={aggregating}
-        onClick={() => void aggregateFromLowerLevel()}
-        style={{ marginBottom: 12 }}
-      >
-        Tổng hợp từ báo cáo tuyến dưới
-      </Button>
+      <Space style={{ marginBottom: 12 }} wrap>
+        <Button
+          icon={<CalculatorOutlined />}
+          loading={aggregating}
+          onClick={() => void aggregateFromLowerLevel()}
+        >
+          Tổng hợp từ báo cáo tuyến dưới
+        </Button>
+        <Button
+          icon={<SyncOutlined />}
+          loading={populateMut.isPending}
+          onClick={handlePopulateFromPoisoningData}
+        >
+          Tự động tổng hợp từ dữ liệu ngộ độc
+        </Button>
+      </Space>
       <Form form={form} layout="vertical" preserve={false}>
         <Divider titlePlacement="left">Ca ngộ độc nhỏ lẻ</Divider>
         <Row gutter={16}>

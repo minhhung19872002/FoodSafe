@@ -60,7 +60,7 @@ public class RiskAnalysisExcelAppService :
         var headers = new[]
         {
             "Tiêu đề", "Chuyên mục", "Mức nguy cơ",
-            "Sản phẩm liên quan", "Khuyến nghị",
+            "Nhóm sản phẩm", "Sản phẩm liên quan", "Khuyến nghị",
             "Trạng thái", "Công khai", "Ngày tạo", "Ngày công bố"
         };
         for (var i = 0; i < headers.Length; i++)
@@ -72,16 +72,17 @@ public class RiskAnalysisExcelAppService :
             sheet.Cell(row, 1).Value = item.Title;
             sheet.Cell(row, 2).Value = CategoryLabel(item.Category);
             sheet.Cell(row, 3).Value = RiskLabel(item.RiskLevel);
-            sheet.Cell(row, 4).Value = item.RelatedProducts ?? string.Empty;
-            sheet.Cell(row, 5).Value = item.Recommendations ?? string.Empty;
-            sheet.Cell(row, 6).Value = StatusLabel(item.Status);
-            sheet.Cell(row, 7).Value = item.IsPublic ? "Có" : "Không";
-            sheet.Cell(row, 8).Value = item.CreationTime;
-            sheet.Cell(row, 8).Style.DateFormat.Format = "dd/MM/yyyy";
+            sheet.Cell(row, 4).Value = string.Join(", ", item.ProductGroupNames);
+            sheet.Cell(row, 5).Value = item.RelatedProducts ?? string.Empty;
+            sheet.Cell(row, 6).Value = item.Recommendations ?? string.Empty;
+            sheet.Cell(row, 7).Value = StatusLabel(item.Status);
+            sheet.Cell(row, 8).Value = item.IsPublic ? "Có" : "Không";
+            sheet.Cell(row, 9).Value = item.CreationTime;
+            sheet.Cell(row, 9).Style.DateFormat.Format = "dd/MM/yyyy";
             if (item.PublishedAt.HasValue)
             {
-                sheet.Cell(row, 9).Value = item.PublishedAt.Value;
-                sheet.Cell(row, 9).Style.DateFormat.Format = "dd/MM/yyyy";
+                sheet.Cell(row, 10).Value = item.PublishedAt.Value;
+                sheet.Cell(row, 10).Style.DateFormat.Format = "dd/MM/yyyy";
             }
             row++;
         }

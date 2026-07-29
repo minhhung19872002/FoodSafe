@@ -40,6 +40,7 @@ public class NdtpReportDto : EntityDto<Guid>, IReportActorsDto
     public string? CompletedByName { get; set; }
     public DateTime? CompletedAt { get; set; }
     public string? Notes { get; set; }
+    public string? SubmissionHash { get; set; }
     public DateTime CreationTime { get; set; }
 }
 

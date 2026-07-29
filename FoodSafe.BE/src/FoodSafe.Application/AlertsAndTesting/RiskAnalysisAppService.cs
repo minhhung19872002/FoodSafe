@@ -1,4 +1,5 @@
 using FoodSafe.Application.Contracts.AlertsAndTesting;
+using FoodSafe.Catalogs;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -15,15 +16,18 @@ namespace FoodSafe.AlertsAndTesting;
 public class RiskAnalysisAppService : ApplicationService
 {
     private readonly IRepository<RiskAnalysis, Guid> _repo;
+    private readonly IReadOnlyRepository<ProductGroup, Guid> _productGroupRepo;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
     public RiskAnalysisAppService(
         IRepository<RiskAnalysis, Guid> repo,
+        IReadOnlyRepository<ProductGroup, Guid> productGroupRepo,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens)
     {
         _repo = repo;
+        _productGroupRepo = productGroupRepo;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
     }
@@ -48,13 +52,15 @@ public class RiskAnalysisAppService : ApplicationService
         query = query.OrderByDescending(x => x.CreationTime).PageBy(input);
         var items = await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
 
-        return new PagedResultDto<RiskAnalysisDto>(totalCount, items.Select(ToDto).ToList());
+        var pgNames = await FetchProductGroupNamesAsync(items.SelectMany(x => x.ProductGroupIds));
+        return new PagedResultDto<RiskAnalysisDto>(totalCount, items.Select(e => ToDto(e, pgNames)).ToList());
     }
 
     public async Task<RiskAnalysisDto> GetAsync(Guid id)
     {
         var entity = await GetScopedAsync(id, DataScopeOperation.View);
-        return ToDto(entity);
+        var pgNames = await FetchProductGroupNamesAsync(entity.ProductGroupIds);
+        return ToDto(entity, pgNames);
     }
 
     [Authorize(FoodSafePermissions.AlertsAndTesting.RiskAnalyses.Create)]
@@ -71,12 +77,14 @@ public class RiskAnalysisAppService : ApplicationService
             input.Content,
             input.Category,
             input.RiskLevel,
+            input.ProductGroupIds,
             input.RelatedProducts,
             input.Evidence,
             input.Recommendations);
 
         await _repo.InsertAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
-        return ToDto(entity);
+        var pgNames = await FetchProductGroupNamesAsync(entity.ProductGroupIds);
+        return ToDto(entity, pgNames);
     }
 
     [Authorize(FoodSafePermissions.AlertsAndTesting.RiskAnalyses.Edit)]
@@ -89,12 +97,14 @@ public class RiskAnalysisAppService : ApplicationService
             input.Content,
             input.Category,
             input.RiskLevel,
+            input.ProductGroupIds,
             input.RelatedProducts,
             input.Evidence,
             input.Recommendations);
 
         await _repo.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
-        return ToDto(entity);
+        var pgNames = await FetchProductGroupNamesAsync(entity.ProductGroupIds);
+        return ToDto(entity, pgNames);
     }
 
     [Authorize(FoodSafePermissions.AlertsAndTesting.RiskAnalyses.Delete)]
@@ -112,7 +122,19 @@ public class RiskAnalysisAppService : ApplicationService
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
         entity.Publish(CurrentUser.GetId(), Clock.Now);
         await _repo.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
-        return ToDto(entity);
+        var pgNames = await FetchProductGroupNamesAsync(entity.ProductGroupIds);
+        return ToDto(entity, pgNames);
+    }
+
+    private async Task<Dictionary<Guid, string>> FetchProductGroupNamesAsync(IEnumerable<Guid> ids)
+    {
+        var distinctIds = ids.Distinct().ToList();
+        if (distinctIds.Count == 0) return [];
+        var pgQuery = await _productGroupRepo.GetQueryableAsync();
+        var groups = await AsyncExecuter.ToListAsync(
+            pgQuery.Where(x => distinctIds.Contains(x.Id)).Select(x => new { x.Id, x.Name }),
+            _cancellationTokens.Token);
+        return groups.ToDictionary(g => g.Id, g => g.Name);
     }
 
     private async Task<IQueryable<RiskAnalysis>> ScopedQueryAsync(DataScopeOperation operation)
@@ -132,7 +154,7 @@ public class RiskAnalysisAppService : ApplicationService
                ?? throw new BusinessException(FoodSafeDomainErrorCodes.RiskAnalysis.NotFound);
     }
 
-    private static RiskAnalysisDto ToDto(RiskAnalysis e) => new()
+    private static RiskAnalysisDto ToDto(RiskAnalysis e, Dictionary<Guid, string> pgNames) => new()
     {
         Id = e.Id,
         OrganizationId = e.OrganizationId,
@@ -140,6 +162,12 @@ public class RiskAnalysisAppService : ApplicationService
         Content = e.Content,
         Category = e.Category,
         RiskLevel = e.RiskLevel,
+        ProductGroupIds = e.ProductGroupIds,
+        ProductGroupNames = e.ProductGroupIds
+            .Select(id => pgNames.TryGetValue(id, out var name) ? name : null)
+            .Where(n => n != null)
+            .Select(n => n!)
+            .ToList(),
         RelatedProducts = e.RelatedProducts,
         Evidence = e.Evidence,
         Recommendations = e.Recommendations,

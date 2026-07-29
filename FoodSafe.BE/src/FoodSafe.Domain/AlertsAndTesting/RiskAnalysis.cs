@@ -11,6 +11,7 @@ public sealed class RiskAnalysis : FullAuditedAggregateRoot<Guid>
     public AlertCategory Category { get; private set; }
     public RiskLevel RiskLevel { get; private set; }
     public string? RelatedProducts { get; private set; }
+    public List<Guid> ProductGroupIds { get; private set; } = [];
     public string? Evidence { get; private set; }
     public string? Recommendations { get; private set; }
     public RiskAnalysisStatus Status { get; private set; }
@@ -29,6 +30,7 @@ public sealed class RiskAnalysis : FullAuditedAggregateRoot<Guid>
         string content,
         AlertCategory category,
         RiskLevel riskLevel,
+        List<Guid>? productGroupIds = null,
         string? relatedProducts = null,
         string? evidence = null,
         string? recommendations = null)
@@ -43,6 +45,7 @@ public sealed class RiskAnalysis : FullAuditedAggregateRoot<Guid>
             Content = content.Trim(),
             Category = category,
             RiskLevel = riskLevel,
+            ProductGroupIds = productGroupIds ?? [],
             RelatedProducts = Normalize(relatedProducts),
             Evidence = Normalize(evidence),
             Recommendations = Normalize(recommendations),
@@ -56,6 +59,7 @@ public sealed class RiskAnalysis : FullAuditedAggregateRoot<Guid>
         string content,
         AlertCategory category,
         RiskLevel riskLevel,
+        List<Guid>? productGroupIds,
         string? relatedProducts,
         string? evidence,
         string? recommendations)
@@ -69,6 +73,7 @@ public sealed class RiskAnalysis : FullAuditedAggregateRoot<Guid>
         Content = content.Trim();
         Category = category;
         RiskLevel = riskLevel;
+        ProductGroupIds = productGroupIds ?? [];
         RelatedProducts = Normalize(relatedProducts);
         Evidence = Normalize(evidence);
         Recommendations = Normalize(recommendations);

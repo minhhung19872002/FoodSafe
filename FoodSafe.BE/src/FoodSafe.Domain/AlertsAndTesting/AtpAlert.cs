@@ -32,6 +32,17 @@ public sealed class AtpAlert : FullAuditedAggregateRoot<Guid>
     public DateTime? RejectedAt { get; private set; }
     public string? RejectedReason { get; private set; }
 
+    public Guid? AssigneeId { get; private set; }
+    public DateTime? AssignedAt { get; private set; }
+    public Guid? AssignedByUserId { get; private set; }
+
+    /// <summary>
+    /// Opaque code (format: FD-XXXXXX) issued to the citizen at submission time.
+    /// Present only for alerts created via the public-report workflow
+    /// (Source == PublicReport). Officers and other sources do not receive one.
+    /// </summary>
+    public string? TrackingCode { get; private set; }
+
     private AtpAlert() { }
 
     private AtpAlert(Guid id) : base(id) { }
@@ -71,8 +82,26 @@ public sealed class AtpAlert : FullAuditedAggregateRoot<Guid>
             ReporterPhone = Normalize(reporterPhone),
             ReporterEmail = Normalize(reporterEmail),
             Status = AlertStatus.Draft,
-            IsPublic = false
+            IsPublic = false,
+            TrackingCode = source == AlertSource.PublicReport
+                ? GenerateTrackingCode(id)
+                : null
         };
+    }
+
+    /// <summary>
+    /// Derives a reproducible, URL-safe tracking code from the entity GUID.
+    /// Format: "FD-XXXXXX" (9 chars, fits HasMaxLength(12)).
+    /// Uses bytes from the GUID so no external RNG injection is required.
+    /// </summary>
+    private static string GenerateTrackingCode(Guid id)
+    {
+        const string Chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 32-char alphabet — avoids 0/O, 1/I/L confusion
+        var bytes = id.ToByteArray();
+        var code = new char[6];
+        for (var i = 0; i < 6; i++)
+            code[i] = Chars[bytes[i] % Chars.Length];
+        return "FD-" + new string(code);
     }
 
     public void Update(
@@ -134,6 +163,18 @@ public sealed class AtpAlert : FullAuditedAggregateRoot<Guid>
         RejectedAt = rejectedAt;
         RejectedReason = reason.Trim();
         IsPublic = false;
+    }
+
+    /// <summary>
+    /// Assigns a Draft citizen report to a staff member for processing (FR-29-06 assign step).
+    /// Can be called multiple times on Draft to re-assign.
+    /// </summary>
+    public void Assign(Guid assigneeId, Guid assignedByUserId, DateTime assignedAt)
+    {
+        EnsureDraft();
+        AssigneeId = assigneeId;
+        AssignedByUserId = assignedByUserId;
+        AssignedAt = assignedAt;
     }
 
     public void Recall(Guid recallerId, DateTime recalledAt, string reason)

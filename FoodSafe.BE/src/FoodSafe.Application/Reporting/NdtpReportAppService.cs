@@ -1,3 +1,4 @@
+using FoodSafe.FoodPoisoning;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -14,17 +15,23 @@ namespace FoodSafe.Reporting;
 public class NdtpReportAppService : ApplicationService
 {
     private readonly IRepository<NdtpReport, Guid> _reports;
+    private readonly IRepository<FoodPoisoningCase, Guid> _poisoningCases;
+    private readonly IRepository<FoodPoisoningIncident, Guid> _poisoningIncidents;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
     private readonly ReportNameEnricher _nameEnricher;
 
     public NdtpReportAppService(
         IRepository<NdtpReport, Guid> reports,
+        IRepository<FoodPoisoningCase, Guid> poisoningCases,
+        IRepository<FoodPoisoningIncident, Guid> poisoningIncidents,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens,
         ReportNameEnricher nameEnricher)
     {
         _reports = reports;
+        _poisoningCases = poisoningCases;
+        _poisoningIncidents = poisoningIncidents;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
         _nameEnricher = nameEnricher;
@@ -104,6 +111,60 @@ public class NdtpReportAppService : ApplicationService
             input.IncidentCount, input.IncidentAffected, input.IncidentHospitalized, input.IncidentDeaths);
         await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return ToDto(entity);
+    }
+
+    [Authorize(FoodSafePermissions.Reporting.NdtpReports.Edit)]
+    public async Task<NdtpReportDto> PopulateFromPoisoningDataAsync(Guid id)
+    {
+        var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
+        var scope = await _dataScopeProvider.GetAsync(DataScopeOperation.View, _cancellationTokens.Token);
+
+        // Period window: [first moment of the month, first moment of next month)
+        var periodStart = new DateTime(entity.PeriodYear, entity.PeriodMonth, 1, 0, 0, 0, DateTimeKind.Unspecified);
+        var periodEnd = periodStart.AddMonths(1);
+
+        // Aggregate FoodPoisoningCase records for the period
+        var caseQuery = await _poisoningCases.GetQueryableAsync();
+        caseQuery = caseQuery.Where(c =>
+            c.OccurrenceDate.HasValue &&
+            c.OccurrenceDate >= periodStart &&
+            c.OccurrenceDate < periodEnd);
+        if (!scope.HasGlobalAccess)
+            caseQuery = caseQuery.Where(c => scope.OrganizationIds.Contains(c.OrganizationId));
+
+        var caseTreatments = await AsyncExecuter.ToListAsync(
+            caseQuery.Select(c => c.TreatmentResult),
+            _cancellationTokens.Token);
+
+        var caseCount = caseTreatments.Count;
+        var caseAffected = caseCount; // each case record represents one affected person
+        var caseHospitalized = caseTreatments.Count(r => r == TreatmentResult.Hospitalized);
+        var caseDeaths = caseTreatments.Count(r => r == TreatmentResult.Deceased);
+
+        // Aggregate FoodPoisoningIncident records for the period
+        var incidentQuery = await _poisoningIncidents.GetQueryableAsync();
+        incidentQuery = incidentQuery.Where(i =>
+            i.OccurrenceDate.HasValue &&
+            i.OccurrenceDate >= periodStart &&
+            i.OccurrenceDate < periodEnd);
+        if (!scope.HasGlobalAccess)
+            incidentQuery = incidentQuery.Where(i => scope.OrganizationIds.Contains(i.OrganizationId));
+
+        var incidentStats = await AsyncExecuter.ToListAsync(
+            incidentQuery.Select(i => new { i.AffectedCount, i.HospitalizedCount, i.DeathCount }),
+            _cancellationTokens.Token);
+
+        var incidentCount = incidentStats.Count;
+        var incidentAffected = incidentStats.Sum(i => i.AffectedCount);
+        var incidentHospitalized = incidentStats.Sum(i => i.HospitalizedCount);
+        var incidentDeaths = incidentStats.Sum(i => i.DeathCount);
+
+        entity.UpdateStats(
+            caseCount, caseAffected, caseHospitalized, caseDeaths,
+            incidentCount, incidentAffected, incidentHospitalized, incidentDeaths);
+
+        await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return await ToEnrichedDtoAsync(entity);
     }
 
     [Authorize(FoodSafePermissions.Reporting.NdtpReports.Edit)]

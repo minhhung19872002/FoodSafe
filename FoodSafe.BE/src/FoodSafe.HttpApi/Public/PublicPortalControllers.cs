@@ -98,6 +98,16 @@ public sealed class PublicContentController(
     public Task<PagedResultDto<PublicRiskAnalysisDto>> GetRiskAnalysesAsync(
         [FromQuery] PublicSearchRequestDto input) =>
         service.GetRiskAnalysesAsync(input);
+
+    [HttpGet("testing-results")]
+    public Task<PagedResultDto<PublicTestingResultDto>> GetTestingResultsAsync(
+        [FromQuery] PublicSearchRequestDto input) =>
+        service.GetTestingResultsAsync(input);
+
+    [HttpGet("inspection-results")]
+    public Task<PagedResultDto<PublicInspectionResultDto>> GetInspectionResultsAsync(
+        [FromQuery] PublicSearchRequestDto input) =>
+        service.GetInspectionResultsAsync(input);
 }
 
 [RemoteService]
@@ -111,6 +121,33 @@ public sealed class CitizenAlertReportController(
     public Task<CitizenAlertReportResultDto> CreateAsync(
         [FromBody] CreateCitizenAlertReportDto input) =>
         service.CreateAsync(input);
+}
+
+[RemoteService]
+[ApiVersion(ApiContract.Version)]
+[AllowAnonymous]
+[Route("api/v1/public/citizen-reports")]
+public sealed class CitizenReportStatusController(
+    IPublicContentAppService service) : AbpControllerBase
+{
+    /// <summary>
+    /// Anonymous tracking code lookup.
+    /// Returns 404 when the code is not found; the response time is deliberately
+    /// kept constant to prevent timing-based enumeration of valid codes.
+    /// No personally identifiable reporter data is included in the response.
+    /// </summary>
+    [HttpGet("status")]
+    public async Task<IActionResult> GetStatusAsync([FromQuery] string trackingCode)
+    {
+        if (string.IsNullOrWhiteSpace(trackingCode))
+            return BadRequest("trackingCode is required.");
+
+        var result = await service.GetCitizenReportStatusAsync(trackingCode);
+        if (result is null)
+            return NotFound();
+
+        return Ok(result);
+    }
 }
 
 [RemoteService]

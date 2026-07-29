@@ -107,12 +107,18 @@ export interface PublicBusiness {
   status: BusinessStatus;
   hasVsattpCommitment: boolean;
   hasEligibilityCertificate: boolean;
+  // TODO: The backend GET /v1/public/businesses/search endpoint currently does not
+  // return coordinates. Request BE to include addressLatitude and addressLongitude
+  // in the public business search response to enable the map view on the public portal.
+  addressLatitude?: number;
+  addressLongitude?: number;
 }
 
 export interface PublicProduct {
   name: string;
   code: string;
   brandName: string;
+  manufacturer: string | null;
   businessName: string;
   productGroupName: string;
 }
@@ -187,6 +193,93 @@ export interface PublicDocument {
   summary: string;
 }
 
+// ── Testing result outcome ───────────────────────────────────────────────────
+
+export const TESTING_OUTCOME = {
+  Pass: 1,
+  Fail: 2,
+  Conditional: 3,
+} as const;
+
+export type TestingOutcome =
+  (typeof TESTING_OUTCOME)[keyof typeof TESTING_OUTCOME];
+
+export const TESTING_OUTCOME_CONFIG: Record<
+  TestingOutcome,
+  { color: string; label: string }
+> = {
+  [TESTING_OUTCOME.Pass]: { color: "green", label: "Đạt" },
+  [TESTING_OUTCOME.Fail]: { color: "red", label: "Không đạt" },
+  [TESTING_OUTCOME.Conditional]: { color: "orange", label: "Đạt có điều kiện" },
+};
+
+// ── Inspection type ──────────────────────────────────────────────────────────
+
+export const INSPECTION_TYPE = {
+  Scheduled: 1,
+  Unscheduled: 2,
+  FollowUp: 3,
+  Emergency: 4,
+} as const;
+
+export type InspectionType =
+  (typeof INSPECTION_TYPE)[keyof typeof INSPECTION_TYPE];
+
+export const INSPECTION_TYPE_CONFIG: Record<InspectionType, { label: string }> =
+  {
+    [INSPECTION_TYPE.Scheduled]: { label: "Theo kế hoạch" },
+    [INSPECTION_TYPE.Unscheduled]: { label: "Đột xuất" },
+    [INSPECTION_TYPE.FollowUp]: { label: "Kiểm tra lại" },
+    [INSPECTION_TYPE.Emergency]: { label: "Khẩn cấp" },
+  };
+
+// ── Inspection overall result ─────────────────────────────────────────────────
+
+export const INSPECTION_OVERALL_RESULT = {
+  Pass: 1,
+  Fail: 2,
+  ConditionalPass: 3,
+} as const;
+
+export type InspectionOverallResult =
+  (typeof INSPECTION_OVERALL_RESULT)[keyof typeof INSPECTION_OVERALL_RESULT];
+
+export const INSPECTION_OVERALL_RESULT_CONFIG: Record<
+  InspectionOverallResult,
+  { color: string; label: string }
+> = {
+  [INSPECTION_OVERALL_RESULT.Pass]: { color: "green", label: "Đạt" },
+  [INSPECTION_OVERALL_RESULT.Fail]: { color: "red", label: "Không đạt" },
+  [INSPECTION_OVERALL_RESULT.ConditionalPass]: {
+    color: "orange",
+    label: "Đạt có điều kiện",
+  },
+};
+
+// ── Testing & Inspection results ─────────────────────────────────────────────
+
+export interface PublicTestingResult {
+  id: string;
+  sampleCode: string;
+  sampleName: string;
+  businessName: string | null;
+  testingCenterName: string | null;
+  sampleDate: string;
+  resultDate: string | null;
+  outcome: TestingOutcome;
+  hasFailedIndicators: boolean;
+}
+
+export interface PublicInspectionResult {
+  id: string;
+  businessName: string;
+  businessAddress: string | null;
+  inspectionDate: string;
+  inspectionType: InspectionType;
+  overallResult: InspectionOverallResult;
+  hasViolation: boolean;
+}
+
 // ── Alert report submission ──────────────────────────────────────────────────
 
 export interface AlertReportInput {
@@ -204,4 +297,32 @@ export interface AlertReportInput {
 export interface AlertReportResult {
   id: string;
   message: string;
+  /** Opaque tracking code (format: FD-XXXXXX). Present for citizen reports. */
+  trackingCode?: string | null;
 }
+
+// ── Citizen report tracking ──────────────────────────────────────────────────
+
+/** One of: Submitted | UnderReview | Resolved | Rejected */
+export type CitizenReportTrackingStatus =
+  | "Submitted"
+  | "UnderReview"
+  | "Resolved"
+  | "Rejected";
+
+export interface CitizenReportStatus {
+  trackingCode: string;
+  submittedAt: string;
+  status: CitizenReportTrackingStatus;
+  updatedAt: string;
+}
+
+export const CITIZEN_REPORT_STATUS_CONFIG: Record<
+  CitizenReportTrackingStatus,
+  { color: string; label: string }
+> = {
+  Submitted: { color: "blue", label: "Đã tiếp nhận" },
+  UnderReview: { color: "orange", label: "Đang xem xét" },
+  Resolved: { color: "green", label: "Đã xử lý" },
+  Rejected: { color: "red", label: "Không được chấp nhận" },
+};

@@ -291,6 +291,17 @@ export const businessApi = {
       response.headers["content-disposition"],
     );
   },
+
+  async downloadProfilePdf(id: string): Promise<ExcelDownload> {
+    const response = await api.get<Blob>(
+      `${businessEndpoint}/${id}/profile-pdf`,
+      { responseType: "blob" },
+    );
+    return excelDownload(
+      response.data,
+      response.headers["content-disposition"],
+    );
+  },
 };
 
 export const productApi = {

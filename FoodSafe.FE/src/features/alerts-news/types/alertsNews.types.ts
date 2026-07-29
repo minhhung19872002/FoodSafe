@@ -117,7 +117,14 @@ export interface AtpAlert {
   rejectedAt?: string;
   rejectedReason?: string;
   isPublic: boolean;
+  assigneeId?: string;
+  assigneeName?: string;
+  assignedAt?: string;
   creationTime: string;
+}
+
+export interface AssignAlertInput {
+  assigneeId: string;
 }
 
 export interface CreateUpdateAlertInput {
@@ -219,4 +226,12 @@ export interface AlertOption {
 export interface PagedResult<T> {
   totalCount: number;
   items: T[];
+}
+
+/** Minimal user record used for the assignee Select in the moderation queue. */
+export interface StaffUserOption {
+  id: string;
+  userName: string;
+  fullName: string;
+  isActive: boolean;
 }

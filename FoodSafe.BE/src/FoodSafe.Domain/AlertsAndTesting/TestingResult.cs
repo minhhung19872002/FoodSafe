@@ -21,6 +21,7 @@ public sealed class TestingResult : FullAuditedAggregateRoot<Guid>
     public string? CertificateNumber { get; private set; }
     public Guid? InspectionResultId { get; private set; }
     public bool IsPublic { get; private set; }
+    public string? StoragePath { get; private set; }
 
     private TestingResult() { }
 
@@ -42,7 +43,8 @@ public sealed class TestingResult : FullAuditedAggregateRoot<Guid>
         DateTime? resultDate = null,
         string? failedCriteria = null,
         string? certificateNumber = null,
-        Guid? inspectionResultId = null)
+        Guid? inspectionResultId = null,
+        string? storagePath = null)
     {
         Check.NotNullOrWhiteSpace(sampleCode, nameof(sampleCode), 100);
         Check.NotNullOrWhiteSpace(sampleName, nameof(sampleName), 500);
@@ -67,7 +69,8 @@ public sealed class TestingResult : FullAuditedAggregateRoot<Guid>
             FailedCriteria = Normalize(failedCriteria),
             CertificateNumber = Normalize(certificateNumber),
             InspectionResultId = inspectionResultId,
-            IsPublic = false
+            IsPublic = false,
+            StoragePath = Normalize(storagePath)
         };
     }
 
@@ -85,7 +88,8 @@ public sealed class TestingResult : FullAuditedAggregateRoot<Guid>
         DateTime? resultDate,
         string? failedCriteria,
         string? certificateNumber,
-        Guid? inspectionResultId)
+        Guid? inspectionResultId,
+        string? storagePath)
     {
         Check.NotNullOrWhiteSpace(sampleCode, nameof(sampleCode), 100);
         Check.NotNullOrWhiteSpace(sampleName, nameof(sampleName), 500);
@@ -107,6 +111,7 @@ public sealed class TestingResult : FullAuditedAggregateRoot<Guid>
         FailedCriteria = Normalize(failedCriteria);
         CertificateNumber = Normalize(certificateNumber);
         InspectionResultId = inspectionResultId;
+        StoragePath = Normalize(storagePath);
     }
 
     public void SetPublic(bool isPublic) => IsPublic = isPublic;

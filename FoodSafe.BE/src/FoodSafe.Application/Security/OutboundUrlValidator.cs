@@ -93,7 +93,7 @@ public static class OutboundUrlValidator
     /// without a reachable server (the connect guard blocks every address a test
     /// listener could bind to).
     /// </summary>
-    internal static SocketsHttpHandler CreateGuardedHandler()
+    public static SocketsHttpHandler CreateGuardedHandler()
     {
         return new SocketsHttpHandler
         {

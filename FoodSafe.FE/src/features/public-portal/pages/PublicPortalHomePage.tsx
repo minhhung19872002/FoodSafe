@@ -117,6 +117,14 @@ const PORTAL_TILES: PortalTile[] = [
     iconBg: "#FBEAE7",
     iconColor: brand.red,
   },
+  {
+    title: "Tra cứu báo cáo",
+    description: "Kiểm tra trạng thái xử lý phản ánh bằng mã theo dõi",
+    to: "/tra-cuu-phan-anh",
+    icon: "🔍",
+    iconBg: "#E8EFFD",
+    iconColor: brand.blue,
+  },
 ];
 
 const PREVIEW = { SkipCount: 0, MaxResultCount: 4 } as const;

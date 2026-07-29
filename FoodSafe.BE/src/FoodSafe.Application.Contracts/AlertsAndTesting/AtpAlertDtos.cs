@@ -30,6 +30,9 @@ public class AtpAlertDto : EntityDto<Guid>
     public DateTime? RejectedAt { get; set; }
     public string? RejectedReason { get; set; }
     public bool IsPublic { get; set; }
+    public Guid? AssigneeId { get; set; }
+    public string? AssigneeName { get; set; }
+    public DateTime? AssignedAt { get; set; }
     public DateTime CreationTime { get; set; }
 }
 
@@ -97,4 +100,11 @@ public class RejectAlertDto
     [Required]
     [StringLength(1000, MinimumLength = 3)]
     public string Reason { get; set; } = string.Empty;
+}
+
+/// <summary>Assigns a citizen-submitted alert to a staff member for processing (FR-29-06).</summary>
+public class AssignAlertDto
+{
+    [Required]
+    public Guid AssigneeId { get; set; }
 }

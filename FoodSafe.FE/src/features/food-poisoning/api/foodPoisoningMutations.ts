@@ -203,6 +203,12 @@ export function useExportCases() {
   });
 }
 
+export function useDownloadCasePdf() {
+  return useMutation({
+    mutationFn: (id: string) => poisoningCaseApi.downloadPdf(id),
+  });
+}
+
 export function useExportIncidents() {
   return useMutation({
     mutationFn: (filter: IncidentFilter) =>

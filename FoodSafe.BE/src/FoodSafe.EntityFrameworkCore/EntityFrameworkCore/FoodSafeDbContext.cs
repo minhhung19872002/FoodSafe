@@ -69,6 +69,7 @@ public class FoodSafeDbContext :
     { get; set; }
     public DbSet<EligibilityCertificate> EligibilityCertificates
     { get; set; }
+    public DbSet<VsattpCommitment> VsattpCommitments { get; set; }
     public DbSet<ExportFoodCertificate> ExportFoodCertificates
     { get; set; }
     public DbSet<InspectionPlan> InspectionPlans { get; set; }

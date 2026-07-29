@@ -1,6 +1,7 @@
 using FoodSafe.AlertsAndTesting;
 using FoodSafe.BusinessManagement;
 using FoodSafe.Catalogs;
+using FoodSafe.Inspection;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -20,6 +21,9 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
     private readonly IRepository<DocumentType, Guid> _documentTypes;
     private readonly IRepository<RiskAnalysis, Guid> _riskAnalyses;
     private readonly IRepository<Business, Guid> _businesses;
+    private readonly IRepository<TestingResult, Guid> _testingResults;
+    private readonly IRepository<TestingCenter, Guid> _testingCenters;
+    private readonly IRepository<InspectionResult, Guid> _inspectionResults;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
     public PublicContentAppService(
@@ -29,6 +33,9 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
         IRepository<DocumentType, Guid> documentTypes,
         IRepository<RiskAnalysis, Guid> riskAnalyses,
         IRepository<Business, Guid> businesses,
+        IRepository<TestingResult, Guid> testingResults,
+        IRepository<TestingCenter, Guid> testingCenters,
+        IRepository<InspectionResult, Guid> inspectionResults,
         ICancellationTokenProvider cancellationTokens)
     {
         _news = news;
@@ -37,6 +44,9 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
         _documentTypes = documentTypes;
         _riskAnalyses = riskAnalyses;
         _businesses = businesses;
+        _testingResults = testingResults;
+        _testingCenters = testingCenters;
+        _inspectionResults = inspectionResults;
         _cancellationTokens = cancellationTokens;
     }
 
@@ -233,6 +243,151 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
                 Content = r.Content,
             }).ToList());
     }
+
+    public async Task<PagedResultDto<PublicTestingResultDto>> GetTestingResultsAsync(
+        PublicSearchRequestDto input)
+    {
+        var query = (await _testingResults.GetQueryableAsync())
+            .Where(t => t.IsPublic && t.BusinessId != null);
+        var keyword = input.Keyword?.Trim();
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            query = query.Where(t =>
+                t.SampleCode.Contains(keyword)
+                || t.SampleName.Contains(keyword));
+        }
+
+        var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
+        var items = await AsyncExecuter.ToListAsync(
+            query.OrderByDescending(t => t.SampleDate)
+                .ThenByDescending(t => t.CreationTime)
+                .Skip(input.SkipCount).Take(input.MaxResultCount),
+            _cancellationTokens.Token);
+
+        var businessIds = items
+            .Where(t => t.BusinessId.HasValue)
+            .Select(t => t.BusinessId!.Value).Distinct().ToList();
+        var businessNames = businessIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : (await _businesses.GetListAsync(
+                    b => businessIds.Contains(b.Id), cancellationToken: _cancellationTokens.Token))
+                .ToDictionary(b => b.Id, b => b.Name);
+
+        var centerIds = items.Select(t => t.TestingCenterId).Distinct().ToList();
+        var centerNames = centerIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : (await _testingCenters.GetListAsync(
+                    c => centerIds.Contains(c.Id), cancellationToken: _cancellationTokens.Token))
+                .ToDictionary(c => c.Id, c => c.Name);
+
+        return new PagedResultDto<PublicTestingResultDto>(
+            totalCount,
+            items.Select(t => new PublicTestingResultDto
+            {
+                Id = t.Id,
+                SampleCode = t.SampleCode,
+                SampleName = t.SampleName,
+                BusinessName = t.BusinessId.HasValue
+                    ? businessNames.GetValueOrDefault(t.BusinessId.Value)
+                    : null,
+                TestingCenterName = centerNames.GetValueOrDefault(t.TestingCenterId),
+                SampleDate = t.SampleDate,
+                ResultDate = t.ResultDate,
+                Outcome = t.Outcome,
+                HasFailedIndicators = !string.IsNullOrWhiteSpace(t.FailedCriteria),
+            }).ToList());
+    }
+
+    public async Task<PagedResultDto<PublicInspectionResultDto>> GetInspectionResultsAsync(
+        PublicSearchRequestDto input)
+    {
+        var query = (await _inspectionResults.GetQueryableAsync())
+            .Where(r => r.IsFinalized);
+        var keyword = input.Keyword?.Trim();
+
+        var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
+        var allItems = await AsyncExecuter.ToListAsync(
+            query.OrderByDescending(r => r.InspectionDate),
+            _cancellationTokens.Token);
+
+        var businessIds = allItems.Select(r => r.BusinessId).Distinct().ToList();
+        var businessesById = businessIds.Count == 0
+            ? new Dictionary<Guid, Business>()
+            : (await _businesses.GetListAsync(
+                    b => businessIds.Contains(b.Id), cancellationToken: _cancellationTokens.Token))
+                .ToDictionary(b => b.Id);
+
+        var rows = allItems
+            .Select(r =>
+            {
+                var business = businessesById.GetValueOrDefault(r.BusinessId);
+                return new PublicInspectionResultDto
+                {
+                    Id = r.Id,
+                    BusinessName = business?.Name ?? string.Empty,
+                    BusinessAddress = business?.AddressStreet,
+                    InspectionDate = r.InspectionDate,
+                    InspectionType = r.InspectionType,
+                    OverallResult = r.OverallResult,
+                    HasViolation = r.HasViolation,
+                };
+            })
+            .ToList();
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            rows = rows.Where(r =>
+                r.BusinessName.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                || (r.BusinessAddress?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false))
+                .ToList();
+        }
+
+        return new PagedResultDto<PublicInspectionResultDto>(
+            string.IsNullOrWhiteSpace(keyword) ? totalCount : rows.Count,
+            rows.Skip(input.SkipCount).Take(input.MaxResultCount).ToList());
+    }
+
+    /// <summary>
+    /// Status lookup by tracking code for anonymous citizens.
+    /// The query always runs to completion before returning null — no early-exit
+    /// short-circuit — so response time is constant regardless of whether the
+    /// code exists, which prevents timing-based enumeration of valid codes.
+    /// No reporter PII is included in the response.
+    /// </summary>
+    public async Task<CitizenReportStatusDto?> GetCitizenReportStatusAsync(
+        string trackingCode)
+    {
+        if (string.IsNullOrWhiteSpace(trackingCode))
+            return null;
+
+        var normalised = trackingCode.Trim().ToUpperInvariant();
+
+        var alert = (await _alerts.GetListAsync(
+                a => a.TrackingCode == normalised && a.Source == AlertSource.PublicReport,
+                cancellationToken: _cancellationTokens.Token))
+            .FirstOrDefault();
+
+        if (alert is null)
+            return null;
+
+        return new CitizenReportStatusDto
+        {
+            TrackingCode = alert.TrackingCode!,
+            SubmittedAt = alert.CreationTime,
+            Status = MapTrackingStatus(alert),
+            UpdatedAt = alert.LastModificationTime ?? alert.CreationTime,
+        };
+    }
+
+    private static string MapTrackingStatus(AtpAlert alert) => alert.Status switch
+    {
+        AlertStatus.Draft when alert.AssigneeId is not null => "UnderReview",
+        AlertStatus.Draft => "Submitted",
+        AlertStatus.Published => "Resolved",
+        AlertStatus.Recalled => "Resolved",
+        AlertStatus.Rejected => "Rejected",
+        _ => "Submitted",
+    };
 
     private static PublicNewsListItemDto ToNewsListItem(AtpNews article)
     {

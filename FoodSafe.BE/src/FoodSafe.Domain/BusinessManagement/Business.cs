@@ -149,6 +149,11 @@ public sealed class Business : FullAuditedAggregateRoot<Guid>
         HasVsattpCommitment = hasVsattpCommitment;
     }
 
+    public void ConfirmVsattpCommitment()
+    {
+        HasVsattpCommitment = true;
+    }
+
     private static void ValidateAddress(
         Guid? provinceId,
         Guid? districtId,

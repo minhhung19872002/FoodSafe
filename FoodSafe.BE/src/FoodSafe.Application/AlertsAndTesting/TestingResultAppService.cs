@@ -107,7 +107,8 @@ public class TestingResultAppService : ApplicationService
             input.ResultDate,
             input.FailedCriteria,
             input.CertificateNumber,
-            input.InspectionResultId);
+            input.InspectionResultId,
+            input.StoragePath);
 
         if (input.IsPublic) entity.SetPublic(true);
 
@@ -137,7 +138,8 @@ public class TestingResultAppService : ApplicationService
             input.ResultDate,
             input.FailedCriteria,
             input.CertificateNumber,
-            input.InspectionResultId);
+            input.InspectionResultId,
+            input.StoragePath);
 
         entity.SetPublic(input.IsPublic);
 
@@ -302,6 +304,7 @@ public class TestingResultAppService : ApplicationService
             CertificateNumber = e.CertificateNumber,
             InspectionResultId = e.InspectionResultId,
             IsPublic = e.IsPublic,
+            StoragePath = e.StoragePath,
             CreationTime = e.CreationTime,
         }).ToList();
     }

@@ -32,6 +32,19 @@ export interface ListResult<T> {
   items: T[];
 }
 
+export interface ImportGeographyErrorDto {
+  rowNumber: number;
+  field: string;
+  message: string;
+}
+
+export interface ImportGeographyResultDto {
+  importedDistricts: number;
+  importedCommunes: number;
+  skippedRows: number;
+  errors: ImportGeographyErrorDto[];
+}
+
 const endpoint = "/v1/app/geographic-catalog";
 
 export async function getGeographicItems<
@@ -65,4 +78,18 @@ export async function deleteGeographicItem(
   id: string,
 ) {
   await api.delete(`${endpoint}/${id}/${kind}`);
+}
+
+export async function importGeographyFromExcel(
+  provinceId: string,
+  file: File,
+): Promise<ImportGeographyResultDto> {
+  const form = new FormData();
+  form.append("provinceId", provinceId);
+  form.append("file", file);
+  const response = await api.post<ImportGeographyResultDto>(
+    `${endpoint}/excel/import`,
+    form,
+  );
+  return response.data;
 }

@@ -43,6 +43,7 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   "product-registrations": "Đăng ký công bố sản phẩm",
   "advertisement-registrations": "Đăng ký quảng cáo",
   "eligibility-certificates": "Giấy đủ điều kiện ATTP",
+  "vsattp-commitments": "Cam kết VSATTP",
   "cfs-certificates": "Chứng nhận CFS",
   "export-food-certificates": "GCN Xuất khẩu thực phẩm",
   inspection: "Thanh tra - Kiểm tra ATTP",
@@ -131,6 +132,12 @@ const NAV_CONFIG: NavEntry[] = [
         icon: navIcon("📋"),
         label: "Giấy đủ ĐK ATTP",
         permission: ROUTE_PERMISSIONS.eligibilityCertificates,
+      },
+      {
+        key: "/vsattp-commitments",
+        icon: navIcon("✍️"),
+        label: "Cam kết VSATTP",
+        permission: ROUTE_PERMISSIONS.vsattpCommitments,
       },
       {
         key: "/cfs-certificates",

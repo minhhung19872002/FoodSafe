@@ -117,6 +117,17 @@ public static class FoodSafePermissions
             public const string Edit = Default + ".Edit";
             public const string Delete = Default + ".Delete";
         }
+
+        public static class VsattpCommitments
+        {
+            public const string Default =
+                Licensing.Default + ".VsattpCommitments";
+            public const string View = Default + ".View";
+            public const string Create = Default + ".Create";
+            public const string Edit = Default + ".Edit";
+            public const string Delete = Default + ".Delete";
+            public const string Confirm = Default + ".Confirm";
+        }
     }
 
     public static class Inspection
@@ -155,6 +166,8 @@ public static class FoodSafePermissions
             public const string Edit = Default + ".Edit";
             public const string Delete = Default + ".Delete";
             public const string Publish = Default + ".Publish";
+            /// <summary>Assign a citizen-submitted alert (Source=PublicReport) to a staff member for processing.</summary>
+            public const string Assign = Default + ".Assign";
         }
 
         public static class News

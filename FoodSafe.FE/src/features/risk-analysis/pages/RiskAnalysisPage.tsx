@@ -31,6 +31,7 @@ import {
   ALERT_CATEGORY,
   ALERT_CATEGORY_LABELS,
 } from "@/features/alerts-news/types/alertsNews.types";
+import { useCatalogOptions } from "@/features/catalogs/api/catalogQueries";
 import { useRiskAnalyses } from "../api/riskAnalysisQueries";
 import {
   useCreateRiskAnalysis,
@@ -69,6 +70,8 @@ export default function RiskAnalysisPage() {
     "FoodSafe.AlertsAndTesting.RiskAnalyses.Delete",
   );
 
+  const productGroupOptions = useCatalogOptions("product-group");
+
   const [filter, setFilter] = useState<RiskAnalysisFilter>({});
   const pagination = useTablePagination(15);
   const listQuery = useRiskAnalyses({
@@ -98,6 +101,7 @@ export default function RiskAnalysisPage() {
     form.setFieldsValue({
       category: ALERT_CATEGORY.FoodSafety,
       riskLevel: RISK_LEVEL.Medium,
+      productGroupIds: [],
     });
     setEditorOpen(true);
   };
@@ -128,6 +132,7 @@ export default function RiskAnalysisPage() {
        <h3>${escapeHtml(record.title)}</h3>
        <p><strong>Chuyên mục:</strong> ${escapeHtml(ALERT_CATEGORY_LABELS[record.category])}</p>
        <p><strong>Mức độ nguy cơ:</strong> ${escapeHtml(RISK_LEVEL_CONFIG[record.riskLevel]?.label)}</p>
+       <p><strong>Nhóm sản phẩm:</strong> ${record.productGroupNames.length > 0 ? record.productGroupNames.map(escapeHtml).join(", ") : "—"}</p>
        <p><strong>Sản phẩm liên quan:</strong> ${escapeHtml(record.relatedProducts) || "—"}</p>
        <p><strong>Nội dung phân tích:</strong></p>
        <p>${escapeHtml(record.content)}</p>
@@ -392,8 +397,21 @@ export default function RiskAnalysisPage() {
           >
             <Input.TextArea rows={4} />
           </Form.Item>
-          <Form.Item name="relatedProducts" label="Sản phẩm liên quan">
-            <Input />
+          <Form.Item name="productGroupIds" label="Nhóm sản phẩm">
+            <Select
+              mode="multiple"
+              allowClear
+              placeholder="Chọn nhóm sản phẩm"
+              loading={productGroupOptions.isFetching}
+              optionFilterProp="label"
+              options={(productGroupOptions.data?.items ?? []).map((pg) => ({
+                value: pg.id,
+                label: pg.name,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item name="relatedProducts" label="Sản phẩm liên quan (mô tả tự do)">
+            <Input placeholder="Tên sản phẩm cụ thể, lô hàng..." />
           </Form.Item>
           <Form.Item name="evidence" label="Bằng chứng">
             <Input.TextArea rows={2} />
@@ -433,6 +451,20 @@ export default function RiskAnalysisPage() {
             render: (r) => (r.isPublic ? "Có" : "Không"),
           },
           { label: "Nội dung", span: 2, render: (r) => r.content },
+          {
+            label: "Nhóm sản phẩm",
+            span: 2,
+            render: (r) =>
+              r.productGroupNames.length > 0 ? (
+                <Space wrap size={4}>
+                  {r.productGroupNames.map((name) => (
+                    <Tag key={name} color="blue">
+                      {name}
+                    </Tag>
+                  ))}
+                </Space>
+              ) : null,
+          },
           {
             label: "Sản phẩm liên quan",
             span: 2,

@@ -7,6 +7,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
+  FilePdfOutlined,
   LockOutlined,
   PaperClipOutlined,
   PlusOutlined,
@@ -44,6 +45,7 @@ import {
   useCreateInspectionResult,
   useDeleteInspectionPlan,
   useDeleteInspectionResult,
+  useDownloadBienBanPdf,
   useExportInspectionPlans,
   useExportInspectionResults,
   useFinalizeInspectionResult,
@@ -714,6 +716,7 @@ function ResultsTab() {
   const deleteMutation = useDeleteInspectionResult();
   const exportMutation = useExportInspectionResults();
   const finalizeMutation = useFinalizeInspectionResult();
+  const bienBanPdfMutation = useDownloadBienBanPdf();
 
   const closeEditor = () => {
     setEditorOpen(false);
@@ -790,6 +793,18 @@ function ResultsTab() {
                 ariaLabel: `Tài liệu kết quả ${item.businessName ?? item.id}`,
                 icon: <PaperClipOutlined />,
                 onClick: () => setAttachmentsResult(item),
+              },
+              {
+                key: "bien-ban-pdf",
+                label: "Tải biên bản PDF",
+                ariaLabel: `Tải biên bản PDF ${item.businessName ?? item.id}`,
+                icon: <FilePdfOutlined />,
+                onClick: () =>
+                  bienBanPdfMutation.mutate(item.id, {
+                    onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                    onError: (error) =>
+                      void message.error(extractApiError(error)),
+                  }),
               },
               {
                 key: "follow-up",

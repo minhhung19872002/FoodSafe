@@ -29,6 +29,7 @@ import {
   ExportOutlined,
   EyeOutlined,
   WarningOutlined,
+  FilePdfOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -73,6 +74,9 @@ import {
   useExportNdtpReports,
   useExportAtpWorkReports,
   useExportActionMonthReports,
+  useDownloadNdtpReportPdf,
+  useDownloadAtpWorkReportPdf,
+  useDownloadActionMonthReportPdf,
 } from "../api/reportingMutations";
 import {
   REPORT_STATUS,
@@ -143,6 +147,7 @@ function NdtpTab() {
   const completeMut = useCompleteNdtpReport();
   const returnToDraftMut = useReturnNdtpToDraft();
   const exportMut = useExportNdtpReports();
+  const downloadPdfMut = useDownloadNdtpReportPdf();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editReport, setEditReport] = useState<NdtpReport | null>(null);
@@ -330,6 +335,19 @@ function NdtpTab() {
               icon: <WarningOutlined />,
               hidden: record.status === REPORT_STATUS.Draft,
               onClick: () => setErrorNotifReport(record),
+            },
+            {
+              key: "download-pdf",
+              label: "Tải PDF",
+              icon: <FilePdfOutlined />,
+              hidden:
+                record.status === REPORT_STATUS.Draft ||
+                record.status === REPORT_STATUS.Returned,
+              onClick: () =>
+                downloadPdfMut.mutate(record.id, {
+                  onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                  onError: (error) => message.error(extractApiError(error)),
+                }),
             },
           ]}
           overflowAriaLabel={`Thao tác Tháng ${record.periodMonth}/${record.periodYear}`}
@@ -544,6 +562,7 @@ function AtpWorkTab() {
   const completeMut = useCompleteAtpWorkReport();
   const returnToDraftMut = useReturnAtpToDraft();
   const exportMut = useExportAtpWorkReports();
+  const downloadPdfMut = useDownloadAtpWorkReportPdf();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editReport, setEditReport] = useState<AtpWorkReport | null>(null);
@@ -734,6 +753,19 @@ function AtpWorkTab() {
               icon: <WarningOutlined />,
               hidden: record.status === REPORT_STATUS.Draft,
               onClick: () => setErrorNotifReport(record),
+            },
+            {
+              key: "download-pdf",
+              label: "Tải PDF",
+              icon: <FilePdfOutlined />,
+              hidden:
+                record.status === REPORT_STATUS.Draft ||
+                record.status === REPORT_STATUS.Returned,
+              onClick: () =>
+                downloadPdfMut.mutate(record.id, {
+                  onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                  onError: (error) => message.error(extractApiError(error)),
+                }),
             },
           ]}
           overflowAriaLabel={`Thao tác ${REPORT_PERIOD_TYPE_CONFIG[record.periodType]?.label ?? ""} ${record.periodYear}${record.periodHalf ? ` (Kỳ ${record.periodHalf})` : ""}`}
@@ -979,6 +1011,7 @@ function ActionMonthTab() {
   const completeMut = useCompleteActionMonthReport();
   const returnToDraftMut = useReturnAmrToDraft();
   const exportMut = useExportActionMonthReports();
+  const downloadPdfMut = useDownloadActionMonthReportPdf();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editReport, setEditReport] = useState<ActionMonthReport | null>(null);
@@ -1171,6 +1204,19 @@ function ActionMonthTab() {
               icon: <WarningOutlined />,
               hidden: record.status === REPORT_STATUS.Draft,
               onClick: () => setErrorNotifReport(record),
+            },
+            {
+              key: "download-pdf",
+              label: "Tải PDF",
+              icon: <FilePdfOutlined />,
+              hidden:
+                record.status === REPORT_STATUS.Draft ||
+                record.status === REPORT_STATUS.Returned,
+              onClick: () =>
+                downloadPdfMut.mutate(record.id, {
+                  onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                  onError: (error) => message.error(extractApiError(error)),
+                }),
             },
           ]}
           overflowAriaLabel={`Thao tác ${record.periodYear}`}

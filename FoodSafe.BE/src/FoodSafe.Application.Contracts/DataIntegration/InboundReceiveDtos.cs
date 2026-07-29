@@ -88,4 +88,21 @@ public interface IPartnerInboundAppService : Volo.Abp.Application.Services.IAppl
         string dataTypeSegment,
         InboundRequestContext context,
         InboundEnvelopeDto envelope);
+
+    Task<InboundSubmissionStatusDto> GetSubmissionStatusAsync(
+        string requestId,
+        InboundRequestContext context);
+}
+
+/// <summary>Status response returned to the submitting partner for their requestId.</summary>
+public class InboundSubmissionStatusDto
+{
+    public Guid SubmissionId { get; set; }
+    public string RequestId { get; set; } = "";
+    public string DataType { get; set; } = "";
+    public int RecordCount { get; set; }
+    public DateTime ReceivedAt { get; set; }
+    public string Status { get; set; } = "";
+    public string? RejectionReason { get; set; }
+    public DateTime? DispositionAt { get; set; }
 }

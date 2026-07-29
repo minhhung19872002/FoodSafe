@@ -819,9 +819,10 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 "thấy 15% mẫu nhiễm Vibrio parahaemolyticus vượt ngưỡng. Nguy cơ ngộ độc " +
                 "tăng cao trong các tháng nắng nóng.",
                 AlertCategory.Biological, RiskLevel.High,
-                "Hàu sống, tôm, mực tươi sống",
-                "Kết quả kiểm nghiệm giám sát quý gần nhất; vụ ngộ độc VNĐ-QN-2026-001",
-                "Khuyến cáo nhà hàng chỉ phục vụ hải sản nấu chín trong các đợt nắng nóng");
+                productGroupIds: null,
+                relatedProducts: "Hàu sống, tôm, mực tươi sống",
+                evidence: "Kết quả kiểm nghiệm giám sát quý gần nhất; vụ ngộ độc VNĐ-QN-2026-001",
+                recommendations: "Khuyến cáo nhà hàng chỉ phục vụ hải sản nấu chín trong các đợt nắng nóng");
             analysis.Publish(ProvinceAdminId, now.AddDays(-25));
             return analysis;
         });
@@ -831,7 +832,8 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "Đang tổng hợp kết quả quan trắc vùng nuôi nhuyễn thể tại Vân Đồn để đánh " +
             "giá tồn dư cadimi và chì trong ngao, hàu thương phẩm.",
             AlertCategory.Chemical, RiskLevel.Medium,
-            "Ngao, hàu, tu hài nuôi tại Vân Đồn"));
+            productGroupIds: null,
+            relatedProducts: "Ngao, hàu, tu hài nuôi tại Vân Đồn"));
 
         await InsertIfMissingAsync(DemoId(0x8064, 1), () => TestingResult.Create(
             DemoId(0x8064, 1), OrgDistrictId, "MAU-2026-0152",

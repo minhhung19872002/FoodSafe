@@ -945,6 +945,62 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasDatabaseName("idx_eligibility_certificates_org");
         });
 
+        builder.Entity<VsattpCommitment>(entity =>
+        {
+            entity.ToTable("vsattp_commitments", table =>
+            {
+                table.HasCheckConstraint(
+                    "chk_vsattp_status",
+                    "status IN (1, 2)");
+                table.HasCheckConstraint(
+                    "chk_vsattp_confirm",
+                    "(status != 2 AND confirmed_by_user_id IS NULL AND " +
+                    "confirmed_at IS NULL) OR " +
+                    "(status = 2 AND confirmed_by_user_id IS NOT NULL AND " +
+                    "confirmed_at IS NOT NULL)");
+            });
+            ConfigureAggregateAudit(
+                entity,
+                "pk_vsattp_commitments");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id");
+            entity.Property(x => x.CommitmentDate)
+                .HasColumnName("commitment_date")
+                .HasColumnType("date");
+            entity.Property(x => x.Notes).HasColumnName("notes");
+            entity.Property(x => x.Status)
+                .HasColumnName("status")
+                .HasConversion<short>();
+            entity.Property(x => x.ConfirmedByUserId)
+                .HasColumnName("confirmed_by_user_id");
+            entity.Property(x => x.ConfirmedAt)
+                .HasColumnName("confirmed_at");
+            entity.HasOne<Business>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    x.Id,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_vsattp_business_org");
+            entity.HasOne<Organization>().WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_vsattp_org");
+            entity.HasIndex(x => x.BusinessId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_vsattp_commitments_business");
+            entity.HasIndex(x => x.OrganizationId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_vsattp_commitments_org");
+        });
+
         builder.Entity<ManagementScopeAssignment>(entity =>
         {
             entity.HasOne<Business>().WithMany().HasForeignKey(x => x.BusinessId)
@@ -1603,6 +1659,10 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.RejectedAt).HasColumnName("rejected_at");
             entity.Property(x => x.RejectedReason).HasColumnName("rejected_reason");
             entity.Property(x => x.IsPublic).HasColumnName("is_public");
+            entity.Property(x => x.AssigneeId).HasColumnName("assignee_id");
+            entity.Property(x => x.AssignedAt).HasColumnName("assigned_at");
+            entity.Property(x => x.AssignedByUserId).HasColumnName("assigned_by_user_id");
+            entity.Property(x => x.TrackingCode).HasColumnName("tracking_code").HasMaxLength(12);
 
             entity.HasOne<Organization>()
                 .WithMany()
@@ -1628,6 +1688,10 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.HasIndex(x => x.IsPublic)
                 .HasFilter("is_deleted = FALSE AND is_public = TRUE")
                 .HasDatabaseName("idx_alerts_public");
+            entity.HasIndex(x => x.TrackingCode)
+                .IsUnique()
+                .HasFilter("tracking_code IS NOT NULL AND is_deleted = FALSE")
+                .HasDatabaseName("uq_alerts_tracking_code");
         });
 
         builder.Entity<AtpNews>(entity =>
@@ -1729,6 +1793,15 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.Content).HasColumnName("content").IsRequired();
             entity.Property(x => x.Category).HasColumnName("category").HasConversion<short>();
             entity.Property(x => x.RiskLevel).HasColumnName("risk_level").HasConversion<short>();
+            entity.Property(x => x.ProductGroupIds)
+                .HasColumnName("product_group_ids")
+                .HasColumnType("text")
+                .HasConversion(
+                    v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                    v => string.IsNullOrEmpty(v)
+                        ? new List<Guid>()
+                        : System.Text.Json.JsonSerializer.Deserialize<List<Guid>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<Guid>())
+                .HasDefaultValueSql("'[]'");
             entity.Property(x => x.RelatedProducts).HasColumnName("related_products");
             entity.Property(x => x.Evidence).HasColumnName("evidence");
             entity.Property(x => x.Recommendations).HasColumnName("recommendations");
@@ -1774,6 +1847,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CertificateNumber).HasColumnName("certificate_number").HasMaxLength(100);
             entity.Property(x => x.InspectionResultId).HasColumnName("inspection_result_id");
             entity.Property(x => x.IsPublic).HasColumnName("is_public");
+            entity.Property(x => x.StoragePath).HasColumnName("storage_path").HasMaxLength(1000).IsRequired(false);
 
             entity.HasOne<Organization>()
                 .WithMany()
@@ -2156,6 +2230,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CompletedById).HasColumnName("completed_by_id");
             entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
             entity.Property(x => x.Notes).HasColumnName("notes");
+            entity.Property(x => x.SubmissionHash).HasColumnName("submission_hash").HasMaxLength(64).IsRequired(false);
 
             entity.ToTable(t =>
             {
@@ -2260,6 +2335,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CompletedById).HasColumnName("completed_by_id");
             entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
             entity.Property(x => x.Notes).HasColumnName("notes");
+            entity.Property(x => x.SubmissionHash).HasColumnName("submission_hash").HasMaxLength(64).IsRequired(false);
 
             entity.ToTable(t =>
             {
@@ -2349,6 +2425,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.CompletedById).HasColumnName("completed_by_id");
             entity.Property(x => x.CompletedAt).HasColumnName("completed_at");
             entity.Property(x => x.Notes).HasColumnName("notes");
+            entity.Property(x => x.SubmissionHash).HasColumnName("submission_hash").HasMaxLength(64).IsRequired(false);
 
             entity.ToTable(t => t.HasCheckConstraint("chk_amr_status", "status IN (1, 2, 3, 4, 5)"));
 

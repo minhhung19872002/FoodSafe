@@ -6,6 +6,7 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Identity;
 using Volo.Abp.Threading;
 using Volo.Abp.Users;
 
@@ -16,17 +17,20 @@ public class AtpAlertAppService : ApplicationService
 {
     private readonly IRepository<AtpAlert, Guid> _alerts;
     private readonly IRepository<Business, Guid> _businesses;
+    private readonly IRepository<IdentityUser, Guid> _identityUsers;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
     public AtpAlertAppService(
         IRepository<AtpAlert, Guid> alerts,
         IRepository<Business, Guid> businesses,
+        IRepository<IdentityUser, Guid> identityUsers,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens)
     {
         _alerts = alerts;
         _businesses = businesses;
+        _identityUsers = identityUsers;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
     }
@@ -162,6 +166,20 @@ public class AtpAlertAppService : ApplicationService
         return (await ToDtosAsync([alert]))[0];
     }
 
+    /// <summary>
+    /// Assigns a citizen-submitted alert (Source = PublicReport) to a staff member
+    /// for processing (FR-29-06 assign step). The alert must be in Draft status.
+    /// POST /api/v1/app/atp-alert/{id}/assign
+    /// </summary>
+    [Authorize(FoodSafePermissions.AlertsAndTesting.Alerts.Assign)]
+    public async Task<AtpAlertDto> AssignAsync(Guid id, AssignAlertDto input)
+    {
+        var alert = await GetScopedAsync(id, DataScopeOperation.Edit);
+        alert.Assign(input.AssigneeId, CurrentUser.GetId(), Clock.Now);
+        await _alerts.UpdateAsync(alert, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return (await ToDtosAsync([alert]))[0];
+    }
+
     private async Task<IQueryable<AtpAlert>> ScopedQueryAsync(DataScopeOperation operation)
     {
         var scope = await _dataScopeProvider.GetAsync(operation, _cancellationTokens.Token);
@@ -238,6 +256,22 @@ public class AtpAlertAppService : ApplicationService
             businesses = rows.ToDictionary(x => x.Id, x => x.Name);
         }
 
+        var assigneeIds = alerts.Where(a => a.AssigneeId.HasValue)
+            .Select(a => a.AssigneeId!.Value).Distinct().ToArray();
+
+        Dictionary<Guid, string> assigneeNames = new();
+        if (assigneeIds.Length > 0)
+        {
+            var uQuery = (await _identityUsers.GetQueryableAsync())
+                .Where(x => assigneeIds.Contains(x.Id));
+            var userRows = await AsyncExecuter.ToListAsync(uQuery, _cancellationTokens.Token);
+            assigneeNames = userRows.ToDictionary(
+                x => x.Id,
+                x => string.IsNullOrWhiteSpace($"{x.Name} {x.Surname}".Trim())
+                    ? x.UserName
+                    : $"{x.Name} {x.Surname}".Trim());
+        }
+
         return alerts.Select(a => new AtpAlertDto
         {
             Id = a.Id,
@@ -265,6 +299,9 @@ public class AtpAlertAppService : ApplicationService
             RejectedAt = a.RejectedAt,
             RejectedReason = a.RejectedReason,
             IsPublic = a.IsPublic,
+            AssigneeId = a.AssigneeId,
+            AssigneeName = a.AssigneeId.HasValue && assigneeNames.TryGetValue(a.AssigneeId.Value, out var aName) ? aName : null,
+            AssignedAt = a.AssignedAt,
             CreationTime = a.CreationTime,
         }).ToList();
     }

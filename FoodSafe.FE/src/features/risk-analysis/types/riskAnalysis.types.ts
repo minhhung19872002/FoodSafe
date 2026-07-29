@@ -50,6 +50,8 @@ export interface RiskAnalysis {
   content: string;
   category: AlertCategory;
   riskLevel: RiskLevel;
+  productGroupIds: string[];
+  productGroupNames: string[];
   relatedProducts: string | null;
   evidence: string | null;
   recommendations: string | null;
@@ -65,6 +67,7 @@ export interface CreateUpdateRiskAnalysisInput {
   content: string;
   category: AlertCategory;
   riskLevel: RiskLevel;
+  productGroupIds: string[];
   relatedProducts?: string;
   evidence?: string;
   recommendations?: string;

@@ -109,7 +109,8 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
             query = query.Where(p =>
                 p.Name.Contains(keyword)
                 || (p.Code != null && p.Code.Contains(keyword))
-                || (p.BrandName != null && p.BrandName.Contains(keyword)));
+                || (p.BrandName != null && p.BrandName.Contains(keyword))
+                || (p.Manufacturer != null && p.Manufacturer.Contains(keyword)));
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
@@ -135,6 +136,7 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
                 Name = p.Name,
                 Code = p.Code,
                 BrandName = p.BrandName,
+                Manufacturer = p.Manufacturer,
                 BusinessName = businessNames.GetValueOrDefault(p.BusinessId) ?? string.Empty,
                 ProductGroupName = p.ProductGroupId.HasValue
                     ? groupNames.GetValueOrDefault(p.ProductGroupId.Value)

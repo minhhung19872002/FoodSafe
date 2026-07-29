@@ -3,6 +3,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
+  FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
   StopOutlined,
@@ -25,6 +26,7 @@ import {
   useDeleteSelfDeclaration,
   useDeleteSelfDeclarationAttachment,
   useDownloadSelfDeclarationAttachment,
+  useDownloadSelfDeclarationPdf,
   useExportSelfDeclarations,
   useRevokeSelfDeclaration,
   useUpdateSelfDeclaration,
@@ -114,6 +116,7 @@ export default function SelfDeclarationPage() {
   const deleteMutation = useDeleteSelfDeclaration();
   const revokeMutation = useRevokeSelfDeclaration();
   const exportMutation = useExportSelfDeclarations();
+  const pdfMutation = useDownloadSelfDeclarationPdf();
   const uploadMutation = useUploadSelfDeclarationAttachment();
   const downloadMutation = useDownloadSelfDeclarationAttachment();
   const deleteAttachmentMutation = useDeleteSelfDeclarationAttachment();
@@ -191,6 +194,20 @@ export default function SelfDeclarationPage() {
               ariaLabel: `Tệp ${item.declarationNumber}`,
               icon: <FileTextOutlined />,
               onClick: () => setAttachmentsFor(item),
+            },
+            {
+              key: "pdf",
+              label: "Tải PDF",
+              ariaLabel: `Tải PDF ${item.declarationNumber}`,
+              icon: <FilePdfOutlined />,
+              disabled:
+                pdfMutation.isPending && pdfMutation.variables === item.id,
+              onClick: () =>
+                pdfMutation.mutate(item.id, {
+                  onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                  onError: (error: unknown) =>
+                    void message.error(extractApiError(error)),
+                }),
             },
             {
               key: "edit",

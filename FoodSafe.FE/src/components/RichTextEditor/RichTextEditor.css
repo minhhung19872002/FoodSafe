@@ -1,0 +1,202 @@
+/* ===== RichTextEditor.css =====
+   Styles for the TipTap-based WYSIWYG editor.
+   Matches Ant Design Input aesthetics.
+   ================================ */
+
+/* ---- Wrapper ---- */
+.rte-wrapper {
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #ffffff;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.rte-wrapper:focus-within {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
+  outline: 0;
+}
+
+/* ---- Toolbar ---- */
+.rte-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  flex-wrap: wrap;
+  gap: 1px;
+  min-height: 36px;
+}
+
+.rte-toolbar-divider {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  background: #e0e0e0;
+  margin: 0 4px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* Active toolbar button */
+.rte-btn-active,
+.rte-btn-active:hover,
+.rte-btn-active:focus {
+  color: #1677ff !important;
+  background-color: #e6f4ff !important;
+}
+
+/* Text-based toolbar icons (H2, H3, blockquote symbol) */
+.rte-text-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  font-family: inherit;
+}
+
+.rte-blockquote-icon {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* ---- Content area ---- */
+.rte-content {
+  padding: 8px 12px;
+  min-height: 200px;
+  max-height: 520px;
+  overflow-y: auto;
+  cursor: text;
+}
+
+.rte-content .ProseMirror {
+  outline: none;
+  min-height: 168px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(0, 0, 0, 0.88);
+  word-break: break-word;
+}
+
+/* Block spacing */
+.rte-content .ProseMirror > * + * {
+  margin-top: 0.4em;
+}
+
+.rte-content .ProseMirror p {
+  margin: 0 0 2px;
+}
+
+/* Headings */
+.rte-content .ProseMirror h2 {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 0.75em 0 0.2em;
+  line-height: 1.4;
+}
+
+.rte-content .ProseMirror h3 {
+  font-size: 1.05em;
+  font-weight: 600;
+  margin: 0.6em 0 0.2em;
+  line-height: 1.4;
+}
+
+/* Lists */
+.rte-content .ProseMirror ul,
+.rte-content .ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0.3em 0;
+}
+
+.rte-content .ProseMirror li > p {
+  margin: 0;
+}
+
+/* Blockquote */
+.rte-content .ProseMirror blockquote {
+  border-left: 3px solid #d9d9d9;
+  margin: 0.4em 0;
+  padding: 0.2em 0 0.2em 1em;
+  color: rgba(0, 0, 0, 0.45);
+  font-style: italic;
+}
+
+/* Links */
+.rte-content .ProseMirror a {
+  color: #1677ff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Placeholder */
+.rte-content .ProseMirror .is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Selection highlight */
+.rte-content .ProseMirror ::selection {
+  background: rgba(22, 119, 255, 0.15);
+}
+
+/* ---- Readonly / display view ---- */
+.rte-readonly {
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(0, 0, 0, 0.88);
+  word-break: break-word;
+}
+
+.rte-readonly > * + * {
+  margin-top: 0.4em;
+}
+
+.rte-readonly p {
+  margin: 0 0 2px;
+}
+
+.rte-readonly h2 {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 0.75em 0 0.2em;
+}
+
+.rte-readonly h3 {
+  font-size: 1.05em;
+  font-weight: 600;
+  margin: 0.6em 0 0.2em;
+}
+
+.rte-readonly ul,
+.rte-readonly ol {
+  padding-left: 1.5em;
+  margin: 0.3em 0;
+}
+
+.rte-readonly blockquote {
+  border-left: 3px solid #d9d9d9;
+  margin: 0.4em 0;
+  padding: 0.2em 0 0.2em 1em;
+  color: rgba(0, 0, 0, 0.45);
+  font-style: italic;
+}
+
+.rte-readonly a {
+  color: #1677ff;
+  text-decoration: underline;
+}
+
+.rte-readonly strong {
+  font-weight: 600;
+}

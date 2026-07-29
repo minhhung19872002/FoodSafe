@@ -19,12 +19,25 @@ import {
   BarChartOutlined,
   SolutionOutlined,
 } from "@ant-design/icons";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { brand } from "@/theme/themeConfig";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
 import type { OrganizationTreeNode } from "@/features/organizations/types/organization.types";
+import { useBusinessList } from "@/features/businesses/api/businessQueries";
+import { BusinessLocationMap } from "@/features/businesses/components/BusinessLocationMap";
+import { useCatalogOptions } from "@/features/catalogs/api/catalogQueries";
 import {
   useDashboardStats,
   useExpiringLicenses,
@@ -209,6 +222,24 @@ const yearOptions = Array.from({ length: 5 }, (_, index) => ({
   label: `Năm ${currentYear - index}`,
 }));
 
+// TODO: Replace with real data from GET /api/v1/app/statistics/food-poisoning-trend
+// once that endpoint is implemented on the backend.
+// Data shape expected: { month: string; cases: number; victims: number }[]
+const DEMO_POISONING_TREND = [
+  { month: "Th8/25", cases: 2, victims: 8 },
+  { month: "Th9/25", cases: 1, victims: 3 },
+  { month: "Th10/25", cases: 3, victims: 12 },
+  { month: "Th11/25", cases: 0, victims: 0 },
+  { month: "Th12/25", cases: 1, victims: 5 },
+  { month: "Th1/26", cases: 2, victims: 9 },
+  { month: "Th2/26", cases: 0, victims: 0 },
+  { month: "Th3/26", cases: 4, victims: 18 },
+  { month: "Th4/26", cases: 1, victims: 4 },
+  { month: "Th5/26", cases: 2, victims: 7 },
+  { month: "Th6/26", cases: 3, victims: 11 },
+  { month: "Th7/26", cases: 1, victims: 5 },
+];
+
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const hasPermission = useAuthStore((s) => s.hasPermission);
@@ -222,6 +253,23 @@ export default function DashboardPage() {
   const { data: stats, isLoading } = useDashboardStats(filter);
   const compliance = useReportCompliance(filter);
   const expiringLicenses = useExpiringLicenses(filter);
+
+  // Business map: fetch up to 500 businesses scoped to the selected org unit.
+  // Fetching is independent of the year filter because locations don't change yearly.
+  const mapBusinessFilter = useMemo(
+    () => ({
+      skipCount: 0,
+      maxResultCount: 500,
+      organizationId,
+    }),
+    [organizationId],
+  );
+  const { data: mapBusinessData, isLoading: isMapLoading } =
+    useBusinessList(mapBusinessFilter);
+  const { data: classificationsData } = useCatalogOptions(
+    "business-classification",
+  );
+
   // Cây đơn vị đòi quyền Organizations.View; tài khoản không có quyền vẫn vào
   // dashboard được nên phải tắt query và ẩn ô lọc, tránh 403 (UIA-005).
   const canViewOrganizations = hasPermission("FoodSafe.Organizations.View");
@@ -514,6 +562,80 @@ export default function DashboardPage() {
         </Col>
         <Col xs={24} xl={8}>
           <RecentActivityPanel items={stats?.recentActivities ?? []} />
+        </Col>
+      </Row>
+
+      {/* Map + Trend chart ───────────────────────────────────────────────── */}
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col xs={24} xl={14}>
+          <Card title="Bản đồ cơ sở kinh doanh" size="small">
+            <Spin spinning={isMapLoading}>
+              <BusinessLocationMap
+                businesses={mapBusinessData?.items ?? []}
+                classifications={classificationsData?.items ?? []}
+                height={400}
+              />
+            </Spin>
+          </Card>
+        </Col>
+        <Col xs={24} xl={10}>
+          <Card
+            title="Diễn biến ngộ độc thực phẩm (12 tháng gần nhất)"
+            size="small"
+            extra={
+              <span style={{ fontSize: 11, color: "rgba(0,0,0,0.45)" }}>
+                Dữ liệu minh hoạ — chưa có API
+              </span>
+            }
+          >
+            {/* TODO: Replace DEMO_POISONING_TREND with real data from
+                GET /api/v1/app/statistics/food-poisoning-trend
+                (endpoint needs to be implemented on the backend). */}
+            <ResponsiveContainer width="100%" height={360}>
+              <LineChart
+                data={DEMO_POISONING_TREND}
+                margin={{ top: 8, right: 16, left: -16, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 11 }}
+                  interval={0}
+                  angle={-35}
+                  textAnchor="end"
+                  height={42}
+                />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    value,
+                    name === "cases" ? "Số vụ" : "Số người",
+                  ]}
+                />
+                <Legend
+                  formatter={(value) =>
+                    value === "cases" ? "Số vụ ngộ độc" : "Số người bị ảnh hưởng"
+                  }
+                />
+                <Line
+                  type="monotone"
+                  dataKey="cases"
+                  stroke={brand.red}
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="victims"
+                  stroke={brand.amber}
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </Card>
         </Col>
       </Row>
     </div>

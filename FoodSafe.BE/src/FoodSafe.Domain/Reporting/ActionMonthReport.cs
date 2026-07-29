@@ -102,4 +102,29 @@ public sealed class ActionMonthReport : BaseReport
         _errorNotifications.Add(new ActionMonthReportErrorNotification(
             id, Id, fromOrganizationId, errorFields, correctionDetails, creatorId));
     }
+
+    protected override object GetSubmissionPayload() => new
+    {
+        reportType = "AMR",
+        organizationId = OrganizationId,
+        periodYear = PeriodYear,
+        submissionVersion = SubmissionVersion,
+        actionMonthTheme = ActionMonthTheme,
+        actionMonthDates = ActionMonthDates,
+        mediaArticles = MediaArticles,
+        broadcastPrograms = BroadcastPrograms,
+        propagandaSessions = PropagandaSessions,
+        participants = Participants,
+        postersDistributed = PostersDistributed,
+        leafletsDistributed = LeafletsDistributed,
+        businessesInspected = BusinessesInspected,
+        violationsFound = ViolationsFound,
+        finesIssued = FinesIssued,
+        fineAmount = FineAmount,
+        newSelfDeclarations = NewSelfDeclarations,
+        achievements = Achievements,
+        limitations = Limitations,
+        lessonsLearned = LessonsLearned,
+        nextSteps = NextSteps,
+    };
 }

@@ -177,6 +177,30 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             FoodSafePermissions.Licensing.EligibilityCertificates.Delete,
             LocalizableString.Create<FoodSafeResource>(
                 "Permission:EligibilityCertificates.Delete"));
+        var vsattpCommitments = licensing.AddChild(
+            FoodSafePermissions.Licensing.VsattpCommitments.Default,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:VsattpCommitments"));
+        vsattpCommitments.AddChild(
+            FoodSafePermissions.Licensing.VsattpCommitments.View,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:VsattpCommitments.View"));
+        vsattpCommitments.AddChild(
+            FoodSafePermissions.Licensing.VsattpCommitments.Create,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:VsattpCommitments.Create"));
+        vsattpCommitments.AddChild(
+            FoodSafePermissions.Licensing.VsattpCommitments.Edit,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:VsattpCommitments.Edit"));
+        vsattpCommitments.AddChild(
+            FoodSafePermissions.Licensing.VsattpCommitments.Delete,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:VsattpCommitments.Delete"));
+        vsattpCommitments.AddChild(
+            FoodSafePermissions.Licensing.VsattpCommitments.Confirm,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:VsattpCommitments.Confirm"));
         var cfsCertificates = licensing.AddChild(
             FoodSafePermissions.Licensing.CfsCertificates.Default,
             LocalizableString.Create<FoodSafeResource>(
@@ -288,6 +312,9 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
         alerts.AddChild(
             FoodSafePermissions.AlertsAndTesting.Alerts.Publish,
             LocalizableString.Create<FoodSafeResource>("Permission:Alerts.Publish"));
+        alerts.AddChild(
+            FoodSafePermissions.AlertsAndTesting.Alerts.Assign,
+            LocalizableString.Create<FoodSafeResource>("Permission:Alerts.Assign"));
         var news = alertsAndTesting.AddChild(
             FoodSafePermissions.AlertsAndTesting.News.Default,
             LocalizableString.Create<FoodSafeResource>("Permission:News"));

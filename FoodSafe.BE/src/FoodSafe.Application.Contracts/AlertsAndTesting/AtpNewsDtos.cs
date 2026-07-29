@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.Application.Services;
 
 namespace FoodSafe.AlertsAndTesting;
 
@@ -89,4 +90,25 @@ public class AlertOptionDto
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? AlertNumber { get; set; }
+}
+
+/// <summary>Result returned after uploading a news thumbnail image.</summary>
+public class NewsThumbnailUploadResultDto
+{
+    public string StoragePath { get; set; } = string.Empty;
+}
+
+/// <summary>Bytes + MIME type returned when serving a news thumbnail.</summary>
+public class NewsThumbnailDto
+{
+    public byte[] Content { get; set; } = [];
+    public string ContentType { get; set; } = "image/jpeg";
+}
+
+public interface IAtpNewsThumbnailAppService : IApplicationService
+{
+    Task<NewsThumbnailUploadResultDto> UploadAsync(
+        byte[] content, string originalName, string contentType);
+
+    Task<NewsThumbnailDto?> GetAsync(string storagePath);
 }

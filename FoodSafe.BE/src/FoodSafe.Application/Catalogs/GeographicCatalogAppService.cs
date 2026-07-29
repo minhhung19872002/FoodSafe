@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using FoodSafe.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
@@ -175,6 +176,183 @@ public class GeographicCatalogAppService : ApplicationService, IGeographicCatalo
         await _communes.DeleteAsync(id, true, _cancellationTokens.Token);
     }
 
+    [Authorize(FoodSafePermissions.GeographicCatalogs.Manage)]
+    public async Task<ImportGeographyResultDto> ImportDistrictsAndCommunesFromExcelAsync(
+        ImportGeographyFromExcelInput input)
+    {
+        await _provinces.GetAsync(input.ProvinceId, cancellationToken: _cancellationTokens.Token);
+
+        List<GeographyExcelRow> excelRows;
+        try
+        {
+            excelRows = ReadExcelRows(input.ExcelBytes);
+        }
+        catch (Exception ex)
+        {
+            throw new UserFriendlyException($"Không thể đọc file Excel: {ex.Message}");
+        }
+
+        var errors = new List<ImportGeographyErrorDto>();
+        var skippedRows = 0;
+        var importedCommunes = 0;
+        var processedDistrictCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // Load all existing districts for the province up front
+        var existingDistricts = (await AsyncExecuter.ToListAsync(
+                (await _districts.GetQueryableAsync()).Where(d => d.ProvinceId == input.ProvinceId),
+                _cancellationTokens.Token))
+            .ToDictionary(d => d.Code, StringComparer.OrdinalIgnoreCase);
+
+        // Communes are loaded per district on demand
+        var communesByDistrict = new Dictionary<Guid, Dictionary<string, Commune>>();
+
+        foreach (var row in excelRows)
+        {
+            var districtCode = NormalizeCode(row.DistrictCode);
+            var districtName = NormalizeName(row.DistrictName);
+            var communeCode = NormalizeCode(row.CommuneCode);
+            var communeName = NormalizeName(row.CommuneName);
+            var typeText = row.Type?.Trim() ?? string.Empty;
+
+            // --- District validation ---
+            if (string.IsNullOrEmpty(districtCode))
+            {
+                // Only log an error if there's any other non-empty data in the row
+                if (!string.IsNullOrEmpty(districtName) || !string.IsNullOrEmpty(communeCode) || !string.IsNullOrEmpty(communeName))
+                {
+                    errors.Add(new ImportGeographyErrorDto
+                    {
+                        RowNumber = row.RowNumber,
+                        Field = "Mã huyện",
+                        Message = "Mã huyện không được để trống"
+                    });
+                }
+                skippedRows++;
+                continue;
+            }
+
+            if (string.IsNullOrEmpty(districtName))
+            {
+                errors.Add(new ImportGeographyErrorDto
+                {
+                    RowNumber = row.RowNumber,
+                    Field = "Tên huyện",
+                    Message = "Tên huyện không được để trống"
+                });
+                skippedRows++;
+                continue;
+            }
+
+            if (districtCode.Length > 10)
+            {
+                errors.Add(new ImportGeographyErrorDto
+                {
+                    RowNumber = row.RowNumber,
+                    Field = "Mã huyện",
+                    Message = $"Mã huyện vượt quá 10 ký tự: {districtCode}"
+                });
+                skippedRows++;
+                continue;
+            }
+
+            var districtType = ParseDistrictType(typeText, districtName);
+            var communeType = ParseCommuneType(typeText);
+
+            // --- Upsert district ---
+            if (!existingDistricts.TryGetValue(districtCode, out var district))
+            {
+                district = District.Create(
+                    GuidGenerator.Create(), districtCode, districtName,
+                    input.ProvinceId, districtType, 0);
+                await _districts.InsertAsync(district, autoSave: false, _cancellationTokens.Token);
+                existingDistricts[districtCode] = district;
+            }
+            else if (district.Name != districtName || district.Type != districtType)
+            {
+                district.Update(districtCode, districtName, input.ProvinceId, districtType,
+                    district.SortOrder, district.IsActive);
+                await _districts.UpdateAsync(district, autoSave: false, _cancellationTokens.Token);
+            }
+
+            processedDistrictCodes.Add(districtCode);
+
+            // --- Commune validation (skip if no commune data) ---
+            if (string.IsNullOrEmpty(communeCode) && string.IsNullOrEmpty(communeName))
+                continue;
+
+            if (string.IsNullOrEmpty(communeCode))
+            {
+                errors.Add(new ImportGeographyErrorDto
+                {
+                    RowNumber = row.RowNumber,
+                    Field = "Mã xã",
+                    Message = "Mã xã không được để trống khi có tên xã"
+                });
+                skippedRows++;
+                continue;
+            }
+
+            if (string.IsNullOrEmpty(communeName))
+            {
+                errors.Add(new ImportGeographyErrorDto
+                {
+                    RowNumber = row.RowNumber,
+                    Field = "Tên xã",
+                    Message = "Tên xã không được để trống khi có mã xã"
+                });
+                skippedRows++;
+                continue;
+            }
+
+            if (communeCode.Length > 10)
+            {
+                errors.Add(new ImportGeographyErrorDto
+                {
+                    RowNumber = row.RowNumber,
+                    Field = "Mã xã",
+                    Message = $"Mã xã vượt quá 10 ký tự: {communeCode}"
+                });
+                skippedRows++;
+                continue;
+            }
+
+            // --- Load communes for this district on demand ---
+            if (!communesByDistrict.TryGetValue(district.Id, out var districtCommunes))
+            {
+                var loaded = await AsyncExecuter.ToListAsync(
+                    (await _communes.GetQueryableAsync()).Where(c => c.DistrictId == district.Id),
+                    _cancellationTokens.Token);
+                districtCommunes = loaded.ToDictionary(c => c.Code, StringComparer.OrdinalIgnoreCase);
+                communesByDistrict[district.Id] = districtCommunes;
+            }
+
+            // --- Upsert commune ---
+            if (!districtCommunes.TryGetValue(communeCode, out var commune))
+            {
+                commune = Commune.Create(GuidGenerator.Create(), communeCode, communeName,
+                    district.Id, communeType, 0);
+                await _communes.InsertAsync(commune, autoSave: false, _cancellationTokens.Token);
+                districtCommunes[communeCode] = commune;
+                importedCommunes++;
+            }
+            else if (commune.Name != communeName || commune.Type != communeType)
+            {
+                commune.Update(communeCode, communeName, district.Id, communeType,
+                    commune.SortOrder, commune.IsActive);
+                await _communes.UpdateAsync(commune, autoSave: false, _cancellationTokens.Token);
+                importedCommunes++;
+            }
+        }
+
+        return new ImportGeographyResultDto
+        {
+            ImportedDistricts = processedDistrictCodes.Count,
+            ImportedCommunes = importedCommunes,
+            SkippedRows = skippedRows,
+            Errors = errors
+        };
+    }
+
     private async Task ValidateRegionAsync(Guid? regionId)
     {
         if (regionId.HasValue)
@@ -198,5 +376,75 @@ public class GeographicCatalogAppService : ApplicationService, IGeographicCatalo
             throw new BusinessException(FoodSafeDomainErrorCodes.Catalog.DuplicateCode)
                 .WithData("Code", normalized);
         }
+    }
+
+    // ── Excel parsing helpers ──────────────────────────────────────────────
+
+    private sealed record GeographyExcelRow(
+        int RowNumber,
+        string? DistrictCode,
+        string? DistrictName,
+        string? CommuneCode,
+        string? CommuneName,
+        string? Type);
+
+    private static List<GeographyExcelRow> ReadExcelRows(byte[] bytes)
+    {
+        using var stream = new MemoryStream(bytes);
+        using var workbook = new XLWorkbook(stream);
+        var sheet = workbook.Worksheets.First();
+        var lastRow = sheet.LastRowUsed()?.RowNumber() ?? 1;
+        var rows = new List<GeographyExcelRow>(lastRow);
+
+        for (var rowNum = 2; rowNum <= lastRow; rowNum++)
+        {
+            var row = sheet.Row(rowNum);
+            rows.Add(new GeographyExcelRow(
+                RowNumber: rowNum,
+                DistrictCode: CellText(row.Cell(1)),
+                DistrictName: CellText(row.Cell(2)),
+                CommuneCode: CellText(row.Cell(3)),
+                CommuneName: CellText(row.Cell(4)),
+                Type: CellText(row.Cell(5))));
+        }
+
+        return rows;
+    }
+
+    private static string CellText(IXLCell cell)
+    {
+        if (cell.IsEmpty()) return string.Empty;
+        return cell.Value.ToString()?.Trim() ?? string.Empty;
+    }
+
+    private static string NormalizeCode(string? raw) =>
+        string.IsNullOrWhiteSpace(raw) ? string.Empty : raw.Trim().ToUpperInvariant();
+
+    private static string NormalizeName(string? raw) =>
+        string.IsNullOrWhiteSpace(raw) ? string.Empty : raw.Trim();
+
+    private static DistrictType ParseDistrictType(string typeText, string districtName)
+    {
+        var t = typeText.ToLowerInvariant();
+        if (t.Contains("quận")) return DistrictType.UrbanDistrict;
+        if (t.Contains("thị xã")) return DistrictType.Town;
+        if (t.Contains("thành phố")) return DistrictType.ProvincialCity;
+        if (t.Contains("huyện")) return DistrictType.RuralDistrict;
+
+        // Infer from district name prefix when type column is not a district type
+        var name = districtName.ToLowerInvariant();
+        if (name.StartsWith("quận")) return DistrictType.UrbanDistrict;
+        if (name.StartsWith("thị xã")) return DistrictType.Town;
+        if (name.StartsWith("thành phố")) return DistrictType.ProvincialCity;
+
+        return DistrictType.RuralDistrict;
+    }
+
+    private static CommuneType ParseCommuneType(string typeText)
+    {
+        var t = typeText.ToLowerInvariant();
+        if (t.Contains("phường")) return CommuneType.Ward;
+        if (t.Contains("thị trấn")) return CommuneType.Township;
+        return CommuneType.Commune;
     }
 }

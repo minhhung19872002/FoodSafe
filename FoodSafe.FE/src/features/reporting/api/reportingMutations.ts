@@ -113,6 +113,14 @@ export function useReturnNdtpToDraft() {
   });
 }
 
+export function usePopulateNdtpFromPoisoning() {
+  const refresh = useNdtpRefresh();
+  return useMutation({
+    mutationFn: (id: string) => ndtpReportApi.populateFromPoisoningData(id),
+    onSuccess: refresh,
+  });
+}
+
 function useAtpRefresh() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: atpKeys.all });
@@ -312,6 +320,24 @@ export function useExportActionMonthReports() {
   return useMutation({
     mutationFn: (filter: ActionMonthReportFilter) =>
       actionMonthReportApi.exportExcel(filter),
+  });
+}
+
+export function useDownloadNdtpReportPdf() {
+  return useMutation({
+    mutationFn: (id: string) => ndtpReportApi.downloadPdf(id),
+  });
+}
+
+export function useDownloadAtpWorkReportPdf() {
+  return useMutation({
+    mutationFn: (id: string) => atpWorkReportApi.downloadPdf(id),
+  });
+}
+
+export function useDownloadActionMonthReportPdf() {
+  return useMutation({
+    mutationFn: (id: string) => actionMonthReportApi.downloadPdf(id),
   });
 }
 

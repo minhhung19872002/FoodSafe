@@ -17,6 +17,7 @@ import {
   AdvertisementRegistrationPage,
   EligibilityCertificatePage,
   PublicEligibilityCertificateLookupPage,
+  VsattpCommitmentPage,
   CfsCertificatePage,
   PublicCfsCertificateLookupPage,
   ExportFoodCertificatePage,
@@ -53,6 +54,7 @@ import {
   PublicDocumentsPage,
   CitizenAlertReportPage,
   CitizenNewsReportPage,
+  CitizenReportLookupPage,
 } from "./routeComponents";
 
 const appRoutes: RouteObject[] = [
@@ -126,6 +128,14 @@ const appRoutes: RouteObject[] = [
     element: (
       <Suspense fallback={<RouteLoading />}>
         <CitizenNewsReportPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-phan-anh",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <CitizenReportLookupPage />
       </Suspense>
     ),
   },
@@ -308,6 +318,16 @@ const appRoutes: RouteObject[] = [
               permission={ROUTE_PERMISSIONS.eligibilityCertificates}
             >
               <EligibilityCertificatePage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "vsattp-commitments",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission={ROUTE_PERMISSIONS.vsattpCommitments}>
+              <VsattpCommitmentPage />
             </PermissionRoute>
           </Suspense>
         ),

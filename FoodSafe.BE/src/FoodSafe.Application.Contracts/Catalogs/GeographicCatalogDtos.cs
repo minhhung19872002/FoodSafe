@@ -116,6 +116,27 @@ public sealed class UpsertCommuneDto : UpsertGeographicCatalogDto
     public CommuneType Type { get; set; }
 }
 
+public sealed class ImportGeographyFromExcelInput
+{
+    public Guid ProvinceId { get; set; }
+    public byte[] ExcelBytes { get; set; } = [];
+}
+
+public sealed class ImportGeographyErrorDto
+{
+    public int RowNumber { get; set; }
+    public string Field { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+}
+
+public sealed class ImportGeographyResultDto
+{
+    public int ImportedDistricts { get; set; }
+    public int ImportedCommunes { get; set; }
+    public int SkippedRows { get; set; }
+    public IReadOnlyList<ImportGeographyErrorDto> Errors { get; set; } = [];
+}
+
 public interface IGeographicCatalogAppService : IApplicationService
 {
     Task<ListResultDto<ProvinceDto>> GetProvincesAsync(bool activeOnly = true);
@@ -130,4 +151,5 @@ public interface IGeographicCatalogAppService : IApplicationService
     Task<CommuneDto> CreateCommuneAsync(UpsertCommuneDto input);
     Task<CommuneDto> UpdateCommuneAsync(Guid id, UpsertCommuneDto input);
     Task DeleteCommuneAsync(Guid id);
+    Task<ImportGeographyResultDto> ImportDistrictsAndCommunesFromExcelAsync(ImportGeographyFromExcelInput input);
 }

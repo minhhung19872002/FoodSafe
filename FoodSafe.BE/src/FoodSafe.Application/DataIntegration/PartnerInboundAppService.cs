@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Authorization;
+using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Threading;
 using Volo.Abp.Uow;
@@ -360,6 +362,71 @@ public class PartnerInboundAppService :
                 ReceivedAt = existing.ReceivedAt,
             },
         };
+
+    /// <summary>
+    /// Partner-facing submission status poll (FUNC-INT-002). Authenticates the
+    /// caller by API key and returns the current disposition of the submission
+    /// identified by the caller's own X-Request-Id. Returns a null Result when
+    /// the submission is not found for this partner (maps to 404 in the controller).
+    /// </summary>
+    [DisableValidation]
+    public async Task<InboundSubmissionStatusDto> GetSubmissionStatusAsync(
+        string requestId,
+        InboundRequestContext context)
+    {
+        var ct = _cancellationTokens.Token;
+        var now = Clock.Now;
+
+        // ── API key authentication (same rules as ReceiveAsync) ──────────────
+        var rawKey = context.ApiKey;
+        if (rawKey.IsNullOrWhiteSpace() ||
+            !rawKey!.StartsWith(PartnerKeyMaterial.Prefix, StringComparison.Ordinal) ||
+            rawKey.Length <= PartnerApiKey.PrefixLength)
+        {
+            throw new AbpAuthorizationException("Invalid API key.");
+        }
+
+        var prefix = rawKey[..PartnerApiKey.PrefixLength];
+        var key = await _keys.FindAsync(k => k.KeyPrefix == prefix, cancellationToken: ct);
+        if (key is null || !PartnerKeyMaterial.Verify(rawKey, key.KeyHash))
+            throw new AbpAuthorizationException("Invalid API key.");
+
+        var partner = await _partners.FindAsync(key.PartnerAccountId, cancellationToken: ct);
+        if (partner is null || key.IsRevoked || key.IsExpired(now) ||
+            partner.Status != PartnerAccountStatus.Active)
+        {
+            throw new AbpAuthorizationException("Invalid API key.");
+        }
+
+        // ── look up the submission by this partner's requestId ────────────────
+        if (string.IsNullOrWhiteSpace(requestId) ||
+            requestId.Length > InboundSubmission.MaxRequestIdLength)
+        {
+            throw new UserFriendlyException(
+                "requestId must be 1–128 characters.");
+        }
+
+        var submission = await _submissions.FindAsync(
+            s => s.PartnerAccountId == partner.Id &&
+                 s.RequestId == requestId,
+            cancellationToken: ct);
+        if (submission is null)
+            throw new EntityNotFoundException(
+                typeof(InboundSubmission),
+                requestId);
+
+        return new InboundSubmissionStatusDto
+        {
+            SubmissionId = submission.Id,
+            RequestId = submission.RequestId,
+            DataType = submission.DataType.ToString(),
+            RecordCount = submission.RecordCount,
+            ReceivedAt = submission.ReceivedAt,
+            Status = submission.Status.ToString(),
+            RejectionReason = submission.RejectReason,
+            DispositionAt = submission.ProcessedAt,
+        };
+    }
 
     private static string? Truncate(string? value, int maximumLength) =>
         value is null || value.Length <= maximumLength

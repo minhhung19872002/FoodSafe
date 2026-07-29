@@ -31,7 +31,9 @@
     <PackageReference Include="Volo.Abp.MailKit" Version="$(AbpVersion)" />
     <PackageReference Include="Volo.Abp.Swashbuckle" Version="$(AbpVersion)" />
     <PackageReference Include="Volo.Abp.BlobStoring.Minio" Version="$(AbpVersion)" />
+    <PackageReference Include="Volo.Abp.Caching.StackExchangeRedis" Version="$(AbpVersion)" />
     <PackageReference Include="Volo.Abp.Account.Web.OpenIddict" Version="$(AbpVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-vfm5-cr22-jg3m" />
   </ItemGroup>

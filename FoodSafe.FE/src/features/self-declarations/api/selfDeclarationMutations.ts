@@ -49,6 +49,10 @@ export function useExportSelfDeclarations() {
   });
 }
 
+export function useDownloadSelfDeclarationPdf() {
+  return useMutation({ mutationFn: selfDeclarationApi.downloadPdf });
+}
+
 export function useUploadSelfDeclarationAttachment() {
   return useMutation({
     mutationFn: ({ id, file }: { id: string; file: File }) =>

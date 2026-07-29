@@ -58,6 +58,7 @@ interface BaseReportFields {
   completedByName: string | null;
   completedAt: string | null;
   notes: string | null;
+  submissionHash: string | null;
   creationTime: string;
 }
 

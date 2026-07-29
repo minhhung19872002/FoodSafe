@@ -3,6 +3,7 @@ import { alertApi, newsApi } from "./alertsNewsApi";
 import { alertKeys, newsKeys } from "./alertsNewsQueries";
 import type {
   AlertFilter,
+  AssignAlertInput,
   CreateUpdateAlertInput,
   CreateUpdateNewsInput,
   NewsFilter,
@@ -73,6 +74,15 @@ export function useRejectAlert() {
   return useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       alertApi.reject(id, reason),
+    onSuccess: refresh,
+  });
+}
+
+export function useAssignAlert() {
+  const refresh = useAlertRefresh();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: AssignAlertInput }) =>
+      alertApi.assign(id, input),
     onSuccess: refresh,
   });
 }

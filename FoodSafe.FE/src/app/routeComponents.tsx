@@ -54,6 +54,10 @@ export const EligibilityCertificatePage = lazy(
   () =>
     import("@/features/eligibility-certificates/pages/EligibilityCertificatePage"),
 );
+export const VsattpCommitmentPage = lazy(
+  () =>
+    import("@/features/vsattp-commitments/pages/VsattpCommitmentPage"),
+);
 export const PublicEligibilityCertificateLookupPage = lazy(
   () =>
     import("@/features/eligibility-certificates/pages/PublicEligibilityCertificateLookupPage"),
@@ -139,6 +143,9 @@ export const CitizenAlertReportPage = lazy(
 );
 export const CitizenNewsReportPage = lazy(
   () => import("@/features/public-portal/pages/CitizenNewsReportPage"),
+);
+export const CitizenReportLookupPage = lazy(
+  () => import("@/features/public-portal/pages/CitizenReportLookupPage"),
 );
 
 export function RouteLoading() {

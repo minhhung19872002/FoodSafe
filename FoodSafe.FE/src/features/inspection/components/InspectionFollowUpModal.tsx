@@ -34,7 +34,21 @@ export function InspectionFollowUpModal({ result, canEdit, onClose }: Props) {
   const setFollowUp = useSetFollowUpResult();
 
   const columns: ColumnsType<InspectionViolation> = [
-    { title: "Mô tả vi phạm", dataIndex: "description", ellipsis: true },
+    { title: "Nội dung vi phạm", dataIndex: "description", ellipsis: true },
+    {
+      title: "Điều khoản vi phạm",
+      dataIndex: "regulationReference",
+      ellipsis: true,
+      render: (v?: string) => v ?? "—",
+    },
+    {
+      title: "Tiền phạt (VNĐ)",
+      dataIndex: "fineAmount",
+      width: 140,
+      align: "right" as const,
+      render: (v?: number) =>
+        v != null ? `${v.toLocaleString("vi-VN")} đ` : "—",
+    },
     {
       title: "Yêu cầu khắc phục",
       dataIndex: "remedyRequired",
@@ -42,13 +56,13 @@ export function InspectionFollowUpModal({ result, canEdit, onClose }: Props) {
       render: (v?: string) => v ?? "—",
     },
     {
-      title: "Hạn",
+      title: "Hạn khắc phục",
       dataIndex: "remedyDeadline",
-      width: 110,
+      width: 120,
       render: (v?: string) => (v ? dayjs(v).format("DD/MM/YYYY") : "—"),
     },
     {
-      title: "Trạng thái",
+      title: "Đã khắc phục",
       dataIndex: "isRemedied",
       width: 130,
       render: (v: boolean, item) =>
@@ -102,7 +116,7 @@ export function InspectionFollowUpModal({ result, canEdit, onClose }: Props) {
       open={Boolean(result)}
       onCancel={onClose}
       footer={null}
-      width={820}
+      width={1100}
       destroyOnHidden
     >
       {result && (

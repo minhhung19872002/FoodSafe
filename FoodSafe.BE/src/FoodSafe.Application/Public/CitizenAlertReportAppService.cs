@@ -63,7 +63,10 @@ public class CitizenAlertReportAppService : ApplicationService, ICitizenAlertRep
         return new CitizenAlertReportResultDto
         {
             Id = alert.Id,
-            Message = "Đã tiếp nhận phản ánh. Cơ quan chức năng sẽ xác minh thông tin.",
+            TrackingCode = alert.TrackingCode,
+            Message = alert.TrackingCode is not null
+                ? $"Đã tiếp nhận phản ánh. Mã theo dõi của bạn: {alert.TrackingCode}. Lưu lại mã này để tra cứu trạng thái xử lý."
+                : "Đã tiếp nhận phản ánh. Cơ quan chức năng sẽ xác minh thông tin.",
         };
     }
 }

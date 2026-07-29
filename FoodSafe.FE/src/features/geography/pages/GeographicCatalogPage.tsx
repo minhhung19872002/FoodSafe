@@ -11,18 +11,25 @@ import {
   Tabs,
   Tag,
 } from "antd";
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  ImportOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import { useCommunes, useDistricts, useProvinces } from "@/hooks/useGeography";
 import { extractApiError } from "@/lib/apiError";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import {
   createGeographicItem,
   deleteGeographicItem,
+  importGeographyFromExcel,
   updateGeographicItem,
   type CommuneItem,
   type DistrictItem,
   type GeographicItem,
   type GeographicUpsert,
+  type ImportGeographyResultDto,
 } from "@/lib/geographyApi";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
@@ -30,6 +37,7 @@ import {
   GeographicCatalogModal,
   type GeographicKind,
 } from "../components/GeographicCatalogModal";
+import { GeographyImportModal } from "../components/GeographyImportModal";
 
 type CatalogItem = GeographicItem | DistrictItem | CommuneItem;
 
@@ -67,6 +75,8 @@ export default function GeographicCatalogPage() {
     kind: GeographicKind;
     item: CatalogItem;
   } | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importResult, setImportResult] = useState<ImportGeographyResultDto>();
 
   useEffect(() => {
     const items = provinces.data?.items ?? [];
@@ -109,6 +119,27 @@ export default function GeographicCatalogPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["geography"] });
       void message.success("Đã xóa địa bàn hành chính");
+    },
+    onError: (error) => {
+      void message.error(extractApiError(error));
+    },
+  });
+
+  const importMutation = useMutation({
+    mutationFn: ({ pid, file }: { pid: string; file: File }) =>
+      importGeographyFromExcel(pid, file),
+    onSuccess: async (result) => {
+      setImportResult(result);
+      await queryClient.invalidateQueries({ queryKey: ["geography"] });
+      if (result.errors.length === 0) {
+        void message.success(
+          `Nhập thành công ${result.importedDistricts} huyện, ${result.importedCommunes} xã`,
+        );
+      } else {
+        void message.warning(
+          `Hoàn thành với ${result.errors.length} lỗi — kiểm tra chi tiết trong cửa sổ nhập`,
+        );
+      }
     },
     onError: (error) => {
       void message.error(extractApiError(error));
@@ -279,6 +310,17 @@ export default function GeographicCatalogPage() {
                         Thêm huyện/quận
                       </Button>
                     )}
+                    {canManage && (
+                      <Button
+                        icon={<ImportOutlined />}
+                        onClick={() => {
+                          setImportResult(undefined);
+                          setImportOpen(true);
+                        }}
+                      >
+                        Nhập từ Excel
+                      </Button>
+                    )}
                   </Space>
                   {table(
                     "district",
@@ -395,6 +437,19 @@ export default function GeographicCatalogPage() {
           onSubmit={(input) => saveMutation.mutate(input)}
         />
       )}
+
+      <GeographyImportModal
+        open={importOpen}
+        importing={importMutation.isPending}
+        provinces={provinces.data?.items ?? []}
+        result={importResult}
+        onCancel={() => {
+          setImportOpen(false);
+          setImportResult(undefined);
+          importMutation.reset();
+        }}
+        onImport={(pid, file) => importMutation.mutate({ pid, file })}
+      />
     </div>
   );
 }

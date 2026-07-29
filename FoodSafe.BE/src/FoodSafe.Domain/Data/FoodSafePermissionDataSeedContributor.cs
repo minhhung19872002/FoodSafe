@@ -132,6 +132,12 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.Licensing.EligibilityCertificates.Create,
         FoodSafePermissions.Licensing.EligibilityCertificates.Edit,
         FoodSafePermissions.Licensing.EligibilityCertificates.Delete,
+        FoodSafePermissions.Licensing.VsattpCommitments.Default,
+        FoodSafePermissions.Licensing.VsattpCommitments.View,
+        FoodSafePermissions.Licensing.VsattpCommitments.Create,
+        FoodSafePermissions.Licensing.VsattpCommitments.Edit,
+        FoodSafePermissions.Licensing.VsattpCommitments.Delete,
+        FoodSafePermissions.Licensing.VsattpCommitments.Confirm,
         FoodSafePermissions.Licensing.CfsCertificates.Default,
         FoodSafePermissions.Licensing.CfsCertificates.View,
         FoodSafePermissions.Licensing.CfsCertificates.Create,
@@ -331,6 +337,11 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Licensing.EligibilityCertificates.View,
                 FoodSafePermissions.Licensing.EligibilityCertificates.Create,
                 FoodSafePermissions.Licensing.EligibilityCertificates.Edit,
+                FoodSafePermissions.Licensing.VsattpCommitments.Default,
+                FoodSafePermissions.Licensing.VsattpCommitments.View,
+                FoodSafePermissions.Licensing.VsattpCommitments.Create,
+                FoodSafePermissions.Licensing.VsattpCommitments.Edit,
+                FoodSafePermissions.Licensing.VsattpCommitments.Confirm,
                 FoodSafePermissions.Licensing.CfsCertificates.Default,
                 FoodSafePermissions.Licensing.CfsCertificates.View,
                 FoodSafePermissions.Licensing.CfsCertificates.Create,
@@ -435,6 +446,11 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.Licensing.EligibilityCertificates.View)
                 .Append(FoodSafePermissions.Licensing.EligibilityCertificates.Create)
                 .Append(FoodSafePermissions.Licensing.EligibilityCertificates.Edit)
+                .Append(FoodSafePermissions.Licensing.VsattpCommitments.Default)
+                .Append(FoodSafePermissions.Licensing.VsattpCommitments.View)
+                .Append(FoodSafePermissions.Licensing.VsattpCommitments.Create)
+                .Append(FoodSafePermissions.Licensing.VsattpCommitments.Edit)
+                .Append(FoodSafePermissions.Licensing.VsattpCommitments.Confirm)
                 .Append(FoodSafePermissions.Licensing.CfsCertificates.Default)
                 .Append(FoodSafePermissions.Licensing.CfsCertificates.View)
                 .Append(FoodSafePermissions.Licensing.ExportCertificates.Default)

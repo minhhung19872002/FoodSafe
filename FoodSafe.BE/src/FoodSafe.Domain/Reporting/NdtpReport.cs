@@ -77,4 +77,24 @@ public sealed class NdtpReport : BaseReport
         _errorNotifications.Add(new NdtpReportErrorNotification(
             id, Id, fromOrganizationId, errorFields, correctionDetails, creatorId));
     }
+
+    protected override object GetSubmissionPayload() => new
+    {
+        reportType = "NDTP",
+        organizationId = OrganizationId,
+        periodYear = PeriodYear,
+        periodMonth = PeriodMonth,
+        submissionVersion = SubmissionVersion,
+        caseCount = CaseCount,
+        caseAffected = CaseAffected,
+        caseHospitalized = CaseHospitalized,
+        caseDeaths = CaseDeaths,
+        incidentCount = IncidentCount,
+        incidentAffected = IncidentAffected,
+        incidentHospitalized = IncidentHospitalized,
+        incidentDeaths = IncidentDeaths,
+        preventionActivities = PreventionActivities,
+        riskFactors = RiskFactors,
+        recommendations = Recommendations,
+    };
 }

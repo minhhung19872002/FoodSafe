@@ -100,6 +100,12 @@ export function useExportBusinesses() {
   });
 }
 
+export function useDownloadBusinessProfilePdf() {
+  return useMutation({
+    mutationFn: (id: string) => businessApi.downloadProfilePdf(id),
+  });
+}
+
 export function useDownloadProductTemplate() {
   return useMutation({ mutationFn: productApi.downloadTemplate });
 }

@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
 
@@ -20,6 +23,12 @@ public abstract class BaseReport : FullAuditedAggregateRoot<Guid>
     public DateTime? CompletedAt { get; protected set; }
     public string? Notes { get; protected set; }
 
+    /// <summary>
+    /// SHA-256 hex digest of the submission payload, computed at submission time.
+    /// Provides immutable evidence of the content at each submission (STT-33).
+    /// </summary>
+    public string? SubmissionHash { get; protected set; }
+
     protected BaseReport() { }
 
     protected void EnsureDraft()
@@ -37,6 +46,20 @@ public abstract class BaseReport : FullAuditedAggregateRoot<Guid>
         SubmittedById = submitterId;
         SubmittedAt = submittedAt;
         Status = ReportStatus.Submitted;
+        SubmissionHash = ComputeSubmissionHash();
+    }
+
+    /// <summary>
+    /// Returns an object whose serialized JSON form becomes the hash input.
+    /// Each subclass overrides this to include its own content fields.
+    /// </summary>
+    protected abstract object GetSubmissionPayload();
+
+    private string ComputeSubmissionHash()
+    {
+        var json = JsonSerializer.Serialize(GetSubmissionPayload());
+        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(json));
+        return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
 
     public void Verify(Guid verifierId, DateTime verifiedAt)

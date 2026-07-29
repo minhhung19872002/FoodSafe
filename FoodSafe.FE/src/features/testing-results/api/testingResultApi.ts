@@ -143,4 +143,25 @@ export const testingResultApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+
+  /**
+   * Upload a phiếu kiểm nghiệm PDF.
+   * Returns the storagePath to be submitted with the testing result form.
+   */
+  async uploadPdf(file: File): Promise<{ storagePath: string }> {
+    const form = new FormData();
+    form.append("file", file);
+    return (
+      await api.post<{ storagePath: string }>(
+        `${endpoint}/pdf`,
+        form,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      )
+    ).data;
+  },
+
+  /** URL to serve a previously uploaded phiếu kiểm nghiệm PDF (authenticated endpoint). */
+  pdfUrl(storagePath: string): string {
+    return `/api/v1/app/testing-result/pdf?path=${encodeURIComponent(storagePath)}`;
+  },
 };

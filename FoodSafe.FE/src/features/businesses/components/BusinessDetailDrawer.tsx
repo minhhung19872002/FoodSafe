@@ -9,6 +9,7 @@ import type {
   BusinessRelatedRecord,
   BusinessTestingRecord,
 } from "../types/business.types";
+import { BusinessVsattpCommitmentsTab } from "./BusinessVsattpCommitmentsTab";
 
 interface Props {
   business?: Business;
@@ -260,6 +261,16 @@ export function BusinessDetailDrawer({ business, onClose }: Props) {
               key: "testing-results",
               label: "Kiểm nghiệm",
               children: <TestingResultTable businessId={business.id} />,
+            },
+            {
+              key: "vsattp",
+              label: "Cam kết VSATTP",
+              children: (
+                <BusinessVsattpCommitmentsTab
+                  businessId={business.id}
+                  organizationId={business.organizationId}
+                />
+              ),
             },
           ]}
         />

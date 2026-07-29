@@ -172,6 +172,7 @@
     "Permission:Alerts.Edit": "Edit alerts",
     "Permission:Alerts.Delete": "Delete alerts",
     "Permission:Alerts.Publish": "Publish alerts",
+    "Permission:Alerts.Assign": "Assign citizen alert to staff",
     "Permission:News": "Food Safety News",
     "Permission:News.View": "View news",
     "Permission:News.Create": "Create news",

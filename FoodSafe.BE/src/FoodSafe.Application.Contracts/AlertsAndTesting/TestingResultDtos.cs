@@ -27,6 +27,7 @@ public class TestingResultDto
     public string? CertificateNumber { get; set; }
     public Guid? InspectionResultId { get; set; }
     public bool IsPublic { get; set; }
+    public string? StoragePath { get; set; }
     public DateTime CreationTime { get; set; }
 }
 
@@ -54,6 +55,30 @@ public class CreateUpdateTestingResultDto
 
     public Guid? InspectionResultId { get; set; }
     public bool IsPublic { get; set; }
+
+    [StringLength(1000)]
+    public string? StoragePath { get; set; }
+}
+
+/// <summary>Result returned after uploading a phiếu kiểm nghiệm PDF.</summary>
+public class TestingResultPdfUploadResultDto
+{
+    public string StoragePath { get; set; } = string.Empty;
+}
+
+/// <summary>Bytes + MIME type returned when serving a phiếu kiểm nghiệm PDF.</summary>
+public class TestingResultPdfDto
+{
+    public byte[] Content { get; set; } = [];
+    public string ContentType { get; set; } = "application/pdf";
+}
+
+public interface ITestingResultPdfAppService : Volo.Abp.Application.Services.IApplicationService
+{
+    Task<TestingResultPdfUploadResultDto> UploadAsync(
+        byte[] content, string originalName, string contentType);
+
+    Task<TestingResultPdfDto?> GetAsync(string storagePath);
 }
 
 public class TestingResultFilterDto : PagedAndSortedResultRequestDto

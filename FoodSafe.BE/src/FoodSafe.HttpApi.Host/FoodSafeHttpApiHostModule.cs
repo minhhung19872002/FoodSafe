@@ -40,6 +40,7 @@ using Volo.Abp.Security.Claims;
 using Volo.Abp.Swashbuckle;
 using Volo.Abp.Timing;
 using Volo.Abp.TextTemplating;
+using Volo.Abp.Caching.StackExchangeRedis;
 using Volo.Abp.UI.Navigation.Urls;
 
 namespace FoodSafe;
@@ -53,7 +54,8 @@ namespace FoodSafe;
     typeof(AbpMailKitModule),
     typeof(AbpAspNetCoreSerilogModule),
     typeof(AbpSwashbuckleModule),
-    typeof(AbpBlobStoringMinioModule)
+    typeof(AbpBlobStoringMinioModule),
+    typeof(AbpCachingStackExchangeRedisModule)
 )]
 public class FoodSafeHttpApiHostModule : AbpModule
 {
@@ -115,6 +117,23 @@ public class FoodSafeHttpApiHostModule : AbpModule
         // IHttpClientFactory is needed by MinioReadinessHealthCheck; register it
         // explicitly rather than relying on another feature's typed client.
         context.Services.AddHttpClient();
+
+        // SSRF-guarded outbound client for partner data sharing (FUNC-INT-004).
+        // The primary handler blocks private/reserved IPs at connect time (B-5).
+        // Polly adds a 30s per-attempt timeout and a circuit breaker so a slow
+        // or failing partner cannot stall all outbound workers indefinitely.
+        context.Services
+            .AddHttpClient(
+                FoodSafe.DataIntegration.DataSharingAppService.OutboundHttpClientName,
+                client =>
+                {
+                    client.MaxResponseContentBufferSize =
+                        FoodSafe.Security.OutboundUrlValidator.MaxResponseBytes;
+                })
+            .ConfigurePrimaryHttpMessageHandler(
+                () => FoodSafe.Security.OutboundUrlValidator.CreateGuardedHandler())
+            .AddStandardResilienceHandler();
+
         context.Services.AddHealthChecks()
             .AddCheck<PostgreSqlReadinessHealthCheck>(
                 "postgresql", tags: ["ready"])
@@ -221,7 +240,6 @@ public class FoodSafeHttpApiHostModule : AbpModule
                         .Select(o => o.TrimEnd('/'))
                         .ToArray() ?? [])
                     .WithExposedHeaders("Grpc-Status", "Grpc-Message", "Grpc-Encoding", "Grpc-Accept-Encoding")
-                    .SetIsOriginAllowedToAllowWildcardSubdomains()
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials()

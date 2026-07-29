@@ -83,6 +83,11 @@ function errorNotificationApi(endpoint: string) {
   };
 }
 
+async function downloadPdf(url: string): Promise<FileDownload> {
+  const response = await api.get<Blob>(url, { responseType: "blob" });
+  return download(response.data, response.headers["content-disposition"]);
+}
+
 export const ndtpReportApi = {
   async list(filter: NdtpReportFilter): Promise<PagedResult<NdtpReport>> {
     return (
@@ -128,12 +133,22 @@ export const ndtpReportApi = {
   async returnToDraft(id: string): Promise<void> {
     await api.post(`${ndtpEndpoint}/${id}/return-to-draft`);
   },
+  async populateFromPoisoningData(id: string): Promise<NdtpReport> {
+    return (
+      await api.post<NdtpReport>(
+        `${ndtpEndpoint}/${id}/populate-from-poisoning-data`,
+      )
+    ).data;
+  },
   async exportExcel(filter: NdtpReportFilter): Promise<FileDownload> {
     const response = await api.get<Blob>(`${ndtpEndpoint}/excel/export`, {
       params: filter,
       responseType: "blob",
     });
     return download(response.data, response.headers["content-disposition"]);
+  },
+  async downloadPdf(id: string): Promise<FileDownload> {
+    return downloadPdf(`${ndtpEndpoint}/${id}/pdf`);
   },
   ...errorNotificationApi(ndtpEndpoint),
 };
@@ -193,6 +208,9 @@ export const atpWorkReportApi = {
       responseType: "blob",
     });
     return download(response.data, response.headers["content-disposition"]);
+  },
+  async downloadPdf(id: string): Promise<FileDownload> {
+    return downloadPdf(`${atpEndpoint}/${id}/pdf`);
   },
   ...errorNotificationApi(atpEndpoint),
 };
@@ -263,6 +281,9 @@ export const actionMonthReportApi = {
       responseType: "blob",
     });
     return download(response.data, response.headers["content-disposition"]);
+  },
+  async downloadPdf(id: string): Promise<FileDownload> {
+    return downloadPdf(`${amrEndpoint}/${id}/pdf`);
   },
   ...errorNotificationApi(amrEndpoint),
 };

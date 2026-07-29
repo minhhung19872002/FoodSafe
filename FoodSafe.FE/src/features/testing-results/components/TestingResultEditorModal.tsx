@@ -1,6 +1,19 @@
-import { useEffect } from "react";
-import { DatePicker, Form, Input, Modal, Select, Space, Switch } from "antd";
+import { useEffect, useState } from "react";
+import {
+  App,
+  Button,
+  DatePicker,
+  Form,
+  Input,
+  Modal,
+  Select,
+  Space,
+  Switch,
+  Upload,
+} from "antd";
+import { DownloadOutlined, UploadOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
+import { testingResultApi } from "../api/testingResultApi";
 import {
   TESTING_OUTCOME,
   TESTING_OUTCOME_CONFIG,
@@ -59,13 +72,22 @@ function trimmed(value?: string): string | undefined {
 
 export function TestingResultEditorModal(props: Props) {
   const { open, item, businesses, products, inspectionResults } = props;
+  const { message } = App.useApp();
   const [form] = Form.useForm<FormValues>();
   const selectedBusinessId = Form.useWatch("businessId", form);
+
+  // PDF storagePath state — kept outside Ant Design form because the value
+  // comes from a server upload response, not a standard form control.
+  const [storagePath, setStoragePath] = useState<string | undefined>();
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     form.resetFields();
+    setStoragePath(undefined);
+    setUploading(false);
     if (item) {
+      setStoragePath(item.storagePath ?? undefined);
       form.setFieldsValue({
         sampleCode: item.sampleCode,
         sampleName: item.sampleName,
@@ -102,6 +124,27 @@ export function TestingResultEditorModal(props: Props) {
     props.onBusinessChange(businessId);
   };
 
+  function handlePdfUpload(file: File) {
+    const MAX_PDF_BYTES = 10 * 1024 * 1024;
+    if (file.size > MAX_PDF_BYTES) {
+      void message.error("Phiếu kiểm nghiệm không được vượt quá 10MB.");
+      return;
+    }
+    setUploading(true);
+    testingResultApi
+      .uploadPdf(file)
+      .then((result) => {
+        setStoragePath(result.storagePath);
+        void message.success("Đã tải lên phiếu kiểm nghiệm.");
+      })
+      .catch(() => {
+        void message.error("Không thể tải lên phiếu kiểm nghiệm.");
+      })
+      .finally(() => {
+        setUploading(false);
+      });
+  }
+
   return (
     <Modal
       title={item ? "Sửa kết quả" : "Nhập kết quả kiểm nghiệm"}
@@ -113,6 +156,7 @@ export function TestingResultEditorModal(props: Props) {
       okText="Lưu"
       cancelText="Hủy"
       confirmLoading={props.saving}
+      okButtonProps={{ disabled: uploading }}
     >
       <Form
         form={form}
@@ -135,6 +179,7 @@ export function TestingResultEditorModal(props: Props) {
             failedCriteria: trimmed(values.failedCriteria),
             certificateNumber: trimmed(values.certificateNumber),
             isPublic: values.isPublic ?? false,
+            storagePath: storagePath || undefined,
           })
         }
       >
@@ -276,6 +321,37 @@ export function TestingResultEditorModal(props: Props) {
         </Form.Item>
         <Form.Item name="certificateNumber" label="Số phiếu kiểm nghiệm">
           <Input />
+        </Form.Item>
+        <Form.Item
+          label="Phiếu kiểm nghiệm (PDF)"
+          extra="Chỉ chấp nhận file PDF, tối đa 10MB."
+        >
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <Upload
+              accept="application/pdf"
+              maxCount={1}
+              showUploadList={false}
+              beforeUpload={(file) => {
+                handlePdfUpload(file);
+                return false;
+              }}
+            >
+              <Button icon={<UploadOutlined />} loading={uploading}>
+                {storagePath ? "Tải lên phiếu mới" : "Tải lên phiếu kiểm nghiệm"}
+              </Button>
+            </Upload>
+            {storagePath && (
+              <Button
+                type="link"
+                icon={<DownloadOutlined />}
+                href={testingResultApi.pdfUrl(storagePath)}
+                target="_blank"
+                style={{ padding: 0 }}
+              >
+                Xem phiếu kiểm nghiệm đã tải lên
+              </Button>
+            )}
+          </Space>
         </Form.Item>
         <Form.Item name="isPublic" label="Công khai" valuePropName="checked">
           <Switch />

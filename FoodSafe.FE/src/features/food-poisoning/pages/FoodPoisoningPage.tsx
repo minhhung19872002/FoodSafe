@@ -17,6 +17,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   ExportOutlined,
+  FilePdfOutlined,
   SendOutlined,
   CheckCircleOutlined,
   SolutionOutlined,
@@ -39,6 +40,7 @@ import {
   useSubmitCase,
   useVerifyCase,
   useExportCases,
+  useDownloadCasePdf,
   useCreateIncident,
   useUpdateIncident,
   useDeleteIncident,
@@ -91,6 +93,7 @@ function CasesTab() {
   const submitMut = useSubmitCase();
   const verifyMut = useVerifyCase();
   const exportMut = useExportCases();
+  const downloadPdfMut = useDownloadCasePdf();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<FoodPoisoningCase | undefined>();
@@ -199,6 +202,17 @@ function CasesTab() {
               icon: <WarningOutlined />,
               hidden: record.status === POISONING_CASE_STATUS.Draft,
               onClick: () => setErrorReportCase(record),
+            },
+            {
+              key: "pdf",
+              label: "Tải PDF",
+              ariaLabel: `Tải PDF ${record.caseCode}`,
+              icon: <FilePdfOutlined />,
+              onClick: () =>
+                downloadPdfMut.mutate(record.id, {
+                  onSuccess: (file) => saveDownload(file.blob, file.fileName),
+                  onError: (error) => message.error(extractApiError(error)),
+                }),
             },
             {
               key: "edit",

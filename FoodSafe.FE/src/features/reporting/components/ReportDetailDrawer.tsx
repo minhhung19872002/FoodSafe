@@ -346,6 +346,27 @@ function workflowSection(report: AnyReport): DetailSection {
       },
       { label: "Ghi chú", value: paragraph(report.notes), span: 2 },
       { label: "Mã báo cáo", value: report.id, span: 2 },
+      ...(report.submissionHash
+        ? [
+            {
+              label: "SHA-256",
+              value: (
+                <span
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: 11,
+                    wordBreak: "break-all" as const,
+                    color: "var(--ant-color-text-secondary, #888)",
+                  }}
+                  title="Hash SHA-256 của nội dung tại thời điểm gửi — bằng chứng bất biến (STT-33)"
+                >
+                  {report.submissionHash}
+                </span>
+              ),
+              span: 2 as const,
+            },
+          ]
+        : []),
     ],
   };
 }

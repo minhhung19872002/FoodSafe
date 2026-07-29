@@ -141,4 +141,42 @@ public sealed class AtpWorkReport : BaseReport
         _errorNotifications.Add(new AtpWorkReportErrorNotification(
             id, Id, fromOrganizationId, errorFields, correctionDetails, creatorId));
     }
+
+    protected override object GetSubmissionPayload() => new
+    {
+        reportType = "ATP",
+        organizationId = OrganizationId,
+        periodType = (int)PeriodType,
+        periodYear = PeriodYear,
+        periodHalf = PeriodHalf,
+        submissionVersion = SubmissionVersion,
+        totalBusinesses = TotalBusinesses,
+        newBusinesses = NewBusinesses,
+        inactiveBusinesses = InactiveBusinesses,
+        businessesWithCertificate = BusinessesWithCertificate,
+        dkcbIssued = DkcbIssued,
+        selfDeclarationsReceived = SelfDeclarationsReceived,
+        adRegistrationsIssued = AdRegistrationsIssued,
+        eligibilityCertificatesIssued = EligibilityCertificatesIssued,
+        cfsIssued = CfsIssued,
+        exportCertificatesIssued = ExportCertificatesIssued,
+        totalInspectionPlans = TotalInspectionPlans,
+        businessesInspected = BusinessesInspected,
+        violationsFound = ViolationsFound,
+        finesIssued = FinesIssued,
+        fineTotalAmount = FineTotalAmount,
+        poisoningCaseCount = PoisoningCaseCount,
+        poisoningIncidentCount = PoisoningIncidentCount,
+        totalAffected = TotalAffected,
+        totalDeaths = TotalDeaths,
+        trainingSessions = TrainingSessions,
+        trainingParticipants = TrainingParticipants,
+        mediaAppearances = MediaAppearances,
+        documentsIssued = DocumentsIssued,
+        overview = Overview,
+        achievements = Achievements,
+        limitations = Limitations,
+        solutions = Solutions,
+        nextPeriodPlan = NextPeriodPlan,
+    };
 }

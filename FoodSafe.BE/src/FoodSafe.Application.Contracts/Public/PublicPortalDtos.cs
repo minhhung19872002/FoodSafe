@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Volo.Abp.Application.Dtos;
 using FoodSafe.AlertsAndTesting;
 using FoodSafe.BusinessManagement;
+using FoodSafe.Inspection;
 
 namespace FoodSafe.PublicPortal;
 
@@ -33,8 +34,33 @@ public class PublicProductSummaryDto
     public string Name { get; set; } = string.Empty;
     public string? Code { get; set; }
     public string? BrandName { get; set; }
+    public string? Manufacturer { get; set; }
     public string BusinessName { get; set; } = string.Empty;
     public string? ProductGroupName { get; set; }
+}
+
+public class PublicTestingResultDto
+{
+    public Guid Id { get; set; }
+    public string SampleCode { get; set; } = string.Empty;
+    public string SampleName { get; set; } = string.Empty;
+    public string? BusinessName { get; set; }
+    public string? TestingCenterName { get; set; }
+    public DateTime SampleDate { get; set; }
+    public DateTime? ResultDate { get; set; }
+    public TestingResultOutcome Outcome { get; set; }
+    public bool HasFailedIndicators { get; set; }
+}
+
+public class PublicInspectionResultDto
+{
+    public Guid Id { get; set; }
+    public string BusinessName { get; set; } = string.Empty;
+    public string? BusinessAddress { get; set; }
+    public DateTime InspectionDate { get; set; }
+    public InspectionType InspectionType { get; set; }
+    public InspectionOverallResult OverallResult { get; set; }
+    public bool HasViolation { get; set; }
 }
 
 public class PublicCertificateSummaryDto
@@ -151,6 +177,29 @@ public class CitizenAlertReportResultDto
 {
     public Guid Id { get; set; }
     public string Message { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Tracking code the citizen can use to look up the report status later
+    /// via the public status endpoint (anonymous). Null if the alert was not
+    /// created via the public-report workflow.
+    /// </summary>
+    public string? TrackingCode { get; set; }
+}
+
+/// <summary>
+/// Minimal status projection exposed to anonymous citizens via the tracking
+/// endpoint. No personally identifiable reporter data is included.
+/// </summary>
+public class CitizenReportStatusDto
+{
+    public string TrackingCode { get; set; } = string.Empty;
+    public DateTime SubmittedAt { get; set; }
+
+    /// <summary>
+    /// Caller-facing status label. One of: Submitted, UnderReview, Resolved, Rejected.
+    /// </summary>
+    public string Status { get; set; } = string.Empty;
+    public DateTime UpdatedAt { get; set; }
 }
 
 public class CreateCitizenNewsReportDto
@@ -204,6 +253,15 @@ public interface IPublicContentAppService
     Task<PagedResultDto<PublicWarnedBusinessDto>> GetWarnedBusinessesAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicDocumentDto>> GetDocumentsAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicRiskAnalysisDto>> GetRiskAnalysesAsync(PublicSearchRequestDto input);
+    Task<PagedResultDto<PublicTestingResultDto>> GetTestingResultsAsync(PublicSearchRequestDto input);
+    Task<PagedResultDto<PublicInspectionResultDto>> GetInspectionResultsAsync(PublicSearchRequestDto input);
+
+    /// <summary>
+    /// Returns the status of a citizen-submitted alert by its tracking code.
+    /// Returns null when the code is not found — callers should respond with 404.
+    /// No personally identifiable reporter data is included in the result.
+    /// </summary>
+    Task<CitizenReportStatusDto?> GetCitizenReportStatusAsync(string trackingCode);
 }
 
 public interface ICitizenAlertReportAppService

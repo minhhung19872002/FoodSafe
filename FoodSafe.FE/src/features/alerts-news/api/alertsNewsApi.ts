@@ -2,6 +2,7 @@ import { api } from "@/lib/axios";
 import type {
   AlertFilter,
   AlertOption,
+  AssignAlertInput,
   AtpAlert,
   AtpNews,
   CreateUpdateAlertInput,
@@ -9,6 +10,7 @@ import type {
   FileDownload,
   NewsFilter,
   PagedResult,
+  StaffUserOption,
 } from "../types/alertsNews.types";
 
 const alertEndpoint = "/v1/app/atp-alert";
@@ -57,12 +59,34 @@ export const alertApi = {
       await api.post<AtpAlert>(`${alertEndpoint}/${id}/reject`, { reason })
     ).data;
   },
+  /** Assign a citizen-submitted draft alert to a staff member (FR-29-06 assign step). */
+  async assign(id: string, input: AssignAlertInput): Promise<AtpAlert> {
+    return (
+      await api.post<AtpAlert>(`${alertEndpoint}/${id}/assign`, input)
+    ).data;
+  },
   async exportExcel(filter: AlertFilter): Promise<FileDownload> {
     const response = await api.get<Blob>(`${alertEndpoint}/excel/export`, {
       params: filter,
       responseType: "blob",
     });
     return download(response.data, response.headers["content-disposition"]);
+  },
+};
+
+/**
+ * Lightweight user list for the moderation-queue assignee Select.
+ * Calls the same administration endpoint used by the identity feature — no
+ * cross-feature import required because this is a plain API call.
+ */
+export const staffApi = {
+  async listUsers(filter?: string): Promise<{ totalCount: number; items: StaffUserOption[] }> {
+    return (
+      await api.get<{ totalCount: number; items: StaffUserOption[] }>(
+        "/v1/administration/users",
+        { params: { filter, maxResultCount: 200, isActive: true } },
+      )
+    ).data;
   },
 };
 
@@ -110,5 +134,26 @@ export const newsApi = {
       responseType: "blob",
     });
     return download(response.data, response.headers["content-disposition"]);
+  },
+
+  /**
+   * Upload a thumbnail image for a news article.
+   * Returns the storagePath to be submitted with the news form.
+   */
+  async uploadThumbnail(file: File): Promise<{ storagePath: string }> {
+    const form = new FormData();
+    form.append("file", file);
+    return (
+      await api.post<{ storagePath: string }>(
+        `${newsEndpoint}/thumbnail`,
+        form,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      )
+    ).data;
+  },
+
+  /** URL to serve a previously uploaded thumbnail (authenticated endpoint). */
+  thumbnailUrl(storagePath: string): string {
+    return `/api/v1/app/atp-news/thumbnail?path=${encodeURIComponent(storagePath)}`;
   },
 };

@@ -162,3 +162,9 @@ export function useExportInspectionResults() {
       inspectionResultApi.exportExcel(filter),
   });
 }
+
+export function useDownloadBienBanPdf() {
+  return useMutation({
+    mutationFn: (id: string) => inspectionResultApi.downloadBienBanPdf(id),
+  });
+}

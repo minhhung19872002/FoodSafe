@@ -102,3 +102,49 @@ export function usePublicRiskAnalyses(filter: PagedFilter) {
     queryFn: () => publicPortalApi.listRiskAnalyses(filter),
   });
 }
+
+export function usePublicTestingResults(filter: PagedFilter) {
+  return useQuery({
+    queryKey: [QK, "testing-results", filter],
+    queryFn: () => publicPortalApi.listTestingResults(filter),
+  });
+}
+
+export function usePublicInspectionResults(filter: PagedFilter) {
+  return useQuery({
+    queryKey: [QK, "inspection-results", filter],
+    queryFn: () => publicPortalApi.listInspectionResults(filter),
+  });
+}
+
+/**
+ * Looks up a citizen report by tracking code.
+ * Only fires when `trackingCode` is non-empty.
+ * Returns null from queryFn when the code is not found (404).
+ */
+export function useCitizenReportStatus(trackingCode: string) {
+  return useQuery({
+    queryKey: [QK, "citizen-report-status", trackingCode],
+    queryFn: () => publicPortalApi.getCitizenReportStatus(trackingCode),
+    enabled: trackingCode.trim().length > 0,
+    retry: false,
+  });
+}
+
+/**
+ * Fetches a large page of public businesses for map display.
+ * Results are cached for 5 minutes to avoid hammering the endpoint when the
+ * user switches between the list and map tabs.
+ */
+export function usePublicBusinessMapData(keyword?: string) {
+  return useQuery({
+    queryKey: [QK, "businesses-map", keyword ?? ""],
+    queryFn: () =>
+      publicPortalApi.searchBusinesses({
+        Keyword: keyword || undefined,
+        SkipCount: 0,
+        MaxResultCount: 500,
+      }),
+    staleTime: 5 * 60 * 1000,
+  });
+}

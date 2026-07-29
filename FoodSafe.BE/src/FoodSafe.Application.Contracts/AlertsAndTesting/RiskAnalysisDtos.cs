@@ -12,6 +12,8 @@ public class RiskAnalysisDto
     public string Content { get; set; } = string.Empty;
     public AlertCategory Category { get; set; }
     public RiskLevel RiskLevel { get; set; }
+    public List<Guid> ProductGroupIds { get; set; } = [];
+    public List<string> ProductGroupNames { get; set; } = [];
     public string? RelatedProducts { get; set; }
     public string? Evidence { get; set; }
     public string? Recommendations { get; set; }
@@ -39,6 +41,7 @@ public class CreateUpdateRiskAnalysisDto
     [EnumDataType(typeof(RiskLevel))]
     public RiskLevel RiskLevel { get; set; }
 
+    public List<Guid> ProductGroupIds { get; set; } = [];
     public string? RelatedProducts { get; set; }
     public string? Evidence { get; set; }
     public string? Recommendations { get; set; }

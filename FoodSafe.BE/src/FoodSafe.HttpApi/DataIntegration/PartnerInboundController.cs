@@ -22,6 +22,40 @@ namespace FoodSafe.DataIntegration;
 public sealed class PartnerInboundController(
     IPartnerInboundAppService service) : AbpControllerBase
 {
+    /// <summary>
+    /// Poll the status of a previously submitted request (FUNC-INT-002).
+    /// Auth: X-Api-Key header (same rules as POST submissions).
+    /// Returns 200 with status on success, 401 on bad key, 404 if not found.
+    /// </summary>
+    [HttpGet("submissions/{requestId}")]
+    public async Task<IActionResult> GetStatusAsync(string requestId)
+    {
+        var context = new InboundRequestContext
+        {
+            ApiKey = Header("X-Api-Key"),
+            Path = HttpContext.Request.Path.ToString(),
+        };
+
+        try
+        {
+            var result = await service.GetSubmissionStatusAsync(requestId, context);
+            return Ok(result);
+        }
+        catch (Volo.Abp.Authorization.AbpAuthorizationException)
+        {
+            return StatusCode(401, ErrorBody(new InboundReceiveOperationDto
+            {
+                Outcome = InboundReceiveOutcome.Unauthorized,
+                ErrorCode = "InvalidApiKey",
+                ErrorMessage = "Invalid API key.",
+            }));
+        }
+        catch (Volo.Abp.Domain.Entities.EntityNotFoundException)
+        {
+            return NotFound(new { error = new { code = "NotFound", message = "Submission not found." } });
+        }
+    }
+
     [HttpPost("submissions/{dataType}")]
     public async Task<IActionResult> ReceiveAsync(
         string dataType, [FromBody] InboundEnvelopeDto envelope)

@@ -51,6 +51,7 @@ export interface TestingResult {
   certificateNumber: string | null;
   inspectionResultId: string | null;
   isPublic: boolean;
+  storagePath: string | null;
   creationTime: string;
 }
 
@@ -70,6 +71,7 @@ export interface CreateUpdateTestingResultInput {
   certificateNumber?: string;
   inspectionResultId?: string;
   isPublic: boolean;
+  storagePath?: string;
 }
 
 export interface TestingResultFilter {

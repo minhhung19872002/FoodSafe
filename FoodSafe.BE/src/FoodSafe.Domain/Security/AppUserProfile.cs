@@ -176,6 +176,120 @@ public sealed class ManagementScopeAssignment : Entity<Guid>, IAggregateRoot<Gui
         };
     }
 
+    public static ManagementScopeAssignment CreateBusiness(
+        Guid id,
+        Guid granteeOrganizationId,
+        Guid? granteeUserId,
+        Guid businessId,
+        bool canView,
+        bool canCreate,
+        bool canEdit,
+        bool canDelete,
+        DateTime validFrom,
+        DateTime? validTo,
+        DateTime now,
+        Guid? creatorId)
+    {
+        if (validTo.HasValue && validFrom >= validTo.Value)
+        {
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.DataScope.InvalidValidityPeriod);
+        }
+
+        return new ManagementScopeAssignment
+        {
+            Id = id,
+            GranteeOrganizationId = granteeOrganizationId,
+            GranteeUserId = granteeUserId,
+            ScopeType = ManagementScopeType.Business,
+            BusinessId = businessId,
+            CanView = canView,
+            CanCreate = canCreate,
+            CanEdit = canEdit,
+            CanDelete = canDelete,
+            ValidFrom = validFrom,
+            ValidTo = validTo,
+            CreationTime = now,
+            CreatorId = creatorId
+        };
+    }
+
+    public static ManagementScopeAssignment CreateBusinessType(
+        Guid id,
+        Guid granteeOrganizationId,
+        Guid? granteeUserId,
+        Guid businessTypeId,
+        bool canView,
+        bool canCreate,
+        bool canEdit,
+        bool canDelete,
+        DateTime validFrom,
+        DateTime? validTo,
+        DateTime now,
+        Guid? creatorId)
+    {
+        if (validTo.HasValue && validFrom >= validTo.Value)
+        {
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.DataScope.InvalidValidityPeriod);
+        }
+
+        return new ManagementScopeAssignment
+        {
+            Id = id,
+            GranteeOrganizationId = granteeOrganizationId,
+            GranteeUserId = granteeUserId,
+            ScopeType = ManagementScopeType.BusinessType,
+            BusinessTypeId = businessTypeId,
+            CanView = canView,
+            CanCreate = canCreate,
+            CanEdit = canEdit,
+            CanDelete = canDelete,
+            ValidFrom = validFrom,
+            ValidTo = validTo,
+            CreationTime = now,
+            CreatorId = creatorId
+        };
+    }
+
+    public static ManagementScopeAssignment CreateProductGroup(
+        Guid id,
+        Guid granteeOrganizationId,
+        Guid? granteeUserId,
+        Guid productGroupId,
+        bool canView,
+        bool canCreate,
+        bool canEdit,
+        bool canDelete,
+        DateTime validFrom,
+        DateTime? validTo,
+        DateTime now,
+        Guid? creatorId)
+    {
+        if (validTo.HasValue && validFrom >= validTo.Value)
+        {
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.DataScope.InvalidValidityPeriod);
+        }
+
+        return new ManagementScopeAssignment
+        {
+            Id = id,
+            GranteeOrganizationId = granteeOrganizationId,
+            GranteeUserId = granteeUserId,
+            ScopeType = ManagementScopeType.ProductGroup,
+            ProductGroupId = productGroupId,
+            CanView = canView,
+            CanCreate = canCreate,
+            CanEdit = canEdit,
+            CanDelete = canDelete,
+            ValidFrom = validFrom,
+            ValidTo = validTo,
+            CreationTime = now,
+            CreatorId = creatorId
+        };
+    }
+
     public bool Allows(DataScopeOperation operation) => operation switch
     {
         DataScopeOperation.View => CanView,

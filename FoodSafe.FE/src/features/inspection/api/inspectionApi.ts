@@ -205,4 +205,10 @@ export const inspectionResultApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+  async downloadBienBanPdf(id: string): Promise<FileDownload> {
+    const response = await api.get<Blob>(`${resultEndpoint}/${id}/bien-ban-pdf`, {
+      responseType: "blob",
+    });
+    return download(response.data, response.headers["content-disposition"]);
+  },
 };

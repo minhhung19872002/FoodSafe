@@ -19,3 +19,9 @@ public enum LicenseStatus : short
     Expired = 2,
     Revoked = 3
 }
+
+public enum VsattpCommitmentStatus : short
+{
+    Submitted = 1,
+    Confirmed = 2
+}

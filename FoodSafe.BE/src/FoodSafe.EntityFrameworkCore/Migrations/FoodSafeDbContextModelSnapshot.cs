@@ -163,6 +163,18 @@ namespace FoodSafe.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("alert_number");
 
+                    b.Property<DateTime?>("AssignedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("assigned_at");
+
+                    b.Property<Guid?>("AssignedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_by_user_id");
+
+                    b.Property<Guid?>("AssigneeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assignee_id");
+
                     b.Property<Guid?>("BusinessId")
                         .HasColumnType("uuid")
                         .HasColumnName("business_id");
@@ -291,6 +303,11 @@ namespace FoodSafe.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("title");
 
+                    b.Property<string>("TrackingCode")
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)")
+                        .HasColumnName("tracking_code");
+
                     b.HasKey("Id")
                         .HasName("pk_atp_alerts");
 
@@ -307,6 +324,11 @@ namespace FoodSafe.Migrations
                     b.HasIndex("Severity")
                         .HasDatabaseName("idx_alerts_severity")
                         .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("TrackingCode")
+                        .IsUnique()
+                        .HasDatabaseName("uq_alerts_tracking_code")
+                        .HasFilter("tracking_code IS NOT NULL AND is_deleted = FALSE");
 
                     b.HasIndex("OrganizationId", "Status")
                         .HasDatabaseName("idx_alerts_org_status")
@@ -597,6 +619,13 @@ namespace FoodSafe.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
+                    b.Property<string>("ProductGroupIds")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("product_group_ids")
+                        .HasDefaultValueSql("'[]'");
+
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("published_at");
@@ -752,6 +781,11 @@ namespace FoodSafe.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("sample_name");
+
+                    b.Property<string>("StoragePath")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("storage_path");
 
                     b.Property<DateTime?>("SubmissionDate")
                         .HasColumnType("timestamp with time zone")
@@ -1455,6 +1489,103 @@ namespace FoodSafe.Migrations
                             t.HasCheckConstraint("chk_self_declarations_revoke", "(status != 3 AND revoke_reason IS NULL AND revoked_at IS NULL AND revoked_by_id IS NULL) OR (status = 3 AND revoke_reason IS NOT NULL AND revoked_at IS NOT NULL AND revoked_by_id IS NOT NULL)");
 
                             t.HasCheckConstraint("chk_self_declarations_status", "status IN (1, 2, 3)");
+                        });
+                });
+
+            modelBuilder.Entity("FoodSafe.BusinessManagement.VsattpCommitment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<DateOnly>("CommitmentDate")
+                        .HasColumnType("date")
+                        .HasColumnName("commitment_date");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmed_at");
+
+                    b.Property<Guid?>("ConfirmedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("confirmed_by_user_id");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creation_time");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("creator_id");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleter_id");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletion_time");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("extra_properties");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modification_time");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_modifier_id");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<short>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_vsattp_commitments");
+
+                    b.HasIndex("BusinessId")
+                        .HasDatabaseName("idx_vsattp_commitments_business")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("idx_vsattp_commitments_org")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("BusinessId", "OrganizationId");
+
+                    b.ToTable("vsattp_commitments", null, t =>
+                        {
+                            t.HasCheckConstraint("chk_vsattp_confirm", "(status != 2 AND confirmed_by_user_id IS NULL AND confirmed_at IS NULL) OR (status = 2 AND confirmed_by_user_id IS NOT NULL AND confirmed_at IS NOT NULL)");
+
+                            t.HasCheckConstraint("chk_vsattp_status", "status IN (1, 2)");
                         });
                 });
 
@@ -5232,6 +5363,11 @@ namespace FoodSafe.Migrations
                         .HasColumnType("smallint")
                         .HasColumnName("status");
 
+                    b.Property<string>("SubmissionHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("submission_hash");
+
                     b.Property<short>("SubmissionVersion")
                         .HasColumnType("smallint")
                         .HasColumnName("submission_version");
@@ -5509,6 +5645,11 @@ namespace FoodSafe.Migrations
                         .HasColumnType("smallint")
                         .HasColumnName("status");
 
+                    b.Property<string>("SubmissionHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("submission_hash");
+
                     b.Property<short>("SubmissionVersion")
                         .HasColumnType("smallint")
                         .HasColumnName("submission_version");
@@ -5767,6 +5908,11 @@ namespace FoodSafe.Migrations
                     b.Property<short>("Status")
                         .HasColumnType("smallint")
                         .HasColumnName("status");
+
+                    b.Property<string>("SubmissionHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("submission_hash");
 
                     b.Property<short>("SubmissionVersion")
                         .HasColumnType("smallint")
@@ -7990,6 +8136,24 @@ namespace FoodSafe.Migrations
                         .HasPrincipalKey("Id", "BusinessId", "OrganizationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_self_declarations_product");
+                });
+
+            modelBuilder.Entity("FoodSafe.BusinessManagement.VsattpCommitment", b =>
+                {
+                    b.HasOne("FoodSafe.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_vsattp_org");
+
+                    b.HasOne("FoodSafe.BusinessManagement.Business", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_vsattp_business_org");
                 });
 
             modelBuilder.Entity("FoodSafe.Catalogs.Commune", b =>

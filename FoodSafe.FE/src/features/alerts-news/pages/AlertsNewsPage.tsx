@@ -27,6 +27,7 @@ import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { RevokeModal } from "@/components/RevokeModal";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
+import { RichTextEditor } from "@/components/RichTextEditor/RichTextEditor";
 import { EmptyState } from "@/components/EmptyState";
 import { extractApiError } from "@/lib/apiError";
 import { saveDownload } from "@/utils/download";
@@ -49,6 +50,7 @@ import {
 } from "../api/alertsNewsMutations";
 import { AlertEditorModal } from "../components/AlertEditorModal";
 import { NewsEditorModal } from "../components/NewsEditorModal";
+import { CitizenReportModerationQueue } from "../components/CitizenReportModerationQueue";
 import {
   ALERT_CATEGORY_LABELS,
   ALERT_SEVERITY_CONFIG,
@@ -910,7 +912,11 @@ function NewsTab() {
           { label: "Người phản ánh", render: (r) => r.reporterName },
           { label: "Liên hệ phản ánh", render: (r) => r.reporterContact },
           { label: "Tóm tắt", span: 2, render: (r) => r.summary },
-          { label: "Nội dung", span: 2, render: (r) => r.content },
+          {
+            label: "Nội dung",
+            span: 2,
+            render: (r) => <RichTextEditor value={r.content} readonly />,
+          },
           {
             label: "Ngày tạo",
             render: (r) => dayjs(r.creationTime).format("DD/MM/YYYY"),
@@ -947,7 +953,7 @@ function NewsTab() {
   );
 }
 
-const TAB_KEYS = ["alerts", "news"] as const;
+const TAB_KEYS = ["alerts", "news", "moderation"] as const;
 type TabKey = (typeof TAB_KEYS)[number];
 
 export default function AlertsNewsPage() {
@@ -955,6 +961,11 @@ export default function AlertsNewsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const canViewAlerts = hasPermission("FoodSafe.AlertsAndTesting.Alerts.View");
   const canViewNews = hasPermission("FoodSafe.AlertsAndTesting.News.View");
+  // Moderation queue is visible to anyone who can view alerts and either assign or publish/reject
+  const canModerate =
+    canViewAlerts &&
+    (hasPermission("FoodSafe.AlertsAndTesting.Alerts.Publish") ||
+      hasPermission("FoodSafe.AlertsAndTesting.Alerts.Assign"));
 
   const tabItems = [
     ...(canViewAlerts
@@ -972,6 +983,15 @@ export default function AlertsNewsPage() {
             key: "news",
             label: "Tin tức ATTP",
             children: <NewsTab />,
+          },
+        ]
+      : []),
+    ...(canModerate
+      ? [
+          {
+            key: "moderation",
+            label: "Hàng chờ phản ánh công dân",
+            children: <CitizenReportModerationQueue />,
           },
         ]
       : []),

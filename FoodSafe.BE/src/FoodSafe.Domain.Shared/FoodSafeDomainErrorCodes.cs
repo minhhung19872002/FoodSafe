@@ -51,6 +51,8 @@ public static class FoodSafeDomainErrorCodes
         public const string InvalidEmployeeCount = "FoodSafe:Business:0008";
         public const string InvalidCertificateDates = "FoodSafe:Business:0009";
         public const string BusinessInUse = "FoodSafe:Business:0010";
+        public const string CannotModifyConfirmedCommitment = "FoodSafe:Business:0011";
+        public const string CommitmentAlreadyConfirmed = "FoodSafe:Business:0012";
     }
 
     public static class Product

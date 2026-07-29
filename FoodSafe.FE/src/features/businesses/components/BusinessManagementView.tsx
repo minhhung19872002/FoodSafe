@@ -5,6 +5,7 @@ import {
   EditOutlined,
   EnvironmentOutlined,
   ExportOutlined,
+  FilePdfOutlined,
   FolderOpenOutlined,
   ImportOutlined,
   PaperClipOutlined,
@@ -31,6 +32,12 @@ export interface FilterOption {
   label: string;
 }
 
+interface ClassificationItem {
+  id: string;
+  riskLevel?: number;
+  name?: string;
+}
+
 interface BusinessManagementViewProps {
   activeTab: "businesses" | "products";
   businesses: Business[];
@@ -47,6 +54,7 @@ interface BusinessManagementViewProps {
   productSorting?: string;
   businessTypeOptions: FilterOption[];
   classificationOptions: FilterOption[];
+  classificationItems?: ClassificationItem[];
   provinceOptions: FilterOption[];
   districtOptions: FilterOption[];
   onBusinessTypeChange: (value?: string) => void;
@@ -90,6 +98,7 @@ interface BusinessManagementViewProps {
   onDeleteProduct: (id: string) => void;
   onManageProductAttachments: (product: Product) => void;
   onShowProductDetail: (product: Product) => void;
+  onDownloadProfilePdf: (business: Business) => void;
 }
 
 const businessStatusLabels: Record<BusinessStatus, string> = {
@@ -229,6 +238,13 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               icon: <EnvironmentOutlined />,
               hidden: business.addressLatitude === undefined,
               onClick: () => props.onShowMap(business),
+            },
+            {
+              key: "profile-pdf",
+              label: "Tải hồ sơ PDF",
+              ariaLabel: `Tải hồ sơ PDF ${business.name}`,
+              icon: <FilePdfOutlined />,
+              onClick: () => props.onDownloadProfilePdf(business),
             },
             {
               key: "delete",
@@ -436,6 +452,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
           ) : (
             <BusinessLocationMap
               businesses={props.businesses}
+              classifications={props.classificationItems}
               onSelect={(b) => props.onShowDetail(b)}
             />
           )}

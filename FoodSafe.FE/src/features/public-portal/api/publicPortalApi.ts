@@ -2,16 +2,19 @@ import { api } from "@/lib/axios";
 import type {
   AlertReportInput,
   AlertReportResult,
+  CitizenReportStatus,
   PagedFilter,
   PagedResult,
   PublicAlert,
   PublicBusiness,
   PublicCertificate,
   PublicDocument,
+  PublicInspectionResult,
   PublicNewsDetail,
   PublicNewsItem,
   PublicProduct,
   PublicRiskAnalysis,
+  PublicTestingResult,
   PublicWarnedBusiness,
 } from "../types/publicPortal.types";
 
@@ -144,6 +147,26 @@ export const publicPortalApi = {
       .then((r) => r.data);
   },
 
+  listTestingResults(
+    filter: PagedFilter,
+  ): Promise<PagedResult<PublicTestingResult>> {
+    return api
+      .get<PagedResult<PublicTestingResult>>("/v1/public/testing-results", {
+        params: filter,
+      })
+      .then((r) => r.data);
+  },
+
+  listInspectionResults(
+    filter: PagedFilter,
+  ): Promise<PagedResult<PublicInspectionResult>> {
+    return api
+      .get<PagedResult<PublicInspectionResult>>("/v1/public/inspection-results", {
+        params: filter,
+      })
+      .then((r) => r.data);
+  },
+
   async submitNewsReport(input: {
     title: string;
     content: string;
@@ -167,5 +190,27 @@ export const publicPortalApi = {
       input,
     );
     return response.data;
+  },
+
+  /**
+   * Looks up a citizen report by its tracking code.
+   * Returns null when the API responds with 404 (code not found).
+   * No PII is included in the response.
+   */
+  async getCitizenReportStatus(
+    trackingCode: string,
+  ): Promise<CitizenReportStatus | null> {
+    try {
+      const response = await api.get<CitizenReportStatus>(
+        "/v1/public/citizen-reports/status",
+        { params: { trackingCode } },
+      );
+      return response.data;
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status;
+      if (status === 404) return null;
+      throw err;
+    }
   },
 };

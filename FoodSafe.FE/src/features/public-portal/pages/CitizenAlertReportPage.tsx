@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import {
   Alert,
   Button,
+  Card,
   Form,
   Input,
   Result,
@@ -133,13 +134,48 @@ export default function CitizenAlertReportPage() {
   };
 
   if (submitMutation.isSuccess && submitMutation.data) {
+    const { trackingCode } = submitMutation.data;
     return (
       <PublicShell>
         <Result
           status="success"
           title="Phản ánh đã được gửi thành công"
-          subTitle={submitMutation.data.message}
+          subTitle="Cơ quan chức năng sẽ xem xét và xác minh thông tin phản ánh của bạn."
           extra={[
+            trackingCode ? (
+              <Card
+                key="tracking"
+                style={{
+                  textAlign: "center",
+                  marginBottom: 16,
+                  background: "#f6ffed",
+                  border: "1px solid #b7eb8f",
+                  maxWidth: 480,
+                  margin: "0 auto 16px",
+                }}
+              >
+                <Typography.Text type="secondary" style={{ display: "block" }}>
+                  Mã theo dõi của bạn
+                </Typography.Text>
+                <Typography.Text
+                  strong
+                  copyable
+                  style={{ fontSize: 28, letterSpacing: 2 }}
+                >
+                  {trackingCode}
+                </Typography.Text>
+                <Typography.Paragraph
+                  type="secondary"
+                  style={{ marginTop: 8, marginBottom: 0, fontSize: 13 }}
+                >
+                  Lưu lại mã này để tra cứu trạng thái xử lý trên trang{" "}
+                  <Typography.Link href="/tra-cuu-phan-anh">
+                    Tra cứu báo cáo
+                  </Typography.Link>
+                  .
+                </Typography.Paragraph>
+              </Card>
+            ) : null,
             <Button
               type="primary"
               key="home"
@@ -157,7 +193,19 @@ export default function CitizenAlertReportPage() {
             >
               Gửi phản ánh khác
             </Button>,
-          ]}
+            trackingCode ? (
+              <Button
+                key="lookup"
+                onClick={() =>
+                  window.location.assign(
+                    `/tra-cuu-phan-anh?code=${encodeURIComponent(trackingCode)}`,
+                  )
+                }
+              >
+                Tra cứu trạng thái
+              </Button>
+            ) : null,
+          ].filter(Boolean)}
         />
       </PublicShell>
     );

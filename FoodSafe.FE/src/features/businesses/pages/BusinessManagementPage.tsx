@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTablePagination } from "@/hooks/useTablePagination";
-import { App, Modal, Tag } from "antd";
+import { App, Button, Modal, Tag } from "antd";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { extractApiError } from "@/lib/apiError";
@@ -21,6 +21,7 @@ import {
   useDeleteBusiness,
   useDeleteProduct,
   useDeleteProductAttachment,
+  useDownloadBusinessProfilePdf,
   useDownloadProductAttachment,
   useDownloadBusinessTemplate,
   useDownloadProductTemplate,
@@ -62,6 +63,7 @@ import {
   type UpdateBusinessInput,
   type UpdateProductInput,
 } from "../types/business.types";
+import { ScopeAssignmentModal } from "@/features/management-scope/components/ScopeAssignmentModal";
 
 function flattenOrganizations(
   nodes: OrganizationTreeNode[],
@@ -90,6 +92,9 @@ export default function BusinessManagementPage() {
   );
   const canViewProducts = hasPermission(
     "FoodSafe.BusinessManagement.Products.View",
+  );
+  const canManageScope = hasPermission(
+    "FoodSafe.SystemAdmin.Users.ManageScope",
   );
   const [activeTab, setActiveTab] = useState<"businesses" | "products">(
     canViewBusinesses ? "businesses" : "products",
@@ -121,6 +126,7 @@ export default function BusinessManagementPage() {
   const [importingProducts, setImportingProducts] = useState(false);
   const [managingHandlersBusinessId, setManagingHandlersBusinessId] =
     useState<string>();
+  const [scopeAssignmentOpen, setScopeAssignmentOpen] = useState(false);
 
   const businessList = useBusinessList(
     {
@@ -164,6 +170,7 @@ export default function BusinessManagementPage() {
   const previewBusinessImport = usePreviewBusinessImport();
   const confirmBusinessImport = useConfirmBusinessImport();
   const exportBusinesses = useExportBusinesses();
+  const downloadBusinessProfilePdf = useDownloadBusinessProfilePdf();
   const downloadProductTemplate = useDownloadProductTemplate();
   const previewProductImport = usePreviewProductImport();
   const confirmProductImport = useConfirmProductImport();
@@ -239,6 +246,13 @@ export default function BusinessManagementPage() {
       <PageHeader
         title="Cơ sở và sản phẩm"
         subtitle="Quản lý cơ sở sản xuất kinh doanh theo phạm vi dữ liệu và sản phẩm trực thuộc từng cơ sở"
+        actions={
+          canManageScope ? (
+            <Button onClick={() => setScopeAssignmentOpen(true)}>
+              Phân quyền dữ liệu
+            </Button>
+          ) : undefined
+        }
       />
       <BusinessManagementView
         activeTab={activeTab}
@@ -321,6 +335,7 @@ export default function BusinessManagementPage() {
         classificationOptions={(classifications.data?.items ?? []).map(
           (item) => ({ value: item.id, label: item.name }),
         )}
+        classificationItems={classifications.data?.items ?? []}
         provinceOptions={(provinces.data?.items ?? []).map((item) => ({
           value: item.id,
           label: item.name,
@@ -416,6 +431,13 @@ export default function BusinessManagementPage() {
         }
         onManageProductAttachments={setAttachmentsProduct}
         onShowProductDetail={setDetailProduct}
+        onDownloadProfilePdf={(business) =>
+          downloadBusinessProfilePdf.mutate(business.id, {
+            onSuccess: ({ blob, fileName }) => saveDownload(blob, fileName),
+            onError: () =>
+              void message.error("Không thể tải hồ sơ PDF của cơ sở"),
+          })
+        }
       />
       {(creatingBusiness || businessDetail.data) && (
         <BusinessEditorModal
@@ -616,6 +638,17 @@ export default function BusinessManagementPage() {
         business={detailBusiness}
         onClose={() => setDetailBusiness(undefined)}
       />
+      {canManageScope && (
+        <ScopeAssignmentModal
+          open={scopeAssignmentOpen}
+          dataType="Business"
+          targetOptions={(businessList.data?.items ?? []).map((b) => ({
+            value: b.id,
+            label: b.name,
+          }))}
+          onClose={() => setScopeAssignmentOpen(false)}
+        />
+      )}
       <RecordDetailDrawer
         title="Chi tiết sản phẩm"
         record={detailProduct}
