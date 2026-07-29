@@ -187,10 +187,16 @@ public sealed class ProductBusinessOptionDto
     public string Name { get; set; } = string.Empty;
 }
 
+public sealed class BusinessCodeSuggestionDto
+{
+    public string Code { get; set; } = string.Empty;
+}
+
 public interface IBusinessAppService : IApplicationService
 {
     Task<PagedResultDto<BusinessDto>> GetListAsync(BusinessListInput input);
     Task<BusinessDto> GetAsync(Guid id);
+    Task<BusinessCodeSuggestionDto> GetNextCodeAsync(Guid organizationId);
     Task<BusinessDto> CreateAsync(UpsertBusinessDto input);
     Task<BusinessDto> UpdateAsync(Guid id, UpdateBusinessDto input);
     Task DeleteAsync(Guid id);

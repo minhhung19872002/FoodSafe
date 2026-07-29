@@ -2,7 +2,9 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# Cypress is a test-only dependency; the production image only needs its
+# TypeScript package metadata, not the ~200 MB browser binary.
+RUN CYPRESS_INSTALL_BINARY=0 npm ci
 COPY . .
 RUN npm run build
 

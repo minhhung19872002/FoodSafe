@@ -31,6 +31,10 @@ export function useGeocodeAddress() {
   return useMutation({ mutationFn: geocodingApi.resolve });
 }
 
+export function useSuggestBusinessCode() {
+  return useMutation({ mutationFn: businessApi.nextCode });
+}
+
 export function useCreateBusiness() {
   return useMutation({
     mutationFn: businessApi.create,

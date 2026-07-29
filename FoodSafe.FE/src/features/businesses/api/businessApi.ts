@@ -227,6 +227,14 @@ export const businessApi = {
     return toBusiness(response.data);
   },
 
+  async nextCode(organizationId: string): Promise<string> {
+    const response = await api.get<{ code: string }>(
+      `${businessEndpoint}/next-code`,
+      { params: { organizationId } },
+    );
+    return response.data.code;
+  },
+
   async create(input: BusinessInput): Promise<Business> {
     const response = await api.post<Business>(businessEndpoint, input);
     return toBusiness(response.data);
