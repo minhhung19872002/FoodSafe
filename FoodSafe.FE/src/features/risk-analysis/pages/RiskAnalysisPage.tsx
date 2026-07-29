@@ -410,7 +410,10 @@ export default function RiskAnalysisPage() {
               }))}
             />
           </Form.Item>
-          <Form.Item name="relatedProducts" label="Sản phẩm liên quan (mô tả tự do)">
+          <Form.Item
+            name="relatedProducts"
+            label="Sản phẩm liên quan (mô tả tự do)"
+          >
             <Input placeholder="Tên sản phẩm cụ thể, lô hàng..." />
           </Form.Item>
           <Form.Item name="evidence" label="Bằng chứng">

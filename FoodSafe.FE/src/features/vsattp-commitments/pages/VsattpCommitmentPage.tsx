@@ -52,10 +52,16 @@ interface FormValues {
 export default function VsattpCommitmentPage() {
   const { message, modal } = App.useApp();
   const hasPermission = useAuthStore((s) => s.hasPermission);
-  const canCreate = hasPermission("FoodSafe.Licensing.VsattpCommitments.Create");
+  const canCreate = hasPermission(
+    "FoodSafe.Licensing.VsattpCommitments.Create",
+  );
   const canEdit = hasPermission("FoodSafe.Licensing.VsattpCommitments.Edit");
-  const canDelete = hasPermission("FoodSafe.Licensing.VsattpCommitments.Delete");
-  const canConfirm = hasPermission("FoodSafe.Licensing.VsattpCommitments.Confirm");
+  const canDelete = hasPermission(
+    "FoodSafe.Licensing.VsattpCommitments.Delete",
+  );
+  const canConfirm = hasPermission(
+    "FoodSafe.Licensing.VsattpCommitments.Confirm",
+  );
 
   const pagination = useTablePagination(20);
   const [filterBizId, setFilterBizId] = useState<string>();
@@ -72,8 +78,8 @@ export default function VsattpCommitmentPage() {
   const filter = {
     businessId: filterBizId,
     status: filterStatus,
-    skipCount: (pagination.current - 1) * pagination.pageSize,
-    maxResultCount: pagination.pageSize,
+    skipCount: pagination.skipCount,
+    maxResultCount: pagination.maxResultCount,
   };
   const { data, isLoading } = useVsattpCommitments(filter);
 
@@ -247,9 +253,10 @@ export default function VsattpCommitmentPage() {
     label: b.code ? `${b.name} (${b.code})` : b.name,
   }));
 
-  const statusOptions = Object.entries(VSATTP_STATUS_CONFIG).map(
-    ([k, v]) => ({ value: Number(k), label: v.label }),
-  );
+  const statusOptions = Object.entries(VSATTP_STATUS_CONFIG).map(([k, v]) => ({
+    value: Number(k),
+    label: v.label,
+  }));
 
   return (
     <>
@@ -289,13 +296,7 @@ export default function VsattpCommitmentPage() {
         loading={isLoading}
         columns={columns}
         dataSource={data?.items}
-        pagination={{
-          current: pagination.current,
-          pageSize: pagination.pageSize,
-          total: data?.totalCount,
-          onChange: pagination.onChange,
-          showSizeChanger: true,
-        }}
+        pagination={pagination.buildConfig(data?.totalCount ?? 0)}
       />
 
       <Modal

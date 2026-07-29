@@ -15,6 +15,7 @@ public class RiskAnalysisTests
             "Phát hiện hàm lượng chì vượt ngưỡng cho phép",
             AlertCategory.Chemical,
             RiskLevel.High,
+            null,
             "Rau, củ, quả",
             "Kết quả kiểm nghiệm mẫu 2026",
             "Tăng cường kiểm soát nguồn gốc");
@@ -45,7 +46,7 @@ public class RiskAnalysisTests
 
         ra.Update("Tiêu đề mới", "Nội dung mới",
             AlertCategory.Biological, RiskLevel.Critical,
-            null, null, null);
+            null, null, null, null);
 
         ra.Title.ShouldBe("Tiêu đề mới");
         ra.Category.ShouldBe(AlertCategory.Biological);
@@ -59,7 +60,7 @@ public class RiskAnalysisTests
         ra.Publish(Guid.NewGuid(), DateTime.UtcNow);
 
         Should.Throw<BusinessException>(() =>
-            ra.Update("New", "Content", AlertCategory.FoodSafety, RiskLevel.Low, null, null, null))
+            ra.Update("New", "Content", AlertCategory.FoodSafety, RiskLevel.Low, null, null, null, null))
             .Code.ShouldBe(FoodSafeDomainErrorCodes.RiskAnalysis.CannotModifyNonDraft);
     }
 

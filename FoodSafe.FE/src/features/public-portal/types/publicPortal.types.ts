@@ -305,10 +305,7 @@ export interface AlertReportResult {
 
 /** One of: Submitted | UnderReview | Resolved | Rejected */
 export type CitizenReportTrackingStatus =
-  | "Submitted"
-  | "UnderReview"
-  | "Resolved"
-  | "Rejected";
+  "Submitted" | "UnderReview" | "Resolved" | "Rejected";
 
 export interface CitizenReportStatus {
   trackingCode: string;

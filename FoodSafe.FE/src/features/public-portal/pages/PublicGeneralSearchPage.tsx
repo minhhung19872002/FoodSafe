@@ -55,8 +55,9 @@ function BusinessSearchTab() {
 
   // Map data: fetch a large page (up to 500) keyed to the submitted keyword so
   // switching tabs does not re-trigger a search.
-  const { data: mapData, isFetching: isMapFetching } =
-    usePublicBusinessMapData(submittedKeyword || undefined);
+  const { data: mapData, isFetching: isMapFetching } = usePublicBusinessMapData(
+    submittedKeyword || undefined,
+  );
 
   const handleSearch = () => {
     pagination.resetToFirstPage();
@@ -115,11 +116,7 @@ function BusinessSearchTab() {
                     width={60}
                   />
                   <Table.Column title="Tên cơ sở" dataIndex="name" />
-                  <Table.Column
-                    title="Mã cơ sở"
-                    dataIndex="code"
-                    width={140}
-                  />
+                  <Table.Column title="Mã cơ sở" dataIndex="code" width={140} />
                   <Table.Column
                     title="Loại hình"
                     dataIndex="businessTypeName"
@@ -243,7 +240,11 @@ function ProductSearchTab() {
           <Table.Column title="Tên sản phẩm" dataIndex="name" />
           <Table.Column title="Mã sản phẩm" dataIndex="code" width={140} />
           <Table.Column title="Nhãn hiệu" dataIndex="brandName" width={140} />
-          <Table.Column title="Nhà sản xuất" dataIndex="manufacturer" width={180} />
+          <Table.Column
+            title="Nhà sản xuất"
+            dataIndex="manufacturer"
+            width={180}
+          />
           <Table.Column title="Cơ sở sản xuất" dataIndex="businessName" />
           <Table.Column
             title="Nhóm sản phẩm"
@@ -327,7 +328,9 @@ function TestingResultSearchTab() {
             title="Ngày lấy mẫu"
             dataIndex="sampleDate"
             width={130}
-            render={(v: string) => v ? new Date(v).toLocaleDateString("vi-VN") : "-"}
+            render={(v: string) =>
+              v ? new Date(v).toLocaleDateString("vi-VN") : "-"
+            }
           />
           <Table.Column
             title="Ngày có kết quả"
@@ -429,7 +432,9 @@ function InspectionResultSearchTab() {
             title="Ngày kiểm tra"
             dataIndex="inspectionDate"
             width={130}
-            render={(v: string) => v ? new Date(v).toLocaleDateString("vi-VN") : "-"}
+            render={(v: string) =>
+              v ? new Date(v).toLocaleDateString("vi-VN") : "-"
+            }
           />
           <Table.Column
             title="Hình thức"

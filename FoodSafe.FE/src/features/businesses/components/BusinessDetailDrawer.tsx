@@ -236,10 +236,7 @@ export function BusinessDetailDrawer({ business, onClose }: Props) {
               key: "cfs",
               label: "CFS",
               children: (
-                <RelatedTable
-                  businessId={business.id}
-                  kind="cfsCertificates"
-                />
+                <RelatedTable businessId={business.id} kind="cfsCertificates" />
               ),
             },
             {

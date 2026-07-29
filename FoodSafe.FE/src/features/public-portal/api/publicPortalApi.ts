@@ -161,9 +161,12 @@ export const publicPortalApi = {
     filter: PagedFilter,
   ): Promise<PagedResult<PublicInspectionResult>> {
     return api
-      .get<PagedResult<PublicInspectionResult>>("/v1/public/inspection-results", {
-        params: filter,
-      })
+      .get<PagedResult<PublicInspectionResult>>(
+        "/v1/public/inspection-results",
+        {
+          params: filter,
+        },
+      )
       .then((r) => r.data);
   },
 

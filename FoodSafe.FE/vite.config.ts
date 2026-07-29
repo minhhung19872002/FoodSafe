@@ -24,6 +24,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    testTimeout: 15000,
+    // AntD table + MSW page tests render slowly when many suites run in
+    // parallel; 15s was tight enough to flake on loaded CI runners.
+    testTimeout: 30000,
   },
 })

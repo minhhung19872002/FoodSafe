@@ -175,22 +175,19 @@ describe("business management API", () => {
     let uploaded = false;
     let deleted = false;
     server.use(
-      http.post(
-        "*/api/v1/app/product/product-1/attachments",
-        () => {
-          uploaded = true;
-          return HttpResponse.json({
-            id: "attachment-1",
-            documentOwnerId: "product-1",
-            originalName: "chung-nhan.pdf",
-            fileSize: 8,
-            mimeType: "application/pdf",
-            checksum: "a".repeat(64),
-            virusScanStatus: 2,
-            uploadTime: "2026-07-25T00:00:00Z",
-          });
-        },
-      ),
+      http.post("*/api/v1/app/product/product-1/attachments", () => {
+        uploaded = true;
+        return HttpResponse.json({
+          id: "attachment-1",
+          documentOwnerId: "product-1",
+          originalName: "chung-nhan.pdf",
+          fileSize: 8,
+          mimeType: "application/pdf",
+          checksum: "a".repeat(64),
+          virusScanStatus: 2,
+          uploadTime: "2026-07-25T00:00:00Z",
+        });
+      }),
       http.delete(
         "*/api/v1/app/product/product-1/attachments/attachment-1",
         () => {

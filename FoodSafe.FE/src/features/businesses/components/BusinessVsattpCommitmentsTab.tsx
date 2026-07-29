@@ -57,9 +57,7 @@ async function fetchCommitments(
 }
 
 async function confirmCommitment(id: string): Promise<VsattpCommitment> {
-  return (
-    await api.post<VsattpCommitment>(`${ENDPOINT}/${id}/confirm`)
-  ).data;
+  return (await api.post<VsattpCommitment>(`${ENDPOINT}/${id}/confirm`)).data;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────

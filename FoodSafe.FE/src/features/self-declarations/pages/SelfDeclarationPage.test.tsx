@@ -91,8 +91,10 @@ describe("SelfDeclarationPage", () => {
       expect(
         screen.getByRole("button", { name: /Thêm hồ sơ/ }),
       ).toBeInTheDocument();
+      // RowActions renders the first two actions inline (Tệp, Tải PDF) and
+      // collapses the write actions (Sửa, Thu hồi) into the ⋯ overflow menu.
       expect(
-        screen.getByRole("button", { name: "Sửa TCB-001" }),
+        screen.getByRole("button", { name: "Tệp TCB-001" }),
       ).toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: "Thao tác TCB-001" }),

@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import {
-  Alert,
-  Button,
-  Card,
-  Input,
-  Spin,
-  Tag,
-  Typography,
-} from "antd";
+import { Alert, Button, Card, Input, Spin, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 import { PublicShell } from "../components/PublicShell";
 import { useCitizenReportStatus } from "../api/publicPortalQueries";
@@ -35,7 +27,12 @@ function StatusCard({
       styles={{ body: { padding: 24 } }}
     >
       <div
-        style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 16,
+        }}
       >
         <Typography.Text strong style={{ fontSize: 20, letterSpacing: 1 }}>
           {trackingCode}
@@ -45,7 +42,13 @@ function StatusCard({
         </Tag>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 0" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "8px 0",
+        }}
+      >
         <Typography.Text type="secondary">Ngày gửi</Typography.Text>
         <Typography.Text>
           {dayjs(submittedAt).format("DD/MM/YYYY HH:mm")}
@@ -99,7 +102,7 @@ export default function CitizenReportLookupPage() {
   const [inputValue, setInputValue] = useState(initialCode);
   const [submittedCode, setSubmittedCode] = useState(initialCode);
 
-  const { data, isFetching, isError, error } = useCitizenReportStatus(submittedCode);
+  const { data, isFetching, isError } = useCitizenReportStatus(submittedCode);
 
   // When the URL ?code= param changes (e.g. user navigated here from success page),
   // pre-fill and trigger a lookup automatically.
@@ -108,7 +111,7 @@ export default function CitizenReportLookupPage() {
       setInputValue(initialCode);
       setSubmittedCode(initialCode);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearch = () => {
@@ -127,8 +130,8 @@ export default function CitizenReportLookupPage() {
           Tra cứu trạng thái phản ánh
         </Typography.Title>
         <Typography.Paragraph type="secondary" style={{ marginBottom: 24 }}>
-          Nhập mã theo dõi (ví dụ: FD-A3X7K2) mà bạn nhận được khi gửi phản
-          ánh để kiểm tra trạng thái xử lý.
+          Nhập mã theo dõi (ví dụ: FD-A3X7K2) mà bạn nhận được khi gửi phản ánh
+          để kiểm tra trạng thái xử lý.
         </Typography.Paragraph>
 
         <Input.Search
@@ -182,11 +185,7 @@ export default function CitizenReportLookupPage() {
         )}
 
         <div style={{ marginTop: 32 }}>
-          <Button
-            type="link"
-            href="/gui-phan-anh"
-            style={{ paddingLeft: 0 }}
-          >
+          <Button type="link" href="/gui-phan-anh" style={{ paddingLeft: 0 }}>
             Gửi phản ánh mới
           </Button>
         </div>

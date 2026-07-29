@@ -337,7 +337,9 @@ export function TestingResultEditorModal(props: Props) {
               }}
             >
               <Button icon={<UploadOutlined />} loading={uploading}>
-                {storagePath ? "Tải lên phiếu mới" : "Tải lên phiếu kiểm nghiệm"}
+                {storagePath
+                  ? "Tải lên phiếu mới"
+                  : "Tải lên phiếu kiểm nghiệm"}
               </Button>
             </Upload>
             {storagePath && (

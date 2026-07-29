@@ -50,7 +50,7 @@ public class TestingResultTests
             "Mẫu thịt lợn", null, null, null,
             null, new DateTime(2026, 8, 5),
             "Hàm lượng clenbuterol vượt ngưỡng",
-            "PKN-001", null);
+            "PKN-001", null, null);
 
         tr.SampleCode.ShouldBe("M-2026-002");
         tr.Outcome.ShouldBe(TestingResultOutcome.Fail);

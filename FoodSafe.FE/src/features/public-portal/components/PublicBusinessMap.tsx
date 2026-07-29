@@ -58,8 +58,8 @@ export function PublicBusinessMap({
             Không có cơ sở nào có tọa độ trên bản đồ.
             <br />
             <small style={{ color: "rgba(0,0,0,0.45)" }}>
-              (Tính năng cần BE bổ sung tọa độ vào kết quả tìm kiếm cơ sở
-              công khai)
+              (Tính năng cần BE bổ sung tọa độ vào kết quả tìm kiếm cơ sở công
+              khai)
             </small>
           </span>
         }
@@ -110,7 +110,14 @@ export function PublicBusinessMap({
                       {b.addressText}
                     </div>
                   )}
-                  <div style={{ marginTop: 6, display: "flex", gap: 4, flexWrap: "wrap" }}>
+                  <div
+                    style={{
+                      marginTop: 6,
+                      display: "flex",
+                      gap: 4,
+                      flexWrap: "wrap",
+                    }}
+                  >
                     {statusCfg && (
                       <Tag color={statusCfg.color} style={{ margin: 0 }}>
                         {statusCfg.label}
@@ -123,9 +130,7 @@ export function PublicBusinessMap({
                     )}
                   </div>
                   <div style={{ marginTop: 6, fontSize: 12 }}>
-                    <Link
-                      to={`/tra-cuu-chung?q=${encodeURIComponent(b.name)}`}
-                    >
+                    <Link to={`/tra-cuu-chung?q=${encodeURIComponent(b.name)}`}>
                       Tìm kiếm chi tiết
                     </Link>
                   </div>

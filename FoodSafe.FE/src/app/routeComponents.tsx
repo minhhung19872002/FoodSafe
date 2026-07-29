@@ -55,8 +55,7 @@ export const EligibilityCertificatePage = lazy(
     import("@/features/eligibility-certificates/pages/EligibilityCertificatePage"),
 );
 export const VsattpCommitmentPage = lazy(
-  () =>
-    import("@/features/vsattp-commitments/pages/VsattpCommitmentPage"),
+  () => import("@/features/vsattp-commitments/pages/VsattpCommitmentPage"),
 );
 export const PublicEligibilityCertificateLookupPage = lazy(
   () =>

@@ -23,8 +23,13 @@ export function useCreateVsattpCommitment() {
 export function useUpdateVsattpCommitment() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpdateVsattpCommitmentInput }) =>
-      vsattpCommitmentApi.update(id, input),
+    mutationFn: ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: UpdateVsattpCommitmentInput;
+    }) => vsattpCommitmentApi.update(id, input),
     onSuccess: invalidate,
   });
 }

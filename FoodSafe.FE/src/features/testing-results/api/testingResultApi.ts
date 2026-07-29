@@ -152,11 +152,9 @@ export const testingResultApi = {
     const form = new FormData();
     form.append("file", file);
     return (
-      await api.post<{ storagePath: string }>(
-        `${endpoint}/pdf`,
-        form,
-        { headers: { "Content-Type": "multipart/form-data" } },
-      )
+      await api.post<{ storagePath: string }>(`${endpoint}/pdf`, form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
     ).data;
   },
 

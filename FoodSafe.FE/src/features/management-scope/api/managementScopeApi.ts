@@ -19,9 +19,7 @@ export const managementScopeApi = {
   createAssignment: (
     input: CreateDataScopeAssignmentInput,
   ): Promise<DataScopeAssignment> =>
-    api
-      .post<DataScopeAssignment>(endpoint, input)
-      .then((r) => r.data),
+    api.post<DataScopeAssignment>(endpoint, input).then((r) => r.data),
 
   deleteAssignment: (id: string): Promise<void> =>
     api.delete(`${endpoint}/${id}`).then(() => undefined),

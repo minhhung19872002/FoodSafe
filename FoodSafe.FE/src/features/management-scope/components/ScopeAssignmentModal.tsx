@@ -108,9 +108,7 @@ export function ScopeAssignmentModal({
   });
 
   // Catalog options — only needed for BusinessType and ProductGroup
-  const businessTypeOptions = useCatalogOptions(
-    "business-type",
-  );
+  const businessTypeOptions = useCatalogOptions("business-type");
   const productGroupOptions = useCatalogOptions("product-group");
 
   const createAssignment = useCreateScopeAssignment();
@@ -185,7 +183,7 @@ export function ScopeAssignmentModal({
     {
       title: "Người dùng",
       dataIndex: "granteeUserName",
-      render: (name?: string, record) =>
+      render: (name: string | undefined, record: DataScopeAssignment) =>
         name ?? record.granteeUserId ?? "(Toàn đơn vị)",
       width: 200,
     },

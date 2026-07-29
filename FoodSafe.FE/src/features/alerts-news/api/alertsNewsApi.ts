@@ -61,9 +61,8 @@ export const alertApi = {
   },
   /** Assign a citizen-submitted draft alert to a staff member (FR-29-06 assign step). */
   async assign(id: string, input: AssignAlertInput): Promise<AtpAlert> {
-    return (
-      await api.post<AtpAlert>(`${alertEndpoint}/${id}/assign`, input)
-    ).data;
+    return (await api.post<AtpAlert>(`${alertEndpoint}/${id}/assign`, input))
+      .data;
   },
   async exportExcel(filter: AlertFilter): Promise<FileDownload> {
     const response = await api.get<Blob>(`${alertEndpoint}/excel/export`, {
@@ -80,7 +79,9 @@ export const alertApi = {
  * cross-feature import required because this is a plain API call.
  */
 export const staffApi = {
-  async listUsers(filter?: string): Promise<{ totalCount: number; items: StaffUserOption[] }> {
+  async listUsers(
+    filter?: string,
+  ): Promise<{ totalCount: number; items: StaffUserOption[] }> {
     return (
       await api.get<{ totalCount: number; items: StaffUserOption[] }>(
         "/v1/administration/users",

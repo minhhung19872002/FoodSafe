@@ -13,7 +13,10 @@ import { FileExcelOutlined, UploadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type { RcFile } from "antd/es/upload/interface";
 import type { GeographicItem } from "@/lib/geographyApi";
-import type { ImportGeographyErrorDto, ImportGeographyResultDto } from "@/lib/geographyApi";
+import type {
+  ImportGeographyErrorDto,
+  ImportGeographyResultDto,
+} from "@/lib/geographyApi";
 
 interface Props {
   open: boolean;
@@ -75,7 +78,9 @@ export function GeographyImportModal({
               <li>Hàng 1 là tiêu đề, dữ liệu bắt đầu từ hàng 2</li>
               <li>Cột A: Mã huyện — Cột B: Tên huyện</li>
               <li>Cột C: Mã xã — Cột D: Tên xã</li>
-              <li>Cột E: Loại (Huyện/Quận/Thị xã/Thành phố/Phường/Xã/Thị trấn)</li>
+              <li>
+                Cột E: Loại (Huyện/Quận/Thị xã/Thành phố/Phường/Xã/Thị trấn)
+              </li>
               <li>Chỉ hỗ trợ định dạng .xlsx, tối đa 10 MB</li>
             </ul>
           }
@@ -153,9 +158,9 @@ export function GeographyImportModal({
                 message="Nhập địa danh thành công"
                 description={
                   <span>
-                    Đã xử lý{" "}
-                    <strong>{result.importedDistricts}</strong> huyện/quận,{" "}
-                    <strong>{result.importedCommunes}</strong> xã/phường
+                    Đã xử lý <strong>{result.importedDistricts}</strong>{" "}
+                    huyện/quận, <strong>{result.importedCommunes}</strong>{" "}
+                    xã/phường
                     {result.skippedRows > 0
                       ? `, bỏ qua ${result.skippedRows} dòng lỗi`
                       : ""}
@@ -170,10 +175,10 @@ export function GeographyImportModal({
                 message={`Hoàn thành với ${result.errors.length} lỗi`}
                 description={
                   <span>
-                    Đã xử lý{" "}
-                    <strong>{result.importedDistricts}</strong> huyện/quận,{" "}
-                    <strong>{result.importedCommunes}</strong> xã/phường.
-                    Bỏ qua <strong>{result.skippedRows}</strong> dòng.
+                    Đã xử lý <strong>{result.importedDistricts}</strong>{" "}
+                    huyện/quận, <strong>{result.importedCommunes}</strong>{" "}
+                    xã/phường. Bỏ qua <strong>{result.skippedRows}</strong>{" "}
+                    dòng.
                   </span>
                 }
               />

@@ -93,7 +93,11 @@ export function CitizenReportModerationQueue() {
   const [assignForm] = Form.useForm<AssignFormValues>();
 
   function openAssignModal(record: AtpAlert) {
-    setAssignModal({ open: true, alertId: record.id, currentAssigneeId: record.assigneeId });
+    setAssignModal({
+      open: true,
+      alertId: record.id,
+      currentAssigneeId: record.assigneeId,
+    });
     assignForm.setFieldsValue({ assigneeId: record.assigneeId });
   }
 
@@ -130,7 +134,13 @@ export function CitizenReportModerationQueue() {
       dataIndex: "reporterName",
       width: 150,
       render: (name?: string) =>
-        name ? name : <span style={{ color: "var(--ant-color-text-tertiary)" }}>Ẩn danh</span>,
+        name ? (
+          name
+        ) : (
+          <span style={{ color: "var(--ant-color-text-tertiary)" }}>
+            Ẩn danh
+          </span>
+        ),
     },
     {
       title: "Tiêu đề / Nội dung",
@@ -179,7 +189,9 @@ export function CitizenReportModerationQueue() {
             {name}
           </Tag>
         ) : (
-          <span style={{ color: "var(--ant-color-text-tertiary)" }}>Chưa phân công</span>
+          <span style={{ color: "var(--ant-color-text-tertiary)" }}>
+            Chưa phân công
+          </span>
         ),
     },
     {
@@ -210,8 +222,10 @@ export function CitizenReportModerationQueue() {
                 publishMut.mutate(
                   { id: record.id, isPublic: true },
                   {
-                    onSuccess: () => void message.success("Đã xuất bản cảnh báo."),
-                    onError: (error) => void message.error(extractApiError(error)),
+                    onSuccess: () =>
+                      void message.success("Đã xuất bản cảnh báo."),
+                    onError: (error) =>
+                      void message.error(extractApiError(error)),
                   },
                 ),
             },
@@ -291,7 +305,9 @@ export function CitizenReportModerationQueue() {
                   : "Chưa có phản ánh từ công dân"
               }
               description={
-                hasActiveFilter ? "Thử thay đổi từ khóa hoặc bộ lọc." : undefined
+                hasActiveFilter
+                  ? "Thử thay đổi từ khóa hoặc bộ lọc."
+                  : undefined
               }
             />
           ),

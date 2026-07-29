@@ -85,10 +85,7 @@ export function ReportStatisticsSection({ year, organizationId }: Props) {
       style={{ marginTop: 16 }}
       loading={isLoading}
       extra={
-        <Button
-          icon={<PrinterOutlined />}
-          onClick={() => window.print()}
-        >
+        <Button icon={<PrinterOutlined />} onClick={() => window.print()}>
           In báo cáo
         </Button>
       }

@@ -596,7 +596,10 @@ export default function DashboardPage() {
                 data={DEMO_POISONING_TREND}
                 margin={{ top: 8, right: 16, left: -16, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(0,0,0,0.08)"
+                />
                 <XAxis
                   dataKey="month"
                   tick={{ fontSize: 11 }}
@@ -607,14 +610,16 @@ export default function DashboardPage() {
                 />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip
-                  formatter={(value: number, name: string) => [
-                    value,
+                  formatter={(value, name) => [
+                    value as number,
                     name === "cases" ? "Số vụ" : "Số người",
                   ]}
                 />
                 <Legend
                   formatter={(value) =>
-                    value === "cases" ? "Số vụ ngộ độc" : "Số người bị ảnh hưởng"
+                    value === "cases"
+                      ? "Số vụ ngộ độc"
+                      : "Số người bị ảnh hưởng"
                   }
                 />
                 <Line
