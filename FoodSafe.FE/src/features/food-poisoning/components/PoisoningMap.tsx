@@ -6,6 +6,7 @@ import type {
   FoodPoisoningCase,
   FoodPoisoningIncident,
 } from "../types/foodPoisoning.types";
+import { hasValidMapCoordinates } from "./poisoningMapCoordinates";
 import {
   POISONING_CASE_STATUS_CONFIG,
   POISONING_INCIDENT_STATUS_CONFIG,
@@ -23,18 +24,12 @@ const QUANG_NINH_CENTER: [number, number] = [21.0064, 107.2925];
 
 export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
   const mappedCases = useMemo(
-    () =>
-      cases.filter(
-        (c) => c.locationLatitude != null && c.locationLongitude != null,
-      ),
+    () => cases.filter(hasValidMapCoordinates),
     [cases],
   );
 
   const mappedIncidents = useMemo(
-    () =>
-      incidents.filter(
-        (i) => i.locationLatitude != null && i.locationLongitude != null,
-      ),
+    () => incidents.filter(hasValidMapCoordinates),
     [incidents],
   );
 
@@ -91,7 +86,7 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
         {mappedCases.map((c) => (
           <CircleMarker
             key={`case-${c.id}`}
-            center={[c.locationLatitude!, c.locationLongitude!]}
+            center={[c.locationLatitude, c.locationLongitude]}
             radius={7}
             pathOptions={{
               color: "#faad14",
@@ -144,7 +139,7 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
         {mappedIncidents.map((i) => (
           <CircleMarker
             key={`incident-${i.id}`}
-            center={[i.locationLatitude!, i.locationLongitude!]}
+            center={[i.locationLatitude, i.locationLongitude]}
             radius={Math.min(6 + i.affectedCount, 20)}
             pathOptions={{
               color: "#ff4d4f",
