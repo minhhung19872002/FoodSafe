@@ -172,14 +172,17 @@ public sealed class FoodPoisoningIncidentTests
     }
 
     [Fact]
-    public void AddErrorReport_Rejects_Concluded()
+    public void AddErrorReport_Works_When_Concluded()
     {
         var i = CreateDraft();
         i.Submit(Guid.NewGuid(), DateTime.UtcNow);
         i.Verify(Guid.NewGuid(), DateTime.UtcNow);
         i.Conclude(Guid.NewGuid(), DateTime.UtcNow, "done");
-        Should.Throw<BusinessException>(() =>
-            i.AddErrorReport(Guid.NewGuid(), Guid.NewGuid(), "err", "fix", null));
+        var report = i.AddErrorReport(
+            Guid.NewGuid(), Guid.NewGuid(), "err", "fix", null);
+
+        i.ErrorReports.Count.ShouldBe(1);
+        report.Status.ShouldBe(ErrorReportStatus.Pending);
     }
 
     [Fact]

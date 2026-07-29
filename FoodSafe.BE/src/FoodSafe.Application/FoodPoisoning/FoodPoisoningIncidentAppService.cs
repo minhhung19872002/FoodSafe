@@ -150,8 +150,8 @@ public class FoodPoisoningIncidentAppService : ApplicationService
         Guid id, CreatePoisoningErrorReportDto input)
     {
         var scope = await _dataScopeProvider.GetAsync(
-            DataScopeOperation.Edit, _cancellationTokens.Token);
-        var entity = await GetScopedWithDetailsAsync(id, DataScopeOperation.Edit);
+            DataScopeOperation.View, _cancellationTokens.Token);
+        var entity = await GetScopedWithDetailsAsync(id, DataScopeOperation.View);
         var report = entity.AddErrorReport(
             GuidGenerator.Create(), scope.OrganizationIds.First(),
             input.ErrorDescription, input.CorrectionRequest, CurrentUser.Id);

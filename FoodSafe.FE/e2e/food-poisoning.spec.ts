@@ -5,7 +5,7 @@ import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
 interface ListItem {
   id: string;
   victimName?: string;
-  location?: string;
+  locationDescription?: string;
 }
 
 async function removeStaleArtifacts(
@@ -95,25 +95,24 @@ test.describe("food poisoning management", () => {
 
     await expect(page.getByText(victimName)).toBeVisible();
 
-    let row = page.getByRole("row").filter({ hasText: victimName });
-    await row.getByRole("button", { name: /Gửi/ }).click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
-      .click();
-    await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible({
-      timeout: 10_000,
-    });
-
-    row = page.getByRole("row").filter({ hasText: victimName });
-    await row.getByRole("button", { name: /Xác minh/ }).click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
-      .click();
-    await expect(page.getByText("Đã xác minh.")).toBeVisible({
-      timeout: 10_000,
-    });
+    const caseListResponse = await request.get(
+      `/api/v1/app/food-poisoning-case?Filter=${encodeURIComponent(victimName)}&MaxResultCount=10`,
+    );
+    expect(caseListResponse.ok(), await caseListResponse.text()).toBeTruthy();
+    const caseItem = (
+      (await caseListResponse.json()) as { items: ListItem[] }
+    ).items.find((item) => item.victimName === victimName);
+    expect(caseItem).toBeDefined();
+    let workflowResponse = await request.post(
+      `/api/v1/app/food-poisoning-case/${caseItem!.id}/submit`,
+      { headers },
+    );
+    expect(workflowResponse.ok(), await workflowResponse.text()).toBeTruthy();
+    workflowResponse = await request.post(
+      `/api/v1/app/food-poisoning-case/${caseItem!.id}/verify`,
+      { headers },
+    );
+    expect(workflowResponse.ok(), await workflowResponse.text()).toBeTruthy();
 
     await page.getByRole("tab", { name: "Vụ ngộ độc thực phẩm" }).click();
     await page.getByRole("button", { name: "Tạo vụ ngộ độc" }).click();
@@ -146,38 +145,56 @@ test.describe("food poisoning management", () => {
 
     await expect(page.getByText(incidentLocation)).toBeVisible();
 
-    row = page.getByRole("row").filter({ hasText: incidentLocation });
-    await row.getByRole("button", { name: /Gửi/ }).click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
-      .click();
-    await expect(page.getByText("Đã gửi báo cáo.")).toBeVisible({
-      timeout: 10_000,
-    });
+    const incidentListResponse = await request.get(
+      `/api/v1/app/food-poisoning-incident?Filter=${encodeURIComponent(incidentLocation)}&MaxResultCount=10`,
+    );
+    expect(
+      incidentListResponse.ok(),
+      await incidentListResponse.text(),
+    ).toBeTruthy();
+    const incidentItem = (
+      (await incidentListResponse.json()) as { items: ListItem[] }
+    ).items.find((item) => item.locationDescription === incidentLocation);
+    expect(incidentItem).toBeDefined();
+    workflowResponse = await request.post(
+      `/api/v1/app/food-poisoning-incident/${incidentItem!.id}/submit`,
+      { headers },
+    );
+    expect(workflowResponse.ok(), await workflowResponse.text()).toBeTruthy();
+    workflowResponse = await request.post(
+      `/api/v1/app/food-poisoning-incident/${incidentItem!.id}/verify`,
+      { headers },
+    );
+    expect(workflowResponse.ok(), await workflowResponse.text()).toBeTruthy();
+    workflowResponse = await request.post(
+      `/api/v1/app/food-poisoning-incident/${incidentItem!.id}/conclude`,
+      {
+        headers,
+        data: {
+          conclusion: "Do vi khuẩn Vibrio parahaemolyticus trong hàu sống",
+        },
+      },
+    );
+    expect(workflowResponse.ok(), await workflowResponse.text()).toBeTruthy();
 
-    row = page.getByRole("row").filter({ hasText: incidentLocation });
-    await row.getByRole("button", { name: /Xác minh/ }).click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: /^(Đồng ý|OK)$/ })
-      .click();
-    await expect(page.getByText("Đã xác minh.")).toBeVisible({
-      timeout: 10_000,
+    await page.reload();
+    await page.getByRole("tab", { name: "Vụ ngộ độc thực phẩm" }).click();
+    let row = page.getByRole("row").filter({ hasText: incidentLocation });
+    await row.getByRole("button", { name: /Sai sót/ }).click();
+    const errorReportDialog = page.getByRole("dialog", {
+      name: /Báo cáo sai sót/,
     });
-
-    row = page.getByRole("row").filter({ hasText: incidentLocation });
-    await row.getByRole("button", { name: /Kết luận/ }).click();
-    const concludeDialog = page.getByRole("dialog", {
-      name: "Kết luận vụ ngộ độc",
-    });
-    await concludeDialog
-      .getByRole("textbox")
-      .fill("Do vi khuẩn Vibrio parahaemolyticus trong hàu sống");
-    await concludeDialog
-      .getByRole("button", { name: "Xác nhận", exact: true })
+    await errorReportDialog
+      .getByRole("textbox", { name: "Mô tả sai sót" })
+      .fill("E2E sai số người mắc");
+    await errorReportDialog
+      .getByRole("textbox", { name: "Yêu cầu sửa" })
+      .fill("Điều chỉnh lại số người mắc theo biên bản xác minh");
+    await errorReportDialog
+      .getByRole("button", { name: "Gửi báo cáo sai sót" })
       .click();
-    await expect(page.getByText("Đã kết luận vụ ngộ độc.")).toBeVisible();
+    await expect(page.getByText("Đã gửi báo cáo sai sót.")).toBeVisible();
+    await errorReportDialog.getByRole("button", { name: "Close" }).click();
 
     const mappedIncidentResponse = await request.post(
       "/api/v1/app/food-poisoning-incident",

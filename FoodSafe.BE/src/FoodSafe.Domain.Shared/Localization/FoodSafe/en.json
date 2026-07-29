@@ -228,7 +228,7 @@
     "FoodSafe:FoodPoisoning:0001": "Poisoning case not found.",
     "FoodSafe:FoodPoisoning:0002": "Poisoning incident not found.",
     "FoodSafe:FoodPoisoning:0003": "Invalid status transition.",
-    "FoodSafe:FoodPoisoning:0004": "Can only report errors on verified records.",
+    "FoodSafe:FoodPoisoning:0004": "Can only report errors after the record has been verified.",
     "FoodSafe:FoodPoisoning:0005": "Conclusion is required.",
     "FoodSafe:FoodPoisoning:0006": "Can only modify records in Draft status.",
     "FoodSafe:FoodPoisoning:0007": "Error report not found.",
