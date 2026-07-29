@@ -4,7 +4,6 @@ namespace FoodSafe.BusinessManagement;
 
 internal static class BusinessExcelWorkbook
 {
-    internal const int MaximumRows = 1000;
     private const string SheetName = "Cơ sở";
     private static readonly string[] Headers =
     [
@@ -43,8 +42,6 @@ internal static class BusinessExcelWorkbook
             "Các cột có dấu * là bắt buộc. Xóa dòng mẫu trước khi upload.";
         instructions.Cell("A5").Value =
             "ProductGroupIds nhận nhiều GUID, phân cách bằng dấu chấm phẩy (;).";
-        instructions.Cell("A6").Value =
-            $"Tối đa {MaximumRows} dòng dữ liệu trong mỗi lần import.";
         instructions.Columns().AdjustToContents();
         return Save(workbook);
     }
@@ -108,16 +105,7 @@ internal static class BusinessExcelWorkbook
             });
         }
 
-        if (rows.Count > MaximumRows)
-        {
-            errors.Add(new ExcelImportErrorDto
-            {
-                RowNumber = MaximumRows + 2,
-                Field = "File",
-                Message = $"File chỉ được chứa tối đa {MaximumRows} dòng."
-            });
-        }
-        return new WorkbookReadResult(rows.Take(MaximumRows).ToList(), errors);
+        return new WorkbookReadResult(rows, errors);
     }
 
     internal static byte[] Export(IReadOnlyList<BusinessDto> businesses)
@@ -163,7 +151,7 @@ internal static class BusinessExcelWorkbook
         header.Style.Fill.BackgroundColor = XLColor.FromHtml("#1677FF");
         sheet.SheetView.FreezeRows(1);
         sheet.Columns().AdjustToContents(10, 40);
-        sheet.Range(1, 1, MaximumRows + 1, Headers.Length)
+        sheet.Range(1, 1, 1, Headers.Length)
             .SetAutoFilter();
     }
 

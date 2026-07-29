@@ -4,7 +4,6 @@ namespace FoodSafe.BusinessManagement;
 
 internal static class ProductExcelWorkbook
 {
-    internal const int MaximumRows = 1000;
     private const string SheetName = "Sản phẩm";
     private static readonly string[] Headers =
     [
@@ -42,7 +41,7 @@ internal static class ProductExcelWorkbook
         instructions.Cell("A4").Value =
             "Các cột có dấu * là bắt buộc. Xóa dòng mẫu trước khi upload.";
         instructions.Cell("A5").Value =
-            $"Tối đa {MaximumRows} dòng dữ liệu trong mỗi lần import.";
+            "Không giới hạn số dòng. Tối đa 10 MB.";
         instructions.Columns().AdjustToContents();
         return Save(workbook);
     }
@@ -103,18 +102,7 @@ internal static class ProductExcelWorkbook
                 Notes = values[13]
             });
         }
-        if (rows.Count > MaximumRows)
-        {
-            errors.Add(new ExcelImportErrorDto
-            {
-                RowNumber = MaximumRows + 2,
-                Field = "File",
-                Message = $"File chỉ được chứa tối đa {MaximumRows} dòng."
-            });
-        }
-        return new ProductWorkbookReadResult(
-            rows.Take(MaximumRows).ToList(),
-            errors);
+        return new ProductWorkbookReadResult(rows, errors);
     }
 
     internal static byte[] Export(IReadOnlyList<ProductDto> products)
@@ -159,7 +147,7 @@ internal static class ProductExcelWorkbook
         header.Style.Fill.BackgroundColor = XLColor.FromHtml("#1677FF");
         sheet.SheetView.FreezeRows(1);
         sheet.Columns().AdjustToContents(10, 40);
-        sheet.Range(1, 1, MaximumRows + 1, Headers.Length).SetAutoFilter();
+        sheet.Range(1, 1, 1, Headers.Length).SetAutoFilter();
     }
 
     private static byte[] Save(XLWorkbook workbook)
