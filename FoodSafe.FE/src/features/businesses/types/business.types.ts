@@ -278,4 +278,3 @@ export interface PublicSelfDeclaration {
   businessName: string;
   status: number;
 }
-

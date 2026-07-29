@@ -120,9 +120,7 @@ export function BusinessEditorModal({
   } = useSuggestBusinessCode();
   const [matchedAddress, setMatchedAddress] = useState<string>();
 
-  const canGeocode = Boolean(
-    street?.trim() || provinceId || communeId,
-  );
+  const canGeocode = Boolean(street?.trim() || provinceId || communeId);
 
   /**
    * Fills the coordinates from the address the user typed. Coordinates and
@@ -283,9 +281,7 @@ export function BusinessEditorModal({
                     {...field}
                     aria-label="Mã cơ sở"
                     placeholder="Tự sinh theo đơn vị quản lý"
-                    suffix={
-                      isSuggestingCode ? <Spin size="small" /> : null
-                    }
+                    suffix={isSuggestingCode ? <Spin size="small" /> : null}
                   />
                 )}
               />
