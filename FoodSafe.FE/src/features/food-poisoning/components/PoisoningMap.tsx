@@ -1,12 +1,5 @@
-import { useEffect, useMemo } from "react";
-import {
-  CircleMarker,
-  MapContainer,
-  Popup,
-  TileLayer,
-  useMap,
-} from "react-leaflet";
-import type { LatLngTuple } from "leaflet";
+import { useMemo } from "react";
+import { CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
 import { Empty, Tag } from "antd";
 import dayjs from "dayjs";
 import type {
@@ -29,35 +22,6 @@ interface PoisoningMapProps {
 
 const QUANG_NINH_CENTER: [number, number] = [21.0064, 107.2925];
 
-function MapViewport({ positions }: { positions: LatLngTuple[] }) {
-  const map = useMap();
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      // Bản đồ nằm trong tab Ant Design; cập nhật kích thước trước khi căn
-      // khung để Leaflet không tính theo kích thước của tab đang ẩn.
-      map.invalidateSize();
-
-      if (positions.length === 1) {
-        map.setView(positions[0], 14, { animate: false });
-        return;
-      }
-
-      if (positions.length > 1) {
-        map.fitBounds(positions, {
-          animate: false,
-          maxZoom: 14,
-          padding: [32, 32],
-        });
-      }
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [map, positions]);
-
-  return null;
-}
-
 export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
   const mappedCases = useMemo(
     () => cases.filter(hasValidMapCoordinates),
@@ -67,20 +31,6 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
   const mappedIncidents = useMemo(
     () => incidents.filter(hasValidMapCoordinates),
     [incidents],
-  );
-
-  const positions = useMemo<LatLngTuple[]>(
-    () => [
-      ...mappedCases.map(
-        (item) =>
-          [item.locationLatitude, item.locationLongitude] as LatLngTuple,
-      ),
-      ...mappedIncidents.map(
-        (item) =>
-          [item.locationLatitude, item.locationLongitude] as LatLngTuple,
-      ),
-    ],
-    [mappedCases, mappedIncidents],
   );
 
   if (mappedCases.length === 0 && mappedIncidents.length === 0) {
@@ -125,11 +75,10 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
         </span>
       </div>
       <MapContainer
-        center={positions[0] ?? QUANG_NINH_CENTER}
+        center={QUANG_NINH_CENTER}
         zoom={10}
         style={{ height: 520, width: "100%", borderRadius: 8 }}
       >
-        <MapViewport positions={positions} />
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
