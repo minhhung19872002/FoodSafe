@@ -38,7 +38,7 @@ public class SystemSettingsDto
 
 public class UpdateSystemSettingsDto
 {
-    [Range(8, 64)]
+    [Range(6, 64)]
     public int PasswordRequiredLength { get; set; } = 8;
 
     [Range(16, 256)]
@@ -70,9 +70,15 @@ public class UpdateSystemSettingsDto
 
     public bool SmtpEnableSsl { get; set; }
 
+    private string? _smtpSenderAddress;
+
     [EmailAddress]
     [StringLength(256)]
-    public string? SmtpSenderAddress { get; set; }
+    public string? SmtpSenderAddress
+    {
+        get => _smtpSenderAddress;
+        set => _smtpSenderAddress = NullIfEmpty(value);
+    }
 
     [StringLength(256)]
     public string? SmtpSenderDisplayName { get; set; }
@@ -86,15 +92,24 @@ public class UpdateSystemSettingsDto
     [StringLength(50)]
     public string? ContactPhone { get; set; }
 
+    private string? _contactEmail;
+
     [EmailAddress]
     [StringLength(256)]
-    public string? ContactEmail { get; set; }
+    public string? ContactEmail
+    {
+        get => _contactEmail;
+        set => _contactEmail = NullIfEmpty(value);
+    }
 
     [StringLength(500)]
     public string? ContactAddress { get; set; }
 
     [Range(1, 365)]
     public int LicenseExpiryNotificationDays { get; set; } = 30;
+
+    private static string? NullIfEmpty(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value;
 }
 
 public sealed class BrandingImageDto

@@ -217,7 +217,7 @@ export default function SystemSettingsPage() {
                     label="Độ dài tối thiểu"
                     rules={[{ required: true, message: "Bắt buộc" }]}
                   >
-                    <InputNumber min={8} max={64} style={{ width: "100%" }} />
+                    <InputNumber min={6} max={64} style={{ width: "100%" }} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
