@@ -32,6 +32,7 @@ describe("BusinessManagementPage", () => {
       http.get("*/api/v1/app/business", () =>
         HttpResponse.json({
           totalCount: 1,
+          hasRestrictedScope: false,
           items: [
             {
               id: "business-1",
