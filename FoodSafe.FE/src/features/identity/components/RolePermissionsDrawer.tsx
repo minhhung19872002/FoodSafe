@@ -38,6 +38,46 @@ export function RolePermissionsDrawer({
   );
   const [granted, setGranted] = useState<Set<string>>(new Set());
 
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, RolePermission[]>();
+    for (const permission of permissions) {
+      if (!permission.parentName) continue;
+      const siblings = map.get(permission.parentName) ?? [];
+      siblings.push(permission);
+      map.set(permission.parentName, siblings);
+    }
+    return map;
+  }, [permissions]);
+
+  const checkboxStates = useMemo(() => {
+    const states = new Map<string, { checked: boolean; indeterminate: boolean }>();
+    const resolve = (
+      permission: RolePermission,
+    ): { checked: boolean; indeterminate: boolean } => {
+      const cached = states.get(permission.name);
+      if (cached) return cached;
+
+      const children = childrenByParent.get(permission.name);
+      const own = granted.has(permission.name);
+      let state: { checked: boolean; indeterminate: boolean };
+      if (!children || children.length === 0) {
+        state = { checked: own, indeterminate: false };
+      } else if (!own) {
+        state = { checked: false, indeterminate: false };
+      } else {
+        const childStates = children.map(resolve);
+        const allChildrenChecked = childStates.every((item) => item.checked);
+        state = allChildrenChecked
+          ? { checked: true, indeterminate: false }
+          : { checked: false, indeterminate: true };
+      }
+      states.set(permission.name, state);
+      return state;
+    };
+    permissions.forEach(resolve);
+    return states;
+  }, [permissions, childrenByParent, granted]);
+
   useEffect(() => {
     setGranted(
       new Set(
@@ -58,6 +98,18 @@ export function RolePermissionsDrawer({
           cursor = cursor.parentName
             ? permissions.find((item) => item.name === cursor?.parentName)
             : undefined;
+        }
+
+        const queue = [permission.name];
+        while (queue.length > 0) {
+          const name = queue.pop();
+          if (!name) continue;
+          permissions
+            .filter((item) => item.parentName === name)
+            .forEach((item) => {
+              next.add(item.name);
+              queue.push(item.name);
+            });
         }
       } else {
         const queue = [permission.name];
@@ -116,10 +168,15 @@ export function RolePermissionsDrawer({
               <Space direction="vertical">
                 {group.permissions.map((permission) => {
                   const depth = permission.name.split(".").length - 2;
+                  const state = checkboxStates.get(permission.name) ?? {
+                    checked: granted.has(permission.name),
+                    indeterminate: false,
+                  };
                   return (
                     <Checkbox
                       key={permission.name}
-                      checked={granted.has(permission.name)}
+                      checked={state.checked}
+                      indeterminate={state.indeterminate}
                       style={{ marginLeft: Math.max(0, depth) * 18 }}
                       onChange={(event) =>
                         toggle(permission, event.target.checked)
