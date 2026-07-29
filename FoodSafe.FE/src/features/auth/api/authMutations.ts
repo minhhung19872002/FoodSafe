@@ -21,6 +21,12 @@ import type {
  * `Areas/Account/Controllers/Models/LoginResultType.cs` — không suy đoán.
  * `AccountController.GetAbpLoginResult` ánh xạ `SignInResult` sang các mã này
  * theo thứ tự: khóa tài khoản → 2FA → không được phép → thành công → sai mật khẩu.
+ *
+ * `accountDeactivated: 6` và `accountDeactivatedByFailedAttempts: 7` không
+ * thuộc enum của ABP — do `LoginPasswordVerificationMiddleware` (BE) tự trả về
+ * trước khi request tới được `AccountController`: 6 khi tài khoản đã bị admin
+ * vô hiệu hóa thủ công (`IsActive = false`), 7 khi tài khoản vừa tự động bị
+ * vô hiệu hóa do nhập sai mật khẩu quá số lần cho phép.
  */
 const LOGIN_RESULT = {
   success: 1,
@@ -28,6 +34,8 @@ const LOGIN_RESULT = {
   notAllowed: 3,
   lockedOut: 4,
   requiresTwoFactor: 5,
+  accountDeactivated: 6,
+  accountDeactivatedByFailedAttempts: 7,
 } as const;
 
 /**
@@ -42,9 +50,13 @@ const LOGIN_FAILURE_MESSAGES: Readonly<Record<number, string | undefined>> = {
   [LOGIN_RESULT.invalidUserNameOrPassword]:
     "Tên đăng nhập hoặc mật khẩu không đúng.",
   [LOGIN_RESULT.lockedOut]:
-    "Tài khoản đã bị tạm khóa do đăng nhập sai quá số lần cho phép. Vui lòng đợi hết thời gian khóa rồi thử lại, hoặc liên hệ quản trị viên để được mở khóa.",
+    "Tài khoản đã bị tạm khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ mở khóa.",
   [LOGIN_RESULT.requiresTwoFactor]:
     "Tài khoản yêu cầu xác thực hai bước. Vui lòng liên hệ quản trị viên để được hỗ trợ đăng nhập.",
+  [LOGIN_RESULT.accountDeactivated]:
+    "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.",
+  [LOGIN_RESULT.accountDeactivatedByFailedAttempts]:
+    "Tài khoản đã bị vô hiệu hóa do đăng nhập sai quá số lần cho phép. Vui lòng liên hệ quản trị viên để được hỗ trợ kích hoạt lại.",
 };
 
 const UNKNOWN_LOGIN_FAILURE_MESSAGE =
@@ -66,12 +78,10 @@ function clearSessionQueryCache(queryClient: QueryClient): void {
 }
 
 /**
- * ABP trả `NotAllowed` khi tài khoản chưa được phép đăng nhập bằng mật khẩu hiện
- * tại. `AbpSignInManager.PreSignInCheck` trả mã này cho ba trường hợp: bắt buộc
- * đổi mật khẩu ở lần đăng nhập tới, mật khẩu đã hết hạn theo chu kỳ, và tài khoản
- * bị vô hiệu hóa. Hai trường hợp đầu chiếm gần như toàn bộ thực tế và đều được
- * giải quyết ở màn hình đổi mật khẩu, nên điều hướng sang đó; tài khoản bị vô
- * hiệu hóa sẽ bị máy chủ từ chối tiếp tại đúng màn hình này.
+ * ABP trả `NotAllowed` khi tài khoản bắt buộc đổi mật khẩu ở lần đăng nhập tới
+ * hoặc mật khẩu đã hết hạn theo chu kỳ. Tài khoản bị vô hiệu hóa không còn rơi
+ * vào nhánh này nữa — `LoginPasswordVerificationMiddleware` (BE) đã chặn và trả
+ * `accountDeactivated` riêng trước khi tới `AccountController`.
  */
 class InitialPasswordChangeRequiredError extends Error {
   readonly userNameOrEmailAddress: string;
