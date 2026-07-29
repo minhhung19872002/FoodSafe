@@ -22,6 +22,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Localization\FoodSafe\*.json" />
     <Content Remove="Localization\FoodSafe\*.json" />
+    <EmbeddedResource Include="Templates\*.tpl" />
+    <Content Remove="Templates\*.tpl" />
   </ItemGroup>
 
 </Project>

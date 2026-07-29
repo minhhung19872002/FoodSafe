@@ -1063,12 +1063,18 @@ public class IdentityAdministrationAppService :
 
     private async Task SendPasswordResetEmailAsync(string email)
     {
-        await _accountAppService.SendPasswordResetCodeAsync(
-            new SendPasswordResetCodeDto
-            {
-                Email = email,
-                AppName = "Angular"
-            });
+        // Recipients are Vietnamese staff. Without pinning the culture the
+        // subject line follows whoever happened to click the button — which is
+        // how it ended up in English on a request with no Accept-Language.
+        using (CultureHelper.Use("vi"))
+        {
+            await _accountAppService.SendPasswordResetCodeAsync(
+                new SendPasswordResetCodeDto
+                {
+                    Email = email,
+                    AppName = "Angular"
+                });
+        }
     }
 
     /// <summary>
