@@ -1,38 +1,43 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Button, Card, Form, Input, Space, Typography } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLocation } from "react-router-dom";
+import {
+  DEFAULT_PASSWORD_POLICY,
+  passwordPolicySchema,
+  usePasswordPolicy,
+} from "@/hooks/usePasswordPolicy";
 import { CaptchaWidget } from "../components/CaptchaWidget";
 import { useCompleteInitialPasswordChange } from "../api/authMutations";
 
-const schema = z
-  .object({
-    userNameOrEmailAddress: z.string().min(1, "Nhập tên đăng nhập hoặc email"),
-    currentPassword: z.string().min(1, "Nhập mật khẩu hiện tại"),
-    newPassword: z
-      .string()
-      .min(8, "Mật khẩu tối thiểu 8 ký tự")
-      .regex(
-        /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])/,
-        "Mật khẩu phải có chữ, số và ký tự đặc biệt",
-      ),
-    confirmPassword: z.string().min(1, "Xác nhận mật khẩu mới"),
-    captchaToken: z.string().min(1, "Hoàn thành xác minh CAPTCHA"),
-  })
-  .refine((value) => value.newPassword === value.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Mật khẩu xác nhận không khớp",
-  });
+function buildSchema(policy: ReturnType<typeof usePasswordPolicy>["data"]) {
+  return z
+    .object({
+      userNameOrEmailAddress: z
+        .string()
+        .min(1, "Nhập tên đăng nhập hoặc email"),
+      currentPassword: z.string().min(1, "Nhập mật khẩu hiện tại"),
+      newPassword: passwordPolicySchema(policy ?? DEFAULT_PASSWORD_POLICY),
+      confirmPassword: z.string().min(1, "Xác nhận mật khẩu mới"),
+      captchaToken: z.string().min(1, "Hoàn thành xác minh CAPTCHA"),
+    })
+    .refine((value) => value.newPassword === value.confirmPassword, {
+      path: ["confirmPassword"],
+      message: "Mật khẩu xác nhận không khớp",
+    });
+}
 
-type FormData = z.infer<typeof schema>;
+type FormData = z.infer<ReturnType<typeof buildSchema>>;
 
 export default function CompleteInitialPasswordChangePage() {
   const location = useLocation();
   const userName =
     (location.state as { userName?: string } | null)?.userName ?? "";
   const mutation = useCompleteInitialPasswordChange();
+  const { data: policy } = usePasswordPolicy();
+  const schema = useMemo(() => buildSchema(policy), [policy]);
   const {
     control,
     handleSubmit,

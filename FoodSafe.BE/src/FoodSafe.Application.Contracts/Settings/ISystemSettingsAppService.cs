@@ -18,3 +18,8 @@ public interface IPublicBrandingAppService : IApplicationService
     Task<BrandingImageDto?> GetLogoAsync();
     Task<BrandingImageDto?> GetLoginBackgroundAsync();
 }
+
+public interface IPublicPasswordPolicyAppService : IApplicationService
+{
+    Task<PublicPasswordPolicyDto> GetAsync();
+}

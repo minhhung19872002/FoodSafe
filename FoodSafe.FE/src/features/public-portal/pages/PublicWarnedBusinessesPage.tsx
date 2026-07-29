@@ -21,7 +21,7 @@ export default function PublicWarnedBusinessesPage() {
   return (
     <PublicShell>
       <Typography.Title level={3} style={{ marginBottom: 8 }}>
-        Cơ sở đang bị cảnh báo
+        Danh sách cơ sở đang bị cảnh báo
       </Typography.Title>
       <Typography.Paragraph type="secondary" style={{ marginBottom: 24 }}>
         Danh sách các cơ sở sản xuất kinh doanh thực phẩm đang bị cơ quan quản
