@@ -47,12 +47,15 @@ public class ProductExcelAppService : ApplicationService,
     }
 
     [Authorize(FoodSafePermissions.BusinessManagement.Products.Import)]
-    public Task<ExcelDownloadDto> GetTemplateAsync() =>
-        Task.FromResult(new ExcelDownloadDto
+    public async Task<ExcelDownloadDto> GetTemplateAsync()
+    {
+        var catalogs = await LoadCatalogsAsync();
+        return new ExcelDownloadDto
         {
-            Content = ProductExcelWorkbook.CreateTemplate(),
+            Content = ProductExcelWorkbook.CreateTemplate(catalogs),
             FileName = "mau-import-san-pham.xlsx"
-        });
+        };
+    }
 
     [Authorize(FoodSafePermissions.BusinessManagement.Products.Import)]
     public async Task<ExcelImportPreviewDto> PreviewAsync(
@@ -77,13 +80,31 @@ public class ProductExcelAppService : ApplicationService,
         var errors = workbook.Errors.ToList();
         if (workbook.Rows.Count == 0)
             errors.Add(Error(2, "File", "File không có dòng dữ liệu."));
+
+        var catalogs = await LoadCatalogsAsync();
+        var businessMap = catalogs.Businesses
+            .Where(x => !string.IsNullOrWhiteSpace(x.Code))
+            .ToDictionary(x => x.Code, x => x.Id,
+                StringComparer.OrdinalIgnoreCase);
+        var groupMap = catalogs.ProductGroups
+            .ToDictionary(x => x.Name, x => x.Id,
+                StringComparer.OrdinalIgnoreCase);
+        var countryMap = catalogs.Countries
+            .ToDictionary(x => x.Name, x => x.Id,
+                StringComparer.OrdinalIgnoreCase);
+
         var candidates = new List<(int RowNumber, UpsertProductDto Input)>();
         foreach (var row in workbook.Rows)
         {
             var parsed = ParseRow(row, errors);
-            if (parsed is not null) candidates.Add((row.RowNumber, parsed));
+            if (parsed is not null)
+            {
+                ResolveCatalogNames(
+                    row, parsed, businessMap, groupMap, countryMap, errors);
+                candidates.Add((row.RowNumber, parsed));
+            }
         }
-        await ValidateReferencesAndScopeAsync(candidates, errors);
+
         await ValidateUniquenessAsync(candidates, errors);
 
         var invalidRows = errors
@@ -169,55 +190,62 @@ public class ProductExcelAppService : ApplicationService,
                     .WithData("MaximumRows", MaximumExportRows);
             rows.AddRange(page.Items);
         } while (rows.Count < total);
+
+        var catalogs = await LoadCatalogsAsync();
         return new ExcelDownloadDto
         {
-            Content = ProductExcelWorkbook.Export(rows),
+            Content = ProductExcelWorkbook.Export(rows, catalogs),
             FileName = $"danh-sach-san-pham-{Clock.Now:yyyyMMdd-HHmmss}.xlsx"
         };
     }
 
-    private async Task ValidateReferencesAndScopeAsync(
-        IReadOnlyList<(int RowNumber, UpsertProductDto Input)> candidates,
+    private static void ResolveCatalogNames(
+        ProductExcelRow row,
+        UpsertProductDto dto,
+        Dictionary<string, Guid> businessMap,
+        Dictionary<string, Guid> groupMap,
+        Dictionary<string, Guid> countryMap,
         ICollection<ExcelImportErrorDto> errors)
     {
-        var allowedBusinessIds = (await _products.GetBusinessOptionsAsync())
-            .Select(x => x.Id)
-            .ToHashSet();
-        var productGroupIds = candidates
-            .Where(x => x.Input.ProductGroupId.HasValue)
-            .Select(x => x.Input.ProductGroupId!.Value)
-            .Distinct()
-            .ToArray();
-        var countryIds = candidates
-            .Where(x => x.Input.ManufacturingCountryId.HasValue)
-            .Select(x => x.Input.ManufacturingCountryId!.Value)
-            .Distinct()
-            .ToArray();
-        var existingProductGroups = await ExistingIdsAsync(
-            _productGroups,
-            productGroupIds);
-        var existingCountries = await ExistingIdsAsync(_countries, countryIds);
-        foreach (var candidate in candidates)
+        if (string.IsNullOrWhiteSpace(row.BusinessCode))
         {
-            if (!allowedBusinessIds.Contains(candidate.Input.BusinessId))
+            errors.Add(Error(
+                row.RowNumber,
+                "Mã cơ sở",
+                "Mã cơ sở là bắt buộc."));
+        }
+        else if (businessMap.TryGetValue(row.BusinessCode, out var bizId))
+        {
+            dto.BusinessId = bizId;
+        }
+        else
+        {
+            errors.Add(Error(
+                row.RowNumber,
+                "Mã cơ sở",
+                $"Mã cơ sở \"{row.BusinessCode}\" không tồn tại hoặc nằm ngoài phạm vi dữ liệu."));
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.ProductGroup))
+        {
+            if (groupMap.TryGetValue(row.ProductGroup, out var groupId))
+                dto.ProductGroupId = groupId;
+            else
                 errors.Add(Error(
-                    candidate.RowNumber,
-                    "BusinessId",
-                    "Cơ sở không tồn tại, không hoạt động hoặc nằm ngoài phạm vi dữ liệu."));
-            if (candidate.Input.ProductGroupId.HasValue &&
-                !existingProductGroups.Contains(
-                    candidate.Input.ProductGroupId.Value))
+                    row.RowNumber,
+                    "Nhóm sản phẩm",
+                    $"Nhóm sản phẩm \"{row.ProductGroup}\" không tồn tại."));
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.Country))
+        {
+            if (countryMap.TryGetValue(row.Country, out var countryId))
+                dto.ManufacturingCountryId = countryId;
+            else
                 errors.Add(Error(
-                    candidate.RowNumber,
-                    "ProductGroupId",
-                    "Nhóm sản phẩm không tồn tại."));
-            if (candidate.Input.ManufacturingCountryId.HasValue &&
-                !existingCountries.Contains(
-                    candidate.Input.ManufacturingCountryId.Value))
-                errors.Add(Error(
-                    candidate.RowNumber,
-                    "CountryId",
-                    "Quốc gia không tồn tại."));
+                    row.RowNumber,
+                    "Quốc gia",
+                    $"Quốc gia \"{row.Country}\" không tồn tại."));
         }
     }
 
@@ -273,11 +301,6 @@ public class ProductExcelAppService : ApplicationService,
         ICollection<ExcelImportErrorDto> errors)
     {
         var rowErrors = new List<ExcelImportErrorDto>();
-        if (!Guid.TryParse(row.BusinessId, out var businessId))
-            rowErrors.Add(Error(
-                row.RowNumber,
-                "BusinessId",
-                "BusinessId phải là GUID hợp lệ."));
         if (string.IsNullOrWhiteSpace(row.Code))
             rowErrors.Add(Error(
                 row.RowNumber,
@@ -294,21 +317,10 @@ public class ProductExcelAppService : ApplicationService,
             rowErrors);
         var input = new UpsertProductDto
         {
-            BusinessId = businessId,
             Code = Normalize(row.Code),
             Name = row.Name.Trim(),
-            ProductGroupId = ParseOptionalGuid(
-                row.ProductGroupId,
-                row.RowNumber,
-                "ProductGroupId",
-                rowErrors),
             BrandName = EmptyToNull(row.BrandName),
             Manufacturer = EmptyToNull(row.Manufacturer),
-            ManufacturingCountryId = ParseOptionalGuid(
-                row.CountryId,
-                row.RowNumber,
-                "CountryId",
-                rowErrors),
             NetWeight = EmptyToNull(row.NetWeight),
             Specifications = EmptyToNull(row.Specifications),
             Ingredients = EmptyToNull(row.Ingredients),
@@ -331,16 +343,33 @@ public class ProductExcelAppService : ApplicationService,
         return rowErrors.Count == 0 ? input : null;
     }
 
-    private static Guid? ParseOptionalGuid(
-        string value,
-        int row,
-        string field,
-        ICollection<ExcelImportErrorDto> errors)
+    private async Task<ProductCatalogData> LoadCatalogsAsync()
     {
-        if (string.IsNullOrWhiteSpace(value)) return null;
-        if (Guid.TryParse(value, out var parsed)) return parsed;
-        errors.Add(Error(row, field, $"{field} phải là GUID hợp lệ."));
-        return null;
+        var ct = _cancellationTokens.Token;
+
+        var businessOptions = await _products.GetBusinessOptionsAsync();
+        var businesses = businessOptions
+            .Where(x => !string.IsNullOrWhiteSpace(x.Code))
+            .Select(x => new BusinessOption(x.Id, x.Code!, x.Name))
+            .ToList();
+
+        var groupQuery = await _productGroups.GetQueryableAsync();
+        var groups = await AsyncExecuter.ToListAsync(
+            groupQuery
+                .Where(x => x.IsActive && !x.IsDeleted)
+                .OrderBy(x => x.SortOrder)
+                .Select(x => new CatalogOption(x.Id, x.Name)),
+            ct);
+
+        var countryQuery = await _countries.GetQueryableAsync();
+        var countries = await AsyncExecuter.ToListAsync(
+            countryQuery
+                .Where(x => x.IsActive && !x.IsDeleted)
+                .OrderBy(x => x.SortOrder)
+                .Select(x => new CatalogOption(x.Id, x.NameVi)),
+            ct);
+
+        return new ProductCatalogData(businesses, groups, countries);
     }
 
     private static int? ParseOptionalInt(
@@ -361,18 +390,6 @@ public class ProductExcelAppService : ApplicationService,
             "ExpiryPeriodMonths",
             "Hạn sử dụng phải là số nguyên không âm."));
         return null;
-    }
-
-    private async Task<HashSet<Guid>> ExistingIdsAsync<TEntity>(
-        IRepository<TEntity, Guid> repository,
-        IReadOnlyCollection<Guid> ids)
-        where TEntity : class, Volo.Abp.Domain.Entities.IEntity<Guid>
-    {
-        if (ids.Count == 0) return [];
-        var query = await repository.GetQueryableAsync();
-        return (await AsyncExecuter.ToListAsync(
-            query.Where(x => ids.Contains(x.Id)).Select(x => x.Id),
-            _cancellationTokens.Token)).ToHashSet();
     }
 
     private static ExcelImportPreviewDto ErrorPreview(string message) =>
