@@ -331,7 +331,6 @@ export default function BusinessManagementPage() {
         classificationOptions={(classifications.data?.items ?? []).map(
           (item) => ({ value: item.id, label: item.name }),
         )}
-        classificationItems={classifications.data?.items ?? []}
         provinceOptions={(provinces.data?.items ?? []).map((item) => ({
           value: item.id,
           label: item.name,

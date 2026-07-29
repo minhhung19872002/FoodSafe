@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { hasValidMapCoordinates } from "./poisoningMapCoordinates";
+import {
+  groupRecordsByCoordinates,
+  hasValidMapCoordinates,
+} from "./poisoningMapCoordinates";
 
 describe("hasValidMapCoordinates", () => {
   it("accepts coordinates stored for a food-poisoning record", () => {
@@ -25,5 +28,46 @@ describe("hasValidMapCoordinates", () => {
         locationLongitude: 20.951,
       }),
     ).toBe(false);
+  });
+});
+
+describe("groupRecordsByCoordinates", () => {
+  it("groups records stored at the same location without inventing coordinates", () => {
+    const records = Array.from({ length: 5 }, (_, index) => ({
+      id: `case-${index + 1}`,
+      locationLatitude: 20.951,
+      locationLongitude: 107.082,
+    }));
+
+    expect(groupRecordsByCoordinates(records)).toEqual([
+      {
+        key: "20.951000:107.082000",
+        latitude: 20.951,
+        longitude: 107.082,
+        items: records,
+      },
+    ]);
+  });
+
+  it("keeps distinct locations separate and omits invalid records", () => {
+    const groups = groupRecordsByCoordinates([
+      {
+        id: "case-1",
+        locationLatitude: 20.951,
+        locationLongitude: 107.082,
+      },
+      {
+        id: "case-2",
+        locationLatitude: 20.9581,
+        locationLongitude: 107.0453,
+      },
+      { id: "case-without-coordinates" },
+    ]);
+
+    expect(groups).toHaveLength(2);
+    expect(groups.map((group) => group.items[0].id)).toEqual([
+      "case-1",
+      "case-2",
+    ]);
   });
 });

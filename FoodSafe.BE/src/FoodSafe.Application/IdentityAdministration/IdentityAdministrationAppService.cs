@@ -455,13 +455,17 @@ public class IdentityAdministrationAppService :
         var roles = await _roles.GetListWithUserCountAsync(
             sorting: NormalizeRoleSorting(input.Sorting),
             maxResultCount: MaximumRoleCount,
-            filter: input.Filter,
+            filter: null,
             includeDetails: true,
             cancellationToken: Token);
+        var normalizedFilter = input.Filter?.Trim();
         var filtered = roles
             .WhereIf(
                 input.IsActive.HasValue,
                 role => IsRoleActive(role.Role) == input.IsActive)
+            .WhereIf(
+                !string.IsNullOrWhiteSpace(normalizedFilter),
+                role => MatchesRoleFilter(role, normalizedFilter!))
             .ToList();
         var page = filtered
             .Skip(input.SkipCount)
@@ -470,6 +474,21 @@ public class IdentityAdministrationAppService :
             .ToList();
         return new PagedResultDto<AdminRoleDto>(filtered.Count, page);
     }
+
+    private static bool MatchesRoleFilter(
+        IdentityRoleWithUserCount item,
+        string filter)
+    {
+        var description = GetExtraProperty<string>(
+            item.Role,
+            RoleDescriptionProperty);
+        return ContainsIgnoreCase(item.Role.Name, filter) ||
+            ContainsIgnoreCase(description, filter);
+    }
+
+    private static bool ContainsIgnoreCase(string? value, string filter) =>
+        !string.IsNullOrEmpty(value) &&
+        value.Contains(filter, StringComparison.OrdinalIgnoreCase);
 
     [Authorize(FoodSafePermissions.SystemAdministration.Roles.Default)]
     public async Task<AdminRoleDto> GetRoleAsync(Guid id)

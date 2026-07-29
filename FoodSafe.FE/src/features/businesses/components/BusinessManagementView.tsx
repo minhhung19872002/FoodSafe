@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { TablePaginationConfig } from "antd";
 import {
   DeleteOutlined,
@@ -10,14 +9,12 @@ import {
   ImportOutlined,
   PaperClipOutlined,
   PlusOutlined,
-  TableOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { Button, Input, Segmented, Select, Table, Tabs, Tag } from "antd";
+import { Button, Input, Select, Table, Tabs, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { RowActions } from "@/components/RowActions";
-import { BusinessLocationMap } from "./BusinessLocationMap";
 import {
   BUSINESS_STATUS,
   PRODUCT_STATUS,
@@ -30,12 +27,6 @@ import {
 export interface FilterOption {
   value: string;
   label: string;
-}
-
-interface ClassificationItem {
-  id: string;
-  riskLevel?: number;
-  name?: string;
 }
 
 interface BusinessManagementViewProps {
@@ -53,7 +44,6 @@ interface BusinessManagementViewProps {
   productSorting?: string;
   businessTypeOptions: FilterOption[];
   classificationOptions: FilterOption[];
-  classificationItems?: ClassificationItem[];
   provinceOptions: FilterOption[];
   onBusinessTypeChange: (value?: string) => void;
   onClassificationChange: (value?: string) => void;
@@ -105,8 +95,6 @@ const businessStatusLabels: Record<BusinessStatus, string> = {
 };
 
 export function BusinessManagementView(props: BusinessManagementViewProps) {
-  const [viewMode, setViewMode] = useState<"table" | "map">("table");
-
   // Server-side sorting: reflect the active sort in the column header so the
   // control is controlled/testable, and translate header clicks into the
   // "<field> <asc|desc>" string the backend's ApplySorting whitelist parses.
@@ -412,43 +400,23 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
             <Button icon={<ExportOutlined />} onClick={props.onExportBusiness}>
               Xuất Excel
             </Button>
-            <Segmented
-              value={viewMode}
-              onChange={(v) => setViewMode(v as "table" | "map")}
-              options={[
-                { value: "table", icon: <TableOutlined />, label: "Bảng" },
-                {
-                  value: "map",
-                  icon: <EnvironmentOutlined />,
-                  label: "Bản đồ",
-                },
-              ]}
-            />
           </div>
-          {viewMode === "table" ? (
-            <Table
-              rowKey="id"
-              size="middle"
-              scroll={{ x: 900 }}
-              loading={props.loading}
-              dataSource={props.businesses}
-              onRow={(business) => ({
-                onDoubleClick: () => props.onShowDetail(business),
-                style: { cursor: "pointer" },
-              })}
-              columns={businessColumns}
-              onChange={(_pagination, _filters, sorter) =>
-                handleBusinessSort(sorter)
-              }
-              pagination={props.businessPagination}
-            />
-          ) : (
-            <BusinessLocationMap
-              businesses={props.businesses}
-              classifications={props.classificationItems}
-              onSelect={(b) => props.onShowDetail(b)}
-            />
-          )}
+          <Table
+            rowKey="id"
+            size="middle"
+            scroll={{ x: 900 }}
+            loading={props.loading}
+            dataSource={props.businesses}
+            onRow={(business) => ({
+              onDoubleClick: () => props.onShowDetail(business),
+              style: { cursor: "pointer" },
+            })}
+            columns={businessColumns}
+            onChange={(_pagination, _filters, sorter) =>
+              handleBusinessSort(sorter)
+            }
+            pagination={props.businessPagination}
+          />
         </>
       ) : (
         <>
