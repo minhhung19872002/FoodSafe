@@ -154,7 +154,7 @@
     "FoodSafe:FoodPoisoning:0001": "Không tìm thấy ca ngộ độc.",
     "FoodSafe:FoodPoisoning:0002": "Không tìm thấy vụ ngộ độc.",
     "FoodSafe:FoodPoisoning:0003": "Chuyển trạng thái không hợp lệ.",
-    "FoodSafe:FoodPoisoning:0004": "Chỉ được báo sai sót khi ở trạng thái Đã xác minh.",
+    "FoodSafe:FoodPoisoning:0004": "Chỉ được báo sai sót sau khi hồ sơ đã được xác minh.",
     "FoodSafe:FoodPoisoning:0005": "Vui lòng nhập kết luận.",
     "FoodSafe:FoodPoisoning:0006": "Chỉ được sửa khi ở trạng thái Nháp.",
     "FoodSafe:FoodPoisoning:0007": "Không tìm thấy báo cáo sai sót.",

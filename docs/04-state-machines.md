@@ -136,6 +136,10 @@
 | Reported | Verified | Verify() | Cán bộ cấp trên | |
 | Verified | Concluded | Conclude() | Cán bộ | Phải có nội dung kết luận |
 
+### Business Rules:
+- Phiếu sai sót được tạo khi vụ đang ở `Verified` hoặc đã `Concluded`.
+- Tạo phiếu sai sót không thay đổi trạng thái của vụ ngộ độc.
+
 ---
 
 ## 4. ATTP Alert Workflow

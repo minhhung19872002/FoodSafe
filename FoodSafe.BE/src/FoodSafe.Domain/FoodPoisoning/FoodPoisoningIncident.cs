@@ -191,7 +191,7 @@ public sealed class FoodPoisoningIncident : FullAuditedAggregateRoot<Guid>
         string correctionRequest,
         Guid? creatorId)
     {
-        if (Status != PoisoningIncidentStatus.Verified)
+        if (Status is not (PoisoningIncidentStatus.Verified or PoisoningIncidentStatus.Concluded))
             throw new BusinessException(FoodSafeDomainErrorCodes.FoodPoisoning.CanOnlyReportErrorOnVerified);
 
         Check.NotNullOrWhiteSpace(errorDescription, nameof(errorDescription));

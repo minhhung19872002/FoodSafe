@@ -31,6 +31,7 @@ import {
   type CreateErrorReportInput,
   type PoisoningErrorReport,
 } from "../types/foodPoisoning.types";
+import { extractApiError } from "@/lib/apiError";
 
 interface Props {
   kind: "case" | "incident";
@@ -80,8 +81,8 @@ export function PoisoningErrorReportsModal({
       await addMutation.mutateAsync({ id: targetId, input: values });
       addForm.resetFields();
       message.success("Đã gửi báo cáo sai sót.");
-    } catch {
-      message.error("Không thể gửi báo cáo sai sót.");
+    } catch (error) {
+      message.error(extractApiError(error));
     }
   };
 
@@ -90,8 +91,8 @@ export function PoisoningErrorReportsModal({
     try {
       await ackMutation.mutateAsync({ id: targetId, reportId });
       message.success("Đã tiếp nhận báo cáo sai sót.");
-    } catch {
-      message.error("Không thể tiếp nhận báo cáo.");
+    } catch (error) {
+      message.error(extractApiError(error));
     }
   };
 
@@ -110,8 +111,8 @@ export function PoisoningErrorReportsModal({
       setRespondingId(null);
       setResponseText("");
       message.success("Đã phản hồi và đánh dấu đã sửa.");
-    } catch {
-      message.error("Không thể phản hồi báo cáo.");
+    } catch (error) {
+      message.error(extractApiError(error));
     }
   };
 
