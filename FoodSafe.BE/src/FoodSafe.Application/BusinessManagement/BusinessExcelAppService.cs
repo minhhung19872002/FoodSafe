@@ -2,14 +2,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO.Compression;
 using FoodSafe.Catalogs;
-using FoodSafe.Organizations;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
-using Volo.Abp.Authorization;
 using Volo.Abp.Caching;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Threading;
@@ -32,7 +30,6 @@ public class BusinessExcelAppService : ApplicationService,
     private readonly ICurrentUser _currentUser;
     private readonly IDistributedCache<BusinessImportSession, string> _sessions;
     private readonly IRepository<Business, Guid> _businessRepository;
-    private readonly IRepository<Organization, Guid> _organizations;
     private readonly IRepository<BusinessType, Guid> _businessTypes;
     private readonly IRepository<BusinessClassification, Guid> _classifications;
     private readonly IRepository<ProductGroup, Guid> _productGroups;
@@ -44,7 +41,6 @@ public class BusinessExcelAppService : ApplicationService,
         ICurrentUser currentUser,
         IDistributedCache<BusinessImportSession, string> sessions,
         IRepository<Business, Guid> businessRepository,
-        IRepository<Organization, Guid> organizations,
         IRepository<BusinessType, Guid> businessTypes,
         IRepository<BusinessClassification, Guid> classifications,
         IRepository<ProductGroup, Guid> productGroups,
@@ -55,7 +51,6 @@ public class BusinessExcelAppService : ApplicationService,
         _currentUser = currentUser;
         _sessions = sessions;
         _businessRepository = businessRepository;
-        _organizations = organizations;
         _businessTypes = businessTypes;
         _classifications = classifications;
         _productGroups = productGroups;
@@ -63,12 +58,15 @@ public class BusinessExcelAppService : ApplicationService,
     }
 
     [Authorize(FoodSafePermissions.BusinessManagement.Businesses.Import)]
-    public Task<ExcelDownloadDto> GetTemplateAsync() =>
-        Task.FromResult(new ExcelDownloadDto
+    public async Task<ExcelDownloadDto> GetTemplateAsync()
+    {
+        var catalogs = await LoadCatalogsAsync();
+        return new ExcelDownloadDto
         {
-            Content = BusinessExcelWorkbook.CreateTemplate(),
+            Content = BusinessExcelWorkbook.CreateTemplate(catalogs),
             FileName = "mau-import-co-so.xlsx"
-        });
+        };
+    }
 
     [Authorize(FoodSafePermissions.BusinessManagement.Businesses.Import)]
     public async Task<ExcelImportPreviewDto> PreviewAsync(
@@ -99,17 +97,35 @@ public class BusinessExcelAppService : ApplicationService,
             errors.Add(Error(2, "File", "File không có dòng dữ liệu."));
         }
 
+        var scope = await _dataScopeProvider.GetAsync(DataScopeOperation.Create);
+        if (!scope.HomeOrganizationId.HasValue)
+        {
+            return ErrorPreview(
+                "Tài khoản chưa được gắn đơn vị. Không thể import.");
+        }
+        var organizationId = scope.HomeOrganizationId.Value;
+
+        var catalogs = await LoadCatalogsAsync();
+        var typeMap = catalogs.BusinessTypes
+            .ToDictionary(x => x.Name, x => x.Id, StringComparer.OrdinalIgnoreCase);
+        var classMap = catalogs.Classifications
+            .ToDictionary(x => x.Name, x => x.Id, StringComparer.OrdinalIgnoreCase);
+        var groupMap = catalogs.ProductGroups
+            .ToDictionary(x => x.Name, x => x.Id, StringComparer.OrdinalIgnoreCase);
+
         var candidates = new List<(int RowNumber, UpsertBusinessDto Input)>();
         foreach (var row in workbook.Rows)
         {
             var parsed = ParseRow(row, errors);
             if (parsed is not null)
             {
+                parsed.OrganizationId = organizationId;
+                ResolveCatalogNames(
+                    row, parsed, typeMap, classMap, groupMap, errors);
                 candidates.Add((row.RowNumber, parsed));
             }
         }
 
-        await ValidateReferencesAndScopeAsync(candidates, errors);
         await ValidateUniquenessAsync(candidates, errors);
 
         var invalidRows = errors
@@ -209,88 +225,61 @@ public class BusinessExcelAppService : ApplicationService,
             rows.AddRange(page.Items);
         } while (rows.Count < total);
 
+        var catalogs = await LoadCatalogsAsync();
         return new ExcelDownloadDto
         {
-            Content = BusinessExcelWorkbook.Export(rows),
+            Content = BusinessExcelWorkbook.Export(rows, catalogs),
             FileName = $"danh-sach-co-so-{Clock.Now:yyyyMMdd-HHmmss}.xlsx"
         };
     }
 
-    private async Task ValidateReferencesAndScopeAsync(
-        IReadOnlyList<(int RowNumber, UpsertBusinessDto Input)> candidates,
+    private static void ResolveCatalogNames(
+        BusinessExcelRow row,
+        UpsertBusinessDto dto,
+        Dictionary<string, Guid> typeMap,
+        Dictionary<string, Guid> classMap,
+        Dictionary<string, Guid> groupMap,
         ICollection<ExcelImportErrorDto> errors)
     {
-        var organizationIds = candidates
-            .Select(x => x.Input.OrganizationId)
-            .Distinct()
-            .ToArray();
-        var existingOrganizations = await ExistingIdsAsync(
-            _organizations,
-            organizationIds);
-        var businessTypeIds = candidates
-            .Select(x => x.Input.BusinessTypeId)
-            .Where(x => x.HasValue)
-            .Select(x => x!.Value)
-            .Distinct()
-            .ToArray();
-        var existingBusinessTypes = await ExistingIdsAsync(
-            _businessTypes,
-            businessTypeIds);
-        var classificationIds = candidates
-            .Select(x => x.Input.BusinessClassificationId)
-            .Where(x => x.HasValue)
-            .Select(x => x!.Value)
-            .Distinct()
-            .ToArray();
-        var existingClassifications = await ExistingIdsAsync(
-            _classifications,
-            classificationIds);
-        var productGroupIds = candidates
-            .SelectMany(x => x.Input.ProductGroupIds)
-            .Distinct()
-            .ToArray();
-        var existingProductGroups = await ExistingIdsAsync(
-            _productGroups,
-            productGroupIds);
-
-        foreach (var candidate in candidates)
+        if (!string.IsNullOrWhiteSpace(row.BusinessType))
         {
-            var row = candidate.RowNumber;
-            var input = candidate.Input;
-            if (!existingOrganizations.Contains(input.OrganizationId))
-                errors.Add(Error(row, "OrganizationId", "Đơn vị không tồn tại."));
+            if (typeMap.TryGetValue(row.BusinessType, out var typeId))
+                dto.BusinessTypeId = typeId;
             else
+                errors.Add(Error(
+                    row.RowNumber,
+                    "Loại hình",
+                    $"Loại hình \"{row.BusinessType}\" không tồn tại."));
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.Classification))
+        {
+            if (classMap.TryGetValue(row.Classification, out var classId))
+                dto.BusinessClassificationId = classId;
+            else
+                errors.Add(Error(
+                    row.RowNumber,
+                    "Phân loại nguy cơ",
+                    $"Phân loại \"{row.Classification}\" không tồn tại."));
+        }
+
+        if (!string.IsNullOrWhiteSpace(row.ProductGroups))
+        {
+            var ids = new List<Guid>();
+            foreach (var name in row.ProductGroups.Split(
+                         ';',
+                         StringSplitOptions.RemoveEmptyEntries |
+                         StringSplitOptions.TrimEntries))
             {
-                try
-                {
-                    await _dataScopeProvider.EnsureOrganizationAccessAsync(
-                        input.OrganizationId,
-                        DataScopeOperation.Create);
-                }
-                catch (AbpAuthorizationException)
-                {
+                if (groupMap.TryGetValue(name, out var groupId))
+                    ids.Add(groupId);
+                else
                     errors.Add(Error(
-                        row,
-                        "OrganizationId",
-                        "Đơn vị nằm ngoài phạm vi tạo dữ liệu."));
-                }
+                        row.RowNumber,
+                        "Nhóm sản phẩm",
+                        $"Nhóm sản phẩm \"{name}\" không tồn tại."));
             }
-            if (input.BusinessTypeId.HasValue &&
-                !existingBusinessTypes.Contains(input.BusinessTypeId.Value))
-                errors.Add(Error(row, "BusinessTypeId", "Loại hình không tồn tại."));
-            if (input.BusinessClassificationId.HasValue &&
-                !existingClassifications.Contains(
-                    input.BusinessClassificationId.Value))
-                errors.Add(Error(
-                    row,
-                    "ClassificationId",
-                    "Phân loại nguy cơ không tồn tại."));
-            if (input.ProductGroupIds.Any(
-                    id => !existingProductGroups.Contains(id)))
-                errors.Add(Error(
-                    row,
-                    "ProductGroupIds",
-                    "Có nhóm sản phẩm không tồn tại."));
+            dto.ProductGroupIds = ids.Distinct().ToList();
         }
     }
 
@@ -372,11 +361,6 @@ public class BusinessExcelAppService : ApplicationService,
         ICollection<ExcelImportErrorDto> errors)
     {
         var rowErrors = new List<ExcelImportErrorDto>();
-        if (!Guid.TryParse(row.OrganizationId, out var organizationId))
-            rowErrors.Add(Error(
-                row.RowNumber,
-                "OrganizationId",
-                "OrganizationId phải là GUID hợp lệ."));
         if (string.IsNullOrWhiteSpace(row.Name))
             rowErrors.Add(Error(
                 row.RowNumber,
@@ -388,20 +372,6 @@ public class BusinessExcelAppService : ApplicationService,
                 "Code",
                 "Mã cơ sở là bắt buộc khi import."));
 
-        var businessTypeId = ParseOptionalGuid(
-            row.BusinessTypeId,
-            row.RowNumber,
-            "BusinessTypeId",
-            rowErrors);
-        var classificationId = ParseOptionalGuid(
-            row.ClassificationId,
-            row.RowNumber,
-            "ClassificationId",
-            rowErrors);
-        var productGroupIds = ParseGuidList(
-            row.ProductGroupIds,
-            row.RowNumber,
-            rowErrors);
         var latitude = ParseOptionalDouble(
             row.Latitude,
             row.RowNumber,
@@ -424,18 +394,14 @@ public class BusinessExcelAppService : ApplicationService,
 
         var input = new UpsertBusinessDto
         {
-            OrganizationId = organizationId,
             Code = Normalize(row.Code),
             Name = row.Name.Trim(),
             TaxCode = Normalize(row.TaxCode),
-            BusinessTypeId = businessTypeId,
-            BusinessClassificationId = classificationId,
             AddressStreet = EmptyToNull(row.Address),
             ContactPhone = EmptyToNull(row.Phone),
             ContactEmail = EmptyToNull(row.Email),
             AddressLatitude = latitude,
             AddressLongitude = longitude,
-            ProductGroupIds = productGroupIds
         };
         var context = new ValidationContext(input);
         var validationResults = new List<ValidationResult>();
@@ -457,39 +423,33 @@ public class BusinessExcelAppService : ApplicationService,
         return rowErrors.Count == 0 ? input : null;
     }
 
-    private static Guid? ParseOptionalGuid(
-        string value,
-        int row,
-        string field,
-        ICollection<ExcelImportErrorDto> errors)
+    private async Task<CatalogData> LoadCatalogsAsync()
     {
-        if (string.IsNullOrWhiteSpace(value)) return null;
-        if (Guid.TryParse(value, out var parsed)) return parsed;
-        errors.Add(Error(row, field, $"{field} phải là GUID hợp lệ."));
-        return null;
-    }
+        var ct = _cancellationTokens.Token;
+        var typeQuery = await _businessTypes.GetQueryableAsync();
+        var classQuery = await _classifications.GetQueryableAsync();
+        var groupQuery = await _productGroups.GetQueryableAsync();
 
-    private static IReadOnlyList<Guid> ParseGuidList(
-        string value,
-        int row,
-        ICollection<ExcelImportErrorDto> errors)
-    {
-        if (string.IsNullOrWhiteSpace(value)) return [];
-        var result = new List<Guid>();
-        foreach (var part in value.Split(
-                     ';',
-                     StringSplitOptions.RemoveEmptyEntries |
-                     StringSplitOptions.TrimEntries))
-        {
-            if (Guid.TryParse(part, out var id))
-                result.Add(id);
-            else
-                errors.Add(Error(
-                    row,
-                    "ProductGroupIds",
-                    $"“{part}” không phải GUID hợp lệ."));
-        }
-        return result.Distinct().ToList();
+        var types = await AsyncExecuter.ToListAsync(
+            typeQuery
+                .Where(x => x.IsActive && !x.IsDeleted)
+                .OrderBy(x => x.SortOrder)
+                .Select(x => new CatalogOption(x.Id, x.Name)),
+            ct);
+        var classifications = await AsyncExecuter.ToListAsync(
+            classQuery
+                .Where(x => x.IsActive && !x.IsDeleted)
+                .OrderBy(x => x.SortOrder)
+                .Select(x => new CatalogOption(x.Id, x.Name)),
+            ct);
+        var groups = await AsyncExecuter.ToListAsync(
+            groupQuery
+                .Where(x => x.IsActive && !x.IsDeleted)
+                .OrderBy(x => x.SortOrder)
+                .Select(x => new CatalogOption(x.Id, x.Name)),
+            ct);
+
+        return new CatalogData(types, classifications, groups);
     }
 
     private static double? ParseOptionalDouble(
@@ -514,19 +474,6 @@ public class BusinessExcelAppService : ApplicationService,
             field,
             $"{field} phải nằm trong khoảng {minimum} đến {maximum}."));
         return null;
-    }
-
-    private async Task<HashSet<Guid>> ExistingIdsAsync<TEntity>(
-        IRepository<TEntity, Guid> repository,
-        IReadOnlyCollection<Guid> ids)
-        where TEntity : class, Volo.Abp.Domain.Entities.IEntity<Guid>
-    {
-        if (ids.Count == 0) return [];
-        var query = await repository.GetQueryableAsync();
-        return (await AsyncExecuter.ToListAsync(
-            query.Where(x => ids.Contains(x.Id)).Select(x => x.Id),
-            _cancellationTokens.Token))
-            .ToHashSet();
     }
 
     internal static string? ValidateFile(byte[] content, string fileName)
