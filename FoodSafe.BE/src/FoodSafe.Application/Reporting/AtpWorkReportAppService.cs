@@ -141,6 +141,15 @@ public class AtpWorkReportAppService : ApplicationService
         await _reports.DeleteAsync(entity, cancellationToken: _cancellationTokens.Token);
     }
 
+    [Authorize(FoodSafePermissions.Reporting.AtpWorkReports.InternallyApprove)]
+    public async Task<AtpWorkReportDto> InternallyApproveAsync(Guid id)
+    {
+        var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
+        entity.InternallyApprove();
+        await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return ToDto(entity);
+    }
+
     [Authorize(FoodSafePermissions.Reporting.AtpWorkReports.Submit)]
     public async Task<AtpWorkReportDto> SubmitAsync(Guid id)
     {

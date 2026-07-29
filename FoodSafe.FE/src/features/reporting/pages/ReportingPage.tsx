@@ -59,6 +59,7 @@ import {
   useReturnNdtpToDraft,
   useCreateAtpWorkReport,
   useDeleteAtpWorkReport,
+  useInternallyApproveAtpWorkReport,
   useSubmitAtpWorkReport,
   useVerifyAtpWorkReport,
   useReturnAtpWorkReport,
@@ -66,6 +67,7 @@ import {
   useReturnAtpToDraft,
   useCreateActionMonthReport,
   useDeleteActionMonthReport,
+  useInternallyApproveActionMonthReport,
   useSubmitActionMonthReport,
   useVerifyActionMonthReport,
   useReturnActionMonthReport,
@@ -556,6 +558,7 @@ function AtpWorkTab() {
   });
   const createMut = useCreateAtpWorkReport();
   const deleteMut = useDeleteAtpWorkReport();
+  const internallyApproveMut = useInternallyApproveAtpWorkReport();
   const submitMut = useSubmitAtpWorkReport();
   const verifyMut = useVerifyAtpWorkReport();
   const returnMut = useReturnAtpWorkReport();
@@ -672,11 +675,26 @@ function AtpWorkTab() {
               onClick: () => setEditReport(record),
             },
             {
+              key: "internally-approve",
+              label: "Duyệt nội bộ",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Draft ||
+                !hasPermission(
+                  "FoodSafe.Reporting.AtpWorkReports.InternallyApprove",
+                ),
+              confirm: "Duyệt nội bộ báo cáo này?",
+              onClick: () =>
+                internallyApproveMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã duyệt nội bộ"),
+                }),
+            },
+            {
               key: "submit",
               label: "Gửi",
               icon: <SendOutlined />,
               hidden:
-                record.status !== REPORT_STATUS.Draft ||
+                record.status !== REPORT_STATUS.InternallyApproved ||
                 !hasPermission("FoodSafe.Reporting.AtpWorkReports.Submit"),
               confirm: "Gửi báo cáo này?",
               onClick: () =>
@@ -1005,6 +1023,7 @@ function ActionMonthTab() {
   });
   const createMut = useCreateActionMonthReport();
   const deleteMut = useDeleteActionMonthReport();
+  const internallyApproveMut = useInternallyApproveActionMonthReport();
   const submitMut = useSubmitActionMonthReport();
   const verifyMut = useVerifyActionMonthReport();
   const returnMut = useReturnActionMonthReport();
@@ -1121,11 +1140,26 @@ function ActionMonthTab() {
               onClick: () => setEditReport(record),
             },
             {
+              key: "internally-approve",
+              label: "Duyệt nội bộ",
+              icon: <CheckCircleOutlined />,
+              hidden:
+                record.status !== REPORT_STATUS.Draft ||
+                !hasPermission(
+                  "FoodSafe.Reporting.ActionMonthReports.InternallyApprove",
+                ),
+              confirm: "Duyệt nội bộ báo cáo này?",
+              onClick: () =>
+                internallyApproveMut.mutate(record.id, {
+                  onSuccess: () => message.success("Đã duyệt nội bộ"),
+                }),
+            },
+            {
               key: "submit",
               label: "Gửi",
               icon: <SendOutlined />,
               hidden:
-                record.status !== REPORT_STATUS.Draft ||
+                record.status !== REPORT_STATUS.InternallyApproved ||
                 !hasPermission("FoodSafe.Reporting.ActionMonthReports.Submit"),
               confirm: "Gửi báo cáo này?",
               onClick: () =>

@@ -25,6 +25,7 @@ import {
   StopOutlined,
   TeamOutlined,
   UnlockOutlined,
+  UserAddOutlined,
 } from "@ant-design/icons";
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
@@ -56,8 +57,10 @@ import {
   useUserActivity,
 } from "../api/identityQueries";
 import { RoleEditorModal } from "../components/RoleEditorModal";
+import { PermissionMatrixDrawer } from "../components/PermissionMatrixDrawer";
 import { RolePermissionsDrawer } from "../components/RolePermissionsDrawer";
 import { UserActivityDrawer } from "../components/UserActivityDrawer";
+import { QuickCreateUserModal } from "../components/QuickCreateUserModal";
 import { UserEditorModal } from "../components/UserEditorModal";
 import type {
   AdminRole,
@@ -135,6 +138,8 @@ export default function IdentityAdministrationPage() {
   const [editingRole, setEditingRole] = useState<AdminRole>();
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [permissionRole, setPermissionRole] = useState<AdminRole>();
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [matrixOpen, setMatrixOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(canViewUsers ? "users" : "roles");
 
   const users = useAdminUsers({
@@ -301,20 +306,32 @@ export default function IdentityAdministrationPage() {
             Xuất Excel
           </Button>
           {hasPermission(permission.createUser) && (
-            <Tooltip title={userFormBlockedReason}>
-              <Button
-                type="primary"
-                aria-label="Tạo tài khoản"
-                icon={<PlusOutlined />}
-                disabled={Boolean(userFormBlockedReason)}
-                onClick={() => {
-                  setEditingUser(undefined);
-                  setUserModalOpen(true);
-                }}
-              >
-                Tạo tài khoản
-              </Button>
-            </Tooltip>
+            <>
+              <Tooltip title={userFormBlockedReason}>
+                <Button
+                  aria-label="Tạo nhanh tài khoản"
+                  icon={<UserAddOutlined />}
+                  disabled={Boolean(userFormBlockedReason)}
+                  onClick={() => setQuickCreateOpen(true)}
+                >
+                  Tạo nhanh
+                </Button>
+              </Tooltip>
+              <Tooltip title={userFormBlockedReason}>
+                <Button
+                  type="primary"
+                  aria-label="Tạo tài khoản"
+                  icon={<PlusOutlined />}
+                  disabled={Boolean(userFormBlockedReason)}
+                  onClick={() => {
+                    setEditingUser(undefined);
+                    setUserModalOpen(true);
+                  }}
+                >
+                  Tạo tài khoản
+                </Button>
+              </Tooltip>
+            </>
           )}
         </div>
         <Table<AdminUser>
@@ -547,6 +564,12 @@ export default function IdentityAdministrationPage() {
               rolesPagination.resetToFirstPage();
             }}
           />
+          <Button
+            icon={<SafetyCertificateOutlined />}
+            onClick={() => setMatrixOpen(true)}
+          >
+            Ma trận quyền
+          </Button>
           {hasPermission(permission.createRole) && (
             <Button
               type="primary"
@@ -683,6 +706,22 @@ export default function IdentityAdministrationPage() {
         </div>
       </div>
 
+      <QuickCreateUserModal
+        open={quickCreateOpen}
+        roles={roleOptions.data?.items ?? []}
+        organizationTree={organizations.data?.items ?? []}
+        loading={createUser.isPending}
+        onCancel={() => setQuickCreateOpen(false)}
+        onSubmit={(input: SaveUserInput) => {
+          createUser.mutate(input, {
+            onSuccess: () => {
+              setQuickCreateOpen(false);
+              showSuccess("Đã tạo tài khoản và gửi hướng dẫn thiết lập");
+            },
+            onError: showError,
+          });
+        }}
+      />
       <UserEditorModal
         open={userModalOpen}
         user={editingUser}
@@ -802,6 +841,10 @@ export default function IdentityAdministrationPage() {
             createRole.mutate(input, callbacks);
           }
         }}
+      />
+      <PermissionMatrixDrawer
+        open={matrixOpen}
+        onClose={() => setMatrixOpen(false)}
       />
       <RolePermissionsDrawer
         role={permissionRole}

@@ -1,6 +1,7 @@
 using FoodSafe.FileManagement;
 using FoodSafe.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.BlobStoring;
@@ -38,17 +39,20 @@ public class SystemSettingsAppService :
     private readonly ISettingProvider _settingProvider;
     private readonly IBlobContainer _blobs;
     private readonly IFileMalwareScanner _malwareScanner;
+    private readonly IConfiguration _configuration;
 
     public SystemSettingsAppService(
         ISettingManager settingManager,
         ISettingProvider settingProvider,
         IBlobContainer blobs,
-        IFileMalwareScanner malwareScanner)
+        IFileMalwareScanner malwareScanner,
+        IConfiguration configuration)
     {
         _settingManager = settingManager;
         _settingProvider = settingProvider;
         _blobs = blobs;
         _malwareScanner = malwareScanner;
+        _configuration = configuration;
     }
 
     public async Task<SystemSettingsDto> GetAsync()
@@ -100,7 +104,11 @@ public class SystemSettingsAppService :
                     FoodSafeSettings.Appearance.LogoBlobName)),
             HasLoginBackground = !string.IsNullOrEmpty(
                 await _settingProvider.GetOrNullAsync(
-                    FoodSafeSettings.Appearance.LoginBackgroundBlobName))
+                    FoodSafeSettings.Appearance.LoginBackgroundBlobName)),
+            LicenseExpiryNotificationDays = await GetIntAsync(
+                FoodSafeSettings.License.ExpiryNotificationDays, 30),
+            MinioEndpoint = _configuration["BlobStorage:Endpoint"],
+            MinioBucketName = _configuration["BlobStorage:BucketName"]
         };
         return dto;
     }
@@ -177,6 +185,10 @@ public class SystemSettingsAppService :
         await SetGlobalAsync(
             FoodSafeSettings.Homepage.ContactAddress,
             input.ContactAddress);
+
+        await SetGlobalAsync(
+            FoodSafeSettings.License.ExpiryNotificationDays,
+            input.LicenseExpiryNotificationDays.ToString());
 
         return await GetAsync();
     }

@@ -134,6 +134,12 @@ export const PublicWarnedBusinessesPage = lazy(
 export const PublicNewsPage = lazy(
   () => import("@/features/public-portal/pages/PublicNewsPage"),
 );
+export const PublicRiskAnalysisSearchPage = lazy(
+  () => import("@/features/public-portal/pages/PublicRiskAnalysisSearchPage"),
+);
+export const PublicTestingResultSearchPage = lazy(
+  () => import("@/features/public-portal/pages/PublicTestingResultSearchPage"),
+);
 export const PublicDocumentsPage = lazy(
   () => import("@/features/public-portal/pages/PublicDocumentsPage"),
 );

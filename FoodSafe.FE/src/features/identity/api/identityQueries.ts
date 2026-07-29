@@ -59,3 +59,12 @@ export function useRolePermissions(id?: string) {
     enabled: Boolean(id),
   });
 }
+
+export function usePermissionMatrix(enabled = true) {
+  return useQuery({
+    queryKey: [...identityKeys.all, "permission-matrix"] as const,
+    queryFn: () => identityApi.getPermissionMatrix(),
+    staleTime: 60_000,
+    enabled,
+  });
+}

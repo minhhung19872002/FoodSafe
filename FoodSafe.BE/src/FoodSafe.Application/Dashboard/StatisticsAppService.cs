@@ -30,6 +30,7 @@ public class StatisticsAppService : ApplicationService
     private readonly IRepository<AdvertisementRegistration, Guid> _adRegistrations;
     private readonly IRepository<InspectionResult, Guid> _inspectionResults;
     private readonly IRepository<FoodPoisoningCase, Guid> _poisoningCases;
+    private readonly IRepository<FoodPoisoningIncident, Guid> _poisoningIncidents;
 
     public StatisticsAppService(
         ICurrentDataScopeProvider dataScopeProvider,
@@ -44,7 +45,8 @@ public class StatisticsAppService : ApplicationService
         IRepository<ExportFoodCertificate, Guid> exportCertificates,
         IRepository<AdvertisementRegistration, Guid> adRegistrations,
         IRepository<InspectionResult, Guid> inspectionResults,
-        IRepository<FoodPoisoningCase, Guid> poisoningCases)
+        IRepository<FoodPoisoningCase, Guid> poisoningCases,
+        IRepository<FoodPoisoningIncident, Guid> poisoningIncidents)
     {
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
@@ -59,6 +61,7 @@ public class StatisticsAppService : ApplicationService
         _adRegistrations = adRegistrations;
         _inspectionResults = inspectionResults;
         _poisoningCases = poisoningCases;
+        _poisoningIncidents = poisoningIncidents;
     }
 
     public async Task<StatisticsDto> GetAsync(StatisticsFilterDto input)
@@ -77,13 +80,16 @@ public class StatisticsAppService : ApplicationService
         }
 
         var year = input.Year ?? _clock.Now.Year;
+        var (rangeStart, rangeEnd) = ComputeDateRange(year, input.Month, input.Quarter);
+        var dtStart = rangeStart.ToDateTime(TimeOnly.MinValue);
+        var dtEnd = rangeEnd.ToDateTime(TimeOnly.MinValue);
 
         var dto = new StatisticsDto();
 
         await AddBusinessStatsAsync(dto, global, orgIds, ct);
         await AddLicenseStatsAsync(dto, global, orgIds, ct);
-        await AddInspectionStatsAsync(dto, global, orgIds, year, ct);
-        await AddPoisoningStatsAsync(dto, global, orgIds, year, ct);
+        await AddInspectionStatsAsync(dto, global, orgIds, year, dtStart, dtEnd, ct);
+        await AddPoisoningStatsAsync(dto, global, orgIds, year, rangeStart, rangeEnd, ct);
 
         return dto;
     }
@@ -191,13 +197,33 @@ public class StatisticsAppService : ApplicationService
         ];
     }
 
+    private static (DateOnly start, DateOnly end) ComputeDateRange(int year, int? month, int? quarter)
+    {
+        if (month.HasValue)
+        {
+            var m = Math.Clamp(month.Value, 1, 12);
+            var s = new DateOnly(year, m, 1);
+            return (s, s.AddMonths(1));
+        }
+
+        if (quarter.HasValue)
+        {
+            var q = Math.Clamp(quarter.Value, 1, 4);
+            var startMonth = (q - 1) * 3 + 1;
+            var s = new DateOnly(year, startMonth, 1);
+            return (s, s.AddMonths(3));
+        }
+
+        return (new DateOnly(year, 1, 1), new DateOnly(year + 1, 1, 1));
+    }
+
     private async Task AddInspectionStatsAsync(
         StatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        int year, CancellationToken ct)
+        int year, DateTime rangeStart, DateTime rangeEnd, CancellationToken ct)
     {
         var resultQ = (await _inspectionResults.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
-            .Where(x => x.InspectionDate.Year == year);
+            .Where(x => x.InspectionDate >= rangeStart && x.InspectionDate < rangeEnd);
 
         var monthly = await AsyncExecuter.ToListAsync(
             resultQ.GroupBy(x => x.InspectionDate.Month)
@@ -249,11 +275,11 @@ public class StatisticsAppService : ApplicationService
 
     private async Task AddPoisoningStatsAsync(
         StatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        int year, CancellationToken ct)
+        int year, DateOnly rangeStart, DateOnly rangeEnd, CancellationToken ct)
     {
         var caseQ = (await _poisoningCases.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
-            .Where(x => x.ReportDate.Year == year);
+            .Where(x => x.ReportDate >= rangeStart && x.ReportDate < rangeEnd);
 
         var monthly = await AsyncExecuter.ToListAsync(
             caseQ.GroupBy(x => x.ReportDate.Month)
@@ -269,5 +295,53 @@ public class StatisticsAppService : ApplicationService
                 Label = monthNames[m],
                 Count = monthly.FirstOrDefault(x => x.Month == m)?.Count ?? 0,
             }).ToList();
+    }
+
+    public async Task<List<PoisoningTrendPoint>> GetFoodPoisoningTrendAsync(StatisticsFilterDto input)
+    {
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.View, _cancellationTokens.Token);
+        var ct = _cancellationTokens.Token;
+        var orgIds = scope.OrganizationIds;
+        var global = scope.HasGlobalAccess;
+
+        if (input.OrganizationId.HasValue &&
+            (global || orgIds.Contains(input.OrganizationId.Value)))
+        {
+            orgIds = new HashSet<Guid> { input.OrganizationId.Value };
+            global = false;
+        }
+
+        var now = _clock.Now;
+        var startDate = new DateTime(now.Year, now.Month, 1).AddMonths(-11);
+
+        var incidentQ = (await _poisoningIncidents.GetQueryableAsync())
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .Where(x => x.OccurrenceDate.HasValue && x.OccurrenceDate.Value >= startDate);
+
+        var grouped = await AsyncExecuter.ToListAsync(
+            incidentQ.GroupBy(x => new { x.OccurrenceDate!.Value.Year, x.OccurrenceDate!.Value.Month })
+                .Select(g => new
+                {
+                    g.Key.Year,
+                    g.Key.Month,
+                    Cases = g.Count(),
+                    Victims = g.Sum(x => x.AffectedCount),
+                }), ct);
+
+        var result = new List<PoisoningTrendPoint>(12);
+        for (var i = 0; i < 12; i++)
+        {
+            var date = startDate.AddMonths(i);
+            var match = grouped.FirstOrDefault(g => g.Year == date.Year && g.Month == date.Month);
+            result.Add(new PoisoningTrendPoint
+            {
+                Month = $"Th{date.Month}/{date.Year % 100}",
+                Cases = match?.Cases ?? 0,
+                Victims = match?.Victims ?? 0,
+            });
+        }
+
+        return result;
     }
 }

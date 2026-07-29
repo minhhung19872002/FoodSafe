@@ -29,5 +29,14 @@ public class MonthlyCount
 public class StatisticsFilterDto
 {
     public int? Year { get; set; }
+    public int? Month { get; set; }
+    public int? Quarter { get; set; }
     public Guid? OrganizationId { get; set; }
+}
+
+public sealed class PoisoningTrendPoint
+{
+    public string Month { get; set; } = string.Empty;
+    public int Cases { get; set; }
+    public int Victims { get; set; }
 }

@@ -26,4 +26,5 @@ public interface IIdentityAdministrationAppService : IApplicationService
     Task DeleteRoleAsync(Guid id);
     Task<ListResultDto<RolePermissionGroupDto>> GetRolePermissionsAsync(Guid id);
     Task UpdateRolePermissionsAsync(Guid id, UpdateRolePermissionsDto input);
+    Task<AllRolesPermissionMatrixDto> GetAllRolesPermissionsAsync();
 }

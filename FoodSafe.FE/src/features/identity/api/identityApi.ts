@@ -2,6 +2,7 @@ import { api } from "@/lib/axios";
 import type {
   AdminRole,
   AdminUser,
+  AllRolesPermissionMatrix,
   GeneratedPassword,
   ListResult,
   PagedResult,
@@ -130,4 +131,9 @@ export const identityApi = {
     api
       .put(`${endpoint}/roles/${id}/permissions`, { permissions })
       .then(() => undefined),
+
+  getPermissionMatrix: (): Promise<AllRolesPermissionMatrix> =>
+    api
+      .get<AllRolesPermissionMatrix>(`${endpoint}/all-roles-permissions`)
+      .then((response) => response.data),
 };

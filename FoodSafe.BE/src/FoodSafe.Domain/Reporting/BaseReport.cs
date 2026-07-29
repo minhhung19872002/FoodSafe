@@ -37,10 +37,25 @@ public abstract class BaseReport : FullAuditedAggregateRoot<Guid>
             throw new BusinessException(FoodSafeDomainErrorCodes.Report.CannotModifyNonDraft);
     }
 
-    public void Submit(Guid submitterId, DateTime submittedAt)
+    protected virtual ReportStatus SubmittableFromStatus => ReportStatus.Draft;
+
+    public void InternallyApprove()
     {
         if (Status != ReportStatus.Draft)
-            throw new BusinessException(FoodSafeDomainErrorCodes.Report.CannotSubmitNonDraft);
+            throw new BusinessException(FoodSafeDomainErrorCodes.Report.CannotInternallyApproveNonDraft);
+
+        Status = ReportStatus.InternallyApproved;
+    }
+
+    public void Submit(Guid submitterId, DateTime submittedAt)
+    {
+        if (Status != SubmittableFromStatus)
+        {
+            var errorCode = SubmittableFromStatus == ReportStatus.InternallyApproved
+                ? FoodSafeDomainErrorCodes.Report.CannotSubmitNonInternallyApproved
+                : FoodSafeDomainErrorCodes.Report.CannotSubmitNonDraft;
+            throw new BusinessException(errorCode);
+        }
 
         SubmissionVersion++;
         SubmittedById = submitterId;

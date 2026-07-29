@@ -471,6 +471,9 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             FoodSafePermissions.Reporting.AtpWorkReports.Delete,
             LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports.Delete"));
         atpWorkReports.AddChild(
+            FoodSafePermissions.Reporting.AtpWorkReports.InternallyApprove,
+            LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports.InternallyApprove"));
+        atpWorkReports.AddChild(
             FoodSafePermissions.Reporting.AtpWorkReports.Submit,
             LocalizableString.Create<FoodSafeResource>("Permission:AtpWorkReports.Submit"));
         atpWorkReports.AddChild(
@@ -497,6 +500,9 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
         actionMonthReports.AddChild(
             FoodSafePermissions.Reporting.ActionMonthReports.Delete,
             LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports.Delete"));
+        actionMonthReports.AddChild(
+            FoodSafePermissions.Reporting.ActionMonthReports.InternallyApprove,
+            LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports.InternallyApprove"));
         actionMonthReports.AddChild(
             FoodSafePermissions.Reporting.ActionMonthReports.Submit,
             LocalizableString.Create<FoodSafeResource>("Permission:ActionMonthReports.Submit"));

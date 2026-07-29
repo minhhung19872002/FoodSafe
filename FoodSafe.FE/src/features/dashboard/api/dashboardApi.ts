@@ -3,6 +3,7 @@ import type {
   DashboardFilter,
   DashboardStats,
   ExpiringLicense,
+  PoisoningTrendPoint,
   ReportComplianceRow,
 } from "../types/dashboard.types";
 
@@ -32,6 +33,17 @@ export const dashboardApi = {
     return (
       await api.get<{ items: ReportComplianceRow[] }>(
         `${endpoint}/report-compliance`,
+        { params: filter },
+      )
+    ).data;
+  },
+
+  async getFoodPoisoningTrend(
+    filter: DashboardFilter,
+  ): Promise<PoisoningTrendPoint[]> {
+    return (
+      await api.get<PoisoningTrendPoint[]>(
+        "/v1/app/statistics/food-poisoning-trend",
         { params: filter },
       )
     ).data;

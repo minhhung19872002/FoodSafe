@@ -20,11 +20,19 @@ export interface AuditLogAction {
   executionDuration: number;
 }
 
+export interface AuditLogPropertyChange {
+  propertyName: string;
+  propertyTypeFullName?: string;
+  originalValue?: string;
+  newValue?: string;
+}
+
 export interface AuditLogEntityChange {
   entityTypeFullName?: string;
   entityId?: string;
   changeType: string;
   changeTime: string;
+  propertyChanges: AuditLogPropertyChange[];
 }
 
 export interface AuditLogDetail extends AuditLog {
@@ -37,6 +45,7 @@ export interface AuditLogDetail extends AuditLog {
 
 export interface AuditLogFilter {
   filter?: string;
+  userName?: string;
   httpMethod?: string;
   httpStatusCode?: number;
   startTime?: string;

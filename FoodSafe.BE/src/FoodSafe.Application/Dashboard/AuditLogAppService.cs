@@ -27,6 +27,7 @@ public class AuditLogAppService : ApplicationService
             endTime: input.EndTime,
             httpMethod: input.HttpMethod,
             url: input.Filter,
+            userName: input.UserName,
             httpStatusCode: input.HttpStatusCode.HasValue ? (HttpStatusCode)input.HttpStatusCode.Value : null,
             hasException: input.HasException,
             cancellationToken: CancellationToken.None);
@@ -39,6 +40,7 @@ public class AuditLogAppService : ApplicationService
             endTime: input.EndTime,
             httpMethod: input.HttpMethod,
             url: input.Filter,
+            userName: input.UserName,
             httpStatusCode: input.HttpStatusCode.HasValue ? (HttpStatusCode)input.HttpStatusCode.Value : null,
             hasException: input.HasException,
             includeDetails: false,
@@ -98,7 +100,15 @@ public class AuditLogAppService : ApplicationService
                     EntityTypeFullName = c.EntityTypeFullName,
                     EntityId = c.EntityId,
                     ChangeType = c.ChangeType.ToString(),
-                    ChangeTime = c.ChangeTime
+                    ChangeTime = c.ChangeTime,
+                    PropertyChanges = c.PropertyChanges
+                        .Select(p => new AuditLogPropertyChangeDto
+                        {
+                            PropertyName = p.PropertyName,
+                            PropertyTypeFullName = p.PropertyTypeFullName,
+                            OriginalValue = p.OriginalValue,
+                            NewValue = p.NewValue
+                        }).ToList()
                 }).ToList()
         };
     }

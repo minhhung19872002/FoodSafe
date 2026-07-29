@@ -632,6 +632,58 @@ public class IdentityAdministrationAppService :
         }
     }
 
+    [Authorize(FoodSafePermissions.SystemAdministration.Roles.Default)]
+    public async Task<AllRolesPermissionMatrixDto> GetAllRolesPermissionsAsync()
+    {
+        var groups = (await _permissionDefinitions.GetGroupsAsync())
+            .Where(group => group.Name == FoodSafePermissions.GroupName)
+            .ToList();
+        var definitions = groups
+            .SelectMany(group => group.GetPermissionsWithChildren())
+            .Where(permission => permission.IsEnabled)
+            .ToList();
+        var permissionNames = definitions
+            .Select(permission => permission.Name)
+            .ToArray();
+        var permissionOptions = definitions
+            .Select(permission => new PermissionOptionDto
+            {
+                Name = permission.Name,
+                DisplayName = permission.DisplayName?.Localize(
+                    StringLocalizerFactory) ?? permission.Name,
+                ParentName = permission.Parent?.Name
+            })
+            .ToList();
+
+        var roles = await _roles.GetListAsync(
+            maxResultCount: MaximumRoleCount,
+            cancellationToken: Token);
+        var roleRows = new List<RolePermissionRowDto>();
+        foreach (var role in roles.Where(IsRoleActive))
+        {
+            var grants = await _permissionManager.GetAsync(
+                permissionNames,
+                RoleProviderName,
+                role.Name);
+            var grantMap = grants.Result.ToDictionary(
+                grant => grant.Name,
+                grant => grant.IsGranted,
+                StringComparer.Ordinal);
+            roleRows.Add(new RolePermissionRowDto
+            {
+                Id = role.Id,
+                Name = role.Name,
+                Grants = grantMap
+            });
+        }
+
+        return new AllRolesPermissionMatrixDto
+        {
+            Permissions = permissionOptions,
+            Roles = roleRows
+        };
+    }
+
     private CancellationToken Token => _cancellationTokens.Token;
 
     private async Task<IQueryable<AdminUserQueryRow>> CreateUserQueryAsync(

@@ -30,6 +30,10 @@ public class SystemSettingsDto
 
     public bool HasLogo { get; set; }
     public bool HasLoginBackground { get; set; }
+
+    public int LicenseExpiryNotificationDays { get; set; }
+    public string? MinioEndpoint { get; set; }
+    public string? MinioBucketName { get; set; }
 }
 
 public class UpdateSystemSettingsDto
@@ -88,6 +92,9 @@ public class UpdateSystemSettingsDto
 
     [StringLength(500)]
     public string? ContactAddress { get; set; }
+
+    [Range(1, 365)]
+    public int LicenseExpiryNotificationDays { get; set; } = 30;
 }
 
 public sealed class BrandingImageDto

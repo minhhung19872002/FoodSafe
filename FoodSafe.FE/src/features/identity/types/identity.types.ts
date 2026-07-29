@@ -119,6 +119,17 @@ export interface ListResult<T> {
   items: T[];
 }
 
+export interface RolePermissionRow {
+  id: string;
+  name: string;
+  grants: Record<string, boolean>;
+}
+
+export interface AllRolesPermissionMatrix {
+  permissions: PermissionOption[];
+  roles: RolePermissionRow[];
+}
+
 export interface UserActivity {
   id: string;
   executionTime: string;

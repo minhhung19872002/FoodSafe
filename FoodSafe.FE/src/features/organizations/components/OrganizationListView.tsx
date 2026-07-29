@@ -17,6 +17,12 @@ import type {
   OrganizationTreeNode,
 } from "../types/organization.types";
 
+interface ParentOption {
+  id: string;
+  name: string;
+  level: OrganizationLevel;
+}
+
 interface Props {
   items: OrganizationDto[];
   treeItems: OrganizationTreeNode[];
@@ -24,6 +30,9 @@ interface Props {
   pagination: TablePaginationConfig;
   filter: string;
   level?: OrganizationLevel;
+  isActive?: boolean;
+  parentId?: string;
+  parentOptions: ParentOption[];
   canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
@@ -32,6 +41,8 @@ interface Props {
   onExport: () => void;
   onFilterChange: (value: string) => void;
   onLevelChange: (value?: OrganizationLevel) => void;
+  onIsActiveChange: (value?: boolean) => void;
+  onParentIdChange: (value?: string) => void;
   onRefresh: () => void;
   onCreate: () => void;
   onEdit: (organization: OrganizationDto) => void;
@@ -60,6 +71,9 @@ export function OrganizationListView({
   pagination,
   filter,
   level,
+  isActive,
+  parentId,
+  parentOptions,
   canCreate,
   canEdit,
   canDelete,
@@ -68,6 +82,8 @@ export function OrganizationListView({
   onExport,
   onFilterChange,
   onLevelChange,
+  onIsActiveChange,
+  onParentIdChange,
   onRefresh,
   onCreate,
   onEdit,
@@ -97,6 +113,30 @@ export function OrganizationListView({
               label: config.label,
             }),
           )}
+        />
+        <Select
+          allowClear
+          placeholder="Trạng thái"
+          value={isActive}
+          onChange={onIsActiveChange}
+          style={{ width: 170 }}
+          options={[
+            { value: true, label: "Hoạt động" },
+            { value: false, label: "Ngừng hoạt động" },
+          ]}
+        />
+        <Select
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="Đơn vị cha"
+          value={parentId}
+          onChange={onParentIdChange}
+          style={{ width: 220 }}
+          options={parentOptions.map((o) => ({
+            value: o.id,
+            label: o.name,
+          }))}
         />
         <Button icon={<ReloadOutlined />} onClick={onRefresh}>
           Làm mới

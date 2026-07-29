@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Card, Col, Row, Select, Space, Spin } from "antd";
+import { Button, Card, Col, Row, Select, Space, Spin } from "antd";
+import { PrinterOutlined } from "@ant-design/icons";
 import type { StatisticsDto } from "../types/statistics.types";
 import {
   BarChart,
@@ -125,12 +126,26 @@ const EMPTY_STATS: StatisticsDto = {
   inspectionOutcome: [],
 };
 
+const monthOptions = Array.from({ length: 12 }, (_, i) => ({
+  value: i + 1,
+  label: `Tháng ${i + 1}`,
+}));
+
+const quarterOptions = [
+  { value: 1, label: "Quý I" },
+  { value: 2, label: "Quý II" },
+  { value: 3, label: "Quý III" },
+  { value: 4, label: "Quý IV" },
+];
+
 export default function StatisticsPage() {
   const [year, setYear] = useState(currentYear());
+  const [month, setMonth] = useState<number>();
+  const [quarter, setQuarter] = useState<number>();
   const [organizationId, setOrganizationId] = useState<string>();
   const filter = useMemo(
-    () => ({ year, organizationId }),
-    [year, organizationId],
+    () => ({ year, month, quarter, organizationId }),
+    [year, month, quarter, organizationId],
   );
   const { data, isLoading } = useStatistics(filter);
   const stats = data ?? EMPTY_STATS;
@@ -155,12 +170,34 @@ export default function StatisticsPage() {
       <PageHeader
         title="Thống kê tổng hợp"
         actions={
-          <Space>
+          <Space wrap>
             <Select
               value={year}
               onChange={setYear}
               options={yearOptions}
               style={{ width: 140 }}
+            />
+            <Select
+              allowClear
+              placeholder="Chọn quý"
+              value={quarter}
+              onChange={(v) => {
+                setQuarter(v);
+                if (v != null) setMonth(undefined);
+              }}
+              options={quarterOptions}
+              style={{ width: 120 }}
+            />
+            <Select
+              allowClear
+              placeholder="Chọn tháng"
+              value={month}
+              onChange={(v) => {
+                setMonth(v);
+                if (v != null) setQuarter(undefined);
+              }}
+              options={monthOptions}
+              style={{ width: 130 }}
             />
             {canViewOrganizations && (
               <Select
@@ -175,6 +212,9 @@ export default function StatisticsPage() {
                 style={{ width: 220 }}
               />
             )}
+            <Button icon={<PrinterOutlined />} onClick={() => window.print()}>
+              Xuất PDF
+            </Button>
           </Space>
         }
       />
@@ -406,7 +446,12 @@ export default function StatisticsPage() {
         </Row>
       )}
 
-      <ReportStatisticsSection year={year} organizationId={organizationId} />
+      <ReportStatisticsSection
+        year={year}
+        month={month}
+        quarter={quarter}
+        organizationId={organizationId}
+      />
     </div>
   );
 }

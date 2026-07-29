@@ -130,6 +130,15 @@ public class ActionMonthReportAppService : ApplicationService
         await _reports.DeleteAsync(entity, cancellationToken: _cancellationTokens.Token);
     }
 
+    [Authorize(FoodSafePermissions.Reporting.ActionMonthReports.InternallyApprove)]
+    public async Task<ActionMonthReportDto> InternallyApproveAsync(Guid id)
+    {
+        var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
+        entity.InternallyApprove();
+        await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
+        return ToDto(entity);
+    }
+
     [Authorize(FoodSafePermissions.Reporting.ActionMonthReports.Submit)]
     public async Task<ActionMonthReportDto> SubmitAsync(Guid id)
     {

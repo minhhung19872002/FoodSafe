@@ -45,6 +45,7 @@ export interface OrganizationFilter {
   filter?: string;
   level?: OrganizationLevel;
   isActive?: boolean;
+  parentId?: string;
   skipCount: number;
   maxResultCount: number;
 }

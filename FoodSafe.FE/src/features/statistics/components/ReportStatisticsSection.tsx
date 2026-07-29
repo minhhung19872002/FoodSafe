@@ -15,6 +15,8 @@ import type {
 
 interface Props {
   year: number;
+  month?: number;
+  quarter?: number;
   organizationId?: string;
 }
 
@@ -53,9 +55,14 @@ const breakdownColumns: ColumnsType<BusinessBreakdownRow> = [
   { title: "Số cơ sở", dataIndex: "count", align: "right" },
 ];
 
-export function ReportStatisticsSection({ year, organizationId }: Props) {
+export function ReportStatisticsSection({
+  year,
+  month,
+  quarter,
+  organizationId,
+}: Props) {
   const { message } = App.useApp();
-  const filter = { year, organizationId };
+  const filter = { year, month, quarter, organizationId };
   const { data, isLoading } = useReportStatistics(filter);
   const exportMut = useMutation({
     mutationFn: (kind: ReportExportKind) =>

@@ -4,6 +4,8 @@ namespace FoodSafe.Reporting;
 
 public sealed class AtpWorkReport : BaseReport
 {
+    protected override ReportStatus SubmittableFromStatus => ReportStatus.InternallyApproved;
+
     public ReportPeriodType PeriodType { get; private set; }
     public int PeriodYear { get; private set; }
     public int? PeriodHalf { get; private set; }

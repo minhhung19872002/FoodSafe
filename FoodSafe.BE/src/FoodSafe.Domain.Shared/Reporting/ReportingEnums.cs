@@ -6,7 +6,8 @@ public enum ReportStatus : short
     Submitted = 2,
     Verified = 3,
     Returned = 4,
-    Completed = 5
+    Completed = 5,
+    InternallyApproved = 6
 }
 
 public enum ReportPeriodType : short

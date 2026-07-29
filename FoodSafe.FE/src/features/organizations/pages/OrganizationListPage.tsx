@@ -65,6 +65,8 @@ export default function OrganizationListPage() {
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const [filter, setFilter] = useState("");
   const [level, setLevel] = useState<OrganizationLevel>();
+  const [isActive, setIsActive] = useState<boolean>();
+  const [parentId, setParentId] = useState<string>();
   const pagination = useTablePagination(20);
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<OrganizationDto>();
@@ -75,10 +77,19 @@ export default function OrganizationListPage() {
     () => ({
       filter: filter || undefined,
       level,
+      isActive,
+      parentId,
       skipCount: pagination.skipCount,
       maxResultCount: pagination.maxResultCount,
     }),
-    [filter, level, pagination.skipCount, pagination.maxResultCount],
+    [
+      filter,
+      level,
+      isActive,
+      parentId,
+      pagination.skipCount,
+      pagination.maxResultCount,
+    ],
   );
 
   const listQuery = useOrganizationList(queryFilter);
@@ -88,15 +99,22 @@ export default function OrganizationListPage() {
   const deleteMutation = useDeleteOrganization();
   const exportMutation = useMutation({
     mutationFn: () =>
-      organizationApi.exportExcel({ filter: filter || undefined, level }),
+      organizationApi.exportExcel({
+        filter: filter || undefined,
+        level,
+        isActive,
+        parentId,
+      }),
   });
+  const allOrganizationOptions = useMemo(
+    () => flattenTree(treeQuery.data?.items ?? []),
+    [treeQuery.data?.items],
+  );
   const organizationOptions = useMemo(() => {
-    const tree = treeQuery.data?.items ?? [];
-    const excluded = editing
-      ? descendantIds(tree, editing.id)
-      : new Set<string>();
-    return flattenTree(tree).filter((item) => !excluded.has(item.id));
-  }, [editing, treeQuery.data?.items]);
+    if (!editing) return allOrganizationOptions;
+    const excluded = descendantIds(treeQuery.data?.items ?? [], editing.id);
+    return allOrganizationOptions.filter((item) => !excluded.has(item.id));
+  }, [editing, allOrganizationOptions, treeQuery.data?.items]);
 
   const refresh = () => {
     void listQuery.refetch();
@@ -118,6 +136,9 @@ export default function OrganizationListPage() {
           pagination={pagination.buildConfig(listQuery.data?.totalCount)}
           filter={filter}
           level={level}
+          isActive={isActive}
+          parentId={parentId}
+          parentOptions={allOrganizationOptions}
           canCreate={hasPermission("FoodSafe.Organizations.Create")}
           canEdit={hasPermission("FoodSafe.Organizations.Edit")}
           canDelete={hasPermission("FoodSafe.Organizations.Delete")}
@@ -139,6 +160,14 @@ export default function OrganizationListPage() {
           }}
           onLevelChange={(value) => {
             setLevel(value);
+            pagination.resetToFirstPage();
+          }}
+          onIsActiveChange={(value) => {
+            setIsActive(value);
+            pagination.resetToFirstPage();
+          }}
+          onParentIdChange={(value) => {
+            setParentId(value);
             pagination.resetToFirstPage();
           }}
           onRefresh={refresh}

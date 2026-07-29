@@ -63,3 +63,9 @@ export interface DashboardStats {
   licenseBreakdown: LicenseBreakdownItem[];
   recentActivities: RecentActivityItem[];
 }
+
+export interface PoisoningTrendPoint {
+  month: string;
+  cases: number;
+  victims: number;
+}

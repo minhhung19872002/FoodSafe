@@ -233,3 +233,16 @@ public sealed class RolePermissionUpdateDto
 
     public bool IsGranted { get; set; }
 }
+
+public sealed class AllRolesPermissionMatrixDto
+{
+    public IReadOnlyList<PermissionOptionDto> Permissions { get; set; } = [];
+    public IReadOnlyList<RolePermissionRowDto> Roles { get; set; } = [];
+}
+
+public sealed class RolePermissionRowDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public Dictionary<string, bool> Grants { get; set; } = [];
+}

@@ -21,11 +21,18 @@ export interface SystemSettings {
   contactAddress?: string;
   hasLogo: boolean;
   hasLoginBackground: boolean;
+  licenseExpiryNotificationDays: number;
+  minioEndpoint?: string;
+  minioBucketName?: string;
 }
 
 export interface UpdateSystemSettingsInput extends Omit<
   SystemSettings,
-  "hasSmtpPassword" | "hasLogo" | "hasLoginBackground"
+  | "hasSmtpPassword"
+  | "hasLogo"
+  | "hasLoginBackground"
+  | "minioEndpoint"
+  | "minioBucketName"
 > {
   smtpPassword?: string;
 }

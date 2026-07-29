@@ -4,6 +4,8 @@ namespace FoodSafe.Reporting;
 
 public sealed class ActionMonthReport : BaseReport
 {
+    protected override ReportStatus SubmittableFromStatus => ReportStatus.InternallyApproved;
+
     public int PeriodYear { get; private set; }
     public string? ActionMonthTheme { get; private set; }
     public string? ActionMonthDates { get; private set; }

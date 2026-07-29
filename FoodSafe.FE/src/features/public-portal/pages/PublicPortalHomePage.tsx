@@ -94,6 +94,22 @@ const PORTAL_TILES: PortalTile[] = [
     iconColor: brand.red,
   },
   {
+    title: "Kết quả kiểm nghiệm",
+    description: "Tra cứu kết quả kiểm nghiệm mẫu thực phẩm",
+    to: "/tra-cuu-ket-qua-kiem-nghiem",
+    icon: "🔬",
+    iconBg: "#F3E8FD",
+    iconColor: "#6B21A8",
+  },
+  {
+    title: "Phân tích nguy cơ",
+    description: "Kết quả phân tích nguy cơ an toàn thực phẩm",
+    to: "/tra-cuu-phan-tich-nguy-co",
+    icon: "📊",
+    iconBg: "#FBEAE7",
+    iconColor: brand.red,
+  },
+  {
     title: "Tin tức & Cảnh báo",
     description: "Tin tức, cảnh báo và phân tích nguy cơ ATTP",
     to: "/tin-tuc",

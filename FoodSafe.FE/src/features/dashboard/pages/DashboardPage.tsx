@@ -41,6 +41,7 @@ import { useCatalogOptions } from "@/features/catalogs/api/catalogQueries";
 import {
   useDashboardStats,
   useExpiringLicenses,
+  useFoodPoisoningTrend,
   useReportCompliance,
 } from "../api/dashboardQueries";
 import { RecentActivityPanel } from "../components/RecentActivityPanel";
@@ -222,24 +223,6 @@ const yearOptions = Array.from({ length: 5 }, (_, index) => ({
   label: `Năm ${currentYear - index}`,
 }));
 
-// TODO: Replace with real data from GET /api/v1/app/statistics/food-poisoning-trend
-// once that endpoint is implemented on the backend.
-// Data shape expected: { month: string; cases: number; victims: number }[]
-const DEMO_POISONING_TREND = [
-  { month: "Th8/25", cases: 2, victims: 8 },
-  { month: "Th9/25", cases: 1, victims: 3 },
-  { month: "Th10/25", cases: 3, victims: 12 },
-  { month: "Th11/25", cases: 0, victims: 0 },
-  { month: "Th12/25", cases: 1, victims: 5 },
-  { month: "Th1/26", cases: 2, victims: 9 },
-  { month: "Th2/26", cases: 0, victims: 0 },
-  { month: "Th3/26", cases: 4, victims: 18 },
-  { month: "Th4/26", cases: 1, victims: 4 },
-  { month: "Th5/26", cases: 2, victims: 7 },
-  { month: "Th6/26", cases: 3, victims: 11 },
-  { month: "Th7/26", cases: 1, victims: 5 },
-];
-
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const hasPermission = useAuthStore((s) => s.hasPermission);
@@ -253,6 +236,7 @@ export default function DashboardPage() {
   const { data: stats, isLoading } = useDashboardStats(filter);
   const compliance = useReportCompliance(filter);
   const expiringLicenses = useExpiringLicenses(filter);
+  const poisoningTrend = useFoodPoisoningTrend(filter);
 
   // Business map: fetch up to 500 businesses scoped to the selected org unit.
   // Fetching is independent of the year filter because locations don't change yearly.
@@ -582,64 +566,58 @@ export default function DashboardPage() {
           <Card
             title="Diễn biến ngộ độc thực phẩm (12 tháng gần nhất)"
             size="small"
-            extra={
-              <span style={{ fontSize: 11, color: "rgba(0,0,0,0.45)" }}>
-                Dữ liệu minh hoạ — chưa có API
-              </span>
-            }
           >
-            {/* TODO: Replace DEMO_POISONING_TREND with real data from
-                GET /api/v1/app/statistics/food-poisoning-trend
-                (endpoint needs to be implemented on the backend). */}
-            <ResponsiveContainer width="100%" height={360}>
-              <LineChart
-                data={DEMO_POISONING_TREND}
-                margin={{ top: 8, right: 16, left: -16, bottom: 0 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(0,0,0,0.08)"
-                />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 11 }}
-                  interval={0}
-                  angle={-35}
-                  textAnchor="end"
-                  height={42}
-                />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip
-                  formatter={(value, name) => [
-                    value as number,
-                    name === "cases" ? "Số vụ" : "Số người",
-                  ]}
-                />
-                <Legend
-                  formatter={(value) =>
-                    value === "cases"
-                      ? "Số vụ ngộ độc"
-                      : "Số người bị ảnh hưởng"
-                  }
-                />
-                <Line
-                  type="monotone"
-                  dataKey="cases"
-                  stroke={brand.red}
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="victims"
-                  stroke={brand.amber}
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <Spin spinning={poisoningTrend.isLoading}>
+              <ResponsiveContainer width="100%" height={360}>
+                <LineChart
+                  data={poisoningTrend.data ?? []}
+                  margin={{ top: 8, right: 16, left: -16, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(0,0,0,0.08)"
+                  />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 11 }}
+                    interval={0}
+                    angle={-35}
+                    textAnchor="end"
+                    height={42}
+                  />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip
+                    formatter={(value, name) => [
+                      value as number,
+                      name === "cases" ? "Số vụ" : "Số người",
+                    ]}
+                  />
+                  <Legend
+                    formatter={(value) =>
+                      value === "cases"
+                        ? "Số vụ ngộ độc"
+                        : "Số người bị ảnh hưởng"
+                    }
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="cases"
+                    stroke={brand.red}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="victims"
+                    stroke={brand.amber}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Spin>
           </Card>
         </Col>
       </Row>

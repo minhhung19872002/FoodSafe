@@ -23,6 +23,8 @@ export interface StatisticsDto {
 
 export interface StatisticsFilter {
   year?: number;
+  month?: number;
+  quarter?: number;
   organizationId?: string;
 }
 

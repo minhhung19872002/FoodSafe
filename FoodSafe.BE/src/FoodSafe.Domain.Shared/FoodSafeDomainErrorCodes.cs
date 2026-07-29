@@ -200,6 +200,8 @@ public static class FoodSafeDomainErrorCodes
         public const string InvalidPeriod = "FoodSafe:Report:0009";
         public const string DuplicatePeriod = "FoodSafe:Report:0010";
         public const string CannotReturnToDraftNonReturned = "FoodSafe:Report:0011";
+        public const string CannotInternallyApproveNonDraft = "FoodSafe:Report:0012";
+        public const string CannotSubmitNonInternallyApproved = "FoodSafe:Report:0013";
     }
 
     public static class Catalog

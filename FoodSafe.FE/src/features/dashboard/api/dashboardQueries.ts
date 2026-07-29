@@ -10,6 +10,8 @@ export const dashboardKeys = {
     [...dashboardKeys.all, "compliance", filter] as const,
   expiringLicenses: (filter: DashboardFilter) =>
     [...dashboardKeys.all, "expiring-licenses", filter] as const,
+  poisoningTrend: (filter: DashboardFilter) =>
+    [...dashboardKeys.all, "poisoning-trend", filter] as const,
 };
 
 export function useDashboardStats(filter: DashboardFilter) {
@@ -32,6 +34,14 @@ export function useReportCompliance(filter: DashboardFilter) {
   return useQuery({
     queryKey: dashboardKeys.compliance(filter),
     queryFn: () => dashboardApi.getReportCompliance(filter),
+    staleTime: 60_000,
+  });
+}
+
+export function useFoodPoisoningTrend(filter: DashboardFilter) {
+  return useQuery({
+    queryKey: dashboardKeys.poisoningTrend(filter),
+    queryFn: () => dashboardApi.getFoodPoisoningTrend(filter),
     staleTime: 60_000,
   });
 }

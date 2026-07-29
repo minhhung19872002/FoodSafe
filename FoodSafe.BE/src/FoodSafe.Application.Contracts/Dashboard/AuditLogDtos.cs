@@ -49,11 +49,21 @@ public sealed class AuditLogEntityChangeDto
     public string? EntityId { get; set; }
     public string ChangeType { get; set; } = string.Empty;
     public DateTime ChangeTime { get; set; }
+    public List<AuditLogPropertyChangeDto> PropertyChanges { get; set; } = [];
+}
+
+public sealed class AuditLogPropertyChangeDto
+{
+    public string PropertyName { get; set; } = string.Empty;
+    public string? PropertyTypeFullName { get; set; }
+    public string? OriginalValue { get; set; }
+    public string? NewValue { get; set; }
 }
 
 public sealed class GetAuditLogListInput : PagedAndSortedResultRequestDto
 {
     public string? Filter { get; set; }
+    public string? UserName { get; set; }
     public string? HttpMethod { get; set; }
     public int? HttpStatusCode { get; set; }
     public DateTime? StartTime { get; set; }

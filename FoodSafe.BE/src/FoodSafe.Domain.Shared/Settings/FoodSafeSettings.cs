@@ -29,4 +29,10 @@ public static class FoodSafeSettings
         public const string PasswordMaxLength =
             Prefix + ".Security.PasswordMaxLength";
     }
+
+    public static class License
+    {
+        public const string ExpiryNotificationDays =
+            Prefix + ".License.ExpiryNotificationDays";
+    }
 }

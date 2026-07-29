@@ -259,6 +259,7 @@ public static class FoodSafePermissions
             public const string Create = Default + ".Create";
             public const string Edit = Default + ".Edit";
             public const string Delete = Default + ".Delete";
+            public const string InternallyApprove = Default + ".InternallyApprove";
             public const string Submit = Default + ".Submit";
             public const string Verify = Default + ".Verify";
             public const string Return = Default + ".Return";
@@ -272,6 +273,7 @@ public static class FoodSafePermissions
             public const string Create = Default + ".Create";
             public const string Edit = Default + ".Edit";
             public const string Delete = Default + ".Delete";
+            public const string InternallyApprove = Default + ".InternallyApprove";
             public const string Submit = Default + ".Submit";
             public const string Verify = Default + ".Verify";
             public const string Return = Default + ".Return";

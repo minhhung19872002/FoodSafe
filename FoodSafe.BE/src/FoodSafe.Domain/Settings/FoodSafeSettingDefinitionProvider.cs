@@ -36,6 +36,9 @@ public class FoodSafeSettingDefinitionProvider : SettingDefinitionProvider
                 string.Empty),
             new SettingDefinition(
                 FoodSafeSettings.Security.PasswordMaxLength,
-                "128"));
+                "128"),
+            new SettingDefinition(
+                FoodSafeSettings.License.ExpiryNotificationDays,
+                "30"));
     }
 }

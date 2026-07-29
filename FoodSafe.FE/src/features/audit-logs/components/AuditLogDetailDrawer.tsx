@@ -13,6 +13,7 @@ import { useAuditLogDetail } from "../api/auditLogQueries";
 import type {
   AuditLogAction,
   AuditLogEntityChange,
+  AuditLogPropertyChange,
 } from "../types/auditLog.types";
 
 interface Props {
@@ -49,6 +50,35 @@ const changeColumns: ColumnsType<AuditLogEntityChange> = [
     dataIndex: "changeType",
     width: 100,
     render: (v: string) => <Tag>{v}</Tag>,
+  },
+];
+
+const propertyChangeColumns: ColumnsType<AuditLogPropertyChange> = [
+  {
+    title: "Thuộc tính",
+    dataIndex: "propertyName",
+    width: 180,
+    ellipsis: true,
+  },
+  {
+    title: "Giá trị cũ",
+    dataIndex: "originalValue",
+    ellipsis: true,
+    render: (v?: string) => (
+      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+        {v ?? "—"}
+      </Typography.Text>
+    ),
+  },
+  {
+    title: "Giá trị mới",
+    dataIndex: "newValue",
+    ellipsis: true,
+    render: (v?: string) => (
+      <Typography.Text strong style={{ fontSize: 12 }}>
+        {v ?? "—"}
+      </Typography.Text>
+    ),
   },
 ];
 
@@ -144,6 +174,18 @@ export function AuditLogDetailDrawer({ auditLogId, onClose }: Props) {
                 dataSource={data.entityChanges}
                 size="small"
                 pagination={false}
+                expandable={{
+                  expandedRowRender: (row) => (
+                    <Table
+                      rowKey="propertyName"
+                      columns={propertyChangeColumns}
+                      dataSource={row.propertyChanges}
+                      size="small"
+                      pagination={false}
+                    />
+                  ),
+                  rowExpandable: (row) => row.propertyChanges?.length > 0,
+                }}
               />
             </>
           )}

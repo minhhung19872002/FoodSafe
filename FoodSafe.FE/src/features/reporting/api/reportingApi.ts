@@ -185,6 +185,11 @@ export const atpWorkReportApi = {
   async delete(id: string): Promise<void> {
     await api.delete(`${atpEndpoint}/${id}`);
   },
+  async internallyApprove(id: string): Promise<AtpWorkReport> {
+    return (
+      await api.post<AtpWorkReport>(`${atpEndpoint}/${id}/internally-approve`)
+    ).data;
+  },
   async submit(id: string): Promise<AtpWorkReport> {
     return (await api.post<AtpWorkReport>(`${atpEndpoint}/${id}/submit`)).data;
   },
@@ -251,6 +256,13 @@ export const actionMonthReportApi = {
   },
   async delete(id: string): Promise<void> {
     await api.delete(`${amrEndpoint}/${id}`);
+  },
+  async internallyApprove(id: string): Promise<ActionMonthReport> {
+    return (
+      await api.post<ActionMonthReport>(
+        `${amrEndpoint}/${id}/internally-approve`,
+      )
+    ).data;
   },
   async submit(id: string): Promise<ActionMonthReport> {
     return (await api.post<ActionMonthReport>(`${amrEndpoint}/${id}/submit`))

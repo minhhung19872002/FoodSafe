@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   Col,
+  Descriptions,
   Form,
   Image,
   Input,
@@ -24,6 +25,8 @@ import {
   SaveOutlined,
   HomeOutlined,
   UploadOutlined,
+  CloudServerOutlined,
+  SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import { PageHeader } from "@/components/PageHeader";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -159,6 +162,7 @@ export default function SystemSettingsPage() {
         contactPhone: data.contactPhone,
         contactEmail: data.contactEmail,
         contactAddress: data.contactAddress,
+        licenseExpiryNotificationDays: data.licenseExpiryNotificationDays,
       });
     }
   }, [data, form]);
@@ -290,6 +294,26 @@ export default function SystemSettingsPage() {
                 rules={[{ required: true, message: "Bắt buộc" }]}
               >
                 <InputNumber min={1} max={1440} style={{ width: "100%" }} />
+              </Form.Item>
+            </Card>
+
+            <Card
+              title={
+                <span>
+                  <SafetyCertificateOutlined style={{ marginRight: 8 }} />
+                  Giấy phép & Chứng nhận
+                </span>
+              }
+              size="small"
+              style={{ marginTop: 16 }}
+            >
+              <Form.Item
+                name="licenseExpiryNotificationDays"
+                label="Cảnh báo giấy phép sắp hết hạn (ngày)"
+                rules={[{ required: true, message: "Bắt buộc" }]}
+                extra="Số ngày trước khi hết hạn để hệ thống gửi cảnh báo"
+              >
+                <InputNumber min={1} max={365} style={{ width: "100%" }} />
               </Form.Item>
             </Card>
           </Col>
@@ -433,6 +457,37 @@ export default function SystemSettingsPage() {
               </Row>
             </Card>
           </Col>
+
+          {(data?.minioEndpoint || data?.minioBucketName) && (
+            <Col xs={24}>
+              <Card
+                title={
+                  <span>
+                    <CloudServerOutlined style={{ marginRight: 8 }} />
+                    Lưu trữ file (MinIO)
+                  </span>
+                }
+                size="small"
+              >
+                <Descriptions column={1} size="small">
+                  <Descriptions.Item label="Endpoint">
+                    <Typography.Text code>
+                      {data.minioEndpoint ?? "—"}
+                    </Typography.Text>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Bucket">
+                    <Typography.Text code>
+                      {data.minioBucketName ?? "—"}
+                    </Typography.Text>
+                  </Descriptions.Item>
+                </Descriptions>
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  Thông tin cấu hình MinIO chỉ đọc. Thay đổi qua file cấu hình
+                  server.
+                </Typography.Text>
+              </Card>
+            </Col>
+          )}
         </Row>
 
         {canEdit && (

@@ -171,6 +171,14 @@ export function useDeleteAtpWorkReport() {
   });
 }
 
+export function useInternallyApproveAtpWorkReport() {
+  const refresh = useAtpRefresh();
+  return useMutation({
+    mutationFn: (id: string) => atpWorkReportApi.internallyApprove(id),
+    onSuccess: refresh,
+  });
+}
+
 export function useSubmitAtpWorkReport() {
   const refresh = useAtpRefresh();
   return useMutation({
@@ -258,6 +266,14 @@ export function useDeleteActionMonthReport() {
   const refresh = useAmrRefresh();
   return useMutation({
     mutationFn: (id: string) => actionMonthReportApi.delete(id),
+    onSuccess: refresh,
+  });
+}
+
+export function useInternallyApproveActionMonthReport() {
+  const refresh = useAmrRefresh();
+  return useMutation({
+    mutationFn: (id: string) => actionMonthReportApi.internallyApprove(id),
     onSuccess: refresh,
   });
 }

@@ -129,6 +129,15 @@ export default function AuditLogPage() {
 
       <Space wrap style={{ marginBottom: 16 }}>
         <Input.Search
+          placeholder="Tìm theo người dùng"
+          allowClear
+          style={{ width: 200 }}
+          onSearch={(v) => {
+            setFilter((p) => ({ ...p, userName: v || undefined }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <Input.Search
           placeholder="Tìm theo URL"
           allowClear
           style={{ width: 240 }}

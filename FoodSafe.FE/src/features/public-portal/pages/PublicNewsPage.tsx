@@ -242,15 +242,38 @@ function NewsListTab() {
 // ── Alerts tab ────────────────────────────────────────────────────────────────
 
 function AlertsTab() {
+  const [keyword, setKeyword] = useState("");
+  const [submittedKeyword, setSubmittedKeyword] = useState("");
   const pagination = useTablePagination(20);
 
   const { data, isFetching, isError } = usePublicAlerts({
+    Keyword: submittedKeyword || undefined,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   });
 
+  const handleSearch = () => {
+    pagination.resetToFirstPage();
+    setSubmittedKeyword(keyword);
+  };
+
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
+      <Space.Compact style={{ width: "100%", maxWidth: 500 }}>
+        <Input
+          value={keyword}
+          placeholder="Tìm kiếm cảnh báo..."
+          onChange={(e) => setKeyword(e.target.value)}
+          onPressEnter={handleSearch}
+          allowClear
+        />
+        <Input.Search
+          enterButton="Tìm"
+          loading={isFetching}
+          onSearch={handleSearch}
+        />
+      </Space.Compact>
+
       {isError && (
         <Alert type="error" message="Không thể tải dữ liệu." showIcon />
       )}
@@ -317,15 +340,38 @@ function AlertsTab() {
 // ── Risk analysis tab ─────────────────────────────────────────────────────────
 
 function RiskAnalysisTab() {
+  const [keyword, setKeyword] = useState("");
+  const [submittedKeyword, setSubmittedKeyword] = useState("");
   const pagination = useTablePagination(20);
 
   const { data, isFetching, isError } = usePublicRiskAnalyses({
+    Keyword: submittedKeyword || undefined,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   });
 
+  const handleSearch = () => {
+    pagination.resetToFirstPage();
+    setSubmittedKeyword(keyword);
+  };
+
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
+      <Space.Compact style={{ width: "100%", maxWidth: 500 }}>
+        <Input
+          value={keyword}
+          placeholder="Tìm kiếm phân tích nguy cơ..."
+          onChange={(e) => setKeyword(e.target.value)}
+          onPressEnter={handleSearch}
+          allowClear
+        />
+        <Input.Search
+          enterButton="Tìm"
+          loading={isFetching}
+          onSearch={handleSearch}
+        />
+      </Space.Compact>
+
       {isError && (
         <Alert type="error" message="Không thể tải dữ liệu." showIcon />
       )}

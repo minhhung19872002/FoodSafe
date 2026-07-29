@@ -4,6 +4,7 @@ export const REPORT_STATUS = {
   Verified: 3,
   Returned: 4,
   Completed: 5,
+  InternallyApproved: 6,
 } as const;
 export type ReportStatus = (typeof REPORT_STATUS)[keyof typeof REPORT_STATUS];
 
@@ -16,6 +17,10 @@ export const REPORT_STATUS_CONFIG: Record<
   [REPORT_STATUS.Verified]: { color: "green", label: "Đã xác minh" },
   [REPORT_STATUS.Returned]: { color: "orange", label: "Trả lại" },
   [REPORT_STATUS.Completed]: { color: "purple", label: "Hoàn thành" },
+  [REPORT_STATUS.InternallyApproved]: {
+    color: "cyan",
+    label: "Đã duyệt nội bộ",
+  },
 };
 
 export const REPORT_PERIOD_TYPE = {

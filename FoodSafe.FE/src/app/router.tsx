@@ -51,6 +51,8 @@ import {
   PublicCertificateSearchPage,
   PublicWarnedBusinessesPage,
   PublicNewsPage,
+  PublicRiskAnalysisSearchPage,
+  PublicTestingResultSearchPage,
   PublicDocumentsPage,
   CitizenAlertReportPage,
   CitizenNewsReportPage,
@@ -104,6 +106,22 @@ const appRoutes: RouteObject[] = [
     element: (
       <Suspense fallback={<RouteLoading />}>
         <PublicNewsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-phan-tich-nguy-co",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicRiskAnalysisSearchPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/tra-cuu-ket-qua-kiem-nghiem",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicTestingResultSearchPage />
       </Suspense>
     ),
   },
