@@ -151,9 +151,8 @@ export const testingResultApi = {
   async uploadPdf(file: File): Promise<{ storagePath: string }> {
     const form = new FormData();
     form.append("file", file);
-    return (
-      await api.post<{ storagePath: string }>(`${endpoint}/pdf`, form)
-    ).data;
+    return (await api.post<{ storagePath: string }>(`${endpoint}/pdf`, form))
+      .data;
   },
 
   /** URL to serve a previously uploaded phiếu kiểm nghiệm PDF (authenticated endpoint). */
