@@ -606,8 +606,7 @@ function IncidentsTab() {
               key: "pdf",
               label: "Tải phiếu kết thúc",
               icon: <FilePdfOutlined />,
-              hidden:
-                record.status !== POISONING_INCIDENT_STATUS.Concluded,
+              hidden: record.status !== POISONING_INCIDENT_STATUS.Concluded,
               onClick: () =>
                 downloadPdfMut.mutate(record.id, {
                   onSuccess: (file) => saveDownload(file.blob, file.fileName),
