@@ -73,6 +73,8 @@ export interface CreatedAdminUser {
 }
 
 export interface SaveUserInput {
+  /** Login name. Only sent on create — it is fixed once the account exists. */
+  userName?: string;
   fullName: string;
   email: string;
   phoneNumber?: string;

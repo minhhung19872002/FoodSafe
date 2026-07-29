@@ -144,7 +144,7 @@ public class IdentityAdministrationAppService :
         var email = input.Email.Trim();
         var user = new IdentityUser(
             GuidGenerator.Create(),
-            email,
+            input.UserName.Trim(),
             email,
             CurrentTenant.Id)
         {
@@ -232,8 +232,10 @@ public class IdentityAdministrationAppService :
         var email = input.Email.Trim();
         if (!string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
         {
+            // The login name is set once at creation and stays put. Renaming it
+            // alongside the email — as this used to — would silently change how
+            // the person signs in and break the audit trail's user references.
             (await _userManager.SetEmailAsync(user, email)).CheckErrors();
-            (await _userManager.SetUserNameAsync(user, email)).CheckErrors();
         }
         (await _userManager.SetPhoneNumberAsync(
             user,

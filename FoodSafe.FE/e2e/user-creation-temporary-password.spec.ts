@@ -12,7 +12,12 @@ import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
  */
 
 interface CreatedUser {
-  user: { id: string; email: string; mustChangePassword: boolean };
+  user: {
+    id: string;
+    email: string;
+    userName: string;
+    mustChangePassword: boolean;
+  };
   temporaryPassword: string;
   notificationEmailSent: boolean;
 }
@@ -27,7 +32,7 @@ async function firstOrganizationId(page: Page) {
   return body.items[0].id;
 }
 
-async function createUser(page: Page, email: string) {
+async function createUser(page: Page, email: string, userName?: string) {
   const token = await requestVerificationToken(page);
   const response = await page
     .context()
@@ -35,6 +40,9 @@ async function createUser(page: Page, email: string) {
       headers: { RequestVerificationToken: token },
       failOnStatusCode: false,
       data: {
+        // Login name is independent of the mailbox: staff without a work email
+        // address of their own still need an account.
+        userName: userName ?? `e2e.user.${Date.now()}`,
         fullName: "E2E Temp Password User",
         email,
         phoneNumber: "0912345678",
@@ -80,6 +88,9 @@ test.describe("Account creation hands over a temporary password", () => {
 
     expect(created.user.email).toBe(email);
     expect(created.user.mustChangePassword).toBe(true);
+    // The login name must be what the administrator typed, not the address.
+    expect(created.user.userName).not.toBe(email);
+    expect(created.user.userName).toMatch(/^e2e\.user\./);
     // Mailpit is part of the local stack, so delivery should succeed here.
     expect(created.notificationEmailSent).toBe(true);
 
@@ -150,11 +161,13 @@ test.describe("Account creation hands over a temporary password", () => {
       );
       expect(xsrf, "XSRF-TOKEN cookie").toBeDefined();
 
+      // Sign in with the login name, not the address — that is the whole point
+      // of keeping the two apart.
       const login = await fresh.context().request.post("/api/account/login", {
         headers: { RequestVerificationToken: decodeURIComponent(xsrf!.value) },
         failOnStatusCode: false,
         data: {
-          userNameOrEmailAddress: email,
+          userNameOrEmailAddress: created.user.userName,
           password: created.temporaryPassword,
           captchaToken: "XXXX.DUMMY.TOKEN.XXXX",
           rememberMe: false,
@@ -179,7 +192,7 @@ test.describe("Account creation hands over a temporary password", () => {
               },
               failOnStatusCode: false,
               data: {
-                userNameOrEmailAddress: email,
+                userNameOrEmailAddress: created.user.userName,
                 currentPassword,
                 newPassword: "Doi-Mat-Khau-9!",
                 captchaToken: "XXXX.DUMMY.TOKEN.XXXX",

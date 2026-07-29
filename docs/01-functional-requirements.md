@@ -67,9 +67,13 @@ PUT    /api/identity/roles/{id}/permissions
 - Tạo người dùng mới:
   - Thông tin cá nhân: họ tên, email, số điện thoại
   - Thông tin tổ chức: đơn vị, chức vụ, phòng ban
-  - Tài khoản: username (tự động từ email), mật khẩu tạm thời
+  - Tài khoản: username (quản trị viên tự đặt, không nhất thiết là email),
+    mật khẩu tạm thời hiển thị một lần cho quản trị viên
+  - Email là trường riêng, bắt buộc, dùng để nhận thư hướng dẫn và đặt lại mật khẩu
   - Gán vai trò (1 hoặc nhiều)
-  - Gửi email thông báo tài khoản
+  - Gửi email thông báo tài khoản (FR-02-08) — gửi theo kiểu best-effort:
+    nếu máy chủ thư lỗi thì tài khoản vẫn được tạo và quản trị viên bàn giao
+    mật khẩu tạm thời trực tiếp
 - Chỉnh sửa thông tin người dùng
 - Khóa/mở khóa tài khoản
 - Reset mật khẩu (gửi email)

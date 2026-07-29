@@ -66,6 +66,20 @@ public sealed class CreatedAdminUserDto
 
 public sealed class CreateAdminUserDto
 {
+    /// <summary>
+    /// Login name, chosen by the administrator. Kept separate from
+    /// <see cref="Email"/> so staff without a work mailbox of their own can
+    /// still get an account. The allowed characters are a subset of ABP's
+    /// default <c>AllowedUserNameCharacters</c>.
+    /// </summary>
+    [Required]
+    [StringLength(50, MinimumLength = 3)]
+    [RegularExpression(
+        "^[A-Za-z0-9._-]+$",
+        ErrorMessage =
+            "Tên đăng nhập chỉ gồm chữ không dấu, số và các ký tự . _ -")]
+    public string UserName { get; set; } = string.Empty;
+
     [Required]
     [StringLength(200)]
     public string FullName { get; set; } = string.Empty;

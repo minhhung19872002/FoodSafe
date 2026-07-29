@@ -157,6 +157,7 @@ export function UserEditorModal({
     form.setFieldsValue(
       user
         ? {
+            userName: user.userName,
             fullName: user.fullName,
             email: user.email,
             phoneNumber: user.phoneNumber,
@@ -229,10 +230,38 @@ export function UserEditorModal({
           </Col>
           <Col xs={24} md={12}>
             <Form.Item
+              name="userName"
+              label="Tên đăng nhập"
+              // Set once at creation: changing it later would change how the
+              // person signs in and break audit-trail references.
+              extra={
+                user
+                  ? "Không thể đổi tên đăng nhập sau khi đã tạo"
+                  : "Chữ không dấu, số và các ký tự . _ -"
+              }
+              rules={
+                user
+                  ? []
+                  : [
+                      { required: true, message: "Nhập tên đăng nhập" },
+                      {
+                        pattern: /^[A-Za-z0-9._-]{3,50}$/,
+                        message:
+                          "Từ 3 đến 50 ký tự, chỉ gồm chữ không dấu, số và . _ -",
+                      },
+                    ]
+              }
+            >
+              <Input maxLength={50} disabled={Boolean(user)} />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item
               name="email"
-              label="Email / tên đăng nhập"
+              label="Email nhận thư"
+              extra="Dùng để gửi hướng dẫn thiết lập và đặt lại mật khẩu"
               rules={[
-                { required: true },
+                { required: true, message: "Nhập email" },
                 { type: "email", message: "Email không hợp lệ" },
               ]}
             >

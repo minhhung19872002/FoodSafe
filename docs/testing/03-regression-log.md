@@ -17,6 +17,36 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-29 — Login name split from email address (F-020)
+
+- **Cause**: Requested change. Staff without a work mailbox of their own could
+  not be given an account, because the login name was the email address.
+- **Commit**: wt-post-`445b362`
+- **Affected features**: F-020 (already DIRTY from the same day's mail fix)
+- **Retest level**: 2
+- **Result**: Targeted verification PASSED; full F-020 suite still NOT re-run
+- **Details**:
+  - `CreateAdminUserDto` gains a required `UserName` (3–50 chars, `[A-Za-z0-9._-]`,
+    a subset of ABP's default `AllowedUserNameCharacters`). Email stays required
+    and is now purely the delivery address.
+  - `UpdateUserAsync` no longer renames the login when the email changes. That
+    rename silently changed how a person signs in and broke audit-trail
+    references; the login is now fixed at creation and the field is disabled on
+    the edit form.
+  - FR STT 2 in `docs/01-functional-requirements.md` updated — it previously
+    specified "username (tự động từ email)".
+  - **Evidence** (local Docker stack, real PostgreSQL, real login, no API
+    interception): `e2e/user-creation-temporary-password.spec.ts` 3/3, including
+    sign-in **by login name** rather than address, and the SMTP-unreachable path.
+    Backend 713/713, `dotnet format`/`tsc`/`oxlint`/prettier clean.
+  - **Vitest note**: the full suite is 116/116, but `SelfDeclarationPage` times
+    out when the 7-container Docker stack is running on the same machine. It
+    passes alone and with the stack stopped; this is host load, not a code
+    regression.
+  - **Not changed**: `E2eTestDataSeedContributor` still seeds fixture accounts
+    with the address as the login name. Those are test fixtures and existing
+    accounts keep working — the split only applies to newly created users.
+
 ### 2026-07-29 — Account creation no longer depends on the mail server (F-020)
 
 - **Cause**: Production defect. `POST /api/v1/administration/users` returned 500
