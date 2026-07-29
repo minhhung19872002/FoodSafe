@@ -1,5 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { businessApi, productApi, productAttachmentApi } from "./businessApi";
+import {
+  businessApi,
+  geocodingApi,
+  productApi,
+  productAttachmentApi,
+} from "./businessApi";
 import { businessKeys } from "./businessQueries";
 import type {
   BusinessInput,
@@ -14,6 +19,16 @@ import type {
 function useInvalidateBusinessManagement() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: businessKeys.all });
+}
+
+/**
+ * Resolves the address typed into the business form into map coordinates.
+ * Deliberately a mutation rather than a query: it runs when the user asks for
+ * it, not on every keystroke, which is what keeps the upstream provider inside
+ * its rate limit.
+ */
+export function useGeocodeAddress() {
+  return useMutation({ mutationFn: geocodingApi.resolve });
 }
 
 export function useCreateBusiness() {

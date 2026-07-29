@@ -97,6 +97,7 @@ public class FoodSafeHttpApiHostModule : AbpModule
         ConfigureAuthentication(context);
         ConfigureSecureTextTemplating();
         ConfigureCaptcha(context, configuration, hostingEnvironment);
+        ConfigureGeocoding(context, configuration);
         ValidateEmailDelivery(configuration, hostingEnvironment);
         ValidateCoreSecrets(configuration, hostingEnvironment);
         ValidatePostgreSqlSsl(configuration, hostingEnvironment);
@@ -339,6 +340,39 @@ public class FoodSafeHttpApiHostModule : AbpModule
         context.Services.Configure<CaptchaOptions>(section);
         context.Services.AddHttpClient<ICaptchaVerifier, TurnstileCaptchaVerifier>(
             client => client.Timeout = TimeSpan.FromSeconds(10));
+    }
+
+    /// <summary>
+    /// Registers the address geocoder used by the business location picker.
+    /// The outbound call goes through the same SSRF-guarded handler as partner
+    /// data sharing, because the endpoint URL is operator-configurable.
+    /// </summary>
+    private static void ConfigureGeocoding(
+        ServiceConfigurationContext context,
+        IConfiguration configuration)
+    {
+        var section = configuration.GetSection(
+            FoodSafe.Geocoding.GeocodingOptions.SectionName);
+        var options = section.Get<FoodSafe.Geocoding.GeocodingOptions>()
+                      ?? new FoodSafe.Geocoding.GeocodingOptions();
+
+        context.Services.Configure<FoodSafe.Geocoding.GeocodingOptions>(section);
+        context.Services
+            .AddHttpClient<
+                FoodSafe.Geocoding.IAddressGeocoder,
+                FoodSafe.Geocoding.NominatimGeocoder>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(
+                    Math.Max(1, options.TimeoutSeconds));
+                // The OpenStreetMap Nominatim usage policy rejects requests
+                // without a User-Agent that identifies the deployment.
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                    options.UserAgent);
+                client.MaxResponseContentBufferSize =
+                    FoodSafe.Security.OutboundUrlValidator.MaxResponseBytes;
+            })
+            .ConfigurePrimaryHttpMessageHandler(
+                () => FoodSafe.Security.OutboundUrlValidator.CreateGuardedHandler());
     }
 
     private static void ValidatePostgreSqlSsl(

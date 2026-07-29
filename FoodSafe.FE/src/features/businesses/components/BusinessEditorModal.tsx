@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
+  App,
   Button,
   Checkbox,
   Col,
@@ -13,8 +14,12 @@ import {
   Row,
   Select,
   Space,
+  Typography,
 } from "antd";
+import { AimOutlined } from "@ant-design/icons";
 import { useCommunes, useDistricts, useProvinces } from "@/hooks/useGeography";
+import { extractApiError } from "@/lib/apiError";
+import { useGeocodeAddress } from "../api/businessMutations";
 import type { CatalogItem } from "@/features/catalogs/types/catalog.types";
 import type { OrganizationDto } from "@/features/organizations/types/organization.types";
 import { MapPicker } from "./MapPicker";
@@ -96,14 +101,62 @@ export function BusinessEditorModal({
     resolver: zodResolver(businessSchema),
     defaultValues: defaults,
   });
+  const { message } = App.useApp();
   const provinceId = useWatch({ control, name: "addressProvinceId" });
   const districtId = useWatch({ control, name: "addressDistrictId" });
+  const communeId = useWatch({ control, name: "addressCommuneId" });
+  const street = useWatch({ control, name: "addressStreet" });
   const status = useWatch({ control, name: "status" });
   const latitude = useWatch({ control, name: "addressLatitude" });
   const longitude = useWatch({ control, name: "addressLongitude" });
   const provinces = useProvinces(true);
   const districts = useDistricts(provinceId ?? "", true);
   const communes = useCommunes(districtId ?? "", true);
+  const geocode = useGeocodeAddress();
+  const [matchedAddress, setMatchedAddress] = useState<string>();
+
+  const canGeocode = Boolean(
+    street?.trim() || provinceId || districtId || communeId,
+  );
+
+  /**
+   * Fills the coordinates from the address the user typed. Coordinates and
+   * address are stored independently, so without this the pin keeps pointing
+   * at wherever it was last dropped after an address edit.
+   */
+  function handleGeocode() {
+    setMatchedAddress(undefined);
+    geocode.mutate(
+      {
+        street: street?.trim() || undefined,
+        provinceId: provinceId || undefined,
+        districtId: districtId || undefined,
+        communeId: communeId || undefined,
+      },
+      {
+        onSuccess: (result) => {
+          if (!result) {
+            void message.warning(
+              "Không tìm thấy tọa độ cho địa chỉ này. Bạn có thể nhấp trực tiếp lên bản đồ để chọn.",
+            );
+            return;
+          }
+          setValue("addressLatitude", result.latitude, {
+            shouldValidate: true,
+          });
+          setValue("addressLongitude", result.longitude, {
+            shouldValidate: true,
+          });
+          setMatchedAddress(result.matchedAddress);
+        },
+        onError: (error) =>
+          void message.error(
+            extractApiError(error) ??
+              "Không thể định vị lúc này. Vui lòng chọn tọa độ trên bản đồ.",
+          ),
+      },
+    );
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -119,6 +172,7 @@ export function BusinessEditorModal({
       establishedDate: toDateInput(business?.establishedDate),
       productGroupIds: business?.productGroupIds ?? [],
     });
+    setMatchedAddress(undefined);
   }, [business, open, reset]);
 
   const submit = handleSubmit((values) => {
@@ -360,7 +414,7 @@ export function BusinessEditorModal({
           <Controller
             control={control}
             name="addressStreet"
-            render={({ field }) => <Input {...field} />}
+            render={({ field }) => <Input {...field} aria-label="Địa chỉ" />}
           />
         </Form.Item>
         <Row gutter={16}>
@@ -441,23 +495,42 @@ export function BusinessEditorModal({
             onChange={(lat, lng) => {
               setValue("addressLatitude", lat, { shouldValidate: true });
               setValue("addressLongitude", lng, { shouldValidate: true });
+              setMatchedAddress(undefined);
             }}
           />
-          {latitude !== undefined && (
+          <Space style={{ marginTop: 8 }} wrap>
             <Button
               size="small"
-              style={{ marginTop: 8 }}
-              onClick={() => {
-                setValue("addressLatitude", undefined, {
-                  shouldValidate: true,
-                });
-                setValue("addressLongitude", undefined, {
-                  shouldValidate: true,
-                });
-              }}
+              icon={<AimOutlined />}
+              loading={geocode.isPending}
+              disabled={!canGeocode}
+              onClick={handleGeocode}
             >
-              Xóa tọa độ
+              Định vị theo địa chỉ
             </Button>
+            {latitude !== undefined && (
+              <Button
+                size="small"
+                onClick={() => {
+                  setValue("addressLatitude", undefined, {
+                    shouldValidate: true,
+                  });
+                  setValue("addressLongitude", undefined, {
+                    shouldValidate: true,
+                  });
+                  setMatchedAddress(undefined);
+                }}
+              >
+                Xóa tọa độ
+              </Button>
+            )}
+          </Space>
+          {matchedAddress && (
+            <div style={{ marginTop: 4 }}>
+              <Typography.Text type="secondary">
+                Đã khớp: {matchedAddress}
+              </Typography.Text>
+            </div>
           )}
         </Form.Item>
         <Row gutter={16}>

@@ -281,3 +281,20 @@ export interface PublicSelfDeclaration {
   businessName: string;
   status: number;
 }
+
+/** Address sent to the server-side geocoding proxy. */
+export interface GeocodeAddressInput {
+  street?: string;
+  provinceId?: string;
+  districtId?: string;
+  communeId?: string;
+}
+
+export interface GeocodeResult {
+  latitude: number;
+  longitude: number;
+  /** Address the provider matched, shown so the user can sanity-check it. */
+  matchedAddress: string;
+  /** Query the server actually sent, useful when a match looks wrong. */
+  query: string;
+}

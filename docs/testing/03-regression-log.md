@@ -17,6 +17,36 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-29 — Address geocoding added (F-035); three pre-existing F-006 regressions found
+
+- **Cause**: New geocoding feature. Business coordinates and address text were
+  independent fields with no geocoding anywhere in the codebase, so editing an
+  address never moved the map pin.
+- **Commit**: wt-post-`0894c54`
+- **Affected features**: F-035 (new, VERIFIED), F-006 (FAILED — see below)
+- **Retest level**: 2 for F-006 (feature frontend changed: business editor +
+  MapPicker)
+- **Result**: F-035 PASSED (4/4), F-006 FAILED (3/13)
+- **Details**:
+  - F-035 verified on the real stack: `e2e/business-geocoding.spec.ts` 4/4,
+    backend `~Geocoding` 23/23, full backend suite 713/713 (Testcontainers
+    included), FE Vitest 116/116, `tsc`/`oxlint`/prettier clean.
+  - Runtime bug caught only by the real run and fixed: ABP auto-generated a
+    conventional controller for `GeocodingAppService` while `GeocodingController`
+    claimed the same route → `AmbiguousMatchException` (HTTP 500). Fixed with
+    `[RemoteService(false)]`, matching the existing pattern used by the Excel and
+    PDF app services.
+  - **F-006 regressions are NOT caused by this change.** They were reproduced on
+    a frontend image built from `0894c54` with all geocoding changes stashed:
+    1. `business-detail-tabs.spec.ts` — the related-record tab
+       "Kết quả thanh kiểm tra" never appears in the detail drawer (90s timeout).
+    2. `business-list-filters.spec.ts` — pagination: `.ant-pagination-item-2`
+       never rendered.
+    3. `businesses.spec.ts` — Excel import preview never shows "Tổng số: 1".
+  - F-006's last green stamp is `e6ce3f7`; commit `ba27881` (22 features) landed
+    afterwards without a Level 2 retest. These three need investigation
+    separately from the geocoding work.
+
 ### 2026-07-28 — Workflow completion batch (F-019h, F-016b) + six stale-spec repairs
 
 - **Cause**: Implemented the two remaining project workflows — inbound partner submission

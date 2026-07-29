@@ -628,6 +628,7 @@ export default function BusinessManagementPage() {
       >
         {mappedBusiness?.addressLatitude !== undefined && (
           <MapPicker
+            readOnly
             latitude={mappedBusiness.addressLatitude}
             longitude={mappedBusiness.addressLongitude}
             onChange={() => undefined}

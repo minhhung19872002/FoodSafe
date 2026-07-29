@@ -15,7 +15,7 @@
 | F-003 | Organizations                   | DIRTY          | `e2e/organizations.spec.ts`, `e2e/organizations-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-004 | Master Catalogs                 | VERIFIED       | `e2e/catalogs.spec.ts`, `e2e/catalogs-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-005 | Geographic Catalogs             | VERIFIED       | `e2e/geography.spec.ts`, `e2e/geography-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-006 | Businesses & Products           | VERIFIED       | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts`, `e2e/business-list-filters.spec.ts`, `e2e/business-detail-tabs.spec.ts`, `e2e/business-delete-guard.spec.ts` | `e6ce3f7` | 2026-07-28 |
+| F-006 | Businesses & Products           | FAILED         | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts`, `e2e/business-list-filters.spec.ts`, `e2e/business-detail-tabs.spec.ts`, `e2e/business-delete-guard.spec.ts` | last green `e6ce3f7` | 2026-07-29 |
 | F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts`, `e2e/business-delete-guard.spec.ts` | `983788c` | 2026-07-28 |
 | F-008 | Product Registrations           | VERIFIED       | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `8e7840e` | 2026-07-28 |
 | F-009 | Advertisement Registrations     | VERIFIED       | `e2e/advertisement-registrations.spec.ts`, `e2e/advertisement-registrations-verification.spec.ts` | wt-post-`a3c7ad7` | 2026-07-28 |
@@ -51,6 +51,7 @@
 | F-034 | Certificate PDF Download (incl. anonymous citizen path) | VERIFIED | `e2e/certificate-pdf-verification.spec.ts` (5/5, cookie-less ctx) | `8be91bc` | 2026-07-28 |
 | F-019h | Data Integration — Inbound submission disposition workflow (INT-03 / STT 51–57: Received → Processed \| Rejected, terminal, `Partners.Moderate`) | VERIFIED | `e2e/inbound-submission-disposition.spec.ts` (2/2, no interception) | `17a29c6` | 2026-07-28 |
 | F-016b | Alerts & News — citizen moderation refusal (YCKT STT 29/30: Draft → Rejected with mandatory reason, record kept and never public) | VERIFIED | `e2e/citizen-moderation-reject.spec.ts` (2/2, no interception) | `17a29c6` | 2026-07-28 |
+| F-035 | Address Geocoding (Định vị cơ sở theo địa chỉ) | VERIFIED | `e2e/business-geocoding.spec.ts` (4/4, no interception) | wt-post-`0894c54` | 2026-07-29 |
 
 ## Workflow completion batch (2026-07-28) — the last two project flows
 
