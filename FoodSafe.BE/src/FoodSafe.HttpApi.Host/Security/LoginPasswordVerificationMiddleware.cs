@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Volo.Abp.Identity;
 using IdentityOptions = Microsoft.AspNetCore.Identity.IdentityOptions;
