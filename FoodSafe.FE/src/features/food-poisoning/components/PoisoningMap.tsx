@@ -1,11 +1,19 @@
-import { useMemo } from "react";
-import { CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
+import { useEffect, useMemo } from "react";
+import {
+  CircleMarker,
+  MapContainer,
+  Popup,
+  TileLayer,
+  useMap,
+} from "react-leaflet";
+import type { LatLngTuple } from "leaflet";
 import { Empty, Tag } from "antd";
 import dayjs from "dayjs";
 import type {
   FoodPoisoningCase,
   FoodPoisoningIncident,
 } from "../types/foodPoisoning.types";
+import { hasValidMapCoordinates } from "./poisoningMapCoordinates";
 import {
   POISONING_CASE_STATUS_CONFIG,
   POISONING_INCIDENT_STATUS_CONFIG,
@@ -21,21 +29,58 @@ interface PoisoningMapProps {
 
 const QUANG_NINH_CENTER: [number, number] = [21.0064, 107.2925];
 
+function MapViewport({ positions }: { positions: LatLngTuple[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      // Bản đồ nằm trong tab Ant Design; cập nhật kích thước trước khi căn
+      // khung để Leaflet không tính theo kích thước của tab đang ẩn.
+      map.invalidateSize();
+
+      if (positions.length === 1) {
+        map.setView(positions[0], 14, { animate: false });
+        return;
+      }
+
+      if (positions.length > 1) {
+        map.fitBounds(positions, {
+          animate: false,
+          maxZoom: 14,
+          padding: [32, 32],
+        });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [map, positions]);
+
+  return null;
+}
+
 export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
   const mappedCases = useMemo(
-    () =>
-      cases.filter(
-        (c) => c.locationLatitude != null && c.locationLongitude != null,
-      ),
+    () => cases.filter(hasValidMapCoordinates),
     [cases],
   );
 
   const mappedIncidents = useMemo(
-    () =>
-      incidents.filter(
-        (i) => i.locationLatitude != null && i.locationLongitude != null,
-      ),
+    () => incidents.filter(hasValidMapCoordinates),
     [incidents],
+  );
+
+  const positions = useMemo<LatLngTuple[]>(
+    () => [
+      ...mappedCases.map(
+        (item) =>
+          [item.locationLatitude, item.locationLongitude] as LatLngTuple,
+      ),
+      ...mappedIncidents.map(
+        (item) =>
+          [item.locationLatitude, item.locationLongitude] as LatLngTuple,
+      ),
+    ],
+    [mappedCases, mappedIncidents],
   );
 
   if (mappedCases.length === 0 && mappedIncidents.length === 0) {
@@ -80,10 +125,11 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
         </span>
       </div>
       <MapContainer
-        center={QUANG_NINH_CENTER}
+        center={positions[0] ?? QUANG_NINH_CENTER}
         zoom={10}
         style={{ height: 520, width: "100%", borderRadius: 8 }}
       >
+        <MapViewport positions={positions} />
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -91,7 +137,7 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
         {mappedCases.map((c) => (
           <CircleMarker
             key={`case-${c.id}`}
-            center={[c.locationLatitude!, c.locationLongitude!]}
+            center={[c.locationLatitude, c.locationLongitude]}
             radius={7}
             pathOptions={{
               color: "#faad14",
@@ -144,7 +190,7 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
         {mappedIncidents.map((i) => (
           <CircleMarker
             key={`incident-${i.id}`}
-            center={[i.locationLatitude!, i.locationLongitude!]}
+            center={[i.locationLatitude, i.locationLongitude]}
             radius={Math.min(6 + i.affectedCount, 20)}
             pathOptions={{
               color: "#ff4d4f",
