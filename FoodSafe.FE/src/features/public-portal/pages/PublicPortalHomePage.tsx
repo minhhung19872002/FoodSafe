@@ -88,7 +88,7 @@ const PORTAL_TILES: PortalTile[] = [
   {
     title: "Danh sách cảnh báo",
     description: "Cơ sở đang bị cảnh báo vi phạm an toàn thực phẩm",
-    to: "/co-so-bi-canh-bao",
+    to: "/danh-sach-canh-bao",
     icon: "⚠️",
     iconBg: "#FBEAE7",
     iconColor: brand.red,
