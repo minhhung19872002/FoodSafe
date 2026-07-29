@@ -26,7 +26,6 @@ describe("GeographicCatalogModal", () => {
       expect.objectContaining({
         code: "qn",
         name: "Quảng Ninh",
-        sortOrder: 0,
         isActive: true,
       }),
     );

@@ -5,6 +5,5 @@ export const organizationLevelConfig: Record<
   { label: string; color: string }
 > = {
   1: { label: "Tỉnh", color: "blue" },
-  2: { label: "Huyện/TP", color: "cyan" },
-  3: { label: "Xã/Phường", color: "green" },
+  2: { label: "Xã/Phường", color: "green" },
 };

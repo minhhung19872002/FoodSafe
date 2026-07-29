@@ -172,24 +172,19 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
             organizationId,
             cancellationToken: _cancellationTokens.Token);
 
-        var organizationSuffix = organization.Code
-            .Split('-', StringSplitOptions.RemoveEmptyEntries)
-            .Last()
-            .ToUpperInvariant();
         var query = await _businesses.GetQueryableAsync();
         var existingCodes = await AsyncExecuter.ToListAsync(
             query
-                .Where(x => x.Code != null && x.Code.StartsWith("CS-"))
+                .Where(x =>
+                    x.OrganizationId == organizationId &&
+                    x.Code != null &&
+                    x.Code.StartsWith("CS-"))
                 .Select(x => x.Code!),
             _cancellationTokens.Token);
-        var nextSequence = existingCodes
-            .Select(TryGetBusinessCodeSequence)
-            .DefaultIfEmpty(0)
-            .Max() + 1;
 
         return new BusinessCodeSuggestionDto
         {
-            Code = $"CS-{organizationSuffix}-{nextSequence:D4}"
+            Code = SuggestBusinessCode(organization.Code, existingCodes)
         };
     }
 
@@ -467,6 +462,18 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
         string.IsNullOrWhiteSpace(value)
             ? null
             : value.Trim().ToUpperInvariant();
+
+    internal static string SuggestBusinessCode(
+        string organizationCode,
+        IEnumerable<string> existingCodes)
+    {
+        var nextSequence = existingCodes
+            .Select(TryGetBusinessCodeSequence)
+            .DefaultIfEmpty(0)
+            .Max() + 1;
+
+        return $"CS-{organizationCode.Trim().ToUpperInvariant()}-{nextSequence:D4}";
+    }
 
     private static int TryGetBusinessCodeSequence(string code)
     {

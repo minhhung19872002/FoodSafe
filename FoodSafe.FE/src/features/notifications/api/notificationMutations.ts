@@ -13,7 +13,8 @@ export function useMarkRead() {
   return useMutation({
     mutationFn: (id: string) => notificationApi.markRead(id),
     onSuccess: refresh,
-    onError: () => message.error("Không thể đánh dấu đã đọc. Vui lòng thử lại."),
+    onError: () =>
+      message.error("Không thể đánh dấu đã đọc. Vui lòng thử lại."),
   });
 }
 
@@ -22,7 +23,8 @@ export function useMarkAllRead() {
   return useMutation({
     mutationFn: () => notificationApi.markAllRead(),
     onSuccess: refresh,
-    onError: () => message.error("Không thể đánh dấu tất cả đã đọc. Vui lòng thử lại."),
+    onError: () =>
+      message.error("Không thể đánh dấu tất cả đã đọc. Vui lòng thử lại."),
   });
 }
 

@@ -18,6 +18,7 @@ import {
   Typography,
 } from "antd";
 import { useTablePagination } from "@/hooks/useTablePagination";
+import { SafeHtmlContent } from "@/components/RichTextEditor/SafeHtmlContent";
 import {
   ArrowLeftOutlined,
   EyeOutlined,
@@ -93,14 +94,7 @@ function NewsDetailView({ id }: { id: string }) {
 
       <Divider />
 
-      <div
-        style={{ lineHeight: 1.8, whiteSpace: "pre-wrap" }}
-        dangerouslySetInnerHTML={undefined}
-      >
-        <Typography.Paragraph style={{ whiteSpace: "pre-wrap" }}>
-          {data.content}
-        </Typography.Paragraph>
-      </div>
+      <SafeHtmlContent html={data.content} className="public-news-content" />
 
       {data.linkedAlerts && data.linkedAlerts.length > 0 && (
         <>

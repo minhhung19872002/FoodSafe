@@ -9,9 +9,8 @@ const endpoint = "/v1/app/notification";
 
 export const notificationApi = {
   async list(filter: NotificationFilter): Promise<PagedNotifications> {
-    return (
-      await api.get<PagedNotifications>(endpoint, { params: filter })
-    ).data;
+    return (await api.get<PagedNotifications>(endpoint, { params: filter }))
+      .data;
   },
 
   async getUnreadCount(): Promise<UnreadCount> {

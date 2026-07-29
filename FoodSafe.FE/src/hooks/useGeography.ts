@@ -1,8 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getCommunesByProvince,
-  getGeographicItems,
-} from "@/lib/geographyApi";
+import { getCommunesByProvince, getGeographicItems } from "@/lib/geographyApi";
 
 const keys = {
   all: ["geography"] as const,

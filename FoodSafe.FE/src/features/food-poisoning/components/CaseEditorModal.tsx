@@ -55,9 +55,8 @@ export function CaseEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
   const { open, item, canLinkIncident } = props;
 
-  const [location, setLocation] = useState<AddressLocation>(
-    emptyAddressLocation,
-  );
+  const [location, setLocation] =
+    useState<AddressLocation>(emptyAddressLocation);
 
   const { data: incidentsData, isLoading: incidentsLoading } =
     usePoisoningIncidents(

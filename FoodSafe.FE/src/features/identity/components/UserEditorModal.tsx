@@ -311,8 +311,7 @@ export function UserEditorModal({
                     rules={[
                       {
                         validator: (_, scope: GeographyScopeInput) =>
-                          scope?.provinceId ||
-                          scope?.communeId
+                          scope?.provinceId || scope?.communeId
                             ? Promise.resolve()
                             : Promise.reject(new Error("Chọn địa bàn")),
                       },

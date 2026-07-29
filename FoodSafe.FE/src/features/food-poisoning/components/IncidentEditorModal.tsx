@@ -46,9 +46,8 @@ export function IncidentEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
   const { open, item } = props;
 
-  const [location, setLocation] = useState<AddressLocation>(
-    emptyAddressLocation,
-  );
+  const [location, setLocation] =
+    useState<AddressLocation>(emptyAddressLocation);
 
   useEffect(() => {
     if (!open) return;

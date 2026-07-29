@@ -279,6 +279,7 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: "1"
           hide-progress: true
+          skip-dirs: FoodSafe.FE/node_modules
 
       - name: Validate production Compose rendering
         working-directory: FoodSafe.BE

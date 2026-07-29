@@ -59,8 +59,7 @@ export function GeographicCatalogModal({
     form.setFieldsValue({
       code: item?.code ?? "",
       name: item?.name ?? "",
-      type:
-        "type" in (item ?? {}) ? (item as CommuneItem).type : undefined,
+      type: "type" in (item ?? {}) ? (item as CommuneItem).type : undefined,
       isActive: item?.isActive ?? true,
     });
   }, [form, item, open]);

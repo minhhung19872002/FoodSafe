@@ -1,9 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  businessApi,
-  productApi,
-  productAttachmentApi,
-} from "./businessApi";
+import { businessApi, productApi, productAttachmentApi } from "./businessApi";
 import { businessKeys } from "./businessQueries";
 import type {
   BusinessInput,
@@ -23,7 +19,6 @@ function useInvalidateBusinessManagement() {
 export function useSuggestBusinessCode() {
   return useMutation({ mutationFn: businessApi.nextCode });
 }
-
 
 export function useCreateBusiness() {
   return useMutation({

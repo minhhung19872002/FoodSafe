@@ -67,7 +67,6 @@ export function BusinessImportModal({
           type="info"
           showIcon
           message="Dữ liệu chỉ được ghi sau khi toàn bộ file hợp lệ và bạn xác nhận."
-          description="Định dạng .xlsx, tối đa 10 MB. Không thay đổi tên sheet hoặc tiêu đề cột."
         />
         <Button
           icon={<DownloadOutlined />}
