@@ -34,7 +34,7 @@
 | F-019e | Data Integration — Typed share payloads + retry attempt history (Batch F-1, FR-51..57) | VERIFIED | `e2e/data-integration-retry.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
 | F-019f | Data Integration — Inbound partner surface: accounts, API keys, receive endpoint (Batch F-2, INT-03) | DIRTY | `e2e/data-integration-partners.spec.ts` (3/3; full DI subset 20/20); FR-50-05 contract spec `e2e/partner-openapi-contract.spec.ts` (1/1 at `0776230`) | `adb30eb` | 2026-07-28 |
 | F-019g | Data Integration — Partner API Specification management (FR-50-05: upload/validate/version/publish/anonymous partner download/metadata) + ApiSpecs route permission (G-02) | DIRTY | `e2e/api-specification-management.spec.ts` (5/5, no interception; adds the ApiSpecs-only route-admission scenario) | `17149f6` | 2026-07-28 |
-| F-020 | Identity Administration         | VERIFIED       | `e2e/identity-administration.spec.ts`, `e2e/identity-administration-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-020 | Identity Administration         | DIRTY          | `e2e/identity-administration.spec.ts`, `e2e/identity-administration-verification.spec.ts`, `e2e/user-creation-temporary-password.spec.ts` | last green `8be91bc` | 2026-07-29 |
 | F-021 | Audit Logs                      | VERIFIED       | `e2e/audit-logs.spec.ts`, `e2e/audit-logs-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-022 | Dashboard                       | VERIFIED       | `e2e/dashboard.spec.ts`, `e2e/dashboard-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-023 | Statistics                      | VERIFIED       | `e2e/statistics.spec.ts`, `e2e/statistics-verification.spec.ts` | `8be91bc` | 2026-07-28 |

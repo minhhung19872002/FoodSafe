@@ -41,6 +41,29 @@ public sealed class AdminUserDto : EntityDto<Guid>, IHasConcurrencyStamp
     public IReadOnlyList<GeographyScopeAssignmentDto> GeographyScopes { get; set; } = [];
 }
 
+/// <summary>
+/// Result of creating a user. Carries the one-time temporary password so the
+/// administrator can hand it over directly (FR STT 2 — "mật khẩu tạm thời"),
+/// which is what keeps account creation working when the mail server does not.
+/// </summary>
+public sealed class CreatedAdminUserDto
+{
+    public AdminUserDto User { get; set; } = new();
+
+    /// <summary>
+    /// Shown to the creating administrator once and never stored or returned
+    /// again. The account is flagged to force a change on first login.
+    /// </summary>
+    public string TemporaryPassword { get; set; } = string.Empty;
+
+    /// <summary>
+    /// False when the notification email could not be delivered. The account
+    /// still exists and works — the administrator just has to pass the
+    /// temporary password on by another channel.
+    /// </summary>
+    public bool NotificationEmailSent { get; set; }
+}
+
 public sealed class CreateAdminUserDto
 {
     [Required]

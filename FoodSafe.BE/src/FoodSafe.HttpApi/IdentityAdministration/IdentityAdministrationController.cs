@@ -27,7 +27,7 @@ public sealed class IdentityAdministrationController(
         service.GetUserAsync(id);
 
     [HttpPost("users")]
-    public Task<AdminUserDto> CreateUserAsync(
+    public Task<CreatedAdminUserDto> CreateUserAsync(
         [FromBody] CreateAdminUserDto input) =>
         service.CreateUserAsync(input);
 

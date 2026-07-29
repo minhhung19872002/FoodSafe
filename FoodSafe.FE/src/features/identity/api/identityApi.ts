@@ -3,6 +3,7 @@ import type {
   AdminRole,
   AdminUser,
   AllRolesPermissionMatrix,
+  CreatedAdminUser,
   GeneratedPassword,
   ListResult,
   PagedResult,
@@ -42,9 +43,9 @@ export const identityApi = {
       .get<AdminUser>(`${endpoint}/users/${id}`)
       .then((response) => response.data),
 
-  createUser: (input: SaveUserInput): Promise<AdminUser> =>
+  createUser: (input: SaveUserInput): Promise<CreatedAdminUser> =>
     api
-      .post<AdminUser>(`${endpoint}/users`, input)
+      .post<CreatedAdminUser>(`${endpoint}/users`, input)
       .then((response) => response.data),
 
   updateUser: (id: string, input: SaveUserInput): Promise<AdminUser> =>

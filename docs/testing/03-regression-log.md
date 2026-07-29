@@ -17,6 +17,44 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-29 — Account creation no longer depends on the mail server (F-020)
+
+- **Cause**: Production defect. `POST /api/v1/administration/users` returned 500
+  and created nothing.
+- **Commit**: wt-post-`4e02ad5`
+- **Affected features**: F-020 (Identity Administration) → DIRTY pending the
+  full feature retest
+- **Retest level**: 2
+- **Result**: Targeted verification PASSED; full F-020 suite NOT yet re-run
+- **Details**:
+  - **Root cause**: `CreateUserAsync` sent the password-reset email through an
+    unguarded `SendPasswordResetEmailAsync`. A mail failure escaped as a 500 and
+    the ambient unit of work rolled the whole account back.
+  - **Why production hit it**: `/opt/foodsafe/.env` on the VM defines no
+    `SMTP_*` keys at all, so `Abp.Mailing.Smtp.Host` was empty. The startup
+    guard `ValidateEmailDelivery` would have caught this, but it only runs when
+    `IsProduction()` and the VM runs `ASPNETCORE_ENVIRONMENT=Staging`.
+  - **Fix**: creation now returns `CreatedAdminUserDto` carrying the temporary
+    password (FR STT 2 already asked for "mật khẩu tạm thời") plus a
+    `notificationEmailSent` flag. Mail failure is logged and reported, not
+    fatal. `SendPasswordResetAsync` still fails on mail errors — that action
+    exists only to send mail — but now with a Vietnamese message instead of a
+    bare 500.
+  - **Reuse**: the temporary password comes from the existing
+    `GenerateCompliantPassword()`; a duplicate generator written during this
+    change was deleted.
+  - **Evidence** (local Docker stack, real PostgreSQL, real login, no API
+    interception): `e2e/user-creation-temporary-password.spec.ts` 3/3 —
+    healthy-SMTP path, forced-change path (wrong password rejected, temporary
+    password accepted), and the SMTP-unreachable path rebuilt with
+    `SMTP_HOST=smtp.invalid` proving 200 + `notificationEmailSent: false` +
+    the account actually persisted. Backend 713/713, Vitest 116/116,
+    `dotnet format`/`tsc`/`oxlint`/prettier clean.
+  - **Open**: prod still has no SMTP configured, so `notificationEmailSent`
+    will be `false` there until it is. `ASPNETCORE_ENVIRONMENT=Staging` on the
+    production VM disables every startup hardening guard and needs separate
+    attention.
+
 ### 2026-07-29 — Address geocoding added (F-035); three pre-existing F-006 regressions found
 
 - **Cause**: New geocoding feature. Business coordinates and address text were

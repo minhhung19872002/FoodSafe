@@ -7,7 +7,7 @@ public interface IIdentityAdministrationAppService : IApplicationService
 {
     Task<PagedResultDto<AdminUserDto>> GetUsersAsync(GetAdminUserListInput input);
     Task<AdminUserDto> GetUserAsync(Guid id);
-    Task<AdminUserDto> CreateUserAsync(CreateAdminUserDto input);
+    Task<CreatedAdminUserDto> CreateUserAsync(CreateAdminUserDto input);
     Task<AdminUserDto> UpdateUserAsync(Guid id, UpdateAdminUserDto input);
     Task DeleteUserAsync(Guid id);
     Task<GeneratedPasswordDto> GenerateRandomPasswordAsync(Guid id);

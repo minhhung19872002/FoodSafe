@@ -4,6 +4,7 @@ using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp;
 using Volo.Abp.Account;
@@ -122,7 +123,7 @@ public class IdentityAdministrationAppService :
     }
 
     [Authorize(FoodSafePermissions.SystemAdministration.Users.Create)]
-    public async Task<AdminUserDto> CreateUserAsync(CreateAdminUserDto input)
+    public async Task<CreatedAdminUserDto> CreateUserAsync(CreateAdminUserDto input)
     {
         await AuthorizationService.CheckAsync(
             FoodSafePermissions.SystemAdministration.Users.ManageRoles);
@@ -151,8 +152,10 @@ public class IdentityAdministrationAppService :
         };
         user.SetShouldChangePasswordOnNextLogin(true);
 
-        var temporaryPassword =
-            $"Fs!{Convert.ToHexString(RandomNumberGenerator.GetBytes(16))}a1";
+        // Handed back to the administrator so the account is usable even when
+        // the notification email cannot be delivered (FR STT 2). Same generator
+        // as the "cấp lại mật khẩu" action, which already returns its result.
+        var temporaryPassword = GenerateCompliantPassword();
         (await _userManager.CreateAsync(user, temporaryPassword)).CheckErrors();
         (await _userManager.SetPhoneNumberAsync(
             user,
@@ -178,9 +181,16 @@ public class IdentityAdministrationAppService :
             input.GeographyScopes);
         await CurrentUnitOfWork!.SaveChangesAsync(Token);
 
-        await SendPasswordResetEmailAsync(email);
+        // Best-effort: a mail-server outage must not roll back the account the
+        // administrator just filled in. They still hold the temporary password.
+        var notificationSent = await TrySendPasswordResetEmailAsync(email);
 
-        return await GetUserAsync(user.Id);
+        return new CreatedAdminUserDto
+        {
+            User = await GetUserAsync(user.Id),
+            TemporaryPassword = temporaryPassword,
+            NotificationEmailSent = notificationSent
+        };
     }
 
     [Authorize(FoodSafePermissions.SystemAdministration.Users.Edit)]
@@ -392,7 +402,15 @@ public class IdentityAdministrationAppService :
     public async Task SendPasswordResetAsync(Guid id)
     {
         var existing = await GetScopedUserAsync(id, DataScopeOperation.Edit);
-        await SendPasswordResetEmailAsync(existing.User.Email);
+
+        // This action exists only to send mail, so a failure is a real failure —
+        // but the administrator deserves to know why instead of a bare 500.
+        if (!await TrySendPasswordResetEmailAsync(existing.User.Email))
+        {
+            throw new UserFriendlyException(
+                "Không gửi được email đặt lại mật khẩu. "
+                + "Vui lòng kiểm tra cấu hình máy chủ thư (SMTP) rồi thử lại.");
+        }
     }
 
     [Authorize(FoodSafePermissions.SystemAdministration.Users.ViewActivity)]
@@ -1049,6 +1067,28 @@ public class IdentityAdministrationAppService :
                 Email = email,
                 AppName = "Angular"
             });
+    }
+
+    /// <summary>
+    /// Sends the account notification without letting a mail failure abort the
+    /// caller. Returns whether the message actually went out.
+    /// </summary>
+    private async Task<bool> TrySendPasswordResetEmailAsync(string email)
+    {
+        try
+        {
+            await SendPasswordResetEmailAsync(email);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            Logger.LogWarning(
+                exception,
+                "Account notification email could not be delivered. "
+                + "The account was still created and the administrator holds "
+                + "the temporary password.");
+            return false;
+        }
     }
 
     private static AdminUserDto MapUser(

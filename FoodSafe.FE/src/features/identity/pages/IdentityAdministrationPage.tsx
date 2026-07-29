@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  Alert,
   App,
   Button,
   Input,
@@ -65,6 +66,7 @@ import { UserEditorModal } from "../components/UserEditorModal";
 import type {
   AdminRole,
   AdminUser,
+  CreatedAdminUser,
   RoleFilter,
   SaveRoleInput,
   SaveUserInput,
@@ -188,6 +190,39 @@ export default function IdentityAdministrationPage() {
   const showSuccess = (content: string) => void message.success(content);
   const showError = () =>
     void message.error("Không thể thực hiện thao tác. Vui lòng kiểm tra lại.");
+
+  /**
+   * The temporary password is returned once and never again, so it has to be
+   * handed to the administrator here. When the notification email failed this
+   * dialog is the only way the new user can be let in, so it says so plainly.
+   */
+  const showCreatedUserPassword = (result: CreatedAdminUser) =>
+    modal.success({
+      title: "Đã tạo tài khoản",
+      content: (
+        <Space direction="vertical">
+          {result.notificationEmailSent ? (
+            <Typography.Text>
+              Đã gửi email hướng dẫn thiết lập tới {result.user.email}. Mật khẩu
+              tạm thời dưới đây chỉ hiển thị một lần.
+            </Typography.Text>
+          ) : (
+            <Alert
+              type="warning"
+              showIcon
+              message="Chưa gửi được email hướng dẫn"
+              description={`Tài khoản đã được tạo nhưng email tới ${result.user.email} không gửi được. Hãy chuyển mật khẩu tạm thời dưới đây cho người dùng, hoặc kiểm tra cấu hình máy chủ thư rồi dùng chức năng "Gửi email đặt lại mật khẩu".`}
+            />
+          )}
+          <Typography.Text code copyable>
+            {result.temporaryPassword}
+          </Typography.Text>
+          <Typography.Text type="secondary">
+            Người dùng phải đổi mật khẩu ở lần đăng nhập đầu tiên.
+          </Typography.Text>
+        </Space>
+      ),
+    });
 
   const permissionSelectOptions = useMemo(
     () =>
@@ -730,22 +765,27 @@ export default function IdentityAdministrationPage() {
         loading={createUser.isPending || updateUser.isPending}
         onCancel={() => setUserModalOpen(false)}
         onSubmit={(input: SaveUserInput) => {
-          const callbacks = {
-            onSuccess: () => {
+          if (editingUser) {
+            updateUser.mutate(
+              { id: editingUser.id, input },
+              {
+                onSuccess: () => {
+                  setUserModalOpen(false);
+                  showSuccess("Đã cập nhật tài khoản");
+                },
+                onError: showError,
+              },
+            );
+            return;
+          }
+
+          createUser.mutate(input, {
+            onSuccess: (result) => {
               setUserModalOpen(false);
-              showSuccess(
-                editingUser
-                  ? "Đã cập nhật tài khoản"
-                  : "Đã tạo tài khoản và gửi hướng dẫn thiết lập",
-              );
+              showCreatedUserPassword(result);
             },
             onError: showError,
-          };
-          if (editingUser) {
-            updateUser.mutate({ id: editingUser.id, input }, callbacks);
-          } else {
-            createUser.mutate(input, callbacks);
-          }
+          });
         }}
       />
       <RecordDetailDrawer
