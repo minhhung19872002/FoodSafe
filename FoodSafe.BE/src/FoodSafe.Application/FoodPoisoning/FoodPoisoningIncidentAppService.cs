@@ -1,3 +1,4 @@
+using FoodSafe.Geocoding;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -19,19 +20,22 @@ public class FoodPoisoningIncidentAppService : ApplicationService
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
     private readonly IDataFilter _dataFilter;
+    private readonly ILocationResolver _locationResolver;
 
     public FoodPoisoningIncidentAppService(
         IRepository<FoodPoisoningIncident, Guid> incidents,
         IRepository<FoodPoisoningCase, Guid> cases,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens,
-        IDataFilter dataFilter)
+        IDataFilter dataFilter,
+        ILocationResolver locationResolver)
     {
         _incidents = incidents;
         _cases = cases;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
         _dataFilter = dataFilter;
+        _locationResolver = locationResolver;
     }
 
     public async Task<PagedResultDto<FoodPoisoningIncidentDto>> GetListAsync(
@@ -83,7 +87,7 @@ public class FoodPoisoningIncidentAppService : ApplicationService
             GuidGenerator.Create(), orgId, code,
             input.OccurrenceDate, input.EndDate, input.Notes);
 
-        ApplyDetails(entity, input);
+        await ApplyDetailsAsync(entity, input);
 
         await _incidents.InsertAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return (await ToDtosAsync([entity]))[0];
@@ -96,7 +100,7 @@ public class FoodPoisoningIncidentAppService : ApplicationService
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
 
         entity.Update(input.OccurrenceDate, input.EndDate, input.Notes);
-        ApplyDetails(entity, input);
+        await ApplyDetailsAsync(entity, input);
 
         await _incidents.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return (await ToDtosAsync([entity]))[0];
@@ -250,13 +254,35 @@ public class FoodPoisoningIncidentAppService : ApplicationService
         }).ToList();
     }
 
-    private static void ApplyDetails(
+    private async Task ApplyDetailsAsync(
         FoodPoisoningIncident entity, CreateUpdateFoodPoisoningIncidentDto input)
     {
+        var lat = input.LocationLatitude;
+        var lng = input.LocationLongitude;
+
+        if (!lat.HasValue && !lng.HasValue && HasAddressInfo(input))
+        {
+            var resolved = await _locationResolver.ResolveAsync(
+                new GeocodeAddressInput
+                {
+                    Street = input.LocationDescription,
+                    ProvinceId = input.LocationProvinceId,
+                    DistrictId = input.LocationDistrictId,
+                    CommuneId = input.LocationCommuneId,
+                },
+                _cancellationTokens.Token);
+
+            if (resolved is not null)
+            {
+                lat = resolved.Latitude;
+                lng = resolved.Longitude;
+            }
+        }
+
         entity.SetLocation(
             input.LocationDescription, input.LocationCommuneId,
             input.LocationDistrictId, input.LocationProvinceId,
-            input.LocationLatitude, input.LocationLongitude);
+            lat, lng);
 
         entity.SetStatistics(
             input.ExposedCount, input.AffectedCount,
@@ -271,6 +297,12 @@ public class FoodPoisoningIncidentAppService : ApplicationService
         entity.SetInvestigationInfo(
             input.InvestigationTeam, input.ControlMeasures, input.PreventionMeasures);
     }
+
+    private static bool HasAddressInfo(CreateUpdateFoodPoisoningIncidentDto input) =>
+        input.LocationProvinceId.HasValue
+        || input.LocationDistrictId.HasValue
+        || input.LocationCommuneId.HasValue
+        || !string.IsNullOrWhiteSpace(input.LocationDescription);
 
     private static FoodPoisoningIncidentDto ToDto(FoodPoisoningIncident e) => new()
     {

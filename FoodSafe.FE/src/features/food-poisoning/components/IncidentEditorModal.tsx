@@ -1,6 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DatePicker, Form, Input, InputNumber, Modal, Select } from "antd";
 import dayjs from "dayjs";
+import {
+  AddressLocationPicker,
+  emptyAddressLocation,
+  type AddressLocation,
+} from "@/components/AddressLocationPicker";
+
 import {
   CAUSE_ASSESSMENT_CONFIG,
   type CauseAssessment,
@@ -40,6 +46,10 @@ export function IncidentEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
   const { open, item } = props;
 
+  const [location, setLocation] = useState<AddressLocation>(
+    emptyAddressLocation,
+  );
+
   useEffect(() => {
     if (!open) return;
     if (item) {
@@ -64,6 +74,11 @@ export function IncidentEditorModal(props: Props) {
         controlMeasures: item.controlMeasures,
         preventionMeasures: item.preventionMeasures,
       });
+      setLocation({
+        provinceId: item.locationProvinceId ?? "",
+        districtId: item.locationDistrictId ?? "",
+        communeId: item.locationCommuneId ?? "",
+      });
     } else {
       form.setFieldsValue({
         exposedCount: 0,
@@ -71,6 +86,7 @@ export function IncidentEditorModal(props: Props) {
         hospitalizedCount: 0,
         deathCount: 0,
       });
+      setLocation(emptyAddressLocation());
     }
   }, [form, open, item]);
 
@@ -90,12 +106,16 @@ export function IncidentEditorModal(props: Props) {
         form={form}
         layout="vertical"
         preserve={false}
-        onFinish={(values) =>
+        onFinish={(values) => {
+          const street = values.locationDescription.trim();
           props.onSubmit({
             occurrenceDate: values.occurrenceDate.toISOString(),
             endDate: values.endDate?.toISOString(),
             notes: values.notes?.trim() || undefined,
-            locationDescription: values.locationDescription.trim(),
+            locationDescription: street,
+            locationProvinceId: location.provinceId || undefined,
+            locationDistrictId: location.districtId || undefined,
+            locationCommuneId: location.communeId || undefined,
             exposedCount: values.exposedCount,
             affectedCount: values.affectedCount,
             hospitalizedCount: values.hospitalizedCount,
@@ -109,8 +129,8 @@ export function IncidentEditorModal(props: Props) {
             investigationTeam: values.investigationTeam?.trim() || undefined,
             controlMeasures: values.controlMeasures?.trim() || undefined,
             preventionMeasures: values.preventionMeasures?.trim() || undefined,
-          })
-        }
+          });
+        }}
       >
         <div
           style={{
@@ -141,19 +161,21 @@ export function IncidentEditorModal(props: Props) {
           </Form.Item>
         </div>
 
+        <AddressLocationPicker value={location} onChange={setLocation} />
+
         <Form.Item
           name="locationDescription"
-          label="Địa điểm xảy ra"
+          label="Địa chỉ chi tiết"
           rules={[
             {
               required: true,
               whitespace: true,
-              message: "Vui lòng nhập địa điểm xảy ra.",
+              message: "Vui lòng nhập địa chỉ chi tiết.",
             },
-            { max: 500, message: "Địa điểm không quá 500 ký tự." },
+            { max: 500, message: "Địa chỉ không quá 500 ký tự." },
           ]}
         >
-          <Input maxLength={500} />
+          <Input maxLength={500} placeholder="Số nhà, tên đường, thôn/xóm..." />
         </Form.Item>
 
         <div

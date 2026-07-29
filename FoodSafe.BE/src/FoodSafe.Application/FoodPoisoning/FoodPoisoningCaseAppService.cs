@@ -1,3 +1,4 @@
+using FoodSafe.Geocoding;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -18,17 +19,20 @@ public class FoodPoisoningCaseAppService : ApplicationService
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
     private readonly IDataFilter _dataFilter;
+    private readonly ILocationResolver _locationResolver;
 
     public FoodPoisoningCaseAppService(
         IRepository<FoodPoisoningCase, Guid> cases,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens,
-        IDataFilter dataFilter)
+        IDataFilter dataFilter,
+        ILocationResolver locationResolver)
     {
         _cases = cases;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
         _dataFilter = dataFilter;
+        _locationResolver = locationResolver;
     }
 
     public async Task<PagedResultDto<FoodPoisoningCaseDto>> GetListAsync(FoodPoisoningCaseFilterDto input)
@@ -79,7 +83,7 @@ public class FoodPoisoningCaseAppService : ApplicationService
             GuidGenerator.Create(), orgId, caseCode, input.ReportDate,
             input.OccurrenceDate, input.IncidentId, input.Notes);
 
-        ApplyDetails(entity, input);
+        await ApplyDetailsAsync(entity, input);
 
         await _cases.InsertAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return ToDto(entity);
@@ -91,7 +95,7 @@ public class FoodPoisoningCaseAppService : ApplicationService
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
 
         entity.Update(input.ReportDate, input.OccurrenceDate, input.IncidentId, input.Notes);
-        ApplyDetails(entity, input);
+        await ApplyDetailsAsync(entity, input);
 
         await _cases.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return ToDto(entity);
@@ -229,12 +233,35 @@ public class FoodPoisoningCaseAppService : ApplicationService
         return max;
     }
 
-    private static void ApplyDetails(FoodPoisoningCase entity, CreateUpdateFoodPoisoningCaseDto input)
+    private async Task ApplyDetailsAsync(
+        FoodPoisoningCase entity, CreateUpdateFoodPoisoningCaseDto input)
     {
+        var lat = input.LocationLatitude;
+        var lng = input.LocationLongitude;
+
+        if (!lat.HasValue && !lng.HasValue && HasAddressInfo(input))
+        {
+            var resolved = await _locationResolver.ResolveAsync(
+                new GeocodeAddressInput
+                {
+                    Street = input.LocationDescription,
+                    ProvinceId = input.LocationProvinceId,
+                    DistrictId = input.LocationDistrictId,
+                    CommuneId = input.LocationCommuneId,
+                },
+                _cancellationTokens.Token);
+
+            if (resolved is not null)
+            {
+                lat = resolved.Latitude;
+                lng = resolved.Longitude;
+            }
+        }
+
         entity.SetLocation(
             input.LocationDescription, input.LocationCommuneId,
             input.LocationDistrictId, input.LocationProvinceId,
-            input.LocationLatitude, input.LocationLongitude);
+            lat, lng);
 
         entity.SetVictimInfo(
             input.VictimName, input.VictimAge, input.VictimGender,
@@ -251,6 +278,12 @@ public class FoodPoisoningCaseAppService : ApplicationService
             input.ReporterName, input.ReporterPhone,
             input.ReporterOrganization, input.ReporterRelation);
     }
+
+    private static bool HasAddressInfo(CreateUpdateFoodPoisoningCaseDto input) =>
+        input.LocationProvinceId.HasValue
+        || input.LocationDistrictId.HasValue
+        || input.LocationCommuneId.HasValue
+        || !string.IsNullOrWhiteSpace(input.LocationDescription);
 
     private static FoodPoisoningCaseDto ToDto(FoodPoisoningCase e) => new()
     {

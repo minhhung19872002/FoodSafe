@@ -13,8 +13,6 @@ import type {
   ExcelImportPreview,
   ExcelImportResult,
   FileAttachment,
-  GeocodeAddressInput,
-  GeocodeResult,
   PagedResult,
   Product,
   ProductBusinessOption,
@@ -30,8 +28,6 @@ const businessEndpoint = "/v1/app/business";
 const productEndpoint = "/v1/app/product";
 const businessExcelEndpoint = `${businessEndpoint}/excel`;
 const productExcelEndpoint = `${productEndpoint}/excel`;
-const geocodingEndpoint = "/v1/app/geocoding";
-
 function excelDownload(data: Blob, contentDisposition?: string): ExcelDownload {
   const encoded = contentDisposition?.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
   const plain = contentDisposition?.match(/filename="?([^";]+)"?/i)?.[1];
@@ -40,21 +36,6 @@ function excelDownload(data: Blob, contentDisposition?: string): ExcelDownload {
     fileName: decodeURIComponent(encoded ?? plain ?? "export.xlsx"),
   };
 }
-
-export const geocodingApi = {
-  /**
-   * Resolves an address to coordinates. The server answers 204 when the
-   * provider finds no match, which axios surfaces as an empty body — that is a
-   * legitimate "not found", not an error.
-   */
-  async resolve(input: GeocodeAddressInput): Promise<GeocodeResult | null> {
-    const response = await api.post<GeocodeResult | "">(
-      `${geocodingEndpoint}/resolve`,
-      input,
-    );
-    return response.status === 204 || !response.data ? null : response.data;
-  },
-};
 
 export const publicBusinessApi = {
   async lookup(keyword: string): Promise<PublicBusiness> {

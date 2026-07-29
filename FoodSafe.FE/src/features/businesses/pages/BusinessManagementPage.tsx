@@ -48,7 +48,7 @@ import { BusinessEditorModal } from "../components/BusinessEditorModal";
 import { BusinessHandlersModal } from "../components/BusinessHandlersModal";
 import { BusinessImportModal } from "../components/BusinessImportModal";
 import { BusinessManagementView } from "../components/BusinessManagementView";
-import { MapPicker } from "../components/MapPicker";
+import { MapPicker } from "@/components/MapPicker";
 import { ProductEditorModal } from "../components/ProductEditorModal";
 import { ProductAttachmentsModal } from "../components/ProductAttachmentsModal";
 import {

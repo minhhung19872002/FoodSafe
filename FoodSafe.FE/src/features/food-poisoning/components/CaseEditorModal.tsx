@@ -1,6 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DatePicker, Form, Input, InputNumber, Modal, Select } from "antd";
 import dayjs from "dayjs";
+import {
+  AddressLocationPicker,
+  emptyAddressLocation,
+  type AddressLocation,
+} from "@/components/AddressLocationPicker";
 import { usePoisoningIncidents } from "../api/foodPoisoningQueries";
 import {
   TREATMENT_RESULT_CONFIG,
@@ -50,6 +55,10 @@ export function CaseEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
   const { open, item, canLinkIncident } = props;
 
+  const [location, setLocation] = useState<AddressLocation>(
+    emptyAddressLocation,
+  );
+
   const { data: incidentsData, isLoading: incidentsLoading } =
     usePoisoningIncidents(
       { skipCount: 0, maxResultCount: 200 },
@@ -61,8 +70,6 @@ export function CaseEditorModal(props: Props) {
       ? `${incident.incidentCode} — ${incident.locationDescription}`
       : incident.incidentCode,
   }));
-  // Ca đã gán vụ ngoài trang đầu (hoặc user không xem được vụ): vẫn hiển thị mã
-  // thay vì ô trống để không mất liên kết khi lưu lại.
   if (
     item?.incidentId &&
     !incidentOptions.some((option) => option.value === item.incidentId)
@@ -103,8 +110,14 @@ export function CaseEditorModal(props: Props) {
         reporterOrganization: item.reporterOrganization,
         reporterRelation: item.reporterRelation,
       });
+      setLocation({
+        provinceId: item.locationProvinceId ?? "",
+        districtId: item.locationDistrictId ?? "",
+        communeId: item.locationCommuneId ?? "",
+      });
     } else {
       form.setFieldsValue({ reportDate: dayjs() });
+      setLocation(emptyAddressLocation());
     }
   }, [form, open, item]);
 
@@ -124,13 +137,17 @@ export function CaseEditorModal(props: Props) {
         form={form}
         layout="vertical"
         preserve={false}
-        onFinish={(values) =>
+        onFinish={(values) => {
+          const street = values.locationDescription.trim();
           props.onSubmit({
             reportDate: values.reportDate.format("YYYY-MM-DD"),
             occurrenceDate: values.occurrenceDate?.toISOString(),
             incidentId: values.incidentId,
             notes: values.notes?.trim() || undefined,
-            locationDescription: values.locationDescription.trim(),
+            locationDescription: street,
+            locationProvinceId: location.provinceId || undefined,
+            locationDistrictId: location.districtId || undefined,
+            locationCommuneId: location.communeId || undefined,
             victimName: values.victimName.trim(),
             victimAge: values.victimAge,
             victimGender: values.victimGender,
@@ -150,8 +167,8 @@ export function CaseEditorModal(props: Props) {
             reporterOrganization:
               values.reporterOrganization?.trim() || undefined,
             reporterRelation: values.reporterRelation?.trim() || undefined,
-          })
-        }
+          });
+        }}
       >
         <div
           style={{
@@ -176,19 +193,21 @@ export function CaseEditorModal(props: Props) {
           </Form.Item>
         </div>
 
+        <AddressLocationPicker value={location} onChange={setLocation} />
+
         <Form.Item
           name="locationDescription"
-          label="Địa điểm xảy ra"
+          label="Địa chỉ chi tiết"
           rules={[
             {
               required: true,
               whitespace: true,
-              message: "Vui lòng nhập địa điểm xảy ra.",
+              message: "Vui lòng nhập địa chỉ chi tiết.",
             },
-            { max: 500, message: "Địa điểm không quá 500 ký tự." },
+            { max: 500, message: "Địa chỉ không quá 500 ký tự." },
           ]}
         >
-          <Input maxLength={500} />
+          <Input maxLength={500} placeholder="Số nhà, tên đường, thôn/xóm..." />
         </Form.Item>
 
         {canLinkIncident && (
