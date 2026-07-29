@@ -1,4 +1,8 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
 import { describeApiError } from "@/lib/apiError";
@@ -51,6 +55,15 @@ const CAPTCHA_ERROR_CODE = "FoodSafe:Captcha:0001";
 
 const CAPTCHA_FAILURE_MESSAGE =
   "Xác minh CAPTCHA không hợp lệ hoặc đã hết hạn. Vui lòng thực hiện lại xác minh rồi đăng nhập.";
+
+/**
+ * Dữ liệu nghiệp vụ trong QueryClient được giới hạn theo người dùng hiện tại.
+ * Giữ lại cache khi đổi tài khoản có thể làm phiên mới nhìn thấy lựa chọn đơn
+ * vị của phiên cũ; thao tác sau đó sẽ bị backend từ chối vì ngoài phạm vi.
+ */
+function clearSessionQueryCache(queryClient: QueryClient): void {
+  queryClient.removeQueries();
+}
 
 /**
  * ABP trả `NotAllowed` khi tài khoản chưa được phép đăng nhập bằng mật khẩu hiện
@@ -122,6 +135,7 @@ export function useLogin() {
       return user;
     },
     onSuccess: (user) => {
+      clearSessionQueryCache(queryClient);
       queryClient.setQueryData(["auth", "current-user"], user);
       setAuth({
         id: user.id,
@@ -159,7 +173,7 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => authApi.logout(),
     onSettled: () => {
-      queryClient.removeQueries({ queryKey: ["auth"] });
+      clearSessionQueryCache(queryClient);
       clearAuth();
       navigate("/login");
     },

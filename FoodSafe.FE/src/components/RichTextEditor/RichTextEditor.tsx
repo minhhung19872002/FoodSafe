@@ -15,17 +15,8 @@ import {
   RedoOutlined,
 } from "@ant-design/icons";
 import type { ReactNode } from "react";
+import { SafeHtmlContent } from "./SafeHtmlContent";
 import "./RichTextEditor.css";
-
-/**
- * Basic HTML sanitizer — removes <script> tags and inline event-handler
- * attributes before rendering untrusted HTML via dangerouslySetInnerHTML.
- */
-function sanitizeHtml(html: string): string {
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    .replace(/\bon\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, "");
-}
 
 // ---- Toolbar helpers ------------------------------------------------
 
@@ -159,14 +150,7 @@ export function RichTextEditor({
 
   // ---- Readonly mode ----
   if (readonly) {
-    return (
-      <div
-        id={id}
-        className="rte-readonly"
-        // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: sanitizeHtml(value ?? "") }}
-      />
-    );
+    return <SafeHtmlContent id={id} html={value ?? ""} />;
   }
 
   // ---- Edit mode ----

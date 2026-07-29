@@ -51,7 +51,7 @@ public class DataScopeTests
                 Guid.NewGuid(),
                 Guid.NewGuid(),
                 Guid.NewGuid(),
-                null,
+                Guid.NewGuid(),
                 true,
                 false,
                 false,
