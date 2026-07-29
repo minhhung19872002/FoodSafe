@@ -14,12 +14,14 @@ import {
   Row,
   Select,
   Space,
+  Spin,
   Typography,
 } from "antd";
 import { AimOutlined } from "@ant-design/icons";
 import { useCommunes, useDistricts, useProvinces } from "@/hooks/useGeography";
 import { extractApiError } from "@/lib/apiError";
 import { useGeocodeAddress } from "@/hooks/useGeocodeAddress";
+import { useSuggestBusinessCode } from "../api/businessMutations";
 import type { CatalogItem } from "@/features/catalogs/types/catalog.types";
 import type { OrganizationDto } from "@/features/organizations/types/organization.types";
 import { MapPicker } from "@/components/MapPicker";
@@ -93,6 +95,7 @@ export function BusinessEditorModal({
 }: BusinessEditorModalProps) {
   const {
     control,
+    getValues,
     reset,
     setValue,
     handleSubmit,
@@ -113,6 +116,11 @@ export function BusinessEditorModal({
   const districts = useDistricts(provinceId ?? "", true);
   const communes = useCommunes(districtId ?? "", true);
   const geocode = useGeocodeAddress();
+  const {
+    isPending: isSuggestingCode,
+    mutate: suggestBusinessCode,
+    reset: resetCodeSuggestion,
+  } = useSuggestBusinessCode();
   const [matchedAddress, setMatchedAddress] = useState<string>();
 
   const canGeocode = Boolean(
@@ -172,8 +180,9 @@ export function BusinessEditorModal({
       establishedDate: toDateInput(business?.establishedDate),
       productGroupIds: business?.productGroupIds ?? [],
     });
+    resetCodeSuggestion();
     setMatchedAddress(undefined);
-  }, [business, open, reset]);
+  }, [business, open, reset, resetCodeSuggestion]);
 
   const submit = handleSubmit((values) => {
     const common: BusinessInput = {
@@ -237,7 +246,30 @@ export function BusinessEditorModal({
                     aria-label="Đơn vị quản lý"
                     showSearch
                     optionFilterProp="label"
+                    popupMatchSelectWidth={600}
                     disabled={Boolean(business)}
+                    onChange={(organizationId) => {
+                      field.onChange(organizationId);
+                      if (business || !organizationId) return;
+                      setValue("code", "");
+                      suggestBusinessCode(organizationId, {
+                        onSuccess: (code, requestedOrganizationId) => {
+                          if (
+                            getValues("organizationId") ===
+                            requestedOrganizationId
+                          ) {
+                            setValue("code", code, {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            });
+                          }
+                        },
+                        onError: () =>
+                          void message.error(
+                            "Không thể tự sinh mã cơ sở. Vui lòng thử lại.",
+                          ),
+                      });
+                    }}
                     options={organizations.map((item) => ({
                       value: item.id,
                       label: `${item.code} — ${item.name}`,
@@ -253,7 +285,14 @@ export function BusinessEditorModal({
                 control={control}
                 name="code"
                 render={({ field }) => (
-                  <Input {...field} aria-label="Mã cơ sở" />
+                  <Input
+                    {...field}
+                    aria-label="Mã cơ sở"
+                    placeholder="Tự sinh theo đơn vị quản lý"
+                    suffix={
+                      isSuggestingCode ? <Spin size="small" /> : null
+                    }
+                  />
                 )}
               />
             </Form.Item>
@@ -280,7 +319,9 @@ export function BusinessEditorModal({
                 render={({ field }) => (
                   <Select
                     {...field}
+                    aria-label="Loại hình"
                     allowClear
+                    popupMatchSelectWidth={460}
                     options={businessTypes.map((item) => ({
                       value: item.id,
                       label: item.name,
@@ -298,7 +339,9 @@ export function BusinessEditorModal({
                 render={({ field }) => (
                   <Select
                     {...field}
+                    aria-label="Phân loại nguy cơ"
                     allowClear
+                    popupMatchSelectWidth={400}
                     options={classifications.map((item) => ({
                       value: item.id,
                       label: item.name,

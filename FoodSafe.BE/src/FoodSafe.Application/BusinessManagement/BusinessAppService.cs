@@ -1,4 +1,5 @@
 using FoodSafe.Licensing;
+using FoodSafe.Organizations;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -17,6 +18,7 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
     private readonly IRepository<Business, Guid> _businesses;
     private readonly IRepository<BusinessProductGroup> _businessProductGroups;
     private readonly IRepository<BusinessHandler, Guid> _handlers;
+    private readonly IRepository<Organization, Guid> _organizations;
     private readonly IRepository<Product, Guid> _products;
     private readonly IRepository<SelfDeclaration, Guid> _selfDeclarations;
     private readonly IRepository<EligibilityCertificate, Guid> _eligibilityCertificates;
@@ -31,6 +33,7 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
         IRepository<Business, Guid> businesses,
         IRepository<BusinessProductGroup> businessProductGroups,
         IRepository<BusinessHandler, Guid> handlers,
+        IRepository<Organization, Guid> organizations,
         IRepository<Product, Guid> products,
         IRepository<SelfDeclaration, Guid> selfDeclarations,
         IRepository<EligibilityCertificate, Guid> eligibilityCertificates,
@@ -44,6 +47,7 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
         _businesses = businesses;
         _businessProductGroups = businessProductGroups;
         _handlers = handlers;
+        _organizations = organizations;
         _products = products;
         _selfDeclarations = selfDeclarations;
         _eligibilityCertificates = eligibilityCertificates;
@@ -132,6 +136,39 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
     {
         var business = await GetScopedAsync(id, DataScopeOperation.View);
         return await ToDetailDtoAsync(business);
+    }
+
+    [Authorize(FoodSafePermissions.BusinessManagement.Businesses.Create)]
+    public async Task<BusinessCodeSuggestionDto> GetNextCodeAsync(
+        Guid organizationId)
+    {
+        await _dataScopeProvider.EnsureOrganizationAccessAsync(
+            organizationId,
+            DataScopeOperation.Create,
+            _cancellationTokens.Token);
+        var organization = await _organizations.GetAsync(
+            organizationId,
+            cancellationToken: _cancellationTokens.Token);
+
+        var organizationSuffix = organization.Code
+            .Split('-', StringSplitOptions.RemoveEmptyEntries)
+            .Last()
+            .ToUpperInvariant();
+        var query = await _businesses.GetQueryableAsync();
+        var existingCodes = await AsyncExecuter.ToListAsync(
+            query
+                .Where(x => x.Code != null && x.Code.StartsWith("CS-"))
+                .Select(x => x.Code!),
+            _cancellationTokens.Token);
+        var nextSequence = existingCodes
+            .Select(TryGetBusinessCodeSequence)
+            .DefaultIfEmpty(0)
+            .Max() + 1;
+
+        return new BusinessCodeSuggestionDto
+        {
+            Code = $"CS-{organizationSuffix}-{nextSequence:D4}"
+        };
     }
 
     [Authorize(FoodSafePermissions.BusinessManagement.Businesses.Create)]
@@ -411,4 +448,10 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
         string.IsNullOrWhiteSpace(value)
             ? null
             : value.Trim().ToUpperInvariant();
+
+    private static int TryGetBusinessCodeSequence(string code)
+    {
+        var suffix = code.Split('-').LastOrDefault();
+        return int.TryParse(suffix, out var sequence) ? sequence : 0;
+    }
 }

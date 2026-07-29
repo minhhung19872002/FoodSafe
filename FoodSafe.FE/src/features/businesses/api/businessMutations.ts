@@ -20,6 +20,11 @@ function useInvalidateBusinessManagement() {
   return () => queryClient.invalidateQueries({ queryKey: businessKeys.all });
 }
 
+export function useSuggestBusinessCode() {
+  return useMutation({ mutationFn: businessApi.nextCode });
+}
+
+
 export function useCreateBusiness() {
   return useMutation({
     mutationFn: businessApi.create,

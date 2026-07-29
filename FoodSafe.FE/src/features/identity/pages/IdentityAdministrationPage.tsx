@@ -32,6 +32,7 @@ import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { useTablePagination } from "@/hooks/useTablePagination";
+import { extractApiError } from "@/lib/apiError";
 import { saveDownload } from "@/utils/download";
 import { identityApi } from "../api/identityApi";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -188,8 +189,11 @@ export default function IdentityAdministrationPage() {
   });
 
   const showSuccess = (content: string) => void message.success(content);
-  const showError = () =>
-    void message.error("Không thể thực hiện thao tác. Vui lòng kiểm tra lại.");
+  // The server explains exactly which rule was broken — e.g. "Vai trò không phù
+  // hợp với cấp đơn vị hoặc phạm vi quản trị." Replacing that with a generic
+  // sentence left administrators staring at a 403 with nothing to act on.
+  const showError = (error: unknown) =>
+    void message.error(extractApiError(error));
 
   /**
    * The temporary password is returned once and never again, so it has to be
