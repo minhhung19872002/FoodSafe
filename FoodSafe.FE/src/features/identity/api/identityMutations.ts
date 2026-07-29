@@ -3,8 +3,8 @@ import { identityApi } from "./identityApi";
 import { identityKeys } from "./identityQueries";
 import type { SaveRoleInput, SaveUserInput } from "../types/identity.types";
 
-function useIdentityMutation<TVariables>(
-  mutationFn: (variables: TVariables) => Promise<unknown>,
+function useIdentityMutation<TVariables, TResult = unknown>(
+  mutationFn: (variables: TVariables) => Promise<TResult>,
 ) {
   const queryClient = useQueryClient();
   return useMutation({

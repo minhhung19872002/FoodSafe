@@ -64,6 +64,14 @@ export interface GeneratedPassword {
   password: string;
 }
 
+export interface CreatedAdminUser {
+  user: AdminUser;
+  /** Shown once so the administrator can hand it over. Never returned again. */
+  temporaryPassword: string;
+  /** False when the notification email could not be delivered. */
+  notificationEmailSent: boolean;
+}
+
 export interface SaveUserInput {
   fullName: string;
   email: string;
