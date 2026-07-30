@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Volo.Abp.AuditLogging;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
@@ -41,5 +43,10 @@ public class FoodSafeEntityFrameworkCoreModule : AbpModule
         {
             options.UseNpgsql();
         });
+
+        // ABP's default EfCoreAuditLogRepository matches UserName with exact equality;
+        // replace it so audit log search by user name is a substring match like Url search.
+        context.Services.Replace(
+            ServiceDescriptor.Transient<IAuditLogRepository, FoodSafeAuditLogRepository>());
     }
 }
