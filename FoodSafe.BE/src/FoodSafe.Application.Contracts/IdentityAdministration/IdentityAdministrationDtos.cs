@@ -75,9 +75,9 @@ public sealed class CreateAdminUserDto
     [Required]
     [StringLength(50, MinimumLength = 3)]
     [RegularExpression(
-        "^[A-Za-z0-9._-]+$",
+        "^[A-Za-z0-9_]+$",
         ErrorMessage =
-            "Tên đăng nhập chỉ gồm chữ không dấu, số và các ký tự . _ -")]
+            "Tên đăng nhập chỉ gồm chữ không dấu, số và dấu gạch dưới _")]
     public string UserName { get; set; } = string.Empty;
 
     [Required]
@@ -166,6 +166,19 @@ public sealed class GeographyScopeAssignmentDto : EntityDto<Guid>
 public sealed class GeneratedPasswordDto
 {
     public string Password { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Lets an administrator set a specific password for another account, as an
+/// alternative to <see cref="GeneratedPasswordDto"/>'s random generation.
+/// Compliance with the password policy (length, character classes) is
+/// enforced by ASP.NET Core Identity's configured validators, not here.
+/// </summary>
+public sealed class SetUserPasswordDto
+{
+    [Required]
+    [StringLength(128, MinimumLength = 8)]
+    public string NewPassword { get; set; } = string.Empty;
 }
 
 public sealed class PermissionOptionDto

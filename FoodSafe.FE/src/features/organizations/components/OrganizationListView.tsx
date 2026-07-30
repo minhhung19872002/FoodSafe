@@ -1,6 +1,7 @@
 import { Button, Empty, Input, Select, Space, Table, Tag, Tree } from "antd";
 import type { TablePaginationConfig } from "antd";
 import {
+  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
@@ -47,6 +48,7 @@ interface Props {
   onIsActiveChange: (value?: boolean) => void;
   onParentIdChange: (value?: string) => void;
   onRefresh: () => void;
+  onResetFilters?: () => void;
   onCreate: () => void;
   onEdit: (organization: OrganizationDto) => void;
   onDelete: (organization: OrganizationDto) => void;
@@ -88,6 +90,7 @@ export function OrganizationListView({
   onIsActiveChange,
   onParentIdChange,
   onRefresh,
+  onResetFilters = () => {},
   onCreate,
   onEdit,
   onDelete,
@@ -141,6 +144,9 @@ export function OrganizationListView({
             label: o.name,
           }))}
         />
+        <Button icon={<ClearOutlined />} onClick={onResetFilters}>
+          Đặt lại bộ lọc
+        </Button>
         <Button icon={<ReloadOutlined />} onClick={onRefresh}>
           Làm mới
         </Button>

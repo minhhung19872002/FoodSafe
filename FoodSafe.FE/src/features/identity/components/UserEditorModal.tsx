@@ -215,7 +215,7 @@ export function UserEditorModal({
               extra={
                 user
                   ? "Không thể đổi tên đăng nhập sau khi đã tạo"
-                  : "Chữ không dấu, số và các ký tự . _ -"
+                  : "Chữ không dấu, số và dấu gạch dưới _"
               }
               rules={
                 user
@@ -223,9 +223,9 @@ export function UserEditorModal({
                   : [
                       { required: true, message: "Nhập tên đăng nhập" },
                       {
-                        pattern: /^[A-Za-z0-9._-]{3,50}$/,
+                        pattern: /^[A-Za-z0-9_]{3,50}$/,
                         message:
-                          "Từ 3 đến 50 ký tự, chỉ gồm chữ không dấu, số và . _ -",
+                          "Từ 3 đến 50 ký tự, chỉ gồm chữ không dấu, số và dấu gạch dưới _",
                       },
                     ]
               }
@@ -247,7 +247,16 @@ export function UserEditorModal({
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item name="phoneNumber" label="Số điện thoại">
+            <Form.Item
+              name="phoneNumber"
+              label="Số điện thoại"
+              rules={[
+                {
+                  pattern: /^[0-9+()\-.\s]{6,20}$/,
+                  message: "Số điện thoại không hợp lệ",
+                },
+              ]}
+            >
               <Input maxLength={32} />
             </Form.Item>
           </Col>

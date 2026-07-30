@@ -8,6 +8,7 @@ import { z } from "zod";
 import {
   brandingLoginBackgroundUrl,
   brandingLogoUrl,
+  defaultBrandingLogoUrl,
   useBranding,
 } from "@/hooks/useBranding";
 import { usePublicCounts } from "@/hooks/usePublicCounts";
@@ -81,15 +82,15 @@ export default function LoginPage() {
       >
         <div className="login-aside-brand">
           <div className="login-aside-mark">
-            {branding.data?.hasLogo ? (
-              <img
-                src={brandingLogoUrl}
-                alt=""
-                style={{ height: 30, objectFit: "contain" }}
-              />
-            ) : (
-              "AT"
-            )}
+            <img
+              src={
+                branding.data?.hasLogo
+                  ? brandingLogoUrl
+                  : defaultBrandingLogoUrl
+              }
+              alt=""
+              className="login-aside-logo"
+            />
           </div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>
             <strong style={{ fontWeight: 700 }}>FoodSafe</strong> · Quảng Ninh
@@ -98,13 +99,17 @@ export default function LoginPage() {
 
         <div className="login-aside-body">
           <h1 className="login-aside-title">
-            Hệ thống quản lý
-            <br />
-            An toàn thực phẩm
+            {branding.data?.homepageTitle?.trim() || (
+              <>
+                Hệ thống quản lý
+                <br />
+                An toàn thực phẩm
+              </>
+            )}
           </h1>
           <p className="login-aside-lead">
-            Nền tảng nghiệp vụ dành cho cán bộ quản lý: cấp phép, thanh tra,
-            giám sát nguy cơ và báo cáo toàn tỉnh trên một hệ thống duy nhất.
+            {branding.data?.homepageDescription?.trim() ||
+              "Nền tảng nghiệp vụ dành cho cán bộ quản lý: cấp phép, thanh tra, giám sát nguy cơ và báo cáo toàn tỉnh trên một hệ thống duy nhất."}
           </p>
 
           {counts.isSuccess && (
@@ -122,7 +127,8 @@ export default function LoginPage() {
         </div>
 
         <div className="login-aside-legal">
-          © {new Date().getFullYear()} {DEFAULT_ORGANIZATION}
+          © {new Date().getFullYear()}{" "}
+          {branding.data?.homepageTitle?.trim() || DEFAULT_ORGANIZATION}
         </div>
       </aside>
 

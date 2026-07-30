@@ -2,15 +2,20 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Volo.Abp.Identity;
+using Volo.Abp.Identity.Settings;
+using Volo.Abp.Settings;
 using IdentityOptions = Microsoft.AspNetCore.Identity.IdentityOptions;
 
 namespace FoodSafe.Security;
 
 public sealed class LoginPasswordVerificationMiddleware(RequestDelegate next)
 {
+    private const int DefaultLockoutDurationSeconds = 1800;
+
     public async Task InvokeAsync(
         HttpContext context,
         IdentityUserManager userManager,
+        ISettingProvider settingProvider,
         IOptions<IdentityOptions> identityOptions)
     {
         if (!HttpMethods.IsPost(context.Request.Method) ||
@@ -100,9 +105,19 @@ public sealed class LoginPasswordVerificationMiddleware(RequestDelegate next)
 
         if (await userManager.IsLockedOutAsync(user))
         {
-            user.SetIsActive(false);
-            (await userManager.UpdateAsync(user)).CheckErrors();
-            await RespondAsync(context, 7, "AccountDeactivatedByFailedAttempts");
+            var lockoutDurationSeconds = int.TryParse(
+                await settingProvider.GetOrNullAsync(
+                    IdentitySettingNames.Lockout.LockoutDuration),
+                out var parsedSeconds)
+                ? parsedSeconds
+                : DefaultLockoutDurationSeconds;
+            var lockoutMinutes = (int)Math.Ceiling(lockoutDurationSeconds / 60.0);
+
+            await RespondAsync(
+                context,
+                7,
+                "AccountLockedByFailedAttempts",
+                lockoutMinutes);
             return;
         }
 
@@ -112,12 +127,13 @@ public sealed class LoginPasswordVerificationMiddleware(RequestDelegate next)
     private static async Task RespondAsync(
         HttpContext context,
         int result,
-        string description)
+        string description,
+        int? lockoutMinutes = null)
     {
         context.Response.StatusCode = StatusCodes.Status200OK;
         context.Response.ContentType = "application/json; charset=utf-8";
         await context.Response.WriteAsJsonAsync(
-            new { result, description },
+            new { result, description, lockoutMinutes },
             context.RequestAborted);
     }
 }

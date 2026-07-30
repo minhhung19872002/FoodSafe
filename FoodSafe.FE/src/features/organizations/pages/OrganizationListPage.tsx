@@ -121,6 +121,15 @@ export default function OrganizationListPage() {
     void treeQuery.refetch();
   };
 
+  const resetFilters = () => {
+    setFilter("");
+    setLevel(undefined);
+    setIsActive(undefined);
+    setParentId(undefined);
+    pagination.resetToFirstPage();
+    void treeQuery.refetch();
+  };
+
   return (
     <div className="page-container">
       <PageHeader
@@ -171,6 +180,7 @@ export default function OrganizationListPage() {
             pagination.resetToFirstPage();
           }}
           onRefresh={refresh}
+          onResetFilters={resetFilters}
           onCreate={() => setCreateOpen(true)}
           onEdit={setEditing}
           onShowDetail={setDetailOrganization}

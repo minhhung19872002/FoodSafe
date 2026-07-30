@@ -156,19 +156,13 @@ button {
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.sidebar-logo-icon {
+.sidebar-logo-image {
   flex-shrink: 0;
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, var(--fs-green), var(--fs-green-dark));
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 800;
-  font-size: 14.5px;
-  letter-spacing: -0.3px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
 }
 
 .sidebar-logo-text {
@@ -467,15 +461,16 @@ button {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--fs-green), var(--fs-green-dark));
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 17px;
-  letter-spacing: -0.5px;
+  background: #fff;
+  overflow: hidden;
   flex-shrink: 0;
+}
+
+.portal-brand-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .portal-brand-name {
@@ -884,13 +879,15 @@ button {
   width: 34px;
   height: 34px;
   border-radius: 9px;
-  background: var(--fs-green);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.portal-footer-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .portal-footer-title {
@@ -975,13 +972,15 @@ button {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 17px;
+  background: #fff;
   overflow: hidden;
+}
+
+.login-aside-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .login-aside-body {

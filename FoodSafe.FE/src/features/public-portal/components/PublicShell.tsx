@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useBranding } from "@/hooks/useBranding";
+import {
+  brandingLogoUrl,
+  defaultBrandingLogoUrl,
+  useBranding,
+} from "@/hooks/useBranding";
 
 interface NavEntry {
   to: string;
@@ -23,6 +27,8 @@ const DEFAULT_HOTLINE = "0981 815 815";
 const DEFAULT_ADDRESS =
   "Tầng 18, Tòa nhà liên cơ quan số 3, P. Hồng Hà, TP. Hạ Long";
 const DEFAULT_EMAIL = "ccvsattp@quangninh.gov.vn";
+const DEFAULT_TITLE = "Chi cục An toàn vệ sinh thực phẩm";
+const DEFAULT_DESCRIPTION = "Sở Y tế Quảng Ninh";
 
 /**
  * Cấu hình branding trả về chuỗi rỗng khi quản trị viên chưa nhập, nên `??`
@@ -44,11 +50,18 @@ export function PublicShell({ children, fullBleed = false }: PublicShellProps) {
   const hotline = orDefault(branding.data?.contactPhone, DEFAULT_HOTLINE);
   const email = orDefault(branding.data?.contactEmail, DEFAULT_EMAIL);
   const address = orDefault(branding.data?.contactAddress, DEFAULT_ADDRESS);
+  const title = orDefault(branding.data?.homepageTitle, DEFAULT_TITLE);
+  const description = orDefault(
+    branding.data?.homepageDescription,
+    DEFAULT_DESCRIPTION,
+  );
 
   return (
     <div className="portal-layout">
       <div className="portal-strip">
-        <span>Chi cục An toàn vệ sinh thực phẩm — Sở Y tế Quảng Ninh</span>
+        <span>
+          {title} — {description}
+        </span>
         <span style={{ display: "flex", gap: 16, alignItems: "center" }}>
           <span>
             Hotline: <strong>{hotline}</strong>
@@ -73,13 +86,21 @@ export function PublicShell({ children, fullBleed = false }: PublicShellProps) {
               }
             }}
           >
-            <div className="portal-brand-mark">AT</div>
+            <div className="portal-brand-mark">
+              <img
+                src={
+                  branding.data?.hasLogo
+                    ? brandingLogoUrl
+                    : defaultBrandingLogoUrl
+                }
+                alt="Logo FoodSafe"
+                className="portal-brand-logo"
+              />
+            </div>
             <div>
-              <div className="portal-brand-name">
-                Chi cục An toàn vệ sinh thực phẩm
-              </div>
+              <div className="portal-brand-name">{title}</div>
               <div className="portal-brand-sub">
-                Sở Y tế Quảng Ninh · Cổng tra cứu công khai
+                {description} · Cổng tra cứu công khai
               </div>
             </div>
           </div>
@@ -112,13 +133,23 @@ export function PublicShell({ children, fullBleed = false }: PublicShellProps) {
         <div className="portal-footer-inner">
           <div>
             <div className="portal-footer-brand">
-              <div className="portal-footer-mark">AT</div>
+              <div className="portal-footer-mark">
+                <img
+                  src={
+                    branding.data?.hasLogo
+                      ? brandingLogoUrl
+                      : defaultBrandingLogoUrl
+                  }
+                  alt=""
+                  className="portal-footer-logo"
+                />
+              </div>
               <div style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>
-                Cổng thông tin An toàn thực phẩm Quảng Ninh
+                {title}
               </div>
             </div>
             <div className="portal-footer-text">
-              Chi cục An toàn vệ sinh thực phẩm — Sở Y tế Quảng Ninh
+              {description}
               <br />
               {address}
             </div>
@@ -146,8 +177,7 @@ export function PublicShell({ children, fullBleed = false }: PublicShellProps) {
         </div>
 
         <div className="portal-footer-bottom">
-          © {new Date().getFullYear()} Chi cục An toàn vệ sinh thực phẩm Quảng
-          Ninh — Cổng thông tin công khai ATTP
+          © {new Date().getFullYear()} {title} — Cổng thông tin công khai ATTP
         </div>
       </footer>
     </div>

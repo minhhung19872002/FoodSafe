@@ -16,12 +16,14 @@ import { RowActions } from "@/components/RowActions";
 import { PageHeader } from "@/components/PageHeader";
 import {
   AuditOutlined,
+  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
-  KeyOutlined,
+  FormOutlined,
   LockOutlined,
   PlusOutlined,
+  ReloadOutlined,
   SafetyCertificateOutlined,
   StopOutlined,
   TeamOutlined,
@@ -44,9 +46,9 @@ import {
   useDeleteAdminRole,
   useDeleteAdminUser,
   useGenerateRandomPassword,
-  useSendPasswordReset,
   useSetUserActivation,
   useSetUserLock,
+  useSetUserPassword,
   useUpdateAdminRole,
   useUpdateAdminUser,
   useUpdateRolePermissions,
@@ -63,6 +65,7 @@ import { PermissionMatrixDrawer } from "../components/PermissionMatrixDrawer";
 import { RolePermissionsDrawer } from "../components/RolePermissionsDrawer";
 import { UserActivityDrawer } from "../components/UserActivityDrawer";
 import { QuickCreateUserModal } from "../components/QuickCreateUserModal";
+import { SetUserPasswordModal } from "../components/SetUserPasswordModal";
 import { UserEditorModal } from "../components/UserEditorModal";
 import type {
   AdminRole,
@@ -131,10 +134,13 @@ export default function IdentityAdministrationPage() {
   const [userFilter, setUserFilter] = useState<UserFilter>({
     sorting: "UserName",
   });
+  const [userFilterResetKey, setUserFilterResetKey] = useState(0);
   const [roleFilter, setRoleFilter] = useState<RoleFilter>({
     sorting: "Name",
   });
+  const [roleFilterResetKey, setRoleFilterResetKey] = useState(0);
   const [editingUser, setEditingUser] = useState<AdminUser>();
+  const [passwordUser, setPasswordUser] = useState<AdminUser>();
   const [detailUser, setDetailUser] = useState<AdminUser | null>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [activityUser, setActivityUser] = useState<AdminUser>();
@@ -165,13 +171,27 @@ export default function IdentityAdministrationPage() {
   const activity = useUserActivity(activityUser?.id);
   const rolePermissions = useRolePermissions(permissionRole?.id);
 
+  const resetUserFilters = () => {
+    setUserFilter({ sorting: "UserName" });
+    usersPagination.resetToFirstPage();
+    setUserFilterResetKey((key) => key + 1);
+  };
+  const refreshUsers = () => void users.refetch();
+
+  const resetRoleFilters = () => {
+    setRoleFilter({ sorting: "Name" });
+    rolesPagination.resetToFirstPage();
+    setRoleFilterResetKey((key) => key + 1);
+  };
+  const refreshRoles = () => void roles.refetch();
+
   const createUser = useCreateAdminUser();
   const updateUser = useUpdateAdminUser();
   const deleteUser = useDeleteAdminUser();
   const generatePassword = useGenerateRandomPassword();
+  const setPassword = useSetUserPassword();
   const setActivation = useSetUserActivation();
   const setLock = useSetUserLock();
-  const sendReset = useSendPasswordReset();
   const permissionOptions = usePermissionOptions();
   const createRole = useCreateAdminRole();
   const updateRole = useUpdateAdminRole();
@@ -259,6 +279,7 @@ export default function IdentityAdministrationPage() {
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <div className="filter-toolbar" style={{ marginBottom: 16 }}>
           <Input.Search
+            key={`user-search-${userFilterResetKey}`}
             aria-label="Tìm tài khoản"
             allowClear
             placeholder="Tên, email hoặc số điện thoại"
@@ -272,6 +293,7 @@ export default function IdentityAdministrationPage() {
             }}
           />
           <Select
+            key={`user-role-${userFilterResetKey}`}
             aria-label="Lọc vai trò"
             allowClear
             placeholder="Vai trò"
@@ -283,6 +305,7 @@ export default function IdentityAdministrationPage() {
             }}
           />
           <Select
+            key={`user-org-${userFilterResetKey}`}
             aria-label="Lọc đơn vị"
             allowClear
             showSearch
@@ -296,6 +319,7 @@ export default function IdentityAdministrationPage() {
             }}
           />
           <Select
+            key={`user-permission-${userFilterResetKey}`}
             aria-label="Lọc theo quyền"
             allowClear
             showSearch
@@ -309,6 +333,7 @@ export default function IdentityAdministrationPage() {
             }}
           />
           <Select
+            key={`user-status-${userFilterResetKey}`}
             aria-label="Lọc trạng thái tài khoản"
             allowClear
             placeholder="Trạng thái"
@@ -332,6 +357,19 @@ export default function IdentityAdministrationPage() {
               usersPagination.resetToFirstPage();
             }}
           />
+          <Button
+            icon={<ClearOutlined />}
+            onClick={resetUserFilters}
+          >
+            Đặt lại bộ lọc
+          </Button>
+          <Button
+            icon={<ReloadOutlined />}
+            loading={users.isFetching}
+            onClick={refreshUsers}
+          >
+            Làm mới
+          </Button>
           <Button
             icon={<ExportOutlined />}
             loading={exportUsers.isPending}
@@ -493,18 +531,12 @@ export default function IdentityAdministrationPage() {
                           ),
                       },
                       {
-                        key: "reset-password",
-                        label: "Đặt lại mật khẩu",
-                        ariaLabel: `Đặt lại mật khẩu ${user.fullName}`,
-                        icon: <KeyOutlined />,
+                        key: "set-password",
+                        label: "Đổi mật khẩu",
+                        ariaLabel: `Đổi mật khẩu ${user.fullName}`,
+                        icon: <FormOutlined />,
                         hidden: !hasPermission(permission.resetPassword),
-                        confirm: "Gửi liên kết đặt lại mật khẩu?",
-                        onClick: () =>
-                          sendReset.mutate(user.id, {
-                            onSuccess: () =>
-                              showSuccess("Đã gửi email đặt lại mật khẩu"),
-                            onError: showError,
-                          }),
+                        onClick: () => setPasswordUser(user),
                       },
                       {
                         key: "generate-password",
@@ -577,6 +609,7 @@ export default function IdentityAdministrationPage() {
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <div className="filter-toolbar" style={{ marginBottom: 16 }}>
           <Input.Search
+            key={`role-search-${roleFilterResetKey}`}
             aria-label="Tìm vai trò"
             allowClear
             placeholder="Tên hoặc mô tả vai trò"
@@ -590,6 +623,7 @@ export default function IdentityAdministrationPage() {
             }}
           />
           <Select
+            key={`role-status-${roleFilterResetKey}`}
             aria-label="Lọc trạng thái vai trò"
             allowClear
             placeholder="Trạng thái"
@@ -603,6 +637,16 @@ export default function IdentityAdministrationPage() {
               rolesPagination.resetToFirstPage();
             }}
           />
+          <Button icon={<ClearOutlined />} onClick={resetRoleFilters}>
+            Đặt lại bộ lọc
+          </Button>
+          <Button
+            icon={<ReloadOutlined />}
+            loading={roles.isFetching}
+            onClick={refreshRoles}
+          >
+            Làm mới
+          </Button>
           <Button
             icon={<SafetyCertificateOutlined />}
             onClick={() => setMatrixOpen(true)}
@@ -790,6 +834,24 @@ export default function IdentityAdministrationPage() {
             },
             onError: showError,
           });
+        }}
+      />
+      <SetUserPasswordModal
+        user={passwordUser}
+        loading={setPassword.isPending}
+        onCancel={() => setPasswordUser(undefined)}
+        onSubmit={(newPassword) => {
+          if (!passwordUser) return;
+          setPassword.mutate(
+            { id: passwordUser.id, newPassword },
+            {
+              onSuccess: () => {
+                setPasswordUser(undefined);
+                showSuccess("Đã đặt mật khẩu mới cho tài khoản");
+              },
+              onError: showError,
+            },
+          );
         }}
       />
       <RecordDetailDrawer

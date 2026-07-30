@@ -23,7 +23,11 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { avatarUrl } from "@/features/auth/api/profileApi";
 import { useLogout } from "@/features/auth/api/authMutations";
 import { ROUTE_PERMISSIONS } from "./routePermissions";
-import { brandingLogoUrl, useBranding } from "@/hooks/useBranding";
+import {
+  brandingLogoUrl,
+  defaultBrandingLogoUrl,
+  useBranding,
+} from "@/hooks/useBranding";
 import {
   SIDEBAR_WIDTH,
   SIDEBAR_COLLAPSED_WIDTH,
@@ -375,15 +379,13 @@ export function AppLayout() {
   const sidebarContent = (
     <>
       <div className="sidebar-logo">
-        {branding.data?.hasLogo ? (
-          <img
-            src={brandingLogoUrl}
-            alt="Logo"
-            style={{ height: 32, objectFit: "contain" }}
-          />
-        ) : (
-          <div className="sidebar-logo-icon">AT</div>
-        )}
+        <img
+          src={
+            branding.data?.hasLogo ? brandingLogoUrl : defaultBrandingLogoUrl
+          }
+          alt="Logo FoodSafe"
+          className="sidebar-logo-image"
+        />
         <div className="sidebar-logo-text">
           <span className="sidebar-logo-title">FoodSafe</span>
           <span className="sidebar-logo-subtitle">Quản lý ATTP Quảng Ninh</span>

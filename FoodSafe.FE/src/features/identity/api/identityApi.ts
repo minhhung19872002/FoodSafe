@@ -61,6 +61,11 @@ export const identityApi = {
       .post<GeneratedPassword>(`${endpoint}/users/${id}/random-password`)
       .then((response) => response.data),
 
+  setUserPassword: (id: string, newPassword: string): Promise<void> =>
+    api
+      .put(`${endpoint}/users/${id}/password`, { newPassword })
+      .then(() => undefined),
+
   getPermissionOptions: (): Promise<ListResult<PermissionOption>> =>
     api
       .get<ListResult<PermissionOption>>(`${endpoint}/permission-options`)

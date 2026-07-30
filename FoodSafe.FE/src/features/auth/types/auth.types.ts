@@ -14,6 +14,7 @@ export interface CaptchaConfig {
 export interface LoginResponse {
   result: number;
   description: string;
+  lockoutMinutes?: number | null;
 }
 
 export interface CurrentUserDto {

@@ -89,6 +89,7 @@ public class UpdateSystemSettingsDto
     [StringLength(2000)]
     public string? HomepageDescription { get; set; }
 
+    [Phone]
     [StringLength(50)]
     public string? ContactPhone { get; set; }
 
