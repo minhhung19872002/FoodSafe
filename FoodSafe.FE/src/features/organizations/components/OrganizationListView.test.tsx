@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { App } from "antd";
 import { describe, expect, it, vi } from "vitest";
 import { OrganizationListView } from "./OrganizationListView";
+import type { OrganizationDto } from "../types/organization.types";
 
 describe("OrganizationListView", () => {
   it("renders organization data and forwards search changes", async () => {
@@ -72,5 +73,52 @@ describe("OrganizationListView", () => {
       screen.getByRole("button", { name: /Sửa Chi cục ATVSTP Quảng Ninh/i }),
     );
     expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: "1" }));
+  });
+
+  it("renders an unknown level returned by the API without crashing", () => {
+    render(
+      <App>
+        <OrganizationListView
+          items={[
+            {
+              id: "legacy-commune",
+              parentId: "province",
+              code: "LEGACY",
+              name: "Đơn vị dữ liệu cũ",
+              level: 3 as OrganizationDto["level"],
+              address: null,
+              phone: null,
+              email: null,
+              leaderName: null,
+              provinceId: "province",
+              communeId: "commune",
+              isActive: true,
+            },
+          ]}
+          treeItems={[]}
+          loading={false}
+          pagination={{}}
+          filter=""
+          canCreate={false}
+          canEdit={false}
+          canDelete={false}
+          exporting={false}
+          onExport={vi.fn()}
+          onFilterChange={vi.fn()}
+          onLevelChange={vi.fn()}
+          onIsActiveChange={vi.fn()}
+          onParentIdChange={vi.fn()}
+          parentOptions={[]}
+          onRefresh={vi.fn()}
+          onCreate={vi.fn()}
+          onEdit={vi.fn()}
+          onDelete={vi.fn()}
+          onShowDetail={vi.fn()}
+        />
+      </App>,
+    );
+
+    expect(screen.getByText("Đơn vị dữ liệu cũ")).toBeInTheDocument();
+    expect(screen.getByText("Không xác định")).toBeInTheDocument();
   });
 });

@@ -10,7 +10,10 @@ import {
 } from "@ant-design/icons";
 import type { DataNode } from "antd/es/tree";
 import { RowActions } from "@/components/RowActions";
-import { organizationLevelConfig } from "./organizationConfig";
+import {
+  getOrganizationLevelConfig,
+  organizationLevelConfig,
+} from "./organizationConfig";
 import type {
   OrganizationDto,
   OrganizationLevel,
@@ -174,7 +177,7 @@ export function OrganizationListView({
             dataIndex: "level",
             width: 130,
             render: (value: OrganizationLevel) => {
-              const config = organizationLevelConfig[value];
+              const config = getOrganizationLevelConfig(value);
               return <Tag color={config.color}>{config.label}</Tag>;
             },
           },
