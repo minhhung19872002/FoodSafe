@@ -80,7 +80,7 @@ const appRoutes: RouteObject[] = [
     ),
   },
   {
-    path: "/co-so-bi-canh-bao",
+    path: "/danh-sach-canh-bao",
     element: (
       <Suspense fallback={<RouteLoading />}>
         <PublicWarnedBusinessesPage />

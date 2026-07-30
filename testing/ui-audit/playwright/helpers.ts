@@ -29,7 +29,7 @@ export const PUBLIC_ROUTES: AuditRoute[] = [
   { slug: "public-portal-home", path: "/cong-thong-tin" },
   { slug: "public-general-search", path: "/tra-cuu-chung" },
   { slug: "public-certificate-search", path: "/tra-cuu-giay-phep" },
-  { slug: "public-warned-businesses", path: "/co-so-bi-canh-bao" },
+  { slug: "public-warned-businesses", path: "/danh-sach-canh-bao" },
   { slug: "public-news", path: "/tin-tuc" },
   { slug: "public-documents", path: "/tra-cuu-van-ban" },
   { slug: "citizen-alert-report", path: "/gui-phan-anh" },

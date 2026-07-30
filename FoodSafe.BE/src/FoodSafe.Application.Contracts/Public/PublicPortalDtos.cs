@@ -16,6 +16,9 @@ public class PublicSearchRequestDto
 
     [Range(1, 500)]
     public int MaxResultCount { get; set; } = 10;
+
+    // Accepts both string category names (news) and numeric enum values (alerts, risk analyses)
+    public IList<string>? Categories { get; set; }
 }
 
 public class PublicBusinessSearchRequestDto : PublicSearchRequestDto

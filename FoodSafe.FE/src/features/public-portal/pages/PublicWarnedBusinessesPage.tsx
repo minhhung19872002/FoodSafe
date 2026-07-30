@@ -64,7 +64,7 @@ export default function PublicWarnedBusinessesPage() {
       {isError && (
         <Alert
           type="error"
-          message="Không thể tải dữ liệu. Vui lòng thử lại."
+          message={`Không thể tải dữ liệu. Vui lòng thử lại.`+ isError}
           showIcon
           style={{ marginBottom: 16 }}
         />

@@ -86,7 +86,7 @@ const PORTAL_TILES: PortalTile[] = [
     iconColor: brand.greenDark,
   },
   {
-    title: "Cơ sở bị cảnh báo",
+    title: "Danh sách cảnh báo",
     description: "Cơ sở đang bị cảnh báo vi phạm an toàn thực phẩm",
     to: "/co-so-bi-canh-bao",
     icon: "⚠️",
@@ -320,7 +320,7 @@ export default function PublicPortalHomePage() {
           <div className="page-card">
             <div className="portal-block-head">
               <h3 className="portal-block-title">⚠️ Cảnh báo mới nhất</h3>
-              <Link to="/co-so-bi-canh-bao" style={{ fontSize: 13 }}>
+              <Link to="/danh-sach-canh-bao" style={{ fontSize: 13 }}>
                 Xem tất cả
               </Link>
             </div>

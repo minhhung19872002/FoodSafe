@@ -15,7 +15,7 @@ interface NavEntry {
 const NAV_ITEMS: NavEntry[] = [
   { to: "/cong-thong-tin", label: "Trang chủ" },
   { to: "/tra-cuu-chung", label: "Tra cứu" },
-  { to: "/co-so-bi-canh-bao", label: "Cơ sở bị cảnh báo" },
+  { to: "/danh-sach-canh-bao", label: "Danh sách cảnh báo" },
   { to: "/tin-tuc", label: "Tin tức" },
   { to: "/tra-cuu-van-ban", label: "Văn bản" },
   { to: "/gui-phan-anh", label: "Gửi phản ánh" },
@@ -159,7 +159,7 @@ export function PublicShell({ children, fullBleed = false }: PublicShellProps) {
             <div className="portal-footer-title">Tra cứu</div>
             <div className="portal-footer-links">
               <Link to="/tra-cuu-giay-phep">Tra cứu giấy phép</Link>
-              <Link to="/co-so-bi-canh-bao">Cơ sở bị cảnh báo</Link>
+              <Link to="/danh-sach-canh-bao">Danh sách cảnh báo</Link>
               <Link to="/tra-cuu-van-ban">Văn bản pháp quy</Link>
             </div>
           </div>
