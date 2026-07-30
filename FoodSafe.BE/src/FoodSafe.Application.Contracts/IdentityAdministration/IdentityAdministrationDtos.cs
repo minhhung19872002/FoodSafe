@@ -176,8 +176,14 @@ public sealed class GeneratedPasswordDto
 /// </summary>
 public sealed class SetUserPasswordDto
 {
+    /// <remarks>
+    /// Chỉ chặn kích thước payload. Độ dài tối thiểu do policy mật khẩu quyết
+    /// định (setting <c>Abp.Identity.Password.RequiredLength</c>) — nếu khai báo
+    /// lại ở đây thì khi quản trị viên đổi policy, thông báo lỗi sẽ lệch với con
+    /// số mà giao diện đang hiển thị.
+    /// </remarks>
     [Required]
-    [StringLength(128, MinimumLength = 8)]
+    [StringLength(128, MinimumLength = 1)]
     public string NewPassword { get; set; } = string.Empty;
 }
 
