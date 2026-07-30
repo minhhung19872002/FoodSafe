@@ -652,10 +652,6 @@ export default function BusinessManagementPage() {
         <ScopeAssignmentModal
           open={scopeAssignmentOpen}
           dataType="Business"
-          targetOptions={(businessList.data?.items ?? []).map((b) => ({
-            value: b.id,
-            label: b.name,
-          }))}
           onClose={() => setScopeAssignmentOpen(false)}
         />
       )}

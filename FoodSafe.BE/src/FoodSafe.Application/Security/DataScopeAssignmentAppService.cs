@@ -117,12 +117,12 @@ public class DataScopeAssignmentAppService :
 
         ManagementScopeAssignment assignment = input.ScopeType switch
         {
-            ManagementScopeType.Business when input.BusinessId.HasValue =>
+            ManagementScopeType.Business =>
                 ManagementScopeAssignment.CreateBusiness(
                     GuidGenerator.Create(),
                     organizationId,
                     input.GranteeUserId,
-                    input.BusinessId.Value,
+                    input.BusinessId,
                     input.CanView,
                     input.CanCreate,
                     input.CanEdit,
@@ -132,12 +132,12 @@ public class DataScopeAssignmentAppService :
                     now,
                     CurrentUser.Id),
 
-            ManagementScopeType.BusinessType when input.BusinessTypeId.HasValue =>
+            ManagementScopeType.BusinessType =>
                 ManagementScopeAssignment.CreateBusinessType(
                     GuidGenerator.Create(),
                     organizationId,
                     input.GranteeUserId,
-                    input.BusinessTypeId.Value,
+                    input.BusinessTypeId,
                     input.CanView,
                     input.CanCreate,
                     input.CanEdit,
@@ -147,12 +147,12 @@ public class DataScopeAssignmentAppService :
                     now,
                     CurrentUser.Id),
 
-            ManagementScopeType.ProductGroup when input.ProductGroupId.HasValue =>
+            ManagementScopeType.ProductGroup =>
                 ManagementScopeAssignment.CreateProductGroup(
                     GuidGenerator.Create(),
                     organizationId,
                     input.GranteeUserId,
-                    input.ProductGroupId.Value,
+                    input.ProductGroupId,
                     input.CanView,
                     input.CanCreate,
                     input.CanEdit,

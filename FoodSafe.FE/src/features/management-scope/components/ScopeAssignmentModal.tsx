@@ -19,7 +19,6 @@ import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useAdminUsers } from "@/features/identity/api/identityQueries";
-import { useCatalogOptions } from "@/features/catalogs/api/catalogQueries";
 import { extractApiError } from "@/lib/apiError";
 import { useScopeAssignments } from "../api/managementScopeQueries";
 import {
@@ -35,16 +34,9 @@ import {
 /** Kiểu dữ liệu được quản lý phạm vi */
 export type ScopeDataType = "Business" | "BusinessType" | "ProductGroup";
 
-export interface ScopeTargetOption {
-  value: string;
-  label: string;
-}
-
 interface ScopeAssignmentModalProps {
   open: boolean;
   dataType: ScopeDataType;
-  /** Options cho entity target — Business: danh sách cơ sở; các loại khác tự load catalog */
-  targetOptions?: ScopeTargetOption[];
   onClose: () => void;
 }
 
@@ -62,7 +54,6 @@ const SCOPE_TYPE_MAP: Record<ScopeDataType, ManagementScopeType> = {
 
 interface AddFormValues {
   granteeUserId: string;
-  targetId: string;
   canView: boolean;
   canCreate: boolean;
   canEdit: boolean;
@@ -84,7 +75,6 @@ const defaultPerms: Pick<
 export function ScopeAssignmentModal({
   open,
   dataType,
-  targetOptions: externalTargetOptions,
   onClose,
 }: ScopeAssignmentModalProps) {
   const { message } = App.useApp();
@@ -94,47 +84,19 @@ export function ScopeAssignmentModal({
   const scopeType = SCOPE_TYPE_MAP[dataType];
   const targetLabel = DATA_TYPE_LABELS[dataType];
 
-  // Load existing assignments for this scope type (all, no entity filter)
   const assignments = useScopeAssignments(
     { scopeType, maxResultCount: 100 },
     open,
   );
 
-  // Users list for the user selector
   const users = useAdminUsers({
     isActive: true,
     maxResultCount: 500,
     sorting: "fullName asc",
   });
 
-  // Catalog options — only needed for BusinessType and ProductGroup
-  const businessTypeOptions = useCatalogOptions("business-type");
-  const productGroupOptions = useCatalogOptions("product-group");
-
   const createAssignment = useCreateScopeAssignment();
   const deleteAssignment = useDeleteScopeAssignment();
-
-  // Resolve target options for the add form
-  const resolvedTargetOptions: ScopeTargetOption[] = (() => {
-    if (dataType === "Business") {
-      return externalTargetOptions ?? [];
-    }
-    if (dataType === "BusinessType") {
-      return (businessTypeOptions.data?.items ?? []).map((item) => ({
-        value: item.id,
-        label: item.name,
-      }));
-    }
-    return (productGroupOptions.data?.items ?? []).map((item) => ({
-      value: item.id,
-      label: item.name,
-    }));
-  })();
-
-  // Build a lookup map for display in the table
-  const targetLookup = new Map(
-    resolvedTargetOptions.map((o) => [o.value, o.label]),
-  );
 
   const handleAdd = async () => {
     const values = await form.validateFields();
@@ -142,11 +104,6 @@ export function ScopeAssignmentModal({
       {
         scopeType,
         granteeUserId: values.granteeUserId,
-        businessId: dataType === "Business" ? values.targetId : undefined,
-        businessTypeId:
-          dataType === "BusinessType" ? values.targetId : undefined,
-        productGroupId:
-          dataType === "ProductGroup" ? values.targetId : undefined,
         canView: values.canView,
         canCreate: values.canCreate,
         canEdit: values.canEdit,
@@ -172,25 +129,13 @@ export function ScopeAssignmentModal({
     });
   };
 
-  const resolveTargetName = (record: DataScopeAssignment): string => {
-    const id =
-      record.businessId ?? record.businessTypeId ?? record.productGroupId;
-    if (!id) return "—";
-    return targetLookup.get(id) ?? id.slice(0, 8) + "…";
-  };
-
   const columns: ColumnsType<DataScopeAssignment> = [
     {
       title: "Người dùng",
       dataIndex: "granteeUserName",
       render: (name: string | undefined, record: DataScopeAssignment) =>
         name ?? record.granteeUserId ?? "(Toàn đơn vị)",
-      width: 200,
-    },
-    {
-      title: targetLabel,
-      render: (_: unknown, record) => resolveTargetName(record),
-      width: 200,
+      width: 240,
     },
     {
       title: "Quyền",
@@ -202,7 +147,7 @@ export function ScopeAssignmentModal({
           {record.canDelete && <Tag color="red">Xóa</Tag>}
         </Space>
       ),
-      width: 180,
+      width: 200,
     },
     {
       title: "Hiệu lực từ",
@@ -242,20 +187,13 @@ export function ScopeAssignmentModal({
     },
   ];
 
-  const targetLoadingState =
-    dataType === "BusinessType"
-      ? businessTypeOptions.isLoading
-      : dataType === "ProductGroup"
-        ? productGroupOptions.isLoading
-        : false;
-
   return (
     <Modal
       open={open}
       title={`Phân quyền dữ liệu — ${targetLabel}`}
       onCancel={onClose}
       footer={null}
-      width={860}
+      width={900}
       destroyOnHidden
     >
       <Table
@@ -266,7 +204,7 @@ export function ScopeAssignmentModal({
         size="small"
         pagination={false}
         locale={{ emptyText: "Chưa có phân quyền nào" }}
-        scroll={{ x: 740 }}
+        scroll={{ x: 640 }}
       />
 
       <Divider />
@@ -278,54 +216,24 @@ export function ScopeAssignmentModal({
           initialValues={defaultPerms}
           onFinish={handleAdd}
         >
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="granteeUserId"
-                label="Người dùng"
-                rules={[
-                  { required: true, message: "Vui lòng chọn người dùng" },
-                ]}
-              >
-                <Select
-                  showSearch
-                  optionFilterProp="label"
-                  placeholder="Tìm người dùng..."
-                  loading={users.isLoading}
-                  options={(users.data?.items ?? []).map((u) => ({
-                    value: u.id,
-                    label: `${u.fullName} (${u.email})`,
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="targetId"
-                label={targetLabel}
-                rules={[
-                  {
-                    required: true,
-                    message: `Vui lòng chọn ${targetLabel}`,
-                  },
-                ]}
-              >
-                <Select
-                  showSearch
-                  optionFilterProp="label"
-                  placeholder={`Chọn ${targetLabel}...`}
-                  options={resolvedTargetOptions}
-                  loading={targetLoadingState}
-                  notFoundContent={
-                    resolvedTargetOptions.length === 0
-                      ? "Không có dữ liệu"
-                      : undefined
-                  }
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item
+            name="granteeUserId"
+            label="Người dùng"
+            rules={[
+              { required: true, message: "Vui lòng chọn người dùng" },
+            ]}
+          >
+            <Select
+              showSearch
+              optionFilterProp="label"
+              placeholder="Tìm người dùng..."
+              loading={users.isLoading}
+              options={(users.data?.items ?? []).map((u) => ({
+                value: u.id,
+                label: `${u.fullName} (${u.email})`,
+              }))}
+            />
+          </Form.Item>
 
           <Row gutter={16}>
             <Col>
