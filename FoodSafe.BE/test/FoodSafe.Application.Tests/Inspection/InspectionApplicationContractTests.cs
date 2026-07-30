@@ -75,4 +75,11 @@ public sealed class InspectionApplicationContractTests
             .Select(x => x.Policy)
             .ShouldContain(permission);
     }
+
+    [Fact]
+    public void UncompletedItemsExist_error_code_should_be_defined()
+    {
+        FoodSafeDomainErrorCodes.Inspection.UncompletedItemsExist
+            .ShouldBe("FoodSafe:Inspection:0021");
+    }
 }

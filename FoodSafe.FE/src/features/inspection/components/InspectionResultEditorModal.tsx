@@ -15,6 +15,7 @@ import { useAdminUsers } from "@/features/identity/api/identityQueries";
 import {
   INSPECTION_OVERALL_RESULT,
   INSPECTION_OVERALL_RESULT_CONFIG,
+  INSPECTION_PLAN_ITEM_STATUS,
   INSPECTION_TYPE,
   INSPECTION_TYPE_LABELS,
   type BusinessOption,
@@ -265,10 +266,18 @@ export function InspectionResultEditorModal(props: Props) {
                 if (planItem)
                   form.setFieldValue("businessId", planItem.businessId);
               }}
-              options={planItems.map((it) => ({
-                value: it.id,
-                label: it.businessName ?? it.businessId,
-              }))}
+              options={planItems.map((it) => {
+                const isCompleted =
+                  !item &&
+                  it.status === INSPECTION_PLAN_ITEM_STATUS.Completed;
+                return {
+                  value: it.id,
+                  label: isCompleted
+                    ? `${it.businessName ?? it.businessId} (Đã có kết quả)`
+                    : (it.businessName ?? it.businessId),
+                  disabled: isCompleted,
+                };
+              })}
             />
           </Form.Item>
         </div>

@@ -207,6 +207,27 @@ public class InspectionPlanAppService : ApplicationService
     public async Task<InspectionPlanDto> CompleteAsync(Guid id)
     {
         var plan = await GetScopedAsync(id, DataScopeOperation.Edit);
+
+        var uncompletedBusinessIds = plan.Items
+            .Where(i => i.Status != InspectionPlanItemStatus.Completed &&
+                        i.Status != InspectionPlanItemStatus.Skipped)
+            .Select(i => i.BusinessId)
+            .Distinct()
+            .ToList();
+
+        if (uncompletedBusinessIds.Count > 0)
+        {
+            var businessQuery = await _businesses.GetQueryableAsync();
+            var businessNames = await AsyncExecuter.ToListAsync(
+                businessQuery.Where(x => uncompletedBusinessIds.Contains(x.Id)).Select(x => x.Name),
+                _cancellationTokens.Token);
+
+            var combinedNames = string.Join(", ", businessNames);
+
+            throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.UncompletedItemsExist)
+                .WithData("CSKD", combinedNames.IsNullOrWhiteSpace() ? "Cơ sở" : combinedNames);
+        }
+
         plan.Complete();
         await _plans.UpdateAsync(plan, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return (await ToDtosAsync([plan]))[0];

@@ -149,6 +149,8 @@
     "FoodSafe:Inspection:0018": "Kết quả thuộc kế hoạch phải chọn cả kế hoạch và cơ sở trong kế hoạch.",
     "FoodSafe:Inspection:0019": "Cơ sở của kết quả không khớp với cơ sở trong kế hoạch.",
     "FoodSafe:Inspection:0020": "Ngày kiểm tra không được ở tương lai.",
+    "FoodSafe:Inspection:0021": "{CSKD} chưa hoàn thành kiểm tra",
+    "FoodSafe:Inspection:0022": "Cơ sở này trong kế hoạch đã được ghi nhận kết quả kiểm tra trước đó.",
     "FoodSafe:Catalog:0001": "Mã danh mục đã tồn tại.",
     "FoodSafe:Catalog:0002": "Danh mục đang được sử dụng, không thể xóa.",
     "FoodSafe:FoodPoisoning:0001": "Không tìm thấy ca ngộ độc.",

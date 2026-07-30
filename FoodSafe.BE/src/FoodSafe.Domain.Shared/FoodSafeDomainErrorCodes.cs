@@ -185,6 +185,8 @@ public static class FoodSafeDomainErrorCodes
         public const string PlanItemWithoutPlan = "FoodSafe:Inspection:0018";
         public const string ResultBusinessMismatch = "FoodSafe:Inspection:0019";
         public const string FutureInspectionDate = "FoodSafe:Inspection:0020";
+        public const string UncompletedItemsExist = "FoodSafe:Inspection:0021";
+        public const string PlanItemResultAlreadyExists = "FoodSafe:Inspection:0022";
     }
 
     public static class Report

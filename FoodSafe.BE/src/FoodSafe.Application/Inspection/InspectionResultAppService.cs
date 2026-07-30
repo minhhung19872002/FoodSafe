@@ -344,6 +344,16 @@ public class InspectionResultAppService : ApplicationService
             if (item.BusinessId != input.BusinessId)
                 throw new BusinessException(
                     FoodSafeDomainErrorCodes.Inspection.ResultBusinessMismatch);
+            if (item.Status == InspectionPlanItemStatus.Completed)
+                throw new BusinessException(
+                    FoodSafeDomainErrorCodes.Inspection.PlanItemResultAlreadyExists);
+
+            var resultsQuery = await _results.GetQueryableAsync();
+            if (await AsyncExecuter.AnyAsync(
+                    resultsQuery.Where(x => x.PlanItemId == input.PlanItemId.Value),
+                    _cancellationTokens.Token))
+                throw new BusinessException(
+                    FoodSafeDomainErrorCodes.Inspection.PlanItemResultAlreadyExists);
         }
 
         return plan;
