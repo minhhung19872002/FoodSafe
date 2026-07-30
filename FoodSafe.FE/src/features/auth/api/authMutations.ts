@@ -22,11 +22,13 @@ import type {
  * `AccountController.GetAbpLoginResult` ánh xạ `SignInResult` sang các mã này
  * theo thứ tự: khóa tài khoản → 2FA → không được phép → thành công → sai mật khẩu.
  *
- * `accountDeactivated: 6` và `accountDeactivatedByFailedAttempts: 7` không
- * thuộc enum của ABP — do `LoginPasswordVerificationMiddleware` (BE) tự trả về
- * trước khi request tới được `AccountController`: 6 khi tài khoản đã bị admin
- * vô hiệu hóa thủ công (`IsActive = false`), 7 khi tài khoản vừa tự động bị
- * vô hiệu hóa do nhập sai mật khẩu quá số lần cho phép.
+ * `accountDeactivated: 6` và `accountLockedByFailedAttempts: 7` không thuộc
+ * enum của ABP — do `LoginPasswordVerificationMiddleware` (BE) tự trả về trước
+ * khi request tới được `AccountController`: 6 khi tài khoản bị admin vô hiệu
+ * hóa thủ công (`IsActive = false`, chỉ admin mở lại được), 7 khi tài khoản bị
+ * khóa tự động do nhập sai mật khẩu quá số lần cho phép (`LockoutEnd`, tự mở
+ * lại sau số phút cấu hình trong Cài đặt hệ thống — không đụng tới `IsActive`
+ * nên không cần admin can thiệp).
  */
 const LOGIN_RESULT = {
   success: 1,
@@ -35,7 +37,7 @@ const LOGIN_RESULT = {
   lockedOut: 4,
   requiresTwoFactor: 5,
   accountDeactivated: 6,
-  accountDeactivatedByFailedAttempts: 7,
+  accountLockedByFailedAttempts: 7,
 } as const;
 
 /**
@@ -55,9 +57,16 @@ const LOGIN_FAILURE_MESSAGES: Readonly<Record<number, string | undefined>> = {
     "Tài khoản yêu cầu xác thực hai bước. Vui lòng liên hệ quản trị viên để được hỗ trợ đăng nhập.",
   [LOGIN_RESULT.accountDeactivated]:
     "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.",
-  [LOGIN_RESULT.accountDeactivatedByFailedAttempts]:
-    "Tài khoản đã bị vô hiệu hóa do đăng nhập sai quá số lần cho phép. Vui lòng liên hệ quản trị viên để được hỗ trợ kích hoạt lại.",
+  [LOGIN_RESULT.accountLockedByFailedAttempts]:
+    "Tài khoản đã tạm thời bị khóa do đăng nhập sai quá số lần cho phép. Vui lòng thử lại sau ít phút.",
 };
+
+/** Thời gian khóa (phút) được cấu hình trong Cài đặt hệ thống — dùng để hiển thị số phút cụ thể thay vì "ít phút". */
+function accountLockedMessage(lockoutMinutes: number | null | undefined): string {
+  return lockoutMinutes
+    ? `Tài khoản đã tạm thời bị khóa do đăng nhập sai quá số lần cho phép. Vui lòng thử lại sau ${lockoutMinutes} phút.`
+    : LOGIN_FAILURE_MESSAGES[LOGIN_RESULT.accountLockedByFailedAttempts]!;
+}
 
 const UNKNOWN_LOGIN_FAILURE_MESSAGE =
   "Không đăng nhập được. Vui lòng thử lại hoặc liên hệ quản trị viên.";
@@ -95,10 +104,12 @@ class InitialPasswordChangeRequiredError extends Error {
 /** Máy chủ đã phản hồi nhưng từ chối đăng nhập, kèm mã `LoginResultType`. */
 class LoginRejectedError extends Error {
   readonly result: number;
+  readonly lockoutMinutes: number | null | undefined;
 
-  constructor(result: number) {
+  constructor(result: number, lockoutMinutes?: number | null) {
     super(`Login rejected with LoginResultType ${result}`);
     this.result = result;
+    this.lockoutMinutes = lockoutMinutes;
   }
 }
 
@@ -114,6 +125,9 @@ class LoginRejectedError extends Error {
  */
 function describeLoginFailure(error: unknown): string {
   if (error instanceof LoginRejectedError) {
+    if (error.result === LOGIN_RESULT.accountLockedByFailedAttempts) {
+      return accountLockedMessage(error.lockoutMinutes);
+    }
     return (
       LOGIN_FAILURE_MESSAGES[error.result] ?? UNKNOWN_LOGIN_FAILURE_MESSAGE
     );
@@ -140,7 +154,7 @@ export function useLogin() {
         );
       }
       if (response.result !== LOGIN_RESULT.success) {
-        throw new LoginRejectedError(response.result);
+        throw new LoginRejectedError(response.result, response.lockoutMinutes);
       }
       const user = await authApi.getCurrentUser();
       return user;
