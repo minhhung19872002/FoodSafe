@@ -29,13 +29,13 @@ import { PublicShell } from "../components/PublicShell";
 import {
   usePublicAlerts,
   usePublicNews,
+  usePublicNewsCategories,
   usePublicNewsDetail,
   usePublicRiskAnalyses,
 } from "../api/publicPortalQueries";
 import {
   ALERT_CATEGORY_CONFIG,
   ALERT_SEVERITY_CONFIG,
-  NEWS_CATEGORIES,
   RISK_LEVEL_CONFIG,
   type AlertCategory,
   type AlertSeverity,
@@ -135,14 +135,14 @@ function NewsDetailView({ id }: { id: string }) {
 
 // ── News list tab ─────────────────────────────────────────────────────────────
 
-const CATEGORY_OPTIONS = NEWS_CATEGORIES.map((c) => ({ value: c, label: c }));
-
 function NewsListTab() {
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const pagination = useTablePagination(20);
+
+  const { data: categoryOptions } = usePublicNewsCategories();
 
   const { data, isFetching, isError } = usePublicNews({
     Keyword: submittedKeyword || undefined,
@@ -178,7 +178,7 @@ function NewsListTab() {
           placeholder="Chọn chuyên mục"
           value={categories}
           onChange={handleCategoryChange}
-          options={CATEGORY_OPTIONS}
+          options={(categoryOptions ?? []).map((c) => ({ value: c, label: c }))}
           style={{ minWidth: 220 }}
           maxTagCount="responsive"
         />

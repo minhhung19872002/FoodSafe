@@ -124,6 +124,12 @@ export default function PublicWarnedBusinessesPage() {
           />
           <Table.Column title="Tiêu đề" dataIndex="title" />
           <Table.Column
+            title="Cơ sở liên quan"
+            dataIndex="businessName"
+            width={200}
+            render={(name: string | undefined) => name || "—"}
+          />
+          <Table.Column
             title="Danh mục"
             dataIndex="category"
             width={150}

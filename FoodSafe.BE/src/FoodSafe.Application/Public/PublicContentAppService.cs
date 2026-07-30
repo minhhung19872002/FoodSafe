@@ -142,8 +142,31 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
                 .Skip(input.SkipCount).Take(input.MaxResultCount),
             _cancellationTokens.Token);
 
+        var bizIds = items.Where(a => a.BusinessId.HasValue)
+            .Select(a => a.BusinessId!.Value).Distinct().ToList();
+        var bizNames = bizIds.Count == 0 ? [] :
+            (await _businesses.GetListAsync(b => bizIds.Contains(b.Id), cancellationToken: _cancellationTokens.Token))
+                .ToDictionary(b => b.Id, b => b.Name);
+
         return new PagedResultDto<PublicAlertDto>(
-            totalCount, items.Select(ToAlertDto).ToList());
+            totalCount, items.Select(a =>
+            {
+                var dto = ToAlertDto(a);
+                dto.BusinessId = a.BusinessId;
+                if (a.BusinessId.HasValue && bizNames.TryGetValue(a.BusinessId.Value, out var n))
+                    dto.BusinessName = n;
+                return dto;
+            }).ToList());
+    }
+
+    public async Task<List<string>> GetNewsCategoriesAsync()
+    {
+        var query = (await _news.GetQueryableAsync())
+            .Where(n => n.Status == NewsStatus.Published && n.IsPublic && n.Category != null)
+            .Select(n => n.Category!)
+            .Distinct()
+            .OrderBy(c => c);
+        return await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
     }
 
     public async Task<PagedResultDto<PublicWarnedBusinessDto>> GetWarnedBusinessesAsync(

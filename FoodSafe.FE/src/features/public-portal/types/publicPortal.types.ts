@@ -224,6 +224,8 @@ export interface PublicAlert {
   affectedProducts: string;
   publishedAt: string;
   content: string;
+  businessId?: string;
+  businessName?: string;
 }
 
 export const NEWS_CATEGORIES = [

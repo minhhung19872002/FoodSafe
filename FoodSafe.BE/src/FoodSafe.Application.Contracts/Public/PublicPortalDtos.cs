@@ -135,6 +135,8 @@ public class PublicAlertDto
     public string? AffectedProducts { get; set; }
     public DateTime? PublishedAt { get; set; }
     public string Content { get; set; } = string.Empty;
+    public Guid? BusinessId { get; set; }
+    public string? BusinessName { get; set; }
 }
 
 public class PublicNewsListItemDto
@@ -300,6 +302,7 @@ public interface IPublicContentAppService
 {
     Task<PagedResultDto<PublicNewsListItemDto>> GetNewsAsync(PublicSearchRequestDto input);
     Task<PublicNewsDetailDto> GetNewsDetailAsync(Guid id);
+    Task<List<string>> GetNewsCategoriesAsync();
     Task<PagedResultDto<PublicAlertDto>> GetAlertsAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicWarnedBusinessDto>> GetWarnedBusinessesAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicDocumentDto>> GetDocumentsAsync(PublicDocumentSearchRequestDto input);
