@@ -85,6 +85,7 @@ export function InspectionResultEditorModal(props: Props) {
     value: u.fullName || u.userName, // use name as value because API expects string
   }));
   const selectedPlanId = Form.useWatch("planId", form);
+  const hasViolation = Form.useWatch("hasViolation", form);
   const selectedPlan = props.plans.find((p) => p.id === selectedPlanId);
   const planItems = selectedPlan?.items ?? [];
 
@@ -186,7 +187,7 @@ export function InspectionResultEditorModal(props: Props) {
             hasViolation: values.hasViolation,
             violationDescription:
               values.violationDescription?.trim() || undefined,
-            fineAmount: values.fineAmount,
+            fineAmount: values.hasViolation ? values.fineAmount : undefined,
             adminDecisionNumber:
               values.adminDecisionNumber?.trim() || undefined,
             adminDecisionDate: values.adminDecisionDate?.format("YYYY-MM-DD"),
@@ -347,11 +348,32 @@ export function InspectionResultEditorModal(props: Props) {
             label=" "
             colon={false}
           >
-            <Checkbox>Có vi phạm</Checkbox>
+            <Checkbox
+              onChange={(event) => {
+                if (!event.target.checked)
+                  form.setFieldValue("fineAmount", undefined);
+              }}
+            >
+              Có vi phạm
+            </Checkbox>
           </Form.Item>
-          <Form.Item name="fineAmount" label="Số tiền phạt (VND)">
+          <Form.Item
+            name="fineAmount"
+            label="Số tiền phạt (VND)"
+            rules={
+              hasViolation
+                ? [
+                    {
+                      required: true,
+                      message: "Vui lòng nhập số tiền phạt.",
+                    },
+                  ]
+                : []
+            }
+          >
             <InputNumber<number>
               min={0}
+              disabled={!hasViolation}
               style={{ width: "100%" }}
               formatter={(v) => groupThousands(`${v ?? ""}`)}
               parser={(v) => Number((v ?? "").replace(/,/g, ""))}
