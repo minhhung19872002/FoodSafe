@@ -16,28 +16,28 @@
 | F-004 | Master Catalogs                 | VERIFIED       | `e2e/catalogs.spec.ts`, `e2e/catalogs-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-005 | Geographic Catalogs             | VERIFIED       | `e2e/geography.spec.ts`, `e2e/geography-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-006 | Businesses & Products           | FAILED         | `e2e/businesses.spec.ts`, `e2e/businesses-verification.spec.ts`, `e2e/business-list-filters.spec.ts`, `e2e/business-detail-tabs.spec.ts`, `e2e/business-delete-guard.spec.ts` | last green `e6ce3f7` | 2026-07-29 |
-| F-007 | Self Declarations               | VERIFIED       | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts`, `e2e/business-delete-guard.spec.ts` | `983788c` | 2026-07-28 |
-| F-008 | Product Registrations           | VERIFIED       | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `8e7840e` | 2026-07-28 |
-| F-009 | Advertisement Registrations     | VERIFIED       | `e2e/advertisement-registrations.spec.ts`, `e2e/advertisement-registrations-verification.spec.ts` | wt-post-`a3c7ad7` | 2026-07-28 |
-| F-010 | Eligibility Certificates        | VERIFIED       | `e2e/eligibility-certificates.spec.ts`, `e2e/eligibility-certificates-verification.spec.ts`, `e2e/business-delete-guard.spec.ts` | `e6ce3f7` | 2026-07-28 |
-| F-011 | CFS Certificates                | VERIFIED       | `e2e/cfs-certificates.spec.ts`, `e2e/cfs-certificates-verification.spec.ts` | wt-post-`b1b8898` | 2026-07-28 |
-| F-012 | Export Food Certificates        | VERIFIED       | `e2e/export-food-certificates.spec.ts`, `e2e/export-food-certificates-verification.spec.ts` | wt-post-`819b803` | 2026-07-28 |
-| F-013 | Inspection Plans & Results      | VERIFIED       | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `02e6b68` | 2026-07-28 |
-| F-014 | Food Poisoning Cases            | VERIFIED       | `e2e/food-poisoning.spec.ts`, `e2e/food-poisoning-verification.spec.ts` | `71d0e46` | 2026-07-28 |
-| F-015 | Reporting (NDTP/ATP/Action)     | VERIFIED       | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `a92df0c` | 2026-07-28 |
-| F-016 | Alerts & News                   | VERIFIED       | `e2e/alerts-news.spec.ts`, `e2e/alerts-news-verification.spec.ts` | `4fa40d5` | 2026-07-28 |
-| F-017 | Testing Results                 | VERIFIED       | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | wt-post-`66e4e7e` | 2026-07-28 |
-| F-018 | Risk Analysis                   | VERIFIED       | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts`, `e2e/risk-analysis-publish.spec.ts` | wt-post-`819b803` | 2026-07-28 |
-| F-019 | Data Integration                | VERIFIED       | `e2e/data-integration.spec.ts`, `e2e/data-integration-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-019c | Data Integration — Outbound Auth Credentials (P0-2, FR-50/51) | VERIFIED | `e2e/data-integration-credentials.spec.ts` (6/6) | `8be91bc` | 2026-07-28 |
-| F-019d | Data Integration — Outbound Share via UI + history persistence (P1-3, FR-51) | VERIFIED | `e2e/data-integration-share.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
-| F-019e | Data Integration — Typed share payloads + retry attempt history (Batch F-1, FR-51..57) | VERIFIED | `e2e/data-integration-retry.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
+| F-007 | Self Declarations               | DIRTY          | `e2e/self-declarations.spec.ts`, `e2e/self-declarations-verification.spec.ts`, `e2e/business-delete-guard.spec.ts` | `983788c` | 2026-07-28 |
+| F-008 | Product Registrations           | DIRTY          | `e2e/product-registrations.spec.ts`, `e2e/product-registrations-verification.spec.ts` | `8e7840e` | 2026-07-28 |
+| F-009 | Advertisement Registrations     | DIRTY          | `e2e/advertisement-registrations.spec.ts`, `e2e/advertisement-registrations-verification.spec.ts` | wt-post-`a3c7ad7` | 2026-07-28 |
+| F-010 | Eligibility Certificates        | DIRTY          | `e2e/eligibility-certificates.spec.ts`, `e2e/eligibility-certificates-verification.spec.ts`, `e2e/business-delete-guard.spec.ts` | `e6ce3f7` | 2026-07-28 |
+| F-011 | CFS Certificates                | DIRTY          | `e2e/cfs-certificates.spec.ts`, `e2e/cfs-certificates-verification.spec.ts` | wt-post-`b1b8898` | 2026-07-28 |
+| F-012 | Export Food Certificates        | DIRTY          | `e2e/export-food-certificates.spec.ts`, `e2e/export-food-certificates-verification.spec.ts` | wt-post-`819b803` | 2026-07-28 |
+| F-013 | Inspection Plans & Results      | DIRTY          | `e2e/inspection.spec.ts`, `e2e/inspection-verification.spec.ts` | `02e6b68` | 2026-07-28 |
+| F-014 | Food Poisoning Cases            | DIRTY          | `e2e/food-poisoning.spec.ts`, `e2e/food-poisoning-verification.spec.ts` | `71d0e46` | 2026-07-28 |
+| F-015 | Reporting (NDTP/ATP/Action)     | DIRTY          | `e2e/reporting.spec.ts`, `e2e/reporting-verification.spec.ts`, `e2e/reporting-error-notifications.spec.ts` | `a92df0c` | 2026-07-28 |
+| F-016 | Alerts & News                   | DIRTY          | `e2e/alerts-news.spec.ts`, `e2e/alerts-news-verification.spec.ts` | `4fa40d5` | 2026-07-28 |
+| F-017 | Testing Results                 | DIRTY          | `e2e/testing-results.spec.ts`, `e2e/testing-results-verification.spec.ts` | wt-post-`66e4e7e` | 2026-07-28 |
+| F-018 | Risk Analysis                   | DIRTY          | `e2e/risk-analysis.spec.ts`, `e2e/risk-analysis-verification.spec.ts`, `e2e/risk-analysis-publish.spec.ts` | wt-post-`819b803` | 2026-07-28 |
+| F-019 | Data Integration                | DIRTY          | `e2e/data-integration.spec.ts`, `e2e/data-integration-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-019c | Data Integration — Outbound Auth Credentials (P0-2, FR-50/51) | DIRTY    | `e2e/data-integration-credentials.spec.ts` (6/6) | `8be91bc` | 2026-07-28 |
+| F-019d | Data Integration — Outbound Share via UI + history persistence (P1-3, FR-51) | DIRTY    | `e2e/data-integration-share.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
+| F-019e | Data Integration — Typed share payloads + retry attempt history (Batch F-1, FR-51..57) | DIRTY    | `e2e/data-integration-retry.spec.ts` (3/3) | `8be91bc` | 2026-07-28 |
 | F-019f | Data Integration — Inbound partner surface: accounts, API keys, receive endpoint (Batch F-2, INT-03) | DIRTY | `e2e/data-integration-partners.spec.ts` (3/3; full DI subset 20/20); FR-50-05 contract spec `e2e/partner-openapi-contract.spec.ts` (1/1 at `0776230`) | `adb30eb` | 2026-07-28 |
 | F-019g | Data Integration — Partner API Specification management (FR-50-05: upload/validate/version/publish/anonymous partner download/metadata) + ApiSpecs route permission (G-02) | DIRTY | `e2e/api-specification-management.spec.ts` (5/5, no interception; adds the ApiSpecs-only route-admission scenario) | `17149f6` | 2026-07-28 |
 | F-020 | Identity Administration         | DIRTY          | `e2e/identity-administration.spec.ts`, `e2e/identity-administration-verification.spec.ts`, `e2e/user-creation-temporary-password.spec.ts` | last green `8be91bc` | 2026-07-29 |
 | F-021 | Audit Logs                      | VERIFIED       | `e2e/audit-logs.spec.ts`, `e2e/audit-logs-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-022 | Dashboard                       | VERIFIED       | `e2e/dashboard.spec.ts`, `e2e/dashboard-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-023 | Statistics                      | VERIFIED       | `e2e/statistics.spec.ts`, `e2e/statistics-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-022 | Dashboard                       | DIRTY          | `e2e/dashboard.spec.ts`, `e2e/dashboard-verification.spec.ts` | `8be91bc` | 2026-07-28 |
+| F-023 | Statistics                      | DIRTY          | `e2e/statistics.spec.ts`, `e2e/statistics-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-024 | Public Lookup — Business        | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-025 | Public Lookup — Self Declaration| VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-026 | Public Lookup — Product Reg.    | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
@@ -45,13 +45,13 @@
 | F-028 | Public Lookup — CFS             | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-029 | Public Lookup — Export Food     | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-030 | Public Lookup — Ad Registration | VERIFIED       | `e2e/public-lookups.spec.ts`, `e2e/public-lookups-verification.spec.ts` | `8be91bc` | 2026-07-28 |
-| F-031 | Documents                       | VERIFIED       | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | wt-post-`819b803` | 2026-07-28 |
+| F-031 | Documents                       | DIRTY          | `e2e/documents.spec.ts`, `e2e/documents-verification.spec.ts` | wt-post-`819b803` | 2026-07-28 |
 | F-032 | System Settings                 | VERIFIED       | `e2e/system-settings.spec.ts`, `e2e/system-settings-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-033 | Public Portal FR-41..FR-49      | VERIFIED       | `e2e/public-portal-verification.spec.ts` | `8be91bc` | 2026-07-28 |
 | F-034 | Certificate PDF Download (incl. anonymous citizen path) | VERIFIED | `e2e/certificate-pdf-verification.spec.ts` (5/5, cookie-less ctx) | `8be91bc` | 2026-07-28 |
-| F-019h | Data Integration — Inbound submission disposition workflow (INT-03 / STT 51–57: Received → Processed \| Rejected, terminal, `Partners.Moderate`) | VERIFIED | `e2e/inbound-submission-disposition.spec.ts` (2/2, no interception) | `17a29c6` | 2026-07-28 |
-| F-016b | Alerts & News — citizen moderation refusal (YCKT STT 29/30: Draft → Rejected with mandatory reason, record kept and never public) | VERIFIED | `e2e/citizen-moderation-reject.spec.ts` (2/2, no interception) | `17a29c6` | 2026-07-28 |
-| F-035 | Address Geocoding (Định vị cơ sở theo địa chỉ) | VERIFIED | `e2e/business-geocoding.spec.ts` (4/4, no interception) | wt-post-`0894c54` | 2026-07-29 |
+| F-019h | Data Integration — Inbound submission disposition workflow (INT-03 / STT 51–57: Received → Processed \| Rejected, terminal, `Partners.Moderate`) | DIRTY    | `e2e/inbound-submission-disposition.spec.ts` (2/2, no interception) | `17a29c6` | 2026-07-28 |
+| F-016b | Alerts & News — citizen moderation refusal (YCKT STT 29/30: Draft → Rejected with mandatory reason, record kept and never public) | DIRTY    | `e2e/citizen-moderation-reject.spec.ts` (2/2, no interception) | `17a29c6` | 2026-07-28 |
+| F-035 | Address Geocoding (Định vị cơ sở theo địa chỉ) | DIRTY    | `e2e/business-geocoding.spec.ts` (4/4, no interception) | wt-post-`0894c54` | 2026-07-29 |
 
 ## Workflow completion batch (2026-07-28) — the last two project flows
 

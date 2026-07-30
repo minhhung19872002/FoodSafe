@@ -216,8 +216,12 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
             switch (assignment.ScopeType)
             {
                 case ManagementScopeType.Geography:
-                    if (assignment.ProvinceId.HasValue) provinces.Add(assignment.ProvinceId.Value);
-                    if (assignment.CommuneId.HasValue) communes.Add(assignment.CommuneId.Value);
+                    // Chọn kèm phường/xã nghĩa là giới hạn đúng phường/xã đó,
+                    // không phải toàn bộ tỉnh chứa nó.
+                    if (assignment.CommuneId.HasValue)
+                        communes.Add(assignment.CommuneId.Value);
+                    else if (assignment.ProvinceId.HasValue)
+                        provinces.Add(assignment.ProvinceId.Value);
                     break;
                 case ManagementScopeType.Business when assignment.BusinessId.HasValue:
                     businesses.Add(assignment.BusinessId.Value);
@@ -247,12 +251,20 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
     private CancellationToken ResolveToken(CancellationToken supplied) =>
         supplied == default ? _cancellationTokens.Token : supplied;
 
+    // Đơn vị cấp xã/phường luôn có cả ProvinceId lẫn CommuneId. Nếu đưa cả
+    // ProvinceId vào phạm vi thì nhân viên cấp xã sẽ thấy mọi cơ sở trong tỉnh
+    // — kể cả cơ sở do đơn vị cấp trên quản lý. Chỉ đơn vị cấp tỉnh mới được
+    // phạm vi toàn tỉnh.
     private static void AddGeography(
         OrganizationScopeNode organization,
         ISet<Guid> provinces,
         ISet<Guid> communes)
     {
+        if (organization.IsCommuneScoped)
+        {
+            communes.Add(organization.CommuneId!.Value);
+            return;
+        }
         if (organization.ProvinceId.HasValue) provinces.Add(organization.ProvinceId.Value);
-        if (organization.CommuneId.HasValue) communes.Add(organization.CommuneId.Value);
     }
 }

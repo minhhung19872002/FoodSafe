@@ -4,7 +4,16 @@ public sealed record OrganizationScopeNode(
     Guid Id,
     Guid? ParentId,
     Guid? ProvinceId,
-    Guid? CommuneId);
+    Guid? CommuneId)
+{
+    /// <summary>
+    /// Địa bàn hẹp nhất mà đơn vị này thực sự quản lý. Đơn vị cấp xã/phường
+    /// bắt buộc có cả ProvinceId và CommuneId (xem
+    /// <c>OrganizationHierarchyRules.ValidateShape</c>) nên nếu lấy cả
+    /// ProvinceId thì phạm vi sẽ nở ra thành toàn tỉnh.
+    /// </summary>
+    public bool IsCommuneScoped => CommuneId.HasValue;
+}
 
 public static class OrganizationHierarchyScope
 {
