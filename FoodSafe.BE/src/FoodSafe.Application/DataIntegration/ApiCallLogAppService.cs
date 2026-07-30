@@ -33,10 +33,10 @@ public class ApiCallLogAppService : ApplicationService
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.ExternalSystemName.Contains(filter) ||
-                x.EndpointUrl.Contains(filter));
+                x.ExternalSystemName.ToUpper().Contains(filter) ||
+                x.EndpointUrl.ToUpper().Contains(filter));
         }
         if (input.Direction.HasValue)
             query = query.Where(x => x.Direction == input.Direction.Value);

@@ -38,10 +38,10 @@ public class AdministrativeDocumentAppService : ApplicationService
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.Title.Contains(filter) ||
-                x.DocumentNumber.Contains(filter));
+                x.Title.ToUpper().Contains(filter) ||
+                x.DocumentNumber.ToUpper().Contains(filter));
         }
         if (input.DocumentTypeId.HasValue)
             query = query.Where(x => x.DocumentTypeId == input.DocumentTypeId.Value);

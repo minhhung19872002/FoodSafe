@@ -42,16 +42,16 @@ public class InspectionResultAppService : ApplicationService
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             var businessQuery = await _businesses.GetQueryableAsync();
             var matchingBusinessIds = await AsyncExecuter.ToListAsync(
                 businessQuery
-                    .Where(b => b.Name.Contains(filter))
+                    .Where(b => b.Name.ToUpper().Contains(filter))
                     .Select(b => b.Id),
                 _cancellationTokens.Token);
             query = query.Where(x =>
-                (x.TeamLeader != null && x.TeamLeader.Contains(filter)) ||
-                (x.AdminDecisionNumber != null && x.AdminDecisionNumber.Contains(filter)) ||
+                (x.TeamLeader != null && x.TeamLeader.ToUpper().Contains(filter)) ||
+                (x.AdminDecisionNumber != null && x.AdminDecisionNumber.ToUpper().Contains(filter)) ||
                 matchingBusinessIds.Contains(x.BusinessId));
         }
         if (input.BusinessId.HasValue)

@@ -18,6 +18,7 @@ import {
 } from "antd";
 import { EyeOutlined, FilePdfOutlined } from "@ant-design/icons";
 import { useTablePagination } from "@/hooks/useTablePagination";
+import { matchesSearch } from "@/utils/textSearch";
 import { PublicShell } from "../components/PublicShell";
 import {
   usePublicAdRegistrations,
@@ -89,10 +90,8 @@ function CertSearchPanel({
   const { data, isFetching, isError } = useHook(filter);
 
   const detailPath = CERT_PATH_MAP[tabKey];
-  const {
-    data: detail,
-    isFetching: detailLoading,
-  } = usePublicCertificateDetail(detailPath, selectedId);
+  const { data: detail, isFetching: detailLoading } =
+    usePublicCertificateDetail(detailPath, selectedId);
 
   const handleSearch = () => {
     pagination.resetToFirstPage();
@@ -117,9 +116,7 @@ function CertSearchPanel({
           placeholder="Trạng thái"
           showSearch
           filterOption={(input, option) =>
-            (option?.label as string)
-              ?.toLowerCase()
-              .includes(input.toLowerCase()) ?? false
+            matchesSearch((option?.label as string) ?? "", input)
           }
           allowClear
           style={{ minWidth: 180 }}
@@ -237,7 +234,11 @@ function formatDate(v: string | null | undefined): string {
 }
 
 function buildFullAddress(detail: PublicCertificateDetail): string | null {
-  const parts = [detail.addressStreet, detail.communeName, detail.provinceName].filter(Boolean);
+  const parts = [
+    detail.addressStreet,
+    detail.communeName,
+    detail.provinceName,
+  ].filter(Boolean);
   return parts.length > 0 ? parts.join(", ") : null;
 }
 
@@ -290,9 +291,7 @@ function CertificateDetailContent({
           {formatDate(detail.issueDate)}
         </Descriptions.Item>
         <Descriptions.Item label="Ngày hết hạn">
-          {detail.expiryDate
-            ? formatDate(detail.expiryDate)
-            : "Không thời hạn"}
+          {detail.expiryDate ? formatDate(detail.expiryDate) : "Không thời hạn"}
         </Descriptions.Item>
         {detail.certifyingAuthority && (
           <Descriptions.Item label="Cơ quan cấp">
@@ -343,9 +342,7 @@ function CertificateDetailContent({
         )}
         <Descriptions.Item label="Trạng thái hoạt động">
           {businessStatusCfg ? (
-            <Tag color={businessStatusCfg.color}>
-              {businessStatusCfg.label}
-            </Tag>
+            <Tag color={businessStatusCfg.color}>{businessStatusCfg.label}</Tag>
           ) : (
             "-"
           )}
@@ -381,9 +378,7 @@ function CertificateDetailContent({
           </Descriptions.Item>
         )}
         {fullAddress && (
-          <Descriptions.Item label="Địa chỉ">
-            {fullAddress}
-          </Descriptions.Item>
+          <Descriptions.Item label="Địa chỉ">{fullAddress}</Descriptions.Item>
         )}
         {detail.establishedDate && (
           <Descriptions.Item label="Ngày thành lập">
@@ -471,9 +466,7 @@ export default function PublicCertificateSearchPage() {
 
       <Tabs
         defaultActiveKey={initialTab}
-        onChange={(key) =>
-          setSearchParams({ tab: key }, { replace: true })
-        }
+        onChange={(key) => setSearchParams({ tab: key }, { replace: true })}
         items={TAB_ITEMS.map((tab) => ({
           key: tab.key,
           label: tab.label,

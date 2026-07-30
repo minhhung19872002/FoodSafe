@@ -55,12 +55,12 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
     {
         var query = (await _news.GetQueryableAsync())
             .Where(n => n.Status == NewsStatus.Published && n.IsPublic);
-        var keyword = input.Keyword?.Trim();
+        var keyword = input.Keyword?.Trim().ToUpperInvariant();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             query = query.Where(n =>
-                n.Title.Contains(keyword)
-                || (n.Summary != null && n.Summary.Contains(keyword)));
+                n.Title.ToUpper().Contains(keyword)
+                || (n.Summary != null && n.Summary.ToUpper().Contains(keyword)));
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
@@ -106,13 +106,13 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
     {
         var query = (await _alerts.GetQueryableAsync())
             .Where(a => a.Status == AlertStatus.Published && a.IsPublic);
-        var keyword = input.Keyword?.Trim();
+        var keyword = input.Keyword?.Trim().ToUpperInvariant();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             query = query.Where(a =>
-                a.Title.Contains(keyword)
-                || (a.AffectedProducts != null && a.AffectedProducts.Contains(keyword))
-                || (a.AffectedArea != null && a.AffectedArea.Contains(keyword)));
+                a.Title.ToUpper().Contains(keyword)
+                || (a.AffectedProducts != null && a.AffectedProducts.ToUpper().Contains(keyword))
+                || (a.AffectedArea != null && a.AffectedArea.ToUpper().Contains(keyword)));
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
@@ -158,7 +158,7 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
                 };
             });
 
-        var keyword = input.Keyword?.Trim();
+        var keyword = input.Keyword?.Trim().ToUpperInvariant();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             rows = rows.Where(r =>
@@ -186,11 +186,11 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
     {
         var query = (await _documents.GetQueryableAsync())
             .Where(d => d.IsPublic && d.Status == DocumentStatus.Active);
-        var keyword = input.Keyword?.Trim();
+        var keyword = input.Keyword?.Trim().ToUpperInvariant();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             query = query.Where(d =>
-                d.Title.Contains(keyword) || d.DocumentNumber.Contains(keyword));
+                d.Title.ToUpper().Contains(keyword) || d.DocumentNumber.ToUpper().Contains(keyword));
         }
 
         if (input.DocumentTypeId.HasValue)
@@ -255,12 +255,12 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
     {
         var query = (await _riskAnalyses.GetQueryableAsync())
             .Where(r => r.Status == RiskAnalysisStatus.Published && r.IsPublic);
-        var keyword = input.Keyword?.Trim();
+        var keyword = input.Keyword?.Trim().ToUpperInvariant();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             query = query.Where(r =>
-                r.Title.Contains(keyword)
-                || (r.RelatedProducts != null && r.RelatedProducts.Contains(keyword)));
+                r.Title.ToUpper().Contains(keyword)
+                || (r.RelatedProducts != null && r.RelatedProducts.ToUpper().Contains(keyword)));
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
@@ -289,12 +289,12 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
     {
         var query = (await _testingResults.GetQueryableAsync())
             .Where(t => t.IsPublic && t.BusinessId != null);
-        var keyword = input.Keyword?.Trim();
+        var keyword = input.Keyword?.Trim().ToUpperInvariant();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             query = query.Where(t =>
-                t.SampleCode.Contains(keyword)
-                || t.SampleName.Contains(keyword));
+                t.SampleCode.ToUpper().Contains(keyword)
+                || t.SampleName.ToUpper().Contains(keyword));
         }
 
         if (input.Outcome.HasValue)

@@ -51,10 +51,10 @@ public class ApiSpecificationAppService :
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.Name.Contains(filter) ||
-                x.Title.Contains(filter));
+                x.Name.ToUpper().Contains(filter) ||
+                x.Title.ToUpper().Contains(filter));
         }
         if (!input.Name.IsNullOrWhiteSpace())
         {

@@ -66,7 +66,7 @@ public class PublicCertificateSearchAppService :
         PublicCertificateSearchRequestDto input) =>
         SearchAsync(
             _eligibility, input,
-            (q, kw) => q.Where(c => c.CertificateNumber.Contains(kw)),
+            (q, kw) => q.Where(c => c.CertificateNumber.ToUpper().Contains(kw)),
             (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.IssueDate),
             c => c.BusinessId,
@@ -88,7 +88,7 @@ public class PublicCertificateSearchAppService :
         SearchAsync(
             _selfDeclarations, input,
             (q, kw) => q.Where(c =>
-                c.DeclarationNumber.Contains(kw) || c.ProductName.Contains(kw)),
+                c.DeclarationNumber.ToUpper().Contains(kw) || c.ProductName.ToUpper().Contains(kw)),
             (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.DeclarationDate),
             c => c.BusinessId,
@@ -110,7 +110,7 @@ public class PublicCertificateSearchAppService :
         SearchAsync(
             _productRegistrations, input,
             (q, kw) => q.Where(c =>
-                c.RegistrationNumber.Contains(kw) || c.ProductName.Contains(kw)),
+                c.RegistrationNumber.ToUpper().Contains(kw) || c.ProductName.ToUpper().Contains(kw)),
             (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.RegistrationDate),
             c => c.BusinessId,
@@ -131,7 +131,7 @@ public class PublicCertificateSearchAppService :
         PublicCertificateSearchRequestDto input) =>
         SearchAsync(
             _adRegistrations, input,
-            (q, kw) => q.Where(c => c.RegistrationNumber.Contains(kw)),
+            (q, kw) => q.Where(c => c.RegistrationNumber.ToUpper().Contains(kw)),
             (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.RegistrationDate),
             c => c.BusinessId,
@@ -157,10 +157,10 @@ public class PublicCertificateSearchAppService :
             (q, kw) =>
             {
                 var matchingBusinessIds = businessQuery
-                    .Where(b => b.Name.Contains(kw))
+                    .Where(b => b.Name.ToUpper().Contains(kw))
                     .Select(b => b.Id);
                 return q.Where(c =>
-                    c.CertificateNumber.Contains(kw) ||
+                    c.CertificateNumber.ToUpper().Contains(kw) ||
                     matchingBusinessIds.Contains(c.BusinessId));
             },
             (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
@@ -184,7 +184,7 @@ public class PublicCertificateSearchAppService :
         PublicCertificateSearchRequestDto input) =>
         SearchAsync(
             _exportCertificates, input,
-            (q, kw) => q.Where(c => c.CertificateNumber.Contains(kw)),
+            (q, kw) => q.Where(c => c.CertificateNumber.ToUpper().Contains(kw)),
             (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.IssueDate),
             c => c.BusinessId,
@@ -373,7 +373,7 @@ public class PublicCertificateSearchAppService :
         where TEntity : class, IEntity<Guid>
     {
         var query = await repository.GetQueryableAsync();
-        var keyword = input.Keyword?.Trim();
+        var keyword = input.Keyword?.Trim().ToUpperInvariant();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             query = applyKeyword(query, keyword);

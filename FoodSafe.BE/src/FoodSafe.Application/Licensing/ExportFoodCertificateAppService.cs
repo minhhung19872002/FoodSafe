@@ -59,7 +59,7 @@ public class ExportFoodCertificateAppService :
             // Số GCN luôn lưu chữ hoa — uppercase filter để tìm không phân
             // biệt hoa/thường.
             var filter = input.Filter!.Trim().ToUpperInvariant();
-            query = query.Where(x => x.CertificateNumber.Contains(filter));
+            query = query.Where(x => x.CertificateNumber.ToUpper().Contains(filter));
         }
         if (input.BusinessId.HasValue)
             query = query.Where(x => x.BusinessId == input.BusinessId);

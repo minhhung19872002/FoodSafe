@@ -51,10 +51,10 @@ public class TestingResultAppService : ApplicationService
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.SampleCode.Contains(filter) ||
-                x.SampleName.Contains(filter));
+                x.SampleCode.ToUpper().Contains(filter) ||
+                x.SampleName.ToUpper().Contains(filter));
         }
         if (input.BusinessId.HasValue)
             query = query.Where(x => x.BusinessId == input.BusinessId.Value);

@@ -44,12 +44,12 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
         PublicBusinessSearchRequestDto input)
     {
         var query = await _businesses.GetQueryableAsync();
-        var keyword = input.Keyword?.Trim();
+        var keyword = input.Keyword?.Trim().ToUpperInvariant();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             query = query.Where(b =>
-                b.Name.Contains(keyword)
-                || (b.Code != null && b.Code.Contains(keyword)));
+                b.Name.ToUpper().Contains(keyword)
+                || (b.Code != null && b.Code.ToUpper().Contains(keyword)));
         }
 
         if (input.BusinessTypeIds is { Count: > 0 })
@@ -127,14 +127,14 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
         PublicProductSearchRequestDto input)
     {
         var query = await _products.GetQueryableAsync();
-        var keyword = input.Keyword?.Trim();
+        var keyword = input.Keyword?.Trim().ToUpperInvariant();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             query = query.Where(p =>
-                p.Name.Contains(keyword)
-                || (p.Code != null && p.Code.Contains(keyword))
-                || (p.BrandName != null && p.BrandName.Contains(keyword))
-                || (p.Manufacturer != null && p.Manufacturer.Contains(keyword)));
+                p.Name.ToUpper().Contains(keyword)
+                || (p.Code != null && p.Code.ToUpper().Contains(keyword))
+                || (p.BrandName != null && p.BrandName.ToUpper().Contains(keyword))
+                || (p.Manufacturer != null && p.Manufacturer.ToUpper().Contains(keyword)));
         }
 
         if (input.ProductGroupId.HasValue)

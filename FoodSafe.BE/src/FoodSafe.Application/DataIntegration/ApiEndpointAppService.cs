@@ -40,11 +40,11 @@ public class ApiEndpointAppService : ApplicationService
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.Name.Contains(filter) ||
-                x.Url.Contains(filter) ||
-                x.ExternalSystem.Contains(filter));
+                x.Name.ToUpper().Contains(filter) ||
+                x.Url.ToUpper().Contains(filter) ||
+                x.ExternalSystem.ToUpper().Contains(filter));
         }
         if (!input.ExternalSystem.IsNullOrWhiteSpace())
             query = query.Where(x => x.ExternalSystem == input.ExternalSystem);

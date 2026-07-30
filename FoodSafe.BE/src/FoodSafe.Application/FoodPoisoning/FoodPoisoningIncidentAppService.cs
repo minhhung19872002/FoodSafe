@@ -45,10 +45,10 @@ public class FoodPoisoningIncidentAppService : ApplicationService
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.IncidentCode.Contains(filter) ||
-                (x.LocationDescription != null && x.LocationDescription.Contains(filter)));
+                x.IncidentCode.ToUpper().Contains(filter) ||
+                (x.LocationDescription != null && x.LocationDescription.ToUpper().Contains(filter)));
         }
         if (input.Status.HasValue)
             query = query.Where(x => x.Status == input.Status.Value);

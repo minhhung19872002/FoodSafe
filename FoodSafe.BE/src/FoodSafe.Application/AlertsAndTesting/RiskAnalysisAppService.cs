@@ -38,8 +38,8 @@ public class RiskAnalysisAppService : ApplicationService
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
-            query = query.Where(x => x.Title.Contains(filter));
+            var filter = input.Filter!.Trim().ToUpperInvariant();
+            query = query.Where(x => x.Title.ToUpper().Contains(filter));
         }
         if (input.Category.HasValue)
             query = query.Where(x => x.Category == input.Category.Value);

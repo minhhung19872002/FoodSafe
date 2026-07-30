@@ -49,13 +49,13 @@ public class EligibilityCertificateAppService :
         var query = await ScopedQueryAsync(DataScopeOperation.View);
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.CertificateNumber.Contains(filter) ||
+                x.CertificateNumber.ToUpper().Contains(filter) ||
                 (x.CertifyingAuthority != null &&
-                 x.CertifyingAuthority.Contains(filter)) ||
+                 x.CertifyingAuthority.ToUpper().Contains(filter)) ||
                 (x.CertificationScope != null &&
-                 x.CertificationScope.Contains(filter)));
+                 x.CertificationScope.ToUpper().Contains(filter)));
         }
         if (input.BusinessId.HasValue)
             query = query.Where(x => x.BusinessId == input.BusinessId);

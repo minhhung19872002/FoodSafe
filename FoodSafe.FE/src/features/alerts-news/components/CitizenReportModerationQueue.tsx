@@ -23,6 +23,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { RevokeModal } from "@/components/RevokeModal";
 import { EmptyState } from "@/components/EmptyState";
 import { extractApiError } from "@/lib/apiError";
+import { matchesSearch } from "@/utils/textSearch";
 import { useAlerts } from "../api/alertsNewsQueries";
 import { useStaffUsers } from "../api/alertsNewsQueries";
 import {
@@ -340,9 +341,7 @@ export function CitizenReportModerationQueue() {
               showSearch
               placeholder="Chọn cán bộ..."
               filterOption={(input, option) =>
-                (option?.label as string)
-                  ?.toLowerCase()
-                  .includes(input.toLowerCase()) ?? false
+                matchesSearch((option?.label as string) ?? "", input)
               }
               options={staffOptions}
               style={{ width: "100%" }}

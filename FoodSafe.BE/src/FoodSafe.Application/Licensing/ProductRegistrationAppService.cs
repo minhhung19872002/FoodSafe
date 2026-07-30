@@ -52,14 +52,14 @@ public class ProductRegistrationAppService :
         var query = await ScopedQueryAsync(DataScopeOperation.View);
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.RegistrationNumber.Contains(filter) ||
+                x.RegistrationNumber.ToUpper().Contains(filter) ||
                 (x.ReceiptNumber != null &&
-                 x.ReceiptNumber.Contains(filter)) ||
-                x.ProductName.Contains(filter) ||
+                 x.ReceiptNumber.ToUpper().Contains(filter)) ||
+                x.ProductName.ToUpper().Contains(filter) ||
                 (x.Manufacturer != null &&
-                 x.Manufacturer.Contains(filter)));
+                 x.Manufacturer.ToUpper().Contains(filter)));
         }
         if (input.BusinessId.HasValue)
             query = query.Where(x => x.BusinessId == input.BusinessId);

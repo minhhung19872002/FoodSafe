@@ -57,12 +57,12 @@ public class AdvertisementRegistrationAppService :
         var query = await ScopedQueryAsync(DataScopeOperation.View);
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.RegistrationNumber.Contains(filter) ||
+                x.RegistrationNumber.ToUpper().Contains(filter) ||
                 (x.ContentDescription != null &&
-                 x.ContentDescription.Contains(filter)) ||
-                (x.Medium != null && x.Medium.Contains(filter)));
+                 x.ContentDescription.ToUpper().Contains(filter)) ||
+                (x.Medium != null && x.Medium.ToUpper().Contains(filter)));
         }
         if (input.BusinessId.HasValue)
             query = query.Where(x => x.BusinessId == input.BusinessId);

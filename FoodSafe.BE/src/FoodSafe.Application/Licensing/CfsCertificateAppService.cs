@@ -56,8 +56,8 @@ public class CfsCertificateAppService :
         var query = await ScopedQueryAsync(DataScopeOperation.View);
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
-            query = query.Where(x => x.CertificateNumber.Contains(filter));
+            var filter = input.Filter!.Trim().ToUpperInvariant();
+            query = query.Where(x => x.CertificateNumber.ToUpper().Contains(filter));
         }
         if (input.BusinessId.HasValue)
             query = query.Where(x => x.BusinessId == input.BusinessId);

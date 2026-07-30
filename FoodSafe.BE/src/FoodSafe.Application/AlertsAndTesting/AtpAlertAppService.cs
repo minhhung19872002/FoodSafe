@@ -41,10 +41,10 @@ public class AtpAlertAppService : ApplicationService
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.Title.Contains(filter) ||
-                (x.AlertNumber != null && x.AlertNumber.Contains(filter)));
+                x.Title.ToUpper().Contains(filter) ||
+                (x.AlertNumber != null && x.AlertNumber.ToUpper().Contains(filter)));
         }
         if (input.Category.HasValue)
             query = query.Where(x => x.Category == input.Category.Value);

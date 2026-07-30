@@ -50,11 +50,11 @@ public class PartnerAccountAppService :
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.Code.Contains(filter) ||
-                x.Name.Contains(filter) ||
-                x.ExternalSystem.Contains(filter));
+                x.Code.ToUpper().Contains(filter) ||
+                x.Name.ToUpper().Contains(filter) ||
+                x.ExternalSystem.ToUpper().Contains(filter));
         }
         if (input.Status.HasValue)
             query = query.Where(x => x.Status == input.Status.Value);

@@ -14,6 +14,7 @@ import {
   Typography,
 } from "antd";
 import { useTablePagination } from "@/hooks/useTablePagination";
+import { matchesSearch } from "@/utils/textSearch";
 import { PublicShell } from "../components/PublicShell";
 import {
   usePublicBusinessMapData,
@@ -90,14 +91,18 @@ function BusinessSearchTab() {
           placeholder="Loại hình"
           showSearch
           filterOption={(input, option) =>
-            (option?.label as string)?.toLowerCase().includes(input.toLowerCase()) ?? false
+            matchesSearch((option?.label as string) ?? "", input)
           }
           allowClear
           style={{ minWidth: 220 }}
           maxTagCount="responsive"
           options={businessTypes?.map((t) => ({ label: t.name, value: t.id }))}
         />
-        <Button type="primary" loading={isFetching || isMapFetching} onClick={handleSearch}>
+        <Button
+          type="primary"
+          loading={isFetching || isMapFetching}
+          onClick={handleSearch}
+        >
           Tìm kiếm
         </Button>
       </Space>
@@ -241,7 +246,7 @@ function ProductSearchTab() {
           placeholder="Nhóm sản phẩm"
           showSearch
           filterOption={(input, option) =>
-            (option?.label as string)?.toLowerCase().includes(input.toLowerCase()) ?? false
+            matchesSearch((option?.label as string) ?? "", input)
           }
           allowClear
           style={{ minWidth: 220 }}
@@ -339,7 +344,7 @@ function TestingResultSearchTab() {
           placeholder="Kết quả"
           showSearch
           filterOption={(input, option) =>
-            (option?.label as string)?.toLowerCase().includes(input.toLowerCase()) ?? false
+            matchesSearch((option?.label as string) ?? "", input)
           }
           allowClear
           style={{ minWidth: 180 }}
@@ -550,9 +555,7 @@ export default function PublicGeneralSearchPage() {
 
       <Tabs
         defaultActiveKey={initialTab}
-        onChange={(key) =>
-          setSearchParams({ tab: key }, { replace: true })
-        }
+        onChange={(key) => setSearchParams({ tab: key }, { replace: true })}
         items={[
           {
             key: "businesses",

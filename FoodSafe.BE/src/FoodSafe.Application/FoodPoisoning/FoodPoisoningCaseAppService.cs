@@ -41,10 +41,10 @@ public class FoodPoisoningCaseAppService : ApplicationService
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.CaseCode.Contains(filter) ||
-                (x.VictimName != null && x.VictimName.Contains(filter)));
+                x.CaseCode.ToUpper().Contains(filter) ||
+                (x.VictimName != null && x.VictimName.ToUpper().Contains(filter)));
         }
         if (input.Status.HasValue)
             query = query.Where(x => x.Status == input.Status.Value);

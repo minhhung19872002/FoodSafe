@@ -51,14 +51,22 @@ public class FoodSafeAuditLogRepository : EfCoreAuditLogRepository
             query = query.Where(auditLog => auditLog.Exceptions == null || auditLog.Exceptions == "");
         if (!string.IsNullOrEmpty(httpMethod))
             query = query.Where(auditLog => auditLog.HttpMethod == httpMethod);
-        if (!string.IsNullOrEmpty(url))
-            query = query.Where(auditLog => auditLog.Url != null && auditLog.Url.Contains(url));
+        if (!string.IsNullOrWhiteSpace(url))
+        {
+            var normalizedUrl = url.Trim().ToUpperInvariant();
+            query = query.Where(auditLog =>
+                auditLog.Url != null && auditLog.Url.ToUpper().Contains(normalizedUrl));
+        }
         if (!string.IsNullOrEmpty(clientId))
             query = query.Where(auditLog => auditLog.ClientId == clientId);
         if (userId != null)
             query = query.Where(auditLog => auditLog.UserId == userId);
-        if (!string.IsNullOrEmpty(userName))
-            query = query.Where(auditLog => auditLog.UserName != null && auditLog.UserName.Contains(userName));
+        if (!string.IsNullOrWhiteSpace(userName))
+        {
+            var normalizedUserName = userName.Trim().ToUpperInvariant();
+            query = query.Where(auditLog =>
+                auditLog.UserName != null && auditLog.UserName.ToUpper().Contains(normalizedUserName));
+        }
         if (!string.IsNullOrEmpty(applicationName))
             query = query.Where(auditLog => auditLog.ApplicationName == applicationName);
         if (!string.IsNullOrEmpty(clientIpAddress))

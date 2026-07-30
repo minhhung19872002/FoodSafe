@@ -42,9 +42,9 @@ public class InspectionPlanAppService : ApplicationService
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.PlanCode.Contains(filter) || x.Title.Contains(filter));
+                x.PlanCode.ToUpper().Contains(filter) || x.Title.ToUpper().Contains(filter));
         }
         if (input.PlanType.HasValue)
             query = query.Where(x => x.PlanType == input.PlanType.Value);
