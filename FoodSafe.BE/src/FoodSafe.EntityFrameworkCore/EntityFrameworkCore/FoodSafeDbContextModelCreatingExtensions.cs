@@ -2018,11 +2018,17 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.LocationLatitude).HasColumnName("location_latitude");
             entity.Property(x => x.LocationLongitude).HasColumnName("location_longitude");
 
-            entity.Property(x => x.VictimName).HasColumnName("victim_name").HasMaxLength(200);
-            entity.Property(x => x.VictimAge).HasColumnName("victim_age");
-            entity.Property(x => x.VictimGender).HasColumnName("victim_gender");
-            entity.Property(x => x.VictimPhone).HasColumnName("victim_phone").HasMaxLength(50);
-            entity.Property(x => x.VictimAddress).HasColumnName("victim_address");
+            entity.Ignore(x => x.VictimName);
+            entity.Ignore(x => x.VictimAge);
+            entity.Ignore(x => x.VictimGender);
+            entity.Ignore(x => x.VictimPhone);
+            entity.Ignore(x => x.VictimAddress);
+
+            entity.HasMany(x => x.Victims)
+                .WithOne()
+                .HasForeignKey(x => x.CaseId)
+                .HasConstraintName("fk_pcv_case")
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(x => x.SuspectedFood).HasColumnName("suspected_food");
             entity.Property(x => x.FoodSource).HasColumnName("food_source").HasMaxLength(200);
@@ -2098,6 +2104,29 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasForeignKey(x => x.CaseId)
                 .HasConstraintName("fk_pcer_case")
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PoisoningCaseVictim>(entity =>
+        {
+            entity.ToTable("poisoning_case_victims");
+
+            entity.HasKey(x => x.Id).HasName("pk_pcv");
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.CaseId).HasColumnName("case_id").IsRequired();
+            entity.Property(x => x.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Age).HasColumnName("age");
+            entity.Property(x => x.Gender).HasColumnName("gender");
+            entity.Property(x => x.Phone).HasColumnName("phone").HasMaxLength(50);
+            entity.Property(x => x.Address).HasColumnName("address");
+
+            entity.HasOne<FoodPoisoningCase>()
+                .WithMany(x => x.Victims)
+                .HasForeignKey(x => x.CaseId)
+                .HasConstraintName("fk_pcv_case")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => x.CaseId)
+                .HasDatabaseName("idx_pcv_case");
         });
 
         builder.Entity<PoisoningCaseErrorReport>(entity =>

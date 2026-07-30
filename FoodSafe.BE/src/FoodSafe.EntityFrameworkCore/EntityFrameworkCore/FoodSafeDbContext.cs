@@ -84,6 +84,7 @@ public class FoodSafeDbContext :
     public DbSet<TestingResult> TestingResults { get; set; }
     public DbSet<AdministrativeDocument> AdministrativeDocuments { get; set; }
     public DbSet<FoodPoisoningCase> FoodPoisoningCases { get; set; }
+    public DbSet<PoisoningCaseVictim> PoisoningCaseVictims { get; set; }
     public DbSet<FoodPoisoningIncident> FoodPoisoningIncidents { get; set; }
     public DbSet<PoisoningCaseErrorReport> PoisoningCaseErrorReports { get; set; }
     public DbSet<PoisoningIncidentErrorReport> PoisoningIncidentErrorReports { get; set; }

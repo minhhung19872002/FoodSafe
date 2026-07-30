@@ -23,6 +23,8 @@ public class FoodPoisoningCaseDto : EntityDto<Guid>
     public string? VictimPhone { get; set; }
     public string? VictimAddress { get; set; }
 
+    public List<PoisoningCaseVictimDto> Victims { get; set; } = [];
+
     public string? SuspectedFood { get; set; }
     public string? FoodSource { get; set; }
     public DateOnly? FoodPreparationDate { get; set; }
@@ -47,6 +49,29 @@ public class FoodPoisoningCaseDto : EntityDto<Guid>
     public DateTime CreationTime { get; set; }
 }
 
+public class PoisoningCaseVictimDto : EntityDto<Guid>
+{
+    public Guid CaseId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public int? Age { get; set; }
+    public VictimGender? Gender { get; set; }
+    public string? Phone { get; set; }
+    public string? Address { get; set; }
+}
+
+public class CreateUpdatePoisoningCaseVictimDto
+{
+    [Required]
+    [StringLength(200)]
+    public string Name { get; set; } = string.Empty;
+    [Range(0, 150)]
+    public int? Age { get; set; }
+    public VictimGender? Gender { get; set; }
+    [StringLength(50)]
+    public string? Phone { get; set; }
+    public string? Address { get; set; }
+}
+
 public class CreateUpdateFoodPoisoningCaseDto
 {
     [Required]
@@ -63,9 +88,12 @@ public class CreateUpdateFoodPoisoningCaseDto
     public double? LocationLatitude { get; set; }
     public double? LocationLongitude { get; set; }
 
-    [Required]
+    // Multi-victim support
+    public List<CreateUpdatePoisoningCaseVictimDto> Victims { get; set; } = [];
+
+    // Legacy single-victim fields (optional if Victims list is used)
     [StringLength(200)]
-    public string VictimName { get; set; } = string.Empty;
+    public string? VictimName { get; set; }
     [Range(0, 150)]
     public int? VictimAge { get; set; }
     public VictimGender? VictimGender { get; set; }

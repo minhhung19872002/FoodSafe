@@ -44,7 +44,7 @@ public class FoodPoisoningCaseAppService : ApplicationService
             var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
                 x.CaseCode.ToUpper().Contains(filter) ||
-                (x.VictimName != null && x.VictimName.ToUpper().Contains(filter)));
+                x.Victims.Any(v => v.Name.ToUpper().Contains(filter)));
         }
         if (input.Status.HasValue)
             query = query.Where(x => x.Status == input.Status.Value);
@@ -183,7 +183,7 @@ public class FoodPoisoningCaseAppService : ApplicationService
     private async Task<IQueryable<FoodPoisoningCase>> ScopedQueryAsync(DataScopeOperation operation)
     {
         var scope = await _dataScopeProvider.GetAsync(operation, _cancellationTokens.Token);
-        var query = await _cases.GetQueryableAsync();
+        var query = await _cases.WithDetailsAsync(x => x.Victims);
         if (!scope.HasGlobalAccess)
             query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
         return query;
@@ -201,7 +201,7 @@ public class FoodPoisoningCaseAppService : ApplicationService
     private async Task<FoodPoisoningCase> GetScopedWithDetailsAsync(Guid id, DataScopeOperation operation)
     {
         var scope = await _dataScopeProvider.GetAsync(operation, _cancellationTokens.Token);
-        var query = await _cases.WithDetailsAsync(x => x.ErrorReports);
+        var query = await _cases.WithDetailsAsync(x => x.Victims, x => x.ErrorReports);
         if (!scope.HasGlobalAccess)
             query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
         return await AsyncExecuter.FirstOrDefaultAsync(
@@ -270,9 +270,24 @@ public class FoodPoisoningCaseAppService : ApplicationService
             input.LocationProvinceId,
             lat, lng);
 
-        entity.SetVictimInfo(
-            input.VictimName, input.VictimAge, input.VictimGender,
-            input.VictimPhone, input.VictimAddress);
+        entity.ClearVictims();
+        if (input.Victims.Count > 0)
+        {
+            foreach (var v in input.Victims)
+            {
+                if (!string.IsNullOrWhiteSpace(v.Name))
+                {
+                    entity.AddVictim(
+                        GuidGenerator.Create(), v.Name, v.Age, v.Gender, v.Phone, v.Address);
+                }
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(input.VictimName))
+        {
+            entity.SetVictimInfo(
+                input.VictimName, input.VictimAge, input.VictimGender,
+                input.VictimPhone, input.VictimAddress);
+        }
 
         entity.SetFoodInfo(
             input.SuspectedFood, input.FoodSource,
@@ -309,6 +324,16 @@ public class FoodPoisoningCaseAppService : ApplicationService
         VictimGender = e.VictimGender,
         VictimPhone = e.VictimPhone,
         VictimAddress = e.VictimAddress,
+        Victims = e.Victims.Select(v => new PoisoningCaseVictimDto
+        {
+            Id = v.Id,
+            CaseId = v.CaseId,
+            Name = v.Name,
+            Age = v.Age,
+            Gender = v.Gender,
+            Phone = v.Phone,
+            Address = v.Address
+        }).ToList(),
         SuspectedFood = e.SuspectedFood,
         FoodSource = e.FoodSource,
         FoodPreparationDate = e.FoodPreparationDate,

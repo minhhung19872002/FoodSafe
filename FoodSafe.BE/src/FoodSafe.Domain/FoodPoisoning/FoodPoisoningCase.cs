@@ -18,12 +18,16 @@ public sealed class FoodPoisoningCase : FullAuditedAggregateRoot<Guid>
     public double? LocationLatitude { get; private set; }
     public double? LocationLongitude { get; private set; }
 
-    // Victim info (flattened)
-    public string? VictimName { get; private set; }
-    public int? VictimAge { get; private set; }
-    public VictimGender? VictimGender { get; private set; }
-    public string? VictimPhone { get; private set; }
-    public string? VictimAddress { get; private set; }
+    // Victim info (child collection)
+    private readonly List<PoisoningCaseVictim> _victims = [];
+    public IReadOnlyList<PoisoningCaseVictim> Victims => _victims.AsReadOnly();
+
+    // Backward-compatibility getters derived from first victim
+    public string? VictimName => _victims.FirstOrDefault()?.Name;
+    public int? VictimAge => _victims.FirstOrDefault()?.Age;
+    public VictimGender? VictimGender => _victims.FirstOrDefault()?.Gender;
+    public string? VictimPhone => _victims.FirstOrDefault()?.Phone;
+    public string? VictimAddress => _victims.FirstOrDefault()?.Address;
 
     // Food info (flattened)
     public string? SuspectedFood { get; private set; }
@@ -108,6 +112,26 @@ public sealed class FoodPoisoningCase : FullAuditedAggregateRoot<Guid>
         LocationLongitude = longitude;
     }
 
+    public PoisoningCaseVictim AddVictim(
+        Guid id,
+        string name,
+        int? age,
+        VictimGender? gender,
+        string? phone,
+        string? address)
+    {
+        EnsureDraft();
+        var victim = new PoisoningCaseVictim(id, Id, name, age, gender, phone, address);
+        _victims.Add(victim);
+        return victim;
+    }
+
+    public void ClearVictims()
+    {
+        EnsureDraft();
+        _victims.Clear();
+    }
+
     public void SetVictimInfo(
         string? name,
         int? age,
@@ -116,11 +140,11 @@ public sealed class FoodPoisoningCase : FullAuditedAggregateRoot<Guid>
         string? address)
     {
         EnsureDraft();
-        VictimName = Normalize(name);
-        VictimAge = age;
-        VictimGender = gender;
-        VictimPhone = Normalize(phone);
-        VictimAddress = Normalize(address);
+        _victims.Clear();
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            _victims.Add(new PoisoningCaseVictim(Guid.NewGuid(), Id, name, age, gender, phone, address));
+        }
     }
 
     public void SetFoodInfo(

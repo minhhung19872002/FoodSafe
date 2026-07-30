@@ -111,6 +111,24 @@ export interface PagedResult<T> {
   items: T[];
 }
 
+export interface PoisoningCaseVictim {
+  id?: string;
+  caseId?: string;
+  name: string;
+  age?: number;
+  gender?: VictimGender;
+  phone?: string;
+  address?: string;
+}
+
+export interface CreateUpdatePoisoningCaseVictimInput {
+  name: string;
+  age?: number;
+  gender?: VictimGender;
+  phone?: string;
+  address?: string;
+}
+
 export interface FoodPoisoningCase {
   id: string;
   organizationId: string;
@@ -130,6 +148,8 @@ export interface FoodPoisoningCase {
   victimGender?: VictimGender;
   victimPhone?: string;
   victimAddress?: string;
+
+  victims?: PoisoningCaseVictim[];
 
   suspectedFood?: string;
   foodSource?: string;
@@ -167,11 +187,13 @@ export interface CreateUpdateCaseInput {
   locationLatitude?: number;
   locationLongitude?: number;
 
-  victimName: string;
+  victimName?: string;
   victimAge?: number;
   victimGender?: VictimGender;
   victimPhone?: string;
   victimAddress?: string;
+
+  victims?: CreateUpdatePoisoningCaseVictimInput[];
 
   suspectedFood?: string;
   foodSource?: string;

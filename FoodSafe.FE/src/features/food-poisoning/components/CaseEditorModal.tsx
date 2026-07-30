@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { DatePicker, Form, Input, InputNumber, Modal, Select } from "antd";
+import { Button, DatePicker, Form, Input, InputNumber, Modal, Select } from "antd";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   AddressLocationPicker,
@@ -16,17 +17,21 @@ import {
   type VictimGender,
 } from "../types/foodPoisoning.types";
 
+interface VictimFormValue {
+  name: string;
+  age?: number;
+  gender?: VictimGender;
+  phone?: string;
+  address?: string;
+}
+
 interface FormValues {
   reportDate: dayjs.Dayjs;
   occurrenceDate?: dayjs.Dayjs;
   incidentId?: string;
   notes?: string;
   locationDescription: string;
-  victimName: string;
-  victimAge?: number;
-  victimGender?: VictimGender;
-  victimPhone?: string;
-  victimAddress?: string;
+  victims: VictimFormValue[];
   suspectedFood?: string;
   foodSource?: string;
   foodPreparationDate?: dayjs.Dayjs;
@@ -79,6 +84,27 @@ export function CaseEditorModal(props: Props) {
   useEffect(() => {
     if (!open) return;
     if (item) {
+      const victimList: VictimFormValue[] =
+        item.victims && item.victims.length > 0
+          ? item.victims.map((v) => ({
+              name: v.name,
+              age: v.age,
+              gender: v.gender,
+              phone: v.phone,
+              address: v.address,
+            }))
+          : item.victimName
+          ? [
+              {
+                name: item.victimName,
+                age: item.victimAge,
+                gender: item.victimGender,
+                phone: item.victimPhone,
+                address: item.victimAddress,
+              },
+            ]
+          : [{ name: "" }];
+
       form.setFieldsValue({
         reportDate: dayjs(item.reportDate),
         occurrenceDate: item.occurrenceDate
@@ -87,11 +113,7 @@ export function CaseEditorModal(props: Props) {
         incidentId: item.incidentId ?? undefined,
         notes: item.notes,
         locationDescription: item.locationDescription,
-        victimName: item.victimName,
-        victimAge: item.victimAge,
-        victimGender: item.victimGender,
-        victimPhone: item.victimPhone,
-        victimAddress: item.victimAddress,
+        victims: victimList,
         suspectedFood: item.suspectedFood,
         foodSource: item.foodSource,
         foodPreparationDate: item.foodPreparationDate
@@ -114,7 +136,10 @@ export function CaseEditorModal(props: Props) {
         communeId: item.locationCommuneId ?? "",
       });
     } else {
-      form.setFieldsValue({ reportDate: dayjs() });
+      form.setFieldsValue({
+        reportDate: dayjs(),
+        victims: [{ name: "" }],
+      });
       setLocation(emptyAddressLocation());
     }
   }, [form, open, item]);
@@ -137,6 +162,16 @@ export function CaseEditorModal(props: Props) {
         preserve={false}
         onFinish={(values) => {
           const street = values.locationDescription.trim();
+          const victims = (values.victims ?? [])
+            .filter((v) => v.name?.trim())
+            .map((v) => ({
+              name: v.name.trim(),
+              age: v.age,
+              gender: v.gender,
+              phone: v.phone?.trim() || undefined,
+              address: v.address?.trim() || undefined,
+            }));
+
           props.onSubmit({
             reportDate: values.reportDate.format("YYYY-MM-DD"),
             occurrenceDate: values.occurrenceDate?.toISOString(),
@@ -145,11 +180,12 @@ export function CaseEditorModal(props: Props) {
             locationDescription: street,
             locationProvinceId: location.provinceId || undefined,
             locationCommuneId: location.communeId || undefined,
-            victimName: values.victimName.trim(),
-            victimAge: values.victimAge,
-            victimGender: values.victimGender,
-            victimPhone: values.victimPhone?.trim() || undefined,
-            victimAddress: values.victimAddress?.trim() || undefined,
+            victims,
+            victimName: victims[0]?.name || "",
+            victimAge: victims[0]?.age,
+            victimGender: victims[0]?.gender,
+            victimPhone: victims[0]?.phone,
+            victimAddress: victims[0]?.address,
             suspectedFood: values.suspectedFood?.trim() || undefined,
             foodSource: values.foodSource?.trim() || undefined,
             foodPreparationDate:
@@ -220,54 +256,121 @@ export function CaseEditorModal(props: Props) {
           </Form.Item>
         )}
 
-        <div
-          style={{
-            marginBottom: 8,
-            fontWeight: 600,
-            borderBottom: "1px solid #f0f0f0",
-            paddingBottom: 4,
-          }}
-        >
-          Thông tin nạn nhân
-        </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr 1fr",
-            gap: 16,
-          }}
-        >
-          <Form.Item
-            name="victimName"
-            label="Họ tên"
-            rules={[
-              {
-                required: true,
-                whitespace: true,
-                message: "Vui lòng nhập họ tên nạn nhân.",
-              },
-            ]}
-          >
-            <Input maxLength={200} />
-          </Form.Item>
-          <Form.Item name="victimAge" label="Tuổi">
-            <InputNumber min={0} max={200} style={{ width: "100%" }} />
-          </Form.Item>
-          <Form.Item name="victimGender" label="Giới tính">
-            <Select
-              allowClear
-              options={Object.entries(VICTIM_GENDER_CONFIG).map(
-                ([value, cfg]) => ({ value: Number(value), label: cfg.label }),
-              )}
-            />
-          </Form.Item>
-          <Form.Item name="victimPhone" label="SĐT">
-            <Input maxLength={50} />
-          </Form.Item>
-        </div>
-        <Form.Item name="victimAddress" label="Địa chỉ nạn nhân">
-          <Input />
-        </Form.Item>
+        <Form.List name="victims" initialValue={[{ name: "" }]}>
+          {(fields, { add, remove }) => (
+            <div style={{ marginBottom: 16 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 8,
+                  borderBottom: "1px solid #f0f0f0",
+                  paddingBottom: 4,
+                }}
+              >
+                <span style={{ fontWeight: 600 }}>Thông tin nạn nhân</span>
+                <Button
+                  type="dashed"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={() => add({ name: "" })}
+                >
+                  Thêm nạn nhân
+                </Button>
+              </div>
+
+              {fields.map((field, index) => (
+                <div
+                  key={field.key}
+                  style={{
+                    backgroundColor: "#fafafa",
+                    padding: 12,
+                    borderRadius: 6,
+                    marginBottom: 12,
+                    border: "1px solid #f0f0f0",
+                  }}
+                >
+                  {fields.length > 1 && (
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontWeight: 500,
+                          fontSize: 13,
+                          color: "#595959",
+                        }}
+                      >
+                        Nạn nhân #{index + 1}
+                      </span>
+                      <Button
+                        type="text"
+                        danger
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        onClick={() => remove(field.name)}
+                      >
+                        Xóa
+                      </Button>
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr 1fr",
+                      gap: 12,
+                    }}
+                  >
+                    <Form.Item
+                      name={[field.name, "name"]}
+                      label="Họ tên"
+                      rules={[
+                        {
+                          required: true,
+                          whitespace: true,
+                          message: "Vui lòng nhập họ tên nạn nhân.",
+                        },
+                      ]}
+                    >
+                      <Input maxLength={200} />
+                    </Form.Item>
+                    <Form.Item name={[field.name, "age"]} label="Tuổi">
+                      <InputNumber min={0} max={200} style={{ width: "100%" }} />
+                    </Form.Item>
+                    <Form.Item name={[field.name, "gender"]} label="Giới tính">
+                      <Select
+                        allowClear
+                        options={Object.entries(VICTIM_GENDER_CONFIG).map(
+                          ([value, cfg]) => ({
+                            value: Number(value),
+                            label: cfg.label,
+                          }),
+                        )}
+                      />
+                    </Form.Item>
+                    <Form.Item name={[field.name, "phone"]} label="SĐT">
+                      <Input maxLength={50} />
+                    </Form.Item>
+                  </div>
+                  <Form.Item
+                    name={[field.name, "address"]}
+                    label="Địa chỉ nạn nhân"
+                    style={{ marginBottom: 0 }}
+                  >
+                    <Input />
+                  </Form.Item>
+                </div>
+              ))}
+            </div>
+          )}
+        </Form.List>
 
         <div
           style={{

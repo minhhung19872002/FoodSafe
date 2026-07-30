@@ -54,6 +54,7 @@ import {
   useExportIncidents,
 } from "../api/foodPoisoningMutations";
 import { CaseEditorModal } from "../components/CaseEditorModal";
+import { CaseDetailModal } from "../components/CaseDetailModal";
 import { IncidentEditorModal } from "../components/IncidentEditorModal";
 import { PoisoningErrorReportsModal } from "../components/PoisoningErrorReportsModal";
 import { PoisoningMap } from "../components/PoisoningMap";
@@ -151,22 +152,46 @@ function CasesTab() {
       render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
     },
     {
-      title: "Nạn nhân",
-      dataIndex: "victimName",
-      width: 160,
-      ellipsis: true,
-    },
-    {
-      title: "Giới tính",
-      dataIndex: "victimGender",
+      title: "Số NN",
+      key: "victimCount",
       width: 80,
-      render: (v?: VictimGender) => (v ? VICTIM_GENDER_CONFIG[v]?.label : "—"),
+      align: "center",
+      render: (_: unknown, r: FoodPoisoningCase) => {
+        const count = r.victims?.length || (r.victimName ? 1 : 0);
+        return <Tag color="blue">{count}</Tag>;
+      },
     },
     {
-      title: "Tuổi",
-      dataIndex: "victimAge",
-      width: 60,
-      render: (v?: number) => v ?? "—",
+      title: "Danh sách nạn nhân",
+      key: "victimsList",
+      width: 240,
+      ellipsis: true,
+      render: (_: unknown, r: FoodPoisoningCase) => {
+        const list =
+          r.victims && r.victims.length > 0
+            ? r.victims
+            : r.victimName
+            ? [
+                {
+                  name: r.victimName,
+                  age: r.victimAge,
+                  gender: r.victimGender,
+                },
+              ]
+            : [];
+        if (list.length === 0) return "—";
+        return list
+          .map((v) => {
+            const meta = [
+              v.gender ? VICTIM_GENDER_CONFIG[v.gender]?.label : null,
+              v.age ? `${v.age}t` : null,
+            ]
+              .filter(Boolean)
+              .join(", ");
+            return meta ? `${v.name} (${meta})` : v.name;
+          })
+          .join("; ");
+      },
     },
     {
       title: "Thực phẩm nghi ngờ",
@@ -362,76 +387,10 @@ function CasesTab() {
         onSubmit={handleSubmit}
       />
 
-      <RecordDetailDrawer
-        title="Chi tiết ca ngộ độc"
-        record={detailCase}
+      <CaseDetailModal
+        open={Boolean(detailCase)}
+        item={detailCase}
         onClose={() => setDetailCase(null)}
-        fields={[
-          { label: "Mã ca", render: (r) => r.caseCode },
-          {
-            label: "Trạng thái",
-            render: (r) => {
-              const cfg = POISONING_CASE_STATUS_CONFIG[r.status];
-              return <Tag color={cfg.color}>{cfg.label}</Tag>;
-            },
-          },
-          { label: "Ngày báo cáo", render: (r) => formatDate(r.reportDate) },
-          {
-            label: "Ngày xảy ra",
-            render: (r) => formatDateTime(r.occurrenceDate),
-          },
-          { label: "Nạn nhân", render: (r) => r.victimName },
-          {
-            label: "Giới tính",
-            render: (r) =>
-              r.victimGender
-                ? VICTIM_GENDER_CONFIG[r.victimGender]?.label
-                : null,
-          },
-          { label: "Tuổi", render: (r) => r.victimAge },
-          { label: "SĐT nạn nhân", render: (r) => r.victimPhone },
-          {
-            label: "Địa chỉ nạn nhân",
-            render: (r) => r.victimAddress,
-            span: 2,
-          },
-          { label: "Địa điểm", render: (r) => r.locationDescription, span: 2 },
-          { label: "Thực phẩm nghi ngờ", render: (r) => r.suspectedFood },
-          { label: "Nguồn thực phẩm", render: (r) => r.foodSource },
-          {
-            label: "Ngày chế biến",
-            render: (r) => formatDate(r.foodPreparationDate),
-          },
-          {
-            label: "Thời gian khởi phát",
-            render: (r) => formatDateTime(r.onsetTime),
-          },
-          { label: "Triệu chứng", render: (r) => r.symptoms, span: 2 },
-          { label: "Cơ sở y tế", render: (r) => r.medicalFacility },
-          {
-            label: "Ngày điều trị",
-            render: (r) => formatDate(r.treatmentStartDate),
-          },
-          {
-            label: "Kết quả điều trị",
-            render: (r) => {
-              if (!r.treatmentResult) return null;
-              const cfg = TREATMENT_RESULT_CONFIG[r.treatmentResult];
-              return <Tag color={cfg.color}>{cfg.label}</Tag>;
-            },
-          },
-          { label: "Người báo cáo", render: (r) => r.reporterName },
-          { label: "SĐT người báo", render: (r) => r.reporterPhone },
-          { label: "Đơn vị báo cáo", render: (r) => r.reporterOrganization },
-          { label: "Quan hệ nạn nhân", render: (r) => r.reporterRelation },
-          {
-            label: "Ngày gửi báo cáo",
-            render: (r) => formatDate(r.reportedAt),
-          },
-          { label: "Ngày xác minh", render: (r) => formatDate(r.verifiedAt) },
-          { label: "Ngày tạo", render: (r) => formatDate(r.creationTime) },
-          { label: "Ghi chú", render: (r) => r.notes, span: 2 },
-        ]}
       />
 
       <PoisoningErrorReportsModal

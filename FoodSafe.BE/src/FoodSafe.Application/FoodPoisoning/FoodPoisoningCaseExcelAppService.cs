@@ -90,7 +90,9 @@ public class FoodPoisoningCaseExcelAppService :
                 sheet.Cell(rowNumber, 3).Value = item.OccurrenceDate.Value;
                 sheet.Cell(rowNumber, 3).Style.DateFormat.Format = "dd/MM/yyyy";
             }
-            sheet.Cell(rowNumber, 4).Value = item.VictimName ?? string.Empty;
+            sheet.Cell(rowNumber, 4).Value = item.Victims.Count > 0
+                ? string.Join(", ", item.Victims.Select(v => v.Name))
+                : (item.VictimName ?? string.Empty);
             if (item.VictimAge.HasValue)
                 sheet.Cell(rowNumber, 5).Value = item.VictimAge.Value;
             sheet.Cell(rowNumber, 6).Value = item.VictimGender switch
