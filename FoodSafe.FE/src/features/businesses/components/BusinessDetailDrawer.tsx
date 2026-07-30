@@ -231,7 +231,14 @@ const TESTING_OUTCOME_CONFIG: Record<number, { color: string; label: string }> =
 
 const testingColumns: ColumnsType<BusinessTestingRecord> = [
   { title: "Mã mẫu", dataIndex: "sampleCode", width: 130 },
-  { title: "Tên mẫu", dataIndex: "sampleName" },
+  { title: "Tên mẫu", dataIndex: "sampleName", ellipsis: true },
+  {
+    title: "Cơ sở KN",
+    dataIndex: "testingCenterName",
+    width: 150,
+    ellipsis: true,
+    render: (v?: string) => v ?? "—",
+  },
   {
     title: "Ngày lấy mẫu",
     dataIndex: "sampleDate",
@@ -263,6 +270,7 @@ function TestingResultTable({ businessId }: { businessId: string }) {
     <Table
       rowKey="id"
       size="small"
+      scroll={{ x: "max-content" }}
       loading={isLoading}
       columns={testingColumns}
       dataSource={data?.items}

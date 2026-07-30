@@ -25,6 +25,7 @@ import { extractApiError } from "@/lib/apiError";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RowActions } from "@/components/RowActions";
 import { saveDownload } from "@/utils/download";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   useRelatedInspectionResultOptions,
@@ -63,11 +64,14 @@ export default function TestingResultsPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const canPickInspectionResult = hasPermission(INSPECTION_RESULTS_VIEW);
   const [filter, setFilter] = useState<TestingResultFilter>({});
+  const [searchText, setSearchText] = useState("");
+  const debouncedSearchText = useDebounce(searchText);
   const [filterResetKey, setFilterResetKey] = useState(0);
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const results = useTestingResults({
     ...filter,
+    filter: debouncedSearchText.trim() || undefined,
     sorting,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
@@ -228,8 +232,9 @@ export default function TestingResultsPage() {
           placeholder="Mã mẫu, tên mẫu"
           allowClear
           style={{ width: 200 }}
-          onSearch={(v) => {
-            setFilter((f) => ({ ...f, filter: v || undefined }));
+          value={searchText}
+          onChange={(e) => {
+            setSearchText(e.target.value);
             pagination.resetToFirstPage();
           }}
         />
@@ -274,13 +279,14 @@ export default function TestingResultsPage() {
         />
         <ClearFiltersButton
           active={Boolean(
-            filter.filter?.trim() ||
+            searchText.trim() ||
             filter.businessId ||
             filter.testingCenterId ||
             filter.outcome !== undefined,
           )}
           onClick={() => {
             setFilter({});
+            setSearchText("");
             setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
@@ -294,7 +300,11 @@ export default function TestingResultsPage() {
           loading={exportMut.isPending}
           onClick={() =>
             exportMut.mutate(
-              { ...filter, sorting },
+              {
+                ...filter,
+                filter: debouncedSearchText.trim() || undefined,
+                sorting,
+              },
               {
                 onSuccess: (file) => saveDownload(file.blob, file.fileName),
                 onError: (error) => void message.error(extractApiError(error)),

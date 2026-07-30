@@ -156,6 +156,7 @@ export interface BusinessTestingRecord {
   id: string;
   sampleCode: string;
   sampleName: string;
+  testingCenterName?: string;
   sampleDate: string;
   outcome: number;
   failedCriteria: string | null;
