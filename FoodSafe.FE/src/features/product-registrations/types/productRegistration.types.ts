@@ -86,6 +86,7 @@ export interface FileDownload {
 
 export type PublicProductRegistration = Pick<
   ProductRegistration,
+  | "id"
   | "registrationNumber"
   | "receiptNumber"
   | "registrationDate"

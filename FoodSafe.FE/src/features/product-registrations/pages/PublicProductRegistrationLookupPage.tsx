@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Card, Descriptions, Input, Space, Typography } from "antd";
+import { DownloadOutlined } from "@ant-design/icons";
 import { StatusBadge } from "@/components/StatusBadge";
 import { productRegistrationApi } from "../api/productRegistrationApi";
 import type { PublicProductRegistration } from "../types/productRegistration.types";
@@ -8,6 +9,7 @@ export default function PublicProductRegistrationLookupPage() {
   const [number, setNumber] = useState("");
   const [result, setResult] = useState<PublicProductRegistration>();
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
 
   const lookup = async () => {
@@ -60,7 +62,32 @@ export default function PublicProductRegistrationLookupPage() {
         </Typography.Paragraph>
       )}
       {result && (
-        <Card style={{ marginTop: 24 }}>
+        <Card
+          style={{ marginTop: 24 }}
+          extra={
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              loading={downloading}
+              onClick={async () => {
+                setDownloading(true);
+                try {
+                  const file = await productRegistrationApi.downloadPdf(result.id);
+                  const url = URL.createObjectURL(file.blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = file.fileName;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                } finally {
+                  setDownloading(false);
+                }
+              }}
+            >
+              Tải giấy chứng nhận
+            </Button>
+          }
+        >
           <Descriptions bordered column={1}>
             <Descriptions.Item label="Số đăng ký">
               {result.registrationNumber}
