@@ -27,6 +27,7 @@ import {
   profileApi,
   type UpdateUserProfileInput,
 } from "../api/profileApi";
+import { useAuthStore } from "../store/authStore";
 
 const profileKeys = { all: ["user-profile"] as const };
 
@@ -35,6 +36,7 @@ export default function ProfilePage() {
   const queryClient = useQueryClient();
   const [form] = Form.useForm<UpdateUserProfileInput>();
   const [avatarVersion, setAvatarVersion] = useState(0);
+  const bumpAvatarVersion = useAuthStore((s) => s.bumpAvatarVersion);
 
   const { data, isLoading } = useQuery({
     queryKey: profileKeys.all,
@@ -57,6 +59,7 @@ export default function ProfilePage() {
     onSuccess: () => {
       refresh();
       setAvatarVersion((v) => v + 1);
+      bumpAvatarVersion();
       void message.success("Đã cập nhật ảnh đại diện.");
     },
     onError: () => void message.error("Không thể tải lên ảnh đại diện."),
@@ -66,6 +69,7 @@ export default function ProfilePage() {
     onSuccess: () => {
       refresh();
       setAvatarVersion((v) => v + 1);
+      bumpAvatarVersion();
       void message.success("Đã xóa ảnh đại diện.");
     },
     onError: () => void message.error("Không thể xóa ảnh đại diện."),

@@ -20,6 +20,7 @@ import {
 import { GlobalSearchBox } from "@/features/global-search/components/GlobalSearchBox";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { avatarUrl } from "@/features/auth/api/profileApi";
 import { useLogout } from "@/features/auth/api/authMutations";
 import { ROUTE_PERMISSIONS } from "./routePermissions";
 import { brandingLogoUrl, useBranding } from "@/hooks/useBranding";
@@ -322,6 +323,7 @@ export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore((s) => s.user);
+  const avatarVersion = useAuthStore((s) => s.avatarVersion);
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const logoutMutation = useLogout();
   const branding = useBranding();
@@ -464,6 +466,7 @@ export function AppLayout() {
               <div className="app-header-user">
                 <Avatar
                   size={32}
+                  src={`${avatarUrl}?v=${avatarVersion}`}
                   style={{
                     backgroundColor: brand.green,
                     fontSize: 13,
