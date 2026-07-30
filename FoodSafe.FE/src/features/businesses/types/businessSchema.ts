@@ -22,13 +22,20 @@ export const businessSchema = z
       .max(50)
       .optional()
       .or(z.literal("")),
-    contactPhone: z.string().trim().max(50).optional().or(z.literal("")),
+    contactPhone: z
+      .string()
+      .trim()
+      .min(1, "Vui lòng nhập số điện thoại")
+      .max(50)
+      .refine(
+        (value) => /^(0\d{9,10}|(\+84|84)\d{9,10})$/.test(value.replace(/[\s.-]/g, "")),
+        "Số điện thoại không hợp lệ",
+      ),
     contactEmail: z
       .string()
       .trim()
-      .email("Email không hợp lệ")
-      .optional()
-      .or(z.literal("")),
+      .min(1, "Vui lòng nhập email")
+      .email("Email không hợp lệ"),
     contactWebsite: z
       .string()
       .trim()

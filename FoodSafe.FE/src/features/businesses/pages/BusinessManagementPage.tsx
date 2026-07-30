@@ -217,6 +217,21 @@ export default function BusinessManagementPage() {
     });
   };
 
+  const resetBusinessFilters = () => {
+    setBusinessFilter("");
+    setBusinessStatus(undefined);
+    setBusinessTypeId(undefined);
+    setBusinessClassificationId(undefined);
+    setProvinceId(undefined);
+    businessPagination.resetToFirstPage();
+  };
+
+  const resetProductFilters = () => {
+    setProductFilter("");
+    setProductStatus(undefined);
+    productPagination.resetToFirstPage();
+  };
+
   const saveProduct = (input: ProductInput | UpdateProductInput) => {
     if (editingProduct) {
       updateProduct.mutate(
@@ -356,6 +371,8 @@ export default function BusinessManagementPage() {
           productPagination.resetToFirstPage();
         }}
         onCreateBusiness={() => setCreatingBusiness(true)}
+        onResetBusinessFilters={resetBusinessFilters}
+        onResetProductFilters={resetProductFilters}
         onImportBusiness={() => setImportingBusinesses(true)}
         onExportBusiness={() =>
           exportBusinesses.mutate(

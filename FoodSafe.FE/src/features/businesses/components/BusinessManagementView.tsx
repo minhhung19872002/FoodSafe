@@ -1,5 +1,6 @@
 import type { TablePaginationConfig } from "antd";
 import {
+  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   EnvironmentOutlined,
@@ -74,8 +75,10 @@ interface BusinessManagementViewProps {
   onCreateBusiness: () => void;
   onImportBusiness: () => void;
   onExportBusiness: () => void;
+  onResetBusinessFilters: () => void;
   onImportProduct: () => void;
   onExportProduct: () => void;
+  onResetProductFilters: () => void;
   onEditBusiness: (business: Business) => void;
   onDeleteBusiness: (id: string) => void;
   onShowMap: (business: Business) => void;
@@ -140,6 +143,16 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     }
   };
 
+  const businessTypeLabelById = new Map(
+    props.businessTypeOptions.map((option) => [option.value, option.label]),
+  );
+  const classificationLabelById = new Map(
+    props.classificationOptions.map((option) => [option.value, option.label]),
+  );
+  const provinceLabelById = new Map(
+    props.provinceOptions.map((option) => [option.value, option.label]),
+  );
+
   const businessColumns: ColumnsType<Business> = [
     {
       title: "Mã",
@@ -155,6 +168,36 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
       sorter: true,
       sortOrder: sortOrderFor("name"),
       showSorterTooltip: false,
+    },
+    {
+      title: "Loại hình",
+      dataIndex: "businessTypeId",
+      width: 160,
+      ellipsis: true,
+      render: (value?: string) =>
+        (value && businessTypeLabelById.get(value)) || "—",
+    },
+    {
+      title: "Mã số thuế",
+      dataIndex: "taxCode",
+      width: 130,
+      render: (value?: string) => value || "—",
+    },
+    {
+      title: "Phân loại",
+      dataIndex: "businessClassificationId",
+      width: 140,
+      ellipsis: true,
+      render: (value?: string) =>
+        (value && classificationLabelById.get(value)) || "—",
+    },
+    {
+      title: "Tỉnh/Thành phố",
+      dataIndex: "addressProvinceId",
+      width: 160,
+      ellipsis: true,
+      render: (value?: string) =>
+        (value && provinceLabelById.get(value)) || "—",
     },
     { title: "Địa chỉ", dataIndex: "addressStreet", ellipsis: true },
     {
@@ -380,6 +423,12 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               style={{ width: 160 }}
               options={props.provinceOptions}
             />
+            <Button
+              icon={<ClearOutlined />}
+              onClick={props.onResetBusinessFilters}
+            >
+              Đặt lại bộ lọc
+            </Button>
             {props.permissions.createBusiness && (
               <Button
                 type="primary"
@@ -404,7 +453,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
           <Table
             rowKey="id"
             size="middle"
-            scroll={{ x: 900 }}
+            scroll={{ x: 1500 }}
             loading={props.loading}
             dataSource={props.businesses}
             onRow={(business) => ({
@@ -441,6 +490,12 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
                 { value: PRODUCT_STATUS.Inactive, label: "Ngừng kinh doanh" },
               ]}
             />
+            <Button
+              icon={<ClearOutlined />}
+              onClick={props.onResetProductFilters}
+            >
+              Đặt lại bộ lọc
+            </Button>
             {props.permissions.createProduct && (
               <Button
                 type="primary"

@@ -102,6 +102,8 @@ export function BusinessEditorModal({
   } = useForm<BusinessFormValues>({
     resolver: zodResolver(businessSchema),
     defaultValues: defaults,
+    mode: "onBlur",
+    reValidateMode: "onChange",
   });
   const { message } = App.useApp();
   const provinceId = useWatch({ control, name: "addressProvinceId" });
@@ -371,6 +373,7 @@ export function BusinessEditorModal({
         </Form.Item>
         <Collapse
           ghost
+          defaultActiveKey={["contact"]}
           items={[
             {
               key: "contact",
@@ -399,7 +402,14 @@ export function BusinessEditorModal({
                   </Row>
                   <Row gutter={16}>
                     <Col span={8}>
-                      <Form.Item label="Điện thoại">
+                      <Form.Item
+                        label="Điện thoại"
+                        required
+                        validateStatus={
+                          errors.contactPhone ? "error" : undefined
+                        }
+                        help={errors.contactPhone?.message}
+                      >
                         <Controller
                           control={control}
                           name="contactPhone"
@@ -410,6 +420,7 @@ export function BusinessEditorModal({
                     <Col span={8}>
                       <Form.Item
                         label="Email"
+                        required
                         validateStatus={
                           errors.contactEmail ? "error" : undefined
                         }
