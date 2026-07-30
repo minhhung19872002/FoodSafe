@@ -11,9 +11,21 @@ import type {
   UpdateProductInput,
 } from "../types/business.types";
 
+function isBusinessOptionsQueryKey(key: readonly unknown[]): boolean {
+  return key.some(
+    (segment) => segment === "business-options" || segment === "businesses",
+  );
+}
+
 function useInvalidateBusinessManagement() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: businessKeys.all });
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: businessKeys.all });
+    void queryClient.invalidateQueries({
+      predicate: (query) => isBusinessOptionsQueryKey(query.queryKey),
+      refetchType: "all",
+    });
+  };
 }
 
 export function useSuggestBusinessCode() {
