@@ -24,7 +24,7 @@ const PORTAL_TILES: PortalTile[] = [
   {
     title: "Cơ sở SXKD thực phẩm",
     description: "Kiểm tra cơ sở đã đăng ký quản lý ATTP",
-    to: "/tra-cuu-co-so",
+    to: "/tra-cuu-chung?tab=businesses",
     icon: "🏭",
     iconBg: brand.greenPale,
     iconColor: brand.greenDark,
@@ -32,7 +32,7 @@ const PORTAL_TILES: PortalTile[] = [
   {
     title: "Hồ sơ tự công bố",
     description: "Sản phẩm doanh nghiệp tự công bố chất lượng",
-    to: "/tra-cuu-tu-cong-bo",
+    to: "/tra-cuu-giay-phep?tab=self-declarations",
     icon: "📄",
     iconBg: "#E8EFFD",
     iconColor: brand.navy,
@@ -40,7 +40,7 @@ const PORTAL_TILES: PortalTile[] = [
   {
     title: "Đăng ký công bố sản phẩm",
     description: "TPBVSK, phụ gia, sản phẩm dinh dưỡng đặc biệt",
-    to: "/tra-cuu-dang-ky-cong-bo",
+    to: "/tra-cuu-giay-phep?tab=product-registrations",
     icon: "✅",
     iconBg: brand.greenPale,
     iconColor: brand.greenDark,
@@ -48,7 +48,7 @@ const PORTAL_TILES: PortalTile[] = [
   {
     title: "Giấy đủ điều kiện ATTP",
     description: "Cơ sở sản xuất, kinh doanh, dịch vụ ăn uống",
-    to: "/tra-cuu-giay-du-dieu-kien",
+    to: "/tra-cuu-giay-phep?tab=eligibility",
     icon: "🛡️",
     iconBg: "#FBF1E2",
     iconColor: brand.amber,
@@ -56,7 +56,7 @@ const PORTAL_TILES: PortalTile[] = [
   {
     title: "Xác nhận quảng cáo",
     description: "Nội dung quảng cáo thực phẩm đã được duyệt",
-    to: "/tra-cuu-dang-ky-quang-cao",
+    to: "/tra-cuu-giay-phep?tab=ad-registrations",
     icon: "📢",
     iconBg: "#F3E8FD",
     iconColor: "#6B21A8",
@@ -72,7 +72,7 @@ const PORTAL_TILES: PortalTile[] = [
   {
     title: "GCN xuất khẩu thực phẩm",
     description: "Giấy chứng nhận phục vụ xuất khẩu thực phẩm",
-    to: "/tra-cuu-gcn-xuat-khau",
+    to: "/tra-cuu-giay-phep?tab=export-food",
     icon: "🚢",
     iconBg: "#FBEAE7",
     iconColor: brand.red,
@@ -96,7 +96,7 @@ const PORTAL_TILES: PortalTile[] = [
   {
     title: "Kết quả kiểm nghiệm",
     description: "Tra cứu kết quả kiểm nghiệm mẫu thực phẩm",
-    to: "/tra-cuu-ket-qua-kiem-nghiem",
+    to: "/tra-cuu-chung?tab=testing-results",
     icon: "🔬",
     iconBg: "#F3E8FD",
     iconColor: "#6B21A8",

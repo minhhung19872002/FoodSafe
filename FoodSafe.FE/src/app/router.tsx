@@ -14,14 +14,11 @@ import {
   BusinessManagementPage,
   SelfDeclarationPage,
   ProductRegistrationPage,
-  PublicProductRegistrationLookupPage,
   AdvertisementRegistrationPage,
   EligibilityCertificatePage,
-  PublicEligibilityCertificateLookupPage,
   VsattpCommitmentPage,
   CfsCertificatePage,
   ExportFoodCertificatePage,
-  PublicExportFoodCertificateLookupPage,
   InspectionPage,
   AlertsNewsPage,
   FoodPoisoningPage,
@@ -29,9 +26,6 @@ import {
   RiskAnalysisPage,
   TestingResultsPage,
   DocumentsPage,
-  PublicBusinessLookupPage,
-  PublicSelfDeclarationLookupPage,
-  PublicAdRegistrationLookupPage,
   CompleteInitialPasswordChangePage,
   DashboardPage,
   ForgotPasswordPage,
@@ -160,11 +154,7 @@ const appRoutes: RouteObject[] = [
   // ── End public portal routes ──────────────────────────────────────────────
   {
     path: "/tra-cuu-giay-du-dieu-kien",
-    element: (
-      <Suspense fallback={<RouteLoading />}>
-        <PublicEligibilityCertificateLookupPage />
-      </Suspense>
-    ),
+    element: <Navigate to="/tra-cuu-giay-phep?tab=eligibility" replace />,
   },
   {
     path: "/tra-cuu-cfs",
@@ -172,43 +162,23 @@ const appRoutes: RouteObject[] = [
   },
   {
     path: "/tra-cuu-gcn-xuat-khau",
-    element: (
-      <Suspense fallback={<RouteLoading />}>
-        <PublicExportFoodCertificateLookupPage />
-      </Suspense>
-    ),
+    element: <Navigate to="/tra-cuu-giay-phep?tab=export-food" replace />,
   },
   {
     path: "/tra-cuu-dang-ky-cong-bo",
-    element: (
-      <Suspense fallback={<RouteLoading />}>
-        <PublicProductRegistrationLookupPage />
-      </Suspense>
-    ),
+    element: <Navigate to="/tra-cuu-giay-phep?tab=product-registrations" replace />,
   },
   {
     path: "/tra-cuu-co-so",
-    element: (
-      <Suspense fallback={<RouteLoading />}>
-        <PublicBusinessLookupPage />
-      </Suspense>
-    ),
+    element: <Navigate to="/tra-cuu-chung?tab=businesses" replace />,
   },
   {
     path: "/tra-cuu-tu-cong-bo",
-    element: (
-      <Suspense fallback={<RouteLoading />}>
-        <PublicSelfDeclarationLookupPage />
-      </Suspense>
-    ),
+    element: <Navigate to="/tra-cuu-giay-phep?tab=self-declarations" replace />,
   },
   {
     path: "/tra-cuu-dang-ky-quang-cao",
-    element: (
-      <Suspense fallback={<RouteLoading />}>
-        <PublicAdRegistrationLookupPage />
-      </Suspense>
-    ),
+    element: <Navigate to="/tra-cuu-giay-phep?tab=ad-registrations" replace />,
   },
   {
     path: "/login",

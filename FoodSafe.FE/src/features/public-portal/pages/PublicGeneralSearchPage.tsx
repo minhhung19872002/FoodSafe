@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Alert,
@@ -528,7 +528,20 @@ function InspectionResultSearchTab() {
   );
 }
 
+const GENERAL_TAB_KEYS = new Set([
+  "businesses",
+  "products",
+  "testing-results",
+  "inspection-results",
+]);
+
 export default function PublicGeneralSearchPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = useMemo(() => {
+    const param = searchParams.get("tab");
+    return param && GENERAL_TAB_KEYS.has(param) ? param : "businesses";
+  }, []);
+
   return (
     <PublicShell>
       <Typography.Title level={3} style={{ marginBottom: 24 }}>
@@ -536,6 +549,10 @@ export default function PublicGeneralSearchPage() {
       </Typography.Title>
 
       <Tabs
+        defaultActiveKey={initialTab}
+        onChange={(key) =>
+          setSearchParams({ tab: key }, { replace: true })
+        }
         items={[
           {
             key: "businesses",
