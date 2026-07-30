@@ -139,6 +139,7 @@ public sealed class ProductListInput : PagedAndSortedResultRequestDto
 public sealed class ProductDto : FullAuditedEntityDto<Guid>
 {
     public Guid BusinessId { get; set; }
+    public string? BusinessName { get; set; }
     public Guid OrganizationId { get; set; }
     public string? Code { get; set; }
     public string Name { get; set; } = string.Empty;

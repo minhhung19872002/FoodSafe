@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { TablePaginationConfig } from "antd";
 import {
   DeleteOutlined,
@@ -167,6 +168,27 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     props.provinceOptions.map((option) => [option.value, option.label]),
   );
 
+  const productBusinessRowSpans = useMemo(() => {
+    const spans: number[] = [];
+    let i = 0;
+    while (i < props.products.length) {
+      const currentId = props.products[i].businessId;
+      let count = 1;
+      while (
+        i + count < props.products.length &&
+        props.products[i + count].businessId === currentId
+      ) {
+        count++;
+      }
+      spans[i] = count;
+      for (let j = 1; j < count; j++) {
+        spans[i + j] = 0;
+      }
+      i += count;
+    }
+    return spans;
+  }, [props.products]);
+
   const businessColumns: ColumnsType<Business> = [
     {
       title: "Mã",
@@ -321,6 +343,21 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
       showSorterTooltip: false,
     },
     { title: "Thương hiệu", dataIndex: "brandName", ellipsis: true },
+    {
+      title: "Cơ sở SXKD",
+      dataIndex: "businessName",
+      ellipsis: true,
+      onCell: (_, index) => {
+        const span = index !== undefined ? productBusinessRowSpans[index] : 1;
+        const groupEndsOnLastRow =
+          index !== undefined && index + span === props.products.length;
+        return {
+          rowSpan: span,
+          style: groupEndsOnLastRow ? { borderBottom: "none" } : undefined,
+        };
+      },
+      render: (v?: string) => <strong>{v || "—"}</strong>,
+    },
     { title: "Nhà sản xuất", dataIndex: "manufacturer", ellipsis: true },
     {
       title: "Trạng thái",

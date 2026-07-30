@@ -166,6 +166,7 @@ export interface BusinessTestingRecord {
 export interface Product {
   id: string;
   businessId: string;
+  businessName?: string;
   organizationId: string;
   code?: string;
   name: string;

@@ -65,7 +65,10 @@ public class ProductAppService : ApplicationService, IProductAppService
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount),
             _cancellationTokens.Token);
-        return new(total, ObjectMapper.Map<List<Product>, List<ProductDto>>(items));
+
+        var dtos = ObjectMapper.Map<List<Product>, List<ProductDto>>(items);
+        await PopulateBusinessNamesAsync(dtos);
+        return new(total, dtos);
     }
 
     public async Task<IReadOnlyList<ProductBusinessOptionDto>>
@@ -94,9 +97,30 @@ public class ProductAppService : ApplicationService, IProductAppService
             _cancellationTokens.Token);
     }
 
-    public async Task<ProductDto> GetAsync(Guid id) =>
-        ObjectMapper.Map<Product, ProductDto>(
-            await GetScopedAsync(id, DataScopeOperation.View));
+    public async Task<ProductDto> GetAsync(Guid id)
+    {
+        var product = await GetScopedAsync(id, DataScopeOperation.View);
+        var dto = ObjectMapper.Map<Product, ProductDto>(product);
+        await PopulateBusinessNamesAsync([dto]);
+        return dto;
+    }
+
+    private async Task PopulateBusinessNamesAsync(List<ProductDto> dtos)
+    {
+        var businessIds = dtos.Select(x => x.BusinessId).Distinct().ToList();
+        if (businessIds.Count == 0) return;
+
+        var businessQuery = await _businesses.GetQueryableAsync();
+        var businessRows = await AsyncExecuter.ToListAsync(
+            businessQuery.Where(x => businessIds.Contains(x.Id))
+                .Select(x => new { x.Id, x.Name }),
+            _cancellationTokens.Token);
+        var map = businessRows.ToDictionary(x => x.Id, x => x.Name);
+        foreach (var dto in dtos)
+        {
+            dto.BusinessName = map.GetValueOrDefault(dto.BusinessId);
+        }
+    }
 
     [Authorize(FoodSafePermissions.BusinessManagement.Products.Create)]
     public async Task<ProductDto> CreateAsync(UpsertProductDto input)
