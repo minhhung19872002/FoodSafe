@@ -19,6 +19,9 @@ public class PublicSearchRequestDto
 
     // Accepts both string category names (news) and numeric enum values (alerts, risk analyses)
     public IList<string>? Categories { get; set; }
+
+    // Numeric severity/risk-level values (AlertSeverity for alerts, RiskLevel for risk analyses)
+    public IList<string>? Severities { get; set; }
 }
 
 public class PublicBusinessSearchRequestDto : PublicSearchRequestDto

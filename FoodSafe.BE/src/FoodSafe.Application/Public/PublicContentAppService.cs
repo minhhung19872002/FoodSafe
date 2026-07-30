@@ -127,6 +127,15 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
                 query = query.Where(a => cats.Contains(a.Category));
         }
 
+        if (input.Severities is { Count: > 0 })
+        {
+            var sevs = input.Severities
+                .Select(s => int.TryParse(s, out var n) ? (AlertSeverity?)n : null)
+                .Where(s => s.HasValue).Select(s => s!.Value).ToList();
+            if (sevs.Count > 0)
+                query = query.Where(a => sevs.Contains(a.Severity));
+        }
+
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
         var items = await AsyncExecuter.ToListAsync(
             query.OrderByDescending(a => a.PublishedAt)
@@ -303,6 +312,15 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
                 .Where(c => c.HasValue).Select(c => c!.Value).ToList();
             if (cats.Count > 0)
                 query = query.Where(r => cats.Contains(r.Category));
+        }
+
+        if (input.Severities is { Count: > 0 })
+        {
+            var levels = input.Severities
+                .Select(s => int.TryParse(s, out var n) ? (RiskLevel?)n : null)
+                .Where(s => s.HasValue).Select(s => s!.Value).ToList();
+            if (levels.Count > 0)
+                query = query.Where(r => levels.Contains(r.RiskLevel));
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);

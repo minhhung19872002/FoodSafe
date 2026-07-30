@@ -100,6 +100,7 @@ export const ALERT_SEVERITY_CONFIG: Record<
 
 export interface PublicAlertFilter extends PagedFilter {
   Categories?: AlertCategory[];
+  Severities?: AlertSeverity[];
 }
 
 // ── Risk level ───────────────────────────────────────────────────────────────
@@ -255,6 +256,7 @@ export interface PublicNewsDetail extends PublicNewsItem {
 
 export interface PublicRiskAnalysisFilter extends PagedFilter {
   Categories?: AlertCategory[];
+  Severities?: RiskLevel[];
 }
 
 export interface PublicRiskAnalysis {

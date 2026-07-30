@@ -255,19 +255,19 @@ function NewsListTab() {
 
 // ── Alerts tab ────────────────────────────────────────────────────────────────
 
-const ALERT_CATEGORY_OPTIONS = Object.entries(ALERT_CATEGORY_CONFIG).map(
+const ALERT_SEVERITY_OPTIONS = Object.entries(ALERT_SEVERITY_CONFIG).map(
   ([value, cfg]) => ({ value: Number(value), label: cfg.label }),
 );
 
 function AlertsTab() {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
-  const [alertCategories, setAlertCategories] = useState<AlertCategory[]>([]);
+  const [alertSeverities, setAlertSeverities] = useState<AlertSeverity[]>([]);
   const pagination = useTablePagination(20);
 
   const { data, isFetching, isError } = usePublicAlerts({
     Keyword: submittedKeyword || undefined,
-    Categories: alertCategories.length > 0 ? alertCategories : undefined,
+    Severities: alertSeverities.length > 0 ? alertSeverities : undefined,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   });
@@ -277,8 +277,8 @@ function AlertsTab() {
     setSubmittedKeyword(keyword);
   };
 
-  const handleCategoryChange = (values: AlertCategory[]) => {
-    setAlertCategories(values);
+  const handleSeverityChange = (values: AlertSeverity[]) => {
+    setAlertSeverities(values);
     pagination.resetToFirstPage();
   };
 
@@ -296,10 +296,10 @@ function AlertsTab() {
         <Select
           mode="multiple"
           allowClear
-          placeholder="Loại cảnh báo"
-          value={alertCategories}
-          onChange={handleCategoryChange}
-          options={ALERT_CATEGORY_OPTIONS}
+          placeholder="Mức độ"
+          value={alertSeverities}
+          onChange={handleSeverityChange}
+          options={ALERT_SEVERITY_OPTIONS}
           style={{ minWidth: 200 }}
           maxTagCount="responsive"
         />
@@ -373,15 +373,19 @@ function AlertsTab() {
 
 // ── Risk analysis tab ─────────────────────────────────────────────────────────
 
+const RISK_LEVEL_OPTIONS = Object.entries(RISK_LEVEL_CONFIG).map(
+  ([value, cfg]) => ({ value: Number(value), label: cfg.label }),
+);
+
 function RiskAnalysisTab() {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
-  const [riskCategories, setRiskCategories] = useState<AlertCategory[]>([]);
+  const [riskLevels, setRiskLevels] = useState<RiskLevel[]>([]);
   const pagination = useTablePagination(20);
 
   const { data, isFetching, isError } = usePublicRiskAnalyses({
     Keyword: submittedKeyword || undefined,
-    Categories: riskCategories.length > 0 ? riskCategories : undefined,
+    Severities: riskLevels.length > 0 ? riskLevels : undefined,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   });
@@ -391,8 +395,8 @@ function RiskAnalysisTab() {
     setSubmittedKeyword(keyword);
   };
 
-  const handleCategoryChange = (values: AlertCategory[]) => {
-    setRiskCategories(values);
+  const handleRiskLevelChange = (values: RiskLevel[]) => {
+    setRiskLevels(values);
     pagination.resetToFirstPage();
   };
 
@@ -410,10 +414,10 @@ function RiskAnalysisTab() {
         <Select
           mode="multiple"
           allowClear
-          placeholder="Chọn chuyên mục"
-          value={riskCategories}
-          onChange={handleCategoryChange}
-          options={ALERT_CATEGORY_OPTIONS}
+          placeholder="Mức nguy cơ"
+          value={riskLevels}
+          onChange={handleRiskLevelChange}
+          options={RISK_LEVEL_OPTIONS}
           style={{ minWidth: 220 }}
           maxTagCount="responsive"
         />
