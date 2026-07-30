@@ -82,34 +82,38 @@ export const businessRelatedApi = {
       declarationNumber: string;
       declarationDate: string;
       productName: string;
-      purpose?: string;
       expiryDate?: string;
+      daysUntilExpiry?: number;
       status?: number;
     }>("/v1/app/self-declaration", params, (raw) => ({
       id: raw.id,
       number: raw.declarationNumber,
       name: raw.productName,
-      content: raw.purpose,
       status: raw.status,
       issuedDate: raw.declarationDate,
       expiryDate: raw.expiryDate,
+      daysUntilExpiry: raw.daysUntilExpiry,
     })),
 
   productRegistrations: (params: RelatedListParams) =>
     fetchRelated<{
       id: string;
       registrationNumber: string;
+      receiptNumber?: string;
       issueDate?: string;
       expiryDate?: string;
+      daysUntilExpiry?: number;
       productName: string;
       status?: number;
     }>("/v1/app/product-registration", params, (raw) => ({
       id: raw.id,
       number: raw.registrationNumber,
+      receiptNumber: raw.receiptNumber,
       name: raw.productName,
       status: raw.status,
       issuedDate: raw.issueDate,
       expiryDate: raw.expiryDate,
+      daysUntilExpiry: raw.daysUntilExpiry,
     })),
 
   adRegistrations: (params: RelatedListParams) =>
@@ -118,17 +122,19 @@ export const businessRelatedApi = {
       registrationNumber: string;
       issueDate?: string;
       expiryDate?: string;
+      daysUntilExpiry?: number;
       products?: { name: string }[];
-      contentDescription?: string;
+      advertisementTypeName?: string;
       status?: number;
     }>("/v1/app/advertisement-registration", params, (raw) => ({
       id: raw.id,
       number: raw.registrationNumber,
       name: raw.products?.map((p) => p.name).join(", "),
-      content: raw.contentDescription,
+      advertisementTypeName: raw.advertisementTypeName,
       status: raw.status,
       issuedDate: raw.issueDate,
       expiryDate: raw.expiryDate,
+      daysUntilExpiry: raw.daysUntilExpiry,
     })),
 
   eligibilityCertificates: (params: RelatedListParams) =>
@@ -137,15 +143,17 @@ export const businessRelatedApi = {
       certificateNumber: string;
       issueDate?: string;
       expiryDate?: string;
-      certificationScope?: string;
+      daysUntilExpiry?: number;
+      certifyingAuthority?: string;
       status?: number;
     }>("/v1/app/eligibility-certificate", params, (raw) => ({
       id: raw.id,
       number: raw.certificateNumber,
-      content: raw.certificationScope,
+      certifyingAuthority: raw.certifyingAuthority,
       status: raw.status,
       issuedDate: raw.issueDate,
       expiryDate: raw.expiryDate,
+      daysUntilExpiry: raw.daysUntilExpiry,
     })),
 
   cfsCertificates: (params: RelatedListParams) =>
@@ -154,15 +162,19 @@ export const businessRelatedApi = {
       certificateNumber: string;
       issueDate?: string;
       expiryDate?: string;
+      daysUntilExpiry?: number;
       linkedProductName?: string;
+      destinationCountryName?: string;
       status?: number;
     }>("/v1/app/cfs-certificate", params, (raw) => ({
       id: raw.id,
       number: raw.certificateNumber,
       name: raw.linkedProductName,
+      destinationCountryName: raw.destinationCountryName,
       status: raw.status,
       issuedDate: raw.issueDate,
       expiryDate: raw.expiryDate,
+      daysUntilExpiry: raw.daysUntilExpiry,
     })),
 
   exportFoodCertificates: (params: RelatedListParams) =>
@@ -171,15 +183,21 @@ export const businessRelatedApi = {
       certificateNumber: string;
       issueDate?: string;
       expiryDate?: string;
+      daysUntilExpiry?: number;
       linkedProductName?: string;
+      destinationCountryName?: string;
+      lotNumber?: string;
       status?: number;
     }>("/v1/app/export-food-certificate", params, (raw) => ({
       id: raw.id,
       number: raw.certificateNumber,
       name: raw.linkedProductName,
+      destinationCountryName: raw.destinationCountryName,
+      lotNumber: raw.lotNumber,
       status: raw.status,
       issuedDate: raw.issueDate,
       expiryDate: raw.expiryDate,
+      daysUntilExpiry: raw.daysUntilExpiry,
     })),
 
   async inspectionResults(

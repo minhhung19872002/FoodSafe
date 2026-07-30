@@ -8,7 +8,13 @@ import type {
 
 function useRefresh() {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: trKeys.all });
+  return () => {
+    void qc.invalidateQueries({ queryKey: trKeys.all });
+    void qc.invalidateQueries({
+      queryKey: ["business-related", "testingResults"],
+      refetchType: "all",
+    });
+  };
 }
 
 export function useCreateTestingResult() {

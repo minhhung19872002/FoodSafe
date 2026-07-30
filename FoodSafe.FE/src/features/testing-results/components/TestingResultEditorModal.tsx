@@ -81,14 +81,8 @@ export function TestingResultEditorModal(props: Props) {
   const [storagePath, setStoragePath] = useState<string | undefined>();
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
-    form.resetFields();
-    setStoragePath(undefined);
-    setUploading(false);
-    if (item) {
-      setStoragePath(item.storagePath ?? undefined);
-      form.setFieldsValue({
+  const initialValues: Partial<FormValues> = item
+    ? {
         sampleCode: item.sampleCode,
         sampleName: item.sampleName,
         description: item.description ?? undefined,
@@ -106,14 +100,19 @@ export function TestingResultEditorModal(props: Props) {
         failedCriteria: item.failedCriteria ?? undefined,
         certificateNumber: item.certificateNumber ?? undefined,
         isPublic: item.isPublic,
-      });
-    } else {
-      form.setFieldsValue({
+      }
+    : {
         outcome: TESTING_OUTCOME.Pass,
         isPublic: false,
-      });
-    }
-  }, [form, open, item]);
+      };
+
+  // `storagePath`/`uploading` back the PDF upload widget, plain React state
+  // outside the AntD Form — it doesn't need the Form's key-remount trick.
+  useEffect(() => {
+    if (!open) return;
+    setStoragePath(item?.storagePath ?? undefined);
+    setUploading(false);
+  }, [open, item]);
 
   // Changing the facility invalidates anything scoped to the previous one.
   const handleBusinessChange = (businessId?: string) => {
@@ -159,8 +158,12 @@ export function TestingResultEditorModal(props: Props) {
       okButtonProps={{ disabled: uploading }}
     >
       <Form
+        // Remount theo kết quả đang sửa để `initialValues` được áp dụng lại khi
+        // mở modal cho bản ghi khác trước lúc nội dung cũ bị destroy.
+        key={item?.id ?? "new"}
         form={form}
         layout="vertical"
+        initialValues={initialValues}
         preserve={false}
         onFinish={(values) =>
           props.onSubmit({

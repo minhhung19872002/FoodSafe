@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   AuditOutlined,
@@ -126,6 +127,7 @@ function PlansTab() {
 
   const planPagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
+  const debouncedFilter = useDebounce(filter);
   const [statusFilter, setStatusFilter] = useState<InspectionPlanStatus>();
   const [planTypeFilter, setPlanTypeFilter] = useState<InspectionPlanType>();
   const [yearFilter, setYearFilter] = useState<number>();
@@ -139,7 +141,7 @@ function PlansTab() {
   const [detailPlan, setDetailPlan] = useState<InspectionPlan | null>(null);
 
   const queryFilter = {
-    filter: filter || undefined,
+    filter: debouncedFilter.trim() || undefined,
     status: statusFilter,
     planType: planTypeFilter,
     year: yearFilter,
@@ -404,8 +406,9 @@ function PlansTab() {
           allowClear
           placeholder="Mã kế hoạch, tên kế hoạch"
           style={{ width: 260 }}
-          onSearch={(v) => {
-            setFilter(v.trim());
+          value={filter}
+          onChange={(e) => {
+            setFilter(e.target.value);
             planPagination.resetToFirstPage();
           }}
         />
@@ -677,6 +680,7 @@ function ResultsTab() {
 
   const resultsPagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
+  const debouncedFilter = useDebounce(filter);
   const [inspectionType, setInspectionType] = useState<InspectionType>();
   const [overallResult, setOverallResult] = useState<InspectionOverallResult>();
   const [filterResetKey, setFilterResetKey] = useState(0);
@@ -693,7 +697,7 @@ function ResultsTab() {
   );
 
   const queryFilter = {
-    filter: filter || undefined,
+    filter: debouncedFilter.trim() || undefined,
     inspectionType,
     overallResult,
     sorting: resultSorting,
@@ -916,8 +920,9 @@ function ResultsTab() {
           allowClear
           placeholder="Cơ sở, trưởng đoàn, số QĐ"
           style={{ width: 260 }}
-          onSearch={(v) => {
-            setFilter(v.trim());
+          value={filter}
+          onChange={(e) => {
+            setFilter(e.target.value);
             resultsPagination.resetToFirstPage();
           }}
         />

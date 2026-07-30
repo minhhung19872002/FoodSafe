@@ -18,14 +18,21 @@ function usePlanRefresh<TVariables>(
   });
 }
 
+function invalidateInspectionResults(queryClient: ReturnType<typeof useQueryClient>) {
+  void queryClient.invalidateQueries({ queryKey: inspectionResultKeys.all });
+  void queryClient.invalidateQueries({
+    queryKey: ["business-related", "inspections"],
+    refetchType: "all",
+  });
+}
+
 function useResultRefresh<TVariables>(
   mutationFn: (variables: TVariables) => Promise<unknown>,
 ) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: inspectionResultKeys.all }),
+    onSuccess: () => invalidateInspectionResults(queryClient),
   });
 }
 
@@ -92,9 +99,7 @@ export function useCreateInspectionResult() {
   return useMutation({
     mutationFn: inspectionResultApi.create,
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: inspectionResultKeys.all,
-      });
+      invalidateInspectionResults(queryClient);
       void queryClient.invalidateQueries({
         queryKey: inspectionPlanKeys.all,
       });

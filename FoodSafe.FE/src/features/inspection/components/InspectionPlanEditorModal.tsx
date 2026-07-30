@@ -59,11 +59,8 @@ export function InspectionPlanEditorModal(props: Props) {
   const [itemsError, setItemsError] = useState<string>();
   const { open, item } = props;
 
-  useEffect(() => {
-    if (!open) return;
-    setItemsError(undefined);
-    if (item) {
-      form.setFieldsValue({
+  const initialValues: Partial<FormValues> = item
+    ? {
         planCode: item.planCode,
         title: item.title,
         planType: item.planType,
@@ -72,24 +69,29 @@ export function InspectionPlanEditorModal(props: Props) {
         endDate: item.endDate ? dayjs(item.endDate) : undefined,
         description: item.description,
         objectives: item.objectives,
-      });
-      setItems(
-        item.items.map((i) => ({
-          key: i.id,
-          businessId: i.businessId,
-          sequenceNumber: i.sequenceNumber,
-          plannedDate: i.plannedDate,
-          notes: i.notes,
-        })),
-      );
-    } else {
-      form.setFieldsValue({
+      }
+    : {
         year: new Date().getFullYear(),
         planType: INSPECTION_PLAN_TYPE.Annual,
-      });
-      setItems([]);
-    }
-  }, [form, open, item]);
+      };
+
+  // `items` backs the PlanItemsEditor table, a plain React state outside the
+  // AntD Form — it doesn't need the Form's key-remount trick to stay in sync.
+  useEffect(() => {
+    if (!open) return;
+    setItemsError(undefined);
+    setItems(
+      item
+        ? item.items.map((i) => ({
+            key: i.id,
+            businessId: i.businessId,
+            sequenceNumber: i.sequenceNumber,
+            plannedDate: i.plannedDate,
+            notes: i.notes,
+          }))
+        : [],
+    );
+  }, [open, item]);
 
   const validateItems = (): boolean => {
     if (items.some((row) => !row.businessId)) {
@@ -145,7 +147,15 @@ export function InspectionPlanEditorModal(props: Props) {
       onOk={handleSubmit}
       destroyOnHidden
     >
-      <Form form={form} layout="vertical" preserve={false}>
+      <Form
+        // Remount theo kế hoạch đang sửa để `initialValues` được áp dụng lại khi
+        // mở modal cho bản ghi khác trước lúc nội dung cũ bị destroy.
+        key={item?.id ?? "new"}
+        form={form}
+        layout="vertical"
+        initialValues={initialValues}
+        preserve={false}
+      >
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
         >

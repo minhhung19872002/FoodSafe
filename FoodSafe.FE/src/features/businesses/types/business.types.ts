@@ -130,10 +130,17 @@ export interface BusinessRelatedRecord {
   id: string;
   number?: string;
   name?: string;
-  content?: string;
-  status?: number | string;
+  status?: number;
   issuedDate?: string;
   expiryDate?: string;
+  daysUntilExpiry?: number;
+  // Module-specific fields, each populated only by the adapter it's meaningful
+  // for — mirrors the "prominent" column each feature's own list page shows.
+  receiptNumber?: string;
+  advertisementTypeName?: string;
+  certifyingAuthority?: string;
+  destinationCountryName?: string;
+  lotNumber?: string;
 }
 
 export interface BusinessInspectionRecord {
@@ -149,6 +156,7 @@ export interface BusinessTestingRecord {
   id: string;
   sampleCode: string;
   sampleName: string;
+  testingCenterName?: string;
   sampleDate: string;
   outcome: number;
   failedCriteria: string | null;
