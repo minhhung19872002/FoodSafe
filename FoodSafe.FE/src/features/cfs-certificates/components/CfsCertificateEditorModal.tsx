@@ -23,6 +23,7 @@ interface FormValues {
 interface Props {
   open: boolean;
   registration?: CfsCertificate;
+  defaultBusinessId?: string;
   businesses: BusinessOption[];
   products: ProductOption[];
   countries: CountryOption[];
@@ -62,11 +63,11 @@ export function CfsCertificateEditorModal(props: Props) {
         certifyingAuthority: registration.certifyingAuthority,
         notes: registration.notes,
       }
-    : { issueDate: dayjs() };
+    : { issueDate: dayjs(), businessId: props.defaultBusinessId };
 
   useEffect(() => {
     if (!open) return;
-    onBusinessChange(registration?.businessId);
+    onBusinessChange(registration?.businessId ?? props.defaultBusinessId);
   }, [open, registration, onBusinessChange]);
 
   return (
@@ -113,7 +114,7 @@ export function CfsCertificateEditorModal(props: Props) {
               <Select
                 showSearch
                 optionFilterProp="label"
-                disabled={Boolean(registration)}
+                disabled={Boolean(registration) || Boolean(props.defaultBusinessId)}
                 options={businessOptions.map((item) => ({
                   value: item.id,
                   label: item.code ? `${item.code} — ${item.name}` : item.name,

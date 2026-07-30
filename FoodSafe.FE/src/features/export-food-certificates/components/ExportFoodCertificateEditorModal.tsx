@@ -34,6 +34,7 @@ interface FormValues {
 interface Props {
   open: boolean;
   registration?: ExportFoodCertificate;
+  defaultBusinessId?: string;
   businesses: BusinessOption[];
   products: ProductOption[];
   countries: CountryOption[];
@@ -75,11 +76,11 @@ export function ExportFoodCertificateEditorModal(props: Props) {
         quantity: registration.quantity,
         quantityUnit: registration.quantityUnit,
       }
-    : { issueDate: dayjs() };
+    : { issueDate: dayjs(), businessId: props.defaultBusinessId };
 
   useEffect(() => {
     if (!open) return;
-    onBusinessChange(registration?.businessId);
+    onBusinessChange(registration?.businessId ?? props.defaultBusinessId);
   }, [open, registration, onBusinessChange]);
 
   return (
@@ -127,7 +128,7 @@ export function ExportFoodCertificateEditorModal(props: Props) {
               <Select
                 showSearch
                 optionFilterProp="label"
-                disabled={Boolean(registration)}
+                disabled={Boolean(registration) || Boolean(props.defaultBusinessId)}
                 options={businessOptions.map((item) => ({
                   value: item.id,
                   label: item.code ? `${item.code} — ${item.name}` : item.name,

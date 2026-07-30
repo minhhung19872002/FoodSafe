@@ -25,6 +25,7 @@ interface FormValues {
 interface Props {
   open: boolean;
   registration?: ProductRegistration;
+  defaultBusinessId?: string;
   businesses: BusinessOption[];
   products: ProductOption[];
   productsLoading: boolean;
@@ -68,11 +69,11 @@ export function ProductRegistrationEditorModal(props: Props) {
         certifyingAuthority: registration.certifyingAuthority,
         notes: registration.notes,
       }
-    : { registrationDate: dayjs() };
+    : { registrationDate: dayjs(), businessId: props.defaultBusinessId };
 
   useEffect(() => {
     if (!open) return;
-    onBusinessChange(registration?.businessId);
+    onBusinessChange(registration?.businessId ?? props.defaultBusinessId);
   }, [open, registration, onBusinessChange]);
 
   return (
@@ -121,7 +122,7 @@ export function ProductRegistrationEditorModal(props: Props) {
             showSearch
             optionFilterProp="label"
             placeholder="Chọn cơ sở"
-            disabled={Boolean(registration)}
+            disabled={Boolean(registration) || Boolean(props.defaultBusinessId)}
             options={businessOptions.map((item) => ({
               value: item.id,
               label: item.code ? `${item.code} — ${item.name}` : item.name,

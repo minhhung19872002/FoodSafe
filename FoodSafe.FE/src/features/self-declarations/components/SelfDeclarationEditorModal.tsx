@@ -23,6 +23,7 @@ interface FormValues {
 interface Props {
   open: boolean;
   declaration?: SelfDeclaration;
+  defaultBusinessId?: string;
   businesses: BusinessOption[];
   products: ProductOption[];
   productsLoading: boolean;
@@ -62,11 +63,11 @@ export function SelfDeclarationEditorModal(props: Props) {
           : undefined,
         notes: declaration.notes,
       }
-    : { declarationDate: dayjs() };
+    : { declarationDate: dayjs(), businessId: props.defaultBusinessId };
 
   useEffect(() => {
     if (!open) return;
-    onBusinessChange(declaration?.businessId);
+    onBusinessChange(declaration?.businessId ?? props.defaultBusinessId);
   }, [open, declaration, onBusinessChange]);
 
   return (
@@ -116,7 +117,7 @@ export function SelfDeclarationEditorModal(props: Props) {
             showSearch
             optionFilterProp="label"
             placeholder="Chọn cơ sở"
-            disabled={Boolean(props.declaration)}
+            disabled={Boolean(props.declaration) || Boolean(props.defaultBusinessId)}
             options={businessOptions.map((item) => ({
               value: item.id,
               label: item.code ? `${item.code} — ${item.name}` : item.name,

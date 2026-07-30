@@ -16,6 +16,15 @@ import type {
 import { PRODUCT_STATUS } from "../types/business.types";
 import { useProductList } from "../api/businessQueries";
 import { BusinessVsattpCommitmentsTab } from "./BusinessVsattpCommitmentsTab";
+import {
+  ProductTabContent,
+  SelfDeclarationTabContent,
+  ProductRegistrationTabContent,
+  AdvertisementTabContent,
+  EligibilityCertificateTabContent,
+  CfsTabContent,
+  ExportFoodTabContent,
+} from "./profile-tabs";
 
 interface Props {
   business?: Business;
@@ -356,60 +365,106 @@ export function BusinessDetailDrawer({ business, onClose }: Props) {
             {
               key: "products",
               label: "Sản phẩm",
-              children: <ProductTable businessId={business.id} />,
+              children: (
+                <ProductTabContent businessId={business.id}>
+                  <ProductTable businessId={business.id} />
+                </ProductTabContent>
+              ),
             },
             {
               key: "self-declarations",
               label: "Tự công bố",
               children: (
-                <RelatedTable
+                <SelfDeclarationTabContent
                   businessId={business.id}
-                  kind="selfDeclarations"
-                />
+                  businessName={business.name}
+                  businessCode={business.code}
+                >
+                  <RelatedTable
+                    businessId={business.id}
+                    kind="selfDeclarations"
+                  />
+                </SelfDeclarationTabContent>
               ),
             },
             {
               key: "product-registrations",
               label: "Đăng ký công bố",
               children: (
-                <RelatedTable
+                <ProductRegistrationTabContent
                   businessId={business.id}
-                  kind="productRegistrations"
-                />
+                  businessName={business.name}
+                  businessCode={business.code}
+                >
+                  <RelatedTable
+                    businessId={business.id}
+                    kind="productRegistrations"
+                  />
+                </ProductRegistrationTabContent>
               ),
             },
             {
               key: "ad-registrations",
               label: "Quảng cáo",
               children: (
-                <RelatedTable businessId={business.id} kind="adRegistrations" />
+                <AdvertisementTabContent
+                  businessId={business.id}
+                  businessName={business.name}
+                  businessCode={business.code}
+                >
+                  <RelatedTable
+                    businessId={business.id}
+                    kind="adRegistrations"
+                  />
+                </AdvertisementTabContent>
               ),
             },
             {
               key: "eligibility",
               label: "GCN đủ điều kiện",
               children: (
-                <RelatedTable
+                <EligibilityCertificateTabContent
                   businessId={business.id}
-                  kind="eligibilityCertificates"
-                />
+                  businessName={business.name}
+                  businessCode={business.code}
+                >
+                  <RelatedTable
+                    businessId={business.id}
+                    kind="eligibilityCertificates"
+                  />
+                </EligibilityCertificateTabContent>
               ),
             },
             {
               key: "cfs",
               label: "CFS",
               children: (
-                <RelatedTable businessId={business.id} kind="cfsCertificates" />
+                <CfsTabContent
+                  businessId={business.id}
+                  businessName={business.name}
+                  businessCode={business.code}
+                >
+                  <RelatedTable
+                    businessId={business.id}
+                    kind="cfsCertificates"
+                  />
+                </CfsTabContent>
               ),
             },
             {
               key: "export-food",
               label: "GCN xuất khẩu",
               children: (
-                <RelatedTable
+                <ExportFoodTabContent
                   businessId={business.id}
-                  kind="exportFoodCertificates"
-                />
+                  businessName={business.name}
+                  businessCode={business.code}
+                >
+                  <RelatedTable
+                    businessId={business.id}
+                    kind="exportFoodCertificates"
+                  />
+                </ExportFoodTabContent>
               ),
             },
             {

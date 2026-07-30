@@ -19,6 +19,7 @@ interface Values {
 interface Props {
   open: boolean;
   item?: EligibilityCertificate;
+  defaultBusinessId?: string;
   businesses: BusinessOption[];
   saving: boolean;
   onCancel: () => void;
@@ -39,7 +40,7 @@ export function EligibilityCertificateEditorModal(props: Props) {
         certificationScope: item.certificationScope,
         notes: item.notes,
       }
-    : { issueDate: dayjs() };
+    : { issueDate: dayjs(), businessId: props.defaultBusinessId };
 
   return (
     <Modal
@@ -87,7 +88,7 @@ export function EligibilityCertificateEditorModal(props: Props) {
             showSearch
             optionFilterProp="label"
             placeholder="Chọn cơ sở SXKD"
-            disabled={Boolean(item)}
+            disabled={Boolean(item) || Boolean(props.defaultBusinessId)}
             options={props.businesses.map((x) => ({
               value: x.id,
               label: x.code ? `${x.code} — ${x.name}` : x.name,

@@ -24,6 +24,7 @@ interface Values {
 interface Props {
   open: boolean;
   item?: AdvertisementRegistration;
+  defaultBusinessId?: string;
   businesses: BusinessOption[];
   products: ProductOption[];
   types: AdvertisementTypeOption[];
@@ -57,11 +58,11 @@ export function AdvertisementRegistrationEditorModal(props: Props) {
         contentDescription: item.contentDescription,
         notes: item.notes,
       }
-    : { registrationDate: dayjs(), productIds: [] };
+    : { registrationDate: dayjs(), productIds: [], businessId: props.defaultBusinessId };
 
   useEffect(() => {
     if (!open) return;
-    onBusinessChange(item?.businessId);
+    onBusinessChange(item?.businessId ?? props.defaultBusinessId);
   }, [open, item, onBusinessChange]);
 
   return (
@@ -110,7 +111,7 @@ export function AdvertisementRegistrationEditorModal(props: Props) {
           <Select
             showSearch
             optionFilterProp="label"
-            disabled={Boolean(item)}
+            disabled={Boolean(item) || Boolean(props.defaultBusinessId)}
             options={businessOptions.map((x) => ({
               value: x.id,
               label: x.code ? `${x.code} — ${x.name}` : x.name,

@@ -15,6 +15,7 @@ import {
 interface ProductEditorModalProps {
   open: boolean;
   product?: Product;
+  defaultBusinessId?: string;
   businesses: ProductBusinessOption[];
   productGroups: CatalogItem[];
   countries: CatalogItem[];
@@ -45,6 +46,7 @@ const optional = (value: string | undefined) => value || undefined;
 export function ProductEditorModal({
   open,
   product,
+  defaultBusinessId,
   businesses,
   productGroups,
   countries,
@@ -67,7 +69,7 @@ export function ProductEditorModal({
       reset({
         ...defaults,
         ...product,
-        businessId: product?.businessId ?? "",
+        businessId: product?.businessId ?? defaultBusinessId ?? "",
         productGroupId: product?.productGroupId ?? "",
         manufacturingCountryId: product?.manufacturingCountryId ?? "",
       });
@@ -120,7 +122,7 @@ export function ProductEditorModal({
                 aria-label="Cơ sở"
                 showSearch
                 optionFilterProp="label"
-                disabled={Boolean(product)}
+                disabled={Boolean(product) || Boolean(defaultBusinessId)}
                 options={businesses.map((item) => ({
                   value: item.id,
                   label: `${item.code ?? "—"} — ${item.name}`,
