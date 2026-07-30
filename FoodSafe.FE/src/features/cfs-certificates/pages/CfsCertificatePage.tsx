@@ -162,7 +162,7 @@ export default function CfsCertificatePage() {
       render: (value?: string) => value || "—",
     },
     {
-      title: "Quốc gia đích",
+      title: "Quốc gia nhập khẩu",
       dataIndex: "destinationCountryName",
       width: 155,
     },
@@ -423,7 +423,7 @@ export default function CfsCertificatePage() {
           },
           { label: "Cơ sở SXKD", render: (r) => r.businessName, span: 2 },
           { label: "Sản phẩm", render: (r) => r.linkedProductName, span: 2 },
-          { label: "Quốc gia đích", render: (r) => r.destinationCountryName },
+          { label: "Quốc gia nhập khẩu", render: (r) => r.destinationCountryName },
           { label: "Cơ quan cấp", render: (r) => r.certifyingAuthority },
           {
             label: "Ngày cấp",

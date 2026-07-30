@@ -128,7 +128,7 @@ export function CfsCertificateEditorModal(props: Props) {
           <Col span={12}>
             <Form.Item
               name="destinationCountryId"
-              label="Quốc gia đích"
+              label="Quốc gia nhập khẩu"
               rules={[{ required: true, message: "Vui lòng chọn quốc gia." }]}
             >
               <Select

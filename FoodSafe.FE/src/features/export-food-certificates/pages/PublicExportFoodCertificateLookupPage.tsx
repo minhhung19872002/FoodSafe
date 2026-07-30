@@ -81,7 +81,7 @@ export default function PublicExportFoodCertificateLookupPage() {
             <Descriptions.Item label="Sản phẩm">
               {result.productName || "—"}
             </Descriptions.Item>
-            <Descriptions.Item label="Quốc gia đích">
+            <Descriptions.Item label="Quốc gia nhập khẩu">
               {result.destinationCountryName || "—"}
             </Descriptions.Item>
             <Descriptions.Item label="Số lô">

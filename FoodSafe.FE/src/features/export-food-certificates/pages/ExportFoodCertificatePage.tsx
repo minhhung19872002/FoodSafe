@@ -185,7 +185,7 @@ export default function ExportFoodCertificatePage() {
       },
     },
     {
-      title: "Quốc gia đích",
+      title: "Quốc gia nhập khẩu",
       dataIndex: "destinationCountryName",
       width: 155,
       render: (value?: string) => value || "—",
@@ -458,7 +458,7 @@ export default function ExportFoodCertificatePage() {
             },
           },
           {
-            label: "Quốc gia đích",
+            label: "Quốc gia nhập khẩu",
             render: (r) => r.destinationCountryName,
             span: 2,
           },

@@ -134,7 +134,7 @@ const RELATED_COLUMNS: Record<
     numberColumn("Số CFS"),
     nameColumn(),
     {
-      title: "Quốc gia đích",
+      title: "Quốc gia nhập khẩu",
       dataIndex: "destinationCountryName",
       width: 150,
       render: dash,
@@ -148,7 +148,7 @@ const RELATED_COLUMNS: Record<
     nameColumn(),
     { title: "Số lô", dataIndex: "lotNumber", width: 110, render: dash },
     {
-      title: "Quốc gia đích",
+      title: "Quốc gia nhập khẩu",
       dataIndex: "destinationCountryName",
       width: 150,
       render: dash,

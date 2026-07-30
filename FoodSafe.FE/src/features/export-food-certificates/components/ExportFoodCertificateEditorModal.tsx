@@ -140,7 +140,7 @@ export function ExportFoodCertificateEditorModal(props: Props) {
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="destinationCountryId" label="Quốc gia đích">
+            <Form.Item name="destinationCountryId" label="Quốc gia nhập khẩu">
               <Select
                 allowClear
                 showSearch

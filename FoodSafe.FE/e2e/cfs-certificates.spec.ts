@@ -127,7 +127,7 @@ test.describe("CFS certificate management", () => {
     await page.getByRole("button", { name: "Thêm CFS" }).click();
     await page.getByRole("combobox", { name: "Cơ sở SXKD" }).click();
     await page.getByText(businessName, { exact: false }).last().click();
-    await page.getByRole("combobox", { name: "Quốc gia đích" }).click();
+    await page.getByRole("combobox", { name: "Quốc gia nhập khẩu" }).click();
     await page
       .getByText(`${country.code} — ${country.name}`, { exact: false })
       .last()
