@@ -6,6 +6,8 @@ describe("businessSchema", () => {
     const result = businessSchema.safeParse({
       organizationId: "3a22ab2f-d5b4-d30a-2357-a2300aef9677",
       name: "Cơ sở kiểm thử",
+      contactPhone: "0901234567",
+      contactEmail: "test@foodsafe.local",
       productGroupIds: [],
       status: 1,
       hasEligibilityCertificate: false,

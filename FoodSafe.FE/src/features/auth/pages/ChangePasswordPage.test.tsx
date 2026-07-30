@@ -25,7 +25,7 @@ function renderPage(props: { isExpired?: boolean } = {}) {
 
 describe("ChangePasswordPage", () => {
   it("renders change password form", async () => {
-    renderPage();
+    const { container } = renderPage();
 
     expect(
       screen.getByRole("heading", { name: "Đổi mật khẩu" }),
@@ -34,7 +34,7 @@ describe("ChangePasswordPage", () => {
       screen.getByPlaceholderText("Nhập mật khẩu hiện tại"),
     ).toBeInTheDocument();
     expect(
-      screen.getByPlaceholderText(/Tối thiểu 8 ký tự/),
+      container.querySelector('input[name="newPassword"]'),
     ).toBeInTheDocument();
     expect(
       screen.getByPlaceholderText("Nhập lại mật khẩu mới"),

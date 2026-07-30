@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { App } from "antd";
 import { HttpResponse, http } from "msw";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { server } from "@/test/server";
@@ -17,7 +18,9 @@ function renderPage() {
   return render(
     <QueryClientProvider client={client}>
       <App>
-        <FoodPoisoningPage />
+        <MemoryRouter>
+          <FoodPoisoningPage />
+        </MemoryRouter>
       </App>
     </QueryClientProvider>,
   );
