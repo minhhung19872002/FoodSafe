@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Button, Card, Descriptions, Input, Space, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Descriptions,
+  Input,
+  Space,
+  Typography,
+} from "antd";
+import { FilePdfOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import { StatusBadge } from "@/components/StatusBadge";
 import { publicSelfDeclarationApi } from "../api/businessApi";
 import type { PublicSelfDeclaration } from "../types/business.types";
@@ -9,6 +18,7 @@ export default function PublicSelfDeclarationLookupPage() {
   const [result, setResult] = useState<PublicSelfDeclaration>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const lookup = async () => {
     if (!number.trim()) return;
@@ -73,6 +83,27 @@ export default function PublicSelfDeclarationLookupPage() {
               {new Date(result.declarationDate).toLocaleDateString("vi-VN")}
             </Descriptions.Item>
           </Descriptions>
+          <Space style={{ marginTop: 16 }}>
+            <Button
+              type="primary"
+              icon={<FilePdfOutlined />}
+              href={`/api/v1/public/self-declarations/${result.id}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Tải giấy chứng nhận (PDF)
+            </Button>
+            <Button
+              icon={<InfoCircleOutlined />}
+              onClick={() =>
+                navigate(
+                  `/tra-cuu-giay-phep?tab=self-declarations&detail=${result.id}`,
+                )
+              }
+            >
+              Xem chi tiết đầy đủ
+            </Button>
+          </Space>
         </Card>
       )}
     </main>

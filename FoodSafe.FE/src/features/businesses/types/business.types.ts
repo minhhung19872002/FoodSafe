@@ -277,6 +277,7 @@ export interface PublicBusiness {
 }
 
 export interface PublicSelfDeclaration {
+  id: string;
   declarationNumber: string;
   declarationDate: string;
   productName: string;

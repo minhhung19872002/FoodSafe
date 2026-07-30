@@ -5,6 +5,7 @@ namespace FoodSafe.Application.Contracts.BusinessManagement;
 
 public sealed class PublicSelfDeclarationDto
 {
+    public Guid Id { get; set; }
     public string DeclarationNumber { get; set; } = string.Empty;
     public DateTime DeclarationDate { get; set; }
     public string ProductName { get; set; } = string.Empty;

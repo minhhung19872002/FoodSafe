@@ -48,6 +48,7 @@ public class PublicSelfDeclarationAppService :
 
         return new PublicSelfDeclarationDto
         {
+            Id = declaration.Id,
             DeclarationNumber = declaration.DeclarationNumber,
             DeclarationDate = declaration.DeclarationDate,
             ProductName = declaration.ProductName,
