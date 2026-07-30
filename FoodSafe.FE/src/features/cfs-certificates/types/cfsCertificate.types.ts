@@ -87,6 +87,7 @@ export interface FileDownload {
 }
 
 export interface PublicCfsCertificate {
+  id: string;
   certificateNumber: string;
   issueDate: string;
   expiryDate?: string;

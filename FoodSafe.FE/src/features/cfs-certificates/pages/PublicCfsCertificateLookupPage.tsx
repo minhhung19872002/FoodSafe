@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Card, Descriptions, Input, Space, Typography } from "antd";
+import { FilePdfOutlined } from "@ant-design/icons";
 import { StatusBadge } from "@/components/StatusBadge";
 import { cfsCertificateApi } from "../api/cfsCertificateApi";
 import type { PublicCfsCertificate } from "../types/cfsCertificate.types";
@@ -8,6 +9,7 @@ export default function PublicCfsCertificateLookupPage() {
   const [number, setNumber] = useState("");
   const [result, setResult] = useState<PublicCfsCertificate>();
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
 
   const lookup = async () => {
@@ -21,6 +23,24 @@ export default function PublicCfsCertificateLookupPage() {
       setError("Không tìm thấy chứng nhận lưu hành tự do (CFS).");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const downloadPdf = async () => {
+    if (!result) return;
+    setDownloading(true);
+    try {
+      const { blob, fileName } = await cfsCertificateApi.downloadPdf(
+        result.id,
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -60,7 +80,19 @@ export default function PublicCfsCertificateLookupPage() {
         </Typography.Paragraph>
       )}
       {result && (
-        <Card style={{ marginTop: 24 }}>
+        <Card
+          style={{ marginTop: 24 }}
+          extra={
+            <Button
+              type="primary"
+              icon={<FilePdfOutlined />}
+              loading={downloading}
+              onClick={() => void downloadPdf()}
+            >
+              Tải giấy chứng nhận (PDF)
+            </Button>
+          }
+        >
           <Descriptions bordered column={1}>
             <Descriptions.Item label="Số CFS">
               {result.certificateNumber}

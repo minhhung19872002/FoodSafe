@@ -64,7 +64,7 @@ const PORTAL_TILES: PortalTile[] = [
   {
     title: "Chứng nhận CFS",
     description: "Certificate of Free Sale cho sản phẩm xuất khẩu",
-    to: "/tra-cuu-cfs",
+    to: "/tra-cuu-giay-phep?tab=cfs",
     icon: "🌐",
     iconBg: "#E8EFFD",
     iconColor: brand.navy,

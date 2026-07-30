@@ -73,6 +73,7 @@ public sealed class RevokeCfsCertificateDto
 
 public sealed class PublicCfsCertificateDto
 {
+    public Guid Id { get; set; }
     public string CertificateNumber { get; set; } = string.Empty;
     public DateTime IssueDate { get; set; }
     public DateTime? ExpiryDate { get; set; }

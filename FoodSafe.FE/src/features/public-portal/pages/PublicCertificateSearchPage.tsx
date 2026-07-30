@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Alert,
   Button,
@@ -453,7 +454,15 @@ const TAB_ITEMS = [
   },
 ];
 
+const VALID_TAB_KEYS = new Set(TAB_ITEMS.map((t) => t.key));
+
 export default function PublicCertificateSearchPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = useMemo(() => {
+    const param = searchParams.get("tab");
+    return param && VALID_TAB_KEYS.has(param) ? param : TAB_ITEMS[0].key;
+  }, []);
+
   return (
     <PublicShell>
       <Typography.Title level={3} style={{ marginBottom: 24 }}>
@@ -461,6 +470,10 @@ export default function PublicCertificateSearchPage() {
       </Typography.Title>
 
       <Tabs
+        defaultActiveKey={initialTab}
+        onChange={(key) =>
+          setSearchParams({ tab: key }, { replace: true })
+        }
         items={TAB_ITEMS.map((tab) => ({
           key: tab.key,
           label: tab.label,

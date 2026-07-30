@@ -148,11 +148,21 @@ public class PublicCertificateSearchAppService :
                 StatusLabel = StatusLabel(c.EffectiveStatus(Clock.Now.Date)),
             });
 
-    public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchCfsCertificatesAsync(
-        PublicCertificateSearchRequestDto input) =>
-        SearchAsync(
+    public async Task<PagedResultDto<PublicCertificateSummaryDto>> SearchCfsCertificatesAsync(
+        PublicCertificateSearchRequestDto input)
+    {
+        var businessQuery = await _businesses.GetQueryableAsync();
+        return await SearchAsync(
             _cfsCertificates, input,
-            (q, kw) => q.Where(c => c.CertificateNumber.Contains(kw)),
+            (q, kw) =>
+            {
+                var matchingBusinessIds = businessQuery
+                    .Where(b => b.Name.Contains(kw))
+                    .Select(b => b.Id);
+                return q.Where(c =>
+                    c.CertificateNumber.Contains(kw) ||
+                    matchingBusinessIds.Contains(c.BusinessId));
+            },
             (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.IssueDate),
             c => c.BusinessId,
@@ -168,6 +178,7 @@ public class PublicCertificateSearchAppService :
                 CertifyingAuthority = c.CertifyingAuthority,
                 StatusLabel = StatusLabel(c.EffectiveStatus(Clock.Now.Date)),
             });
+    }
 
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchExportFoodCertificatesAsync(
         PublicCertificateSearchRequestDto input) =>

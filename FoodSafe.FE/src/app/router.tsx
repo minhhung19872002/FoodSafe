@@ -20,7 +20,6 @@ import {
   PublicEligibilityCertificateLookupPage,
   VsattpCommitmentPage,
   CfsCertificatePage,
-  PublicCfsCertificateLookupPage,
   ExportFoodCertificatePage,
   PublicExportFoodCertificateLookupPage,
   InspectionPage,
@@ -169,11 +168,7 @@ const appRoutes: RouteObject[] = [
   },
   {
     path: "/tra-cuu-cfs",
-    element: (
-      <Suspense fallback={<RouteLoading />}>
-        <PublicCfsCertificateLookupPage />
-      </Suspense>
-    ),
+    element: <Navigate to="/tra-cuu-giay-phep?tab=cfs" replace />,
   },
   {
     path: "/tra-cuu-gcn-xuat-khau",

@@ -70,6 +70,7 @@ public class PublicCfsCertificateAppService :
 
         return new PublicCfsCertificateDto
         {
+            Id = certificate.Id,
             CertificateNumber = certificate.CertificateNumber,
             IssueDate = certificate.IssueDate,
             ExpiryDate = certificate.ExpiryDate,
