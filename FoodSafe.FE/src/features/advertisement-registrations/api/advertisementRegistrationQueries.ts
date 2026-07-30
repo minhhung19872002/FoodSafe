@@ -33,6 +33,7 @@ export const useAdvertisementProducts = (id?: string) =>
     queryKey: advertisementRegistrationKeys.products(id),
     queryFn: () => service.productOptions(id!),
     enabled: Boolean(id),
+    staleTime: 0,
   });
 export const useAdvertisementTypes = () =>
   useQuery({

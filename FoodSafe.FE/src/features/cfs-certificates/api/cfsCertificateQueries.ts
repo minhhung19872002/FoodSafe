@@ -34,6 +34,7 @@ export function useCfsCertificateProducts(businessId?: string) {
     queryKey: cfsCertificateKeys.products(businessId),
     queryFn: () => cfsCertificateApi.productOptions(businessId!),
     enabled: Boolean(businessId),
+    staleTime: 0,
   });
 }
 
