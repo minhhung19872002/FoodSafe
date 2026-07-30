@@ -311,6 +311,7 @@ export default function DocumentsPage() {
         )}
       </Space>
       <Table
+        sticky
         rowKey="id"
         columns={columns}
         dataSource={documents.data?.items}

@@ -297,6 +297,7 @@ export function CitizenReportModerationQueue() {
       </div>
 
       <Table
+        sticky
         rowKey="id"
         dataSource={data?.items}
         columns={columns}

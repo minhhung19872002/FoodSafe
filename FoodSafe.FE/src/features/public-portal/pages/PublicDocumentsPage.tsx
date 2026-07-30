@@ -166,6 +166,7 @@ function DocumentListView() {
 
         <Spin spinning={isFetching}>
           <Table<PublicDocument>
+            sticky
             dataSource={data?.items}
             rowKey="id"
             pagination={pagination.buildConfig(data?.totalCount)}

@@ -403,6 +403,7 @@ function AlertsTab() {
       </div>
 
       <Table
+        sticky
         rowKey="id"
         dataSource={data?.items}
         columns={columns}
@@ -848,6 +849,7 @@ function NewsTab() {
       </div>
 
       <Table
+        sticky
         rowKey="id"
         dataSource={data?.items}
         columns={columns}

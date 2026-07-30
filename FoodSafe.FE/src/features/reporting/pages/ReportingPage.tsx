@@ -467,6 +467,7 @@ function NdtpTab() {
       </Space>
       <ListErrorAlert visible={isError} onRetry={() => void refetch()} />
       <Table
+        sticky
         rowKey="id"
         columns={columns}
         dataSource={data?.items}
@@ -919,6 +920,7 @@ function AtpWorkTab() {
       </Space>
       <ListErrorAlert visible={isError} onRetry={() => void refetch()} />
       <Table
+        sticky
         rowKey="id"
         columns={columns}
         dataSource={data?.items}
@@ -1385,6 +1387,7 @@ function ActionMonthTab() {
       </Space>
       <ListErrorAlert visible={isError} onRetry={() => void refetch()} />
       <Table
+        sticky
         rowKey="id"
         columns={columns}
         dataSource={data?.items}

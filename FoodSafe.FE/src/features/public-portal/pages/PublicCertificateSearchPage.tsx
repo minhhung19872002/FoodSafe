@@ -137,6 +137,7 @@ function CertSearchPanel({
 
       <Spin spinning={isFetching}>
         <Table
+          sticky
           dataSource={data?.items}
           rowKey={(row) => row.id}
           pagination={pagination.buildConfig(data?.totalCount)}

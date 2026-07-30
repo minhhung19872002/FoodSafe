@@ -10,7 +10,10 @@ import type {
   UpdateOrganizationInput,
 } from "../types/organization.types";
 
-const optionalUuid = z.union([z.literal(""), z.uuid("ID phải là UUID hợp lệ")]);
+// Backend sinh khóa bằng ABP GuidGenerator (sequential GUID) nên nibble version
+// không nằm trong 1–8 như RFC 9562 yêu cầu — `z.uuid()` sẽ từ chối chính ID mà
+// server vừa tạo. Dùng `z.guid()` để chỉ kiểm tra đúng định dạng 8-4-4-4-12.
+const optionalUuid = z.union([z.literal(""), z.guid("ID không hợp lệ")]);
 
 const schema = z
   .object({

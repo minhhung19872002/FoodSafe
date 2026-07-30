@@ -297,6 +297,7 @@ function EndpointsTab() {
         )}
       </Space>
       <Table
+        sticky
         rowKey="id"
         columns={columns}
         dataSource={data?.items}
@@ -894,6 +895,7 @@ function CallHistoryTab() {
         )}
       </Space>
       <Table
+        sticky
         rowKey="id"
         columns={columns}
         dataSource={data?.items}

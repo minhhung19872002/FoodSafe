@@ -481,6 +481,7 @@ function PlansTab() {
         )}
       </div>
       <Table
+        sticky
         size="middle"
         rowKey="id"
         scroll={{ x: 1000 }}
@@ -543,6 +544,7 @@ function PlansTab() {
               Danh sách cơ sở trong kế hoạch
             </h4>
             <Table<InspectionPlanItem>
+              sticky
               rowKey="id"
               size="small"
               dataSource={detailPlan.items}
@@ -986,6 +988,7 @@ function ResultsTab() {
         )}
       </div>
       <Table
+        sticky
         size="middle"
         rowKey="id"
         scroll={{ x: 1000 }}

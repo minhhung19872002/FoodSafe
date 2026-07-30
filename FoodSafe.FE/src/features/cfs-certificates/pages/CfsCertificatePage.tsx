@@ -394,6 +394,7 @@ export default function CfsCertificatePage() {
         </div>
 
         <Table
+          sticky
           rowKey="id"
           size="middle"
           scroll={{ x: 1350 }}

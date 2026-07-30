@@ -314,6 +314,7 @@ function AlertsTab() {
 
       <Spin spinning={isFetching}>
         <Table
+          sticky
           dataSource={data?.items}
           rowKey="id"
           pagination={pagination.buildConfig(data?.totalCount)}
@@ -432,6 +433,7 @@ function RiskAnalysisTab() {
 
       <Spin spinning={isFetching}>
         <Table
+          sticky
           dataSource={data?.items}
           rowKey="id"
           pagination={pagination.buildConfig(data?.totalCount)}

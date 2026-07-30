@@ -323,6 +323,7 @@ export function PartnersTab() {
         )}
       </Space>
       <Table
+        sticky
         rowKey="id"
         columns={columns}
         dataSource={data?.items}
@@ -489,6 +490,7 @@ function PartnerKeysModal({
         </Button>
       </Space>
       <Table
+        sticky
         rowKey="id"
         size="small"
         loading={keys.isLoading}

@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import "leaflet/dist/leaflet.css";
 import { queryClient } from "./lib/queryClient";
+import { GlobalBehaviors } from "./app/GlobalBehaviors";
 import { router } from "./app/router";
 import { themeConfig } from "./theme/themeConfig";
 import "./index.css";
@@ -20,6 +21,7 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <ConfigProvider locale={viVN} theme={themeConfig}>
         <AntdApp>
+          <GlobalBehaviors />
           <RouterProvider router={router} />
         </AntdApp>
       </ConfigProvider>

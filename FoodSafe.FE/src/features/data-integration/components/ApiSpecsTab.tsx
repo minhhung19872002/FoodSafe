@@ -341,6 +341,7 @@ export function ApiSpecsTab() {
         )}
       </Space>
       <Table
+        sticky
         rowKey="id"
         columns={columns}
         dataSource={data?.items}
