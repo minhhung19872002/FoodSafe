@@ -13,6 +13,7 @@ import {
   type TableColumnsType,
 } from "antd";
 import { RowActions } from "@/components/RowActions";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import {
   PlusOutlined,
   EditOutlined,
@@ -83,6 +84,7 @@ const formatDateTime = (v?: string) =>
 function CasesTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<CaseFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
   const { data, isFetching } = usePoisoningCases({
     ...filter,
@@ -272,6 +274,7 @@ function CasesTab() {
   return (
     <>
       <div
+        key={filterResetKey}
         style={{
           display: "flex",
           gap: 12,
@@ -303,6 +306,14 @@ function CasesTab() {
               label: cfg.label,
             }),
           )}
+        />
+        <ClearFiltersButton
+          active={Boolean(filter.filter?.trim() || filter.status !== undefined)}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
+            pagination.resetToFirstPage();
+          }}
         />
         <div style={{ flex: 1 }} />
         <Button
@@ -433,6 +444,7 @@ function CasesTab() {
 function IncidentsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<IncidentFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
   const { data, isFetching } = usePoisoningIncidents({
     ...filter,
@@ -638,6 +650,7 @@ function IncidentsTab() {
   return (
     <>
       <div
+        key={filterResetKey}
         style={{
           display: "flex",
           gap: 12,
@@ -669,6 +682,14 @@ function IncidentsTab() {
               label: cfg.label,
             }),
           )}
+        />
+        <ClearFiltersButton
+          active={Boolean(filter.filter?.trim() || filter.status !== undefined)}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
+            pagination.resetToFirstPage();
+          }}
         />
         <div style={{ flex: 1 }} />
         <Button

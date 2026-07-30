@@ -103,6 +103,18 @@ describe("BusinessManagementPage", () => {
       screen.queryByRole("radio", { name: "Bản đồ" }),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /import/i })).toBeInTheDocument();
+
+    const search = screen.getByPlaceholderText("Tên, mã, MST hoặc địa chỉ");
+    const clearFilters = screen.getByRole("button", {
+      name: "Xóa tất cả bộ lọc",
+    });
+    expect(clearFilters).toHaveAttribute("data-active", "false");
+    await user.type(search, "CS-01");
+    expect(clearFilters).toHaveAttribute("data-active", "true");
+    await user.click(clearFilters);
+    expect(search).toHaveValue("");
+    expect(clearFilters).toHaveAttribute("data-active", "false");
+
     await user.click(screen.getByRole("tab", { name: "Sản phẩm" }));
     expect(await screen.findByText("Sản phẩm kiểm thử")).toBeInTheDocument();
     expect(

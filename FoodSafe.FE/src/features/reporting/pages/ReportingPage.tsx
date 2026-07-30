@@ -17,6 +17,7 @@ import {
   type TableColumnsType,
 } from "antd";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { RowActions } from "@/components/RowActions";
 import {
   PlusOutlined,
@@ -134,6 +135,7 @@ function ListErrorAlert({
 function NdtpTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<NdtpReportFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading, isError, refetch } = useNdtpReports({
@@ -383,7 +385,7 @@ function NdtpTab() {
         document={docView}
         onClose={() => setDocView(null)}
       />
-      <Space style={{ marginBottom: 16 }} wrap>
+      <Space style={{ marginBottom: 16 }} wrap key={filterResetKey}>
         <Select
           placeholder="Trạng thái"
           allowClear
@@ -414,6 +416,18 @@ function NdtpTab() {
           options={MONTHS}
           onChange={(v) => {
             setFilter((f) => ({ ...f, periodMonth: v ?? undefined }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <ClearFiltersButton
+          active={Boolean(
+            filter.status !== undefined ||
+            filter.periodYear !== undefined ||
+            filter.periodMonth !== undefined,
+          )}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
         />
@@ -549,6 +563,7 @@ function NdtpTab() {
 function AtpWorkTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<AtpWorkReportFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading, isError, refetch } = useAtpWorkReports({
@@ -817,7 +832,7 @@ function AtpWorkTab() {
         document={docView}
         onClose={() => setDocView(null)}
       />
-      <Space style={{ marginBottom: 16 }} wrap>
+      <Space style={{ marginBottom: 16 }} wrap key={filterResetKey}>
         <Select
           placeholder="Trạng thái"
           allowClear
@@ -851,6 +866,18 @@ function AtpWorkTab() {
           style={{ width: 100 }}
           onChange={(v) => {
             setFilter((f) => ({ ...f, periodYear: v ?? undefined }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <ClearFiltersButton
+          active={Boolean(
+            filter.status !== undefined ||
+            filter.periodType !== undefined ||
+            filter.periodYear !== undefined,
+          )}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
         />
@@ -1014,6 +1041,7 @@ function AtpWorkTab() {
 function ActionMonthTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<ActionMonthReportFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading, isError, refetch } = useActionMonthReports({
@@ -1288,7 +1316,7 @@ function ActionMonthTab() {
         document={docView}
         onClose={() => setDocView(null)}
       />
-      <Space style={{ marginBottom: 16 }} wrap>
+      <Space style={{ marginBottom: 16 }} wrap key={filterResetKey}>
         <Select
           placeholder="Trạng thái"
           allowClear
@@ -1309,6 +1337,16 @@ function ActionMonthTab() {
           style={{ width: 100 }}
           onChange={(v) => {
             setFilter((f) => ({ ...f, periodYear: v ?? undefined }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <ClearFiltersButton
+          active={Boolean(
+            filter.status !== undefined || filter.periodYear !== undefined,
+          )}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
         />

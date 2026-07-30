@@ -14,9 +14,9 @@ import {
 } from "antd";
 import { RowActions } from "@/components/RowActions";
 import { PageHeader } from "@/components/PageHeader";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import {
   AuditOutlined,
-  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
@@ -357,12 +357,17 @@ export default function IdentityAdministrationPage() {
               usersPagination.resetToFirstPage();
             }}
           />
-          <Button
-            icon={<ClearOutlined />}
+          <ClearFiltersButton
+            active={Boolean(
+              userFilter.filter?.trim() ||
+              userFilter.roleId ||
+              userFilter.organizationId ||
+              userFilter.permissionName ||
+              userFilter.isActive !== undefined ||
+              userFilter.isLocked !== undefined,
+            )}
             onClick={resetUserFilters}
-          >
-            Đặt lại bộ lọc
-          </Button>
+          />
           <Button
             icon={<ReloadOutlined />}
             loading={users.isFetching}
@@ -637,9 +642,12 @@ export default function IdentityAdministrationPage() {
               rolesPagination.resetToFirstPage();
             }}
           />
-          <Button icon={<ClearOutlined />} onClick={resetRoleFilters}>
-            Đặt lại bộ lọc
-          </Button>
+          <ClearFiltersButton
+            active={Boolean(
+              roleFilter.filter?.trim() || roleFilter.isActive !== undefined,
+            )}
+            onClick={resetRoleFilters}
+          />
           <Button
             icon={<ReloadOutlined />}
             loading={roles.isFetching}

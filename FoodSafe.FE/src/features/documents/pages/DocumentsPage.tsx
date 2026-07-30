@@ -25,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { extractApiError } from "@/lib/apiError";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { saveDownload } from "@/utils/download";
@@ -51,6 +52,7 @@ export default function DocumentsPage() {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<DocumentFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const documents = useDocuments({
@@ -231,7 +233,7 @@ export default function DocumentsPage() {
 
   return (
     <Card>
-      <Space style={{ marginBottom: 16 }} wrap>
+      <Space style={{ marginBottom: 16 }} wrap key={filterResetKey}>
         <Input.Search
           placeholder="Số VB, tiêu đề"
           allowClear
@@ -267,6 +269,18 @@ export default function DocumentsPage() {
           }))}
           onChange={(v) => {
             setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <ClearFiltersButton
+          active={Boolean(
+            filter.filter?.trim() ||
+            filter.documentTypeId ||
+            filter.status !== undefined,
+          )}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
         />

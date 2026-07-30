@@ -20,6 +20,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { RevokeModal } from "@/components/RevokeModal";
 import { EmptyState } from "@/components/EmptyState";
 import { extractApiError } from "@/lib/apiError";
@@ -63,6 +64,7 @@ export function CitizenReportModerationQueue() {
   const pagination = useTablePagination(15);
   const [statusFilter, setStatusFilter] = useState<AlertStatus | undefined>();
   const [keywordFilter, setKeywordFilter] = useState<string | undefined>();
+  const [filterResetKey, setFilterResetKey] = useState(0);
 
   const queryFilter = {
     source: ALERT_SOURCE.PublicReport,
@@ -119,7 +121,15 @@ export function CitizenReportModerationQueue() {
     );
   }
 
-  const hasActiveFilter = Boolean(keywordFilter);
+  const hasActiveFilter = Boolean(
+    keywordFilter?.trim() || statusFilter !== undefined,
+  );
+  const resetFilters = () => {
+    setKeywordFilter(undefined);
+    setStatusFilter(undefined);
+    setFilterResetKey((key) => key + 1);
+    pagination.resetToFirstPage();
+  };
 
   const columns: TableColumnsType<AtpAlert> = [
     {
@@ -254,7 +264,7 @@ export function CitizenReportModerationQueue() {
           flexWrap: "wrap",
         }}
       >
-        <Space wrap>
+        <Space wrap key={filterResetKey}>
           <Input.Search
             allowClear
             placeholder="Tìm theo tiêu đề, nội dung..."
@@ -273,11 +283,14 @@ export function CitizenReportModerationQueue() {
               setStatusFilter(v as AlertStatus | undefined);
               pagination.resetToFirstPage();
             }}
-            options={Object.entries(ALERT_STATUS_CONFIG).map(([value, cfg]) => ({
-              value: Number(value) as AlertStatus,
-              label: cfg.label,
-            }))}
+            options={Object.entries(ALERT_STATUS_CONFIG).map(
+              ([value, cfg]) => ({
+                value: Number(value) as AlertStatus,
+                label: cfg.label,
+              }),
+            )}
           />
+          <ClearFiltersButton active={hasActiveFilter} onClick={resetFilters} />
         </Space>
         <Tooltip title="Tải lại danh sách">
           <Button

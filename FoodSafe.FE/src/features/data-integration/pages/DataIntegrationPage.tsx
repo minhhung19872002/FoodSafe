@@ -17,6 +17,7 @@ import {
   type TableColumnsType,
 } from "antd";
 import { RowActions } from "@/components/RowActions";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import {
   ApiOutlined,
   PlusOutlined,
@@ -101,6 +102,7 @@ function apiErrorMessage(error: unknown, fallback: string): string {
 function EndpointsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<ApiEndpointFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
   const { data, isLoading } = useApiEndpoints({
     ...filter,
@@ -243,7 +245,7 @@ function EndpointsTab() {
 
   return (
     <>
-      <Space style={{ marginBottom: 16 }} wrap>
+      <Space style={{ marginBottom: 16 }} wrap key={filterResetKey}>
         <Input.Search
           placeholder="Tên, URL, hệ thống"
           allowClear
@@ -263,6 +265,14 @@ function EndpointsTab() {
           }))}
           onChange={(v) => {
             setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <ClearFiltersButton
+          active={Boolean(filter.filter?.trim() || filter.status !== undefined)}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
         />
@@ -477,6 +487,7 @@ function EndpointsTab() {
 function CallHistoryTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<ApiCallLogFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
   const { data, isLoading } = useApiCallLogs({
     ...filter,
@@ -785,7 +796,7 @@ function CallHistoryTab() {
             .map(([value, label]) => ({ key: value, label })),
         ]}
       />
-      <Space style={{ marginBottom: 16 }} wrap>
+      <Space style={{ marginBottom: 16 }} wrap key={filterResetKey}>
         <Input.Search
           placeholder="URL, hệ thống, nội dung"
           allowClear
@@ -830,6 +841,21 @@ function CallHistoryTab() {
               fromDate: range?.[0]?.format("YYYY-MM-DD"),
               toDate: range?.[1]?.format("YYYY-MM-DD"),
             }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <ClearFiltersButton
+          active={Boolean(
+            filter.filter?.trim() ||
+            filter.dataType !== undefined ||
+            filter.direction !== undefined ||
+            filter.isSuccess !== undefined ||
+            filter.fromDate ||
+            filter.toDate,
+          )}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
         />

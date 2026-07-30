@@ -28,6 +28,7 @@ import {
   Tooltip,
 } from "antd";
 import { extractApiError } from "@/lib/apiError";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { RowActions } from "@/components/RowActions";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
@@ -127,6 +128,7 @@ function PlansTab() {
   const [statusFilter, setStatusFilter] = useState<InspectionPlanStatus>();
   const [planTypeFilter, setPlanTypeFilter] = useState<InspectionPlanType>();
   const [yearFilter, setYearFilter] = useState<number>();
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [planSorting, setPlanSorting] = useState<string | undefined>(undefined);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<InspectionPlan>();
@@ -178,6 +180,15 @@ function PlansTab() {
       setYearFilter(next);
       planPagination.resetToFirstPage();
     }
+  };
+
+  const resetFilters = () => {
+    setFilter("");
+    setStatusFilter(undefined);
+    setPlanTypeFilter(undefined);
+    setYearFilter(undefined);
+    setFilterResetKey((key) => key + 1);
+    planPagination.resetToFirstPage();
   };
 
   const createMutation = useCreateInspectionPlan();
@@ -378,6 +389,7 @@ function PlansTab() {
   return (
     <>
       <div
+        key={filterResetKey}
         className="filter-toolbar"
         style={{
           marginBottom: 16,
@@ -427,6 +439,15 @@ function PlansTab() {
           max={2099}
           onBlur={(e) => commitYearFilter(e.target.value)}
           onPressEnter={(e) => commitYearFilter(e.currentTarget.value)}
+        />
+        <ClearFiltersButton
+          active={Boolean(
+            filter.trim() ||
+            statusFilter !== undefined ||
+            planTypeFilter !== undefined ||
+            yearFilter !== undefined,
+          )}
+          onClick={resetFilters}
         />
         <div style={{ flex: 1 }} />
         <Button
@@ -653,6 +674,7 @@ function ResultsTab() {
   const [filter, setFilter] = useState("");
   const [inspectionType, setInspectionType] = useState<InspectionType>();
   const [overallResult, setOverallResult] = useState<InspectionOverallResult>();
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [resultSorting, setResultSorting] = useState<string | undefined>(
     undefined,
   );
@@ -694,6 +716,14 @@ function ResultsTab() {
       setResultSorting(next);
       resultsPagination.resetToFirstPage();
     }
+  };
+
+  const resetFilters = () => {
+    setFilter("");
+    setInspectionType(undefined);
+    setOverallResult(undefined);
+    setFilterResetKey((key) => key + 1);
+    resultsPagination.resetToFirstPage();
   };
   const [businessSearch, setBusinessSearch] = useState("");
   const businesses = useInspectionBusinesses(businessSearch);
@@ -867,6 +897,7 @@ function ResultsTab() {
   return (
     <>
       <div
+        key={filterResetKey}
         className="filter-toolbar"
         style={{
           marginBottom: 16,
@@ -908,6 +939,14 @@ function ResultsTab() {
             setOverallResult(v);
             resultsPagination.resetToFirstPage();
           }}
+        />
+        <ClearFiltersButton
+          active={Boolean(
+            filter.trim() ||
+            inspectionType !== undefined ||
+            overallResult !== undefined,
+          )}
+          onClick={resetFilters}
         />
         <div style={{ flex: 1 }} />
         <Button

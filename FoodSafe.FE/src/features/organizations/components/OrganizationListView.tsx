@@ -1,7 +1,6 @@
 import { Button, Empty, Input, Select, Space, Table, Tag, Tree } from "antd";
 import type { TablePaginationConfig } from "antd";
 import {
-  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
@@ -10,6 +9,7 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import type { DataNode } from "antd/es/tree";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { RowActions } from "@/components/RowActions";
 import {
   getOrganizationLevelConfig,
@@ -144,9 +144,15 @@ export function OrganizationListView({
             label: o.name,
           }))}
         />
-        <Button icon={<ClearOutlined />} onClick={onResetFilters}>
-          Đặt lại bộ lọc
-        </Button>
+        <ClearFiltersButton
+          active={Boolean(
+            filter.trim() ||
+            level !== undefined ||
+            isActive !== undefined ||
+            parentId,
+          )}
+          onClick={onResetFilters}
+        />
         <Button icon={<ReloadOutlined />} onClick={onRefresh}>
           Làm mới
         </Button>

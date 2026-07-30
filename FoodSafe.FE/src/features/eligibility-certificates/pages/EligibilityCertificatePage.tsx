@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
@@ -23,6 +22,7 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { ProductRegistrationAttachmentsModal } from "@/features/product-registrations/components/ProductRegistrationAttachmentsModal";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
@@ -367,9 +367,15 @@ export default function EligibilityCertificatePage() {
               pagination.resetToFirstPage();
             }}
           />
-          <Button icon={<ClearOutlined />} onClick={resetFilters}>
-            Đặt lại bộ lọc
-          </Button>
+          <ClearFiltersButton
+            active={Boolean(
+              filter.trim() ||
+              businessId ||
+              status !== undefined ||
+              expiringWithinDays !== undefined,
+            )}
+            onClick={resetFilters}
+          />
         </div>
         <Table
           size="middle"

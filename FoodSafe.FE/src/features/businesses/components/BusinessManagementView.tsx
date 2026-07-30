@@ -1,6 +1,5 @@
 import type { TablePaginationConfig } from "antd";
 import {
-  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   EnvironmentOutlined,
@@ -15,6 +14,7 @@ import {
 import { Button, Input, Select, Table, Tabs, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { RowActions } from "@/components/RowActions";
 import {
   BUSINESS_STATUS,
@@ -98,6 +98,17 @@ const businessStatusLabels: Record<BusinessStatus, string> = {
 };
 
 export function BusinessManagementView(props: BusinessManagementViewProps) {
+  const hasActiveBusinessFilters = Boolean(
+    props.businessFilter.trim() ||
+    props.businessStatus !== undefined ||
+    props.businessTypeId ||
+    props.businessClassificationId ||
+    props.provinceId,
+  );
+  const hasActiveProductFilters = Boolean(
+    props.productFilter.trim() || props.productStatus !== undefined,
+  );
+
   // Server-side sorting: reflect the active sort in the column header so the
   // control is controlled/testable, and translate header clicks into the
   // "<field> <asc|desc>" string the backend's ApplySorting whitelist parses.
@@ -423,12 +434,10 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               style={{ width: 160 }}
               options={props.provinceOptions}
             />
-            <Button
-              icon={<ClearOutlined />}
+            <ClearFiltersButton
+              active={hasActiveBusinessFilters}
               onClick={props.onResetBusinessFilters}
-            >
-              Đặt lại bộ lọc
-            </Button>
+            />
             {props.permissions.createBusiness && (
               <Button
                 type="primary"
@@ -490,12 +499,10 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
                 { value: PRODUCT_STATUS.Inactive, label: "Ngừng kinh doanh" },
               ]}
             />
-            <Button
-              icon={<ClearOutlined />}
+            <ClearFiltersButton
+              active={hasActiveProductFilters}
               onClick={props.onResetProductFilters}
-            >
-              Đặt lại bộ lọc
-            </Button>
+            />
             {props.permissions.createProduct && (
               <Button
                 type="primary"

@@ -17,6 +17,7 @@ import {
   type TableColumnsType,
 } from "antd";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { RowActions } from "@/components/RowActions";
 import {
   DeleteOutlined,
@@ -74,6 +75,7 @@ interface PartnerFormValues {
 export function PartnersTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<PartnerAccountFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading } = usePartnerAccounts({
@@ -282,7 +284,7 @@ export function PartnersTab() {
 
   return (
     <>
-      <Space style={{ marginBottom: 16 }} wrap>
+      <Space style={{ marginBottom: 16 }} wrap key={filterResetKey}>
         <Input.Search
           placeholder="Mã, tên, hệ thống"
           allowClear
@@ -301,6 +303,14 @@ export function PartnersTab() {
           )}
           onChange={(v) => {
             setFilter((f) => ({ ...f, status: v }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <ClearFiltersButton
+          active={Boolean(filter.filter?.trim() || filter.status !== undefined)}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
         />

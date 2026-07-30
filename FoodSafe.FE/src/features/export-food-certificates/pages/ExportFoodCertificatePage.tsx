@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
@@ -14,6 +13,7 @@ import { App, Button, Input, Select, Space, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { extractApiError } from "@/lib/apiError";
 import {
   useCreateExportFoodCertificate,
@@ -407,9 +407,16 @@ export default function ExportFoodCertificatePage() {
                 pagination.resetToFirstPage();
               }}
             />
-            <Button icon={<ClearOutlined />} onClick={resetFilters}>
-              Đặt lại bộ lọc
-            </Button>
+            <ClearFiltersButton
+              active={Boolean(
+                filter.trim() ||
+                businessId ||
+                destinationCountryId ||
+                status !== undefined ||
+                expiringWithinDays !== undefined,
+              )}
+              onClick={resetFilters}
+            />
           </Space>
         </div>
 

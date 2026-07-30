@@ -18,6 +18,7 @@ import {
 } from "antd";
 import { CheckOutlined, CloseOutlined, EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import {
   useInboundSubmissionDetail,
   useInboundSubmissions,
@@ -50,6 +51,7 @@ interface RejectFormValues {
 export function InboundSubmissionsTab() {
   const { message } = App.useApp();
   const [filter, setFilter] = useState<InboundSubmissionFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
   const { data, isLoading } = useInboundSubmissions({
     ...filter,
@@ -184,7 +186,7 @@ export function InboundSubmissionsTab() {
 
   return (
     <>
-      <Space style={{ marginBottom: 16 }} wrap>
+      <Space style={{ marginBottom: 16 }} wrap key={filterResetKey}>
         <Input.Search
           placeholder="Mã yêu cầu, đối tác, correlation, nội dung"
           allowClear
@@ -230,6 +232,20 @@ export function InboundSubmissionsTab() {
               fromDate: range?.[0]?.format("YYYY-MM-DD"),
               toDate: range?.[1]?.format("YYYY-MM-DD"),
             }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <ClearFiltersButton
+          active={Boolean(
+            filter.filter?.trim() ||
+            filter.dataType !== undefined ||
+            filter.status !== undefined ||
+            filter.fromDate ||
+            filter.toDate,
+          )}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
         />

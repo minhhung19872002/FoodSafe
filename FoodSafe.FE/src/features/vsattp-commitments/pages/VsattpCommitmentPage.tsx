@@ -20,6 +20,7 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { useBusinessList } from "@/features/businesses/api/businessQueries";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { PageHeader } from "@/components/PageHeader";
@@ -282,6 +283,14 @@ export default function VsattpCommitmentPage() {
           onChange={setFilterStatus}
           style={{ width: 160 }}
           options={statusOptions}
+        />
+        <ClearFiltersButton
+          active={Boolean(filterBizId || filterStatus !== undefined)}
+          onClick={() => {
+            setFilterBizId(undefined);
+            setFilterStatus(undefined);
+            pagination.resetToFirstPage();
+          }}
         />
         {canCreate && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>

@@ -25,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { RevokeModal } from "@/components/RevokeModal";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RichTextEditor } from "@/components/RichTextEditor/RichTextEditor";
@@ -104,6 +105,7 @@ function AlertsTab() {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<AlertFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
   const { sorting, sortOrderFor, handleSort } = useServerSorting<AtpAlert>(
     pagination.resetToFirstPage,
@@ -136,12 +138,17 @@ function AlertsTab() {
   const canPublish = hasPermission("FoodSafe.AlertsAndTesting.Alerts.Publish");
 
   const hasActiveFilter = Boolean(
-    filter.filter ||
-    filter.category ||
-    filter.severity ||
-    filter.source ||
-    filter.status,
+    filter.filter?.trim() ||
+    filter.category !== undefined ||
+    filter.severity !== undefined ||
+    filter.source !== undefined ||
+    filter.status !== undefined,
   );
+  const resetFilters = () => {
+    setFilter({});
+    setFilterResetKey((key) => key + 1);
+    pagination.resetToFirstPage();
+  };
 
   function openCreate() {
     setEditing(undefined);
@@ -305,7 +312,7 @@ function AlertsTab() {
           flexWrap: "wrap",
         }}
       >
-        <Space wrap>
+        <Space wrap key={filterResetKey}>
           <Input.Search
             allowClear
             placeholder="Tìm theo tiêu đề, số cảnh báo..."
@@ -363,6 +370,7 @@ function AlertsTab() {
               ([value, label]) => ({ value: Number(value), label }),
             )}
           />
+          <ClearFiltersButton active={hasActiveFilter} onClick={resetFilters} />
         </Space>
         <Space>
           <Button
@@ -546,6 +554,7 @@ function NewsTab() {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<NewsFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
   const { sorting, sortOrderFor, handleSort } = useServerSorting<AtpNews>(
     pagination.resetToFirstPage,
@@ -576,8 +585,16 @@ function NewsTab() {
   const canPublish = hasPermission("FoodSafe.AlertsAndTesting.News.Publish");
 
   const hasActiveFilter = Boolean(
-    filter.filter || filter.category || filter.status || filter.source,
+    filter.filter?.trim() ||
+    filter.category ||
+    filter.status !== undefined ||
+    filter.source !== undefined,
   );
+  const resetFilters = () => {
+    setFilter({});
+    setFilterResetKey((key) => key + 1);
+    pagination.resetToFirstPage();
+  };
 
   function openCreate() {
     setEditing(undefined);
@@ -749,7 +766,7 @@ function NewsTab() {
           flexWrap: "wrap",
         }}
       >
-        <Space wrap>
+        <Space wrap key={filterResetKey}>
           <Input.Search
             allowClear
             placeholder="Tìm theo tiêu đề..."
@@ -794,6 +811,7 @@ function NewsTab() {
               ([value, label]) => ({ value: Number(value), label }),
             )}
           />
+          <ClearFiltersButton active={hasActiveFilter} onClick={resetFilters} />
         </Space>
         <Space>
           <Button

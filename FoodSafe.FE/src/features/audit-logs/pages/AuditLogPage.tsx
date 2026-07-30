@@ -15,6 +15,7 @@ import { ExportOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { saveDownload } from "@/utils/download";
@@ -42,6 +43,7 @@ function statusColor(code?: number) {
 
 export default function AuditLogPage() {
   const [filter, setFilter] = useState<AuditLogFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [searchDraft, setSearchDraft] = useState<{
     userName?: string;
     url?: string;
@@ -58,7 +60,10 @@ export default function AuditLogPage() {
     mutationFn: (f: AuditLogFilter) => auditLogApi.exportExcel(f),
   });
 
-  const commitSearchDraft = (overrides: { userName?: string; url?: string }) => {
+  const commitSearchDraft = (overrides: {
+    userName?: string;
+    url?: string;
+  }) => {
     const next = { ...searchDraft, ...overrides };
     setSearchDraft(next);
     setFilter((p) => ({
@@ -66,6 +71,13 @@ export default function AuditLogPage() {
       userName: next.userName || undefined,
       filter: next.url || undefined,
     }));
+    pagination.resetToFirstPage();
+  };
+
+  const resetFilters = () => {
+    setSearchDraft({});
+    setFilter({});
+    setFilterResetKey((key) => key + 1);
     pagination.resetToFirstPage();
   };
 
@@ -142,7 +154,7 @@ export default function AuditLogPage() {
     <div>
       <PageHeader title="Nhật ký hoạt động" />
 
-      <Space wrap style={{ marginBottom: 16 }}>
+      <Space wrap style={{ marginBottom: 16 }} key={filterResetKey}>
         <Input.Search
           placeholder="Tìm theo người dùng"
           allowClear
@@ -198,6 +210,17 @@ export default function AuditLogPage() {
             }}
           />
         </Space>
+        <ClearFiltersButton
+          active={Boolean(
+            filter.userName?.trim() ||
+            filter.filter?.trim() ||
+            filter.httpMethod ||
+            filter.startTime ||
+            filter.endTime ||
+            filter.hasException,
+          )}
+          onClick={resetFilters}
+        />
         <Button
           icon={<ExportOutlined />}
           loading={exportMut.isPending}

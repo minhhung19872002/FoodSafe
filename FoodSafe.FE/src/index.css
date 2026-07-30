@@ -115,6 +115,38 @@ button {
   align-items: center;
 }
 
+.filter-clear-button {
+  color: var(--fs-sub);
+}
+
+.filter-clear-button:hover,
+.filter-clear-button:focus-visible {
+  color: var(--fs-red) !important;
+  border-color: var(--fs-red) !important;
+}
+
+.filter-clear-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+}
+
+.filter-clear-active-dot {
+  position: absolute;
+  top: -4px;
+  right: -5px;
+  width: 7px;
+  height: 7px;
+  background: var(--fs-red);
+  border: 1px solid #fff;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px #fff;
+}
+
 /* AntD Space không tự xuống dòng, nên một hàng chọn lọc/nút dài trở thành
    một khối không thể chia nhỏ và đẩy trang cuộn ngang trên màn hẹp. Trong
    hai vùng thanh công cụ của hệ thống, Space phải xuống dòng được và các ô

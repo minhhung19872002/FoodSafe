@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
@@ -15,6 +14,7 @@ import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { extractApiError } from "@/lib/apiError";
 import { ProductRegistrationAttachmentsModal } from "@/features/product-registrations/components/ProductRegistrationAttachmentsModal";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
@@ -355,9 +355,16 @@ export default function AdvertisementRegistrationPage() {
               pagination.resetToFirstPage();
             }}
           />
-          <Button icon={<ClearOutlined />} onClick={resetFilters}>
-            Đặt lại bộ lọc
-          </Button>
+          <ClearFiltersButton
+            active={Boolean(
+              filter.trim() ||
+              businessId ||
+              advertisementTypeId ||
+              status !== undefined ||
+              expiringWithinDays !== undefined,
+            )}
+            onClick={resetFilters}
+          />
         </div>
         <Table
           rowKey="id"

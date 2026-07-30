@@ -21,6 +21,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RowActions } from "@/components/RowActions";
@@ -73,6 +74,7 @@ export default function RiskAnalysisPage() {
   const productGroupOptions = useCatalogOptions("product-group");
 
   const [filter, setFilter] = useState<RiskAnalysisFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
   const listQuery = useRiskAnalyses({
     ...filter,
@@ -92,6 +94,12 @@ export default function RiskAnalysisPage() {
 
   const applyFilter = (patch: Partial<RiskAnalysisFilter>) => {
     setFilter((current) => ({ ...current, ...patch }));
+    pagination.resetToFirstPage();
+  };
+
+  const resetFilters = () => {
+    setFilter({});
+    setFilterResetKey((key) => key + 1);
     pagination.resetToFirstPage();
   };
 
@@ -278,7 +286,7 @@ export default function RiskAnalysisPage() {
 
       <div className="page-card">
         <div className="filter-toolbar" style={{ marginBottom: 16 }}>
-          <Space wrap>
+          <Space wrap key={filterResetKey}>
             <Input.Search
               placeholder="Tìm theo tiêu đề"
               allowClear
@@ -325,6 +333,15 @@ export default function RiskAnalysisPage() {
               onChange={(value: RiskLevel | undefined) =>
                 applyFilter({ riskLevel: value })
               }
+            />
+            <ClearFiltersButton
+              active={Boolean(
+                filter.filter?.trim() ||
+                filter.category !== undefined ||
+                filter.status !== undefined ||
+                filter.riskLevel !== undefined,
+              )}
+              onClick={resetFilters}
             />
           </Space>
         </div>

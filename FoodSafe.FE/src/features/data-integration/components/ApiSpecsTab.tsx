@@ -16,6 +16,7 @@ import {
   type UploadProps,
 } from "antd";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { RowActions } from "@/components/RowActions";
 import {
   CloudUploadOutlined,
@@ -74,6 +75,7 @@ function partnerUrl(name: string): string {
 export function ApiSpecsTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<ApiSpecificationFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const { data, isLoading } = useApiSpecs({
@@ -278,7 +280,7 @@ export function ApiSpecsTab() {
 
   return (
     <>
-      <Space style={{ marginBottom: 16 }} wrap>
+      <Space style={{ marginBottom: 16 }} wrap key={filterResetKey}>
         <Input.Search
           placeholder="Tên, tiêu đề đặc tả"
           allowClear
@@ -301,6 +303,16 @@ export function ApiSpecsTab() {
               ...f,
               isPublished: v as boolean | undefined,
             }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <ClearFiltersButton
+          active={Boolean(
+            filter.filter?.trim() || filter.isPublished !== undefined,
+          )}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
         />

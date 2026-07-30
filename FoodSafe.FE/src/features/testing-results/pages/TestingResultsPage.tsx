@@ -19,6 +19,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { extractApiError } from "@/lib/apiError";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RowActions } from "@/components/RowActions";
@@ -61,6 +62,7 @@ export default function TestingResultsPage() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const canPickInspectionResult = hasPermission(INSPECTION_RESULTS_VIEW);
   const [filter, setFilter] = useState<TestingResultFilter>({});
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
   const results = useTestingResults({
@@ -220,7 +222,7 @@ export default function TestingResultsPage() {
 
   return (
     <Card>
-      <Space style={{ marginBottom: 16 }} wrap>
+      <Space style={{ marginBottom: 16 }} wrap key={filterResetKey}>
         <Input.Search
           placeholder="Mã mẫu, tên mẫu"
           allowClear
@@ -266,6 +268,19 @@ export default function TestingResultsPage() {
           options={OUTCOME_OPTIONS}
           onChange={(v?: TestingOutcome) => {
             setFilter((f) => ({ ...f, outcome: v }));
+            pagination.resetToFirstPage();
+          }}
+        />
+        <ClearFiltersButton
+          active={Boolean(
+            filter.filter?.trim() ||
+            filter.businessId ||
+            filter.testingCenterId ||
+            filter.outcome !== undefined,
+          )}
+          onClick={() => {
+            setFilter({});
+            setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
         />
