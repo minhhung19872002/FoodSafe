@@ -234,23 +234,11 @@ export interface ExcelDownload {
   fileName: string;
 }
 
-export interface ExcelImportError {
-  rowNumber: number;
-  field: string;
-  message: string;
-}
-
-export interface ExcelImportPreview {
-  confirmationToken?: string;
-  totalRows: number;
-  validCount: number;
-  errorCount: number;
-  errors: ExcelImportError[];
-}
-
-export interface ExcelImportResult {
-  importedCount: number;
-}
+export type {
+  ExcelImportError,
+  ExcelImportPreview,
+  ExcelImportResult,
+} from "@/types/excelImport";
 
 export interface FileAttachment {
   id: string;

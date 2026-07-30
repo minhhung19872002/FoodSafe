@@ -14,6 +14,36 @@
   - `PUT /api/v1/app/master-catalog/document-types/{id}` — update
   - `DELETE /api/v1/app/master-catalog/document-types/{id}` — delete
 
+## Excel import (bổ sung 2026-07-31)
+
+- **Status**: VERIFIED · **Verified Git commit**: xem `01-feature-verification-registry.md`
+- **Environment**: Vite dev server `http://localhost:5173` → API `http://localhost:5019` → PostgreSQL 15 thật (`foodsafe-postgres-1`) · **API interception**: **No**
+- **Account**: `admin` (login thật qua `POST /api/account/login`)
+- **Endpoints**:
+  - `GET /api/v1/app/master-catalog/excel/template?kind={MasterCatalogKind}` — tải file mẫu
+  - `POST /api/v1/app/master-catalog/excel/preview?kind={MasterCatalogKind}` — kiểm tra file, trả lỗi theo dòng
+  - `POST /api/v1/app/master-catalog/excel/confirm` — ghi dữ liệu theo `confirmationToken`
+- **Phân quyền**: cả 3 endpoint yêu cầu `FoodSafe.Catalogs.Create`
+
+`e2e/catalogs-excel-import.spec.ts` — 4 tests (đều PASS):
+
+1. Tải file mẫu cho tab đang mở → `mau-import-loai-van-ban.xlsx`
+2. Preview file hợp lệ (2 dòng) → xác nhận → toast "Đã import 2 dòng loại văn bản";
+   dữ liệu xuất hiện trong danh sách lấy từ API và **còn nguyên sau khi reload trang**
+3. File sai dữ liệu → báo lỗi theo dòng (thiếu tên bắt buộc, thứ tự không phải số,
+   trùng mã trong file); **không có** nút xác nhận và `totalCount` trong DB = 0
+4. File sai tên cột → báo `Cột 1 phải có tên "Mã*"`, không cho import
+
+Kiểm tra thêm bằng HTTP thật: `GET .../excel/template` trả `200` cho cả 9 `MasterCatalogKind`
+(Country, Region, ProductGroup, BusinessType, BusinessClassification, AdvertisementType,
+DocumentType, TestingCenter, TestingService).
+
+### Điều kiện cần retest
+
+- Đổi `MasterCatalogExcelWorkbook` (cấu trúc cột / sheet của file mẫu)
+- Đổi `MasterCatalogAppService` (các hàm `Create*`) vì bước Confirm gọi qua đó
+- Đổi `ExcelImportModal` dùng chung (ảnh hưởng cả import Cơ sở/Sản phẩm — F-006)
+
 ## Evidence
 
 `e2e/catalogs-verification.spec.ts` — 7 tests:
@@ -50,6 +80,8 @@
 
 ## Paths & dependencies
 
-- FE: `src/features/catalogs/`
-- BE: `FoodSafe.Application/Catalogs/`
+- FE: `src/features/catalogs/`, `src/components/ExcelImportModal.tsx`, `src/types/excelImport.ts`
+- BE: `FoodSafe.Application/Catalogs/`, `FoodSafe.HttpApi/Catalogs/`
 - Depends on: Authentication (F-001)
+- Chia sẻ với F-006 (Businesses & Products): `ExcelImportModal` — trước đây là
+  `BusinessImportModal` trong feature `businesses`, đã chuyển thành component dùng chung.

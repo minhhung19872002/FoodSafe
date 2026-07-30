@@ -2,6 +2,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
+  ImportOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import { Button, Input, Table, Tabs, Tag } from "antd";
@@ -39,6 +40,7 @@ interface MasterCatalogViewProps {
   onEdit: (item: CatalogItem) => void;
   onDelete: (id: string) => void;
   onExport?: () => void;
+  onImport: () => void;
   onShowDetail: (item: CatalogItem) => void;
 }
 
@@ -259,6 +261,11 @@ export function MasterCatalogView(props: MasterCatalogViewProps) {
             onClick={props.onExport}
           >
             Xuất Excel
+          </Button>
+        )}
+        {props.canCreate && (
+          <Button icon={<ImportOutlined />} onClick={props.onImport}>
+            Import
           </Button>
         )}
         {props.canCreate && (

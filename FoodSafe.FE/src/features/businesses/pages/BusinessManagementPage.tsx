@@ -47,7 +47,7 @@ import { useProvinces } from "@/hooks/useGeography";
 import { BusinessDetailDrawer } from "../components/BusinessDetailDrawer";
 import { BusinessEditorModal } from "../components/BusinessEditorModal";
 import { BusinessHandlersModal } from "../components/BusinessHandlersModal";
-import { BusinessImportModal } from "../components/BusinessImportModal";
+import { ExcelImportModal } from "@/components/ExcelImportModal";
 import { BusinessManagementView } from "../components/BusinessManagementView";
 import { MapPicker } from "@/components/MapPicker";
 import { ProductEditorModal } from "../components/ProductEditorModal";
@@ -557,8 +557,10 @@ export default function BusinessManagementPage() {
           );
         }}
       />
-      <BusinessImportModal
+      <ExcelImportModal
         open={importingBusinesses}
+        title="Import cơ sở từ Excel"
+        entityLabel="cơ sở"
         preview={previewBusinessImport.data}
         previewing={previewBusinessImport.isPending}
         confirming={confirmBusinessImport.isPending}
@@ -590,7 +592,7 @@ export default function BusinessManagementPage() {
           })
         }
       />
-      <BusinessImportModal
+      <ExcelImportModal
         open={importingProducts}
         title="Import sản phẩm từ Excel"
         entityLabel="sản phẩm"
