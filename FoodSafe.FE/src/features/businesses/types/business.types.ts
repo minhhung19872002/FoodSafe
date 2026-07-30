@@ -130,6 +130,7 @@ export interface BusinessRelatedRecord {
   id: string;
   number?: string;
   name?: string;
+  content?: string;
   status?: number | string;
   issuedDate?: string;
   expiryDate?: string;

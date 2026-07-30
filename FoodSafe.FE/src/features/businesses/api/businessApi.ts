@@ -82,12 +82,14 @@ export const businessRelatedApi = {
       declarationNumber: string;
       declarationDate: string;
       productName: string;
+      purpose?: string;
       expiryDate?: string;
       status?: number;
     }>("/v1/app/self-declaration", params, (raw) => ({
       id: raw.id,
       number: raw.declarationNumber,
       name: raw.productName,
+      content: raw.purpose,
       status: raw.status,
       issuedDate: raw.declarationDate,
       expiryDate: raw.expiryDate,
@@ -116,12 +118,14 @@ export const businessRelatedApi = {
       registrationNumber: string;
       issueDate?: string;
       expiryDate?: string;
-      productName?: string;
+      products?: { name: string }[];
+      contentDescription?: string;
       status?: number;
     }>("/v1/app/advertisement-registration", params, (raw) => ({
       id: raw.id,
       number: raw.registrationNumber,
-      name: raw.productName,
+      name: raw.products?.map((p) => p.name).join(", "),
+      content: raw.contentDescription,
       status: raw.status,
       issuedDate: raw.issueDate,
       expiryDate: raw.expiryDate,
@@ -133,10 +137,12 @@ export const businessRelatedApi = {
       certificateNumber: string;
       issueDate?: string;
       expiryDate?: string;
+      certificationScope?: string;
       status?: number;
     }>("/v1/app/eligibility-certificate", params, (raw) => ({
       id: raw.id,
       number: raw.certificateNumber,
+      content: raw.certificationScope,
       status: raw.status,
       issuedDate: raw.issueDate,
       expiryDate: raw.expiryDate,
@@ -148,10 +154,12 @@ export const businessRelatedApi = {
       certificateNumber: string;
       issueDate?: string;
       expiryDate?: string;
+      linkedProductName?: string;
       status?: number;
     }>("/v1/app/cfs-certificate", params, (raw) => ({
       id: raw.id,
       number: raw.certificateNumber,
+      name: raw.linkedProductName,
       status: raw.status,
       issuedDate: raw.issueDate,
       expiryDate: raw.expiryDate,
@@ -163,10 +171,12 @@ export const businessRelatedApi = {
       certificateNumber: string;
       issueDate?: string;
       expiryDate?: string;
+      linkedProductName?: string;
       status?: number;
     }>("/v1/app/export-food-certificate", params, (raw) => ({
       id: raw.id,
       number: raw.certificateNumber,
+      name: raw.linkedProductName,
       status: raw.status,
       issuedDate: raw.issueDate,
       expiryDate: raw.expiryDate,
