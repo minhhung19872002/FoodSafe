@@ -8,8 +8,13 @@ import type {
 
 function useInvalidate() {
   const queryClient = useQueryClient();
-  return () =>
-    queryClient.invalidateQueries({ queryKey: cfsCertificateKeys.all });
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: cfsCertificateKeys.all });
+    void queryClient.invalidateQueries({
+      queryKey: ["business-related", "cfsCertificates"],
+      refetchType: "all",
+    });
+  };
 }
 
 export function useCreateCfsCertificate() {
