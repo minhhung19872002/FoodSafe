@@ -20,7 +20,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
-  KeyOutlined,
+  FormOutlined,
   LockOutlined,
   PlusOutlined,
   ReloadOutlined,
@@ -46,9 +46,9 @@ import {
   useDeleteAdminRole,
   useDeleteAdminUser,
   useGenerateRandomPassword,
-  useSendPasswordReset,
   useSetUserActivation,
   useSetUserLock,
+  useSetUserPassword,
   useUpdateAdminRole,
   useUpdateAdminUser,
   useUpdateRolePermissions,
@@ -65,6 +65,7 @@ import { PermissionMatrixDrawer } from "../components/PermissionMatrixDrawer";
 import { RolePermissionsDrawer } from "../components/RolePermissionsDrawer";
 import { UserActivityDrawer } from "../components/UserActivityDrawer";
 import { QuickCreateUserModal } from "../components/QuickCreateUserModal";
+import { SetUserPasswordModal } from "../components/SetUserPasswordModal";
 import { UserEditorModal } from "../components/UserEditorModal";
 import type {
   AdminRole,
@@ -139,6 +140,7 @@ export default function IdentityAdministrationPage() {
   });
   const [roleFilterResetKey, setRoleFilterResetKey] = useState(0);
   const [editingUser, setEditingUser] = useState<AdminUser>();
+  const [passwordUser, setPasswordUser] = useState<AdminUser>();
   const [detailUser, setDetailUser] = useState<AdminUser | null>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [activityUser, setActivityUser] = useState<AdminUser>();
@@ -187,9 +189,9 @@ export default function IdentityAdministrationPage() {
   const updateUser = useUpdateAdminUser();
   const deleteUser = useDeleteAdminUser();
   const generatePassword = useGenerateRandomPassword();
+  const setPassword = useSetUserPassword();
   const setActivation = useSetUserActivation();
   const setLock = useSetUserLock();
-  const sendReset = useSendPasswordReset();
   const permissionOptions = usePermissionOptions();
   const createRole = useCreateAdminRole();
   const updateRole = useUpdateAdminRole();
@@ -529,18 +531,12 @@ export default function IdentityAdministrationPage() {
                           ),
                       },
                       {
-                        key: "reset-password",
-                        label: "Đặt lại mật khẩu",
-                        ariaLabel: `Đặt lại mật khẩu ${user.fullName}`,
-                        icon: <KeyOutlined />,
+                        key: "set-password",
+                        label: "Đổi mật khẩu",
+                        ariaLabel: `Đổi mật khẩu ${user.fullName}`,
+                        icon: <FormOutlined />,
                         hidden: !hasPermission(permission.resetPassword),
-                        confirm: "Gửi liên kết đặt lại mật khẩu?",
-                        onClick: () =>
-                          sendReset.mutate(user.id, {
-                            onSuccess: () =>
-                              showSuccess("Đã gửi email đặt lại mật khẩu"),
-                            onError: showError,
-                          }),
+                        onClick: () => setPasswordUser(user),
                       },
                       {
                         key: "generate-password",
@@ -838,6 +834,24 @@ export default function IdentityAdministrationPage() {
             },
             onError: showError,
           });
+        }}
+      />
+      <SetUserPasswordModal
+        user={passwordUser}
+        loading={setPassword.isPending}
+        onCancel={() => setPasswordUser(undefined)}
+        onSubmit={(newPassword) => {
+          if (!passwordUser) return;
+          setPassword.mutate(
+            { id: passwordUser.id, newPassword },
+            {
+              onSuccess: () => {
+                setPasswordUser(undefined);
+                showSuccess("Đã đặt mật khẩu mới cho tài khoản");
+              },
+              onError: showError,
+            },
+          );
         }}
       />
       <RecordDetailDrawer

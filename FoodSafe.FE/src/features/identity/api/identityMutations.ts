@@ -47,6 +47,12 @@ export const useGenerateRandomPassword = () => {
   });
 };
 
+export const useSetUserPassword = () =>
+  useIdentityMutation(
+    ({ id, newPassword }: { id: string; newPassword: string }) =>
+      identityApi.setUserPassword(id, newPassword),
+  );
+
 export const useCreateAdminRole = () =>
   useIdentityMutation(identityApi.createRole);
 

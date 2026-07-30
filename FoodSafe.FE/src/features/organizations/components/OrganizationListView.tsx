@@ -48,7 +48,7 @@ interface Props {
   onIsActiveChange: (value?: boolean) => void;
   onParentIdChange: (value?: string) => void;
   onRefresh: () => void;
-  onResetFilters: () => void;
+  onResetFilters?: () => void;
   onCreate: () => void;
   onEdit: (organization: OrganizationDto) => void;
   onDelete: (organization: OrganizationDto) => void;
@@ -90,7 +90,7 @@ export function OrganizationListView({
   onIsActiveChange,
   onParentIdChange,
   onRefresh,
-  onResetFilters,
+  onResetFilters = () => {},
   onCreate,
   onEdit,
   onDelete,

@@ -57,6 +57,12 @@ public sealed class IdentityAdministrationController(
     public Task<GeneratedPasswordDto> GenerateRandomPasswordAsync(Guid id) =>
         service.GenerateRandomPasswordAsync(id);
 
+    [HttpPut("users/{id:guid}/password")]
+    public Task SetUserPasswordAsync(
+        Guid id,
+        [FromBody] SetUserPasswordDto input) =>
+        service.SetUserPasswordAsync(id, input);
+
     [HttpGet("permission-options")]
     public Task<ListResultDto<PermissionOptionDto>>
         GetPermissionOptionsAsync() =>

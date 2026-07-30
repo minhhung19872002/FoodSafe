@@ -4,6 +4,7 @@ using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Volo.Abp;
@@ -37,6 +38,11 @@ public class IdentityAdministrationAppService :
     private const string RoleActiveProperty = "IsActive";
     private const int MaximumRoleCount = 500;
 
+    // Mirrors AccountSecurityAppService's SEC-04 default so an admin-set
+    // password expires on the same schedule as a self-service change.
+    private const int DefaultPasswordValidityDays = 90;
+
+    private readonly TimeSpan _passwordValidity;
     private readonly IRepository<IdentityUser, Guid> _users;
     private readonly IIdentityUserRepository _identityUsers;
     private readonly IdentityUserManager _userManager;
@@ -72,8 +78,14 @@ public class IdentityAdministrationAppService :
         IAccountAppService accountAppService,
         IOptions<IdentityOptions> identityOptions,
         ICancellationTokenProvider cancellationTokens,
-        IClock clock)
+        IClock clock,
+        IConfiguration configuration)
     {
+        var validityDays = configuration.GetValue(
+            "Security:PasswordValidityDays",
+            DefaultPasswordValidityDays);
+        _passwordValidity = TimeSpan.FromDays(
+            validityDays > 0 ? validityDays : DefaultPasswordValidityDays);
         _users = users;
         _identityUsers = identityUsers;
         _userManager = userManager;
@@ -332,6 +344,31 @@ public class IdentityAdministrationAppService :
         await CurrentUnitOfWork!.SaveChangesAsync(Token);
 
         return new GeneratedPasswordDto { Password = password };
+    }
+
+    [Authorize(FoodSafePermissions.SystemAdministration.Users.ResetPassword)]
+    public async Task SetUserPasswordAsync(Guid id, SetUserPasswordDto input)
+    {
+        var existing = await GetScopedUserAsync(id, DataScopeOperation.Edit);
+        await _identityOptions.SetAsync();
+        var user = await _userManager.GetByIdAsync(existing.Id);
+
+        var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+        (await _userManager.ResetPasswordAsync(user, resetToken, input.NewPassword))
+            .CheckErrors();
+        // The administrator chose this password deliberately, so it takes
+        // effect immediately — unlike the random/temporary password flow,
+        // the user must NOT be forced through the initial-password-change
+        // screen on their next login.
+        user.SetShouldChangePasswordOnNextLogin(false);
+        (await _userManager.UpdateSecurityStampAsync(user)).CheckErrors();
+        (await _userManager.UpdateAsync(user)).CheckErrors();
+        existing.Profile?.RecordPasswordChanged(_clock.Now, _passwordValidity);
+        if (existing.Profile is not null)
+        {
+            await _profiles.UpdateAsync(existing.Profile, cancellationToken: Token);
+        }
+        await CurrentUnitOfWork!.SaveChangesAsync(Token);
     }
 
     [Authorize(FoodSafePermissions.SystemAdministration.Users.Default)]

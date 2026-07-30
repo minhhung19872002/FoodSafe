@@ -168,6 +168,19 @@ public sealed class GeneratedPasswordDto
     public string Password { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Lets an administrator set a specific password for another account, as an
+/// alternative to <see cref="GeneratedPasswordDto"/>'s random generation.
+/// Compliance with the password policy (length, character classes) is
+/// enforced by ASP.NET Core Identity's configured validators, not here.
+/// </summary>
+public sealed class SetUserPasswordDto
+{
+    [Required]
+    [StringLength(128, MinimumLength = 8)]
+    public string NewPassword { get; set; } = string.Empty;
+}
+
 public sealed class PermissionOptionDto
 {
     public string Name { get; set; } = string.Empty;
