@@ -89,9 +89,20 @@ public class UpdateSystemSettingsDto
     [StringLength(2000)]
     public string? HomepageDescription { get; set; }
 
+    private string? _contactPhone;
+
+    /// <summary>
+    /// Không bắt buộc; chỉ kiểm tra định dạng khi có giá trị. Phải quy chuỗi rỗng
+    /// về null vì <see cref="PhoneAttribute"/> đòi tối thiểu một chữ số nên coi
+    /// chuỗi rỗng là không hợp lệ — xóa trắng ô này sẽ bị chặn.
+    /// </summary>
     [Phone]
     [StringLength(50)]
-    public string? ContactPhone { get; set; }
+    public string? ContactPhone
+    {
+        get => _contactPhone;
+        set => _contactPhone = NullIfEmpty(value);
+    }
 
     private string? _contactEmail;
 
