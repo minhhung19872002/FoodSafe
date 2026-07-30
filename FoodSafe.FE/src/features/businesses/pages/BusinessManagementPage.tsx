@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { App, Button, Modal, Tag } from "antd";
 import { PageHeader } from "@/components/PageHeader";
@@ -99,7 +100,9 @@ export default function BusinessManagementPage() {
     canViewBusinesses ? "businesses" : "products",
   );
   const [businessFilter, setBusinessFilter] = useState("");
+  const debouncedBusinessFilter = useDebounce(businessFilter);
   const [productFilter, setProductFilter] = useState("");
+  const debouncedProductFilter = useDebounce(productFilter);
   const [businessStatus, setBusinessStatus] = useState<BusinessStatus>();
   const [businessTypeId, setBusinessTypeId] = useState<string>();
   const [businessClassificationId, setBusinessClassificationId] =
@@ -128,7 +131,7 @@ export default function BusinessManagementPage() {
 
   const businessList = useBusinessList(
     {
-      filter: businessFilter || undefined,
+      filter: debouncedBusinessFilter || undefined,
       status: businessStatus,
       businessTypeId,
       businessClassificationId,
@@ -142,7 +145,7 @@ export default function BusinessManagementPage() {
   const businessOptions = useProductBusinessOptions(canViewProducts);
   const productList = useProductList(
     {
-      filter: productFilter || undefined,
+      filter: debouncedProductFilter || undefined,
       status: productStatus,
       sorting: productSorting,
       skipCount: productPagination.skipCount,
@@ -212,6 +215,21 @@ export default function BusinessManagementPage() {
       },
       onError: (error) => void message.error(extractApiError(error)),
     });
+  };
+
+  const resetBusinessFilters = () => {
+    setBusinessFilter("");
+    setBusinessStatus(undefined);
+    setBusinessTypeId(undefined);
+    setBusinessClassificationId(undefined);
+    setProvinceId(undefined);
+    businessPagination.resetToFirstPage();
+  };
+
+  const resetProductFilters = () => {
+    setProductFilter("");
+    setProductStatus(undefined);
+    productPagination.resetToFirstPage();
   };
 
   const saveProduct = (input: ProductInput | UpdateProductInput) => {
@@ -353,6 +371,8 @@ export default function BusinessManagementPage() {
           productPagination.resetToFirstPage();
         }}
         onCreateBusiness={() => setCreatingBusiness(true)}
+        onResetBusinessFilters={resetBusinessFilters}
+        onResetProductFilters={resetProductFilters}
         onImportBusiness={() => setImportingBusinesses(true)}
         onExportBusiness={() =>
           exportBusinesses.mutate(

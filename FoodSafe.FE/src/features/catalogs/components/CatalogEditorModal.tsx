@@ -61,6 +61,7 @@ export function CatalogEditorModal({
   } = useForm<CatalogInput>({
     resolver: zodResolver(schema),
     defaultValues: emptyCatalog,
+    mode: "onBlur",
   });
   const provinceId = useWatch({ control, name: "provinceId" });
   const level = useWatch({ control, name: "level" });

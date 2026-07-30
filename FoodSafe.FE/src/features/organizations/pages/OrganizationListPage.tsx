@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { App, Tag } from "antd";
 import { useMutation } from "@tanstack/react-query";
@@ -64,6 +65,7 @@ export default function OrganizationListPage() {
   const { message } = App.useApp();
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const [filter, setFilter] = useState("");
+  const debouncedFilter = useDebounce(filter);
   const [level, setLevel] = useState<OrganizationLevel>();
   const [isActive, setIsActive] = useState<boolean>();
   const [parentId, setParentId] = useState<string>();
@@ -75,7 +77,7 @@ export default function OrganizationListPage() {
 
   const queryFilter = useMemo(
     () => ({
-      filter: filter || undefined,
+      filter: debouncedFilter || undefined,
       level,
       isActive,
       parentId,
@@ -83,7 +85,7 @@ export default function OrganizationListPage() {
       maxResultCount: pagination.maxResultCount,
     }),
     [
-      filter,
+      debouncedFilter,
       level,
       isActive,
       parentId,
