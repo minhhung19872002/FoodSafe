@@ -1,4 +1,6 @@
+import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
+import { unzipSync, strFromU8 } from "fflate";
 import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
 import { buildXlsx } from "./helpers/xlsx";
 
@@ -48,7 +50,7 @@ test.describe("master catalog Excel import", () => {
     await removeStaleE2eArtifacts(page);
   });
 
-  test("downloads the generated template for the active catalog tab", async ({
+  test("downloads a template that carries headers, a sample row and guidance", async ({
     page,
   }) => {
     const modal = await openImportModal(page);
@@ -61,6 +63,22 @@ test.describe("master catalog Excel import", () => {
     expect(download.suggestedFilename()).toBe("mau-import-loai-van-ban.xlsx");
     const path = await download.path();
     expect(path).toBeTruthy();
+
+    // Đọc thẳng nội dung workbook: phải có tiêu đề cột, dòng mẫu và sheet hướng dẫn.
+    const entries = unzipSync(new Uint8Array(await readFile(path!)));
+    const text = Object.keys(entries)
+      .filter((entry) => entry.endsWith(".xml"))
+      .map((entry) => strFromU8(entries[entry]))
+      .join("");
+
+    expect(text).toContain("Loại văn bản");
+    expect(text).toContain("Mã*");
+    expect(text).toContain("Tên*");
+    // Dòng mẫu (giống file mẫu import cơ sở)
+    expect(text).toContain("VB-01");
+    expect(text).toContain("Nghị định");
+    expect(text).toContain("← Dòng mẫu, xóa trước khi upload");
+    expect(text).toContain("Hướng dẫn");
   });
 
   test("previews a valid file then imports the rows into the real database", async ({

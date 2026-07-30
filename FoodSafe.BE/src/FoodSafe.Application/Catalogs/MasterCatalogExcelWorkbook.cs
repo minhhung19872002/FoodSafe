@@ -16,6 +16,9 @@ internal enum CatalogColumnType
 /// <summary>
 /// Đặc tả một cột của file mẫu. <paramref name="LookupKey"/> trỏ tới danh sách
 /// tham chiếu được ghi ra sheet "Danh mục tham chiếu" và dùng làm dropdown.
+/// <paramref name="Sample"/> là giá trị minh họa ghi ở dòng 2 của file mẫu; cột
+/// tham chiếu bắt buộc sẽ tự lấy giá trị đầu tiên trong danh sách thay cho
+/// <paramref name="Sample"/> để dòng mẫu luôn khớp dropdown.
 /// </summary>
 internal sealed record CatalogColumn(
     string Field,
@@ -23,7 +26,8 @@ internal sealed record CatalogColumn(
     CatalogColumnType Type = CatalogColumnType.Text,
     bool Required = false,
     string? LookupKey = null,
-    string? Hint = null);
+    string? Hint = null,
+    string? Sample = null);
 
 /// <summary>Danh sách tham chiếu (tên hiển thị → id) dùng cho cột Lookup.</summary>
 internal sealed record CatalogLookup(
@@ -76,6 +80,7 @@ internal static class MasterCatalogExcelWorkbook
         using var workbook = new XLWorkbook();
         var sheet = workbook.Worksheets.Add(definition.SheetName);
         WriteHeaders(sheet, definition);
+        WriteSampleRow(sheet, definition, lookups);
         WriteLookupSheet(workbook, lookups);
         AddDropdownValidation(sheet, workbook, definition, lookups);
         WriteInstructions(workbook, definition);
@@ -174,6 +179,49 @@ internal static class MasterCatalogExcelWorkbook
         sheet.Columns().AdjustToContents(12, 42);
     }
 
+    /// <summary>
+    /// Ghi dòng minh họa ở dòng 2 (chữ xám, in nghiêng) giống file mẫu import
+    /// cơ sở. Người dùng phải xóa dòng này trước khi upload — sheet "Hướng dẫn"
+    /// nhắc lại yêu cầu đó.
+    /// </summary>
+    private static void WriteSampleRow(
+        IXLWorksheet sheet,
+        CatalogSheetDefinition definition,
+        IReadOnlyList<CatalogLookup> lookups)
+    {
+        for (var index = 0; index < definition.Columns.Count; index++)
+        {
+            var column = definition.Columns[index];
+            var value = ResolveSample(column, lookups);
+            if (value is null) continue;
+            sheet.Cell(2, index + 1).Value = value;
+        }
+        var row = sheet.Range(2, 1, 2, definition.Columns.Count);
+        row.Style.Font.FontColor = XLColor.Gray;
+        row.Style.Font.Italic = true;
+
+        // Nhắc ngay cạnh dòng mẫu — nằm ngoài vùng cột nên không bị đọc khi import.
+        var note = sheet.Cell(2, definition.Columns.Count + 2);
+        note.Value = "← Dòng mẫu, xóa trước khi upload";
+        note.Style.Font.FontColor = XLColor.Red;
+        note.Style.Font.Bold = true;
+    }
+
+    // Cột tham chiếu bắt buộc lấy giá trị thật đầu tiên để dòng mẫu không vi
+    // phạm dropdown; cột tham chiếu không bắt buộc để trống cho an toàn (ví dụ
+    // Phường/Xã phải thuộc đúng Tỉnh/Thành phố đã chọn).
+    private static string? ResolveSample(
+        CatalogColumn column,
+        IReadOnlyList<CatalogLookup> lookups)
+    {
+        if (column.LookupKey is null) return column.Sample;
+        if (!column.Required) return null;
+        var index = IndexOfLookup(lookups, column.LookupKey);
+        if (index < 0) return null;
+        var values = lookups[index].Values;
+        return values.Count == 0 ? null : values[0];
+    }
+
     private static void WriteLookupSheet(
         XLWorkbook workbook,
         IReadOnlyList<CatalogLookup> lookups)
@@ -248,6 +296,8 @@ internal static class MasterCatalogExcelWorkbook
         sheet.Cell(row++, 1).Value =
             $"Không đổi tên sheet \"{definition.SheetName}\" và không đổi tên cột.";
         sheet.Cell(row++, 1).Value =
+            "Dòng 2 (chữ xám, in nghiêng) là dòng mẫu — XÓA trước khi upload.";
+        sheet.Cell(row++, 1).Value =
             "Các cột có dấu * là bắt buộc. Không để trống.";
         sheet.Cell(row++, 1).Value =
             "Cột có dropdown: chọn từ danh sách, không tự nhập giá trị mới.";
@@ -283,18 +333,25 @@ internal static class MasterCatalogExcelWorkbook
     private static IReadOnlyDictionary<MasterCatalogKind, CatalogSheetDefinition>
         BuildDefinitions()
     {
-        var code = new CatalogColumn("Code", "Mã*", Required: true,
-            Hint: "Mã duy nhất trong danh mục.");
-        var name = new CatalogColumn("Name", "Tên*", Required: true);
-        var description = new CatalogColumn("Description", "Mô tả");
+        // Các cột dùng chung nhận giá trị mẫu theo từng danh mục để dòng minh
+        // họa đọc lên có nghĩa thay vì "Mã mẫu / Tên mẫu" chung chung.
+        static CatalogColumn Code(string sample) =>
+            new("Code", "Mã*", Required: true,
+                Hint: "Mã duy nhất trong danh mục.", Sample: sample);
+        static CatalogColumn Name(string sample) =>
+            new("Name", "Tên*", Required: true, Sample: sample);
+        static CatalogColumn Description(string? sample = null) =>
+            new("Description", "Mô tả", Sample: sample);
+
         var sortOrder = new CatalogColumn(
             "SortOrder", "Thứ tự", CatalogColumnType.Integer,
-            Hint: "Số nguyên, để trống = 0.");
+            Hint: "Số nguyên, để trống = 0.", Sample: "1");
         var active = new CatalogColumn(
             "IsActive", "Trạng thái", CatalogColumnType.Boolean,
-            Hint: "Có = hoạt động, Không = ngừng. Để trống = Có.");
+            Hint: "Có = hoạt động, Không = ngừng. Để trống = Có.", Sample: "Có");
 
-        var simple = new[] { code, name, description, sortOrder, active };
+        CatalogColumn[] Simple(string codeSample, string nameSample, string? note) =>
+            [Code(codeSample), Name(nameSample), Description(note), sortOrder, active];
 
         return new Dictionary<MasterCatalogKind, CatalogSheetDefinition>
         {
@@ -304,11 +361,12 @@ internal static class MasterCatalogExcelWorkbook
                 "quoc-gia",
                 [
                     new("CodeAlpha2", "Mã ISO Alpha-2*", Required: true,
-                        Hint: "Đúng 2 chữ cái, ví dụ VN."),
+                        Hint: "Đúng 2 chữ cái, ví dụ VN.", Sample: "JP"),
                     new("CodeAlpha3", "Mã ISO Alpha-3",
-                        Hint: "Đúng 3 chữ cái, ví dụ VNM."),
-                    new("NameVi", "Tên tiếng Việt*", Required: true),
-                    new("NameEn", "Tên tiếng Anh"),
+                        Hint: "Đúng 3 chữ cái, ví dụ VNM.", Sample: "JPN"),
+                    new("NameVi", "Tên tiếng Việt*", Required: true,
+                        Sample: "Nhật Bản"),
+                    new("NameEn", "Tên tiếng Anh", Sample: "Japan"),
                     sortOrder,
                     active
                 ],
@@ -318,7 +376,8 @@ internal static class MasterCatalogExcelWorkbook
                 MasterCatalogKind.Region,
                 "Vùng",
                 "vung",
-                [code, name, description, sortOrder, active],
+                Simple("DBSH", "Đồng bằng sông Hồng",
+                    "Gồm các tỉnh/thành thuộc đồng bằng sông Hồng"),
                 ["Mã vùng tối đa 20 ký tự."]),
 
             [MasterCatalogKind.ProductGroup] = new(
@@ -326,13 +385,13 @@ internal static class MasterCatalogExcelWorkbook
                 "Nhóm sản phẩm",
                 "nhom-san-pham",
                 [
-                    code,
-                    name,
+                    Code("NSP-01"),
+                    Name("Nước mắm và gia vị"),
                     new("Level", "Cấp*", CatalogColumnType.Integer, Required: true,
-                        Hint: "1 = nhóm cha, 2 = nhóm con."),
+                        Hint: "1 = nhóm cha, 2 = nhóm con.", Sample: "1"),
                     new("ParentName", "Nhóm cha", LookupKey: "product-group",
                         Hint: "Bắt buộc khi Cấp = 2. Chọn theo tên nhóm cấp 1."),
-                    description,
+                    Description(),
                     sortOrder,
                     active
                 ],
@@ -345,7 +404,7 @@ internal static class MasterCatalogExcelWorkbook
                 MasterCatalogKind.BusinessType,
                 "Loại hình cơ sở",
                 "loai-hinh-co-so",
-                simple,
+                Simple("LH-01", "Cơ sở sản xuất, chế biến thực phẩm", null),
                 []),
 
             [MasterCatalogKind.BusinessClassification] = new(
@@ -353,13 +412,15 @@ internal static class MasterCatalogExcelWorkbook
                 "Phân loại cơ sở",
                 "phan-loai-co-so",
                 [
-                    code,
-                    name,
+                    Code("LOAI-A"),
+                    Name("Loại A — Tốt"),
                     new("RiskLevel", "Rủi ro*", Required: true,
                         LookupKey: "risk-level",
                         Hint: "Cao, Trung bình hoặc Thấp."),
-                    new("Criteria", "Tiêu chí phân loại*", Required: true),
-                    description,
+                    new("Criteria", "Tiêu chí phân loại*", Required: true,
+                        Sample: "Cơ sở đáp ứng đầy đủ điều kiện bảo đảm an toàn "
+                            + "thực phẩm; tần suất thanh kiểm tra 01 lần/năm."),
+                    Description(),
                     sortOrder,
                     active
                 ],
@@ -369,14 +430,14 @@ internal static class MasterCatalogExcelWorkbook
                 MasterCatalogKind.AdvertisementType,
                 "Loại quảng cáo",
                 "loai-quang-cao",
-                simple,
+                Simple("QC-01", "Quảng cáo trên báo điện tử", null),
                 []),
 
             [MasterCatalogKind.DocumentType] = new(
                 MasterCatalogKind.DocumentType,
                 "Loại văn bản",
                 "loai-van-ban",
-                simple,
+                Simple("VB-01", "Nghị định", null),
                 []),
 
             [MasterCatalogKind.TestingCenter] = new(
@@ -384,22 +445,25 @@ internal static class MasterCatalogExcelWorkbook
                 "Trung tâm kiểm nghiệm",
                 "trung-tam-kiem-nghiem",
                 [
-                    code,
-                    name,
-                    new("Address", "Địa chỉ*", Required: true),
+                    Code("TTKN-01"),
+                    Name("Trung tâm Kiểm nghiệm ATTP Quảng Ninh"),
+                    new("Address", "Địa chỉ*", Required: true,
+                        Sample: "Số 651 đường Nguyễn Văn Cừ"),
                     new("ProvinceName", "Tỉnh/Thành phố*", Required: true,
                         LookupKey: "province"),
                     new("CommuneName", "Phường/Xã", LookupKey: "commune",
                         Hint: "Phải thuộc tỉnh/thành phố đã chọn."),
-                    new("ContactPerson", "Người liên hệ"),
-                    new("Phone", "Điện thoại"),
-                    new("Email", "Email"),
-                    new("AccreditationNumber", "Số công nhận*", Required: true),
-                    new("AccreditationScope", "Phạm vi công nhận*", Required: true),
+                    new("ContactPerson", "Người liên hệ", Sample: "Nguyễn Văn A"),
+                    new("Phone", "Điện thoại", Sample: "0203 3825 111"),
+                    new("Email", "Email", Sample: "ttkn@quangninh.gov.vn"),
+                    new("AccreditationNumber", "Số công nhận*", Required: true,
+                        Sample: "VILAS 1234"),
+                    new("AccreditationScope", "Phạm vi công nhận*", Required: true,
+                        Sample: "Vi sinh, hóa lý thực phẩm"),
                     new("AccreditationExpiresAt", "Hết hạn công nhận*",
                         CatalogColumnType.Date, Required: true,
-                        Hint: "Định dạng dd/MM/yyyy."),
-                    description,
+                        Hint: "Định dạng dd/MM/yyyy.", Sample: "31/12/2027"),
+                    Description(),
                     sortOrder,
                     active
                 ],
@@ -410,17 +474,18 @@ internal static class MasterCatalogExcelWorkbook
                 "Dịch vụ kiểm nghiệm",
                 "dich-vu-kiem-nghiem",
                 [
-                    code,
-                    name,
+                    Code("DV-01"),
+                    Name("Định lượng E.coli trong thực phẩm"),
                     new("TestingCenterName", "Trung tâm kiểm nghiệm*",
                         Required: true, LookupKey: "testing-center"),
-                    new("Unit", "Đơn vị tính*", Required: true),
-                    new("Method", "Phương pháp*", Required: true),
+                    new("Unit", "Đơn vị tính*", Required: true, Sample: "mẫu"),
+                    new("Method", "Phương pháp*", Required: true,
+                        Sample: "TCVN 6846:2007"),
                     new("Price", "Đơn giá (VND)", CatalogColumnType.Decimal,
-                        Hint: "Số không âm, để trống = 0."),
+                        Hint: "Số không âm, để trống = 0.", Sample: "350000"),
                     new("TurnaroundDays", "Thời gian trả KQ (ngày)",
-                        CatalogColumnType.Integer, Hint: "0 đến 3650."),
-                    description,
+                        CatalogColumnType.Integer, Hint: "0 đến 3650.", Sample: "5"),
+                    Description(),
                     sortOrder,
                     active
                 ],
