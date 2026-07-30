@@ -313,11 +313,24 @@ public class StatisticsAppService : ApplicationService
         }
 
         var now = _clock.Now;
-        var startDate = new DateTime(now.Year, now.Month, 1).AddMonths(-11);
+        DateTime startDate;
+        DateTime endDate;
+        if (input.Year.HasValue)
+        {
+            startDate = new DateTime(input.Year.Value, 1, 1);
+            endDate = new DateTime(input.Year.Value + 1, 1, 1);
+        }
+        else
+        {
+            startDate = new DateTime(now.Year, now.Month, 1).AddMonths(-11);
+            endDate = new DateTime(now.Year, now.Month, 1).AddMonths(1);
+        }
 
         var incidentQ = (await _poisoningIncidents.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
-            .Where(x => x.OccurrenceDate.HasValue && x.OccurrenceDate.Value >= startDate);
+            .Where(x => x.OccurrenceDate.HasValue &&
+                        x.OccurrenceDate.Value >= startDate &&
+                        x.OccurrenceDate.Value < endDate);
 
         var grouped = await AsyncExecuter.ToListAsync(
             incidentQ.GroupBy(x => new { x.OccurrenceDate!.Value.Year, x.OccurrenceDate!.Value.Month })

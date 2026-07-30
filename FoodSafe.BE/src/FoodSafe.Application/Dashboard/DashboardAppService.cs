@@ -126,9 +126,11 @@ public class DashboardAppService : ApplicationService
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
             .WhereIf(year.HasValue, x => x.ReportDate.Year == year!.Value);
         var alertQ = (await _alerts.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var riskQ = (await _riskAnalyses.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .WhereIf(year.HasValue, x => x.CreationTime.Year == year!.Value);
         var testQ = (await _testingResults.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
             .WhereIf(year.HasValue, x => x.SampleDate.Year == year!.Value);
@@ -137,12 +139,18 @@ public class DashboardAppService : ApplicationService
         var activeBusinesses = await AsyncExecuter.CountAsync(
             businessQ.Where(b => b.Status == BusinessStatus.Active), ct);
 
-        var totalSelfDecl = await AsyncExecuter.CountAsync(selfDeclQ, ct);
-        var totalProdReg = await AsyncExecuter.CountAsync(prodRegQ, ct);
-        var totalElig = await AsyncExecuter.CountAsync(eligQ, ct);
-        var totalCfs = await AsyncExecuter.CountAsync(cfsQ, ct);
-        var totalExport = await AsyncExecuter.CountAsync(exportQ, ct);
-        var totalAdReg = await AsyncExecuter.CountAsync(adRegQ, ct);
+        var totalSelfDecl = await AsyncExecuter.CountAsync(
+            selfDeclQ.WhereIf(year.HasValue, x => x.DeclarationDate.Year == year!.Value), ct);
+        var totalProdReg = await AsyncExecuter.CountAsync(
+            prodRegQ.WhereIf(year.HasValue, x => x.RegistrationDate.Year == year!.Value), ct);
+        var totalElig = await AsyncExecuter.CountAsync(
+            eligQ.WhereIf(year.HasValue, x => x.IssueDate.Year == year!.Value), ct);
+        var totalCfs = await AsyncExecuter.CountAsync(
+            cfsQ.WhereIf(year.HasValue, x => x.IssueDate.Year == year!.Value), ct);
+        var totalExport = await AsyncExecuter.CountAsync(
+            exportQ.WhereIf(year.HasValue, x => x.IssueDate.Year == year!.Value), ct);
+        var totalAdReg = await AsyncExecuter.CountAsync(
+            adRegQ.WhereIf(year.HasValue, x => x.RegistrationDate.Year == year!.Value), ct);
 
         var expiringElig = await AsyncExecuter.CountAsync(
             eligQ.Where(x => x.ExpiryDate != null && x.ExpiryDate > now && x.ExpiryDate <= expiry30), ct);
