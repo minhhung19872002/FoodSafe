@@ -18,7 +18,7 @@ import {
 } from "../api/organizationQueries";
 import { OrganizationCreateModal } from "../components/OrganizationCreateModal";
 import { OrganizationListView } from "../components/OrganizationListView";
-import { organizationLevelConfig } from "../components/organizationConfig";
+import { getOrganizationLevelConfig } from "../components/organizationConfig";
 import type {
   OrganizationDto,
   OrganizationLevel,
@@ -199,7 +199,7 @@ export default function OrganizationListPage() {
           {
             label: "Cấp",
             render: (r) => {
-              const config = organizationLevelConfig[r.level];
+              const config = getOrganizationLevelConfig(r.level);
               return <Tag color={config.color}>{config.label}</Tag>;
             },
           },

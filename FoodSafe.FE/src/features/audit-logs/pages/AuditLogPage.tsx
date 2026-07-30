@@ -42,6 +42,10 @@ function statusColor(code?: number) {
 
 export default function AuditLogPage() {
   const [filter, setFilter] = useState<AuditLogFilter>({});
+  const [searchDraft, setSearchDraft] = useState<{
+    userName?: string;
+    url?: string;
+  }>({});
   const pagination = useTablePagination(20);
 
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -53,6 +57,17 @@ export default function AuditLogPage() {
   const exportMut = useMutation({
     mutationFn: (f: AuditLogFilter) => auditLogApi.exportExcel(f),
   });
+
+  const commitSearchDraft = (overrides: { userName?: string; url?: string }) => {
+    const next = { ...searchDraft, ...overrides };
+    setSearchDraft(next);
+    setFilter((p) => ({
+      ...p,
+      userName: next.userName || undefined,
+      filter: next.url || undefined,
+    }));
+    pagination.resetToFirstPage();
+  };
 
   const columns: ColumnsType<AuditLog> = [
     {
@@ -132,19 +147,21 @@ export default function AuditLogPage() {
           placeholder="Tìm theo người dùng"
           allowClear
           style={{ width: 200 }}
-          onSearch={(v) => {
-            setFilter((p) => ({ ...p, userName: v || undefined }));
-            pagination.resetToFirstPage();
-          }}
+          value={searchDraft.userName ?? ""}
+          onChange={(e) =>
+            setSearchDraft((d) => ({ ...d, userName: e.target.value }))
+          }
+          onSearch={(v) => commitSearchDraft({ userName: v })}
         />
         <Input.Search
           placeholder="Tìm theo URL"
           allowClear
           style={{ width: 240 }}
-          onSearch={(v) => {
-            setFilter((p) => ({ ...p, filter: v || undefined }));
-            pagination.resetToFirstPage();
-          }}
+          value={searchDraft.url ?? ""}
+          onChange={(e) =>
+            setSearchDraft((d) => ({ ...d, url: e.target.value }))
+          }
+          onSearch={(v) => commitSearchDraft({ url: v })}
         />
         <Select
           placeholder="Phương thức"
