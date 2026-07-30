@@ -18,6 +18,7 @@ public class AtpAlertAppService : ApplicationService
     private readonly IRepository<AtpAlert, Guid> _alerts;
     private readonly IRepository<Business, Guid> _businesses;
     private readonly IRepository<IdentityUser, Guid> _identityUsers;
+    private readonly IRepository<AppUserProfile, Guid> _userProfiles;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
@@ -25,12 +26,14 @@ public class AtpAlertAppService : ApplicationService
         IRepository<AtpAlert, Guid> alerts,
         IRepository<Business, Guid> businesses,
         IRepository<IdentityUser, Guid> identityUsers,
+        IRepository<AppUserProfile, Guid> userProfiles,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens)
     {
         _alerts = alerts;
         _businesses = businesses;
         _identityUsers = identityUsers;
+        _userProfiles = userProfiles;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
     }
@@ -179,9 +182,47 @@ public class AtpAlertAppService : ApplicationService
     public async Task<AtpAlertDto> AssignAsync(Guid id, AssignAlertDto input)
     {
         var alert = await GetScopedAsync(id, DataScopeOperation.Edit);
+        await EnsureAssigneeAccessibleAsync(input.AssigneeId);
         alert.Assign(input.AssigneeId, CurrentUser.GetId(), Clock.Now);
         await _alerts.UpdateAsync(alert, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return (await ToDtosAsync([alert]))[0];
+    }
+
+    /// <summary>
+    /// Returns active staff available to the assignment picker. This endpoint is
+    /// intentionally protected by Alerts.Assign instead of the much broader
+    /// identity-administration permission.
+    /// </summary>
+    [Authorize(FoodSafePermissions.AlertsAndTesting.Alerts.Assign)]
+    public async Task<ListResultDto<AssignableAlertStaffDto>> GetAssignableUsersAsync(
+        string? filter = null)
+    {
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.View, _cancellationTokens.Token);
+        var users = await BuildAssignableUsersQueryAsync(scope);
+
+        if (!filter.IsNullOrWhiteSpace())
+        {
+            var keyword = filter!.Trim();
+            users = users.Where(x =>
+                x.UserName.Contains(keyword) ||
+                x.FullName.Contains(keyword));
+        }
+
+        var rows = await AsyncExecuter.ToListAsync(
+            users
+                .OrderBy(x => x.FullName)
+                .ThenBy(x => x.UserName)
+                .Take(200),
+            _cancellationTokens.Token);
+
+        return new ListResultDto<AssignableAlertStaffDto>(
+            rows.Select(x => new AssignableAlertStaffDto
+            {
+                Id = x.Id,
+                UserName = x.UserName,
+                FullName = x.FullName
+            }).ToList());
     }
 
     private async Task<IQueryable<AtpAlert>> ScopedQueryAsync(DataScopeOperation operation)
@@ -219,6 +260,48 @@ public class AtpAlertAppService : ApplicationService
         if (!await AsyncExecuter.AnyAsync(query, _cancellationTokens.Token))
             throw new BusinessException(FoodSafeDomainErrorCodes.Alert.BusinessNotAccessible);
     }
+
+    private async Task EnsureAssigneeAccessibleAsync(Guid assigneeId)
+    {
+        var scope = await _dataScopeProvider.GetAsync(
+            DataScopeOperation.View, _cancellationTokens.Token);
+        var users = await BuildAssignableUsersQueryAsync(scope);
+        if (!await AsyncExecuter.AnyAsync(
+                users.Where(x => x.Id == assigneeId),
+                _cancellationTokens.Token))
+        {
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Alert.AssigneeNotAccessible);
+        }
+    }
+
+    private async Task<IQueryable<AssignableUserRow>> BuildAssignableUsersQueryAsync(
+        CurrentDataScope scope)
+    {
+        var users = await _identityUsers.GetQueryableAsync();
+        var profiles = await _userProfiles.GetQueryableAsync();
+
+        var query =
+            from user in users
+            join profile in profiles on user.Id equals profile.UserId
+            where user.IsActive
+            select new AssignableUserRow(
+                user.Id,
+                user.UserName,
+                profile.FullName,
+                profile.OrganizationId);
+
+        if (!scope.HasGlobalAccess)
+            query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
+
+        return query;
+    }
+
+    private sealed record AssignableUserRow(
+        Guid Id,
+        string UserName,
+        string FullName,
+        Guid OrganizationId);
 
     // Sắp xếp theo yêu cầu của client trong danh sách cột cho phép; mặc định
     // mới nhất lên đầu.

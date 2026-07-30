@@ -233,5 +233,4 @@ export interface StaffUserOption {
   id: string;
   userName: string;
   fullName: string;
-  isActive: boolean;
 }

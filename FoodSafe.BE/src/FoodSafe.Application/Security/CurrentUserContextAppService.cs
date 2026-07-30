@@ -76,6 +76,7 @@ public class CurrentUserContextAppService :
         FoodSafePermissions.AlertsAndTesting.Alerts.Edit,
         FoodSafePermissions.AlertsAndTesting.Alerts.Delete,
         FoodSafePermissions.AlertsAndTesting.Alerts.Publish,
+        FoodSafePermissions.AlertsAndTesting.Alerts.Assign,
         FoodSafePermissions.AlertsAndTesting.News.View,
         FoodSafePermissions.AlertsAndTesting.News.Create,
         FoodSafePermissions.AlertsAndTesting.News.Edit,

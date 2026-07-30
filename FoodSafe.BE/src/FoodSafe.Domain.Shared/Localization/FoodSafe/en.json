@@ -200,6 +200,7 @@
     "FoodSafe:Alert:0003": "Can only recall published alerts.",
     "FoodSafe:Alert:0004": "Cannot modify alert that is not in Draft status.",
     "FoodSafe:Alert:0005": "The linked business does not exist or is outside your organization scope.",
+    "FoodSafe:Alert:0006": "The assignee does not exist, is inactive, or is outside your organization scope.",
     "FoodSafe:News:0001": "News article not found.",
     "FoodSafe:News:0002": "Can only modify news in Draft status.",
     "FoodSafe:News:0003": "Can only recall published news.",

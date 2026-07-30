@@ -1,7 +1,7 @@
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { server } from "@/test/server";
-import { alertApi, newsApi } from "./alertsNewsApi";
+import { alertApi, newsApi, staffApi } from "./alertsNewsApi";
 
 describe("alertsNewsApi", () => {
   it("alertApi uses the expected list path contract", async () => {
@@ -66,5 +66,30 @@ describe("alertsNewsApi", () => {
 
     expect(requestedPath).toBe("/api/v1/app/atp-news/alert-options");
     expect(result).toEqual([{ id: "alert-1", title: "Cảnh báo 01" }]);
+  });
+
+  it("staffApi uses the alert-scoped assignable-users endpoint", async () => {
+    let requestedPath = "";
+    server.use(
+      http.get("*/api/v1/app/atp-alert/assignable-users", ({ request }) => {
+        requestedPath = new URL(request.url).pathname;
+        return HttpResponse.json({
+          items: [
+            {
+              id: "staff-1",
+              userName: "staff.one",
+              fullName: "Cán bộ Một",
+            },
+          ],
+        });
+      }),
+    );
+
+    const result = await staffApi.listUsers();
+
+    expect(requestedPath).toBe(
+      "/api/v1/app/atp-alert/assignable-users",
+    );
+    expect(result.items[0]?.fullName).toBe("Cán bộ Một");
   });
 });

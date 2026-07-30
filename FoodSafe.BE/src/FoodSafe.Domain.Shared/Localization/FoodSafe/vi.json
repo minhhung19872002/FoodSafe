@@ -229,6 +229,7 @@
     "FoodSafe:Alert:0003": "Chỉ cảnh báo đã xuất bản mới được thu hồi.",
     "FoodSafe:Alert:0004": "Không thể sửa cảnh báo khi không ở trạng thái Nháp.",
     "FoodSafe:Alert:0005": "Cơ sở liên quan không tồn tại hoặc không thuộc phạm vi đơn vị của bạn.",
+    "FoodSafe:Alert:0006": "Cán bộ xử lý không tồn tại, đã bị khóa hoặc không thuộc phạm vi đơn vị của bạn.",
     "FoodSafe:News:0001": "Không tìm thấy tin tức.",
     "FoodSafe:News:0002": "Chỉ được sửa tin tức ở trạng thái Nháp.",
     "FoodSafe:News:0003": "Chỉ tin tức đã xuất bản mới được thu hồi.",

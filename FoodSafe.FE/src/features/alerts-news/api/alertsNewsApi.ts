@@ -73,19 +73,15 @@ export const alertApi = {
   },
 };
 
-/**
- * Lightweight user list for the moderation-queue assignee Select.
- * Calls the same administration endpoint used by the identity feature — no
- * cross-feature import required because this is a plain API call.
- */
+/** Lightweight, scope-filtered active-user list for the assignment picker. */
 export const staffApi = {
   async listUsers(
     filter?: string,
-  ): Promise<{ totalCount: number; items: StaffUserOption[] }> {
+  ): Promise<{ items: StaffUserOption[] }> {
     return (
-      await api.get<{ totalCount: number; items: StaffUserOption[] }>(
-        "/v1/administration/users",
-        { params: { filter, maxResultCount: 200, isActive: true } },
+      await api.get<{ items: StaffUserOption[] }>(
+        `${alertEndpoint}/assignable-users`,
+        { params: { filter } },
       )
     ).data;
   },

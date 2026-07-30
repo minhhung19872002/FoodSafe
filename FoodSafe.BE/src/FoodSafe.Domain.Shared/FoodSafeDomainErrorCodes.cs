@@ -236,6 +236,7 @@ public static class FoodSafeDomainErrorCodes
         public const string CanOnlyRecallPublished = "FoodSafe:Alert:0003";
         public const string CannotModifyNonDraft = "FoodSafe:Alert:0004";
         public const string BusinessNotAccessible = "FoodSafe:Alert:0005";
+        public const string AssigneeNotAccessible = "FoodSafe:Alert:0006";
     }
 
     public static class News

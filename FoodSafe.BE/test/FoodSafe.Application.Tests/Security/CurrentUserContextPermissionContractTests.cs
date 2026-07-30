@@ -158,6 +158,9 @@ public sealed class CurrentUserContextPermissionContractTests
             FoodSafePermissions.AlertsAndTesting.Alerts.Publish,
             permissions);
         Assert.Contains(
+            FoodSafePermissions.AlertsAndTesting.Alerts.Assign,
+            permissions);
+        Assert.Contains(
             FoodSafePermissions.AlertsAndTesting.News.View,
             permissions);
         Assert.Contains(

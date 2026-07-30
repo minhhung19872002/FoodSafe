@@ -23,6 +23,10 @@ public sealed class AlertsAndTestingApplicationContractTests
         FoodSafePermissions.AlertsAndTesting.Alerts.Publish)]
     [InlineData(typeof(AtpAlertAppService), "RejectAsync",
         FoodSafePermissions.AlertsAndTesting.Alerts.Publish)]
+    [InlineData(typeof(AtpAlertAppService), "AssignAsync",
+        FoodSafePermissions.AlertsAndTesting.Alerts.Assign)]
+    [InlineData(typeof(AtpAlertAppService), "GetAssignableUsersAsync",
+        FoodSafePermissions.AlertsAndTesting.Alerts.Assign)]
     [InlineData(typeof(AtpNewsAppService), "GetListAsync", null)]
     [InlineData(typeof(AtpNewsAppService), "GetAsync", null)]
     [InlineData(typeof(AtpNewsAppService), "GetAlertOptionsAsync", null)]

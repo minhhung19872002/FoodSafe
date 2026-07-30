@@ -108,3 +108,13 @@ public class AssignAlertDto
     [Required]
     public Guid AssigneeId { get; set; }
 }
+
+/// <summary>
+/// Minimal active-user projection used by the citizen-report assignment picker.
+/// It deliberately excludes identity-administration fields.
+/// </summary>
+public class AssignableAlertStaffDto : EntityDto<Guid>
+{
+    public string UserName { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+}
