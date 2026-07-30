@@ -235,7 +235,9 @@ export default function StatisticsPage() {
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
-                    data={stats.businessByStatus}
+                    data={stats.businessByStatus.filter(
+                      (e) => e.count > 0,
+                    )}
                     dataKey="count"
                     nameKey="name"
                     cx="50%"
@@ -243,12 +245,14 @@ export default function StatisticsPage() {
                     outerRadius={100}
                     label={({ name, value }) => `${name}: ${value}`}
                   >
-                    {stats.businessByStatus.map((entry) => (
-                      <Cell
-                        key={entry.name}
-                        fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
-                      />
-                    ))}
+                    {stats.businessByStatus
+                      .filter((e) => e.count > 0)
+                      .map((entry) => (
+                        <Cell
+                          key={entry.name}
+                          fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
+                        />
+                      ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
@@ -313,7 +317,9 @@ export default function StatisticsPage() {
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
-                    data={stats.licenseByStatus}
+                    data={stats.licenseByStatus.filter(
+                      (e) => e.count > 0,
+                    )}
                     dataKey="count"
                     nameKey="name"
                     cx="50%"
@@ -322,12 +328,14 @@ export default function StatisticsPage() {
                     outerRadius={100}
                     label={({ name, value }) => `${name}: ${value}`}
                   >
-                    {stats.licenseByStatus.map((entry) => (
-                      <Cell
-                        key={entry.name}
-                        fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
-                      />
-                    ))}
+                    {stats.licenseByStatus
+                      .filter((e) => e.count > 0)
+                      .map((entry) => (
+                        <Cell
+                          key={entry.name}
+                          fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
+                        />
+                      ))}
                   </Pie>
                   <Tooltip />
                   <Legend />
@@ -392,7 +400,9 @@ export default function StatisticsPage() {
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
-                    data={stats.inspectionOutcome}
+                    data={stats.inspectionOutcome.filter(
+                      (e) => e.count > 0,
+                    )}
                     dataKey="count"
                     nameKey="name"
                     cx="50%"
@@ -400,12 +410,14 @@ export default function StatisticsPage() {
                     outerRadius={100}
                     label={({ name, value }) => `${name}: ${value}`}
                   >
-                    {stats.inspectionOutcome.map((entry) => (
-                      <Cell
-                        key={entry.name}
-                        fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
-                      />
-                    ))}
+                    {stats.inspectionOutcome
+                      .filter((e) => e.count > 0)
+                      .map((entry) => (
+                        <Cell
+                          key={entry.name}
+                          fill={STATUS_COLORS[entry.name] ?? COLORS[0]}
+                        />
+                      ))}
                   </Pie>
                   <Tooltip />
                   <Legend />

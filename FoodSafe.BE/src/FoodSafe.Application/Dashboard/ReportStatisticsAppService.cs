@@ -82,18 +82,21 @@ public class ReportStatisticsAppService : ApplicationService
         var global = scope.HasGlobalAccess;
         var year = input.Year ?? _clock.Now.Year;
         var filterOrgId = input.OrganizationId;
+        var (rangeStart, rangeEnd) = ComputeDateRange(year, input.Month, input.Quarter);
+        var dtStart = rangeStart.ToDateTime(TimeOnly.MinValue);
+        var dtEnd = rangeEnd.ToDateTime(TimeOnly.MinValue);
 
         var dto = new ReportStatisticsDto();
-        await AddLicensesByBusinessTypeAsync(dto, global, orgIds, filterOrgId, ct);
-        await AddPoisoningByAreaAsync(dto, global, orgIds, filterOrgId, year, ct);
-        await AddInspectionSummaryAsync(dto, global, orgIds, filterOrgId, year, ct);
-        await AddBusinessBreakdownAsync(dto, global, orgIds, filterOrgId, ct);
+        await AddLicensesByBusinessTypeAsync(dto, global, orgIds, filterOrgId, dtStart, dtEnd, ct);
+        await AddPoisoningByAreaAsync(dto, global, orgIds, filterOrgId, rangeStart, rangeEnd, ct);
+        await AddInspectionSummaryAsync(dto, global, orgIds, filterOrgId, year, dtStart, dtEnd, ct);
+        await AddBusinessBreakdownAsync(dto, global, orgIds, filterOrgId, dtStart, dtEnd, ct);
         return dto;
     }
 
     private async Task AddLicensesByBusinessTypeAsync(
         ReportStatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        Guid? filterOrgId, CancellationToken ct)
+        Guid? filterOrgId, DateTime dtStart, DateTime dtEnd, CancellationToken ct)
     {
         var bizQ = (await _businesses.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
@@ -131,27 +134,33 @@ public class ReportStatisticsAppService : ApplicationService
 
         await CollectAsync(_selfDeclarations,
             q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
-                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
+                  .Where(x => x.DeclarationDate >= dtStart && x.DeclarationDate < dtEnd),
             (row, count) => row.SelfDeclarations += count);
         await CollectAsync(_productRegistrations,
             q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
-                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
+                  .Where(x => x.RegistrationDate >= dtStart && x.RegistrationDate < dtEnd),
             (row, count) => row.ProductRegistrations += count);
         await CollectAsync(_eligibilityCertificates,
             q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
-                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
+                  .Where(x => x.IssueDate >= dtStart && x.IssueDate < dtEnd),
             (row, count) => row.EligibilityCertificates += count);
         await CollectAsync(_cfsCertificates,
             q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
-                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
+                  .Where(x => x.IssueDate >= dtStart && x.IssueDate < dtEnd),
             (row, count) => row.CfsCertificates += count);
         await CollectAsync(_exportCertificates,
             q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
-                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
+                  .Where(x => x.IssueDate >= dtStart && x.IssueDate < dtEnd),
             (row, count) => row.ExportCertificates += count);
         await CollectAsync(_adRegistrations,
             q => q.WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
-                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value),
+                  .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
+                  .Where(x => x.RegistrationDate >= dtStart && x.RegistrationDate < dtEnd),
             (row, count) => row.AdRegistrations += count);
 
         var typeIds = rows.Keys.Where(k => k != Guid.Empty).ToList();
@@ -176,6 +185,26 @@ public class ReportStatisticsAppService : ApplicationService
             .ToList();
     }
 
+    private static (DateOnly start, DateOnly end) ComputeDateRange(int year, int? month, int? quarter)
+    {
+        if (month.HasValue)
+        {
+            var m = Math.Clamp(month.Value, 1, 12);
+            var s = new DateOnly(year, m, 1);
+            return (s, s.AddMonths(1));
+        }
+
+        if (quarter.HasValue)
+        {
+            var q = Math.Clamp(quarter.Value, 1, 4);
+            var startMonth = (q - 1) * 3 + 1;
+            var s = new DateOnly(year, startMonth, 1);
+            return (s, s.AddMonths(3));
+        }
+
+        return (new DateOnly(year, 1, 1), new DateOnly(year + 1, 1, 1));
+    }
+
     private static System.Linq.Expressions.Expression<Func<TLicense, Guid>>
         BuildBusinessIdExpression<TLicense>()
     {
@@ -187,12 +216,12 @@ public class ReportStatisticsAppService : ApplicationService
 
     private async Task AddPoisoningByAreaAsync(
         ReportStatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        Guid? filterOrgId, int year, CancellationToken ct)
+        Guid? filterOrgId, DateOnly rangeStart, DateOnly rangeEnd, CancellationToken ct)
     {
         var caseQ = (await _poisoningCases.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
             .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
-            .Where(x => x.ReportDate.Year == year);
+            .Where(x => x.ReportDate >= rangeStart && x.ReportDate < rangeEnd);
 
         var grouped = await AsyncExecuter.ToListAsync(
             caseQ.GroupBy(x => x.LocationProvinceId)
@@ -230,7 +259,7 @@ public class ReportStatisticsAppService : ApplicationService
 
     private async Task AddInspectionSummaryAsync(
         ReportStatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        Guid? filterOrgId, int year, CancellationToken ct)
+        Guid? filterOrgId, int year, DateTime dtStart, DateTime dtEnd, CancellationToken ct)
     {
         var planQ = (await _inspectionPlans.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
@@ -243,7 +272,7 @@ public class ReportStatisticsAppService : ApplicationService
         var resultQ = (await _inspectionResults.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
             .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
-            .Where(x => x.InspectionDate.Year == year);
+            .Where(x => x.InspectionDate >= dtStart && x.InspectionDate < dtEnd);
         var results = await AsyncExecuter.ToListAsync(
             resultQ.GroupBy(x => x.OrganizationId)
                 .Select(g => new
@@ -281,11 +310,12 @@ public class ReportStatisticsAppService : ApplicationService
 
     private async Task AddBusinessBreakdownAsync(
         ReportStatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        Guid? filterOrgId, CancellationToken ct)
+        Guid? filterOrgId, DateTime dtStart, DateTime dtEnd, CancellationToken ct)
     {
         var bizQ = (await _businesses.GetQueryableAsync())
             .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
-            .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value);
+            .WhereIf(filterOrgId.HasValue, x => x.OrganizationId == filterOrgId!.Value)
+            .Where(x => x.CreationTime >= dtStart && x.CreationTime < dtEnd);
 
         var byType = await AsyncExecuter.ToListAsync(
             bizQ.GroupBy(b => b.BusinessTypeId)

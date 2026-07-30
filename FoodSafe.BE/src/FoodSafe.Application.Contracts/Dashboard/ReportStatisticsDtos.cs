@@ -3,6 +3,8 @@ namespace FoodSafe.Application.Contracts.Dashboard;
 public class ReportStatisticsFilterDto
 {
     public int? Year { get; set; }
+    public int? Month { get; set; }
+    public int? Quarter { get; set; }
     public Guid? OrganizationId { get; set; }
 }
 

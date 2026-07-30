@@ -86,8 +86,8 @@ public class StatisticsAppService : ApplicationService
 
         var dto = new StatisticsDto();
 
-        await AddBusinessStatsAsync(dto, global, orgIds, ct);
-        await AddLicenseStatsAsync(dto, global, orgIds, ct);
+        await AddBusinessStatsAsync(dto, global, orgIds, dtStart, dtEnd, ct);
+        await AddLicenseStatsAsync(dto, global, orgIds, dtStart, dtEnd, ct);
         await AddInspectionStatsAsync(dto, global, orgIds, year, dtStart, dtEnd, ct);
         await AddPoisoningStatsAsync(dto, global, orgIds, year, rangeStart, rangeEnd, ct);
 
@@ -96,10 +96,11 @@ public class StatisticsAppService : ApplicationService
 
     private async Task AddBusinessStatsAsync(
         StatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        CancellationToken ct)
+        DateTime dtStart, DateTime dtEnd, CancellationToken ct)
     {
         var businessQ = (await _businesses.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .Where(x => x.CreationTime >= dtStart && x.CreationTime < dtEnd);
 
         var businessByStatus = await AsyncExecuter.ToListAsync(
             businessQ.GroupBy(b => b.Status)
@@ -143,38 +144,44 @@ public class StatisticsAppService : ApplicationService
 
     private async Task AddLicenseStatsAsync(
         StatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
-        CancellationToken ct)
+        DateTime dtStart, DateTime dtEnd, CancellationToken ct)
     {
         var selfDeclQ = (await _selfDeclarations.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .Where(x => x.DeclarationDate >= dtStart && x.DeclarationDate < dtEnd);
         var selfDeclCount = await AsyncExecuter.CountAsync(selfDeclQ, ct);
 
         var prodRegQ = (await _productRegistrations.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .Where(x => x.RegistrationDate >= dtStart && x.RegistrationDate < dtEnd);
         var prodActive = await AsyncExecuter.CountAsync(prodRegQ.Where(x => x.Status == LicenseStatus.Active), ct);
         var prodExpired = await AsyncExecuter.CountAsync(prodRegQ.Where(x => x.Status == LicenseStatus.Expired), ct);
         var prodRevoked = await AsyncExecuter.CountAsync(prodRegQ.Where(x => x.Status == LicenseStatus.Revoked), ct);
 
         var eligQ = (await _eligibilityCertificates.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .Where(x => x.IssueDate >= dtStart && x.IssueDate < dtEnd);
         var eligActive = await AsyncExecuter.CountAsync(eligQ.Where(x => x.Status == LicenseStatus.Active), ct);
         var eligExpired = await AsyncExecuter.CountAsync(eligQ.Where(x => x.Status == LicenseStatus.Expired), ct);
         var eligRevoked = await AsyncExecuter.CountAsync(eligQ.Where(x => x.Status == LicenseStatus.Revoked), ct);
 
         var cfsQ = (await _cfsCertificates.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .Where(x => x.IssueDate >= dtStart && x.IssueDate < dtEnd);
         var cfsActive = await AsyncExecuter.CountAsync(cfsQ.Where(x => x.Status == LicenseStatus.Active), ct);
         var cfsExpired = await AsyncExecuter.CountAsync(cfsQ.Where(x => x.Status == LicenseStatus.Expired), ct);
         var cfsRevoked = await AsyncExecuter.CountAsync(cfsQ.Where(x => x.Status == LicenseStatus.Revoked), ct);
 
         var exportQ = (await _exportCertificates.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .Where(x => x.IssueDate >= dtStart && x.IssueDate < dtEnd);
         var expActive = await AsyncExecuter.CountAsync(exportQ.Where(x => x.Status == LicenseStatus.Active), ct);
         var expExpired = await AsyncExecuter.CountAsync(exportQ.Where(x => x.Status == LicenseStatus.Expired), ct);
         var expRevoked = await AsyncExecuter.CountAsync(exportQ.Where(x => x.Status == LicenseStatus.Revoked), ct);
 
         var adRegQ = (await _adRegistrations.GetQueryableAsync())
-            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId));
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .Where(x => x.RegistrationDate >= dtStart && x.RegistrationDate < dtEnd);
         var adActive = await AsyncExecuter.CountAsync(adRegQ.Where(x => x.Status == LicenseStatus.Active), ct);
         var adExpired = await AsyncExecuter.CountAsync(adRegQ.Where(x => x.Status == LicenseStatus.Expired), ct);
         var adRevoked = await AsyncExecuter.CountAsync(adRegQ.Where(x => x.Status == LicenseStatus.Revoked), ct);

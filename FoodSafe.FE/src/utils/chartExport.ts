@@ -6,7 +6,17 @@ export function downloadChartAsPng(
   container: HTMLElement,
   fileName: string,
 ): Promise<void> {
-  const svg = container.querySelector("svg");
+  const candidates = container.querySelectorAll<SVGSVGElement>("svg");
+  let svg: SVGSVGElement | null = null;
+  let maxArea = 0;
+  for (const candidate of candidates) {
+    const r = candidate.getBoundingClientRect();
+    const area = r.width * r.height;
+    if (area > maxArea) {
+      maxArea = area;
+      svg = candidate;
+    }
+  }
   if (!svg) {
     return Promise.reject(new Error("No chart found in container"));
   }
