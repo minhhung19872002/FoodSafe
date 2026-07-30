@@ -117,12 +117,16 @@ export default function OrganizationListPage() {
   }, [editing, allOrganizationOptions, treeQuery.data?.items]);
 
   const refresh = () => {
+    void listQuery.refetch();
+    void treeQuery.refetch();
+  };
+
+  const resetFilters = () => {
     setFilter("");
     setLevel(undefined);
     setIsActive(undefined);
     setParentId(undefined);
     pagination.resetToFirstPage();
-    void listQuery.refetch();
     void treeQuery.refetch();
   };
 
@@ -176,6 +180,7 @@ export default function OrganizationListPage() {
             pagination.resetToFirstPage();
           }}
           onRefresh={refresh}
+          onResetFilters={resetFilters}
           onCreate={() => setCreateOpen(true)}
           onEdit={setEditing}
           onShowDetail={setDetailOrganization}

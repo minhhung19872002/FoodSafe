@@ -16,12 +16,14 @@ import { RowActions } from "@/components/RowActions";
 import { PageHeader } from "@/components/PageHeader";
 import {
   AuditOutlined,
+  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
   KeyOutlined,
   LockOutlined,
   PlusOutlined,
+  ReloadOutlined,
   SafetyCertificateOutlined,
   StopOutlined,
   TeamOutlined,
@@ -131,9 +133,11 @@ export default function IdentityAdministrationPage() {
   const [userFilter, setUserFilter] = useState<UserFilter>({
     sorting: "UserName",
   });
+  const [userFilterResetKey, setUserFilterResetKey] = useState(0);
   const [roleFilter, setRoleFilter] = useState<RoleFilter>({
     sorting: "Name",
   });
+  const [roleFilterResetKey, setRoleFilterResetKey] = useState(0);
   const [editingUser, setEditingUser] = useState<AdminUser>();
   const [detailUser, setDetailUser] = useState<AdminUser | null>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -164,6 +168,20 @@ export default function IdentityAdministrationPage() {
   const organizations = useOrganizationTree();
   const activity = useUserActivity(activityUser?.id);
   const rolePermissions = useRolePermissions(permissionRole?.id);
+
+  const resetUserFilters = () => {
+    setUserFilter({ sorting: "UserName" });
+    usersPagination.resetToFirstPage();
+    setUserFilterResetKey((key) => key + 1);
+  };
+  const refreshUsers = () => void users.refetch();
+
+  const resetRoleFilters = () => {
+    setRoleFilter({ sorting: "Name" });
+    rolesPagination.resetToFirstPage();
+    setRoleFilterResetKey((key) => key + 1);
+  };
+  const refreshRoles = () => void roles.refetch();
 
   const createUser = useCreateAdminUser();
   const updateUser = useUpdateAdminUser();
@@ -259,6 +277,7 @@ export default function IdentityAdministrationPage() {
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <div className="filter-toolbar" style={{ marginBottom: 16 }}>
           <Input.Search
+            key={`user-search-${userFilterResetKey}`}
             aria-label="Tìm tài khoản"
             allowClear
             placeholder="Tên, email hoặc số điện thoại"
@@ -272,6 +291,7 @@ export default function IdentityAdministrationPage() {
             }}
           />
           <Select
+            key={`user-role-${userFilterResetKey}`}
             aria-label="Lọc vai trò"
             allowClear
             placeholder="Vai trò"
@@ -283,6 +303,7 @@ export default function IdentityAdministrationPage() {
             }}
           />
           <Select
+            key={`user-org-${userFilterResetKey}`}
             aria-label="Lọc đơn vị"
             allowClear
             showSearch
@@ -296,6 +317,7 @@ export default function IdentityAdministrationPage() {
             }}
           />
           <Select
+            key={`user-permission-${userFilterResetKey}`}
             aria-label="Lọc theo quyền"
             allowClear
             showSearch
@@ -309,6 +331,7 @@ export default function IdentityAdministrationPage() {
             }}
           />
           <Select
+            key={`user-status-${userFilterResetKey}`}
             aria-label="Lọc trạng thái tài khoản"
             allowClear
             placeholder="Trạng thái"
@@ -332,6 +355,19 @@ export default function IdentityAdministrationPage() {
               usersPagination.resetToFirstPage();
             }}
           />
+          <Button
+            icon={<ClearOutlined />}
+            onClick={resetUserFilters}
+          >
+            Đặt lại bộ lọc
+          </Button>
+          <Button
+            icon={<ReloadOutlined />}
+            loading={users.isFetching}
+            onClick={refreshUsers}
+          >
+            Làm mới
+          </Button>
           <Button
             icon={<ExportOutlined />}
             loading={exportUsers.isPending}
@@ -577,6 +613,7 @@ export default function IdentityAdministrationPage() {
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <div className="filter-toolbar" style={{ marginBottom: 16 }}>
           <Input.Search
+            key={`role-search-${roleFilterResetKey}`}
             aria-label="Tìm vai trò"
             allowClear
             placeholder="Tên hoặc mô tả vai trò"
@@ -590,6 +627,7 @@ export default function IdentityAdministrationPage() {
             }}
           />
           <Select
+            key={`role-status-${roleFilterResetKey}`}
             aria-label="Lọc trạng thái vai trò"
             allowClear
             placeholder="Trạng thái"
@@ -603,6 +641,16 @@ export default function IdentityAdministrationPage() {
               rolesPagination.resetToFirstPage();
             }}
           />
+          <Button icon={<ClearOutlined />} onClick={resetRoleFilters}>
+            Đặt lại bộ lọc
+          </Button>
+          <Button
+            icon={<ReloadOutlined />}
+            loading={roles.isFetching}
+            onClick={refreshRoles}
+          >
+            Làm mới
+          </Button>
           <Button
             icon={<SafetyCertificateOutlined />}
             onClick={() => setMatrixOpen(true)}
