@@ -48,28 +48,26 @@ export function SelfDeclarationEditorModal(props: Props) {
         ]
       : props.businesses;
 
+  const initialValues: Partial<FormValues> = declaration
+    ? {
+        businessId: declaration.businessId,
+        productId: declaration.productId,
+        declarationNumber: declaration.declarationNumber,
+        declarationDate: dayjs(declaration.declarationDate),
+        productName: declaration.productName,
+        manufacturer: declaration.manufacturer,
+        purpose: declaration.purpose,
+        expiryDate: declaration.expiryDate
+          ? dayjs(declaration.expiryDate)
+          : undefined,
+        notes: declaration.notes,
+      }
+    : { declarationDate: dayjs() };
+
   useEffect(() => {
     if (!open) return;
-    const item = declaration;
-    form.setFieldsValue(
-      item
-        ? {
-            businessId: item.businessId,
-            productId: item.productId,
-            declarationNumber: item.declarationNumber,
-            declarationDate: dayjs(item.declarationDate),
-            productName: item.productName,
-            manufacturer: item.manufacturer,
-            purpose: item.purpose,
-            expiryDate: item.expiryDate ? dayjs(item.expiryDate) : undefined,
-            notes: item.notes,
-          }
-        : {
-            declarationDate: dayjs(),
-          },
-    );
-    onBusinessChange(item?.businessId);
-  }, [form, open, declaration, onBusinessChange]);
+    onBusinessChange(declaration?.businessId);
+  }, [open, declaration, onBusinessChange]);
 
   return (
     <Modal
@@ -88,8 +86,12 @@ export function SelfDeclarationEditorModal(props: Props) {
       destroyOnHidden
     >
       <Form
+        // Remount theo hồ sơ đang sửa để `initialValues` được áp dụng lại khi
+        // mở modal cho bản ghi khác trước lúc nội dung cũ bị destroy.
+        key={declaration?.id ?? "new"}
         form={form}
         layout="vertical"
+        initialValues={initialValues}
         preserve={false}
         onFinish={(values) =>
           props.onSubmit({

@@ -63,6 +63,9 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
                 || (n.Summary != null && n.Summary.ToUpper().Contains(keyword)));
         }
 
+        if (input.Categories is { Count: > 0 })
+            query = query.Where(n => n.Category != null && input.Categories.Contains(n.Category));
+
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
         var items = await AsyncExecuter.ToListAsync(
             query.OrderByDescending(n => n.IsFeatured)
@@ -115,61 +118,123 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
                 || (a.AffectedArea != null && a.AffectedArea.ToUpper().Contains(keyword)));
         }
 
+        if (input.Categories is { Count: > 0 })
+        {
+            var cats = input.Categories
+                .Select(c => int.TryParse(c, out var n) ? (AlertCategory?)n : null)
+                .Where(c => c.HasValue).Select(c => c!.Value).ToList();
+            if (cats.Count > 0)
+                query = query.Where(a => cats.Contains(a.Category));
+        }
+
+        if (input.Severities is { Count: > 0 })
+        {
+            var sevs = input.Severities
+                .Select(s => int.TryParse(s, out var n) ? (AlertSeverity?)n : null)
+                .Where(s => s.HasValue).Select(s => s!.Value).ToList();
+            if (sevs.Count > 0)
+                query = query.Where(a => sevs.Contains(a.Severity));
+        }
+
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
         var items = await AsyncExecuter.ToListAsync(
             query.OrderByDescending(a => a.PublishedAt)
                 .Skip(input.SkipCount).Take(input.MaxResultCount),
             _cancellationTokens.Token);
 
+        var bizIds = items.Where(a => a.BusinessId.HasValue)
+            .Select(a => a.BusinessId!.Value).Distinct().ToList();
+        var bizNames = bizIds.Count == 0 ? [] :
+            (await _businesses.GetListAsync(b => bizIds.Contains(b.Id), cancellationToken: _cancellationTokens.Token))
+                .ToDictionary(b => b.Id, b => b.Name);
+
         return new PagedResultDto<PublicAlertDto>(
-            totalCount, items.Select(ToAlertDto).ToList());
+            totalCount, items.Select(a =>
+            {
+                var dto = ToAlertDto(a);
+                dto.BusinessId = a.BusinessId;
+                if (a.BusinessId.HasValue && bizNames.TryGetValue(a.BusinessId.Value, out var n))
+                    dto.BusinessName = n;
+                return dto;
+            }).ToList());
+    }
+
+    public async Task<List<string>> GetNewsCategoriesAsync()
+    {
+        var query = (await _news.GetQueryableAsync())
+            .Where(n => n.Status == NewsStatus.Published && n.IsPublic && n.Category != null)
+            .Select(n => n.Category!)
+            .Distinct()
+            .OrderBy(c => c);
+        return await AsyncExecuter.ToListAsync(query, _cancellationTokens.Token);
     }
 
     public async Task<PagedResultDto<PublicWarnedBusinessDto>> GetWarnedBusinessesAsync(
         PublicSearchRequestDto input)
     {
-        var query = (await _alerts.GetQueryableAsync())
-            .Where(a => a.Status == AlertStatus.Published && a.IsPublic && a.BusinessId != null);
+        var keyword = input.Keyword?.Trim();
+        var baseQuery = (await _alerts.GetQueryableAsync())
+            .Where(a => a.Status == AlertStatus.Published && a.IsPublic && a.BusinessId != null)
+            .OrderByDescending(a => a.PublishedAt);
 
-        var alerts = await AsyncExecuter.ToListAsync(
-            query.OrderByDescending(a => a.PublishedAt),
-            _cancellationTokens.Token);
+        List<AtpAlert> pageAlerts;
+        Dictionary<Guid, Business> businessesById;
+        long totalCount;
 
-        var businessIds = alerts.Select(a => a.BusinessId!.Value).Distinct().ToList();
-        var businessesById = (await _businesses.GetListAsync(
-                b => businessIds.Contains(b.Id), cancellationToken: _cancellationTokens.Token))
-            .ToDictionary(b => b.Id);
-
-        var rows = alerts
-            .Where(a => businessesById.ContainsKey(a.BusinessId!.Value))
-            .Select(a =>
-            {
-                var business = businessesById[a.BusinessId!.Value];
-                return new PublicWarnedBusinessDto
-                {
-                    BusinessName = business.Name,
-                    BusinessCode = business.Code,
-                    AddressText = business.AddressStreet,
-                    AlertTitle = a.Title,
-                    AlertNumber = a.AlertNumber,
-                    Severity = a.Severity,
-                    PublishedAt = a.PublishedAt,
-                    Content = a.Content,
-                };
-            });
-
-        var keyword = input.Keyword?.Trim().ToUpperInvariant();
-        if (!string.IsNullOrWhiteSpace(keyword))
+        if (string.IsNullOrWhiteSpace(keyword))
         {
-            rows = rows.Where(r =>
-                r.BusinessName.Contains(keyword, StringComparison.OrdinalIgnoreCase)
-                || (r.BusinessCode?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false));
+            // No keyword: paginate at DB level for efficiency and accurate totalCount
+            totalCount = await AsyncExecuter.CountAsync(baseQuery, _cancellationTokens.Token);
+            pageAlerts = await AsyncExecuter.ToListAsync(
+                baseQuery.Skip(input.SkipCount).Take(input.MaxResultCount),
+                _cancellationTokens.Token);
+
+            var pageIds = pageAlerts.Select(a => a.BusinessId!.Value).Distinct().ToList();
+            businessesById = pageIds.Count == 0
+                ? []
+                : (await _businesses.GetListAsync(
+                        b => pageIds.Contains(b.Id), cancellationToken: _cancellationTokens.Token))
+                    .ToDictionary(b => b.Id);
+        }
+        else
+        {
+            // Keyword on business name/code requires in-memory filtering after joining
+            var allAlerts = await AsyncExecuter.ToListAsync(baseQuery, _cancellationTokens.Token);
+            var allIds = allAlerts.Select(a => a.BusinessId!.Value).Distinct().ToList();
+            businessesById = allIds.Count == 0
+                ? []
+                : (await _businesses.GetListAsync(
+                        b => allIds.Contains(b.Id), cancellationToken: _cancellationTokens.Token))
+                    .ToDictionary(b => b.Id);
+
+            var filtered = allAlerts.Where(a =>
+            {
+                businessesById.TryGetValue(a.BusinessId!.Value, out var biz);
+                return (biz?.Name?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false)
+                    || (biz?.Code?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false);
+            }).ToList();
+
+            totalCount = filtered.Count;
+            pageAlerts = filtered.Skip(input.SkipCount).Take(input.MaxResultCount).ToList();
         }
 
-        var list = rows.ToList();
-        return new PagedResultDto<PublicWarnedBusinessDto>(
-            list.Count,
-            list.Skip(input.SkipCount).Take(input.MaxResultCount).ToList());
+        var items = pageAlerts.Select(a =>
+        {
+            businessesById.TryGetValue(a.BusinessId!.Value, out var business);
+            return new PublicWarnedBusinessDto
+            {
+                BusinessName = business?.Name ?? string.Empty,
+                BusinessCode = business?.Code,
+                AddressText = business?.AddressStreet,
+                AlertTitle = a.Title,
+                AlertNumber = a.AlertNumber,
+                Severity = a.Severity,
+                PublishedAt = a.PublishedAt,
+                Content = a.Content,
+            };
+        }).ToList();
+
+        return new PagedResultDto<PublicWarnedBusinessDto>(totalCount, items);
     }
 
     public async Task<List<CatalogOptionDto>> GetDocumentTypeOptionsAsync()
@@ -261,6 +326,24 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
             query = query.Where(r =>
                 r.Title.ToUpper().Contains(keyword)
                 || (r.RelatedProducts != null && r.RelatedProducts.ToUpper().Contains(keyword)));
+        }
+
+        if (input.Categories is { Count: > 0 })
+        {
+            var cats = input.Categories
+                .Select(c => int.TryParse(c, out var n) ? (AlertCategory?)n : null)
+                .Where(c => c.HasValue).Select(c => c!.Value).ToList();
+            if (cats.Count > 0)
+                query = query.Where(r => cats.Contains(r.Category));
+        }
+
+        if (input.Severities is { Count: > 0 })
+        {
+            var levels = input.Severities
+                .Select(s => int.TryParse(s, out var n) ? (RiskLevel?)n : null)
+                .Where(s => s.HasValue).Select(s => s!.Value).ToList();
+            if (levels.Count > 0)
+                query = query.Where(r => levels.Contains(r.RiskLevel));
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);

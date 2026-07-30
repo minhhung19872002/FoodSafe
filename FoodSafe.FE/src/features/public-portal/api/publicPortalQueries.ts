@@ -85,6 +85,14 @@ export function usePublicNewsDetail(id: string) {
   });
 }
 
+export function usePublicNewsCategories() {
+  return useQuery({
+    queryKey: [QK, "news-categories"],
+    queryFn: () => publicPortalApi.fetchNewsCategoryOptions(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function usePublicAlerts(filter: PublicAlertFilter) {
   return useQuery({
     queryKey: [QK, "alerts", filter],

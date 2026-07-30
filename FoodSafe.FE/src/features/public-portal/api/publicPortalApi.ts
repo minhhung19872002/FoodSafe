@@ -119,7 +119,16 @@ export const publicPortalApi = {
 
   listNews(filter: PublicNewsFilter): Promise<PagedResult<PublicNewsItem>> {
     return api
-      .get<PagedResult<PublicNewsItem>>("/v1/public/news", { params: filter })
+      .get<PagedResult<PublicNewsItem>>("/v1/public/news", {
+        params: filter,
+        paramsSerializer: { indexes: null },
+      })
+      .then((r) => r.data);
+  },
+
+  fetchNewsCategoryOptions(): Promise<string[]> {
+    return api
+      .get<string[]>("/v1/public/catalog/news-categories")
       .then((r) => r.data);
   },
 
@@ -131,7 +140,10 @@ export const publicPortalApi = {
 
   listAlerts(filter: PublicAlertFilter): Promise<PagedResult<PublicAlert>> {
     return api
-      .get<PagedResult<PublicAlert>>("/v1/public/alerts", { params: filter })
+      .get<PagedResult<PublicAlert>>("/v1/public/alerts", {
+        params: filter,
+        paramsSerializer: { indexes: null },
+      })
       .then((r) => r.data);
   },
 
@@ -173,6 +185,7 @@ export const publicPortalApi = {
     return api
       .get<PagedResult<PublicRiskAnalysis>>("/v1/public/risk-analyses", {
         params: filter,
+        paramsSerializer: { indexes: null },
       })
       .then((r) => r.data);
   },

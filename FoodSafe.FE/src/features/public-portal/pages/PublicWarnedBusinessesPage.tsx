@@ -4,6 +4,7 @@ import {
   Button,
   Empty,
   Input,
+  Select,
   Space,
   Spin,
   Table,
@@ -12,49 +13,69 @@ import {
 } from "antd";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { PublicShell } from "../components/PublicShell";
-import { usePublicWarnedBusinesses } from "../api/publicPortalQueries";
+import { usePublicAlerts } from "../api/publicPortalQueries";
 import {
+  ALERT_CATEGORY_CONFIG,
   ALERT_SEVERITY_CONFIG,
+  type AlertCategory,
   type AlertSeverity,
-  type PublicWarnedBusiness,
+  type PublicAlert,
 } from "../types/publicPortal.types";
+
+const ALERT_SEVERITY_OPTIONS = Object.entries(ALERT_SEVERITY_CONFIG).map(
+  ([value, cfg]) => ({ value: Number(value), label: cfg.label }),
+);
 
 export default function PublicWarnedBusinessesPage() {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
+  const [severities, setSeverities] = useState<AlertSeverity[]>([]);
   const pagination = useTablePagination(20);
 
-  const filter = {
+  const { data, isFetching, isError } = usePublicAlerts({
     Keyword: submittedKeyword || undefined,
+    Severities: severities.length > 0 ? severities : undefined,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
-  };
-
-  const { data, isFetching, isError } = usePublicWarnedBusinesses(filter);
+  });
 
   const handleSearch = () => {
     pagination.resetToFirstPage();
     setSubmittedKeyword(keyword);
   };
 
+  const handleSeverityChange = (values: AlertSeverity[]) => {
+    setSeverities(values);
+    pagination.resetToFirstPage();
+  };
+
   return (
     <PublicShell>
       <Typography.Title level={3} style={{ marginBottom: 8 }}>
-        Danh sách cơ sở đang bị cảnh báo
+        Danh sách cảnh báo
       </Typography.Title>
       <Typography.Paragraph type="secondary" style={{ marginBottom: 24 }}>
-        Danh sách các cơ sở sản xuất kinh doanh thực phẩm đang bị cơ quan quản
-        lý cảnh báo vi phạm an toàn thực phẩm.
+        Danh sách cảnh báo an toàn thực phẩm được cơ quan quản lý công khai.
       </Typography.Paragraph>
 
       <Space wrap style={{ marginBottom: 16 }}>
         <Input
           value={keyword}
-          placeholder="Tên hoặc mã cơ sở..."
+          placeholder="Tìm kiếm cảnh báo..."
           onChange={(e) => setKeyword(e.target.value)}
           onPressEnter={handleSearch}
           allowClear
           style={{ width: 350 }}
+        />
+        <Select
+          mode="multiple"
+          allowClear
+          placeholder="Mức độ"
+          value={severities}
+          onChange={handleSeverityChange}
+          options={ALERT_SEVERITY_OPTIONS}
+          style={{ minWidth: 200 }}
+          maxTagCount="responsive"
         />
         <Button type="primary" loading={isFetching} onClick={handleSearch}>
           Tìm kiếm
@@ -71,14 +92,12 @@ export default function PublicWarnedBusinessesPage() {
       )}
 
       <Spin spinning={isFetching}>
-        <Table<PublicWarnedBusiness>
+        <Table<PublicAlert>
           dataSource={data?.items}
-          rowKey={(row) => `${row.businessCode}-${row.alertNumber}`}
+          rowKey="id"
           pagination={pagination.buildConfig(data?.totalCount)}
           locale={{
-            emptyText: (
-              <Empty description="Không có cơ sở nào đang bị cảnh báo" />
-            ),
+            emptyText: <Empty description="Không có cảnh báo nào" />,
           }}
           size="middle"
           expandable={{
@@ -99,34 +118,40 @@ export default function PublicWarnedBusinessesPage() {
           }}
         >
           <Table.Column
-            title="STT"
-            render={(_v, _r, i) =>
-              (pagination.page - 1) * pagination.pageSize + i + 1
-            }
-            width={60}
-          />
-          <Table.Column title="Tên cơ sở" dataIndex="businessName" />
-          <Table.Column title="Mã cơ sở" dataIndex="businessCode" width={130} />
-          <Table.Column title="Địa chỉ" dataIndex="addressText" />
-          <Table.Column
             title="Số cảnh báo"
             dataIndex="alertNumber"
-            width={140}
+            width={150}
           />
-          <Table.Column title="Tiêu đề cảnh báo" dataIndex="alertTitle" />
+          <Table.Column title="Tiêu đề" dataIndex="title" />
+          <Table.Column
+            title="Cơ sở liên quan"
+            dataIndex="businessName"
+            width={200}
+            render={(name: string | undefined) => name || "—"}
+          />
+          <Table.Column
+            title="Danh mục"
+            dataIndex="category"
+            width={150}
+            render={(cat: AlertCategory) => {
+              const cfg = ALERT_CATEGORY_CONFIG[cat];
+              return cfg ? <Tag>{cfg.label}</Tag> : <Tag>{cat}</Tag>;
+            }}
+          />
           <Table.Column
             title="Mức độ"
             dataIndex="severity"
             width={110}
-            render={(severity: AlertSeverity) => {
-              const cfg = ALERT_SEVERITY_CONFIG[severity];
+            render={(sev: AlertSeverity) => {
+              const cfg = ALERT_SEVERITY_CONFIG[sev];
               return cfg ? (
                 <Tag color={cfg.color}>{cfg.label}</Tag>
               ) : (
-                <Tag>{severity}</Tag>
+                <Tag>{sev}</Tag>
               );
             }}
           />
+          <Table.Column title="Địa bàn" dataIndex="affectedArea" width={160} />
           <Table.Column
             title="Ngày đăng"
             dataIndex="publishedAt"
