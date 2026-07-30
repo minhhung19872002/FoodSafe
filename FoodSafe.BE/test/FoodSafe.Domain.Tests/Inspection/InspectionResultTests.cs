@@ -28,7 +28,7 @@ public sealed class InspectionResultTests
                     planId: Guid.NewGuid(), planItemId: null,
                     Today, InspectionType.Scheduled,
                     null, null, InspectionOverallResult.Pass,
-                    false, null, null, null, null, false, null, null, null))
+                    false, null, null, null, null, false, null, null, null, null))
             .Code.ShouldBe(FoodSafeDomainErrorCodes.Inspection.PlanItemWithoutPlan);
     }
 
@@ -41,7 +41,7 @@ public sealed class InspectionResultTests
                     planId: null, planItemId: Guid.NewGuid(),
                     Today, InspectionType.Scheduled,
                     null, null, InspectionOverallResult.Pass,
-                    false, null, null, null, null, false, null, null, null))
+                    false, null, null, null, null, false, null, null, null, null))
             .Code.ShouldBe(FoodSafeDomainErrorCodes.Inspection.PlanItemWithoutPlan);
     }
 
@@ -52,7 +52,7 @@ public sealed class InspectionResultTests
             Guid.NewGuid(), Guid.NewGuid(), OrgId,
             null, null, Today, InspectionType.Scheduled,
             null, null, InspectionOverallResult.Fail,
-            true, null, 5_000_000m, null, null, false, null, null, null);
+            true, null, 5_000_000m, null, null, false, null, null, null, null);
 
         result.AddViolation(Guid.NewGuid(), "V01", "Vi phạm", null, null, null, null);
 
@@ -68,7 +68,7 @@ public sealed class InspectionResultTests
                 Guid.NewGuid(), Guid.NewGuid(), OrgId,
                 null, null, Today, InspectionType.Scheduled,
                 null, null, InspectionOverallResult.Pass,
-                false, null, -100m, null, null, false, null, null, null));
+                false, null, -100m, null, null, false, null, null, null, null));
     }
 
     [Fact]
@@ -145,5 +145,5 @@ public sealed class InspectionResultTests
             Guid.NewGuid(), Guid.NewGuid(), OrgId,
             null, null, Today, InspectionType.Scheduled,
             "Nguyễn Văn A", null, InspectionOverallResult.Pass,
-            false, null, null, null, null, false, null, null, null);
+            false, null, null, null, null, false, null, null, null, null);
 }

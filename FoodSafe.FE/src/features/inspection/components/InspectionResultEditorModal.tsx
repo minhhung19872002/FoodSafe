@@ -50,6 +50,7 @@ interface FormValues {
   adminDecisionDate?: Dayjs;
   followUpRequired: boolean;
   followUpDate?: Dayjs;
+  followUpScope?: string;
   recommendations?: string;
   notes?: string;
   violations?: ViolationFormValue[];
@@ -86,6 +87,7 @@ export function InspectionResultEditorModal(props: Props) {
   }));
   const selectedPlanId = Form.useWatch("planId", form);
   const hasViolation = Form.useWatch("hasViolation", form);
+  const followUpRequired = Form.useWatch("followUpRequired", form);
   const selectedPlan = props.plans.find((p) => p.id === selectedPlanId);
   const planItems = selectedPlan?.items ?? [];
 
@@ -127,6 +129,7 @@ export function InspectionResultEditorModal(props: Props) {
           : undefined,
         followUpRequired: item.followUpRequired,
         followUpDate: item.followUpDate ? dayjs(item.followUpDate) : undefined,
+        followUpScope: item.followUpScope,
         recommendations: item.recommendations,
         notes: item.notes,
         // The server replaces the whole violation set on update, so the form
@@ -192,7 +195,12 @@ export function InspectionResultEditorModal(props: Props) {
               values.adminDecisionNumber?.trim() || undefined,
             adminDecisionDate: values.adminDecisionDate?.format("YYYY-MM-DD"),
             followUpRequired: values.followUpRequired,
-            followUpDate: values.followUpDate?.format("YYYY-MM-DD"),
+            followUpDate: values.followUpRequired
+              ? values.followUpDate?.format("YYYY-MM-DD")
+              : undefined,
+            followUpScope: values.followUpRequired
+              ? values.followUpScope?.trim() || undefined
+              : undefined,
             recommendations: values.recommendations?.trim() || undefined,
             notes: values.notes?.trim() || undefined,
             violations: (values.violations ?? []).map((v) => ({
@@ -467,29 +475,15 @@ export function InspectionResultEditorModal(props: Props) {
                     <Input.TextArea rows={2} />
                   </Form.Item>
 
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: 12,
-                    }}
+                  <Form.Item
+                    name={[field.name, "remedyDeadline"]}
+                    label="Hạn khắc phục"
                   >
-                    <Form.Item
-                      name={[field.name, "fineAmount"]}
-                      label="Tiền phạt (VNĐ)"
-                    >
-                      <InputNumber min={0} style={{ width: "100%" }} />
-                    </Form.Item>
-                    <Form.Item
-                      name={[field.name, "remedyDeadline"]}
-                      label="Hạn khắc phục"
-                    >
-                      <DatePicker
-                        format="DD/MM/YYYY"
-                        style={{ width: "100%" }}
-                      />
-                    </Form.Item>
-                  </div>
+                    <DatePicker
+                      format="DD/MM/YYYY"
+                      style={{ width: "100%" }}
+                    />
+                  </Form.Item>
 
                   <Form.Item
                     name={[field.name, "remedyRequired"]}
@@ -523,12 +517,48 @@ export function InspectionResultEditorModal(props: Props) {
             label=" "
             colon={false}
           >
-            <Checkbox>Yêu cầu tái kiểm tra</Checkbox>
+            <Checkbox
+              onChange={(e) => {
+                if (!e.target.checked) {
+                  form.setFieldValue("followUpDate", undefined);
+                  form.setFieldValue("followUpScope", undefined);
+                }
+              }}
+            >
+              Yêu cầu tái kiểm tra
+            </Checkbox>
           </Form.Item>
-          <Form.Item name="followUpDate" label="Ngày tái kiểm tra">
-            <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
+          <Form.Item
+            name="followUpDate"
+            label="Ngày tái kiểm tra"
+            rules={
+              followUpRequired
+                ? [
+                    {
+                      required: true,
+                      message: "Vui lòng chọn ngày tái kiểm tra.",
+                    },
+                  ]
+                : []
+            }
+          >
+            <DatePicker
+              format="DD/MM/YYYY"
+              style={{ width: "100%" }}
+              disabled={!followUpRequired}
+            />
           </Form.Item>
         </div>
+
+        <Form.Item name="followUpScope" label="Phạm vi kiểm tra lại">
+          <Input.TextArea
+            rows={2}
+            disabled={!followUpRequired}
+            placeholder={
+              followUpRequired ? "Nhập phạm vi kiểm tra lại" : undefined
+            }
+          />
+        </Form.Item>
 
         <Form.Item name="recommendations" label="Kiến nghị">
           <Input.TextArea rows={2} />

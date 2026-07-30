@@ -1118,6 +1118,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.AdminDecisionDate).HasColumnName("admin_decision_date").HasColumnType("date");
             entity.Property(x => x.FollowUpRequired).HasColumnName("follow_up_required");
             entity.Property(x => x.FollowUpDate).HasColumnName("follow_up_date").HasColumnType("date");
+            entity.Property(x => x.FollowUpScope).HasColumnName("follow_up_scope");
             entity.Property(x => x.FollowUpResultValue).HasColumnName("follow_up_result").HasConversion<short?>();
             entity.Property(x => x.Recommendations).HasColumnName("recommendations");
             entity.Property(x => x.Notes).HasColumnName("notes");

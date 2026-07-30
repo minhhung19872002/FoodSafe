@@ -22,6 +22,7 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
     public DateTime? AdminDecisionDate { get; private set; }
     public bool FollowUpRequired { get; private set; }
     public DateTime? FollowUpDate { get; private set; }
+    public string? FollowUpScope { get; private set; }
     public FollowUpResult? FollowUpResultValue { get; private set; }
     public string? Recommendations { get; private set; }
     public string? Notes { get; private set; }
@@ -62,6 +63,7 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         DateTime? adminDecisionDate,
         bool followUpRequired,
         DateTime? followUpDate,
+        string? followUpScope,
         string? recommendations,
         string? notes)
     {
@@ -81,7 +83,7 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
             inspectionDate, inspectionType, teamLeader, teamMembersText,
             overallResult, hasViolation, violationDescription, fineAmount,
             adminDecisionNumber, adminDecisionDate,
-            followUpRequired, followUpDate, recommendations, notes);
+            followUpRequired, followUpDate, followUpScope, recommendations, notes);
         return result;
     }
 
@@ -115,6 +117,7 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         DateTime? adminDecisionDate,
         bool followUpRequired,
         DateTime? followUpDate,
+        string? followUpScope,
         string? recommendations,
         string? notes)
     {
@@ -123,7 +126,7 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
             inspectionDate, inspectionType, teamLeader, teamMembersText,
             overallResult, hasViolation, violationDescription, fineAmount,
             adminDecisionNumber, adminDecisionDate,
-            followUpRequired, followUpDate, recommendations, notes);
+            followUpRequired, followUpDate, followUpScope, recommendations, notes);
     }
 
     public InspectionViolation AddViolation(
@@ -197,6 +200,7 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         DateTime? adminDecisionDate,
         bool followUpRequired,
         DateTime? followUpDate,
+        string? followUpScope,
         string? recommendations,
         string? notes)
     {
@@ -216,7 +220,8 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         AdminDecisionNumber = Normalize(adminDecisionNumber);
         AdminDecisionDate = adminDecisionDate?.Date;
         FollowUpRequired = followUpRequired;
-        FollowUpDate = followUpDate?.Date;
+        FollowUpDate = followUpRequired ? followUpDate?.Date : null;
+        FollowUpScope = followUpRequired ? Normalize(followUpScope) : null;
         Recommendations = Normalize(recommendations);
         Notes = Normalize(notes);
     }

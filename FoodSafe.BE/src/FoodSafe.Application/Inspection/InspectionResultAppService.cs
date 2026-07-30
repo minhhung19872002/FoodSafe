@@ -122,6 +122,7 @@ public class InspectionResultAppService : ApplicationService
             input.AdminDecisionDate,
             input.FollowUpRequired,
             input.FollowUpDate,
+            input.FollowUpScope,
             input.Recommendations,
             input.Notes);
 
@@ -179,6 +180,7 @@ public class InspectionResultAppService : ApplicationService
             input.AdminDecisionDate,
             input.FollowUpRequired,
             input.FollowUpDate,
+            input.FollowUpScope,
             input.Recommendations,
             input.Notes);
 
@@ -302,7 +304,8 @@ public class InspectionResultAppService : ApplicationService
 
     private void EnsureInspectionDateNotInFuture(DateTime inspectionDate)
     {
-        if (inspectionDate.Date > Clock.Now.Date)
+        var localToday = Clock.Now.ToLocalTime().Date;
+        if (inspectionDate.Date > localToday)
             throw new BusinessException(
                 FoodSafeDomainErrorCodes.Inspection.FutureInspectionDate);
     }
@@ -377,6 +380,7 @@ public class InspectionResultAppService : ApplicationService
             AdminDecisionDate = r.AdminDecisionDate,
             FollowUpRequired = r.FollowUpRequired,
             FollowUpDate = r.FollowUpDate,
+            FollowUpScope = r.FollowUpScope,
             FollowUpResultValue = r.FollowUpResultValue,
             Recommendations = r.Recommendations,
             Notes = r.Notes,

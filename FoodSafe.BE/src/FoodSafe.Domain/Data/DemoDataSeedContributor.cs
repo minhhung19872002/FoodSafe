@@ -476,7 +476,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 "Trần Thị Huyện", "Trần Thị Huyện, Lê Văn Xem",
                 InspectionOverallResult.Fail, true,
                 "Vi phạm điều kiện vệ sinh khu chế biến và hồ sơ nhân sự",
-                null, "68/QĐ-XPHC", now.AddDays(-55), true, now.AddDays(-20),
+                null, "68/QĐ-XPHC", now.AddDays(-55), true, now.AddDays(-20), null,
                 "Yêu cầu khắc phục toàn bộ vi phạm trước đợt kiểm tra lại", null);
             result.AddViolation(DemoId(0x8033, 1), "VP-01",
                 "Khu vực chế biến không bảo đảm vệ sinh, dụng cụ sống chín dùng chung",
@@ -502,7 +502,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 now.AddDays(-100), InspectionType.Unscheduled,
                 "Nguyễn Văn Tỉnh", "Nguyễn Văn Tỉnh, Trần Thị Huyện",
                 InspectionOverallResult.Pass, false, null, null, null, null,
-                false, null,
+                false, null, null,
                 "Duy trì tốt điều kiện sản xuất, khuyến khích áp dụng HACCP", null);
             result.SetInspectors([(ProvinceAdminId, true), (CommuneStaffId, false)]);
             result.Finalize(ProvinceAdminId, now.AddDays(-95));
@@ -517,7 +517,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 now.AddDays(-30), InspectionType.Unscheduled,
                 "Lê Văn Xem", "Lê Văn Xem",
                 InspectionOverallResult.ConditionalPass, false, null, null,
-                null, null, true, now.AddDays(30),
+                null, null, true, now.AddDays(30), null,
                 "Bổ sung lưu mẫu thức ăn 24 giờ đúng quy định", null);
             result.SetInspectors([(CommuneStaffId, true)]);
             return result;

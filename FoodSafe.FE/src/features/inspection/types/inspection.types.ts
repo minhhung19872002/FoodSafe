@@ -222,6 +222,7 @@ export interface InspectionResult {
   adminDecisionDate?: string;
   followUpRequired: boolean;
   followUpDate?: string;
+  followUpScope?: string;
   followUpResultValue?: FollowUpResult;
   recommendations?: string;
   notes?: string;
@@ -262,6 +263,7 @@ export interface CreateUpdateInspectionResultInput {
   adminDecisionDate?: string;
   followUpRequired: boolean;
   followUpDate?: string;
+  followUpScope?: string;
   recommendations?: string;
   notes?: string;
   violations: CreateUpdateViolationInput[];

@@ -25,6 +25,7 @@ public class InspectionResultDto : EntityDto<Guid>
     public DateTime? AdminDecisionDate { get; set; }
     public bool FollowUpRequired { get; set; }
     public DateTime? FollowUpDate { get; set; }
+    public string? FollowUpScope { get; set; }
     public FollowUpResult? FollowUpResultValue { get; set; }
     public string? Recommendations { get; set; }
     public string? Notes { get; set; }
@@ -86,6 +87,7 @@ public class CreateUpdateInspectionResultDto
     public DateTime? AdminDecisionDate { get; set; }
     public bool FollowUpRequired { get; set; }
     public DateTime? FollowUpDate { get; set; }
+    public string? FollowUpScope { get; set; }
     public string? Recommendations { get; set; }
     public string? Notes { get; set; }
     public List<CreateUpdateViolationDto> Violations { get; set; } = new();
