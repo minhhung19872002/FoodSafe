@@ -6,7 +6,6 @@ import {
   FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
-  ReloadOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import {
@@ -23,6 +22,7 @@ import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { ProductRegistrationAttachmentsModal } from "@/features/product-registrations/components/ProductRegistrationAttachmentsModal";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
@@ -279,13 +279,6 @@ export default function EligibilityCertificatePage() {
         actions={
           <Space>
             <Button
-              icon={<ReloadOutlined />}
-              loading={certificates.isFetching}
-              onClick={refreshCertificates}
-            >
-              Làm mới
-            </Button>
-            <Button
               icon={<ExportOutlined />}
               loading={exportMutation.isPending}
               onClick={() =>
@@ -367,15 +360,21 @@ export default function EligibilityCertificatePage() {
               pagination.resetToFirstPage();
             }}
           />
-          <ClearFiltersButton
-            active={Boolean(
-              filter.trim() ||
-              businessId ||
-              status !== undefined ||
-              expiringWithinDays !== undefined,
-            )}
-            onClick={resetFilters}
-          />
+          <div className="filter-toolbar-actions">
+            <ClearFiltersButton
+              active={Boolean(
+                filter.trim() ||
+                businessId ||
+                status !== undefined ||
+                expiringWithinDays !== undefined,
+              )}
+              onClick={resetFilters}
+            />
+            <RefreshListButton
+              loading={certificates.isFetching}
+              onClick={refreshCertificates}
+            />
+          </div>
         </div>
         <Table
           size="middle"

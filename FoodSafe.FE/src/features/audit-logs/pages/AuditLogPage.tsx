@@ -16,6 +16,7 @@ import type { ColumnsType } from "antd/es/table";
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { PageHeader } from "@/components/PageHeader";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { saveDownload } from "@/utils/download";
@@ -51,7 +52,7 @@ export default function AuditLogPage() {
   const pagination = useTablePagination(20);
 
   const [detailId, setDetailId] = useState<string | null>(null);
-  const { data, isLoading } = useAuditLogs({
+  const { data, isLoading, refetch } = useAuditLogs({
     ...filter,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
@@ -221,6 +222,7 @@ export default function AuditLogPage() {
           )}
           onClick={resetFilters}
         />
+        <RefreshListButton loading={isLoading} onClick={() => void refetch()} />
         <Button
           icon={<ExportOutlined />}
           loading={exportMut.isPending}

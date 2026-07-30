@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   App,
-  Button,
   Form,
   Input,
   Modal,
@@ -9,18 +8,17 @@ import {
   Space,
   Table,
   Tag,
-  Tooltip,
   type TableColumnsType,
 } from "antd";
 import {
   CheckCircleOutlined,
-  ReloadOutlined,
   StopOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { RevokeModal } from "@/components/RevokeModal";
 import { EmptyState } from "@/components/EmptyState";
 import { extractApiError } from "@/lib/apiError";
@@ -73,7 +71,7 @@ export function CitizenReportModerationQueue() {
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   };
-  const { data, isFetching } = useAlerts(queryFilter);
+  const { data, isFetching, refetch } = useAlerts(queryFilter);
 
   const { data: staffData } = useStaffUsers();
   const staffUsers = staffData?.items ?? [];
@@ -292,12 +290,10 @@ export function CitizenReportModerationQueue() {
           />
           <ClearFiltersButton active={hasActiveFilter} onClick={resetFilters} />
         </Space>
-        <Tooltip title="Tải lại danh sách">
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={() => pagination.resetToFirstPage()}
-          />
-        </Tooltip>
+        <RefreshListButton
+          loading={isFetching}
+          onClick={() => void refetch()}
+        />
       </div>
 
       <Table

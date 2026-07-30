@@ -6,7 +6,6 @@ import {
   FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
-  ReloadOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import { App, Button, Input, Select, Table } from "antd";
@@ -14,6 +13,7 @@ import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { extractApiError } from "@/lib/apiError";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -273,13 +273,6 @@ export default function SelfDeclarationPage() {
         actions={
           <>
             <Button
-              icon={<ReloadOutlined />}
-              loading={declarations.isFetching}
-              onClick={refreshDeclarations}
-            >
-              Làm mới
-            </Button>
-            <Button
               icon={<ExportOutlined />}
               loading={exportMutation.isPending}
               onClick={() =>
@@ -367,15 +360,21 @@ export default function SelfDeclarationPage() {
               pagination.resetToFirstPage();
             }}
           />
-          <ClearFiltersButton
-            active={Boolean(
-              filter.trim() ||
-              businessId ||
-              status !== undefined ||
-              expiringWithinDays !== undefined,
-            )}
-            onClick={resetFilters}
-          />
+          <div className="filter-toolbar-actions">
+            <ClearFiltersButton
+              active={Boolean(
+                filter.trim() ||
+                businessId ||
+                status !== undefined ||
+                expiringWithinDays !== undefined,
+              )}
+              onClick={resetFilters}
+            />
+            <RefreshListButton
+              loading={declarations.isFetching}
+              onClick={refreshDeclarations}
+            />
+          </div>
         </div>
 
         <Table

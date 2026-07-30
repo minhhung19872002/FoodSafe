@@ -6,7 +6,6 @@ import {
   FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
-  ReloadOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import { App, Button, Input, Select, Space, Table } from "antd";
@@ -14,6 +13,7 @@ import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { extractApiError } from "@/lib/apiError";
 import {
   useCreateCfsCertificate,
@@ -271,13 +271,6 @@ export default function CfsCertificatePage() {
         actions={
           <Space>
             <Button
-              icon={<ReloadOutlined />}
-              loading={registrations.isFetching}
-              onClick={refreshRegistrations}
-            >
-              Làm mới
-            </Button>
-            <Button
               icon={<ExportOutlined />}
               loading={exportMutation.isPending}
               onClick={() =>
@@ -308,81 +301,81 @@ export default function CfsCertificatePage() {
 
       <div className="page-card">
         <div className="filter-toolbar" style={{ marginBottom: 16 }}>
-          <Space wrap>
-            <Input.Search
-              allowClear
-              placeholder="Tìm theo số CFS"
-              style={{ width: 310 }}
-              value={filter}
-              onChange={(event) => {
-                setFilter(event.target.value);
-                pagination.resetToFirstPage();
-              }}
-            />
-            <Select
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              placeholder="Tất cả cơ sở"
-              style={{ width: 260 }}
-              loading={businesses.isLoading}
-              value={businessId}
-              options={(businesses.data ?? []).map((item) => ({
-                value: item.id,
-                label: item.code ? `${item.code} — ${item.name}` : item.name,
-              }))}
-              onChange={(value) => {
-                setBusinessId(value);
-                pagination.resetToFirstPage();
-              }}
-            />
-            <Select
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              placeholder="Tất cả quốc gia"
-              style={{ width: 220 }}
-              loading={countries.isLoading}
-              value={destinationCountryId}
-              options={(countries.data ?? []).map((item) => ({
-                value: item.id,
-                label: `${item.code} — ${item.name}`,
-              }))}
-              onChange={(value) => {
-                setDestinationCountryId(value);
-                pagination.resetToFirstPage();
-              }}
-            />
-            <Select
-              allowClear
-              placeholder="Tất cả trạng thái"
-              style={{ width: 170 }}
-              value={status}
-              options={[
-                { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
-                { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
-                { value: LICENSE_STATUS.Revoked, label: "Đã thu hồi" },
-              ]}
-              onChange={(value) => {
-                setStatus(value);
-                pagination.resetToFirstPage();
-              }}
-            />
-            <Select
-              allowClear
-              placeholder="Cảnh báo hết hạn"
-              style={{ width: 180 }}
-              value={expiringWithinDays}
-              options={[
-                { value: 30, label: "Trong 30 ngày" },
-                { value: 60, label: "Trong 60 ngày" },
-                { value: 90, label: "Trong 90 ngày" },
-              ]}
-              onChange={(value) => {
-                setExpiringWithinDays(value);
-                pagination.resetToFirstPage();
-              }}
-            />
+          <Input.Search
+            allowClear
+            placeholder="Tìm theo số CFS"
+            style={{ width: 310 }}
+            value={filter}
+            onChange={(event) => {
+              setFilter(event.target.value);
+              pagination.resetToFirstPage();
+            }}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Tất cả cơ sở"
+            style={{ width: 260 }}
+            loading={businesses.isLoading}
+            value={businessId}
+            options={(businesses.data ?? []).map((item) => ({
+              value: item.id,
+              label: item.code ? `${item.code} — ${item.name}` : item.name,
+            }))}
+            onChange={(value) => {
+              setBusinessId(value);
+              pagination.resetToFirstPage();
+            }}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Tất cả quốc gia"
+            style={{ width: 220 }}
+            loading={countries.isLoading}
+            value={destinationCountryId}
+            options={(countries.data ?? []).map((item) => ({
+              value: item.id,
+              label: `${item.code} — ${item.name}`,
+            }))}
+            onChange={(value) => {
+              setDestinationCountryId(value);
+              pagination.resetToFirstPage();
+            }}
+          />
+          <Select
+            allowClear
+            placeholder="Tất cả trạng thái"
+            style={{ width: 170 }}
+            value={status}
+            options={[
+              { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
+              { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
+              { value: LICENSE_STATUS.Revoked, label: "Đã thu hồi" },
+            ]}
+            onChange={(value) => {
+              setStatus(value);
+              pagination.resetToFirstPage();
+            }}
+          />
+          <Select
+            allowClear
+            placeholder="Cảnh báo hết hạn"
+            style={{ width: 180 }}
+            value={expiringWithinDays}
+            options={[
+              { value: 30, label: "Trong 30 ngày" },
+              { value: 60, label: "Trong 60 ngày" },
+              { value: 90, label: "Trong 90 ngày" },
+            ]}
+            onChange={(value) => {
+              setExpiringWithinDays(value);
+              pagination.resetToFirstPage();
+            }}
+          />
+          <div className="filter-toolbar-actions">
             <ClearFiltersButton
               active={Boolean(
                 filter.trim() ||
@@ -393,7 +386,11 @@ export default function CfsCertificatePage() {
               )}
               onClick={resetFilters}
             />
-          </Space>
+            <RefreshListButton
+              loading={registrations.isFetching}
+              onClick={refreshRegistrations}
+            />
+          </div>
         </div>
 
         <Table

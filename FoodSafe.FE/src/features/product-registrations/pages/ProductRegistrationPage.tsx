@@ -6,14 +6,14 @@ import {
   FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
-  ReloadOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { App, Button, Input, Select, Space, Table } from "antd";
+import { App, Button, Input, Select, Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { extractApiError } from "@/lib/apiError";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
@@ -268,13 +268,6 @@ export default function ProductRegistrationPage() {
         actions={
           <>
             <Button
-              icon={<ReloadOutlined />}
-              loading={registrations.isFetching}
-              onClick={refreshRegistrations}
-            >
-              Làm mới
-            </Button>
-            <Button
               icon={<ExportOutlined />}
               loading={exportMutation.isPending}
               onClick={() =>
@@ -305,64 +298,64 @@ export default function ProductRegistrationPage() {
 
       <div className="page-card">
         <div className="filter-toolbar" style={{ marginBottom: 16 }}>
-          <Space wrap>
-            <Input.Search
-              allowClear
-              placeholder="Số đăng ký, tiếp nhận, sản phẩm, nhà sản xuất"
-              style={{ width: 330 }}
-              value={filter}
-              onChange={(event) => {
-                setFilter(event.target.value);
-                pagination.resetToFirstPage();
-              }}
-            />
-            <Select
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              placeholder="Tất cả cơ sở"
-              style={{ width: 260 }}
-              loading={businesses.isLoading}
-              value={businessId}
-              options={(businesses.data ?? []).map((item) => ({
-                value: item.id,
-                label: item.code ? `${item.code} — ${item.name}` : item.name,
-              }))}
-              onChange={(value) => {
-                setBusinessId(value);
-                pagination.resetToFirstPage();
-              }}
-            />
-            <Select
-              allowClear
-              placeholder="Tất cả trạng thái"
-              style={{ width: 170 }}
-              value={status}
-              options={[
-                { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
-                { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
-                { value: LICENSE_STATUS.Revoked, label: "Đã thu hồi" },
-              ]}
-              onChange={(value) => {
-                setStatus(value);
-                pagination.resetToFirstPage();
-              }}
-            />
-            <Select
-              allowClear
-              placeholder="Cảnh báo hết hạn"
-              style={{ width: 180 }}
-              value={expiringWithinDays}
-              options={[
-                { value: 30, label: "Trong 30 ngày" },
-                { value: 60, label: "Trong 60 ngày" },
-                { value: 90, label: "Trong 90 ngày" },
-              ]}
-              onChange={(value) => {
-                setExpiringWithinDays(value);
-                pagination.resetToFirstPage();
-              }}
-            />
+          <Input.Search
+            allowClear
+            placeholder="Số đăng ký, tiếp nhận, sản phẩm, nhà sản xuất"
+            style={{ width: 330 }}
+            value={filter}
+            onChange={(event) => {
+              setFilter(event.target.value);
+              pagination.resetToFirstPage();
+            }}
+          />
+          <Select
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Tất cả cơ sở"
+            style={{ width: 260 }}
+            loading={businesses.isLoading}
+            value={businessId}
+            options={(businesses.data ?? []).map((item) => ({
+              value: item.id,
+              label: item.code ? `${item.code} — ${item.name}` : item.name,
+            }))}
+            onChange={(value) => {
+              setBusinessId(value);
+              pagination.resetToFirstPage();
+            }}
+          />
+          <Select
+            allowClear
+            placeholder="Tất cả trạng thái"
+            style={{ width: 170 }}
+            value={status}
+            options={[
+              { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
+              { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
+              { value: LICENSE_STATUS.Revoked, label: "Đã thu hồi" },
+            ]}
+            onChange={(value) => {
+              setStatus(value);
+              pagination.resetToFirstPage();
+            }}
+          />
+          <Select
+            allowClear
+            placeholder="Cảnh báo hết hạn"
+            style={{ width: 180 }}
+            value={expiringWithinDays}
+            options={[
+              { value: 30, label: "Trong 30 ngày" },
+              { value: 60, label: "Trong 60 ngày" },
+              { value: 90, label: "Trong 90 ngày" },
+            ]}
+            onChange={(value) => {
+              setExpiringWithinDays(value);
+              pagination.resetToFirstPage();
+            }}
+          />
+          <div className="filter-toolbar-actions">
             <ClearFiltersButton
               active={Boolean(
                 filter.trim() ||
@@ -372,7 +365,11 @@ export default function ProductRegistrationPage() {
               )}
               onClick={resetFilters}
             />
-          </Space>
+            <RefreshListButton
+              loading={registrations.isFetching}
+              onClick={refreshRegistrations}
+            />
+          </div>
         </div>
 
         <Table

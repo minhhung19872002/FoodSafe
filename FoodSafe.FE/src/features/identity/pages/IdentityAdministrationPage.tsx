@@ -15,6 +15,7 @@ import {
 import { RowActions } from "@/components/RowActions";
 import { PageHeader } from "@/components/PageHeader";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import {
   AuditOutlined,
   DeleteOutlined,
@@ -23,7 +24,6 @@ import {
   FormOutlined,
   LockOutlined,
   PlusOutlined,
-  ReloadOutlined,
   SafetyCertificateOutlined,
   StopOutlined,
   TeamOutlined,
@@ -368,13 +368,10 @@ export default function IdentityAdministrationPage() {
             )}
             onClick={resetUserFilters}
           />
-          <Button
-            icon={<ReloadOutlined />}
+          <RefreshListButton
             loading={users.isFetching}
             onClick={refreshUsers}
-          >
-            Làm mới
-          </Button>
+          />
           <Button
             icon={<ExportOutlined />}
             loading={exportUsers.isPending}
@@ -648,13 +645,10 @@ export default function IdentityAdministrationPage() {
             )}
             onClick={resetRoleFilters}
           />
-          <Button
-            icon={<ReloadOutlined />}
+          <RefreshListButton
             loading={roles.isFetching}
             onClick={refreshRoles}
-          >
-            Làm mới
-          </Button>
+          />
           <Button
             icon={<SafetyCertificateOutlined />}
             onClick={() => setMatrixOpen(true)}

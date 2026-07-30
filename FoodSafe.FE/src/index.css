@@ -115,6 +115,13 @@ button {
   align-items: center;
 }
 
+.filter-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-inline-start: auto;
+}
+
 .filter-clear-button {
   color: var(--fs-sub);
 }

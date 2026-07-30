@@ -26,6 +26,7 @@ import {
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { RevokeModal } from "@/components/RevokeModal";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RichTextEditor } from "@/components/RichTextEditor/RichTextEditor";
@@ -116,7 +117,7 @@ function AlertsTab() {
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   };
-  const { data, isFetching } = useAlerts(queryFilter);
+  const { data, isFetching, refetch } = useAlerts(queryFilter);
   const createMut = useCreateAlert();
   const updateMut = useUpdateAlert();
   const deleteMut = useDeleteAlert();
@@ -371,6 +372,10 @@ function AlertsTab() {
             )}
           />
           <ClearFiltersButton active={hasActiveFilter} onClick={resetFilters} />
+          <RefreshListButton
+            loading={isFetching}
+            onClick={() => void refetch()}
+          />
         </Space>
         <Space>
           <Button
@@ -565,7 +570,7 @@ function NewsTab() {
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   };
-  const { data, isFetching } = useNews(queryFilter);
+  const { data, isFetching, refetch } = useNews(queryFilter);
   const createMut = useCreateNews();
   const updateMut = useUpdateNews();
   const deleteMut = useDeleteNews();
@@ -812,6 +817,10 @@ function NewsTab() {
             )}
           />
           <ClearFiltersButton active={hasActiveFilter} onClick={resetFilters} />
+          <RefreshListButton
+            loading={isFetching}
+            onClick={() => void refetch()}
+          />
         </Space>
         <Space>
           <Button

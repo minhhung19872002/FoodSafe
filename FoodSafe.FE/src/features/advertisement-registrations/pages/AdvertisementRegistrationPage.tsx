@@ -5,7 +5,6 @@ import {
   ExportOutlined,
   FileTextOutlined,
   PlusOutlined,
-  ReloadOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import { App, Button, Input, Select, Table } from "antd";
@@ -15,6 +14,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { extractApiError } from "@/lib/apiError";
 import { ProductRegistrationAttachmentsModal } from "@/features/product-registrations/components/ProductRegistrationAttachmentsModal";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { ExpiryTag } from "@/components/ExpiryTag";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
@@ -253,13 +253,6 @@ export default function AdvertisementRegistrationPage() {
         actions={
           <>
             <Button
-              icon={<ReloadOutlined />}
-              loading={registrations.isFetching}
-              onClick={refreshRegistrations}
-            >
-              Làm mới
-            </Button>
-            <Button
               icon={<ExportOutlined />}
               loading={exportMutation.isPending}
               onClick={() =>
@@ -355,16 +348,22 @@ export default function AdvertisementRegistrationPage() {
               pagination.resetToFirstPage();
             }}
           />
-          <ClearFiltersButton
-            active={Boolean(
-              filter.trim() ||
-              businessId ||
-              advertisementTypeId ||
-              status !== undefined ||
-              expiringWithinDays !== undefined,
-            )}
-            onClick={resetFilters}
-          />
+          <div className="filter-toolbar-actions">
+            <ClearFiltersButton
+              active={Boolean(
+                filter.trim() ||
+                businessId ||
+                advertisementTypeId ||
+                status !== undefined ||
+                expiringWithinDays !== undefined,
+              )}
+              onClick={resetFilters}
+            />
+            <RefreshListButton
+              loading={registrations.isFetching}
+              onClick={refreshRegistrations}
+            />
+          </div>
         </div>
         <Table
           rowKey="id"

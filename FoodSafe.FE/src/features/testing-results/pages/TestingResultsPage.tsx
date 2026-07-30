@@ -20,6 +20,7 @@ import {
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { extractApiError } from "@/lib/apiError";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RowActions } from "@/components/RowActions";
@@ -283,6 +284,10 @@ export default function TestingResultsPage() {
             setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
+        />
+        <RefreshListButton
+          loading={results.isFetching}
+          onClick={() => void results.refetch()}
         />
         <Button
           icon={<ExportOutlined />}

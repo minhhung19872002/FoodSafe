@@ -15,6 +15,7 @@ import { Button, Input, Select, Table, Tabs, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { RowActions } from "@/components/RowActions";
 import {
   BUSINESS_STATUS,
@@ -76,9 +77,11 @@ interface BusinessManagementViewProps {
   onImportBusiness: () => void;
   onExportBusiness: () => void;
   onResetBusinessFilters: () => void;
+  onRefreshBusinesses: () => void;
   onImportProduct: () => void;
   onExportProduct: () => void;
   onResetProductFilters: () => void;
+  onRefreshProducts: () => void;
   onEditBusiness: (business: Business) => void;
   onDeleteBusiness: (id: string) => void;
   onShowMap: (business: Business) => void;
@@ -438,6 +441,10 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
               active={hasActiveBusinessFilters}
               onClick={props.onResetBusinessFilters}
             />
+            <RefreshListButton
+              loading={props.loading}
+              onClick={props.onRefreshBusinesses}
+            />
             {props.permissions.createBusiness && (
               <Button
                 type="primary"
@@ -502,6 +509,10 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
             <ClearFiltersButton
               active={hasActiveProductFilters}
               onClick={props.onResetProductFilters}
+            />
+            <RefreshListButton
+              loading={props.loading}
+              onClick={props.onRefreshProducts}
             />
             {props.permissions.createProduct && (
               <Button

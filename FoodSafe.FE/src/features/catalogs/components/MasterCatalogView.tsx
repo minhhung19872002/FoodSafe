@@ -8,6 +8,7 @@ import { Button, Input, Table, Tabs, Tag } from "antd";
 import type { TablePaginationConfig } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { RowActions } from "@/components/RowActions";
 import { catalogDefinitions } from "../types/catalog.types";
 import type { CatalogItem, CatalogKind } from "../types/catalog.types";
@@ -33,6 +34,7 @@ interface MasterCatalogViewProps {
   provinceOptions: GeographyOption[];
   onKindChange: (kind: CatalogKind) => void;
   onFilterChange: (filter: string) => void;
+  onRefresh: () => void;
   onCreate: () => void;
   onEdit: (item: CatalogItem) => void;
   onDelete: (id: string) => void;
@@ -249,6 +251,7 @@ export function MasterCatalogView(props: MasterCatalogViewProps) {
           onChange={(event) => props.onFilterChange(event.target.value)}
           style={{ width: 320 }}
         />
+        <RefreshListButton loading={props.loading} onClick={props.onRefresh} />
         {props.kind === "testing-service" && props.onExport && (
           <Button
             icon={<ExportOutlined />}

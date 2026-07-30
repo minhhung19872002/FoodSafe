@@ -29,6 +29,7 @@ import {
 } from "antd";
 import { extractApiError } from "@/lib/apiError";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { RowActions } from "@/components/RowActions";
 import type { ColumnsType } from "antd/es/table";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
@@ -448,6 +449,10 @@ function PlansTab() {
             yearFilter !== undefined,
           )}
           onClick={resetFilters}
+        />
+        <RefreshListButton
+          loading={plans.isFetching}
+          onClick={() => void plans.refetch()}
         />
         <div style={{ flex: 1 }} />
         <Button
@@ -947,6 +952,10 @@ function ResultsTab() {
             overallResult !== undefined,
           )}
           onClick={resetFilters}
+        />
+        <RefreshListButton
+          loading={results.isFetching}
+          onClick={() => void results.refetch()}
         />
         <div style={{ flex: 1 }} />
         <Button

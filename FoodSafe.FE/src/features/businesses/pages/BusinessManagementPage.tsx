@@ -373,6 +373,8 @@ export default function BusinessManagementPage() {
         onCreateBusiness={() => setCreatingBusiness(true)}
         onResetBusinessFilters={resetBusinessFilters}
         onResetProductFilters={resetProductFilters}
+        onRefreshBusinesses={() => void businessList.refetch()}
+        onRefreshProducts={() => void productList.refetch()}
         onImportBusiness={() => setImportingBusinesses(true)}
         onExportBusiness={() =>
           exportBusinesses.mutate(

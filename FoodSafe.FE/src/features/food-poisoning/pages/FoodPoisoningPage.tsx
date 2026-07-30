@@ -14,6 +14,7 @@ import {
 } from "antd";
 import { RowActions } from "@/components/RowActions";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import {
   PlusOutlined,
   EditOutlined,
@@ -86,7 +87,7 @@ function CasesTab() {
   const [filter, setFilter] = useState<CaseFilter>({});
   const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
-  const { data, isFetching } = usePoisoningCases({
+  const { data, isFetching, refetch } = usePoisoningCases({
     ...filter,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
@@ -315,6 +316,10 @@ function CasesTab() {
             pagination.resetToFirstPage();
           }}
         />
+        <RefreshListButton
+          loading={isFetching}
+          onClick={() => void refetch()}
+        />
         <div style={{ flex: 1 }} />
         <Button
           icon={<ExportOutlined />}
@@ -446,7 +451,7 @@ function IncidentsTab() {
   const [filter, setFilter] = useState<IncidentFilter>({});
   const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
-  const { data, isFetching } = usePoisoningIncidents({
+  const { data, isFetching, refetch } = usePoisoningIncidents({
     ...filter,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
@@ -690,6 +695,10 @@ function IncidentsTab() {
             setFilterResetKey((key) => key + 1);
             pagination.resetToFirstPage();
           }}
+        />
+        <RefreshListButton
+          loading={isFetching}
+          onClick={() => void refetch()}
         />
         <div style={{ flex: 1 }} />
         <Button

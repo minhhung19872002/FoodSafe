@@ -18,6 +18,7 @@ import {
 } from "antd";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { RowActions } from "@/components/RowActions";
 import {
   PlusOutlined,
@@ -431,6 +432,7 @@ function NdtpTab() {
             pagination.resetToFirstPage();
           }}
         />
+        <RefreshListButton loading={isLoading} onClick={() => void refetch()} />
         <Button
           icon={<ExportOutlined />}
           loading={exportMut.isPending}
@@ -881,6 +883,7 @@ function AtpWorkTab() {
             pagination.resetToFirstPage();
           }}
         />
+        <RefreshListButton loading={isLoading} onClick={() => void refetch()} />
         <Button
           icon={<ExportOutlined />}
           loading={exportMut.isPending}
@@ -1350,6 +1353,7 @@ function ActionMonthTab() {
             pagination.resetToFirstPage();
           }}
         />
+        <RefreshListButton loading={isLoading} onClick={() => void refetch()} />
         <Button
           icon={<ExportOutlined />}
           loading={exportMut.isPending}

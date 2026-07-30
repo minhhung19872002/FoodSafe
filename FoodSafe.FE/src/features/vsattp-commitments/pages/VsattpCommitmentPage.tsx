@@ -21,6 +21,7 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { useBusinessList } from "@/features/businesses/api/businessQueries";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { PageHeader } from "@/components/PageHeader";
@@ -82,7 +83,8 @@ export default function VsattpCommitmentPage() {
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   };
-  const { data, isLoading } = useVsattpCommitments(filter);
+  const commitments = useVsattpCommitments(filter);
+  const { data, isLoading } = commitments;
 
   const createMutation = useCreateVsattpCommitment();
   const updateMutation = useUpdateVsattpCommitment();
@@ -291,6 +293,10 @@ export default function VsattpCommitmentPage() {
             setFilterStatus(undefined);
             pagination.resetToFirstPage();
           }}
+        />
+        <RefreshListButton
+          loading={commitments.isFetching}
+          onClick={() => void commitments.refetch()}
         />
         {canCreate && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>

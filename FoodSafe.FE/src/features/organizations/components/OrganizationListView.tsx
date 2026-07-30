@@ -5,11 +5,11 @@ import {
   EditOutlined,
   ExportOutlined,
   PlusOutlined,
-  ReloadOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import type { DataNode } from "antd/es/tree";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { RowActions } from "@/components/RowActions";
 import {
   getOrganizationLevelConfig,
@@ -153,9 +153,7 @@ export function OrganizationListView({
           )}
           onClick={onResetFilters}
         />
-        <Button icon={<ReloadOutlined />} onClick={onRefresh}>
-          Làm mới
-        </Button>
+        <RefreshListButton loading={loading} onClick={onRefresh} />
         <Button
           icon={<ExportOutlined />}
           loading={exporting}

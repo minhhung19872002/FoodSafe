@@ -19,6 +19,7 @@ import {
 import { CheckOutlined, CloseOutlined, EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import {
   useInboundSubmissionDetail,
   useInboundSubmissions,
@@ -53,7 +54,7 @@ export function InboundSubmissionsTab() {
   const [filter, setFilter] = useState<InboundSubmissionFilter>({});
   const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
-  const { data, isLoading } = useInboundSubmissions({
+  const { data, isLoading, refetch } = useInboundSubmissions({
     ...filter,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
@@ -249,6 +250,7 @@ export function InboundSubmissionsTab() {
             pagination.resetToFirstPage();
           }}
         />
+        <RefreshListButton loading={isLoading} onClick={() => void refetch()} />
       </Space>
       <Table
         rowKey="id"

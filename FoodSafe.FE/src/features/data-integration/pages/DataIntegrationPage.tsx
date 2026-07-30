@@ -18,6 +18,7 @@ import {
 } from "antd";
 import { RowActions } from "@/components/RowActions";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import {
   ApiOutlined,
   PlusOutlined,
@@ -104,7 +105,7 @@ function EndpointsTab() {
   const [filter, setFilter] = useState<ApiEndpointFilter>({});
   const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
-  const { data, isLoading } = useApiEndpoints({
+  const { data, isLoading, refetch } = useApiEndpoints({
     ...filter,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
@@ -276,6 +277,7 @@ function EndpointsTab() {
             pagination.resetToFirstPage();
           }}
         />
+        <RefreshListButton loading={isLoading} onClick={() => void refetch()} />
         <Button
           icon={<ExportOutlined />}
           loading={exportMut.isPending}
@@ -489,7 +491,7 @@ function CallHistoryTab() {
   const [filter, setFilter] = useState<ApiCallLogFilter>({});
   const [filterResetKey, setFilterResetKey] = useState(0);
   const pagination = useTablePagination(15);
-  const { data, isLoading } = useApiCallLogs({
+  const { data, isLoading, refetch } = useApiCallLogs({
     ...filter,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
@@ -859,6 +861,7 @@ function CallHistoryTab() {
             pagination.resetToFirstPage();
           }}
         />
+        <RefreshListButton loading={isLoading} onClick={() => void refetch()} />
         <Button
           icon={<ExportOutlined />}
           loading={exportMut.isPending}

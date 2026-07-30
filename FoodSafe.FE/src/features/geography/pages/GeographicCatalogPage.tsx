@@ -27,6 +27,7 @@ import {
   type GeographicUpsert,
 } from "@/lib/geographyApi";
 import { PageHeader } from "@/components/PageHeader";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import {
   GeographicCatalogModal,
@@ -236,6 +237,10 @@ export default function GeographicCatalogPage() {
                       }
                       style={{ width: 320 }}
                     />
+                    <RefreshListButton
+                      loading={provinces.isFetching}
+                      onClick={() => void provinces.refetch()}
+                    />
                     {canManage && (
                       <Button
                         type="primary"
@@ -283,13 +288,19 @@ export default function GeographicCatalogPage() {
                       </Button>
                     )}
                   </Space>
-                  <Input.Search
-                    allowClear
-                    placeholder="Tìm theo mã hoặc tên"
-                    value={communeFilter}
-                    onChange={(event) => setCommuneFilter(event.target.value)}
-                    style={{ width: 320 }}
-                  />
+                  <Space wrap>
+                    <Input.Search
+                      allowClear
+                      placeholder="Tìm theo mã hoặc tên"
+                      value={communeFilter}
+                      onChange={(event) => setCommuneFilter(event.target.value)}
+                      style={{ width: 320 }}
+                    />
+                    <RefreshListButton
+                      loading={communes.isFetching}
+                      onClick={() => void communes.refetch()}
+                    />
+                  </Space>
                   {table("commune", filteredCommunes, communes.isLoading)}
                 </Space>
               ),

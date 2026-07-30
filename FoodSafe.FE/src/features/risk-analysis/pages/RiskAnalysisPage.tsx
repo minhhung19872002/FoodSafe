@@ -22,6 +22,7 @@ import {
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RowActions } from "@/components/RowActions";
@@ -342,6 +343,10 @@ export default function RiskAnalysisPage() {
                 filter.riskLevel !== undefined,
               )}
               onClick={resetFilters}
+            />
+            <RefreshListButton
+              loading={listQuery.isFetching}
+              onClick={() => void listQuery.refetch()}
             />
           </Space>
         </div>

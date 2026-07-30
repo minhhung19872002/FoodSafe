@@ -214,6 +214,7 @@ export default function MasterCatalogPage() {
             setFilter(nextFilter);
             pagination.resetToFirstPage();
           }}
+          onRefresh={() => void catalog.refetch()}
           onCreate={() => setEditing(null)}
           onEdit={setEditing}
           onShowDetail={setDetailItem}

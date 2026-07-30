@@ -17,6 +17,7 @@ import {
 } from "antd";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { RowActions } from "@/components/RowActions";
 import {
   CloudUploadOutlined,
@@ -78,7 +79,7 @@ export function ApiSpecsTab() {
   const [filterResetKey, setFilterResetKey] = useState(0);
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
-  const { data, isLoading } = useApiSpecs({
+  const { data, isLoading, refetch } = useApiSpecs({
     ...filter,
     sorting,
     skipCount: pagination.skipCount,
@@ -316,6 +317,7 @@ export function ApiSpecsTab() {
             pagination.resetToFirstPage();
           }}
         />
+        <RefreshListButton loading={isLoading} onClick={() => void refetch()} />
         <Button
           icon={<ExportOutlined />}
           loading={exportMut.isPending}

@@ -18,6 +18,7 @@ import {
 } from "antd";
 import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
+import { RefreshListButton } from "@/components/RefreshListButton";
 import { RowActions } from "@/components/RowActions";
 import {
   DeleteOutlined,
@@ -78,7 +79,7 @@ export function PartnersTab() {
   const [filterResetKey, setFilterResetKey] = useState(0);
   const [sorting, setSorting] = useState<string | undefined>(undefined);
   const pagination = useTablePagination(15);
-  const { data, isLoading } = usePartnerAccounts({
+  const { data, isLoading, refetch } = usePartnerAccounts({
     ...filter,
     sorting,
     skipCount: pagination.skipCount,
@@ -314,6 +315,7 @@ export function PartnersTab() {
             pagination.resetToFirstPage();
           }}
         />
+        <RefreshListButton loading={isLoading} onClick={() => void refetch()} />
         {canCreate && (
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             Thêm đối tác
