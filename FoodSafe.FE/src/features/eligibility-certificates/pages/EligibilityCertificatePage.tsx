@@ -1,11 +1,13 @@
 import { useState } from "react";
 import {
+  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
   FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
+  ReloadOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import {
@@ -31,6 +33,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { extractApiError } from "@/lib/apiError";
 import { saveDownload } from "@/utils/download";
 import { formatDate } from "@/utils/format";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   useCreateEligibilityCertificate,
@@ -71,6 +74,7 @@ export default function EligibilityCertificatePage() {
   );
   const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
+  const debouncedFilter = useDebounce(filter);
   const [businessId, setBusinessId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
   const [expiringWithinDays, setExpiringWithinDays] = useState<number>();
@@ -106,7 +110,7 @@ export default function EligibilityCertificatePage() {
   };
 
   const queryFilter = {
-    filter: filter || undefined,
+    filter: debouncedFilter.trim() || undefined,
     businessId,
     status,
     expiringWithinDays,
@@ -127,9 +131,19 @@ export default function EligibilityCertificatePage() {
   const downloadMutation = useDownloadEligibilityAttachment();
   const deleteAttachmentMutation = useDeleteEligibilityAttachment();
 
+  const refreshCertificates = () => void certificates.refetch();
+
   const closeEditor = () => {
     setEditorOpen(false);
     setEditing(undefined);
+  };
+
+  const resetFilters = () => {
+    setFilter("");
+    setBusinessId(undefined);
+    setStatus(undefined);
+    setExpiringWithinDays(undefined);
+    pagination.resetToFirstPage();
   };
 
   const save = (input: EligibilityCertificateInput) => {
@@ -265,6 +279,13 @@ export default function EligibilityCertificatePage() {
         actions={
           <Space>
             <Button
+              icon={<ReloadOutlined />}
+              loading={certificates.isFetching}
+              onClick={refreshCertificates}
+            >
+              Làm mới
+            </Button>
+            <Button
               icon={<ExportOutlined />}
               loading={exportMutation.isPending}
               onClick={() =>
@@ -295,8 +316,9 @@ export default function EligibilityCertificatePage() {
             allowClear
             placeholder="Số giấy, cơ quan cấp, phạm vi"
             style={{ width: 300 }}
-            onSearch={(value) => {
-              setFilter(value.trim());
+            value={filter}
+            onChange={(event) => {
+              setFilter(event.target.value);
               pagination.resetToFirstPage();
             }}
           />
@@ -306,6 +328,7 @@ export default function EligibilityCertificatePage() {
             optionFilterProp="label"
             placeholder="Tất cả cơ sở"
             style={{ width: 260 }}
+            value={businessId}
             options={(businesses.data ?? []).map((x) => ({
               value: x.id,
               label: x.code ? `${x.code} — ${x.name}` : x.name,
@@ -319,6 +342,7 @@ export default function EligibilityCertificatePage() {
             allowClear
             placeholder="Trạng thái"
             style={{ width: 160 }}
+            value={status}
             options={[
               { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
               { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
@@ -333,6 +357,7 @@ export default function EligibilityCertificatePage() {
             allowClear
             placeholder="Cảnh báo hết hạn"
             style={{ width: 180 }}
+            value={expiringWithinDays}
             options={[30, 60, 90].map((value) => ({
               value,
               label: `Trong ${value} ngày`,
@@ -342,12 +367,15 @@ export default function EligibilityCertificatePage() {
               pagination.resetToFirstPage();
             }}
           />
+          <Button icon={<ClearOutlined />} onClick={resetFilters}>
+            Đặt lại bộ lọc
+          </Button>
         </div>
         <Table
           size="middle"
           rowKey="id"
           scroll={{ x: 1100 }}
-          loading={certificates.isLoading}
+          loading={certificates.isFetching}
           columns={columns}
           locale={{
             emptyText: (

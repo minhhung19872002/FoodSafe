@@ -1,10 +1,12 @@
 import { useState } from "react";
 import {
+  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
   FileTextOutlined,
   PlusOutlined,
+  ReloadOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import { App, Button, Input, Select, Table } from "antd";
@@ -20,6 +22,7 @@ import { RevokeModal } from "@/components/RevokeModal";
 import { RowActions } from "@/components/RowActions";
 import { StatusBadge } from "@/components/StatusBadge";
 import { saveDownload } from "@/utils/download";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   useCreateAdvertisementRegistration,
@@ -55,6 +58,7 @@ export default function AdvertisementRegistrationPage() {
   const canDelete = hasPermission("FoodSafe.Licensing.AdRegistrations.Delete");
   const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
+  const debouncedFilter = useDebounce(filter);
   const [businessId, setBusinessId] = useState<string>();
   const [advertisementTypeId, setAdvertisementTypeId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
@@ -93,7 +97,7 @@ export default function AdvertisementRegistrationPage() {
   };
 
   const queryFilter = {
-    filter: filter || undefined,
+    filter: debouncedFilter.trim() || undefined,
     businessId,
     advertisementTypeId,
     status,
@@ -116,10 +120,21 @@ export default function AdvertisementRegistrationPage() {
   const downloadMutation = useDownloadAdvertisementAttachment();
   const deleteAttachmentMutation = useDeleteAdvertisementAttachment();
 
+  const refreshRegistrations = () => void registrations.refetch();
+
   const closeEditor = () => {
     setEditorOpen(false);
     setEditing(undefined);
     setEditorBusinessId(undefined);
+  };
+
+  const resetFilters = () => {
+    setFilter("");
+    setBusinessId(undefined);
+    setAdvertisementTypeId(undefined);
+    setStatus(undefined);
+    setExpiringWithinDays(undefined);
+    pagination.resetToFirstPage();
   };
 
   const save = (input: AdvertisementRegistrationInput) => {
@@ -238,6 +253,13 @@ export default function AdvertisementRegistrationPage() {
         actions={
           <>
             <Button
+              icon={<ReloadOutlined />}
+              loading={registrations.isFetching}
+              onClick={refreshRegistrations}
+            >
+              Làm mới
+            </Button>
+            <Button
               icon={<ExportOutlined />}
               loading={exportMutation.isPending}
               onClick={() =>
@@ -268,8 +290,9 @@ export default function AdvertisementRegistrationPage() {
             allowClear
             placeholder="Số đăng ký, phương tiện, nội dung"
             style={{ width: 300 }}
-            onSearch={(value) => {
-              setFilter(value.trim());
+            value={filter}
+            onChange={(event) => {
+              setFilter(event.target.value);
               pagination.resetToFirstPage();
             }}
           />
@@ -279,6 +302,7 @@ export default function AdvertisementRegistrationPage() {
             optionFilterProp="label"
             placeholder="Tất cả cơ sở"
             style={{ width: 250 }}
+            value={businessId}
             options={(businesses.data ?? []).map((x) => ({
               value: x.id,
               label: x.code ? `${x.code} — ${x.name}` : x.name,
@@ -292,6 +316,7 @@ export default function AdvertisementRegistrationPage() {
             allowClear
             placeholder="Loại quảng cáo"
             style={{ width: 190 }}
+            value={advertisementTypeId}
             options={(types.data ?? []).map((x) => ({
               value: x.id,
               label: x.name,
@@ -305,6 +330,7 @@ export default function AdvertisementRegistrationPage() {
             allowClear
             placeholder="Trạng thái"
             style={{ width: 160 }}
+            value={status}
             options={[
               { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
               { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
@@ -319,6 +345,7 @@ export default function AdvertisementRegistrationPage() {
             allowClear
             placeholder="Cảnh báo hết hạn"
             style={{ width: 180 }}
+            value={expiringWithinDays}
             options={[30, 60, 90].map((value) => ({
               value,
               label: `Trong ${value} ngày`,
@@ -328,6 +355,9 @@ export default function AdvertisementRegistrationPage() {
               pagination.resetToFirstPage();
             }}
           />
+          <Button icon={<ClearOutlined />} onClick={resetFilters}>
+            Đặt lại bộ lọc
+          </Button>
         </div>
         <Table
           rowKey="id"
