@@ -321,6 +321,7 @@ export default function TestingResultsPage() {
         )}
       </Space>
       <Table
+        sticky
         rowKey="id"
         columns={columns}
         dataSource={results.data?.items}

@@ -373,6 +373,7 @@ export default function ProductRegistrationPage() {
         </div>
 
         <Table
+          sticky
           rowKey="id"
           size="middle"
           scroll={{ x: 960 }}

@@ -306,6 +306,7 @@ export default function VsattpCommitmentPage() {
       </Space>
 
       <Table
+        sticky
         rowKey="id"
         size="small"
         loading={isLoading}

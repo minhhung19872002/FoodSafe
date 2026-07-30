@@ -351,6 +351,7 @@ export default function RiskAnalysisPage() {
           </Space>
         </div>
         <Table
+          sticky
           rowKey="id"
           columns={columns}
           dataSource={listQuery.data?.items}

@@ -126,6 +126,7 @@ function BusinessSearchTab() {
             children: (
               <Spin spinning={isFetching}>
                 <Table
+                  sticky
                   dataSource={data?.items}
                   rowKey={(row) => row.code || row.name}
                   pagination={pagination.buildConfig(data?.totalCount)}
@@ -267,6 +268,7 @@ function ProductSearchTab() {
 
       <Spin spinning={isFetching}>
         <Table
+          sticky
           dataSource={data?.items}
           rowKey={(row) => row.code || row.name}
           pagination={pagination.buildConfig(data?.totalCount)}
@@ -365,6 +367,7 @@ function TestingResultSearchTab() {
 
       <Spin spinning={isFetching}>
         <Table
+          sticky
           dataSource={data?.items}
           rowKey={(row) => row.id}
           pagination={pagination.buildConfig(data?.totalCount)}
@@ -474,6 +477,7 @@ function InspectionResultSearchTab() {
 
       <Spin spinning={isFetching}>
         <Table
+          sticky
           dataSource={data?.items}
           rowKey={(row) => row.id}
           pagination={pagination.buildConfig(data?.totalCount)}

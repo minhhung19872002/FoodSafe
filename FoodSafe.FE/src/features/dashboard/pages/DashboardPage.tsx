@@ -486,6 +486,7 @@ export default function DashboardPage() {
         <Col xs={24} lg={12}>
           <Card title="Chi tiết theo loại hồ sơ" size="small">
             <Table
+              sticky
               rowKey="category"
               columns={breakdownColumns}
               dataSource={stats?.licenseBreakdown ?? []}
@@ -512,6 +513,7 @@ export default function DashboardPage() {
         <Col xs={24}>
           <Card title="Giấy phép sắp hết hạn (30/60/90 ngày)" size="small">
             <Table
+              sticky
               rowKey="id"
               columns={expiringLicenseColumns}
               dataSource={expiringLicenses.data?.items ?? []}
@@ -535,6 +537,7 @@ export default function DashboardPage() {
             size="small"
           >
             <Table
+              sticky
               rowKey="organizationId"
               columns={complianceColumns}
               dataSource={compliance.data?.items ?? []}

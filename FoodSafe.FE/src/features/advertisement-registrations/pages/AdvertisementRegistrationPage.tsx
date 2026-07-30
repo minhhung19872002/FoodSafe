@@ -366,6 +366,7 @@ export default function AdvertisementRegistrationPage() {
           </div>
         </div>
         <Table
+          sticky
           rowKey="id"
           size="middle"
           scroll={{ x: 1250 }}

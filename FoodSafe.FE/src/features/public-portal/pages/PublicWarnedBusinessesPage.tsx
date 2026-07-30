@@ -93,6 +93,7 @@ export default function PublicWarnedBusinessesPage() {
 
       <Spin spinning={isFetching}>
         <Table<PublicAlert>
+          sticky
           dataSource={data?.items}
           rowKey="id"
           pagination={pagination.buildConfig(data?.totalCount)}

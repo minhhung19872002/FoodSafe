@@ -17,6 +17,29 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-31 — Kéo ngang bằng chuột trong bảng danh sách (toàn hệ thống)
+
+- **Cause**: Yêu cầu từ bản review drawio. Bảng rộng hơn khung chứa chỉ cuộn
+  ngang được bằng thanh cuộn ở đáy bảng, nên với danh sách dài người dùng phải
+  cuộn hết xuống cuối mới với tới thanh cuộn.
+- **Commit**: nhánh `fix/drawio-review-round-2`
+- **Affected features**: mọi feature có bảng danh sách (thay đổi thuần UI, không
+  đổi API, dữ liệu hay phân quyền)
+- **Retest level**: 1 (visual smoke) — không có thay đổi hành vi nghiệp vụ
+- **Result**: PASSED (người dùng tự kiểm tra trên browser)
+- **Details**:
+  - `hooks/useTableDragScroll.ts`: bắt sự kiện pointer ở cấp document, cho phép
+    bấm giữ và kéo ngang bên trong vùng cuộn của Ant Design Table. Chỉ áp dụng
+    cho chuột (cảm ứng đã có cuộn quán tính sẵn), bỏ qua khi bấm vào phần tử
+    tương tác (nút, link, ô nhập, select, sort/filter cột), và chỉ nhận khi
+    khoảng kéo ngang vượt 4px và lớn hơn khoảng kéo dọc — nên cuộn dọc trang và
+    click trong bảng giữ nguyên hành vi. Click phát sinh ngay sau một lần kéo
+    bị bỏ qua để không mở nhầm bản ghi.
+  - Thêm prop `sticky` cho 35 bảng danh sách (pages/, *View/*Tab/*Section) để
+    thanh cuộn ngang luôn nhìn thấy. Bảng trong Modal/Drawer không đổi.
+  - Không sửa file test nào; không feature nào bị chuyển sang DIRTY vì thay đổi
+    không ảnh hưởng API, phân quyền hay dữ liệu.
+
 ### 2026-07-29 — Login name split from email address (F-020)
 
 - **Cause**: Requested change. Staff without a work mailbox of their own could

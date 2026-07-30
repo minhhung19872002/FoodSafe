@@ -130,6 +130,7 @@ export default function GeographicCatalogPage() {
     loading: boolean,
   ) => (
     <Table<CatalogItem>
+      sticky
       rowKey="id"
       size="middle"
       loading={loading}

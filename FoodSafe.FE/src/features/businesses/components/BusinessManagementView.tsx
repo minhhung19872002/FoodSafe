@@ -504,6 +504,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
             </Button>
           </div>
           <Table
+            sticky
             rowKey="id"
             size="middle"
             scroll={{ x: 1500 }}
@@ -570,6 +571,7 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
             </Button>
           </div>
           <Table
+            sticky
             rowKey="id"
             size="middle"
             scroll={{ x: 800 }}

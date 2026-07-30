@@ -166,6 +166,7 @@ export function BusinessVsattpCommitmentsTab({
 
   return (
     <Table
+      sticky
       rowKey="id"
       size="small"
       loading={isLoading}

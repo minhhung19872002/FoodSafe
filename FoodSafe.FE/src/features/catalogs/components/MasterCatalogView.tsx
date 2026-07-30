@@ -279,6 +279,7 @@ export function MasterCatalogView(props: MasterCatalogViewProps) {
         )}
       </div>
       <Table<CatalogItem>
+        sticky
         rowKey="id"
         size="middle"
         loading={props.loading}

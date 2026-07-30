@@ -377,6 +377,7 @@ export default function EligibilityCertificatePage() {
           </div>
         </div>
         <Table
+          sticky
           size="middle"
           rowKey="id"
           scroll={{ x: 1100 }}

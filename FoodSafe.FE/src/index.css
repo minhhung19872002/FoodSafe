@@ -1153,6 +1153,27 @@ button {
   overflow-x: auto;
 }
 
+/* Kéo ngang bằng chuột ngay trong bảng (xem hooks/useTableDragScroll.ts) —
+   không phải cuộn xuống cuối danh sách để với tới thanh cuộn. */
+.ant-table-content.is-drag-scrollable,
+.ant-table-body.is-drag-scrollable {
+  cursor: grab;
+}
+
+.ant-table-content.is-drag-scrolling,
+.ant-table-body.is-drag-scrolling {
+  cursor: grabbing;
+  user-select: none;
+  /* Kéo mượt: tắt cuộn "snap" mặc định của trình duyệt khi đặt scrollLeft. */
+  scroll-behavior: auto;
+}
+
+.ant-table-content.is-drag-scrolling *,
+.ant-table-body.is-drag-scrolling * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
 .ant-table-wrapper .ant-table-thead > tr > th {
   background: var(--fs-bg-head);
   color: var(--fs-muted);

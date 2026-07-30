@@ -238,6 +238,7 @@ export default function AuditLogPage() {
       </Space>
 
       <Table
+        sticky
         rowKey="id"
         columns={columns}
         dataSource={data?.items}

@@ -378,6 +378,7 @@ export default function SelfDeclarationPage() {
         </div>
 
         <Table
+          sticky
           rowKey="id"
           size="middle"
           scroll={{ x: 1000 }}

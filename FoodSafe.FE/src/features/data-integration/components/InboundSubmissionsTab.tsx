@@ -253,6 +253,7 @@ export function InboundSubmissionsTab() {
         <RefreshListButton loading={isLoading} onClick={() => void refetch()} />
       </Space>
       <Table
+        sticky
         rowKey="id"
         columns={columns}
         dataSource={data?.items}

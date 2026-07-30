@@ -169,6 +169,7 @@ export function OrganizationListView({
       </div>
 
       <Table<OrganizationDto>
+        sticky
         rowKey="id"
         loading={loading}
         dataSource={items}

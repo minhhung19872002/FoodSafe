@@ -108,6 +108,7 @@ export function ReportStatisticsSection({
                   {exportButton("licenses-by-business-type")}
                 </div>
                 <Table
+                  sticky
                   rowKey="businessTypeName"
                   columns={licenseColumns}
                   dataSource={data?.licensesByBusinessType}
@@ -127,6 +128,7 @@ export function ReportStatisticsSection({
                   {exportButton("poisoning-by-area")}
                 </div>
                 <Table
+                  sticky
                   rowKey="areaName"
                   columns={poisoningColumns}
                   dataSource={data?.poisoningByArea}
@@ -145,6 +147,7 @@ export function ReportStatisticsSection({
                   {exportButton("inspection-summary")}
                 </div>
                 <Table
+                  sticky
                   rowKey="organizationName"
                   columns={inspectionColumns}
                   dataSource={data?.inspectionByOrganization}
@@ -170,6 +173,7 @@ export function ReportStatisticsSection({
                       label: "Theo loại hình",
                       children: (
                         <Table
+                          sticky
                           rowKey="groupName"
                           columns={breakdownColumns}
                           dataSource={data?.businessesByType}
@@ -183,6 +187,7 @@ export function ReportStatisticsSection({
                       label: "Theo vùng",
                       children: (
                         <Table
+                          sticky
                           rowKey="groupName"
                           columns={breakdownColumns}
                           dataSource={data?.businessesByRegion}
@@ -196,6 +201,7 @@ export function ReportStatisticsSection({
                       label: "Theo tỉnh/TP",
                       children: (
                         <Table
+                          sticky
                           rowKey="groupName"
                           columns={breakdownColumns}
                           dataSource={data?.businessesByProvince}
@@ -209,6 +215,7 @@ export function ReportStatisticsSection({
                       label: "Theo đầu mối quản lý",
                       children: (
                         <Table
+                          sticky
                           rowKey="groupName"
                           columns={breakdownColumns}
                           dataSource={data?.businessesByOrganization}

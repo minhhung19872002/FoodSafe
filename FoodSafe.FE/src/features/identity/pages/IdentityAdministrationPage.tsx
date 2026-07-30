@@ -414,6 +414,7 @@ export default function IdentityAdministrationPage() {
           )}
         </div>
         <Table<AdminUser>
+          sticky
           rowKey="id"
           size="middle"
           loading={users.isLoading}
@@ -669,6 +670,7 @@ export default function IdentityAdministrationPage() {
           )}
         </div>
         <Table<AdminRole>
+          sticky
           rowKey="id"
           size="middle"
           loading={roles.isLoading}
