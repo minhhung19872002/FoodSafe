@@ -99,8 +99,12 @@ public sealed class PublicContentController(
 
     [HttpGet("documents")]
     public Task<PagedResultDto<PublicDocumentDto>> GetDocumentsAsync(
-        [FromQuery] PublicSearchRequestDto input) =>
+        [FromQuery] PublicDocumentSearchRequestDto input) =>
         service.GetDocumentsAsync(input);
+
+    [HttpGet("catalog/document-types")]
+    public Task<List<CatalogOptionDto>> GetDocumentTypeOptionsAsync() =>
+        service.GetDocumentTypeOptionsAsync();
 
     [HttpGet("risk-analyses")]
     public Task<PagedResultDto<PublicRiskAnalysisDto>> GetRiskAnalysesAsync(

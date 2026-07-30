@@ -23,6 +23,10 @@ export interface PublicTestingResultFilter extends PagedFilter {
   Outcome?: TestingOutcome;
 }
 
+export interface PublicDocumentFilter extends PagedFilter {
+  DocumentTypeId?: string;
+}
+
 export interface CatalogOption {
   id: string;
   name: string;

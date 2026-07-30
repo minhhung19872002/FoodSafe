@@ -17,6 +17,7 @@ import type {
   PublicNewsFilter,
   PublicNewsItem,
   PublicProduct,
+  PublicDocumentFilter,
   PublicProductFilter,
   PublicRiskAnalysis,
   PublicRiskAnalysisFilter,
@@ -141,11 +142,19 @@ export const publicPortalApi = {
       .then((r) => r.data);
   },
 
-  listDocuments(filter: PagedFilter): Promise<PagedResult<PublicDocument>> {
+  listDocuments(
+    filter: PublicDocumentFilter,
+  ): Promise<PagedResult<PublicDocument>> {
     return api
       .get<PagedResult<PublicDocument>>("/v1/public/documents", {
         params: filter,
       })
+      .then((r) => r.data);
+  },
+
+  fetchDocumentTypeOptions(): Promise<CatalogOption[]> {
+    return api
+      .get<CatalogOption[]>("/v1/public/catalog/document-types")
       .then((r) => r.data);
   },
 

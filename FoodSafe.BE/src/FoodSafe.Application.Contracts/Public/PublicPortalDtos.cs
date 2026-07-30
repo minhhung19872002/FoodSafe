@@ -33,6 +33,11 @@ public class PublicTestingResultSearchRequestDto : PublicSearchRequestDto
     public TestingResultOutcome? Outcome { get; set; }
 }
 
+public class PublicDocumentSearchRequestDto : PublicSearchRequestDto
+{
+    public Guid? DocumentTypeId { get; set; }
+}
+
 public class CatalogOptionDto
 {
     public Guid Id { get; set; }
@@ -274,7 +279,8 @@ public interface IPublicContentAppService
     Task<PublicNewsDetailDto> GetNewsDetailAsync(Guid id);
     Task<PagedResultDto<PublicAlertDto>> GetAlertsAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicWarnedBusinessDto>> GetWarnedBusinessesAsync(PublicSearchRequestDto input);
-    Task<PagedResultDto<PublicDocumentDto>> GetDocumentsAsync(PublicSearchRequestDto input);
+    Task<PagedResultDto<PublicDocumentDto>> GetDocumentsAsync(PublicDocumentSearchRequestDto input);
+    Task<List<CatalogOptionDto>> GetDocumentTypeOptionsAsync();
     Task<PagedResultDto<PublicRiskAnalysisDto>> GetRiskAnalysesAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicTestingResultDto>> GetTestingResultsAsync(PublicTestingResultSearchRequestDto input);
     Task<PagedResultDto<PublicInspectionResultDto>> GetInspectionResultsAsync(PublicSearchRequestDto input);

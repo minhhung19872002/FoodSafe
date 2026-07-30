@@ -173,8 +173,17 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
             list.Skip(input.SkipCount).Take(input.MaxResultCount).ToList());
     }
 
+    public async Task<List<CatalogOptionDto>> GetDocumentTypeOptionsAsync()
+    {
+        var items = await _documentTypes.GetListAsync(
+            t => t.IsActive, cancellationToken: _cancellationTokens.Token);
+        return items.OrderBy(t => t.SortOrder).ThenBy(t => t.Name)
+            .Select(t => new CatalogOptionDto { Id = t.Id, Name = t.Name })
+            .ToList();
+    }
+
     public async Task<PagedResultDto<PublicDocumentDto>> GetDocumentsAsync(
-        PublicSearchRequestDto input)
+        PublicDocumentSearchRequestDto input)
     {
         var query = (await _documents.GetQueryableAsync())
             .Where(d => d.IsPublic && d.Status == DocumentStatus.Active);
@@ -183,6 +192,11 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
         {
             query = query.Where(d =>
                 d.Title.Contains(keyword) || d.DocumentNumber.Contains(keyword));
+        }
+
+        if (input.DocumentTypeId.HasValue)
+        {
+            query = query.Where(d => d.DocumentTypeId == input.DocumentTypeId.Value);
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);

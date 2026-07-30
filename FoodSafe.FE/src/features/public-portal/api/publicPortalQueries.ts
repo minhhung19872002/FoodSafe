@@ -4,6 +4,7 @@ import type {
   PagedFilter,
   PublicAlertFilter,
   PublicBusinessFilter,
+  PublicDocumentFilter,
   PublicNewsFilter,
   PublicProductFilter,
   PublicRiskAnalysisFilter,
@@ -97,10 +98,18 @@ export function usePublicWarnedBusinesses(filter: PagedFilter) {
   });
 }
 
-export function usePublicDocuments(filter: PagedFilter) {
+export function usePublicDocuments(filter: PublicDocumentFilter) {
   return useQuery({
     queryKey: [QK, "documents", filter],
     queryFn: () => publicPortalApi.listDocuments(filter),
+  });
+}
+
+export function usePublicDocumentTypeOptions() {
+  return useQuery({
+    queryKey: [QK, "catalog", "document-types"],
+    queryFn: () => publicPortalApi.fetchDocumentTypeOptions(),
+    staleTime: 10 * 60 * 1000,
   });
 }
 

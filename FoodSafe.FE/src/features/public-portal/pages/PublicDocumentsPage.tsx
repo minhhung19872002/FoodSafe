@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Alert, Button, Empty, Input, Space, Spin, Table, Typography } from "antd";
+import { Alert, Button, Empty, Input, Select, Space, Spin, Table, Typography } from "antd";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { PublicShell } from "../components/PublicShell";
-import { usePublicDocuments } from "../api/publicPortalQueries";
+import { usePublicDocuments, usePublicDocumentTypeOptions } from "../api/publicPortalQueries";
 
 function formatDate(iso: string) {
   return iso ? new Date(iso).toLocaleDateString("vi-VN") : "—";
@@ -11,10 +11,15 @@ function formatDate(iso: string) {
 export default function PublicDocumentsPage() {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
+  const [selectedTypeId, setSelectedTypeId] = useState<string>();
+  const [submittedTypeId, setSubmittedTypeId] = useState<string>();
   const pagination = useTablePagination(20);
+
+  const { data: documentTypes } = usePublicDocumentTypeOptions();
 
   const filter = {
     Keyword: submittedKeyword || undefined,
+    DocumentTypeId: submittedTypeId,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   };
@@ -24,6 +29,7 @@ export default function PublicDocumentsPage() {
   const handleSearch = () => {
     pagination.resetToFirstPage();
     setSubmittedKeyword(keyword);
+    setSubmittedTypeId(selectedTypeId);
   };
 
   return (
@@ -37,7 +43,7 @@ export default function PublicDocumentsPage() {
       </Typography.Paragraph>
 
       <Space direction="vertical" style={{ width: "100%" }} size="middle">
-        <Space>
+        <Space wrap>
           <Input
             value={keyword}
             placeholder="Số văn bản, tên văn bản..."
@@ -45,6 +51,14 @@ export default function PublicDocumentsPage() {
             onPressEnter={handleSearch}
             allowClear
             style={{ width: 350 }}
+          />
+          <Select
+            value={selectedTypeId}
+            onChange={setSelectedTypeId}
+            placeholder="Loại văn bản"
+            allowClear
+            style={{ minWidth: 220 }}
+            options={documentTypes?.map((t) => ({ label: t.name, value: t.id }))}
           />
           <Button type="primary" loading={isFetching} onClick={handleSearch}>
             Tìm kiếm
