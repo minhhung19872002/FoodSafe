@@ -22,6 +22,7 @@ import {
   DeleteOutlined,
   DownloadOutlined,
   EditOutlined,
+  EyeOutlined,
   ExportOutlined,
   InboxOutlined,
   StopOutlined,
@@ -200,6 +201,13 @@ export function ApiSpecsTab() {
         <RowActions
           overflowAriaLabel={`Thao tác ${record.name}`}
           actions={[
+            {
+              key: "view",
+              label: "Xem chi tiết",
+              ariaLabel: `Xem chi tiết ${record.name}`,
+              icon: <EyeOutlined />,
+              onClick: () => setDetailRecord(record),
+            },
             {
               key: "download",
               label: "Tải xuống",
