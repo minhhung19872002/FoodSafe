@@ -50,6 +50,16 @@ function mockData() {
         { id: "alert-1", alertNumber: "CB-001", title: "Cảnh báo mẫu" },
       ]),
     ),
+    http.get("*/v1/app/data-sharing/inspection-result-options", () =>
+      HttpResponse.json([
+        {
+          id: "result-1",
+          businessName: "Cơ sở mẫu",
+          inspectionDate: "2026-07-30T00:00:00",
+          adminDecisionNumber: "QĐ-001",
+        },
+      ]),
+    ),
   );
 }
 
@@ -134,6 +144,43 @@ describe("DataIntegrationPage", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText("Cảnh báo ATTP", { selector: "label" }),
+    ).toBeInTheDocument();
+  });
+
+  it("requires selecting a concrete inspection result when sharing", async () => {
+    mockData();
+    const user = userEvent.setup();
+    useAuthStore.getState().setAuth({
+      id: "integration-user",
+      name: "Integration User",
+      email: "integration@foodsafe.local",
+      organizationId: null,
+      organizationName: null,
+      roles: ["Integration"],
+      permissions: [
+        "FoodSafe.DataIntegration.ApiEndpoints.View",
+        "FoodSafe.DataIntegration.CallHistory.View",
+        "FoodSafe.DataIntegration.Share",
+      ],
+    });
+
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("tab", { name: "Lịch sử gọi API" }),
+    );
+    await user.click(
+      screen.getByRole("tab", {
+        name: "Kết quả thanh kiểm tra",
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: /Chia sẻ dữ liệu/ }));
+
+    expect(
+      await screen.findByText("Tìm theo cơ sở hoặc số quyết định"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Kết quả thanh, kiểm tra", { selector: "label" }),
     ).toBeInTheDocument();
   });
 });

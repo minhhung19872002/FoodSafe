@@ -67,7 +67,11 @@ public sealed class DataIntegrationApplicationContractTests
         typeof(DataSharingAppService).GetMethod("ShareAsync").ShouldNotBeNull();
         typeof(DataSharingAppService).GetMethod("RetryAsync").ShouldNotBeNull();
         typeof(DataSharingAppService).GetMethod("GetAlertOptionsAsync").ShouldNotBeNull();
+        typeof(DataSharingAppService)
+            .GetMethod("GetInspectionResultOptionsAsync").ShouldNotBeNull();
         typeof(IDataSharingAppService).GetMethod("GetAlertOptionsAsync").ShouldNotBeNull();
+        typeof(IDataSharingAppService)
+            .GetMethod("GetInspectionResultOptionsAsync").ShouldNotBeNull();
         typeof(IDataSharingAppService).GetMethod("RetryAsync").ShouldNotBeNull();
     }
 

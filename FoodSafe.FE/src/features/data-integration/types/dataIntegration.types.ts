@@ -120,6 +120,13 @@ export interface AlertShareOption {
   title: string;
 }
 
+export interface InspectionResultShareOption {
+  id: string;
+  businessName: string;
+  inspectionDate: string;
+  adminDecisionNumber?: string;
+}
+
 export interface TestConnectionResult {
   isSuccess: boolean;
   statusCode?: number;

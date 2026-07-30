@@ -4,6 +4,8 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FoodSafe.AlertsAndTesting;
+using FoodSafe.BusinessManagement;
+using FoodSafe.Inspection;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -44,6 +46,8 @@ public class DataSharingAppService :
 
     private readonly IRepository<ApiEndpoint, Guid> _endpoints;
     private readonly IRepository<AtpAlert, Guid> _alerts;
+    private readonly IRepository<InspectionResult, Guid> _inspectionResults;
+    private readonly IRepository<Business, Guid> _businesses;
     private readonly IRepository<ApiCallLog, Guid> _logs;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
@@ -54,6 +58,8 @@ public class DataSharingAppService :
     public DataSharingAppService(
         IRepository<ApiEndpoint, Guid> endpoints,
         IRepository<AtpAlert, Guid> alerts,
+        IRepository<InspectionResult, Guid> inspectionResults,
+        IRepository<Business, Guid> businesses,
         IRepository<ApiCallLog, Guid> logs,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens,
@@ -63,6 +69,8 @@ public class DataSharingAppService :
     {
         _endpoints = endpoints;
         _alerts = alerts;
+        _inspectionResults = inspectionResults;
+        _businesses = businesses;
         _logs = logs;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
@@ -101,6 +109,52 @@ public class DataSharingAppService :
                     Id = x.Id,
                     AlertNumber = x.AlertNumber,
                     Title = x.Title,
+                }),
+            ct);
+    }
+
+    /// <summary>
+    /// Lightweight inspection-result lookup for the share dialog, protected by
+    /// the integration Share permission and the caller's organization scope.
+    /// </summary>
+    public async Task<List<InspectionResultShareOptionDto>>
+        GetInspectionResultOptionsAsync(string? filter)
+    {
+        var ct = _cancellationTokens.Token;
+        var scope = await _dataScopeProvider.GetAsync(DataScopeOperation.View, ct);
+        var results = (await _inspectionResults.GetQueryableAsync())
+            .WhereIf(!scope.HasGlobalAccess,
+                x => scope.OrganizationIds.Contains(x.OrganizationId));
+        var businesses = await _businesses.GetQueryableAsync();
+
+        var query =
+            from result in results
+            join business in businesses on result.BusinessId equals business.Id
+            select new
+            {
+                Result = result,
+                BusinessName = business.Name,
+            };
+
+        if (!filter.IsNullOrWhiteSpace())
+        {
+            var keyword = filter!.Trim().ToUpperInvariant();
+            query = query.Where(x =>
+                x.BusinessName.ToUpper().Contains(keyword) ||
+                (x.Result.AdminDecisionNumber != null &&
+                 x.Result.AdminDecisionNumber.ToUpper().Contains(keyword)));
+        }
+
+        return await AsyncExecuter.ToListAsync(
+            query.OrderByDescending(x => x.Result.InspectionDate)
+                .ThenByDescending(x => x.Result.CreationTime)
+                .Take(100)
+                .Select(x => new InspectionResultShareOptionDto
+                {
+                    Id = x.Result.Id,
+                    BusinessName = x.BusinessName,
+                    InspectionDate = x.Result.InspectionDate,
+                    AdminDecisionNumber = x.Result.AdminDecisionNumber,
                 }),
             ct);
     }

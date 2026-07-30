@@ -14,6 +14,8 @@ const keys = {
   callLog: (id: string) => ["api-call-log", id] as const,
   alertShareOptions: (filter?: string) =>
     ["data-sharing", "alert-options", filter] as const,
+  inspectionResultShareOptions: (filter?: string) =>
+    ["data-sharing", "inspection-result-options", filter] as const,
   partners: (filter: PartnerAccountFilter) =>
     ["partner-accounts", filter] as const,
   partnerKeys: (id: string) => ["partner-keys", id] as const,
@@ -51,6 +53,17 @@ export function useAlertShareOptions(filter?: string, enabled = true) {
   return useQuery({
     queryKey: keys.alertShareOptions(filter),
     queryFn: () => dataIntegrationApi.getAlertShareOptions(filter),
+    enabled,
+  });
+}
+
+export function useInspectionResultShareOptions(
+  filter?: string,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: keys.inspectionResultShareOptions(filter),
+    queryFn: () => dataIntegrationApi.getInspectionResultShareOptions(filter),
     enabled,
   });
 }

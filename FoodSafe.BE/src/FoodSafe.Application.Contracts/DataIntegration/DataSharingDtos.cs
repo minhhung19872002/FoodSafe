@@ -10,6 +10,14 @@ public class AlertShareOptionDto
     public string Title { get; set; } = null!;
 }
 
+public class InspectionResultShareOptionDto
+{
+    public Guid Id { get; set; }
+    public string BusinessName { get; set; } = null!;
+    public DateTime InspectionDate { get; set; }
+    public string? AdminDecisionNumber { get; set; }
+}
+
 public class ShareDataInput
 {
     [Required]
@@ -36,6 +44,8 @@ public class ShareDataResultDto
 public interface IDataSharingAppService : IApplicationService
 {
     Task<List<AlertShareOptionDto>> GetAlertOptionsAsync(string? filter);
+    Task<List<InspectionResultShareOptionDto>> GetInspectionResultOptionsAsync(
+        string? filter);
     Task<ShareDataResultDto> ShareAsync(ShareDataInput input);
 
     /// <summary>

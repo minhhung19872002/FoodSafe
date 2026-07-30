@@ -15,6 +15,7 @@ import type {
   InboundSubmission,
   InboundSubmissionDetail,
   InboundSubmissionFilter,
+  InspectionResultShareOption,
   IssuePartnerApiKeyInput,
   IssuedPartnerApiKey,
   PagedResult,
@@ -86,6 +87,14 @@ export const dataIntegrationApi = {
       .get<AlertShareOption[]>("/v1/app/data-sharing/alert-options", {
         params: { filter },
       })
+      .then((r) => r.data),
+
+  getInspectionResultShareOptions: (filter?: string) =>
+    api
+      .get<InspectionResultShareOption[]>(
+        "/v1/app/data-sharing/inspection-result-options",
+        { params: { filter } },
+      )
       .then((r) => r.data),
 
   shareData: (input: ShareDataInput) =>

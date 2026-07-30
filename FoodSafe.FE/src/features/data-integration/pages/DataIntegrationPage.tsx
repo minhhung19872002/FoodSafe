@@ -41,6 +41,7 @@ import {
   useApiCallLogs,
   useApiCallLogDetail,
   useAlertShareOptions,
+  useInspectionResultShareOptions,
 } from "../api/dataIntegrationQueries";
 import {
   useCreateEndpoint,
@@ -483,6 +484,12 @@ function CallHistoryTab() {
     alertSearch,
     shareOpen && selectedShareDataType === SHARED_DATA_TYPE.Alert,
   );
+  const [inspectionResultSearch, setInspectionResultSearch] =
+    useState<string>();
+  const inspectionResultOptions = useInspectionResultShareOptions(
+    inspectionResultSearch,
+    shareOpen && selectedShareDataType === SHARED_DATA_TYPE.InspectionResult,
+  );
   const detail = useApiCallLogDetail(detailId);
   const canViewEndpoints = hasPermission(
     "FoodSafe.DataIntegration.ApiEndpoints.View",
@@ -697,6 +704,7 @@ function CallHistoryTab() {
               });
               setSelectedShareDataType(dataType);
               setAlertSearch(undefined);
+              setInspectionResultSearch(undefined);
               setShareOpen(true);
             }}
           >
@@ -808,6 +816,46 @@ function CallHistoryTab() {
                   label: alert.alertNumber
                     ? `${alert.alertNumber} — ${alert.title}`
                     : alert.title,
+                }))}
+              />
+            </Form.Item>
+          )}
+          {selectedShareDataType === SHARED_DATA_TYPE.InspectionResult && (
+            <Form.Item
+              name="entityId"
+              label="Kết quả thanh, kiểm tra"
+              rules={[
+                {
+                  required: true,
+                  message: "Chọn kết quả thanh, kiểm tra cần chia sẻ",
+                },
+              ]}
+            >
+              <Select
+                showSearch
+                allowClear
+                filterOption={false}
+                placeholder="Tìm theo cơ sở hoặc số quyết định"
+                loading={inspectionResultOptions.isFetching}
+                onSearch={(value) =>
+                  setInspectionResultSearch(value || undefined)
+                }
+                notFoundContent={
+                  inspectionResultOptions.isFetching
+                    ? "Đang tải..."
+                    : "Không tìm thấy kết quả thanh, kiểm tra"
+                }
+                options={(inspectionResultOptions.data ?? []).map((result) => ({
+                  value: result.id,
+                  label: [
+                    result.businessName,
+                    dayjs(result.inspectionDate).format("DD/MM/YYYY"),
+                    result.adminDecisionNumber
+                      ? `QĐ ${result.adminDecisionNumber}`
+                      : undefined,
+                  ]
+                    .filter(Boolean)
+                    .join(" — "),
                 }))}
               />
             </Form.Item>

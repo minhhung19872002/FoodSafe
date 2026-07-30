@@ -19,6 +19,11 @@ public sealed class DataSharingController(
         [FromQuery] string? filter) =>
         service.GetAlertOptionsAsync(filter);
 
+    [HttpGet("inspection-result-options")]
+    public Task<List<InspectionResultShareOptionDto>>
+        GetInspectionResultOptionsAsync([FromQuery] string? filter) =>
+        service.GetInspectionResultOptionsAsync(filter);
+
     [HttpPost("share")]
     public Task<ShareDataResultDto> ShareAsync(
         [FromBody] ShareDataInput input) =>

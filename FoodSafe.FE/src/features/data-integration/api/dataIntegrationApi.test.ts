@@ -67,6 +67,36 @@ describe("dataIntegrationApi", () => {
     expect(result[0]?.id).toBe("alert-1");
   });
 
+  it("loads shareable inspection-result options with the search filter", async () => {
+    let requestedUrl = "";
+    server.use(
+      http.get(
+        "*/v1/app/data-sharing/inspection-result-options",
+        ({ request }) => {
+          requestedUrl = request.url;
+          return HttpResponse.json([
+            {
+              id: "result-1",
+              businessName: "Cơ sở mẫu",
+              inspectionDate: "2026-07-30T00:00:00",
+              adminDecisionNumber: "QĐ-001",
+            },
+          ]);
+        },
+      ),
+    );
+
+    const result =
+      await dataIntegrationApi.getInspectionResultShareOptions("QĐ-001");
+
+    const url = new URL(requestedUrl);
+    expect(url.pathname).toBe(
+      "/api/v1/app/data-sharing/inspection-result-options",
+    );
+    expect(url.searchParams.get("filter")).toBe("QĐ-001");
+    expect(result[0]?.id).toBe("result-1");
+  });
+
   it("forwards the inbound-submission keyword filter", async () => {
     let requestedUrl = "";
     server.use(
