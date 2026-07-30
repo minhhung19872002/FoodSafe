@@ -410,9 +410,12 @@ export default function SystemSettingsPage() {
                   <Form.Item
                     name="contactPhone"
                     label="Điện thoại liên hệ"
+                    // Không bắt buộc — AntD bỏ qua pattern khi ô để trống. Bắt
+                    // buộc có ít nhất một chữ số để khớp với [Phone] ở server,
+                    // nếu không "((((((" sẽ qua được FE rồi bị server chặn.
                     rules={[
                       {
-                        pattern: /^[0-9+()\-.\s]{6,20}$/,
+                        pattern: /^(?=.*[0-9])[0-9+()\-.\s]{6,20}$/,
                         message: "Số điện thoại không hợp lệ",
                       },
                     ]}
