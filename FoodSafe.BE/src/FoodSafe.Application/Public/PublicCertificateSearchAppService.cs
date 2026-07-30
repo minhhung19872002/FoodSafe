@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using FoodSafe.BusinessManagement;
+using FoodSafe.Catalogs;
 using FoodSafe.Licensing;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
@@ -25,6 +26,10 @@ public class PublicCertificateSearchAppService :
     private readonly IRepository<ExportFoodCertificate, Guid> _exportCertificates;
     private readonly IRepository<Business, Guid> _businesses;
     private readonly IRepository<Product, Guid> _products;
+    private readonly IRepository<BusinessType, Guid> _businessTypes;
+    private readonly IRepository<BusinessClassification, Guid> _businessClassifications;
+    private readonly IRepository<Province, Guid> _provinces;
+    private readonly IRepository<Commune, Guid> _communes;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
     public PublicCertificateSearchAppService(
@@ -36,6 +41,10 @@ public class PublicCertificateSearchAppService :
         IRepository<ExportFoodCertificate, Guid> exportCertificates,
         IRepository<Business, Guid> businesses,
         IRepository<Product, Guid> products,
+        IRepository<BusinessType, Guid> businessTypes,
+        IRepository<BusinessClassification, Guid> businessClassifications,
+        IRepository<Province, Guid> provinces,
+        IRepository<Commune, Guid> communes,
         ICancellationTokenProvider cancellationTokens)
     {
         _eligibility = eligibility;
@@ -46,6 +55,10 @@ public class PublicCertificateSearchAppService :
         _exportCertificates = exportCertificates;
         _businesses = businesses;
         _products = products;
+        _businessTypes = businessTypes;
+        _businessClassifications = businessClassifications;
+        _provinces = provinces;
+        _communes = communes;
         _cancellationTokens = cancellationTokens;
     }
 
@@ -176,6 +189,166 @@ public class PublicCertificateSearchAppService :
                 CertifyingAuthority = null,
                 StatusLabel = StatusLabel(c.EffectiveStatus(Clock.Now.Date)),
             });
+
+    public async Task<PublicCertificateDetailDto> GetEligibilityCertificateDetailAsync(Guid id)
+    {
+        var c = await _eligibility.GetAsync(id, cancellationToken: _cancellationTokens.Token);
+        var dto = await BuildDetailAsync(c.BusinessId);
+        dto.Id = c.Id;
+        dto.Number = c.CertificateNumber;
+        dto.CertificationScope = c.CertificationScope;
+        dto.IssueDate = c.IssueDate;
+        dto.ExpiryDate = c.ExpiryDate;
+        dto.CertifyingAuthority = c.CertifyingAuthority;
+        dto.StatusLabel = StatusLabel(c.EffectiveStatus(Clock.Now.Date));
+        dto.RevokeReason = c.RevokeReason;
+        dto.RevokedAt = c.RevokedAt;
+        return dto;
+    }
+
+    public async Task<PublicCertificateDetailDto> GetSelfDeclarationDetailAsync(Guid id)
+    {
+        var c = await _selfDeclarations.GetAsync(id, cancellationToken: _cancellationTokens.Token);
+        var dto = await BuildDetailAsync(c.BusinessId);
+        dto.Id = c.Id;
+        dto.Number = c.DeclarationNumber;
+        dto.ProductName = c.ProductName;
+        dto.Manufacturer = c.Manufacturer;
+        dto.IssueDate = c.DeclarationDate;
+        dto.ExpiryDate = c.ExpiryDate;
+        dto.StatusLabel = StatusLabel(c.EffectiveStatus(Clock.Now.Date));
+        dto.RevokeReason = c.RevokeReason;
+        dto.RevokedAt = c.RevokedAt;
+        return dto;
+    }
+
+    public async Task<PublicCertificateDetailDto> GetProductRegistrationDetailAsync(Guid id)
+    {
+        var c = await _productRegistrations.GetAsync(id, cancellationToken: _cancellationTokens.Token);
+        var dto = await BuildDetailAsync(c.BusinessId);
+        dto.Id = c.Id;
+        dto.Number = c.RegistrationNumber;
+        dto.ProductName = c.ProductName;
+        dto.Manufacturer = c.Manufacturer;
+        dto.IssueDate = c.RegistrationDate;
+        dto.ExpiryDate = c.ExpiryDate;
+        dto.CertifyingAuthority = c.CertifyingAuthority;
+        dto.StatusLabel = StatusLabel(c.EffectiveStatus(Clock.Now.Date));
+        dto.RevokeReason = c.RevokeReason;
+        dto.RevokedAt = c.RevokedAt;
+        return dto;
+    }
+
+    public async Task<PublicCertificateDetailDto> GetAdRegistrationDetailAsync(Guid id)
+    {
+        var c = await _adRegistrations.GetAsync(id, cancellationToken: _cancellationTokens.Token);
+        var dto = await BuildDetailAsync(c.BusinessId);
+        dto.Id = c.Id;
+        dto.Number = c.RegistrationNumber;
+        dto.ProductName = c.ContentDescription;
+        dto.IssueDate = c.RegistrationDate;
+        dto.ExpiryDate = c.ExpiryDate;
+        dto.StatusLabel = StatusLabel(c.EffectiveStatus(Clock.Now.Date));
+        dto.RevokeReason = c.RevokeReason;
+        dto.RevokedAt = c.RevokedAt;
+        return dto;
+    }
+
+    public async Task<PublicCertificateDetailDto> GetCfsCertificateDetailAsync(Guid id)
+    {
+        var c = await _cfsCertificates.GetAsync(id, cancellationToken: _cancellationTokens.Token);
+        var dto = await BuildDetailAsync(c.BusinessId);
+        dto.Id = c.Id;
+        dto.Number = c.CertificateNumber;
+        dto.IssueDate = c.IssueDate;
+        dto.ExpiryDate = c.ExpiryDate;
+        dto.CertifyingAuthority = c.CertifyingAuthority;
+        dto.StatusLabel = StatusLabel(c.EffectiveStatus(Clock.Now.Date));
+        dto.RevokeReason = c.RevokeReason;
+        dto.RevokedAt = c.RevokedAt;
+        if (c.ProductId.HasValue)
+        {
+            var product = await _products.FindAsync(c.ProductId.Value, cancellationToken: _cancellationTokens.Token);
+            dto.ProductName = product?.Name;
+        }
+        return dto;
+    }
+
+    public async Task<PublicCertificateDetailDto> GetExportFoodCertificateDetailAsync(Guid id)
+    {
+        var c = await _exportCertificates.GetAsync(id, cancellationToken: _cancellationTokens.Token);
+        var dto = await BuildDetailAsync(c.BusinessId);
+        dto.Id = c.Id;
+        dto.Number = c.CertificateNumber;
+        dto.IssueDate = c.IssueDate;
+        dto.ExpiryDate = c.ExpiryDate;
+        dto.StatusLabel = StatusLabel(c.EffectiveStatus(Clock.Now.Date));
+        dto.RevokeReason = c.RevokeReason;
+        dto.RevokedAt = c.RevokedAt;
+        if (c.ProductId.HasValue)
+        {
+            var product = await _products.FindAsync(c.ProductId.Value, cancellationToken: _cancellationTokens.Token);
+            dto.ProductName = product?.Name;
+        }
+        return dto;
+    }
+
+    private async Task<PublicCertificateDetailDto> BuildDetailAsync(Guid businessId)
+    {
+        var business = await _businesses.GetAsync(businessId, cancellationToken: _cancellationTokens.Token);
+
+        string? businessTypeName = null;
+        if (business.BusinessTypeId.HasValue)
+        {
+            var bt = await _businessTypes.FindAsync(
+                business.BusinessTypeId.Value, cancellationToken: _cancellationTokens.Token);
+            businessTypeName = bt?.Name;
+        }
+
+        string? classificationName = null;
+        if (business.BusinessClassificationId.HasValue)
+        {
+            var bc = await _businessClassifications.FindAsync(
+                business.BusinessClassificationId.Value, cancellationToken: _cancellationTokens.Token);
+            classificationName = bc?.Name;
+        }
+
+        string? provinceName = null;
+        if (business.AddressProvinceId.HasValue)
+        {
+            var province = await _provinces.FindAsync(
+                business.AddressProvinceId.Value, cancellationToken: _cancellationTokens.Token);
+            provinceName = province?.Name;
+        }
+
+        string? communeName = null;
+        if (business.AddressCommuneId.HasValue)
+        {
+            var commune = await _communes.FindAsync(
+                business.AddressCommuneId.Value, cancellationToken: _cancellationTokens.Token);
+            communeName = commune?.Name;
+        }
+
+        return new PublicCertificateDetailDto
+        {
+            BusinessName = business.Name,
+            BusinessCode = business.Code,
+            BusinessTypeName = businessTypeName,
+            BusinessClassificationName = classificationName,
+            BusinessStatus = business.Status,
+            TaxCode = business.TaxCode,
+            RepresentativeName = business.RepresentativeName,
+            ContactPhone = business.ContactPhone,
+            ContactEmail = business.ContactEmail,
+            AddressStreet = business.AddressStreet,
+            CommuneName = communeName,
+            ProvinceName = provinceName,
+            EstablishedDate = business.EstablishedDate,
+            EmployeeCount = business.EmployeeCount,
+            HasVsattpCommitment = business.HasVsattpCommitment,
+            HasEligibilityCertificate = business.HasEligibilityCertificate,
+        };
+    }
 
     private async Task<PagedResultDto<PublicCertificateSummaryDto>> SearchAsync<TEntity>(
         IRepository<TEntity, Guid> repository,

@@ -11,6 +11,7 @@ import type {
   PublicBusiness,
   PublicBusinessFilter,
   PublicCertificate,
+  PublicCertificateDetail,
   PublicCertificateFilter,
   PublicDocument,
   PublicInspectionResult,
@@ -188,6 +189,15 @@ export const publicPortalApi = {
   fetchProductGroupOptions(): Promise<CatalogOption[]> {
     return api
       .get<CatalogOption[]>("/v1/public/catalog/product-groups")
+      .then((r) => r.data);
+  },
+
+  getCertificateDetail(
+    certPath: string,
+    id: string,
+  ): Promise<PublicCertificateDetail> {
+    return api
+      .get<PublicCertificateDetail>(`/v1/public/${certPath}/${id}`)
       .then((r) => r.data);
   },
 

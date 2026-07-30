@@ -276,6 +276,12 @@ public interface IPublicCertificateSearchAppService
     Task<PagedResultDto<PublicCertificateSummaryDto>> SearchAdRegistrationsAsync(PublicCertificateSearchRequestDto input);
     Task<PagedResultDto<PublicCertificateSummaryDto>> SearchCfsCertificatesAsync(PublicCertificateSearchRequestDto input);
     Task<PagedResultDto<PublicCertificateSummaryDto>> SearchExportFoodCertificatesAsync(PublicCertificateSearchRequestDto input);
+    Task<PublicCertificateDetailDto> GetEligibilityCertificateDetailAsync(Guid id);
+    Task<PublicCertificateDetailDto> GetSelfDeclarationDetailAsync(Guid id);
+    Task<PublicCertificateDetailDto> GetProductRegistrationDetailAsync(Guid id);
+    Task<PublicCertificateDetailDto> GetAdRegistrationDetailAsync(Guid id);
+    Task<PublicCertificateDetailDto> GetCfsCertificateDetailAsync(Guid id);
+    Task<PublicCertificateDetailDto> GetExportFoodCertificateDetailAsync(Guid id);
 }
 
 public interface IPublicContentAppService
@@ -301,6 +307,40 @@ public interface IPublicContentAppService
 public interface ICitizenAlertReportAppService
 {
     Task<CitizenAlertReportResultDto> CreateAsync(CreateCitizenAlertReportDto input);
+}
+
+public class PublicCertificateDetailDto
+{
+    // ── Certificate ──
+    public Guid Id { get; set; }
+    public string Number { get; set; } = string.Empty;
+    public string? ProductName { get; set; }
+    public string? Manufacturer { get; set; }
+    public DateTime IssueDate { get; set; }
+    public DateTime? ExpiryDate { get; set; }
+    public string? CertifyingAuthority { get; set; }
+    public string? CertificationScope { get; set; }
+    public string StatusLabel { get; set; } = string.Empty;
+    public string? RevokeReason { get; set; }
+    public DateTime? RevokedAt { get; set; }
+
+    // ── Business ──
+    public string BusinessName { get; set; } = string.Empty;
+    public string? BusinessCode { get; set; }
+    public string? BusinessTypeName { get; set; }
+    public string? BusinessClassificationName { get; set; }
+    public BusinessStatus BusinessStatus { get; set; }
+    public string? TaxCode { get; set; }
+    public string? RepresentativeName { get; set; }
+    public string? ContactPhone { get; set; }
+    public string? ContactEmail { get; set; }
+    public string? AddressStreet { get; set; }
+    public string? CommuneName { get; set; }
+    public string? ProvinceName { get; set; }
+    public DateTime? EstablishedDate { get; set; }
+    public int? EmployeeCount { get; set; }
+    public bool HasVsattpCommitment { get; set; }
+    public bool HasEligibilityCertificate { get; set; }
 }
 
 public class CertificatePdfDto

@@ -69,6 +69,30 @@ public sealed class PublicCertificateSearchController(
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchExportFoodCertificatesAsync(
         [FromQuery] PublicCertificateSearchRequestDto input) =>
         service.SearchExportFoodCertificatesAsync(input);
+
+    [HttpGet("eligibility-certificates/{id:guid}")]
+    public Task<PublicCertificateDetailDto> GetEligibilityCertificateDetailAsync(Guid id) =>
+        service.GetEligibilityCertificateDetailAsync(id);
+
+    [HttpGet("self-declarations/{id:guid}")]
+    public Task<PublicCertificateDetailDto> GetSelfDeclarationDetailAsync(Guid id) =>
+        service.GetSelfDeclarationDetailAsync(id);
+
+    [HttpGet("product-registrations/{id:guid}")]
+    public Task<PublicCertificateDetailDto> GetProductRegistrationDetailAsync(Guid id) =>
+        service.GetProductRegistrationDetailAsync(id);
+
+    [HttpGet("ad-registrations/{id:guid}")]
+    public Task<PublicCertificateDetailDto> GetAdRegistrationDetailAsync(Guid id) =>
+        service.GetAdRegistrationDetailAsync(id);
+
+    [HttpGet("cfs-certificates/{id:guid}")]
+    public Task<PublicCertificateDetailDto> GetCfsCertificateDetailAsync(Guid id) =>
+        service.GetCfsCertificateDetailAsync(id);
+
+    [HttpGet("export-food-certificates/{id:guid}")]
+    public Task<PublicCertificateDetailDto> GetExportFoodCertificateDetailAsync(Guid id) =>
+        service.GetExportFoodCertificateDetailAsync(id);
 }
 
 [RemoteService]

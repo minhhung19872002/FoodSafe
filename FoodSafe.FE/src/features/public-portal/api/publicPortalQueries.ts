@@ -144,6 +144,17 @@ export function usePublicProductGroupOptions() {
   });
 }
 
+export function usePublicCertificateDetail(
+  certPath: string | undefined,
+  id: string | undefined,
+) {
+  return useQuery({
+    queryKey: [QK, "certificate-detail", certPath, id],
+    queryFn: () => publicPortalApi.getCertificateDetail(certPath!, id!),
+    enabled: Boolean(certPath && id),
+  });
+}
+
 export function usePublicInspectionResults(filter: PagedFilter) {
   return useQuery({
     queryKey: [QK, "inspection-results", filter],

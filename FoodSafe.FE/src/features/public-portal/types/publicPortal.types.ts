@@ -183,6 +183,36 @@ export interface PublicCertificate {
   statusLabel: string;
 }
 
+export interface PublicCertificateDetail {
+  id: string;
+  number: string;
+  productName: string | null;
+  manufacturer: string | null;
+  issueDate: string;
+  expiryDate: string | null;
+  certifyingAuthority: string | null;
+  certificationScope: string | null;
+  statusLabel: string;
+  revokeReason: string | null;
+  revokedAt: string | null;
+  businessName: string;
+  businessCode: string | null;
+  businessTypeName: string | null;
+  businessClassificationName: string | null;
+  businessStatus: BusinessStatus;
+  taxCode: string | null;
+  representativeName: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  addressStreet: string | null;
+  communeName: string | null;
+  provinceName: string | null;
+  establishedDate: string | null;
+  employeeCount: number | null;
+  hasVsattpCommitment: boolean;
+  hasEligibilityCertificate: boolean;
+}
+
 export interface PublicAlert {
   id: string;
   title: string;
