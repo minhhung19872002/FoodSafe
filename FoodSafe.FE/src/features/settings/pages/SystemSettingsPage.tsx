@@ -407,7 +407,16 @@ export default function SystemSettingsPage() {
               </Form.Item>
               <Row gutter={12}>
                 <Col span={12}>
-                  <Form.Item name="contactPhone" label="Điện thoại liên hệ">
+                  <Form.Item
+                    name="contactPhone"
+                    label="Điện thoại liên hệ"
+                    rules={[
+                      {
+                        pattern: /^[0-9+()\-.\s]{6,20}$/,
+                        message: "Số điện thoại không hợp lệ",
+                      },
+                    ]}
+                  >
                     <Input />
                   </Form.Item>
                 </Col>

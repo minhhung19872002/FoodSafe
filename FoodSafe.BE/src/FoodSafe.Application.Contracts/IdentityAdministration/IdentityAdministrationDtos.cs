@@ -75,9 +75,9 @@ public sealed class CreateAdminUserDto
     [Required]
     [StringLength(50, MinimumLength = 3)]
     [RegularExpression(
-        "^[A-Za-z0-9._-]+$",
+        "^[A-Za-z0-9_]+$",
         ErrorMessage =
-            "Tên đăng nhập chỉ gồm chữ không dấu, số và các ký tự . _ -")]
+            "Tên đăng nhập chỉ gồm chữ không dấu, số và dấu gạch dưới _")]
     public string UserName { get; set; } = string.Empty;
 
     [Required]

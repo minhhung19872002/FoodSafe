@@ -89,12 +89,13 @@ export function QuickCreateUserModal({
         <Form.Item
           name="userName"
           label="Tên đăng nhập"
-          extra="Chữ không dấu, số và các ký tự . _ -"
+          extra="Chữ không dấu, số và dấu gạch dưới _"
           rules={[
             { required: true, message: "Vui lòng nhập tên đăng nhập" },
             {
-              pattern: /^[A-Za-z0-9._-]{3,50}$/,
-              message: "Từ 3 đến 50 ký tự, chỉ gồm chữ không dấu, số và . _ -",
+              pattern: /^[A-Za-z0-9_]{3,50}$/,
+              message:
+                "Từ 3 đến 50 ký tự, chỉ gồm chữ không dấu, số và dấu gạch dưới _",
             },
           ]}
         >

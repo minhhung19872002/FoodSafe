@@ -98,13 +98,17 @@ export default function LoginPage() {
 
         <div className="login-aside-body">
           <h1 className="login-aside-title">
-            Hệ thống quản lý
-            <br />
-            An toàn thực phẩm
+            {branding.data?.homepageTitle?.trim() || (
+              <>
+                Hệ thống quản lý
+                <br />
+                An toàn thực phẩm
+              </>
+            )}
           </h1>
           <p className="login-aside-lead">
-            Nền tảng nghiệp vụ dành cho cán bộ quản lý: cấp phép, thanh tra,
-            giám sát nguy cơ và báo cáo toàn tỉnh trên một hệ thống duy nhất.
+            {branding.data?.homepageDescription?.trim() ||
+              "Nền tảng nghiệp vụ dành cho cán bộ quản lý: cấp phép, thanh tra, giám sát nguy cơ và báo cáo toàn tỉnh trên một hệ thống duy nhất."}
           </p>
 
           {counts.isSuccess && (
@@ -122,7 +126,8 @@ export default function LoginPage() {
         </div>
 
         <div className="login-aside-legal">
-          © {new Date().getFullYear()} {DEFAULT_ORGANIZATION}
+          © {new Date().getFullYear()}{" "}
+          {branding.data?.homepageTitle?.trim() || DEFAULT_ORGANIZATION}
         </div>
       </aside>
 
