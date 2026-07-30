@@ -19,6 +19,7 @@ import {
   BarChartOutlined,
   SolutionOutlined,
 } from "@ant-design/icons";
+import { ChartCard } from "@/components/ChartCard";
 import {
   CartesianGrid,
   Legend,
@@ -563,9 +564,17 @@ export default function DashboardPage() {
           </Card>
         </Col>
         <Col xs={24} xl={10}>
-          <Card
+          <ChartCard
             title="Diễn biến ngộ độc thực phẩm (12 tháng gần nhất)"
-            size="small"
+            fileName="dien-bien-ngo-doc.png"
+            height={360}
+            isEmpty={
+              !poisoningTrend.isLoading &&
+              (!poisoningTrend.data?.length ||
+                poisoningTrend.data.every(
+                  (d) => d.cases === 0 && d.victims === 0,
+                ))
+            }
           >
             <Spin spinning={poisoningTrend.isLoading}>
               <ResponsiveContainer width="100%" height={360}>
@@ -618,7 +627,7 @@ export default function DashboardPage() {
                 </LineChart>
               </ResponsiveContainer>
             </Spin>
-          </Card>
+          </ChartCard>
         </Col>
       </Row>
     </div>

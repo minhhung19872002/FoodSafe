@@ -13,6 +13,7 @@ export interface MonthlyCount {
 export interface StatisticsDto {
   businessByStatus: CategoryCount[];
   businessByType: CategoryCount[];
+  productByGroup: CategoryCount[];
   licenseByCategory: CategoryCount[];
   licenseByStatus: CategoryCount[];
   inspectionsByMonth: MonthlyCount[];

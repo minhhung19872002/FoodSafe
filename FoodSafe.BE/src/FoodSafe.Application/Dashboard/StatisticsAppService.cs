@@ -22,6 +22,8 @@ public class StatisticsAppService : ApplicationService
     private readonly IClock _clock;
     private readonly IRepository<Business, Guid> _businesses;
     private readonly IRepository<BusinessType, Guid> _businessTypes;
+    private readonly IRepository<Product, Guid> _products;
+    private readonly IRepository<ProductGroup, Guid> _productGroups;
     private readonly IRepository<SelfDeclaration, Guid> _selfDeclarations;
     private readonly IRepository<ProductRegistration, Guid> _productRegistrations;
     private readonly IRepository<EligibilityCertificate, Guid> _eligibilityCertificates;
@@ -38,6 +40,8 @@ public class StatisticsAppService : ApplicationService
         IClock clock,
         IRepository<Business, Guid> businesses,
         IRepository<BusinessType, Guid> businessTypes,
+        IRepository<Product, Guid> products,
+        IRepository<ProductGroup, Guid> productGroups,
         IRepository<SelfDeclaration, Guid> selfDeclarations,
         IRepository<ProductRegistration, Guid> productRegistrations,
         IRepository<EligibilityCertificate, Guid> eligibilityCertificates,
@@ -53,6 +57,8 @@ public class StatisticsAppService : ApplicationService
         _clock = clock;
         _businesses = businesses;
         _businessTypes = businessTypes;
+        _products = products;
+        _productGroups = productGroups;
         _selfDeclarations = selfDeclarations;
         _productRegistrations = productRegistrations;
         _eligibilityCertificates = eligibilityCertificates;
@@ -87,6 +93,7 @@ public class StatisticsAppService : ApplicationService
         var dto = new StatisticsDto();
 
         await AddBusinessStatsAsync(dto, global, orgIds, dtStart, dtEnd, ct);
+        await AddProductStatsAsync(dto, global, orgIds, dtStart, dtEnd, ct);
         await AddLicenseStatsAsync(dto, global, orgIds, dtStart, dtEnd, ct);
         await AddInspectionStatsAsync(dto, global, orgIds, year, dtStart, dtEnd, ct);
         await AddPoisoningStatsAsync(dto, global, orgIds, year, rangeStart, rangeEnd, ct);
@@ -140,6 +147,44 @@ public class StatisticsAppService : ApplicationService
             .OrderByDescending(x => x.Count)
             .Take(10)
             .ToList();
+    }
+
+    private async Task AddProductStatsAsync(
+        StatisticsDto dto, bool global, IReadOnlySet<Guid> orgIds,
+        DateTime dtStart, DateTime dtEnd, CancellationToken ct)
+    {
+        var productQ = (await _products.GetQueryableAsync())
+            .WhereIf(!global, x => orgIds.Contains(x.OrganizationId))
+            .Where(x => x.CreationTime >= dtStart && x.CreationTime < dtEnd);
+
+        var byGroup = await AsyncExecuter.ToListAsync(
+            productQ.Where(p => p.ProductGroupId != null)
+                .GroupBy(p => p.ProductGroupId!.Value)
+                .Select(g => new { GroupId = g.Key, Count = g.Count() }), ct);
+
+        var noGroup = await AsyncExecuter.CountAsync(
+            productQ.Where(p => p.ProductGroupId == null), ct);
+
+        var groupIds = byGroup.Select(b => b.GroupId).ToList();
+        var groupQ = await _productGroups.GetQueryableAsync();
+        var groupNames = await AsyncExecuter.ToListAsync(
+            groupQ.Where(g => groupIds.Contains(g.Id))
+                .Select(g => new { g.Id, g.Name }), ct);
+
+        dto.ProductByGroup = byGroup
+            .Select(x => new CategoryCount
+            {
+                Name = groupNames.FirstOrDefault(g => g.Id == x.GroupId)?.Name ?? "Khác",
+                Count = x.Count
+            })
+            .OrderByDescending(x => x.Count)
+            .Take(10)
+            .ToList();
+
+        if (noGroup > 0)
+        {
+            dto.ProductByGroup.Add(new CategoryCount { Name = "Chưa phân nhóm", Count = noGroup });
+        }
     }
 
     private async Task AddLicenseStatsAsync(

@@ -83,8 +83,8 @@ function flattenOrganizationOptions(
 }
 
 /** A chart is empty when every bucket is zero, not only when the array is. */
-function hasChartData(items: ReadonlyArray<{ count: number }>): boolean {
-  return items.some((item) => item.count > 0);
+function hasChartData(items?: ReadonlyArray<{ count: number }>): boolean {
+  return !!items?.some((item) => item.count > 0);
 }
 
 /**
@@ -118,6 +118,7 @@ function PoisoningMapSection({
 const EMPTY_STATS: StatisticsDto = {
   businessByStatus: [],
   businessByType: [],
+  productByGroup: [],
   licenseByCategory: [],
   licenseByStatus: [],
   inspectionsByMonth: [],
@@ -290,6 +291,34 @@ export default function StatisticsPage() {
 
           <Col xs={24} lg={12}>
             <ChartCard
+              title="Sản phẩm theo nhóm"
+              fileName={`san-pham-theo-nhom-${year}.png`}
+              height={280}
+              isEmpty={!hasChartData(stats.productByGroup)}
+            >
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart
+                  data={stats.productByGroup ?? []}
+                  layout="vertical"
+                  margin={{ left: 80 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" allowDecimals={false} />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={80}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#0958D9" name="Số lượng" />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          </Col>
+
+          <Col xs={24} lg={12}>
+            <ChartCard
               title="Giấy phép / Chứng nhận theo loại"
               fileName={`giay-phep-theo-loai-${year}.png`}
               height={280}
@@ -439,7 +468,7 @@ export default function StatisticsPage() {
                   <XAxis dataKey="label" />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#CF1322" name="Vi phạm" />
+                  <Bar dataKey="count" fill="#CF1322" name="Số vụ ngộ độc" />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
