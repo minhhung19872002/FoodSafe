@@ -106,6 +106,14 @@ export function usePublicDocuments(filter: PublicDocumentFilter) {
   });
 }
 
+export function usePublicDocumentDetail(id: string | undefined) {
+  return useQuery({
+    queryKey: [QK, "document-detail", id],
+    queryFn: () => publicPortalApi.getDocumentDetail(id!),
+    enabled: Boolean(id),
+  });
+}
+
 export function usePublicDocumentTypeOptions() {
   return useQuery({
     queryKey: [QK, "catalog", "document-types"],

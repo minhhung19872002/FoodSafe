@@ -280,6 +280,7 @@ export interface PublicWarnedBusiness {
 }
 
 export interface PublicDocument {
+  id: string;
   documentNumber: string;
   title: string;
   documentTypeName: string;
@@ -287,6 +288,10 @@ export interface PublicDocument {
   issuedDate: string;
   effectiveDate: string;
   summary: string;
+}
+
+export interface PublicDocumentDetail extends PublicDocument {
+  expiryDate: string | null;
 }
 
 // ── Testing result outcome ───────────────────────────────────────────────────

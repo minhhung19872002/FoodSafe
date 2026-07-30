@@ -126,6 +126,10 @@ public sealed class PublicContentController(
         [FromQuery] PublicDocumentSearchRequestDto input) =>
         service.GetDocumentsAsync(input);
 
+    [HttpGet("documents/{id:guid}")]
+    public Task<PublicDocumentDetailDto> GetDocumentDetailAsync(Guid id) =>
+        service.GetDocumentDetailAsync(id);
+
     [HttpGet("catalog/document-types")]
     public Task<List<CatalogOptionDto>> GetDocumentTypeOptionsAsync() =>
         service.GetDocumentTypeOptionsAsync();

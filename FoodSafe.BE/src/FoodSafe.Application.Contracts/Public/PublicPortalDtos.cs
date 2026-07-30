@@ -150,6 +150,7 @@ public class PublicNewsDetailDto : PublicNewsListItemDto
 
 public class PublicDocumentDto
 {
+    public Guid Id { get; set; }
     public string DocumentNumber { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string? DocumentTypeName { get; set; }
@@ -157,6 +158,11 @@ public class PublicDocumentDto
     public DateTime IssuedDate { get; set; }
     public DateTime? EffectiveDate { get; set; }
     public string? Summary { get; set; }
+}
+
+public class PublicDocumentDetailDto : PublicDocumentDto
+{
+    public DateTime? ExpiryDate { get; set; }
 }
 
 public class PublicRiskAnalysisDto
@@ -291,6 +297,7 @@ public interface IPublicContentAppService
     Task<PagedResultDto<PublicAlertDto>> GetAlertsAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicWarnedBusinessDto>> GetWarnedBusinessesAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicDocumentDto>> GetDocumentsAsync(PublicDocumentSearchRequestDto input);
+    Task<PublicDocumentDetailDto> GetDocumentDetailAsync(Guid id);
     Task<List<CatalogOptionDto>> GetDocumentTypeOptionsAsync();
     Task<PagedResultDto<PublicRiskAnalysisDto>> GetRiskAnalysesAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicTestingResultDto>> GetTestingResultsAsync(PublicTestingResultSearchRequestDto input);

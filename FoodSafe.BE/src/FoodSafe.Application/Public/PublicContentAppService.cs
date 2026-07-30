@@ -213,6 +213,7 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
             totalCount,
             items.Select(d => new PublicDocumentDto
             {
+                Id = d.Id,
                 DocumentNumber = d.DocumentNumber,
                 Title = d.Title,
                 DocumentTypeName = typeNames.GetValueOrDefault(d.DocumentTypeId),
@@ -221,6 +222,32 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
                 EffectiveDate = d.EffectiveDate,
                 Summary = d.Summary,
             }).ToList());
+    }
+
+    public async Task<PublicDocumentDetailDto> GetDocumentDetailAsync(Guid id)
+    {
+        var doc = await _documents.GetAsync(id, cancellationToken: _cancellationTokens.Token);
+
+        if (!doc.IsPublic || doc.Status != DocumentStatus.Active)
+        {
+            throw new Volo.Abp.UserFriendlyException("Văn bản không tồn tại hoặc không công khai.");
+        }
+
+        var typeName = (await _documentTypes.FindAsync(doc.DocumentTypeId,
+            cancellationToken: _cancellationTokens.Token))?.Name;
+
+        return new PublicDocumentDetailDto
+        {
+            Id = doc.Id,
+            DocumentNumber = doc.DocumentNumber,
+            Title = doc.Title,
+            DocumentTypeName = typeName,
+            IssuingAuthority = doc.IssuingAuthority,
+            IssuedDate = doc.IssuedDate,
+            EffectiveDate = doc.EffectiveDate,
+            ExpiryDate = doc.ExpiryDate,
+            Summary = doc.Summary,
+        };
     }
 
     public async Task<PagedResultDto<PublicRiskAnalysisDto>> GetRiskAnalysesAsync(

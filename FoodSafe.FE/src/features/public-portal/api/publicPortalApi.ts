@@ -14,6 +14,7 @@ import type {
   PublicCertificateDetail,
   PublicCertificateFilter,
   PublicDocument,
+  PublicDocumentDetail,
   PublicInspectionResult,
   PublicNewsDetail,
   PublicNewsFilter,
@@ -151,6 +152,12 @@ export const publicPortalApi = {
       .get<PagedResult<PublicDocument>>("/v1/public/documents", {
         params: filter,
       })
+      .then((r) => r.data);
+  },
+
+  getDocumentDetail(id: string): Promise<PublicDocumentDetail> {
+    return api
+      .get<PublicDocumentDetail>(`/v1/public/documents/${id}`)
       .then((r) => r.data);
   },
 

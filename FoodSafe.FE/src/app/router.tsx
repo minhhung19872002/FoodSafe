@@ -128,6 +128,14 @@ const appRoutes: RouteObject[] = [
     ),
   },
   {
+    path: "/tra-cuu-van-ban/:id",
+    element: (
+      <Suspense fallback={<RouteLoading />}>
+        <PublicDocumentsPage />
+      </Suspense>
+    ),
+  },
+  {
     path: "/gui-phan-anh",
     element: (
       <Suspense fallback={<RouteLoading />}>
