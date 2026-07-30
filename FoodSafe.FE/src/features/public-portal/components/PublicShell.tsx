@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useBranding } from "@/hooks/useBranding";
+import {
+  brandingLogoUrl,
+  defaultBrandingLogoUrl,
+  useBranding,
+} from "@/hooks/useBranding";
 
 interface NavEntry {
   to: string;
@@ -82,7 +86,17 @@ export function PublicShell({ children, fullBleed = false }: PublicShellProps) {
               }
             }}
           >
-            <div className="portal-brand-mark">AT</div>
+            <div className="portal-brand-mark">
+              <img
+                src={
+                  branding.data?.hasLogo
+                    ? brandingLogoUrl
+                    : defaultBrandingLogoUrl
+                }
+                alt="Logo FoodSafe"
+                className="portal-brand-logo"
+              />
+            </div>
             <div>
               <div className="portal-brand-name">{title}</div>
               <div className="portal-brand-sub">
@@ -119,7 +133,17 @@ export function PublicShell({ children, fullBleed = false }: PublicShellProps) {
         <div className="portal-footer-inner">
           <div>
             <div className="portal-footer-brand">
-              <div className="portal-footer-mark">AT</div>
+              <div className="portal-footer-mark">
+                <img
+                  src={
+                    branding.data?.hasLogo
+                      ? brandingLogoUrl
+                      : defaultBrandingLogoUrl
+                  }
+                  alt=""
+                  className="portal-footer-logo"
+                />
+              </div>
               <div style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>
                 {title}
               </div>

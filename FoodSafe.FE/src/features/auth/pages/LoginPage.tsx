@@ -8,6 +8,7 @@ import { z } from "zod";
 import {
   brandingLoginBackgroundUrl,
   brandingLogoUrl,
+  defaultBrandingLogoUrl,
   useBranding,
 } from "@/hooks/useBranding";
 import { usePublicCounts } from "@/hooks/usePublicCounts";
@@ -81,15 +82,15 @@ export default function LoginPage() {
       >
         <div className="login-aside-brand">
           <div className="login-aside-mark">
-            {branding.data?.hasLogo ? (
-              <img
-                src={brandingLogoUrl}
-                alt=""
-                style={{ height: 30, objectFit: "contain" }}
-              />
-            ) : (
-              "AT"
-            )}
+            <img
+              src={
+                branding.data?.hasLogo
+                  ? brandingLogoUrl
+                  : defaultBrandingLogoUrl
+              }
+              alt=""
+              className="login-aside-logo"
+            />
           </div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>
             <strong style={{ fontWeight: 700 }}>FoodSafe</strong> · Quảng Ninh

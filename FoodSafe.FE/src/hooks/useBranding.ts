@@ -12,6 +12,7 @@ export interface PublicBranding {
 }
 
 export const brandingLogoUrl = "/api/v1/public/branding/logo";
+export const defaultBrandingLogoUrl = "/foodsafe-logo.png";
 export const brandingLoginBackgroundUrl =
   "/api/v1/public/branding/login-background";
 
