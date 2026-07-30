@@ -117,6 +117,11 @@ export default function OrganizationListPage() {
   }, [editing, allOrganizationOptions, treeQuery.data?.items]);
 
   const refresh = () => {
+    setFilter("");
+    setLevel(undefined);
+    setIsActive(undefined);
+    setParentId(undefined);
+    pagination.resetToFirstPage();
     void listQuery.refetch();
     void treeQuery.refetch();
   };
