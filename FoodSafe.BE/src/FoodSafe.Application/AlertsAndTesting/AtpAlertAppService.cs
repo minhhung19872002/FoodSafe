@@ -199,30 +199,17 @@ public class AtpAlertAppService : ApplicationService
     {
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.View, _cancellationTokens.Token);
-        var users = await BuildAssignableUsersQueryAsync(scope);
-
-        if (!filter.IsNullOrWhiteSpace())
-        {
-            var keyword = filter!.Trim();
-            users = users.Where(x =>
-                x.UserName.Contains(keyword) ||
-                x.FullName.Contains(keyword));
-        }
+        var users = BuildAssignableUsersQuery(
+            await _identityUsers.GetQueryableAsync(),
+            await _userProfiles.GetQueryableAsync(),
+            scope,
+            filter);
 
         var rows = await AsyncExecuter.ToListAsync(
-            users
-                .OrderBy(x => x.FullName)
-                .ThenBy(x => x.UserName)
-                .Take(200),
+            users.Take(200),
             _cancellationTokens.Token);
 
-        return new ListResultDto<AssignableAlertStaffDto>(
-            rows.Select(x => new AssignableAlertStaffDto
-            {
-                Id = x.Id,
-                UserName = x.UserName,
-                FullName = x.FullName
-            }).ToList());
+        return new ListResultDto<AssignableAlertStaffDto>(rows);
     }
 
     private async Task<IQueryable<AtpAlert>> ScopedQueryAsync(DataScopeOperation operation)
@@ -265,7 +252,10 @@ public class AtpAlertAppService : ApplicationService
     {
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.View, _cancellationTokens.Token);
-        var users = await BuildAssignableUsersQueryAsync(scope);
+        var users = BuildAssignableUsersQuery(
+            await _identityUsers.GetQueryableAsync(),
+            await _userProfiles.GetQueryableAsync(),
+            scope);
         if (!await AsyncExecuter.AnyAsync(
                 users.Where(x => x.Id == assigneeId),
                 _cancellationTokens.Token))
@@ -275,33 +265,43 @@ public class AtpAlertAppService : ApplicationService
         }
     }
 
-    private async Task<IQueryable<AssignableUserRow>> BuildAssignableUsersQueryAsync(
-        CurrentDataScope scope)
+    internal static IQueryable<AssignableAlertStaffDto> BuildAssignableUsersQuery(
+        IQueryable<IdentityUser> users,
+        IQueryable<AppUserProfile> profiles,
+        CurrentDataScope scope,
+        string? filter = null)
     {
-        var users = await _identityUsers.GetQueryableAsync();
-        var profiles = await _userProfiles.GetQueryableAsync();
-
-        var query =
+        // Keep filtering and ordering on mapped entity properties. Projecting to a
+        // positional record first makes EF Core generate an untranslatable
+        // "OrderBy(new AssignableUserRow(...).FullName)" expression on PostgreSQL.
+        var candidates =
             from user in users
             join profile in profiles on user.Id equals profile.UserId
             where user.IsActive
-            select new AssignableUserRow(
-                user.Id,
-                user.UserName,
-                profile.FullName,
-                profile.OrganizationId);
+            select new { User = user, Profile = profile };
 
         if (!scope.HasGlobalAccess)
-            query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
+            candidates = candidates.Where(
+                x => scope.OrganizationIds.Contains(x.Profile.OrganizationId));
 
-        return query;
+        if (!filter.IsNullOrWhiteSpace())
+        {
+            var keyword = filter!.Trim();
+            candidates = candidates.Where(x =>
+                x.User.UserName.Contains(keyword) ||
+                x.Profile.FullName.Contains(keyword));
+        }
+
+        return candidates
+            .OrderBy(x => x.Profile.FullName)
+            .ThenBy(x => x.User.UserName)
+            .Select(x => new AssignableAlertStaffDto
+            {
+                Id = x.User.Id,
+                UserName = x.User.UserName,
+                FullName = x.Profile.FullName
+            });
     }
-
-    private sealed record AssignableUserRow(
-        Guid Id,
-        string UserName,
-        string FullName,
-        Guid OrganizationId);
 
     // Sắp xếp theo yêu cầu của client trong danh sách cột cho phép; mặc định
     // mới nhất lên đầu.
