@@ -216,6 +216,21 @@ public class PartnerAccountAppService :
             .WhereIf(!scope.HasGlobalAccess,
                 x => scope.OrganizationIds.Contains(x.OrganizationId));
 
+        if (!input.Filter.IsNullOrWhiteSpace())
+        {
+            var filter = input.Filter!.Trim().ToUpperInvariant();
+            var matchingPartnerIds = (await _partners.GetQueryableAsync())
+                .Where(x =>
+                    x.Name.ToUpper().Contains(filter) ||
+                    x.ExternalSystem.ToUpper().Contains(filter))
+                .Select(x => x.Id);
+            query = query.Where(x =>
+                x.RequestId.ToUpper().Contains(filter) ||
+                (x.CorrelationId != null &&
+                 x.CorrelationId.ToUpper().Contains(filter)) ||
+                x.Payload.ToUpper().Contains(filter) ||
+                matchingPartnerIds.Contains(x.PartnerAccountId));
+        }
         if (input.PartnerAccountId.HasValue)
             query = query.Where(x => x.PartnerAccountId == input.PartnerAccountId);
         if (input.DataType.HasValue)

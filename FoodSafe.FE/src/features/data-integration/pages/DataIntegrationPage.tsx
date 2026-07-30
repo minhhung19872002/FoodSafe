@@ -40,6 +40,7 @@ import {
   useApiEndpoints,
   useApiCallLogs,
   useApiCallLogDetail,
+  useAlertShareOptions,
 } from "../api/dataIntegrationQueries";
 import {
   useCreateEndpoint,
@@ -475,6 +476,13 @@ function CallHistoryTab() {
   const [detailId, setDetailId] = useState<string>();
   const [shareOpen, setShareOpen] = useState(false);
   const [shareForm] = Form.useForm();
+  const [selectedShareDataType, setSelectedShareDataType] =
+    useState<SharedDataType>();
+  const [alertSearch, setAlertSearch] = useState<string>();
+  const alertOptions = useAlertShareOptions(
+    alertSearch,
+    shareOpen && selectedShareDataType === SHARED_DATA_TYPE.Alert,
+  );
   const detail = useApiCallLogDetail(detailId);
   const canViewEndpoints = hasPermission(
     "FoodSafe.DataIntegration.ApiEndpoints.View",
@@ -619,7 +627,7 @@ function CallHistoryTab() {
       />
       <Space style={{ marginBottom: 16 }} wrap>
         <Input.Search
-          placeholder="URL, hệ thống"
+          placeholder="URL, hệ thống, nội dung"
           allowClear
           style={{ width: 240 }}
           onSearch={(v) => {
@@ -682,9 +690,13 @@ function CallHistoryTab() {
             type="primary"
             icon={<ShareAltOutlined />}
             onClick={() => {
+              const dataType = filter.dataType ?? SHARED_DATA_TYPE.Alert;
+              shareForm.resetFields();
               shareForm.setFieldsValue({
-                dataType: filter.dataType ?? SHARED_DATA_TYPE.Alert,
+                dataType,
               });
+              setSelectedShareDataType(dataType);
+              setAlertSearch(undefined);
               setShareOpen(true);
             }}
           >
@@ -707,7 +719,11 @@ function CallHistoryTab() {
       <Modal
         title="Chia sẻ dữ liệu đến hệ thống bên ngoài"
         open={shareOpen}
-        onCancel={() => setShareOpen(false)}
+        onCancel={() => {
+          setShareOpen(false);
+          setSelectedShareDataType(undefined);
+          shareForm.resetFields();
+        }}
         onOk={() => shareForm.submit()}
         okText="Gửi"
         cancelText="Hủy"
@@ -722,6 +738,8 @@ function CallHistoryTab() {
             shareMut.mutate(values, {
               onSuccess: (result) => {
                 setShareOpen(false);
+                setSelectedShareDataType(undefined);
+                shareForm.resetFields();
                 if (result.isSuccess) {
                   message.success("Đã chia sẻ dữ liệu thành công.");
                 } else {
@@ -753,11 +771,47 @@ function CallHistoryTab() {
             rules={[{ required: true, message: "Chọn loại dữ liệu" }]}
           >
             <Select
+              onChange={(value: SharedDataType) => {
+                setSelectedShareDataType(value);
+                shareForm.setFieldValue("entityId", undefined);
+              }}
               options={Object.entries(SHARED_DATA_TYPE_LABELS).map(
                 ([value, label]) => ({ value: Number(value), label }),
               )}
             />
           </Form.Item>
+          {selectedShareDataType === SHARED_DATA_TYPE.Alert && (
+            <Form.Item
+              name="entityId"
+              label="Cảnh báo ATTP"
+              rules={[
+                {
+                  required: true,
+                  message: "Chọn cảnh báo ATTP cần chia sẻ",
+                },
+              ]}
+            >
+              <Select
+                showSearch
+                allowClear
+                filterOption={false}
+                placeholder="Tìm theo mã hoặc tiêu đề cảnh báo"
+                loading={alertOptions.isFetching}
+                onSearch={(value) => setAlertSearch(value || undefined)}
+                notFoundContent={
+                  alertOptions.isFetching
+                    ? "Đang tải..."
+                    : "Không tìm thấy cảnh báo"
+                }
+                options={(alertOptions.data ?? []).map((alert) => ({
+                  value: alert.id,
+                  label: alert.alertNumber
+                    ? `${alert.alertNumber} — ${alert.title}`
+                    : alert.title,
+                }))}
+              />
+            </Form.Item>
+          )}
           <Form.Item name="note" label="Ghi chú / mô tả dữ liệu">
             <Input.TextArea
               rows={3}

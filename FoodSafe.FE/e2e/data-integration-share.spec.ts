@@ -30,7 +30,11 @@
  */
 
 import { test, expect, type Page } from "@playwright/test";
-import { signIn, signInAsAdmin, requestVerificationToken } from "./helpers/auth";
+import {
+  signIn,
+  signInAsAdmin,
+  requestVerificationToken,
+} from "./helpers/auth";
 
 const BASE_URL = "http://127.0.0.1:8080";
 const ECHO_URL = "https://postman-echo.com/post";
@@ -118,8 +122,9 @@ test.describe("FR-51 P1-3 — outbound data sharing through the real UI", () => 
       // single open dialog is located by role only) ---
       await page.getByRole("button", { name: "Chia sẻ dữ liệu" }).click();
       const dialog = page.getByRole("dialog");
-      await expect(dialog.getByText("Chia sẻ dữ liệu đến hệ thống bên ngoài"))
-        .toBeVisible();
+      await expect(
+        dialog.getByText("Chia sẻ dữ liệu đến hệ thống bên ngoài"),
+      ).toBeVisible();
 
       // Ant Select options render in a body-level portal with the label as a
       // `title` attribute; `.last()` disambiguates from any selected-value chip.
@@ -128,6 +133,13 @@ test.describe("FR-51 P1-3 — outbound data sharing through the real UI", () => 
 
       await dialog.getByLabel("Loại dữ liệu").click();
       await page.getByTitle(ALERT_LABEL, { exact: true }).last().click();
+
+      await dialog.getByLabel("Cảnh báo ATTP").click();
+      await page
+        .locator(".ant-select-dropdown:visible")
+        .getByRole("option")
+        .first()
+        .click();
 
       await dialog
         .getByPlaceholder("Mô tả nội dung dữ liệu được chia sẻ")
@@ -166,20 +178,19 @@ test.describe("FR-51 P1-3 — outbound data sharing through the real UI", () => 
     const endpoint = await createEndpoint(page);
 
     try {
-      const toggle = await page.context().request.post(
-        `${ENDPOINT_API}/${endpoint.id}/toggle-status`,
-        {
+      const toggle = await page
+        .context()
+        .request.post(`${ENDPOINT_API}/${endpoint.id}/toggle-status`, {
           headers: {
             RequestVerificationToken: await requestVerificationToken(page),
           },
-        },
-      );
+        });
       // ABP void action → 204 No Content.
       expect([200, 204]).toContain(toggle.status());
 
-      const detail = await page.context().request.get(
-        `${ENDPOINT_API}/${endpoint.id}`,
-      );
+      const detail = await page
+        .context()
+        .request.get(`${ENDPOINT_API}/${endpoint.id}`);
       expect(((await detail.json()) as EndpointDto).status).toBe(
         STATUS_INACTIVE,
       );

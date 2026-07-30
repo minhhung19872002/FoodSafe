@@ -36,7 +36,11 @@ public class ApiCallLogAppService : ApplicationService
             var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
                 x.ExternalSystemName.ToUpper().Contains(filter) ||
-                x.EndpointUrl.ToUpper().Contains(filter));
+                x.EndpointUrl.ToUpper().Contains(filter) ||
+                (x.RequestBody != null &&
+                 x.RequestBody.ToUpper().Contains(filter)) ||
+                (x.ErrorMessage != null &&
+                 x.ErrorMessage.ToUpper().Contains(filter)));
         }
         if (input.Direction.HasValue)
             query = query.Where(x => x.Direction == input.Direction.Value);

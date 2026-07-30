@@ -185,6 +185,18 @@ export function InboundSubmissionsTab() {
   return (
     <>
       <Space style={{ marginBottom: 16 }} wrap>
+        <Input.Search
+          placeholder="Mã yêu cầu, đối tác, correlation, nội dung"
+          allowClear
+          style={{ width: 320 }}
+          onSearch={(value) => {
+            setFilter((current) => ({
+              ...current,
+              filter: value.trim() || undefined,
+            }));
+            pagination.resetToFirstPage();
+          }}
+        />
         <Select
           placeholder="Loại dữ liệu"
           allowClear

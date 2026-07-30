@@ -12,6 +12,8 @@ const keys = {
   endpoints: (filter: ApiEndpointFilter) => ["api-endpoints", filter] as const,
   callLogs: (filter: ApiCallLogFilter) => ["api-call-logs", filter] as const,
   callLog: (id: string) => ["api-call-log", id] as const,
+  alertShareOptions: (filter?: string) =>
+    ["data-sharing", "alert-options", filter] as const,
   partners: (filter: PartnerAccountFilter) =>
     ["partner-accounts", filter] as const,
   partnerKeys: (id: string) => ["partner-keys", id] as const,
@@ -42,6 +44,14 @@ export function useApiCallLogDetail(id: string | undefined) {
     queryKey: keys.callLog(id!),
     queryFn: () => dataIntegrationApi.getCallLog(id!),
     enabled: Boolean(id),
+  });
+}
+
+export function useAlertShareOptions(filter?: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.alertShareOptions(filter),
+    queryFn: () => dataIntegrationApi.getAlertShareOptions(filter),
+    enabled,
   });
 }
 

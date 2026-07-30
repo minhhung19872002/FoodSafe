@@ -2,6 +2,7 @@ import { api } from "@/lib/axios";
 import type {
   ApiEndpoint,
   ApiEndpointFilter,
+  AlertShareOption,
   ApiSpecification,
   ApiSpecificationDownload,
   ApiSpecificationFilter,
@@ -78,6 +79,13 @@ export const dataIntegrationApi = {
   testConnection: (id: string) =>
     api
       .post<TestConnectionResult>(`/v1/app/api-endpoint/${id}/test-connection`)
+      .then((r) => r.data),
+
+  getAlertShareOptions: (filter?: string) =>
+    api
+      .get<AlertShareOption[]>("/v1/app/data-sharing/alert-options", {
+        params: { filter },
+      })
       .then((r) => r.data),
 
   shareData: (input: ShareDataInput) =>

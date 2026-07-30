@@ -3,6 +3,13 @@ using Volo.Abp.Application.Services;
 
 namespace FoodSafe.DataIntegration;
 
+public class AlertShareOptionDto
+{
+    public Guid Id { get; set; }
+    public string? AlertNumber { get; set; }
+    public string Title { get; set; } = null!;
+}
+
 public class ShareDataInput
 {
     [Required]
@@ -28,6 +35,7 @@ public class ShareDataResultDto
 
 public interface IDataSharingAppService : IApplicationService
 {
+    Task<List<AlertShareOptionDto>> GetAlertOptionsAsync(string? filter);
     Task<ShareDataResultDto> ShareAsync(ShareDataInput input);
 
     /// <summary>

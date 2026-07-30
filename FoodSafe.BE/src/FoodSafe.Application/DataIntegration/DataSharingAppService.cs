@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using FoodSafe.AlertsAndTesting;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -42,6 +43,7 @@ public class DataSharingAppService :
         };
 
     private readonly IRepository<ApiEndpoint, Guid> _endpoints;
+    private readonly IRepository<AtpAlert, Guid> _alerts;
     private readonly IRepository<ApiCallLog, Guid> _logs;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
@@ -51,6 +53,7 @@ public class DataSharingAppService :
 
     public DataSharingAppService(
         IRepository<ApiEndpoint, Guid> endpoints,
+        IRepository<AtpAlert, Guid> alerts,
         IRepository<ApiCallLog, Guid> logs,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens,
@@ -59,12 +62,47 @@ public class DataSharingAppService :
         IHttpClientFactory httpClientFactory)
     {
         _endpoints = endpoints;
+        _alerts = alerts;
         _logs = logs;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
         _encryption = encryption;
         _payloadBuilders = payloadBuilders;
         _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Lightweight alert lookup for the share dialog. It deliberately belongs
+    /// to DataIntegration so users with Share permission do not also need the
+    /// unrelated alert-management permission.
+    /// </summary>
+    public async Task<List<AlertShareOptionDto>> GetAlertOptionsAsync(string? filter)
+    {
+        var ct = _cancellationTokens.Token;
+        var scope = await _dataScopeProvider.GetAsync(DataScopeOperation.View, ct);
+        var query = (await _alerts.GetQueryableAsync())
+            .WhereIf(!scope.HasGlobalAccess,
+                x => scope.OrganizationIds.Contains(x.OrganizationId));
+
+        if (!filter.IsNullOrWhiteSpace())
+        {
+            var keyword = filter!.Trim().ToUpperInvariant();
+            query = query.Where(x =>
+                x.Title.ToUpper().Contains(keyword) ||
+                (x.AlertNumber != null &&
+                 x.AlertNumber.ToUpper().Contains(keyword)));
+        }
+
+        return await AsyncExecuter.ToListAsync(
+            query.OrderByDescending(x => x.CreationTime)
+                .Take(100)
+                .Select(x => new AlertShareOptionDto
+                {
+                    Id = x.Id,
+                    AlertNumber = x.AlertNumber,
+                    Title = x.Title,
+                }),
+            ct);
     }
 
     public async Task<ShareDataResultDto> ShareAsync(ShareDataInput input)

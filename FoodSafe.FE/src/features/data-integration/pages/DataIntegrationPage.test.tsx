@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { App } from "antd";
 import { HttpResponse, http } from "msw";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { server } from "@/test/server";
@@ -43,6 +44,11 @@ function mockData() {
     ),
     http.get("*/v1/app/api-call-log", () =>
       HttpResponse.json({ totalCount: 0, items: [] }),
+    ),
+    http.get("*/v1/app/data-sharing/alert-options", () =>
+      HttpResponse.json([
+        { id: "alert-1", alertNumber: "CB-001", title: "Cảnh báo mẫu" },
+      ]),
     ),
   );
 }
@@ -97,5 +103,37 @@ describe("DataIntegrationPage", () => {
     expect(
       screen.queryByRole("button", { name: /Thêm endpoint/ }),
     ).not.toBeInTheDocument();
+  });
+
+  it("requires selecting a concrete alert when sharing alert data", async () => {
+    mockData();
+    const user = userEvent.setup();
+    useAuthStore.getState().setAuth({
+      id: "integration-user",
+      name: "Integration User",
+      email: "integration@foodsafe.local",
+      organizationId: null,
+      organizationName: null,
+      roles: ["Integration"],
+      permissions: [
+        "FoodSafe.DataIntegration.ApiEndpoints.View",
+        "FoodSafe.DataIntegration.CallHistory.View",
+        "FoodSafe.DataIntegration.Share",
+      ],
+    });
+
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("tab", { name: "Lịch sử gọi API" }),
+    );
+    await user.click(screen.getByRole("button", { name: /Chia sẻ dữ liệu/ }));
+
+    expect(
+      await screen.findByText("Tìm theo mã hoặc tiêu đề cảnh báo"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Cảnh báo ATTP", { selector: "label" }),
+    ).toBeInTheDocument();
   });
 });

@@ -14,6 +14,11 @@ namespace FoodSafe.DataIntegration;
 public sealed class DataSharingController(
     IDataSharingAppService service) : AbpControllerBase
 {
+    [HttpGet("alert-options")]
+    public Task<List<AlertShareOptionDto>> GetAlertOptionsAsync(
+        [FromQuery] string? filter) =>
+        service.GetAlertOptionsAsync(filter);
+
     [HttpPost("share")]
     public Task<ShareDataResultDto> ShareAsync(
         [FromBody] ShareDataInput input) =>

@@ -47,4 +47,44 @@ describe("dataIntegrationApi", () => {
       "/api/v1/app/api-endpoint/abc-123/toggle-status",
     );
   });
+
+  it("loads shareable alert options with the search filter", async () => {
+    let requestedUrl = "";
+    server.use(
+      http.get("*/v1/app/data-sharing/alert-options", ({ request }) => {
+        requestedUrl = request.url;
+        return HttpResponse.json([
+          { id: "alert-1", alertNumber: "CB-001", title: "Cảnh báo mẫu" },
+        ]);
+      }),
+    );
+
+    const result = await dataIntegrationApi.getAlertShareOptions("CB-001");
+
+    const url = new URL(requestedUrl);
+    expect(url.pathname).toBe("/api/v1/app/data-sharing/alert-options");
+    expect(url.searchParams.get("filter")).toBe("CB-001");
+    expect(result[0]?.id).toBe("alert-1");
+  });
+
+  it("forwards the inbound-submission keyword filter", async () => {
+    let requestedUrl = "";
+    server.use(
+      http.get("*/v1/app/partner-account/submissions", ({ request }) => {
+        requestedUrl = request.url;
+        return HttpResponse.json({ totalCount: 0, items: [] });
+      }),
+    );
+
+    await dataIntegrationApi.getInboundSubmissions({
+      filter: "REQ-001",
+      dataType: 1,
+      skipCount: 0,
+      maxResultCount: 15,
+    });
+
+    const url = new URL(requestedUrl);
+    expect(url.searchParams.get("filter")).toBe("REQ-001");
+    expect(url.searchParams.get("dataType")).toBe("1");
+  });
 });

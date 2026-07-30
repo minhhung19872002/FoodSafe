@@ -114,6 +114,12 @@ export interface ShareDataInput {
   note?: string;
 }
 
+export interface AlertShareOption {
+  id: string;
+  alertNumber?: string;
+  title: string;
+}
+
 export interface TestConnectionResult {
   isSuccess: boolean;
   statusCode?: number;
@@ -278,6 +284,7 @@ export interface InboundSubmissionDetail extends InboundSubmission {
 }
 
 export interface InboundSubmissionFilter {
+  filter?: string;
   partnerAccountId?: string;
   dataType?: SharedDataType;
   status?: InboundSubmissionStatus;

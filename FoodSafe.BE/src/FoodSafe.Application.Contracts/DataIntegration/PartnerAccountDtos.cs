@@ -122,6 +122,7 @@ public class InboundSubmissionDetailDto : InboundSubmissionDto
 
 public class InboundSubmissionFilterDto : PagedAndSortedResultRequestDto
 {
+    public string? Filter { get; set; }
     public Guid? PartnerAccountId { get; set; }
     public SharedDataType? DataType { get; set; }
     public InboundSubmissionStatus? Status { get; set; }
