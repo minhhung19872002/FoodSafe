@@ -999,11 +999,13 @@ public class IdentityAdministrationAppService :
 
         foreach (var assignment in assignments)
         {
-            var isAllowed =
-                (assignment.ProvinceId.HasValue &&
-                 provinceIds.Contains(assignment.ProvinceId.Value)) ||
-                (assignment.CommuneId.HasValue &&
-                 communeIds.Contains(assignment.CommuneId.Value));
+            // Không được cấp phạm vi rộng hơn phạm vi của chính người đang cấp.
+            var isAllowed = assignment.OrganizationId.HasValue
+                ? scope.OrganizationIds.Contains(assignment.OrganizationId.Value)
+                : (assignment.ProvinceId.HasValue &&
+                   provinceIds.Contains(assignment.ProvinceId.Value)) ||
+                  (assignment.CommuneId.HasValue &&
+                   communeIds.Contains(assignment.CommuneId.Value));
             if (!isAllowed)
             {
                 throw new BusinessException(
@@ -1031,20 +1033,36 @@ public class IdentityAdministrationAppService :
         var now = _clock.Now;
         foreach (var input in inputs)
         {
-            var assignment = ManagementScopeAssignment.CreateGeography(
-                GuidGenerator.Create(),
-                organizationId,
-                userId,
-                input.ProvinceId,
-                input.CommuneId,
-                input.CanView,
-                input.CanCreate,
-                input.CanEdit,
-                input.CanDelete,
-                input.ValidFrom ?? now,
-                input.ValidTo,
-                now,
-                CurrentUser.Id);
+            // Chọn đơn vị thì dòng đó là phạm vi theo đơn vị quản lý; tỉnh/xã lúc
+            // này chỉ là bộ lọc trên giao diện nên không lưu kèm.
+            var assignment = input.OrganizationId.HasValue
+                ? ManagementScopeAssignment.CreateOrganization(
+                    GuidGenerator.Create(),
+                    organizationId,
+                    userId,
+                    input.OrganizationId.Value,
+                    input.CanView,
+                    input.CanCreate,
+                    input.CanEdit,
+                    input.CanDelete,
+                    input.ValidFrom ?? now,
+                    input.ValidTo,
+                    now,
+                    CurrentUser.Id)
+                : ManagementScopeAssignment.CreateGeography(
+                    GuidGenerator.Create(),
+                    organizationId,
+                    userId,
+                    input.ProvinceId,
+                    input.CommuneId,
+                    input.CanView,
+                    input.CanCreate,
+                    input.CanEdit,
+                    input.CanDelete,
+                    input.ValidFrom ?? now,
+                    input.ValidTo,
+                    now,
+                    CurrentUser.Id);
             await _scopeAssignments.InsertAsync(
                 assignment,
                 cancellationToken: Token);
@@ -1076,6 +1094,7 @@ public class IdentityAdministrationAppService :
                 Id = assignment.Id,
                 ProvinceId = assignment.ProvinceId,
                 CommuneId = assignment.CommuneId,
+                OrganizationId = assignment.OrganizationId,
                 CanView = assignment.CanView,
                 CanCreate = assignment.CanCreate,
                 CanEdit = assignment.CanEdit,

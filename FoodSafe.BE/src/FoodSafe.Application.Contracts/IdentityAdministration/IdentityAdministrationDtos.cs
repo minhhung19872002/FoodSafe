@@ -139,10 +139,18 @@ public sealed class UpdateAdminUserDto : IHasConcurrencyStamp
     public string ConcurrencyStamp { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Một dòng "Phạm vi ... bổ sung" của tài khoản. Dòng nhắm tới ĐÚNG MỘT mục
+/// tiêu: hoặc địa bàn (<see cref="ProvinceId"/>/<see cref="CommuneId"/>), hoặc
+/// đơn vị quản lý (<see cref="OrganizationId"/>). Khi chọn đơn vị, tỉnh/phường-xã
+/// trên giao diện chỉ dùng để lọc danh sách đơn vị nên không được gửi kèm —
+/// ràng buộc <c>chk_msa_one_target</c> ở DB cũng chặn việc gửi cả hai.
+/// </summary>
 public sealed class GeographyScopeAssignmentInput
 {
     public Guid? ProvinceId { get; set; }
     public Guid? CommuneId { get; set; }
+    public Guid? OrganizationId { get; set; }
     public bool CanView { get; set; } = true;
     public bool CanCreate { get; set; }
     public bool CanEdit { get; set; }
@@ -151,10 +159,12 @@ public sealed class GeographyScopeAssignmentInput
     public DateTime? ValidTo { get; set; }
 }
 
+/// <inheritdoc cref="GeographyScopeAssignmentInput"/>
 public sealed class GeographyScopeAssignmentDto : EntityDto<Guid>
 {
     public Guid? ProvinceId { get; set; }
     public Guid? CommuneId { get; set; }
+    public Guid? OrganizationId { get; set; }
     public bool CanView { get; set; }
     public bool CanCreate { get; set; }
     public bool CanEdit { get; set; }

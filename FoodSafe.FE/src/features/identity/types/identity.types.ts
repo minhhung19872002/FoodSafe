@@ -3,9 +3,16 @@ export interface PagedResult<T> {
   items: T[];
 }
 
+/**
+ * Một dòng "Phạm vi ... bổ sung" của tài khoản. Dòng nhắm tới đúng một mục tiêu:
+ * hoặc địa bàn (`provinceId`/`communeId`), hoặc đơn vị quản lý
+ * (`organizationId`). Khi đã chọn đơn vị, tỉnh/phường-xã chỉ là bộ lọc trên giao
+ * diện và không được gửi lên server.
+ */
 export interface GeographyScopeInput {
   provinceId?: string;
   communeId?: string;
+  organizationId?: string;
   canView: boolean;
   canCreate: boolean;
   canEdit: boolean;

@@ -116,6 +116,9 @@ public sealed class ManagementScopeAssignment : Entity<Guid>, IAggregateRoot<Gui
     public Guid? BusinessId { get; private set; }
     public Guid? BusinessTypeId { get; private set; }
     public Guid? ProductGroupId { get; private set; }
+
+    /// <summary>Đơn vị được cấp phạm vi, chỉ dùng cho <see cref="ManagementScopeType.Organization"/>.</summary>
+    public Guid? OrganizationId { get; private set; }
     public bool CanView { get; private set; }
     public bool CanCreate { get; private set; }
     public bool CanEdit { get; private set; }
@@ -200,6 +203,48 @@ public sealed class ManagementScopeAssignment : Entity<Guid>, IAggregateRoot<Gui
             GranteeUserId = granteeUserId,
             ScopeType = ManagementScopeType.Business,
             BusinessId = businessId,
+            CanView = canView,
+            CanCreate = canCreate,
+            CanEdit = canEdit,
+            CanDelete = canDelete,
+            ValidFrom = validFrom,
+            ValidTo = validTo,
+            CreationTime = now,
+            CreatorId = creatorId
+        };
+    }
+
+    /// <summary>
+    /// Phạm vi theo đơn vị quản lý. Dùng khi cần cho một người xem/sửa dữ liệu
+    /// của mọi cơ sở thuộc một đơn vị, thay vì liệt kê từng cơ sở một.
+    /// </summary>
+    public static ManagementScopeAssignment CreateOrganization(
+        Guid id,
+        Guid granteeOrganizationId,
+        Guid? granteeUserId,
+        Guid organizationId,
+        bool canView,
+        bool canCreate,
+        bool canEdit,
+        bool canDelete,
+        DateTime validFrom,
+        DateTime? validTo,
+        DateTime now,
+        Guid? creatorId)
+    {
+        if (validTo.HasValue && validFrom >= validTo.Value)
+        {
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.DataScope.InvalidValidityPeriod);
+        }
+
+        return new ManagementScopeAssignment
+        {
+            Id = id,
+            GranteeOrganizationId = granteeOrganizationId,
+            GranteeUserId = granteeUserId,
+            ScopeType = ManagementScopeType.Organization,
+            OrganizationId = organizationId,
             CanView = canView,
             CanCreate = canCreate,
             CanEdit = canEdit,

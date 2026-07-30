@@ -55,6 +55,7 @@ import {
 } from "../api/identityMutations";
 import {
   useAdminRoles,
+  useAdminUser,
   useAdminUsers,
   usePermissionOptions,
   useRolePermissions,
@@ -156,6 +157,10 @@ export default function IdentityAdministrationPage() {
     skipCount: usersPagination.skipCount,
     maxResultCount: usersPagination.maxResultCount,
   });
+  // Danh sách tài khoản không trả kèm phạm vi bổ sung (chỉ endpoint chi tiết
+  // mới có). Nếu mở form sửa bằng dữ liệu của danh sách thì form nạp 0 dòng
+  // phạm vi và khi lưu sẽ xóa sạch phạm vi đã cấp.
+  const editingUserDetail = useAdminUser(editingUser?.id);
   const roles = useAdminRoles({
     ...roleFilter,
     skipCount: rolesPagination.skipCount,
@@ -811,10 +816,14 @@ export default function IdentityAdministrationPage() {
       />
       <UserEditorModal
         open={userModalOpen}
-        user={editingUser}
+        user={editingUser ? (editingUserDetail.data ?? editingUser) : undefined}
         roles={roleOptions.data?.items ?? []}
         organizationTree={organizations.data?.items ?? []}
-        loading={createUser.isPending || updateUser.isPending}
+        loading={
+          createUser.isPending ||
+          updateUser.isPending ||
+          editingUserDetail.isFetching
+        }
         onCancel={() => setUserModalOpen(false)}
         onSubmit={(input: SaveUserInput) => {
           if (editingUser) {

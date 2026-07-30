@@ -39,12 +39,19 @@ function flattenOrganizations(
   ]);
 }
 
+function flatOrganizations(
+  items: OrganizationTreeNode[],
+): OrganizationTreeNode[] {
+  return items.flatMap((item) => [item, ...flatOrganizations(item.children)]);
+}
+
 interface ScopeEditorProps {
+  organizations: OrganizationTreeNode[];
   value?: GeographyScopeInput;
   onChange?: (value: GeographyScopeInput) => void;
 }
 
-function ScopeEditor({ value, onChange }: ScopeEditorProps) {
+function ScopeEditor({ organizations, value, onChange }: ScopeEditorProps) {
   const scope = value ?? {
     canView: true,
     canCreate: false,
@@ -52,9 +59,29 @@ function ScopeEditor({ value, onChange }: ScopeEditorProps) {
     canDelete: false,
   };
   const provinces = useProvinces();
-  const communes = useCommunesByProvince(scope.provinceId ?? "");
+  const flat = flatOrganizations(organizations);
+
+  // Dòng đã lưu chỉ mang organizationId; suy ra địa bàn từ chính đơn vị đó để
+  // hai ô lọc hiển thị đúng khi mở lại form.
+  const selectedOrganization = scope.organizationId
+    ? flat.find((item) => item.id === scope.organizationId)
+    : undefined;
+  const provinceId =
+    scope.provinceId ?? selectedOrganization?.provinceId ?? undefined;
+  const communeId =
+    scope.communeId ?? selectedOrganization?.communeId ?? undefined;
+
+  const communes = useCommunesByProvince(provinceId ?? "");
   const update = (changes: Partial<GeographyScopeInput>) =>
     onChange?.({ ...scope, ...changes });
+
+  const organizationOptions = flat
+    .filter((item) => item.isActive || item.id === scope.organizationId)
+    .filter((item) => !provinceId || item.provinceId === provinceId)
+    // Phường/xã chỉ dùng để lọc khi đã chọn — đơn vị cấp tỉnh không có communeId
+    // nên sẽ bị loại, đúng ý "đơn vị thuộc phường/xã đã chọn".
+    .filter((item) => !communeId || item.communeId === communeId)
+    .map((item) => ({ value: item.id, label: `${item.code} — ${item.name}` }));
 
   return (
     <Space direction="vertical" style={{ width: "100%" }}>
@@ -62,30 +89,53 @@ function ScopeEditor({ value, onChange }: ScopeEditorProps) {
         <Select
           aria-label="Tỉnh, thành phố"
           placeholder="Tỉnh/thành"
-          value={scope.provinceId}
+          value={provinceId}
           loading={provinces.isLoading}
           options={provinces.data?.items.map((item) => ({
             value: item.id,
             label: item.name,
           }))}
           style={{ width: 180 }}
-          onChange={(provinceId) =>
-            update({ provinceId, communeId: undefined })
+          onChange={(nextProvinceId) =>
+            update({
+              provinceId: nextProvinceId,
+              communeId: undefined,
+              organizationId: undefined,
+            })
           }
         />
         <Select
           aria-label="Phường, xã"
           allowClear
           placeholder="Phường/xã"
-          value={scope.communeId}
-          disabled={!scope.provinceId}
+          value={communeId}
+          disabled={!provinceId}
           loading={communes.isLoading}
           options={communes.data?.items.map((item) => ({
             value: item.id,
             label: item.name,
           }))}
           style={{ width: 180 }}
-          onChange={(communeId) => update({ communeId })}
+          onChange={(nextCommuneId) =>
+            update({ communeId: nextCommuneId, organizationId: undefined })
+          }
+        />
+        <Select
+          aria-label="Đơn vị"
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="Đơn vị (tùy chọn)"
+          value={scope.organizationId}
+          disabled={!provinceId}
+          options={organizationOptions}
+          style={{ width: 260 }}
+          notFoundContent="Không có đơn vị trong địa bàn đã chọn"
+          onChange={(organizationId) =>
+            // Chọn đơn vị: gửi lên server đúng một mục tiêu là đơn vị, tỉnh/xã
+            // giữ lại trong state chỉ để hiển thị bộ lọc.
+            update({ organizationId: organizationId ?? undefined })
+          }
         />
       </Space>
       <Checkbox.Group
@@ -151,6 +201,7 @@ export function UserEditorModal({
             geographyScopes: user.geographyScopes.map((scope) => ({
               provinceId: scope.provinceId,
               communeId: scope.communeId,
+              organizationId: scope.organizationId,
               canView: scope.canView,
               canCreate: scope.canCreate,
               canEdit: scope.canEdit,
@@ -187,11 +238,23 @@ export function UserEditorModal({
         onFinish={(values) =>
           onSubmit({
             ...values,
-            geographyScopes: values.geographyScopes.map((scope) => ({
-              ...scope,
-              provinceId: !scope.communeId ? scope.provinceId : undefined,
-              communeId: scope.communeId,
-            })),
+            // Mỗi dòng chỉ gửi đúng một mục tiêu (ràng buộc chk_msa_one_target):
+            // đã chọn đơn vị thì bỏ địa bàn, còn lại thì phường/xã ưu tiên hơn
+            // tỉnh/thành phố.
+            geographyScopes: values.geographyScopes.map((scope) =>
+              scope.organizationId
+                ? {
+                    ...scope,
+                    provinceId: undefined,
+                    communeId: undefined,
+                  }
+                : {
+                    ...scope,
+                    organizationId: undefined,
+                    provinceId: !scope.communeId ? scope.provinceId : undefined,
+                    communeId: scope.communeId,
+                  },
+            ),
             concurrencyStamp: user?.concurrencyStamp,
           })
         }
@@ -320,13 +383,17 @@ export function UserEditorModal({
                     rules={[
                       {
                         validator: (_, scope: GeographyScopeInput) =>
-                          scope?.provinceId || scope?.communeId
+                          scope?.provinceId ||
+                          scope?.communeId ||
+                          scope?.organizationId
                             ? Promise.resolve()
-                            : Promise.reject(new Error("Chọn địa bàn")),
+                            : Promise.reject(
+                                new Error("Chọn địa bàn hoặc đơn vị"),
+                              ),
                       },
                     ]}
                   >
-                    <ScopeEditor />
+                    <ScopeEditor organizations={organizationTree} />
                   </Form.Item>
                   <Button
                     aria-label="Xóa phạm vi"

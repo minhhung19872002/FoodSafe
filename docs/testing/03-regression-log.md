@@ -17,6 +17,44 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-31 — Phạm vi bổ sung theo đơn vị quản lý, và "bổ sung" nay đúng nghĩa cộng thêm
+
+- **Cause**: Yêu cầu từ bản review drawio: thêm dropdown "Đơn vị" vào mục
+  "Phạm vi địa bàn bổ sung", lọc theo tỉnh/phường-xã đã chọn, và khi cấp thì
+  người dùng xem được toàn bộ cơ sở thuộc đơn vị đó.
+- **Commit**: nhánh `fix/drawio-review-round-4`
+- **Affected features**: các feature dùng `CurrentDataScopeProvider` — vẫn đang
+  DIRTY từ lần sửa phạm vi cấp xã cùng ngày, không đổi trạng thái thêm.
+  Riêng F-020 (Identity Administration) đã DIRTY từ trước.
+- **Retest level**: 3 (shared dependency: organization-scope resolver + form tài khoản)
+- **Result**: Người dùng tự kiểm tra trên browser — PASSED. Bộ verification chưa chạy lại.
+- **Details**:
+  - Thêm `ManagementScopeType.Organization` + cột `organization_id`, migration
+    `AddOrganizationScopeToManagementScopeAssignment` nới `chk_msa_type` và
+    `chk_msa_one_target` (loại 5 chỉ được có `organization_id`).
+  - Mỗi dòng phạm vi nhắm đúng một mục tiêu: chọn Đơn vị thì tỉnh/phường-xã chỉ
+    là bộ lọc trên giao diện, không lưu kèm. Mở lại form thì địa bàn được suy ra
+    từ chính đơn vị đã chọn nên hai ô lọc vẫn hiển thị đúng.
+  - `OrganizationTreeNodeDto` trả thêm `ProvinceId`/`CommuneId` để giao diện lọc
+    được danh sách đơn vị.
+  - `EnsureGeographyScopesAllowedAsync` chặn cấp đơn vị nằm ngoài phạm vi của
+    chính người đang cấp.
+  - **Hai bug có sẵn phát hiện khi làm và đã sửa kèm**:
+    1. Phạm vi "bổ sung" trước đây **thay thế** phạm vi gốc: chỉ cần có một bản
+       ghi phân quyền là `AllowedOrganizationIds` bị gán rỗng và địa bàn của đơn
+       vị gốc bị bỏ, nên người dùng được cấp thêm quyền lại **mất** dữ liệu cơ sở
+       của chính đơn vị mình; xóa dòng bổ sung đi thì mới thấy lại. Nay phạm vi
+       đơn vị gốc luôn được giữ và phân quyền chỉ cộng thêm.
+    2. Danh sách tài khoản không trả `geographyScopes` (chỉ endpoint chi tiết
+       mới có), mà form sửa lại lấy dữ liệu từ danh sách — nên mở form ra là 0
+       dòng phạm vi và bấm Lưu sẽ **xóa sạch** phạm vi đã cấp. Nay form nạp theo
+       endpoint chi tiết.
+  - Phạm vi đơn vị được tính riêng cho từng phép nên bản ghi chỉ tick "Xem"
+    không kéo theo quyền sửa/xóa.
+  - Còn tồn: bản ghi phân quyền cấp cho cả đơn vị (`GranteeUserId` null) vẫn bị
+    bỏ qua khi người dùng có phân quyền riêng — cùng kiểu "thay thế" như trên,
+    chưa sửa vì ngoài phạm vi báo cáo.
+
 ### 2026-07-31 — Đơn vị cấp xã/phường không còn được phạm vi toàn tỉnh
 
 - **Cause**: Bug từ bản review drawio. Nhân viên thuộc Trạm Y tế Phường Bạch

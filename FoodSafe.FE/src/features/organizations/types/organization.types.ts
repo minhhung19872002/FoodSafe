@@ -27,6 +27,9 @@ export interface OrganizationTreeNode {
   name: string;
   level: OrganizationLevel;
   isActive: boolean;
+  /** Địa bàn của đơn vị — dùng để lọc danh sách đơn vị theo tỉnh/phường-xã. */
+  provinceId?: string | null;
+  communeId?: string | null;
   children: OrganizationTreeNode[];
 }
 

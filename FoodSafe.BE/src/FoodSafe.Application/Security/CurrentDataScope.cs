@@ -177,13 +177,17 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
 
         var hasUserSpecific = assignments.Any(x => x.GranteeUserId == userId);
 
-        var allowedOrganizationIds = hasUserSpecific
-            ? new HashSet<Guid>()
-            : OrganizationHierarchyScope.Expand(profile.OrganizationId, organizations);
+        // Giao diện gọi đây là "Phạm vi địa bàn BỔ SUNG" nên phải cộng thêm:
+        // người dùng luôn giữ phạm vi đơn vị của mình, các bản ghi phân quyền chỉ
+        // mở rộng ra ngoài phạm vi đó. Trước đây chỉ cần có một bản ghi phân quyền
+        // là phạm vi đơn vị gốc bị bỏ hẳn, nên cấp thêm quyền lại làm người dùng
+        // mất luôn dữ liệu cơ sở của chính đơn vị mình.
+        var homeOrganizationIds =
+            OrganizationHierarchyScope.Expand(profile.OrganizationId, organizations);
 
         return new ScopeContext(
             userId, profile.OrganizationId, false,
-            allowedOrganizationIds, home, hasUserSpecific, assignments);
+            homeOrganizationIds, home, hasUserSpecific, assignments);
     }
 
     private static CurrentDataScope BuildScope(ScopeContext ctx, DataScopeOperation operation)
@@ -198,13 +202,17 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
                 new HashSet<Guid>());
         }
 
+        // Phạm vi đơn vị được tính riêng cho từng phép — một bản ghi phân quyền
+        // chỉ tick "Xem" thì không được kéo theo quyền sửa/xóa.
+        var organizations = new HashSet<Guid>(ctx.AllowedOrganizationIds);
         var provinces = new HashSet<Guid>();
         var communes = new HashSet<Guid>();
         var businesses = new HashSet<Guid>();
         var businessTypes = new HashSet<Guid>();
         var productGroups = new HashSet<Guid>();
 
-        if (!ctx.HasUserSpecificAssignments && ctx.Home is not null)
+        // Địa bàn của đơn vị gốc cũng luôn được giữ, cùng lý do như trên.
+        if (ctx.Home is not null)
             AddGeography(ctx.Home, provinces, communes);
 
         var effectiveAssignments = ctx.HasUserSpecificAssignments
@@ -223,6 +231,12 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
                     else if (assignment.ProvinceId.HasValue)
                         provinces.Add(assignment.ProvinceId.Value);
                     break;
+                // Cấp phạm vi theo đơn vị: người được cấp thao tác được trên mọi
+                // dữ liệu thuộc đơn vị đó, gồm cả các cơ sở do đơn vị quản lý.
+                case ManagementScopeType.Organization
+                    when assignment.OrganizationId.HasValue:
+                    organizations.Add(assignment.OrganizationId.Value);
+                    break;
                 case ManagementScopeType.Business when assignment.BusinessId.HasValue:
                     businesses.Add(assignment.BusinessId.Value);
                     break;
@@ -240,7 +254,7 @@ public class CurrentDataScopeProvider : DomainService, ICurrentDataScopeProvider
             ctx.HomeOrganizationId,
             false,
             ctx.HasUserSpecificAssignments,
-            ctx.AllowedOrganizationIds,
+            organizations,
             provinces,
             communes,
             businesses,

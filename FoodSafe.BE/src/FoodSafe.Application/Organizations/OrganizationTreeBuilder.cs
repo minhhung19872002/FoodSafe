@@ -13,7 +13,9 @@ public static class OrganizationTreeBuilder
                 Code = item.Code,
                 Name = item.Name,
                 Level = item.Level,
-                IsActive = item.IsActive
+                IsActive = item.IsActive,
+                ProvinceId = item.ProvinceId,
+                CommuneId = item.CommuneId
             });
 
         var roots = new List<OrganizationTreeNodeDto>();

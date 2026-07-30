@@ -1477,7 +1477,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
         {
             entity.ToTable("management_scope_assignments", table =>
             {
-                table.HasCheckConstraint("chk_msa_type", "scope_type IN (1, 2, 3, 4)");
+                table.HasCheckConstraint("chk_msa_type", "scope_type IN (1, 2, 3, 4, 5)");
                 table.HasCheckConstraint("chk_msa_dates", "valid_to IS NULL OR valid_from < valid_to");
                 // Single-line on purpose: a multi-line raw string embeds the
                 // source file's git-checkout line endings (CRLF on Windows,
@@ -1485,16 +1485,20 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 table.HasCheckConstraint(
                     "chk_msa_one_target",
                     "(scope_type = 1 AND business_id IS NULL AND business_type_id IS NULL" +
-                    " AND product_group_id IS NULL AND num_nonnulls(province_id, commune_id) = 1)" +
+                    " AND product_group_id IS NULL AND organization_id IS NULL" +
+                    " AND num_nonnulls(province_id, commune_id) = 1)" +
                     " OR (scope_type = 2 AND business_id IS NOT NULL AND province_id IS NULL" +
                     " AND commune_id IS NULL AND business_type_id IS NULL" +
-                    " AND product_group_id IS NULL)" +
+                    " AND product_group_id IS NULL AND organization_id IS NULL)" +
                     " OR (scope_type = 3 AND business_type_id IS NOT NULL AND province_id IS NULL" +
                     " AND commune_id IS NULL AND business_id IS NULL" +
-                    " AND product_group_id IS NULL)" +
+                    " AND product_group_id IS NULL AND organization_id IS NULL)" +
                     " OR (scope_type = 4 AND product_group_id IS NOT NULL AND province_id IS NULL" +
                     " AND commune_id IS NULL AND business_id IS NULL" +
-                    " AND business_type_id IS NULL)");
+                    " AND business_type_id IS NULL AND organization_id IS NULL)" +
+                    " OR (scope_type = 5 AND organization_id IS NOT NULL AND province_id IS NULL" +
+                    " AND commune_id IS NULL AND business_id IS NULL" +
+                    " AND business_type_id IS NULL AND product_group_id IS NULL)");
             });
             entity.HasKey(x => x.Id).HasName("pk_management_scope_assignments");
             entity.Property(x => x.Id).HasColumnName("id");
@@ -1506,6 +1510,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.BusinessId).HasColumnName("business_id");
             entity.Property(x => x.BusinessTypeId).HasColumnName("business_type_id");
             entity.Property(x => x.ProductGroupId).HasColumnName("product_group_id");
+            entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
             entity.Property(x => x.CanView).HasColumnName("can_view");
             entity.Property(x => x.CanCreate).HasColumnName("can_create");
             entity.Property(x => x.CanEdit).HasColumnName("can_edit");
@@ -1524,6 +1529,9 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_business_type");
             entity.HasOne<ProductGroup>().WithMany().HasForeignKey(x => x.ProductGroupId)
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_product_group");
+            entity.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_msa_scope_org");
+            entity.HasIndex(x => x.OrganizationId).HasDatabaseName("idx_msa_scope_org");
             entity.HasIndex(x => new
             {
                 x.GranteeOrganizationId,
