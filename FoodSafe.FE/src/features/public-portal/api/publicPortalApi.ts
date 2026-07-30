@@ -11,6 +11,7 @@ import type {
   PublicBusiness,
   PublicBusinessFilter,
   PublicCertificate,
+  PublicCertificateFilter,
   PublicDocument,
   PublicInspectionResult,
   PublicNewsDetail,
@@ -49,7 +50,7 @@ export const publicPortalApi = {
   },
 
   searchEligibilityCertificates(
-    filter: PagedFilter,
+    filter: PublicCertificateFilter,
   ): Promise<PagedResult<PublicCertificate>> {
     return api
       .get<PagedResult<PublicCertificate>>(
@@ -60,7 +61,7 @@ export const publicPortalApi = {
   },
 
   searchSelfDeclarations(
-    filter: PagedFilter,
+    filter: PublicCertificateFilter,
   ): Promise<PagedResult<PublicCertificate>> {
     return api
       .get<PagedResult<PublicCertificate>>(
@@ -71,7 +72,7 @@ export const publicPortalApi = {
   },
 
   searchProductRegistrations(
-    filter: PagedFilter,
+    filter: PublicCertificateFilter,
   ): Promise<PagedResult<PublicCertificate>> {
     return api
       .get<PagedResult<PublicCertificate>>(
@@ -82,7 +83,7 @@ export const publicPortalApi = {
   },
 
   searchAdRegistrations(
-    filter: PagedFilter,
+    filter: PublicCertificateFilter,
   ): Promise<PagedResult<PublicCertificate>> {
     return api
       .get<PagedResult<PublicCertificate>>(
@@ -93,7 +94,7 @@ export const publicPortalApi = {
   },
 
   searchCfsCertificates(
-    filter: PagedFilter,
+    filter: PublicCertificateFilter,
   ): Promise<PagedResult<PublicCertificate>> {
     return api
       .get<PagedResult<PublicCertificate>>(
@@ -104,7 +105,7 @@ export const publicPortalApi = {
   },
 
   searchExportFoodCertificates(
-    filter: PagedFilter,
+    filter: PublicCertificateFilter,
   ): Promise<PagedResult<PublicCertificate>> {
     return api
       .get<PagedResult<PublicCertificate>>(

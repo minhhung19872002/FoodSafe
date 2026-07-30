@@ -4,6 +4,7 @@ import {
   Button,
   Empty,
   Input,
+  Select,
   Space,
   Spin,
   Table,
@@ -22,12 +23,21 @@ import {
   usePublicSelfDeclarations,
 } from "../api/publicPortalQueries";
 import type {
-  PagedFilter,
+  LicenseStatus,
   PublicCertificate,
+  PublicCertificateFilter,
 } from "../types/publicPortal.types";
+import { LICENSE_STATUS_CONFIG } from "../types/publicPortal.types";
+
+const STATUS_OPTIONS = (
+  Object.entries(LICENSE_STATUS_CONFIG) as [string, { label: string }][]
+).map(([value, { label }]) => ({
+  label,
+  value: Number(value),
+}));
 
 interface CertSearchPanelProps {
-  useHook: (filter: PagedFilter) => {
+  useHook: (filter: PublicCertificateFilter) => {
     data?: { items: PublicCertificate[]; totalCount: number };
     isFetching: boolean;
     isError: boolean;
@@ -43,10 +53,13 @@ function CertSearchPanel({
 }: CertSearchPanelProps) {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<LicenseStatus>();
+  const [submittedStatus, setSubmittedStatus] = useState<LicenseStatus>();
   const pagination = useTablePagination(20);
 
-  const filter: PagedFilter = {
+  const filter: PublicCertificateFilter = {
     Keyword: submittedKeyword || undefined,
+    Status: submittedStatus,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   };
@@ -56,11 +69,12 @@ function CertSearchPanel({
   const handleSearch = () => {
     pagination.resetToFirstPage();
     setSubmittedKeyword(keyword);
+    setSubmittedStatus(selectedStatus);
   };
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space>
+      <Space wrap>
         <Input
           value={keyword}
           placeholder={placeholder}
@@ -68,6 +82,14 @@ function CertSearchPanel({
           onPressEnter={handleSearch}
           allowClear
           style={{ width: 350 }}
+        />
+        <Select
+          value={selectedStatus}
+          onChange={setSelectedStatus}
+          placeholder="Trạng thái"
+          allowClear
+          style={{ minWidth: 180 }}
+          options={STATUS_OPTIONS}
         />
         <Button type="primary" loading={isFetching} onClick={handleSearch}>
           Tìm kiếm

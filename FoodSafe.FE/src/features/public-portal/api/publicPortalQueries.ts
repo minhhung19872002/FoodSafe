@@ -4,6 +4,7 @@ import type {
   PagedFilter,
   PublicAlertFilter,
   PublicBusinessFilter,
+  PublicCertificateFilter,
   PublicDocumentFilter,
   PublicNewsFilter,
   PublicProductFilter,
@@ -27,42 +28,42 @@ export function usePublicProductSearch(filter: PublicProductFilter) {
   });
 }
 
-export function usePublicEligibilityCertificates(filter: PagedFilter) {
+export function usePublicEligibilityCertificates(filter: PublicCertificateFilter) {
   return useQuery({
     queryKey: [QK, "eligibility-certificates", filter],
     queryFn: () => publicPortalApi.searchEligibilityCertificates(filter),
   });
 }
 
-export function usePublicSelfDeclarations(filter: PagedFilter) {
+export function usePublicSelfDeclarations(filter: PublicCertificateFilter) {
   return useQuery({
     queryKey: [QK, "self-declarations", filter],
     queryFn: () => publicPortalApi.searchSelfDeclarations(filter),
   });
 }
 
-export function usePublicProductRegistrations(filter: PagedFilter) {
+export function usePublicProductRegistrations(filter: PublicCertificateFilter) {
   return useQuery({
     queryKey: [QK, "product-registrations", filter],
     queryFn: () => publicPortalApi.searchProductRegistrations(filter),
   });
 }
 
-export function usePublicAdRegistrations(filter: PagedFilter) {
+export function usePublicAdRegistrations(filter: PublicCertificateFilter) {
   return useQuery({
     queryKey: [QK, "ad-registrations", filter],
     queryFn: () => publicPortalApi.searchAdRegistrations(filter),
   });
 }
 
-export function usePublicCfsCertificates(filter: PagedFilter) {
+export function usePublicCfsCertificates(filter: PublicCertificateFilter) {
   return useQuery({
     queryKey: [QK, "cfs-certificates", filter],
     queryFn: () => publicPortalApi.searchCfsCertificates(filter),
   });
 }
 
-export function usePublicExportFoodCertificates(filter: PagedFilter) {
+export function usePublicExportFoodCertificates(filter: PublicCertificateFilter) {
   return useQuery({
     queryKey: [QK, "export-food-certificates", filter],
     queryFn: () => publicPortalApi.searchExportFoodCertificates(filter),

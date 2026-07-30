@@ -27,6 +27,30 @@ export interface PublicDocumentFilter extends PagedFilter {
   DocumentTypeId?: string;
 }
 
+export interface PublicCertificateFilter extends PagedFilter {
+  Status?: LicenseStatus;
+}
+
+// ── License status ──────────────────────────────────────────────────────────
+
+export const LICENSE_STATUS = {
+  Active: 1,
+  Expired: 2,
+  Revoked: 3,
+} as const;
+
+export type LicenseStatus =
+  (typeof LICENSE_STATUS)[keyof typeof LICENSE_STATUS];
+
+export const LICENSE_STATUS_CONFIG: Record<
+  LicenseStatus,
+  { color: string; label: string }
+> = {
+  [LICENSE_STATUS.Active]: { color: "green", label: "Còn hiệu lực" },
+  [LICENSE_STATUS.Expired]: { color: "default", label: "Hết hiệu lực" },
+  [LICENSE_STATUS.Revoked]: { color: "red", label: "Đã thu hồi" },
+};
+
 export interface CatalogOption {
   id: string;
   name: string;

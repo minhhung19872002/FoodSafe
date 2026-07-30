@@ -42,32 +42,32 @@ public sealed class PublicCertificateSearchController(
 {
     [HttpGet("eligibility-certificates/search")]
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchEligibilityCertificatesAsync(
-        [FromQuery] PublicSearchRequestDto input) =>
+        [FromQuery] PublicCertificateSearchRequestDto input) =>
         service.SearchEligibilityCertificatesAsync(input);
 
     [HttpGet("self-declarations/search")]
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchSelfDeclarationsAsync(
-        [FromQuery] PublicSearchRequestDto input) =>
+        [FromQuery] PublicCertificateSearchRequestDto input) =>
         service.SearchSelfDeclarationsAsync(input);
 
     [HttpGet("product-registrations/search")]
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchProductRegistrationsAsync(
-        [FromQuery] PublicSearchRequestDto input) =>
+        [FromQuery] PublicCertificateSearchRequestDto input) =>
         service.SearchProductRegistrationsAsync(input);
 
     [HttpGet("ad-registrations/search")]
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchAdRegistrationsAsync(
-        [FromQuery] PublicSearchRequestDto input) =>
+        [FromQuery] PublicCertificateSearchRequestDto input) =>
         service.SearchAdRegistrationsAsync(input);
 
     [HttpGet("cfs-certificates/search")]
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchCfsCertificatesAsync(
-        [FromQuery] PublicSearchRequestDto input) =>
+        [FromQuery] PublicCertificateSearchRequestDto input) =>
         service.SearchCfsCertificatesAsync(input);
 
     [HttpGet("export-food-certificates/search")]
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchExportFoodCertificatesAsync(
-        [FromQuery] PublicSearchRequestDto input) =>
+        [FromQuery] PublicCertificateSearchRequestDto input) =>
         service.SearchExportFoodCertificatesAsync(input);
 }
 

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using FoodSafe.BusinessManagement;
 using FoodSafe.Licensing;
 using Microsoft.AspNetCore.Authorization;
@@ -49,10 +50,11 @@ public class PublicCertificateSearchAppService :
     }
 
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchEligibilityCertificatesAsync(
-        PublicSearchRequestDto input) =>
+        PublicCertificateSearchRequestDto input) =>
         SearchAsync(
             _eligibility, input,
             (q, kw) => q.Where(c => c.CertificateNumber.Contains(kw)),
+            (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.IssueDate),
             c => c.BusinessId,
             _ => null,
@@ -69,11 +71,12 @@ public class PublicCertificateSearchAppService :
             });
 
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchSelfDeclarationsAsync(
-        PublicSearchRequestDto input) =>
+        PublicCertificateSearchRequestDto input) =>
         SearchAsync(
             _selfDeclarations, input,
             (q, kw) => q.Where(c =>
                 c.DeclarationNumber.Contains(kw) || c.ProductName.Contains(kw)),
+            (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.DeclarationDate),
             c => c.BusinessId,
             _ => null,
@@ -90,11 +93,12 @@ public class PublicCertificateSearchAppService :
             });
 
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchProductRegistrationsAsync(
-        PublicSearchRequestDto input) =>
+        PublicCertificateSearchRequestDto input) =>
         SearchAsync(
             _productRegistrations, input,
             (q, kw) => q.Where(c =>
                 c.RegistrationNumber.Contains(kw) || c.ProductName.Contains(kw)),
+            (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.RegistrationDate),
             c => c.BusinessId,
             _ => null,
@@ -111,10 +115,11 @@ public class PublicCertificateSearchAppService :
             });
 
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchAdRegistrationsAsync(
-        PublicSearchRequestDto input) =>
+        PublicCertificateSearchRequestDto input) =>
         SearchAsync(
             _adRegistrations, input,
             (q, kw) => q.Where(c => c.RegistrationNumber.Contains(kw)),
+            (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.RegistrationDate),
             c => c.BusinessId,
             _ => null,
@@ -131,10 +136,11 @@ public class PublicCertificateSearchAppService :
             });
 
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchCfsCertificatesAsync(
-        PublicSearchRequestDto input) =>
+        PublicCertificateSearchRequestDto input) =>
         SearchAsync(
             _cfsCertificates, input,
             (q, kw) => q.Where(c => c.CertificateNumber.Contains(kw)),
+            (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.IssueDate),
             c => c.BusinessId,
             c => c.ProductId,
@@ -151,10 +157,11 @@ public class PublicCertificateSearchAppService :
             });
 
     public Task<PagedResultDto<PublicCertificateSummaryDto>> SearchExportFoodCertificatesAsync(
-        PublicSearchRequestDto input) =>
+        PublicCertificateSearchRequestDto input) =>
         SearchAsync(
             _exportCertificates, input,
             (q, kw) => q.Where(c => c.CertificateNumber.Contains(kw)),
+            (q, s, today) => ApplyEffectiveStatusFilter(q, s, today, c => c.Status, c => c.ExpiryDate),
             q => q.OrderByDescending(c => c.IssueDate),
             c => c.BusinessId,
             c => c.ProductId,
@@ -172,8 +179,9 @@ public class PublicCertificateSearchAppService :
 
     private async Task<PagedResultDto<PublicCertificateSummaryDto>> SearchAsync<TEntity>(
         IRepository<TEntity, Guid> repository,
-        PublicSearchRequestDto input,
+        PublicCertificateSearchRequestDto input,
         Func<IQueryable<TEntity>, string, IQueryable<TEntity>> applyKeyword,
+        Func<IQueryable<TEntity>, LicenseStatus?, DateTime, IQueryable<TEntity>> applyStatusFilter,
         Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> order,
         Func<TEntity, Guid> businessIdSelector,
         Func<TEntity, Guid?> productIdSelector,
@@ -186,6 +194,8 @@ public class PublicCertificateSearchAppService :
         {
             query = applyKeyword(query, keyword);
         }
+
+        query = applyStatusFilter(query, input.Status, Clock.Now.Date);
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
         var items = await AsyncExecuter.ToListAsync(
@@ -213,6 +223,55 @@ public class PublicCertificateSearchAppService :
                 productIdSelector(item) is { } pid
                     ? productNames.GetValueOrDefault(pid)
                     : null)).ToList());
+    }
+
+    private static IQueryable<TEntity> ApplyEffectiveStatusFilter<TEntity>(
+        IQueryable<TEntity> query,
+        LicenseStatus? status,
+        DateTime today,
+        Expression<Func<TEntity, LicenseStatus>> statusSelector,
+        Expression<Func<TEntity, DateTime?>> expirySelector)
+    {
+        if (status is null) return query;
+
+        var param = Expression.Parameter(typeof(TEntity), "e");
+        var statusBody = ReplaceLambdaParam(statusSelector, param);
+        var expiryBody = ReplaceLambdaParam(expirySelector, param);
+        var revokedConst = Expression.Constant(LicenseStatus.Revoked);
+        var todayConst = Expression.Constant((DateTime?)today, typeof(DateTime?));
+        var nullConst = Expression.Constant(null, typeof(DateTime?));
+
+        Expression predicate = status.Value switch
+        {
+            LicenseStatus.Active => Expression.AndAlso(
+                Expression.NotEqual(statusBody, revokedConst),
+                Expression.OrElse(
+                    Expression.Equal(expiryBody, nullConst),
+                    Expression.GreaterThanOrEqual(expiryBody, todayConst))),
+            LicenseStatus.Expired => Expression.AndAlso(
+                Expression.NotEqual(statusBody, revokedConst),
+                Expression.AndAlso(
+                    Expression.NotEqual(expiryBody, nullConst),
+                    Expression.LessThan(expiryBody, todayConst))),
+            LicenseStatus.Revoked => Expression.Equal(statusBody, revokedConst),
+            _ => throw new ArgumentOutOfRangeException(nameof(status)),
+        };
+
+        var lambda = Expression.Lambda<Func<TEntity, bool>>(predicate, param);
+        return query.Where(lambda);
+    }
+
+    private static Expression ReplaceLambdaParam<TIn, TOut>(
+        Expression<Func<TIn, TOut>> lambda, ParameterExpression newParam)
+    {
+        return new ParameterReplacer(lambda.Parameters[0], newParam).Visit(lambda.Body);
+    }
+
+    private sealed class ParameterReplacer(ParameterExpression oldParam, ParameterExpression newParam)
+        : ExpressionVisitor
+    {
+        protected override Expression VisitParameter(ParameterExpression node)
+            => node == oldParam ? newParam : base.VisitParameter(node);
     }
 
     private static string StatusLabel(LicenseStatus status) => status switch

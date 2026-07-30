@@ -38,6 +38,11 @@ public class PublicDocumentSearchRequestDto : PublicSearchRequestDto
     public Guid? DocumentTypeId { get; set; }
 }
 
+public class PublicCertificateSearchRequestDto : PublicSearchRequestDto
+{
+    public LicenseStatus? Status { get; set; }
+}
+
 public class CatalogOptionDto
 {
     public Guid Id { get; set; }
@@ -265,12 +270,12 @@ public interface IPublicDirectoryAppService
 
 public interface IPublicCertificateSearchAppService
 {
-    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchEligibilityCertificatesAsync(PublicSearchRequestDto input);
-    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchSelfDeclarationsAsync(PublicSearchRequestDto input);
-    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchProductRegistrationsAsync(PublicSearchRequestDto input);
-    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchAdRegistrationsAsync(PublicSearchRequestDto input);
-    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchCfsCertificatesAsync(PublicSearchRequestDto input);
-    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchExportFoodCertificatesAsync(PublicSearchRequestDto input);
+    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchEligibilityCertificatesAsync(PublicCertificateSearchRequestDto input);
+    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchSelfDeclarationsAsync(PublicCertificateSearchRequestDto input);
+    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchProductRegistrationsAsync(PublicCertificateSearchRequestDto input);
+    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchAdRegistrationsAsync(PublicCertificateSearchRequestDto input);
+    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchCfsCertificatesAsync(PublicCertificateSearchRequestDto input);
+    Task<PagedResultDto<PublicCertificateSummaryDto>> SearchExportFoodCertificatesAsync(PublicCertificateSearchRequestDto input);
 }
 
 public interface IPublicContentAppService
