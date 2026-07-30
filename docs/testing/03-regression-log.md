@@ -17,6 +17,38 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-07-31 — Đơn vị cấp xã/phường không còn được phạm vi toàn tỉnh
+
+- **Cause**: Bug từ bản review drawio. Nhân viên thuộc Trạm Y tế Phường Bạch
+  Đằng nhìn thấy cơ sở "Công ty CP Nước mắm Cái Rồng" — cơ sở này do Chi cục
+  (đơn vị cấp trên) quản lý và không thuộc địa bàn phường Bạch Đằng.
+- **Commit**: nhánh `fix/drawio-review-round-3`
+- **Affected features**: 22 feature dùng `CurrentDataScopeProvider` — F-007..F-019,
+  F-019c/d/e/h, F-016b, F-022, F-023, F-031, F-035 (đã chuyển sang DIRTY).
+  F-003, F-006, F-019f, F-019g, F-020 vốn đã DIRTY/FAILED từ trước.
+  F-004, F-005, F-021, F-024..F-034 KHÔNG bị ảnh hưởng vì dữ liệu không theo
+  phạm vi đơn vị (đã đối chiếu danh sách AppService có inject scope resolver).
+- **Retest level**: 3 (thay đổi shared dependency: organization-scope resolver)
+- **Result**: CHỜ RETEST — chưa chạy lại bộ verification
+- **Details**:
+  - Nguyên nhân: `OrganizationHierarchyRules.ValidateShape` bắt buộc đơn vị cấp
+    xã/phường phải có **cả** `ProvinceId` lẫn `CommuneId`. `AddGeography` lại đưa
+    cả hai vào phạm vi, nên `ProvinceIds` của nhân viên cấp xã chứa luôn cả tỉnh
+    và mọi truy vấn khớp theo `AddressProvinceId` trả về toàn bộ cơ sở trong tỉnh.
+  - Sửa: đơn vị có `CommuneId` thì chỉ lấy phạm vi phường/xã; chỉ đơn vị cấp
+    tỉnh (không có `CommuneId`) mới được phạm vi toàn tỉnh. Dùng sự hiện diện của
+    `CommuneId` thay vì `Level` để không phụ thuộc dữ liệu `Level` sai — trong DB
+    hiện có bản ghi hiển thị cấp "Không xác định".
+  - Sửa kèm: phân quyền `ManagementScopeType.Geography` chọn kèm phường/xã trước
+    đây cũng cộng thêm cả tỉnh; nay chọn phường/xã nghĩa là giới hạn đúng
+    phường/xã đó.
+  - Hệ quả cần lưu ý khi retest: người dùng cấp xã nay thấy **ít** dữ liệu hơn
+    trước. Cần kiểm tra các kịch bản đang giả định nhân viên cấp xã đọc được dữ
+    liệu toàn tỉnh, và kiểm tra người dùng cấp tỉnh không bị thu hẹp phạm vi.
+  - Không có test nào đang assert hành vi cũ:
+    `DataScopeEnforcementContractTests` khởi tạo `CurrentDataScope` trực tiếp nên
+    không đi qua `AddGeography`; `DataScopeTests` chỉ kiểm tra `Expand`.
+
 ### 2026-07-31 — Kéo ngang bằng chuột trong bảng danh sách (toàn hệ thống)
 
 - **Cause**: Yêu cầu từ bản review drawio. Bảng rộng hơn khung chứa chỉ cuộn
