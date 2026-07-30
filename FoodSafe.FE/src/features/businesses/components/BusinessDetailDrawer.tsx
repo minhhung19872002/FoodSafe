@@ -3,6 +3,8 @@ import { Drawer, Table, Tabs, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { ExpiryTag } from "@/components/ExpiryTag";
+import { StatusBadge } from "@/components/StatusBadge";
 import { businessRelatedApi } from "../api/businessApi";
 import type {
   Business,
@@ -26,36 +28,136 @@ function formatDate(value?: string) {
   return value ? dayjs(value).format("DD/MM/YYYY") : "—";
 }
 
-const relatedColumns: ColumnsType<BusinessRelatedRecord> = [
-  {
-    title: "Số hiệu",
-    dataIndex: "number",
-    width: 200,
-    render: (v?: string) => v ?? "—",
-  },
-  {
-    title: "Tên sản phẩm",
-    dataIndex: "name",
-    render: (v?: string) => v ?? "—",
-  },
-  {
-    title: "Nội dung",
-    dataIndex: "content",
-    render: (v?: string) => v ?? "—",
-  },
-  {
-    title: "Ngày cấp",
-    dataIndex: "issuedDate",
-    width: 110,
-    render: formatDate,
-  },
-  {
-    title: "Hết hạn",
-    dataIndex: "expiryDate",
-    width: 110,
-    render: formatDate,
-  },
-];
+const dash = (v?: string) => v ?? "—";
+
+const numberColumn = (title: string): ColumnsType<BusinessRelatedRecord>[number] => ({
+  title,
+  dataIndex: "number",
+  width: 170,
+  render: dash,
+});
+
+const nameColumn = (
+  title = "Sản phẩm",
+): ColumnsType<BusinessRelatedRecord>[number] => ({
+  title,
+  dataIndex: "name",
+  ellipsis: true,
+  render: dash,
+});
+
+const issuedDateColumn = (
+  title: string,
+): ColumnsType<BusinessRelatedRecord>[number] => ({
+  title,
+  dataIndex: "issuedDate",
+  width: 115,
+  render: (v?: string) => formatDate(v),
+});
+
+const expiryColumn: ColumnsType<BusinessRelatedRecord>[number] = {
+  title: "Hết hạn",
+  width: 140,
+  render: (_, item) => (
+    <ExpiryTag
+      expiryDate={item.expiryDate}
+      status={item.status ?? 0}
+      daysUntilExpiry={item.daysUntilExpiry}
+    />
+  ),
+};
+
+const statusColumn: ColumnsType<BusinessRelatedRecord>[number] = {
+  title: "Trạng thái",
+  dataIndex: "status",
+  width: 125,
+  render: (v?: number) => (v == null ? "—" : <StatusBadge status={v} />),
+};
+
+// Each tab mirrors the "prominent" columns of that feature's own list page
+// (business name dropped — redundant inside its own profile drawer).
+const RELATED_COLUMNS: Record<
+  | "selfDeclarations"
+  | "productRegistrations"
+  | "adRegistrations"
+  | "eligibilityCertificates"
+  | "cfsCertificates"
+  | "exportFoodCertificates",
+  ColumnsType<BusinessRelatedRecord>
+> = {
+  selfDeclarations: [
+    numberColumn("Số hồ sơ"),
+    nameColumn(),
+    issuedDateColumn("Ngày công bố"),
+    expiryColumn,
+    statusColumn,
+  ],
+  productRegistrations: [
+    numberColumn("Số đăng ký"),
+    {
+      title: "Số tiếp nhận",
+      dataIndex: "receiptNumber",
+      width: 120,
+      render: dash,
+    },
+    nameColumn(),
+    issuedDateColumn("Ngày đăng ký"),
+    expiryColumn,
+    statusColumn,
+  ],
+  adRegistrations: [
+    numberColumn("Số đăng ký"),
+    {
+      title: "Loại quảng cáo",
+      dataIndex: "advertisementTypeName",
+      width: 150,
+      render: dash,
+    },
+    nameColumn(),
+    issuedDateColumn("Ngày cấp"),
+    expiryColumn,
+    statusColumn,
+  ],
+  eligibilityCertificates: [
+    numberColumn("Số giấy"),
+    issuedDateColumn("Ngày cấp"),
+    expiryColumn,
+    {
+      title: "Cơ quan cấp",
+      dataIndex: "certifyingAuthority",
+      ellipsis: true,
+      render: dash,
+    },
+    statusColumn,
+  ],
+  cfsCertificates: [
+    numberColumn("Số CFS"),
+    nameColumn(),
+    {
+      title: "Quốc gia đích",
+      dataIndex: "destinationCountryName",
+      width: 150,
+      render: dash,
+    },
+    issuedDateColumn("Ngày cấp"),
+    expiryColumn,
+    statusColumn,
+  ],
+  exportFoodCertificates: [
+    numberColumn("Số GCN XK"),
+    nameColumn(),
+    { title: "Số lô", dataIndex: "lotNumber", width: 110, render: dash },
+    {
+      title: "Quốc gia đích",
+      dataIndex: "destinationCountryName",
+      width: 150,
+      render: dash,
+    },
+    issuedDateColumn("Ngày cấp"),
+    expiryColumn,
+    statusColumn,
+  ],
+};
 
 const inspectionColumns: ColumnsType<BusinessInspectionRecord> = [
   {
@@ -101,13 +203,7 @@ function RelatedTable({
   kind,
 }: {
   businessId: string;
-  kind:
-    | "selfDeclarations"
-    | "productRegistrations"
-    | "adRegistrations"
-    | "eligibilityCertificates"
-    | "cfsCertificates"
-    | "exportFoodCertificates";
+  kind: keyof typeof RELATED_COLUMNS;
 }) {
   const { data, isLoading } = useQuery({
     queryKey: ["business-related", kind, businessId] as const,
@@ -117,8 +213,9 @@ function RelatedTable({
     <Table
       rowKey="id"
       size="small"
+      scroll={{ x: "max-content" }}
       loading={isLoading}
-      columns={relatedColumns}
+      columns={RELATED_COLUMNS[kind]}
       dataSource={data?.items}
       pagination={false}
     />
