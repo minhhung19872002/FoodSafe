@@ -1,11 +1,13 @@
 import { useState } from "react";
 import {
+  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
   FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
+  ReloadOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import { App, Button, Input, Select, Space, Table } from "antd";
@@ -20,6 +22,7 @@ import { RevokeModal } from "@/components/RevokeModal";
 import { RowActions } from "@/components/RowActions";
 import { StatusBadge } from "@/components/StatusBadge";
 import { saveDownload } from "@/utils/download";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import {
   useCreateProductRegistration,
@@ -60,6 +63,7 @@ export default function ProductRegistrationPage() {
   );
   const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
+  const debouncedFilter = useDebounce(filter);
   const [businessId, setBusinessId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
   const [expiringWithinDays, setExpiringWithinDays] = useState<number>();
@@ -96,7 +100,7 @@ export default function ProductRegistrationPage() {
   };
 
   const queryFilter = {
-    filter: filter || undefined,
+    filter: debouncedFilter.trim() || undefined,
     businessId,
     status,
     expiringWithinDays,
@@ -118,10 +122,20 @@ export default function ProductRegistrationPage() {
   const downloadMutation = useDownloadProductRegistrationAttachment();
   const deleteAttachmentMutation = useDeleteProductRegistrationAttachment();
 
+  const refreshRegistrations = () => void registrations.refetch();
+
   const closeEditor = () => {
     setEditorOpen(false);
     setEditing(undefined);
     setEditorBusinessId(undefined);
+  };
+
+  const resetFilters = () => {
+    setFilter("");
+    setBusinessId(undefined);
+    setStatus(undefined);
+    setExpiringWithinDays(undefined);
+    pagination.resetToFirstPage();
   };
 
   const save = (input: ProductRegistrationInput) => {
@@ -254,6 +268,13 @@ export default function ProductRegistrationPage() {
         actions={
           <>
             <Button
+              icon={<ReloadOutlined />}
+              loading={registrations.isFetching}
+              onClick={refreshRegistrations}
+            >
+              Làm mới
+            </Button>
+            <Button
               icon={<ExportOutlined />}
               loading={exportMutation.isPending}
               onClick={() =>
@@ -289,8 +310,9 @@ export default function ProductRegistrationPage() {
               allowClear
               placeholder="Số đăng ký, tiếp nhận, sản phẩm, nhà sản xuất"
               style={{ width: 330 }}
-              onSearch={(value) => {
-                setFilter(value.trim());
+              value={filter}
+              onChange={(event) => {
+                setFilter(event.target.value);
                 pagination.resetToFirstPage();
               }}
             />
@@ -301,6 +323,7 @@ export default function ProductRegistrationPage() {
               placeholder="Tất cả cơ sở"
               style={{ width: 260 }}
               loading={businesses.isLoading}
+              value={businessId}
               options={(businesses.data ?? []).map((item) => ({
                 value: item.id,
                 label: item.code ? `${item.code} — ${item.name}` : item.name,
@@ -314,6 +337,7 @@ export default function ProductRegistrationPage() {
               allowClear
               placeholder="Tất cả trạng thái"
               style={{ width: 170 }}
+              value={status}
               options={[
                 { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
                 { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
@@ -328,6 +352,7 @@ export default function ProductRegistrationPage() {
               allowClear
               placeholder="Cảnh báo hết hạn"
               style={{ width: 180 }}
+              value={expiringWithinDays}
               options={[
                 { value: 30, label: "Trong 30 ngày" },
                 { value: 60, label: "Trong 60 ngày" },
@@ -338,6 +363,9 @@ export default function ProductRegistrationPage() {
                 pagination.resetToFirstPage();
               }}
             />
+            <Button icon={<ClearOutlined />} onClick={resetFilters}>
+              Đặt lại bộ lọc
+            </Button>
           </Space>
         </div>
 

@@ -8,8 +8,15 @@ import type {
 
 function useInvalidate() {
   const queryClient = useQueryClient();
-  return () =>
-    queryClient.invalidateQueries({ queryKey: productRegistrationKeys.all });
+  return () => {
+    void queryClient.invalidateQueries({
+      queryKey: productRegistrationKeys.all,
+    });
+    void queryClient.invalidateQueries({
+      queryKey: ["business-related", "productRegistrations"],
+      refetchType: "all",
+    });
+  };
 }
 
 export function useCreateProductRegistration() {

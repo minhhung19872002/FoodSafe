@@ -50,28 +50,30 @@ export function ProductRegistrationEditorModal(props: Props) {
         ]
       : props.businesses;
 
+  const initialValues: Partial<FormValues> = registration
+    ? {
+        businessId: registration.businessId,
+        productId: registration.productId,
+        registrationNumber: registration.registrationNumber,
+        receiptNumber: registration.receiptNumber,
+        registrationDate: dayjs(registration.registrationDate),
+        receiptDate: registration.receiptDate
+          ? dayjs(registration.receiptDate)
+          : undefined,
+        expiryDate: registration.expiryDate
+          ? dayjs(registration.expiryDate)
+          : undefined,
+        productName: registration.productName,
+        manufacturer: registration.manufacturer,
+        certifyingAuthority: registration.certifyingAuthority,
+        notes: registration.notes,
+      }
+    : { registrationDate: dayjs() };
+
   useEffect(() => {
     if (!open) return;
-    const item = registration;
-    form.setFieldsValue(
-      item
-        ? {
-            businessId: item.businessId,
-            productId: item.productId,
-            registrationNumber: item.registrationNumber,
-            receiptNumber: item.receiptNumber,
-            registrationDate: dayjs(item.registrationDate),
-            receiptDate: item.receiptDate ? dayjs(item.receiptDate) : undefined,
-            expiryDate: item.expiryDate ? dayjs(item.expiryDate) : undefined,
-            productName: item.productName,
-            manufacturer: item.manufacturer,
-            certifyingAuthority: item.certifyingAuthority,
-            notes: item.notes,
-          }
-        : { registrationDate: dayjs() },
-    );
-    onBusinessChange(item?.businessId);
-  }, [form, open, registration, onBusinessChange]);
+    onBusinessChange(registration?.businessId);
+  }, [open, registration, onBusinessChange]);
 
   return (
     <Modal
@@ -86,8 +88,12 @@ export function ProductRegistrationEditorModal(props: Props) {
       destroyOnHidden
     >
       <Form
+        // Remount theo đăng ký đang sửa để `initialValues` được áp dụng lại khi
+        // mở modal cho bản ghi khác trước lúc nội dung cũ bị destroy.
+        key={registration?.id ?? "new"}
         form={form}
         layout="vertical"
+        initialValues={initialValues}
         preserve={false}
         onFinish={(values) =>
           props.onSubmit({
