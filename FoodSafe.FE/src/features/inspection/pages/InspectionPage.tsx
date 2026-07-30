@@ -768,8 +768,6 @@ function ResultsTab() {
     setFilterResetKey((key) => key + 1);
     resultsPagination.resetToFirstPage();
   };
-  const [businessSearch, setBusinessSearch] = useState("");
-  const businesses = useInspectionBusinesses(businessSearch);
   // Results may be attached to an approved plan; the server then advances the
   // plan to InProgress and marks the matching plan item completed. Only plans
   // the server will accept are offered.
@@ -1037,7 +1035,6 @@ function ResultsTab() {
       <InspectionResultEditorModal
         open={editorOpen}
         item={editing}
-        businesses={businesses.data ?? []}
         plans={[
           ...(linkablePlans.data?.items ?? []),
           ...(inProgressPlans.data?.items ?? []),
@@ -1045,7 +1042,6 @@ function ResultsTab() {
         saving={createMutation.isPending || updateMutation.isPending}
         onCancel={closeEditor}
         onSubmit={save}
-        onBusinessSearch={setBusinessSearch}
       />
       <InspectionAttachmentsModal
         ownerId={attachmentsResult?.id}

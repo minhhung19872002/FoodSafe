@@ -18,7 +18,6 @@ import {
   INSPECTION_PLAN_ITEM_STATUS,
   INSPECTION_TYPE,
   INSPECTION_TYPE_LABELS,
-  type BusinessOption,
   type CreateUpdateInspectionResultInput,
   type InspectionOverallResult,
   type InspectionPlan,
@@ -60,13 +59,10 @@ interface FormValues {
 interface Props {
   open: boolean;
   item?: InspectionResult;
-  businesses: BusinessOption[];
   plans: InspectionPlan[];
   saving: boolean;
   onCancel: () => void;
   onSubmit: (input: CreateUpdateInspectionResultInput) => void;
-  /** Server-side search: options list is refetched with this filter. */
-  onBusinessSearch?: (value: string) => void;
 }
 
 const groupThousands = (value: string) =>
@@ -91,23 +87,6 @@ export function InspectionResultEditorModal(props: Props) {
   const followUpRequired = Form.useWatch("followUpRequired", form);
   const selectedPlan = props.plans.find((p) => p.id === selectedPlanId);
   const planItems = selectedPlan?.items ?? [];
-
-  // The business select's option list is search-limited; make sure the value
-  // set by editing or by picking a plan item always has a visible label.
-  const businessOptionMap = new Map<string, string>();
-  for (const it of planItems)
-    businessOptionMap.set(it.businessId, it.businessName ?? it.businessId);
-  if (item)
-    businessOptionMap.set(
-      item.businessId,
-      item.businessName ?? item.businessId,
-    );
-  for (const x of props.businesses)
-    businessOptionMap.set(x.id, x.code ? `${x.code} — ${x.name}` : x.name);
-  const businessOptions = [...businessOptionMap].map(([value, label]) => ({
-    value,
-    label,
-  }));
 
   const initialValues: Partial<FormValues> = item
     ? {
@@ -224,6 +203,9 @@ export function InspectionResultEditorModal(props: Props) {
           <Form.Item
             name="planId"
             label="Thuộc kế hoạch thanh tra"
+            rules={[
+              { required: true, message: "Vui lòng chọn kế hoạch thanh tra." },
+            ]}
             extra={
               item
                 ? "Không thể đổi kế hoạch của kết quả đã ghi nhận."
@@ -231,12 +213,14 @@ export function InspectionResultEditorModal(props: Props) {
             }
           >
             <Select
-              allowClear
               showSearch
               optionFilterProp="label"
               disabled={Boolean(item)}
-              placeholder="Không thuộc kế hoạch"
-              onChange={() => form.setFieldValue("planItemId", undefined)}
+              placeholder="Chọn kế hoạch thanh tra"
+              onChange={() => {
+                form.setFieldValue("planItemId", undefined);
+                form.setFieldValue("businessId", undefined);
+              }}
               options={props.plans.map((p) => ({
                 value: p.id,
                 label: `${p.planCode} — ${p.title}`,
@@ -248,7 +232,7 @@ export function InspectionResultEditorModal(props: Props) {
             label="Cơ sở trong kế hoạch"
             rules={[
               {
-                required: Boolean(selectedPlanId),
+                required: true,
                 message: "Vui lòng chọn cơ sở trong kế hoạch.",
               },
             ]}
@@ -281,19 +265,8 @@ export function InspectionResultEditorModal(props: Props) {
           </Form.Item>
         </div>
 
-        <Form.Item
-          name="businessId"
-          label="Cơ sở SXKD"
-          rules={[{ required: true, message: "Vui lòng chọn cơ sở." }]}
-          extra="Chọn kế hoạch bên trên để ghi nhận kết quả này thuộc kế hoạch thanh tra."
-        >
-          <Select
-            showSearch
-            optionFilterProp="label"
-            disabled={Boolean(item)}
-            options={businessOptions}
-            onSearch={props.onBusinessSearch}
-          />
+        <Form.Item name="businessId" hidden>
+          <Input />
         </Form.Item>
 
         <div
