@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   Button,
   Checkbox,
@@ -73,7 +72,7 @@ const groupThousands = (value: string) =>
 export function InspectionResultEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
   const { token } = theme.useToken();
-  const { open, item } = props;
+  const { item } = props;
   const selectedPlanId = Form.useWatch("planId", form);
   const selectedPlan = props.plans.find((p) => p.id === selectedPlanId);
   const planItems = selectedPlan?.items ?? [];
@@ -95,10 +94,8 @@ export function InspectionResultEditorModal(props: Props) {
     label,
   }));
 
-  useEffect(() => {
-    if (!open) return;
-    if (item) {
-      form.setFieldsValue({
+  const initialValues: Partial<FormValues> = item
+    ? {
         planId: item.planId,
         planItemId: item.planItemId,
         businessId: item.businessId,
@@ -131,22 +128,19 @@ export function InspectionResultEditorModal(props: Props) {
             ? dayjs(v.remedyDeadline)
             : undefined,
         })),
-      });
-    } else {
-      form.setFieldsValue({
+      }
+    : {
         inspectionDate: dayjs(),
         inspectionType: INSPECTION_TYPE.Scheduled,
         overallResult: INSPECTION_OVERALL_RESULT.Pass,
         hasViolation: false,
         followUpRequired: false,
         violations: [],
-      });
-    }
-  }, [form, open, item]);
+      };
 
   return (
     <Modal
-      open={open}
+      open={props.open}
       title={item ? "Cập nhật kết quả kiểm tra" : "Ghi nhận kết quả kiểm tra"}
       width={860}
       okText="Lưu"
@@ -157,8 +151,12 @@ export function InspectionResultEditorModal(props: Props) {
       destroyOnHidden
     >
       <Form
+        // Remount theo kết quả đang sửa để `initialValues` được áp dụng lại khi
+        // mở modal cho bản ghi khác trước lúc nội dung cũ bị destroy.
+        key={item?.id ?? "new"}
         form={form}
         layout="vertical"
+        initialValues={initialValues}
         preserve={false}
         onFinish={(values) =>
           props.onSubmit({
