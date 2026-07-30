@@ -8,7 +8,13 @@ import type {
 
 function useInvalidate() {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: vsattpCommitmentKeys.all });
+  return () => {
+    void qc.invalidateQueries({ queryKey: vsattpCommitmentKeys.all });
+    void qc.invalidateQueries({
+      queryKey: ["business-vsattp-commitments"],
+      refetchType: "all",
+    });
+  };
 }
 
 export function useCreateVsattpCommitment() {
