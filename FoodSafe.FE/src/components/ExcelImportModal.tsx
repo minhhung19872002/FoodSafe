@@ -10,11 +10,12 @@ import type { RcFile } from "antd/es/upload/interface";
 import type {
   ExcelImportError,
   ExcelImportPreview,
-} from "../types/business.types";
+} from "@/types/excelImport";
 
 interface Props {
-  title?: string;
-  entityLabel?: string;
+  title: string;
+  /** Danh từ đứng sau số lượng trong nút xác nhận, ví dụ "cơ sở". */
+  entityLabel: string;
   open: boolean;
   preview?: ExcelImportPreview;
   previewing: boolean;
@@ -33,9 +34,9 @@ const errorColumns: ColumnsType<ExcelImportError> = [
   { title: "Lỗi", dataIndex: "message" },
 ];
 
-export function BusinessImportModal({
-  title = "Import cơ sở từ Excel",
-  entityLabel = "cơ sở",
+export function ExcelImportModal({
+  title,
+  entityLabel,
   open,
   preview,
   previewing,

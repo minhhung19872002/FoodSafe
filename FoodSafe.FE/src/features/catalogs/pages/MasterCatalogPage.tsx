@@ -5,6 +5,7 @@ import { useTablePagination } from "@/hooks/useTablePagination";
 import { App, Tag } from "antd";
 import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { ExcelImportModal } from "@/components/ExcelImportModal";
 import { PageHeader } from "@/components/PageHeader";
 import {
   RecordDetailDrawer,
@@ -14,10 +15,17 @@ import { saveDownload } from "@/utils/download";
 import { extractApiError } from "@/lib/apiError";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { exportTestingServices } from "../api/catalogApi";
-import { useDeleteCatalog, useSaveCatalog } from "../api/catalogMutations";
+import {
+  useConfirmCatalogImport,
+  useDeleteCatalog,
+  useDownloadCatalogTemplate,
+  usePreviewCatalogImport,
+  useSaveCatalog,
+} from "../api/catalogMutations";
 import { useCatalog, useCatalogOptions } from "../api/catalogQueries";
 import { CatalogEditorModal } from "../components/CatalogEditorModal";
 import { MasterCatalogView } from "../components/MasterCatalogView";
+import { catalogDefinitions } from "../types/catalog.types";
 import type {
   CatalogInput,
   CatalogItem,
@@ -25,6 +33,12 @@ import type {
 } from "../types/catalog.types";
 
 const riskLevelLabels = ["", "Cao", "Trung bình", "Thấp"];
+
+function catalogLabel(kind: CatalogKind) {
+  return (
+    catalogDefinitions.find((item) => item.kind === kind)?.label ?? "danh mục"
+  );
+}
 
 export default function MasterCatalogPage() {
   const { message } = App.useApp();
@@ -36,6 +50,7 @@ export default function MasterCatalogPage() {
   const [testingCenterSearch, setTestingCenterSearch] = useState("");
   const [editing, setEditing] = useState<CatalogItem | null | undefined>();
   const [detailItem, setDetailItem] = useState<CatalogItem | null>(null);
+  const [importing, setImporting] = useState(false);
   const canCreate = useAuthStore((state) =>
     state.hasPermission("FoodSafe.Catalogs.Create"),
   );
@@ -62,6 +77,14 @@ export default function MasterCatalogPage() {
   const exportServices = useMutation({
     mutationFn: () => exportTestingServices(filter),
   });
+  const downloadTemplate = useDownloadCatalogTemplate(kind);
+  const previewImport = usePreviewCatalogImport(kind);
+  const confirmImport = useConfirmCatalogImport();
+
+  const closeImport = () => {
+    setImporting(false);
+    previewImport.reset();
+  };
 
   const closeEditor = () => {
     setEditing(undefined);
@@ -208,6 +231,7 @@ export default function MasterCatalogPage() {
             setFilter("");
             pagination.resetToFirstPage();
             setDetailItem(null);
+            closeImport();
           }}
           exporting={exportServices.isPending}
           onFilterChange={(nextFilter) => {
@@ -216,6 +240,7 @@ export default function MasterCatalogPage() {
           }}
           onRefresh={() => void catalog.refetch()}
           onCreate={() => setEditing(null)}
+          onImport={() => setImporting(true)}
           onEdit={setEditing}
           onShowDetail={setDetailItem}
           onDelete={handleDelete}
@@ -233,6 +258,39 @@ export default function MasterCatalogPage() {
         record={detailItem}
         onClose={() => setDetailItem(null)}
         fields={detailFields}
+      />
+      <ExcelImportModal
+        open={importing}
+        title={`Import ${catalogLabel(kind)} từ Excel`}
+        entityLabel="dòng"
+        preview={previewImport.data}
+        previewing={previewImport.isPending}
+        confirming={confirmImport.isPending}
+        downloadingTemplate={downloadTemplate.isPending}
+        onCancel={closeImport}
+        onDownloadTemplate={() =>
+          downloadTemplate.mutate(undefined, {
+            onSuccess: ({ blob, fileName }) => saveDownload(blob, fileName),
+            onError: (error) => void message.error(extractApiError(error)),
+          })
+        }
+        onFileChange={() => previewImport.reset()}
+        onPreview={(file) =>
+          previewImport.mutate(file, {
+            onError: (error) => void message.error(extractApiError(error)),
+          })
+        }
+        onConfirm={(token) =>
+          confirmImport.mutate(token, {
+            onSuccess: ({ importedCount }) => {
+              closeImport();
+              void message.success(
+                `Đã import ${importedCount} dòng ${catalogLabel(kind).toLowerCase()}`,
+              );
+            },
+            onError: (error) => void message.error(extractApiError(error)),
+          })
+        }
       />
       <CatalogEditorModal
         kind={kind}

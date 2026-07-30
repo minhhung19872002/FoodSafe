@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { persistCatalog, removeCatalog } from "./catalogApi";
+import {
+  confirmCatalogImport,
+  downloadCatalogTemplate,
+  persistCatalog,
+  previewCatalogImport,
+  removeCatalog,
+} from "./catalogApi";
 import { catalogQueryKeys } from "./catalogQueries";
 import type { CatalogInput, CatalogKind } from "../types/catalog.types";
 
@@ -24,6 +30,26 @@ export function useDeleteCatalog(kind: CatalogKind) {
 
   return useMutation({
     mutationFn: (id: string) => removeCatalog(kind, id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: catalogQueryKeys.all }),
+  });
+}
+
+export function useDownloadCatalogTemplate(kind: CatalogKind) {
+  return useMutation({ mutationFn: () => downloadCatalogTemplate(kind) });
+}
+
+export function usePreviewCatalogImport(kind: CatalogKind) {
+  return useMutation({
+    mutationFn: (file: File) => previewCatalogImport(kind, file),
+  });
+}
+
+export function useConfirmCatalogImport() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) => confirmCatalogImport(token),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: catalogQueryKeys.all }),
   });
