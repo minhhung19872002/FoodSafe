@@ -5,7 +5,6 @@ import {
   TREATMENT_RESULT_CONFIG,
   VICTIM_GENDER_CONFIG,
   type FoodPoisoningCase,
-  type TreatmentResult,
   type VictimGender,
 } from "../types/foodPoisoning.types";
 

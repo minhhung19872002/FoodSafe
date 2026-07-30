@@ -75,7 +75,7 @@ const groupThousands = (value: string) =>
 export function InspectionResultEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
   const { token } = theme.useToken();
-  const { open, item } = props;
+  const { item } = props;
 
   const { data: usersData, isLoading: isLoadingUsers } = useAdminUsers({
     skipCount: 0,

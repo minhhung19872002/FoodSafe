@@ -75,7 +75,6 @@ import {
   type PoisoningCaseStatus,
   type PoisoningIncidentStatus,
   type TreatmentResult,
-  type VictimGender,
 } from "../types/foodPoisoning.types";
 import { useTablePagination } from "@/hooks/useTablePagination";
 
