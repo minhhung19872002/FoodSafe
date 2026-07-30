@@ -61,9 +61,7 @@ export function CitizenReportModerationQueue() {
   const canAssign = hasPermission("FoodSafe.AlertsAndTesting.Alerts.Assign");
 
   const pagination = useTablePagination(15);
-  const [statusFilter, setStatusFilter] = useState<AlertStatus | undefined>(
-    ALERT_STATUS.Draft,
-  );
+  const [statusFilter, setStatusFilter] = useState<AlertStatus | undefined>();
   const [keywordFilter, setKeywordFilter] = useState<string | undefined>();
 
   const queryFilter = {
@@ -267,19 +265,18 @@ export function CitizenReportModerationQueue() {
             }}
           />
           <Select
+            allowClear
+            placeholder="Tất cả trạng thái"
             value={statusFilter}
             style={{ width: 160 }}
             onChange={(v) => {
               setStatusFilter(v as AlertStatus | undefined);
               pagination.resetToFirstPage();
             }}
-            options={[
-              { value: undefined, label: "Tất cả trạng thái" },
-              ...Object.entries(ALERT_STATUS_CONFIG).map(([value, cfg]) => ({
-                value: Number(value) as AlertStatus,
-                label: cfg.label,
-              })),
-            ]}
+            options={Object.entries(ALERT_STATUS_CONFIG).map(([value, cfg]) => ({
+              value: Number(value) as AlertStatus,
+              label: cfg.label,
+            }))}
           />
         </Space>
         <Tooltip title="Tải lại danh sách">
