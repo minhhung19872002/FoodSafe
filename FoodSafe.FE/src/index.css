@@ -154,6 +154,17 @@ button {
   overflow: hidden;
   white-space: nowrap;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.sidebar-logo:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-logo:focus-visible {
+  outline: 2px solid var(--fs-green-light);
+  outline-offset: -3px;
 }
 
 .sidebar-logo-image {

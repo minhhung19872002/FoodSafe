@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   Layout,
   Menu,
@@ -378,7 +378,12 @@ export function AppLayout() {
 
   const sidebarContent = (
     <>
-      <div className="sidebar-logo">
+      <Link
+        to="/dashboard"
+        className="sidebar-logo"
+        aria-label="Về trang chủ"
+        onClick={() => setMobileOpen(false)}
+      >
         <img
           src={
             branding.data?.hasLogo ? brandingLogoUrl : defaultBrandingLogoUrl
@@ -390,7 +395,7 @@ export function AppLayout() {
           <span className="sidebar-logo-title">FoodSafe</span>
           <span className="sidebar-logo-subtitle">Quản lý ATTP Quảng Ninh</span>
         </div>
-      </div>
+      </Link>
       <Menu
         theme="dark"
         mode="inline"
