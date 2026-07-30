@@ -199,7 +199,7 @@ public class OrganizationAppService :
         {
             var filter = input.Filter.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.Code.Contains(filter) ||
+                x.Code.ToUpper().Contains(filter) ||
                 x.Name.ToUpper().Contains(filter));
         }
 

@@ -43,12 +43,12 @@ public class ProductAppService : ApplicationService, IProductAppService
         var query = await ScopedQueryAsync(DataScopeOperation.View);
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.Name.Contains(filter) ||
-                (x.Code != null && x.Code.Contains(filter)) ||
-                (x.BrandName != null && x.BrandName.Contains(filter)) ||
-                (x.Manufacturer != null && x.Manufacturer.Contains(filter)));
+                x.Name.ToUpper().Contains(filter) ||
+                (x.Code != null && x.Code.ToUpper().Contains(filter)) ||
+                (x.BrandName != null && x.BrandName.ToUpper().Contains(filter)) ||
+                (x.Manufacturer != null && x.Manufacturer.ToUpper().Contains(filter)));
         }
         if (input.BusinessId.HasValue)
             query = query.Where(x => x.BusinessId == input.BusinessId);

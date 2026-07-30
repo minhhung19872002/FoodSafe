@@ -68,12 +68,12 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
 
         if (!input.Filter.IsNullOrWhiteSpace())
         {
-            var filter = input.Filter!.Trim();
+            var filter = input.Filter!.Trim().ToUpperInvariant();
             query = query.Where(x =>
-                x.Name.Contains(filter) ||
-                (x.Code != null && x.Code.Contains(filter)) ||
-                (x.TaxCode != null && x.TaxCode.Contains(filter)) ||
-                (x.AddressStreet != null && x.AddressStreet.Contains(filter)));
+                x.Name.ToUpper().Contains(filter) ||
+                (x.Code != null && x.Code.ToUpper().Contains(filter)) ||
+                (x.TaxCode != null && x.TaxCode.ToUpper().Contains(filter)) ||
+                (x.AddressStreet != null && x.AddressStreet.ToUpper().Contains(filter)));
         }
         if (input.OrganizationId.HasValue)
             query = query.Where(x => x.OrganizationId == input.OrganizationId);

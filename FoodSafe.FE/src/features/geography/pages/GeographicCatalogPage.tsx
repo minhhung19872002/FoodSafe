@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   App,
   Button,
   Empty,
+  Input,
   Popconfirm,
   Select,
   Space,
@@ -12,9 +13,11 @@ import {
   Tag,
 } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useCommunesByProvince, useProvinces } from "@/hooks/useGeography";
 import { extractApiError } from "@/lib/apiError";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { matchesSearch } from "@/utils/textSearch";
 import {
   createGeographicItem,
   deleteGeographicItem,
@@ -52,6 +55,10 @@ export default function GeographicCatalogPage() {
   const provinces = useProvinces(false);
   const [provinceId, setProvinceId] = useState("");
   const communes = useCommunesByProvince(provinceId, false);
+  const [provinceFilter, setProvinceFilter] = useState("");
+  const debouncedProvinceFilter = useDebounce(provinceFilter);
+  const [communeFilter, setCommuneFilter] = useState("");
+  const debouncedCommuneFilter = useDebounce(communeFilter);
   const [modal, setModal] = useState<ModalState>();
   const [detail, setDetail] = useState<{
     kind: GeographicKind;
@@ -64,6 +71,26 @@ export default function GeographicCatalogPage() {
       setProvinceId(items[0]?.id ?? "");
     }
   }, [provinceId, provinces.data?.items]);
+
+  const filteredProvinces = useMemo(
+    () =>
+      (provinces.data?.items ?? []).filter(
+        (item) =>
+          matchesSearch(item.name, debouncedProvinceFilter) ||
+          matchesSearch(item.code, debouncedProvinceFilter),
+      ),
+    [provinces.data?.items, debouncedProvinceFilter],
+  );
+
+  const filteredCommunes = useMemo(
+    () =>
+      (communes.data?.items ?? []).filter(
+        (item) =>
+          matchesSearch(item.name, debouncedCommuneFilter) ||
+          matchesSearch(item.code, debouncedCommuneFilter),
+      ),
+    [communes.data?.items, debouncedCommuneFilter],
+  );
 
   const saveMutation = useMutation({
     mutationFn: (input: GeographicUpsert) => {
@@ -199,20 +226,27 @@ export default function GeographicCatalogPage() {
                   size="middle"
                   style={{ width: "100%" }}
                 >
-                  {canManage && (
-                    <Button
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      onClick={() => setModal({ kind: "province" })}
-                    >
-                      Thêm tỉnh/thành phố
-                    </Button>
-                  )}
-                  {table(
-                    "province",
-                    provinces.data?.items ?? [],
-                    provinces.isLoading,
-                  )}
+                  <Space wrap>
+                    <Input.Search
+                      allowClear
+                      placeholder="Tìm theo mã hoặc tên"
+                      value={provinceFilter}
+                      onChange={(event) =>
+                        setProvinceFilter(event.target.value)
+                      }
+                      style={{ width: 320 }}
+                    />
+                    {canManage && (
+                      <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={() => setModal({ kind: "province" })}
+                      >
+                        Thêm tỉnh/thành phố
+                      </Button>
+                    )}
+                  </Space>
+                  {table("province", filteredProvinces, provinces.isLoading)}
                 </Space>
               ),
             },
@@ -249,11 +283,14 @@ export default function GeographicCatalogPage() {
                       </Button>
                     )}
                   </Space>
-                  {table(
-                    "commune",
-                    communes.data?.items ?? [],
-                    communes.isLoading,
-                  )}
+                  <Input.Search
+                    allowClear
+                    placeholder="Tìm theo mã hoặc tên"
+                    value={communeFilter}
+                    onChange={(event) => setCommuneFilter(event.target.value)}
+                    style={{ width: 320 }}
+                  />
+                  {table("commune", filteredCommunes, communes.isLoading)}
                 </Space>
               ),
             },

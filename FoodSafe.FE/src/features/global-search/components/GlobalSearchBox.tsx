@@ -10,7 +10,7 @@ import { useGlobalSearch } from "../api/globalSearchQueries";
 
 export function GlobalSearchBox() {
   const [inputValue, setInputValue] = useState("");
-  const debouncedQ = useDebounce(inputValue, 300);
+  const debouncedQ = useDebounce(inputValue);
   const navigate = useNavigate();
   const inputRef = useRef<InputRef>(null);
 

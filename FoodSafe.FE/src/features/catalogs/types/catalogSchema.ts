@@ -21,7 +21,12 @@ const catalogSchema = z.object({
   provinceId: optionalText,
   communeId: optionalText,
   contactPerson: optionalText,
-  phone: optionalText,
+  phone: z
+    .string()
+    .trim()
+    .regex(/^[0-9+()\-.\s]{6,20}$/, "Số điện thoại không hợp lệ")
+    .optional()
+    .or(z.literal("")),
   email: z
     .string()
     .trim()

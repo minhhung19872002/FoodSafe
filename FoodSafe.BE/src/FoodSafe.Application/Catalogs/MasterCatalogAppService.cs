@@ -52,8 +52,11 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
     {
         var query = await _countries.GetQueryableAsync();
         if (!input.Filter.IsNullOrWhiteSpace())
-            query = query.Where(x => x.CodeAlpha2.Contains(input.Filter!) || x.NameVi.Contains(input.Filter!)
-                || (x.NameEn != null && x.NameEn.Contains(input.Filter!)));
+        {
+            var filter = input.Filter!.Trim().ToUpperInvariant();
+            query = query.Where(x => x.CodeAlpha2.ToUpper().Contains(filter) || x.NameVi.ToUpper().Contains(filter)
+                || (x.NameEn != null && x.NameEn.ToUpper().Contains(filter)));
+        }
         if (input.IsActive.HasValue) query = query.Where(x => x.IsActive == input.IsActive);
         return await PageAsync<Country, CountryDto>(
             query.OrderBy(x => x.SortOrder).ThenBy(x => x.NameVi), input);
@@ -301,7 +304,10 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
         IQueryable<TEntity> query, MasterCatalogListInput input) where TEntity : MasterCatalog
     {
         if (!input.Filter.IsNullOrWhiteSpace())
-            query = query.Where(x => x.Code.Contains(input.Filter!) || x.Name.Contains(input.Filter!));
+        {
+            var filter = input.Filter!.Trim().ToUpperInvariant();
+            query = query.Where(x => x.Code.ToUpper().Contains(filter) || x.Name.ToUpper().Contains(filter));
+        }
         if (input.IsActive.HasValue) query = query.Where(x => x.IsActive == input.IsActive);
         return await PageAsync<TEntity, TDto>(
             query.OrderBy(x => x.SortOrder).ThenBy(x => x.Name), input);
@@ -311,7 +317,10 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
         IQueryable<TEntity> query, MasterCatalogListInput input) where TEntity : AdministrativeArea
     {
         if (!input.Filter.IsNullOrWhiteSpace())
-            query = query.Where(x => x.Code.Contains(input.Filter!) || x.Name.Contains(input.Filter!));
+        {
+            var filter = input.Filter!.Trim().ToUpperInvariant();
+            query = query.Where(x => x.Code.ToUpper().Contains(filter) || x.Name.ToUpper().Contains(filter));
+        }
         if (input.IsActive.HasValue) query = query.Where(x => x.IsActive == input.IsActive);
         return await PageAsync<TEntity, TDto>(
             query.OrderBy(x => x.SortOrder).ThenBy(x => x.Name), input);

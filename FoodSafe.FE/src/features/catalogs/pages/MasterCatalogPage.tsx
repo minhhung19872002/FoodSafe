@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useProvinces } from "@/hooks/useGeography";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { App, Tag } from "antd";
 import { useMutation } from "@tanstack/react-query";
@@ -28,6 +30,7 @@ export default function MasterCatalogPage() {
   const { message } = App.useApp();
   const [kind, setKind] = useState<CatalogKind>("country");
   const [filter, setFilter] = useState("");
+  const debouncedFilter = useDebounce(filter);
   const pagination = useTablePagination(20);
   const [productGroupSearch, setProductGroupSearch] = useState("");
   const [testingCenterSearch, setTestingCenterSearch] = useState("");
@@ -44,7 +47,7 @@ export default function MasterCatalogPage() {
   );
 
   const catalog = useCatalog(kind, {
-    filter: filter || undefined,
+    filter: debouncedFilter || undefined,
     skipCount: pagination.skipCount,
     maxResultCount: pagination.maxResultCount,
   });
@@ -53,6 +56,7 @@ export default function MasterCatalogPage() {
     "testing-center",
     testingCenterSearch,
   );
+  const provinces = useProvinces();
   const saveCatalog = useSaveCatalog(kind);
   const deleteCatalog = useDeleteCatalog(kind);
   const exportServices = useMutation({
@@ -193,6 +197,12 @@ export default function MasterCatalogPage() {
           canCreate={canCreate}
           canEdit={canEdit}
           canDelete={canDelete}
+          productGroupOptions={productGroups.data?.items ?? []}
+          testingCenterOptions={testingCenters.data?.items ?? []}
+          provinceOptions={(provinces.data?.items ?? []).map((item) => ({
+            id: item.id,
+            name: item.name,
+          }))}
           onKindChange={(nextKind) => {
             setKind(nextKind);
             setFilter("");
