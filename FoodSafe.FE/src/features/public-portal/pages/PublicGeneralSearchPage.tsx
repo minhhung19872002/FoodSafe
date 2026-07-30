@@ -5,6 +5,7 @@ import {
   Button,
   Empty,
   Input,
+  Select,
   Space,
   Spin,
   Table,
@@ -17,7 +18,9 @@ import { PublicShell } from "../components/PublicShell";
 import {
   usePublicBusinessMapData,
   usePublicBusinessSearch,
+  usePublicBusinessTypeOptions,
   usePublicInspectionResults,
+  usePublicProductGroupOptions,
   usePublicProductSearch,
   usePublicTestingResults,
 } from "../api/publicPortalQueries";
@@ -26,6 +29,7 @@ import {
   BUSINESS_STATUS_CONFIG,
   INSPECTION_OVERALL_RESULT_CONFIG,
   INSPECTION_TYPE_CONFIG,
+  TESTING_OUTCOME,
   TESTING_OUTCOME_CONFIG,
   type BusinessStatus,
   type InspectionOverallResult,
@@ -43,19 +47,22 @@ function BusinessSearchTab() {
   const initialKeyword = useInitialKeyword();
   const [keyword, setKeyword] = useState(initialKeyword);
   const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
+  const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
+  const [submittedTypeIds, setSubmittedTypeIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<string>("list");
   const pagination = useTablePagination(20);
 
+  const { data: businessTypes } = usePublicBusinessTypeOptions();
+
   const listFilter = {
     Keyword: submittedKeyword || undefined,
+    BusinessTypeIds: submittedTypeIds.length > 0 ? submittedTypeIds : undefined,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   };
 
   const { data, isFetching, isError } = usePublicBusinessSearch(listFilter);
 
-  // Map data: fetch a large page (up to 500) keyed to the submitted keyword so
-  // switching tabs does not re-trigger a search.
   const { data: mapData, isFetching: isMapFetching } = usePublicBusinessMapData(
     submittedKeyword || undefined,
   );
@@ -63,11 +70,12 @@ function BusinessSearchTab() {
   const handleSearch = () => {
     pagination.resetToFirstPage();
     setSubmittedKeyword(keyword);
+    setSubmittedTypeIds(selectedTypeIds);
   };
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space>
+      <Space wrap>
         <Input
           value={keyword}
           placeholder="Tên hoặc mã cơ sở..."
@@ -75,6 +83,16 @@ function BusinessSearchTab() {
           onPressEnter={handleSearch}
           allowClear
           style={{ width: 350 }}
+        />
+        <Select
+          mode="multiple"
+          value={selectedTypeIds}
+          onChange={setSelectedTypeIds}
+          placeholder="Loại hình"
+          allowClear
+          style={{ minWidth: 220 }}
+          maxTagCount="responsive"
+          options={businessTypes?.map((t) => ({ label: t.name, value: t.id }))}
         />
         <Button type="primary" loading={isFetching || isMapFetching} onClick={handleSearch}>
           Tìm kiếm
@@ -182,10 +200,15 @@ function ProductSearchTab() {
   const initialKeyword = useInitialKeyword();
   const [keyword, setKeyword] = useState(initialKeyword);
   const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>();
+  const [submittedGroupId, setSubmittedGroupId] = useState<string>();
   const pagination = useTablePagination(20);
+
+  const { data: productGroups } = usePublicProductGroupOptions();
 
   const filter = {
     Keyword: submittedKeyword || undefined,
+    ProductGroupId: submittedGroupId,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   };
@@ -195,11 +218,12 @@ function ProductSearchTab() {
   const handleSearch = () => {
     pagination.resetToFirstPage();
     setSubmittedKeyword(keyword);
+    setSubmittedGroupId(selectedGroupId);
   };
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space>
+      <Space wrap>
         <Input
           value={keyword}
           placeholder="Tên hoặc mã sản phẩm..."
@@ -207,6 +231,14 @@ function ProductSearchTab() {
           onPressEnter={handleSearch}
           allowClear
           style={{ width: 350 }}
+        />
+        <Select
+          value={selectedGroupId}
+          onChange={setSelectedGroupId}
+          placeholder="Nhóm sản phẩm"
+          allowClear
+          style={{ minWidth: 220 }}
+          options={productGroups?.map((g) => ({ label: g.name, value: g.id }))}
         />
         <Button type="primary" loading={isFetching} onClick={handleSearch}>
           Tìm kiếm
@@ -256,14 +288,21 @@ function ProductSearchTab() {
   );
 }
 
+const TESTING_OUTCOME_OPTIONS = Object.entries(TESTING_OUTCOME_CONFIG).map(
+  ([value, cfg]) => ({ label: cfg.label, value: Number(value) }),
+);
+
 function TestingResultSearchTab() {
   const initialKeyword = useInitialKeyword();
   const [keyword, setKeyword] = useState(initialKeyword);
   const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
+  const [selectedOutcome, setSelectedOutcome] = useState<TestingOutcome>();
+  const [submittedOutcome, setSubmittedOutcome] = useState<TestingOutcome>();
   const pagination = useTablePagination(20);
 
   const filter = {
     Keyword: submittedKeyword || undefined,
+    Outcome: submittedOutcome,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   };
@@ -273,11 +312,12 @@ function TestingResultSearchTab() {
   const handleSearch = () => {
     pagination.resetToFirstPage();
     setSubmittedKeyword(keyword);
+    setSubmittedOutcome(selectedOutcome);
   };
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Space>
+      <Space wrap>
         <Input
           value={keyword}
           placeholder="Tên hoặc mã mẫu kiểm nghiệm..."
@@ -285,6 +325,14 @@ function TestingResultSearchTab() {
           onPressEnter={handleSearch}
           allowClear
           style={{ width: 350 }}
+        />
+        <Select
+          value={selectedOutcome}
+          onChange={setSelectedOutcome}
+          placeholder="Kết quả"
+          allowClear
+          style={{ minWidth: 180 }}
+          options={TESTING_OUTCOME_OPTIONS}
         />
         <Button type="primary" loading={isFetching} onClick={handleSearch}>
           Tìm kiếm

@@ -2,12 +2,14 @@ import { api } from "@/lib/axios";
 import type {
   AlertReportInput,
   AlertReportResult,
+  CatalogOption,
   CitizenReportStatus,
   PagedFilter,
   PagedResult,
   PublicAlert,
   PublicAlertFilter,
   PublicBusiness,
+  PublicBusinessFilter,
   PublicCertificate,
   PublicDocument,
   PublicInspectionResult,
@@ -15,22 +17,29 @@ import type {
   PublicNewsFilter,
   PublicNewsItem,
   PublicProduct,
+  PublicProductFilter,
   PublicRiskAnalysis,
   PublicRiskAnalysisFilter,
   PublicTestingResult,
+  PublicTestingResultFilter,
   PublicWarnedBusiness,
 } from "../types/publicPortal.types";
 
 export const publicPortalApi = {
-  searchBusinesses(filter: PagedFilter): Promise<PagedResult<PublicBusiness>> {
+  searchBusinesses(
+    filter: PublicBusinessFilter,
+  ): Promise<PagedResult<PublicBusiness>> {
     return api
       .get<PagedResult<PublicBusiness>>("/v1/public/businesses/search", {
         params: filter,
+        paramsSerializer: { indexes: null },
       })
       .then((r) => r.data);
   },
 
-  searchProducts(filter: PagedFilter): Promise<PagedResult<PublicProduct>> {
+  searchProducts(
+    filter: PublicProductFilter,
+  ): Promise<PagedResult<PublicProduct>> {
     return api
       .get<PagedResult<PublicProduct>>("/v1/public/products/search", {
         params: filter,
@@ -151,12 +160,24 @@ export const publicPortalApi = {
   },
 
   listTestingResults(
-    filter: PagedFilter,
+    filter: PublicTestingResultFilter,
   ): Promise<PagedResult<PublicTestingResult>> {
     return api
       .get<PagedResult<PublicTestingResult>>("/v1/public/testing-results", {
         params: filter,
       })
+      .then((r) => r.data);
+  },
+
+  fetchBusinessTypeOptions(): Promise<CatalogOption[]> {
+    return api
+      .get<CatalogOption[]>("/v1/public/catalog/business-types")
+      .then((r) => r.data);
+  },
+
+  fetchProductGroupOptions(): Promise<CatalogOption[]> {
+    return api
+      .get<CatalogOption[]>("/v1/public/catalog/product-groups")
       .then((r) => r.data);
   },
 

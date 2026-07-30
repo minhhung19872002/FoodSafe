@@ -11,6 +11,23 @@ export interface PagedFilter {
   MaxResultCount: number;
 }
 
+export interface PublicBusinessFilter extends PagedFilter {
+  BusinessTypeIds?: string[];
+}
+
+export interface PublicProductFilter extends PagedFilter {
+  ProductGroupId?: string;
+}
+
+export interface PublicTestingResultFilter extends PagedFilter {
+  Outcome?: TestingOutcome;
+}
+
+export interface CatalogOption {
+  id: string;
+  name: string;
+}
+
 // ── Business status ──────────────────────────────────────────────────────────
 
 export const BUSINESS_STATUS = {

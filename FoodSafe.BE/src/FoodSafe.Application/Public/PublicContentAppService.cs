@@ -245,7 +245,7 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
     }
 
     public async Task<PagedResultDto<PublicTestingResultDto>> GetTestingResultsAsync(
-        PublicSearchRequestDto input)
+        PublicTestingResultSearchRequestDto input)
     {
         var query = (await _testingResults.GetQueryableAsync())
             .Where(t => t.IsPublic && t.BusinessId != null);
@@ -255,6 +255,11 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
             query = query.Where(t =>
                 t.SampleCode.Contains(keyword)
                 || t.SampleName.Contains(keyword));
+        }
+
+        if (input.Outcome.HasValue)
+        {
+            query = query.Where(t => t.Outcome == input.Outcome.Value);
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);

@@ -14,8 +14,29 @@ public class PublicSearchRequestDto
     [Range(0, int.MaxValue)]
     public int SkipCount { get; set; }
 
-    [Range(1, 50)]
+    [Range(1, 500)]
     public int MaxResultCount { get; set; } = 10;
+}
+
+public class PublicBusinessSearchRequestDto : PublicSearchRequestDto
+{
+    public List<Guid>? BusinessTypeIds { get; set; }
+}
+
+public class PublicProductSearchRequestDto : PublicSearchRequestDto
+{
+    public Guid? ProductGroupId { get; set; }
+}
+
+public class PublicTestingResultSearchRequestDto : PublicSearchRequestDto
+{
+    public TestingResultOutcome? Outcome { get; set; }
+}
+
+public class CatalogOptionDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
 }
 
 public class PublicBusinessSummaryDto
@@ -231,8 +252,10 @@ public interface ICitizenNewsReportAppService
 
 public interface IPublicDirectoryAppService
 {
-    Task<PagedResultDto<PublicBusinessSummaryDto>> SearchBusinessesAsync(PublicSearchRequestDto input);
-    Task<PagedResultDto<PublicProductSummaryDto>> SearchProductsAsync(PublicSearchRequestDto input);
+    Task<PagedResultDto<PublicBusinessSummaryDto>> SearchBusinessesAsync(PublicBusinessSearchRequestDto input);
+    Task<PagedResultDto<PublicProductSummaryDto>> SearchProductsAsync(PublicProductSearchRequestDto input);
+    Task<List<CatalogOptionDto>> GetBusinessTypeOptionsAsync();
+    Task<List<CatalogOptionDto>> GetProductGroupOptionsAsync();
 }
 
 public interface IPublicCertificateSearchAppService
@@ -253,7 +276,7 @@ public interface IPublicContentAppService
     Task<PagedResultDto<PublicWarnedBusinessDto>> GetWarnedBusinessesAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicDocumentDto>> GetDocumentsAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicRiskAnalysisDto>> GetRiskAnalysesAsync(PublicSearchRequestDto input);
-    Task<PagedResultDto<PublicTestingResultDto>> GetTestingResultsAsync(PublicSearchRequestDto input);
+    Task<PagedResultDto<PublicTestingResultDto>> GetTestingResultsAsync(PublicTestingResultSearchRequestDto input);
     Task<PagedResultDto<PublicInspectionResultDto>> GetInspectionResultsAsync(PublicSearchRequestDto input);
 
     /// <summary>

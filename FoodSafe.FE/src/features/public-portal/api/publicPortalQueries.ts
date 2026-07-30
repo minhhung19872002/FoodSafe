@@ -3,20 +3,23 @@ import { publicPortalApi } from "./publicPortalApi";
 import type {
   PagedFilter,
   PublicAlertFilter,
+  PublicBusinessFilter,
   PublicNewsFilter,
+  PublicProductFilter,
   PublicRiskAnalysisFilter,
+  PublicTestingResultFilter,
 } from "../types/publicPortal.types";
 
 const QK = "public-portal" as const;
 
-export function usePublicBusinessSearch(filter: PagedFilter) {
+export function usePublicBusinessSearch(filter: PublicBusinessFilter) {
   return useQuery({
     queryKey: [QK, "businesses", filter],
     queryFn: () => publicPortalApi.searchBusinesses(filter),
   });
 }
 
-export function usePublicProductSearch(filter: PagedFilter) {
+export function usePublicProductSearch(filter: PublicProductFilter) {
   return useQuery({
     queryKey: [QK, "products", filter],
     queryFn: () => publicPortalApi.searchProducts(filter),
@@ -108,10 +111,26 @@ export function usePublicRiskAnalyses(filter: PublicRiskAnalysisFilter) {
   });
 }
 
-export function usePublicTestingResults(filter: PagedFilter) {
+export function usePublicTestingResults(filter: PublicTestingResultFilter) {
   return useQuery({
     queryKey: [QK, "testing-results", filter],
     queryFn: () => publicPortalApi.listTestingResults(filter),
+  });
+}
+
+export function usePublicBusinessTypeOptions() {
+  return useQuery({
+    queryKey: [QK, "catalog", "business-types"],
+    queryFn: () => publicPortalApi.fetchBusinessTypeOptions(),
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+export function usePublicProductGroupOptions() {
+  return useQuery({
+    queryKey: [QK, "catalog", "product-groups"],
+    queryFn: () => publicPortalApi.fetchProductGroupOptions(),
+    staleTime: 10 * 60 * 1000,
   });
 }
 

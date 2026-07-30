@@ -16,13 +16,21 @@ public sealed class PublicDirectoryController(
 {
     [HttpGet("businesses/search")]
     public Task<PagedResultDto<PublicBusinessSummaryDto>> SearchBusinessesAsync(
-        [FromQuery] PublicSearchRequestDto input) =>
+        [FromQuery] PublicBusinessSearchRequestDto input) =>
         service.SearchBusinessesAsync(input);
 
     [HttpGet("products/search")]
     public Task<PagedResultDto<PublicProductSummaryDto>> SearchProductsAsync(
-        [FromQuery] PublicSearchRequestDto input) =>
+        [FromQuery] PublicProductSearchRequestDto input) =>
         service.SearchProductsAsync(input);
+
+    [HttpGet("catalog/business-types")]
+    public Task<List<CatalogOptionDto>> GetBusinessTypeOptionsAsync() =>
+        service.GetBusinessTypeOptionsAsync();
+
+    [HttpGet("catalog/product-groups")]
+    public Task<List<CatalogOptionDto>> GetProductGroupOptionsAsync() =>
+        service.GetProductGroupOptionsAsync();
 }
 
 [RemoteService]
@@ -101,7 +109,7 @@ public sealed class PublicContentController(
 
     [HttpGet("testing-results")]
     public Task<PagedResultDto<PublicTestingResultDto>> GetTestingResultsAsync(
-        [FromQuery] PublicSearchRequestDto input) =>
+        [FromQuery] PublicTestingResultSearchRequestDto input) =>
         service.GetTestingResultsAsync(input);
 
     [HttpGet("inspection-results")]

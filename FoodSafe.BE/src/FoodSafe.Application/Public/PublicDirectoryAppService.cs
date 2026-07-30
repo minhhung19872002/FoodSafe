@@ -41,7 +41,7 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
     }
 
     public async Task<PagedResultDto<PublicBusinessSummaryDto>> SearchBusinessesAsync(
-        PublicSearchRequestDto input)
+        PublicBusinessSearchRequestDto input)
     {
         var query = await _businesses.GetQueryableAsync();
         var keyword = input.Keyword?.Trim();
@@ -50,6 +50,12 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
             query = query.Where(b =>
                 b.Name.Contains(keyword)
                 || (b.Code != null && b.Code.Contains(keyword)));
+        }
+
+        if (input.BusinessTypeIds is { Count: > 0 })
+        {
+            query = query.Where(b =>
+                b.BusinessTypeId.HasValue && input.BusinessTypeIds.Contains(b.BusinessTypeId.Value));
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
@@ -99,8 +105,26 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
             }).ToList());
     }
 
+    public async Task<List<CatalogOptionDto>> GetBusinessTypeOptionsAsync()
+    {
+        var items = await _businessTypes.GetListAsync(
+            t => t.IsActive, cancellationToken: _cancellationTokens.Token);
+        return items.OrderBy(t => t.SortOrder).ThenBy(t => t.Name)
+            .Select(t => new CatalogOptionDto { Id = t.Id, Name = t.Name })
+            .ToList();
+    }
+
+    public async Task<List<CatalogOptionDto>> GetProductGroupOptionsAsync()
+    {
+        var items = await _productGroups.GetListAsync(
+            g => g.IsActive, cancellationToken: _cancellationTokens.Token);
+        return items.OrderBy(g => g.SortOrder).ThenBy(g => g.Name)
+            .Select(g => new CatalogOptionDto { Id = g.Id, Name = g.Name })
+            .ToList();
+    }
+
     public async Task<PagedResultDto<PublicProductSummaryDto>> SearchProductsAsync(
-        PublicSearchRequestDto input)
+        PublicProductSearchRequestDto input)
     {
         var query = await _products.GetQueryableAsync();
         var keyword = input.Keyword?.Trim();
@@ -111,6 +135,11 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
                 || (p.Code != null && p.Code.Contains(keyword))
                 || (p.BrandName != null && p.BrandName.Contains(keyword))
                 || (p.Manufacturer != null && p.Manufacturer.Contains(keyword)));
+        }
+
+        if (input.ProductGroupId.HasValue)
+        {
+            query = query.Where(p => p.ProductGroupId == input.ProductGroupId.Value);
         }
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
