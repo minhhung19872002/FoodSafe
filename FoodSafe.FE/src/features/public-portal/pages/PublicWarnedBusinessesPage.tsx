@@ -1,4 +1,15 @@
-import { Alert, Empty, Space, Spin, Table, Tag, Typography } from "antd";
+import { useState } from "react";
+import {
+  Alert,
+  Button,
+  Empty,
+  Input,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+} from "antd";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { PublicShell } from "../components/PublicShell";
 import { usePublicWarnedBusinesses } from "../api/publicPortalQueries";
@@ -9,14 +20,22 @@ import {
 } from "../types/publicPortal.types";
 
 export default function PublicWarnedBusinessesPage() {
+  const [keyword, setKeyword] = useState("");
+  const [submittedKeyword, setSubmittedKeyword] = useState("");
   const pagination = useTablePagination(20);
 
   const filter = {
+    Keyword: submittedKeyword || undefined,
     SkipCount: pagination.skipCount,
     MaxResultCount: pagination.maxResultCount,
   };
 
   const { data, isFetching, isError } = usePublicWarnedBusinesses(filter);
+
+  const handleSearch = () => {
+    pagination.resetToFirstPage();
+    setSubmittedKeyword(keyword);
+  };
 
   return (
     <PublicShell>
@@ -27,6 +46,20 @@ export default function PublicWarnedBusinessesPage() {
         Danh sách các cơ sở sản xuất kinh doanh thực phẩm đang bị cơ quan quản
         lý cảnh báo vi phạm an toàn thực phẩm.
       </Typography.Paragraph>
+
+      <Space wrap style={{ marginBottom: 16 }}>
+        <Input
+          value={keyword}
+          placeholder="Tên hoặc mã cơ sở..."
+          onChange={(e) => setKeyword(e.target.value)}
+          onPressEnter={handleSearch}
+          allowClear
+          style={{ width: 350 }}
+        />
+        <Button type="primary" loading={isFetching} onClick={handleSearch}>
+          Tìm kiếm
+        </Button>
+      </Space>
 
       {isError && (
         <Alert

@@ -130,9 +130,7 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
     {
         var query = (await _alerts.GetQueryableAsync())
             .Where(a => a.Status == AlertStatus.Published && a.IsPublic && a.BusinessId != null);
-        var keyword = input.Keyword?.Trim();
 
-        var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
         var alerts = await AsyncExecuter.ToListAsync(
             query.OrderByDescending(a => a.PublishedAt),
             _cancellationTokens.Token);
@@ -160,6 +158,7 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
                 };
             });
 
+        var keyword = input.Keyword?.Trim();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             rows = rows.Where(r =>
@@ -169,7 +168,7 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
 
         var list = rows.ToList();
         return new PagedResultDto<PublicWarnedBusinessDto>(
-            string.IsNullOrWhiteSpace(keyword) ? totalCount : list.Count,
+            list.Count,
             list.Skip(input.SkipCount).Take(input.MaxResultCount).ToList());
     }
 
