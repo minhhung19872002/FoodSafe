@@ -58,7 +58,11 @@ export function AdvertisementRegistrationEditorModal(props: Props) {
         contentDescription: item.contentDescription,
         notes: item.notes,
       }
-    : { registrationDate: dayjs(), productIds: [], businessId: props.defaultBusinessId };
+    : {
+        registrationDate: dayjs(),
+        productIds: [],
+        businessId: props.defaultBusinessId,
+      };
 
   useEffect(() => {
     if (!open) return;

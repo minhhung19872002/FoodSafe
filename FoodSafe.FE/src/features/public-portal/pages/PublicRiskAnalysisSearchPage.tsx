@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Alert, Button, Empty, Input, Space, Spin, Table, Tag, Typography } from "antd";
+import {
+  Alert,
+  Button,
+  Empty,
+  Input,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+} from "antd";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { PublicShell } from "../components/PublicShell";
 import { usePublicRiskAnalyses } from "../api/publicPortalQueries";

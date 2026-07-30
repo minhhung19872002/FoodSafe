@@ -24,7 +24,9 @@ export function usePasswordPolicy() {
   return useQuery({
     queryKey: ["public-password-policy"] as const,
     queryFn: async () => {
-      const response = await api.get<PasswordPolicy>("/v1/public/password-policy");
+      const response = await api.get<PasswordPolicy>(
+        "/v1/public/password-policy",
+      );
       return response.data;
     },
     staleTime: 300_000,
@@ -35,8 +37,14 @@ export function usePasswordPolicy() {
 export function passwordPolicySchema(policy: PasswordPolicy) {
   let schema = z
     .string()
-    .min(policy.requiredLength, `Mật khẩu phải có tối thiểu ${policy.requiredLength} ký tự`)
-    .max(policy.maxLength, `Mật khẩu không được vượt quá ${policy.maxLength} ký tự`);
+    .min(
+      policy.requiredLength,
+      `Mật khẩu phải có tối thiểu ${policy.requiredLength} ký tự`,
+    )
+    .max(
+      policy.maxLength,
+      `Mật khẩu không được vượt quá ${policy.maxLength} ký tự`,
+    );
   if (policy.requireLowercase) {
     schema = schema.regex(/[a-z]/, "Mật khẩu phải có chữ thường");
   }

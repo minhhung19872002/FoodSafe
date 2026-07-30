@@ -128,7 +128,9 @@ export function ExportFoodCertificateEditorModal(props: Props) {
               <Select
                 showSearch
                 optionFilterProp="label"
-                disabled={Boolean(registration) || Boolean(props.defaultBusinessId)}
+                disabled={
+                  Boolean(registration) || Boolean(props.defaultBusinessId)
+                }
                 options={businessOptions.map((item) => ({
                   value: item.id,
                   label: item.code ? `${item.code} — ${item.name}` : item.name,

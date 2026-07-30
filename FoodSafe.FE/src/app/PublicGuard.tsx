@@ -18,7 +18,9 @@ export function PublicGuard({ children }: Props) {
 
   if (currentUser.isLoading) {
     return (
-      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+      <div
+        style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}
+      >
         <Spin size="large" tip="Đang kiểm tra phiên đăng nhập..." />
       </div>
     );

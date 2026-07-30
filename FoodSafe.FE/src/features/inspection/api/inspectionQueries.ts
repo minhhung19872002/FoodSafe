@@ -10,7 +10,13 @@ export const inspectionPlanKeys = {
   list: (filter: InspectionPlanFilter) =>
     [...inspectionPlanKeys.all, "list", filter] as const,
   businesses: (filter?: string, provinceId?: string, communeId?: string) =>
-    [...inspectionPlanKeys.all, "businesses", filter ?? "", provinceId ?? "", communeId ?? ""] as const,
+    [
+      ...inspectionPlanKeys.all,
+      "businesses",
+      filter ?? "",
+      provinceId ?? "",
+      communeId ?? "",
+    ] as const,
 };
 
 export const inspectionResultKeys = {

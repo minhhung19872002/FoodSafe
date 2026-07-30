@@ -174,7 +174,9 @@ const appRoutes: RouteObject[] = [
   },
   {
     path: "/tra-cuu-dang-ky-cong-bo",
-    element: <Navigate to="/tra-cuu-giay-phep?tab=product-registrations" replace />,
+    element: (
+      <Navigate to="/tra-cuu-giay-phep?tab=product-registrations" replace />
+    ),
   },
   {
     path: "/tra-cuu-co-so",

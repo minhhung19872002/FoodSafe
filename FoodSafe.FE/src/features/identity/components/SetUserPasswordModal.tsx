@@ -59,7 +59,8 @@ export function SetUserPasswordModal({
             {
               validator: (_, value: string | undefined) => {
                 if (!value) return Promise.resolve();
-                const result = passwordPolicySchema(activePolicy).safeParse(value);
+                const result =
+                  passwordPolicySchema(activePolicy).safeParse(value);
                 return result.success
                   ? Promise.resolve()
                   : Promise.reject(

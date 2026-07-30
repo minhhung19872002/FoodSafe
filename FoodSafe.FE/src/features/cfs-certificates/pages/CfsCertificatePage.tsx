@@ -424,7 +424,10 @@ export default function CfsCertificatePage() {
           },
           { label: "Cơ sở SXKD", render: (r) => r.businessName, span: 2 },
           { label: "Sản phẩm", render: (r) => r.linkedProductName, span: 2 },
-          { label: "Quốc gia nhập khẩu", render: (r) => r.destinationCountryName },
+          {
+            label: "Quốc gia nhập khẩu",
+            render: (r) => r.destinationCountryName,
+          },
           { label: "Cơ quan cấp", render: (r) => r.certifyingAuthority },
           {
             label: "Ngày cấp",

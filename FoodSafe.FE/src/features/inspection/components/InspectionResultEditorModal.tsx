@@ -268,8 +268,7 @@ export function InspectionResultEditorModal(props: Props) {
               }}
               options={planItems.map((it) => {
                 const isCompleted =
-                  !item &&
-                  it.status === INSPECTION_PLAN_ITEM_STATUS.Completed;
+                  !item && it.status === INSPECTION_PLAN_ITEM_STATUS.Completed;
                 return {
                   value: it.id,
                   label: isCompleted
@@ -488,10 +487,7 @@ export function InspectionResultEditorModal(props: Props) {
                     name={[field.name, "remedyDeadline"]}
                     label="Hạn khắc phục"
                   >
-                    <DatePicker
-                      format="DD/MM/YYYY"
-                      style={{ width: "100%" }}
-                    />
+                    <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
                   </Form.Item>
 
                   <Form.Item

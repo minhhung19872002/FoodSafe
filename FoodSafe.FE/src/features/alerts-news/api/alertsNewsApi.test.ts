@@ -87,9 +87,7 @@ describe("alertsNewsApi", () => {
 
     const result = await staffApi.listUsers();
 
-    expect(requestedPath).toBe(
-      "/api/v1/app/atp-alert/assignable-users",
-    );
+    expect(requestedPath).toBe("/api/v1/app/atp-alert/assignable-users");
     expect(result.items[0]?.fullName).toBe("Cán bộ Một");
   });
 });

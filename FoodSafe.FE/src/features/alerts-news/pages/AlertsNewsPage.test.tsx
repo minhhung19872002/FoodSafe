@@ -174,9 +174,7 @@ describe("AlertsNewsPage", () => {
     });
     await user.click(within(dialog).getByRole("combobox"));
     await user.click(await screen.findByText("Cán bộ Một"));
-    await user.click(
-      within(dialog).getByRole("button", { name: "Phân công" }),
-    );
+    await user.click(within(dialog).getByRole("button", { name: "Phân công" }));
 
     await waitFor(() =>
       expect(assignment).toEqual({

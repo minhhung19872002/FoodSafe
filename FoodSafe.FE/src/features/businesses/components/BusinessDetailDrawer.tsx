@@ -39,7 +39,9 @@ function formatDate(value?: string) {
 
 const dash = (v?: string) => v ?? "—";
 
-const numberColumn = (title: string): ColumnsType<BusinessRelatedRecord>[number] => ({
+const numberColumn = (
+  title: string,
+): ColumnsType<BusinessRelatedRecord>[number] => ({
   title,
   dataIndex: "number",
   width: 170,
@@ -307,10 +309,25 @@ function InspectionTable({ businessId }: { businessId: string }) {
 }
 
 const productColumns: ColumnsType<Product> = [
-  { title: "Mã", dataIndex: "code", width: 120, render: (v?: string) => v ?? "—" },
+  {
+    title: "Mã",
+    dataIndex: "code",
+    width: 120,
+    render: (v?: string) => v ?? "—",
+  },
   { title: "Tên sản phẩm", dataIndex: "name", ellipsis: true },
-  { title: "Thương hiệu", dataIndex: "brandName", ellipsis: true, render: (v?: string) => v ?? "—" },
-  { title: "Nhà sản xuất", dataIndex: "manufacturer", ellipsis: true, render: (v?: string) => v ?? "—" },
+  {
+    title: "Thương hiệu",
+    dataIndex: "brandName",
+    ellipsis: true,
+    render: (v?: string) => v ?? "—",
+  },
+  {
+    title: "Nhà sản xuất",
+    dataIndex: "manufacturer",
+    ellipsis: true,
+    render: (v?: string) => v ?? "—",
+  },
   {
     title: "Trạng thái",
     dataIndex: "status",

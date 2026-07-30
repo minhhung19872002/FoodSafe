@@ -170,14 +170,14 @@ function CasesTab() {
           r.victims && r.victims.length > 0
             ? r.victims
             : r.victimName
-            ? [
-                {
-                  name: r.victimName,
-                  age: r.victimAge,
-                  gender: r.victimGender,
-                },
-              ]
-            : [];
+              ? [
+                  {
+                    name: r.victimName,
+                    age: r.victimAge,
+                    gender: r.victimGender,
+                  },
+                ]
+              : [];
         if (list.length === 0) return "—";
         return list
           .map((v) => {

@@ -7,10 +7,7 @@ import {
 import { Alert, Button, Modal, Space, Table, Typography, Upload } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { RcFile } from "antd/es/upload/interface";
-import type {
-  ExcelImportError,
-  ExcelImportPreview,
-} from "@/types/excelImport";
+import type { ExcelImportError, ExcelImportPreview } from "@/types/excelImport";
 
 interface Props {
   title: string;

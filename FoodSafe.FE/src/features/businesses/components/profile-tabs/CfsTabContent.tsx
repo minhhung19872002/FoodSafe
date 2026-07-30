@@ -41,7 +41,9 @@ export function CfsTabContent({
       <CfsCertificateEditorModal
         open={creating}
         defaultBusinessId={businessId}
-        businesses={[{ id: businessId, name: businessName, code: businessCode }]}
+        businesses={[
+          { id: businessId, name: businessName, code: businessCode },
+        ]}
         products={products.data ?? []}
         countries={countries.data ?? []}
         productsLoading={products.isLoading}

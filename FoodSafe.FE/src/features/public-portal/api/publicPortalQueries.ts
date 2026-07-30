@@ -28,7 +28,9 @@ export function usePublicProductSearch(filter: PublicProductFilter) {
   });
 }
 
-export function usePublicEligibilityCertificates(filter: PublicCertificateFilter) {
+export function usePublicEligibilityCertificates(
+  filter: PublicCertificateFilter,
+) {
   return useQuery({
     queryKey: [QK, "eligibility-certificates", filter],
     queryFn: () => publicPortalApi.searchEligibilityCertificates(filter),
@@ -63,7 +65,9 @@ export function usePublicCfsCertificates(filter: PublicCertificateFilter) {
   });
 }
 
-export function usePublicExportFoodCertificates(filter: PublicCertificateFilter) {
+export function usePublicExportFoodCertificates(
+  filter: PublicCertificateFilter,
+) {
   return useQuery({
     queryKey: [QK, "export-food-certificates", filter],
     queryFn: () => publicPortalApi.searchExportFoodCertificates(filter),

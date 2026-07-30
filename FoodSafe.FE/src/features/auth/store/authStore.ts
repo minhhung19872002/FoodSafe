@@ -26,7 +26,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   avatarVersion: 0,
 
   setAuth: (user) => set({ user, isAuthenticated: true }),
-  clearAuth: () => set({ user: null, isAuthenticated: false, avatarVersion: 0 }),
+  clearAuth: () =>
+    set({ user: null, isAuthenticated: false, avatarVersion: 0 }),
 
   hasPermission: (permission) =>
     get().user?.permissions.includes(permission) ?? false,

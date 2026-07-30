@@ -75,9 +75,7 @@ export const alertApi = {
 
 /** Lightweight, scope-filtered active-user list for the assignment picker. */
 export const staffApi = {
-  async listUsers(
-    filter?: string,
-  ): Promise<{ items: StaffUserOption[] }> {
+  async listUsers(filter?: string): Promise<{ items: StaffUserOption[] }> {
     return (
       await api.get<{ items: StaffUserOption[] }>(
         `${alertEndpoint}/assignable-users`,

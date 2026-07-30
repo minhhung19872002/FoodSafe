@@ -50,7 +50,10 @@ export function RolePermissionsDrawer({
   }, [permissions]);
 
   const checkboxStates = useMemo(() => {
-    const states = new Map<string, { checked: boolean; indeterminate: boolean }>();
+    const states = new Map<
+      string,
+      { checked: boolean; indeterminate: boolean }
+    >();
     const resolve = (
       permission: RolePermission,
     ): { checked: boolean; indeterminate: boolean } => {

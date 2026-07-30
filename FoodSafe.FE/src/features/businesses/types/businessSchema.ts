@@ -28,7 +28,8 @@ export const businessSchema = z
       .min(1, "Vui lòng nhập số điện thoại")
       .max(50)
       .refine(
-        (value) => /^(0\d{9,10}|(\+84|84)\d{9,10})$/.test(value.replace(/[\s.-]/g, "")),
+        (value) =>
+          /^(0\d{9,10}|(\+84|84)\d{9,10})$/.test(value.replace(/[\s.-]/g, "")),
         "Số điện thoại không hợp lệ",
       ),
     contactEmail: z

@@ -25,16 +25,16 @@ export function CaseDetailModal({ open, item, onClose }: Props) {
     item.victims && item.victims.length > 0
       ? item.victims
       : item.victimName
-      ? [
-          {
-            name: item.victimName,
-            age: item.victimAge,
-            gender: item.victimGender,
-            phone: item.victimPhone,
-            address: item.victimAddress,
-          },
-        ]
-      : [];
+        ? [
+            {
+              name: item.victimName,
+              age: item.victimAge,
+              gender: item.victimGender,
+              phone: item.victimPhone,
+              address: item.victimAddress,
+            },
+          ]
+        : [];
 
   const statusCfg = POISONING_CASE_STATUS_CONFIG[item.status];
   const treatmentCfg = item.treatmentResult

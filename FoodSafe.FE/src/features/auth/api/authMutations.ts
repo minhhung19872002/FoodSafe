@@ -62,7 +62,9 @@ const LOGIN_FAILURE_MESSAGES: Readonly<Record<number, string | undefined>> = {
 };
 
 /** Thời gian khóa (phút) được cấu hình trong Cài đặt hệ thống — dùng để hiển thị số phút cụ thể thay vì "ít phút". */
-function accountLockedMessage(lockoutMinutes: number | null | undefined): string {
+function accountLockedMessage(
+  lockoutMinutes: number | null | undefined,
+): string {
   return lockoutMinutes
     ? `Tài khoản đã tạm thời bị khóa do đăng nhập sai quá số lần cho phép. Vui lòng thử lại sau ${lockoutMinutes} phút.`
     : LOGIN_FAILURE_MESSAGES[LOGIN_RESULT.accountLockedByFailedAttempts]!;

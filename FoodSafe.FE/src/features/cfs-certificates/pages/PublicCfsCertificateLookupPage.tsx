@@ -30,9 +30,7 @@ export default function PublicCfsCertificateLookupPage() {
     if (!result) return;
     setDownloading(true);
     try {
-      const { blob, fileName } = await cfsCertificateApi.downloadPdf(
-        result.id,
-      );
+      const { blob, fileName } = await cfsCertificateApi.downloadPdf(result.id);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

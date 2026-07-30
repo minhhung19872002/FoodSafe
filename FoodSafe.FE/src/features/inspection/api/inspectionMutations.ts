@@ -18,7 +18,9 @@ function usePlanRefresh<TVariables>(
   });
 }
 
-function invalidateInspectionResults(queryClient: ReturnType<typeof useQueryClient>) {
+function invalidateInspectionResults(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
   void queryClient.invalidateQueries({ queryKey: inspectionResultKeys.all });
   void queryClient.invalidateQueries({
     queryKey: ["business-related", "inspections"],

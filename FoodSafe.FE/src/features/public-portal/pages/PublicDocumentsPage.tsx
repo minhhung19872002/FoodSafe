@@ -149,7 +149,10 @@ function DocumentListView() {
             placeholder="Loại văn bản"
             allowClear
             style={{ minWidth: 220 }}
-            options={documentTypes?.map((t) => ({ label: t.name, value: t.id }))}
+            options={documentTypes?.map((t) => ({
+              label: t.name,
+              value: t.id,
+            }))}
           />
           <Button type="primary" loading={isFetching} onClick={handleSearch}>
             Tìm kiếm
@@ -227,6 +230,8 @@ export default function PublicDocumentsPage() {
   const { id } = useParams<{ id: string }>();
 
   return (
-    <PublicShell>{id ? <DocumentDetailView id={id} /> : <DocumentListView />}</PublicShell>
+    <PublicShell>
+      {id ? <DocumentDetailView id={id} /> : <DocumentListView />}
+    </PublicShell>
   );
 }

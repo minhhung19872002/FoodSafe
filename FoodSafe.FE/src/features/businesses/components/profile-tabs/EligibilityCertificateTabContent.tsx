@@ -34,7 +34,9 @@ export function EligibilityCertificateTabContent({
       <EligibilityCertificateEditorModal
         open={creating}
         defaultBusinessId={businessId}
-        businesses={[{ id: businessId, name: businessName, code: businessCode }]}
+        businesses={[
+          { id: businessId, name: businessName, code: businessCode },
+        ]}
         saving={createMutation.isPending}
         onCancel={() => setCreating(false)}
         onSubmit={(input) =>

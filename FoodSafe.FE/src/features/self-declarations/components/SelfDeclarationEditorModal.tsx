@@ -117,7 +117,9 @@ export function SelfDeclarationEditorModal(props: Props) {
             showSearch
             optionFilterProp="label"
             placeholder="Chọn cơ sở"
-            disabled={Boolean(props.declaration) || Boolean(props.defaultBusinessId)}
+            disabled={
+              Boolean(props.declaration) || Boolean(props.defaultBusinessId)
+            }
             options={businessOptions.map((item) => ({
               value: item.id,
               label: item.code ? `${item.code} — ${item.name}` : item.name,

@@ -72,7 +72,9 @@ export default function PublicProductRegistrationLookupPage() {
               onClick={async () => {
                 setDownloading(true);
                 try {
-                  const file = await productRegistrationApi.downloadPdf(result.id);
+                  const file = await productRegistrationApi.downloadPdf(
+                    result.id,
+                  );
                   const url = URL.createObjectURL(file.blob);
                   const a = document.createElement("a");
                   a.href = url;

@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Button, DatePicker, Form, Input, InputNumber, Modal, Select } from "antd";
+import {
+  Button,
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Select,
+} from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
@@ -94,16 +102,16 @@ export function CaseEditorModal(props: Props) {
               address: v.address,
             }))
           : item.victimName
-          ? [
-              {
-                name: item.victimName,
-                age: item.victimAge,
-                gender: item.victimGender,
-                phone: item.victimPhone,
-                address: item.victimAddress,
-              },
-            ]
-          : [{ name: "" }];
+            ? [
+                {
+                  name: item.victimName,
+                  age: item.victimAge,
+                  gender: item.victimGender,
+                  phone: item.victimPhone,
+                  address: item.victimAddress,
+                },
+              ]
+            : [{ name: "" }];
 
       form.setFieldsValue({
         reportDate: dayjs(item.reportDate),
@@ -342,7 +350,11 @@ export function CaseEditorModal(props: Props) {
                       <Input maxLength={200} />
                     </Form.Item>
                     <Form.Item name={[field.name, "age"]} label="Tuổi">
-                      <InputNumber min={0} max={200} style={{ width: "100%" }} />
+                      <InputNumber
+                        min={0}
+                        max={200}
+                        style={{ width: "100%" }}
+                      />
                     </Form.Item>
                     <Form.Item name={[field.name, "gender"]} label="Giới tính">
                       <Select

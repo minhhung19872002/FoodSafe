@@ -58,7 +58,10 @@ interface Props {
   onSubmit: (input: CreateUpdateInspectionPlanInput) => void;
   /** Server-side search: options list is refetched with this filter. */
   onBusinessSearch?: (value: string) => void;
-  onLocationChange?: (location: { provinceId?: string; communeId?: string }) => void;
+  onLocationChange?: (location: {
+    provinceId?: string;
+    communeId?: string;
+  }) => void;
 }
 
 function flattenOrganizations(
@@ -89,7 +92,9 @@ export function InspectionPlanEditorModal(props: Props) {
 
   const provinces = useProvinces(true);
   const communes = useCommunesByProvince(selectedProvinceId ?? "", true);
-  const { data: organizationTree } = useOrganizationTree({ enabled: canViewOrgs });
+  const { data: organizationTree } = useOrganizationTree({
+    enabled: canViewOrgs,
+  });
 
   const flatOrganizations = useMemo(
     () => flattenOrganizations(organizationTree?.items),
@@ -380,7 +385,9 @@ function PlanItemsEditor({
     for (const item of items) {
       map.set(
         item.key,
-        all.filter((o) => o.value === item.businessId || !selected.has(o.value)),
+        all.filter(
+          (o) => o.value === item.businessId || !selected.has(o.value),
+        ),
       );
     }
     return map;

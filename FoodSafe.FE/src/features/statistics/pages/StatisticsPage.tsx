@@ -236,9 +236,7 @@ export default function StatisticsPage() {
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
-                    data={stats.businessByStatus.filter(
-                      (e) => e.count > 0,
-                    )}
+                    data={stats.businessByStatus.filter((e) => e.count > 0)}
                     dataKey="count"
                     nameKey="name"
                     cx="50%"
@@ -346,9 +344,7 @@ export default function StatisticsPage() {
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
-                    data={stats.licenseByStatus.filter(
-                      (e) => e.count > 0,
-                    )}
+                    data={stats.licenseByStatus.filter((e) => e.count > 0)}
                     dataKey="count"
                     nameKey="name"
                     cx="50%"
@@ -429,9 +425,7 @@ export default function StatisticsPage() {
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
-                    data={stats.inspectionOutcome.filter(
-                      (e) => e.count > 0,
-                    )}
+                    data={stats.inspectionOutcome.filter((e) => e.count > 0)}
                     dataKey="count"
                     nameKey="name"
                     cx="50%"
