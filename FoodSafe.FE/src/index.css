@@ -1141,18 +1141,21 @@ button {
 }
 
 /* Tab gạch chân xanh đậm */
-.ant-tabs .ant-tabs-tab {
+.ant-tabs .ant-tabs-nav .ant-tabs-tab {
   font-size: 13px;
   font-weight: 500;
   color: var(--fs-muted);
-  padding: 10px 14px;
+  padding: 10px 14px !important;
 }
 
-/* Design đặt các tab cách nhau 2px; Ant mặc định 32px khiến thanh tab dễ
-   tràn vào menu "..." khi có nhiều tab. */
+/* Tab con (nested) padding nhỏ hơn */
+.ant-tabs .ant-tabs-content .ant-tabs .ant-tabs-nav .ant-tabs-tab {
+  padding: 8px 10px !important;
+}
+
 .ant-tabs-top > .ant-tabs-nav .ant-tabs-tab + .ant-tabs-tab,
 .ant-tabs-bottom > .ant-tabs-nav .ant-tabs-tab + .ant-tabs-tab {
-  margin-left: 2px;
+  margin-left: 0;
 }
 
 .ant-tabs .ant-tabs-tab:hover {
