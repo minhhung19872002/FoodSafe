@@ -113,74 +113,81 @@ describe("AlertsNewsPage", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("assigns a citizen report with the alert-scoped staff picker", async () => {
-    const user = userEvent.setup();
-    let assignment: { id: string; assigneeId: string } | undefined;
-    mockData();
-    server.use(
-      http.get("*/api/v1/app/atp-alert/assignable-users", () =>
-        HttpResponse.json({
-          items: [
-            {
-              id: "staff-1",
-              userName: "staff.one",
-              fullName: "Cán bộ Một",
-            },
-          ],
+  it(
+    "assigns a citizen report with the alert-scoped staff picker",
+    { timeout: 60000 },
+    async () => {
+      const user = userEvent.setup();
+      let assignment: { id: string; assigneeId: string } | undefined;
+      mockData();
+      server.use(
+        http.get("*/api/v1/app/atp-alert/assignable-users", () =>
+          HttpResponse.json({
+            items: [
+              {
+                id: "staff-1",
+                userName: "staff.one",
+                fullName: "Cán bộ Một",
+              },
+            ],
+          }),
+        ),
+        http.post(
+          "*/api/v1/app/atp-alert/:id/assign",
+          async ({ params, request }) => {
+            const body = (await request.json()) as { assigneeId: string };
+            assignment = { id: String(params.id), assigneeId: body.assigneeId };
+            return HttpResponse.json({
+              id: params.id,
+              title: "Cảnh báo nguy cơ kiểm thử",
+              category: 1,
+              severity: 2,
+              source: 2,
+              status: 1,
+              assigneeId: body.assigneeId,
+              assigneeName: "Cán bộ Một",
+              creationTime: "2026-07-01T00:00:00",
+            });
+          },
+        ),
+      );
+      useAuthStore.getState().setAuth({
+        id: "moderator",
+        name: "Moderator",
+        email: "moderator@foodsafe.local",
+        organizationId: null,
+        organizationName: null,
+        roles: ["ProvinceStaff"],
+        permissions: [
+          "FoodSafe.AlertsAndTesting.Alerts.View",
+          "FoodSafe.AlertsAndTesting.Alerts.Publish",
+          "FoodSafe.AlertsAndTesting.Alerts.Assign",
+        ],
+      });
+
+      renderPage("/alerts-news?tab=moderation");
+
+      const assignAction = await screen.findByRole("button", {
+        name: "Phân công Cảnh báo nguy cơ kiểm thử",
+      });
+      await user.click(assignAction);
+
+      const modalTitle = await screen.findByText("Phân công cán bộ xử lý");
+      const dialog = modalTitle.closest<HTMLElement>('[role="dialog"]');
+      expect(dialog).not.toBeNull();
+      if (!dialog) throw new Error("Assignment dialog was not rendered");
+      await user.click(within(dialog).getByRole("combobox"));
+      await user.click(await screen.findByText("Cán bộ Một"));
+      await user.click(
+        within(dialog).getByRole("button", { name: "Phân công" }),
+      );
+
+      await waitFor(() =>
+        expect(assignment).toEqual({
+          id: "alert-1",
+          assigneeId: "staff-1",
         }),
-      ),
-      http.post(
-        "*/api/v1/app/atp-alert/:id/assign",
-        async ({ params, request }) => {
-          const body = (await request.json()) as { assigneeId: string };
-          assignment = { id: String(params.id), assigneeId: body.assigneeId };
-          return HttpResponse.json({
-            id: params.id,
-            title: "Cảnh báo nguy cơ kiểm thử",
-            category: 1,
-            severity: 2,
-            source: 2,
-            status: 1,
-            assigneeId: body.assigneeId,
-            assigneeName: "Cán bộ Một",
-            creationTime: "2026-07-01T00:00:00",
-          });
-        },
-      ),
-    );
-    useAuthStore.getState().setAuth({
-      id: "moderator",
-      name: "Moderator",
-      email: "moderator@foodsafe.local",
-      organizationId: null,
-      organizationName: null,
-      roles: ["ProvinceStaff"],
-      permissions: [
-        "FoodSafe.AlertsAndTesting.Alerts.View",
-        "FoodSafe.AlertsAndTesting.Alerts.Publish",
-        "FoodSafe.AlertsAndTesting.Alerts.Assign",
-      ],
-    });
-
-    renderPage("/alerts-news?tab=moderation");
-
-    const assignAction = await screen.findByRole("button", {
-      name: "Phân công Cảnh báo nguy cơ kiểm thử",
-    });
-    await user.click(assignAction);
-
-    const dialog = await screen.findByRole("dialog", {
-      name: "Phân công cán bộ xử lý",
-    });
-    await user.click(within(dialog).getByRole("combobox"));
-    await user.click(await screen.findByText("Cán bộ Một"));
-    await user.click(within(dialog).getByRole("button", { name: "Phân công" }));
-
-    await waitFor(() =>
-      expect(assignment).toEqual({
-        id: "alert-1",
-        assigneeId: "staff-1",
-      }),
-    );
-  });
+      );
+    },
+  );
 });

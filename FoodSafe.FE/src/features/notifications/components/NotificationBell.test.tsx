@@ -4,9 +4,13 @@ import { HttpResponse, http } from "msw";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { server } from "@/test/server";
 import { NotificationBell } from "./NotificationBell";
+
+vi.mock("../hooks/useNotificationHub", () => ({
+  useNotificationHub: vi.fn(),
+}));
 
 function renderBell() {
   const client = new QueryClient({
