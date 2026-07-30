@@ -41,7 +41,12 @@ import {
   useApiCallLogs,
   useApiCallLogDetail,
   useAlertShareOptions,
+  useBusinessShareOptions,
+  useFoodPoisoningShareOptions,
   useInspectionResultShareOptions,
+  useLicenseShareOptions,
+  useNewsShareOptions,
+  useProductShareOptions,
 } from "../api/dataIntegrationQueries";
 import {
   useCreateEndpoint,
@@ -75,6 +80,13 @@ import {
 
 const HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
 const EXTERNAL_SYSTEMS = ["Bộ Y tế", "Sở Nông nghiệp", "Sở Công thương"];
+
+const LICENSE_KIND_LABELS: Record<string, string> = {
+  eligibility: "Giấy chứng nhận đủ điều kiện",
+  cfs: "CFS",
+  "export-food": "Chứng nhận thực phẩm xuất khẩu",
+  "product-registration": "Đăng ký sản phẩm",
+};
 
 /** Surfaces the server's Vietnamese business message when one exists. */
 function apiErrorMessage(error: unknown, fallback: string): string {
@@ -479,16 +491,34 @@ function CallHistoryTab() {
   const [shareForm] = Form.useForm();
   const [selectedShareDataType, setSelectedShareDataType] =
     useState<SharedDataType>();
-  const [alertSearch, setAlertSearch] = useState<string>();
+  const [shareRecordSearch, setShareRecordSearch] = useState<string>();
   const alertOptions = useAlertShareOptions(
-    alertSearch,
+    shareRecordSearch,
     shareOpen && selectedShareDataType === SHARED_DATA_TYPE.Alert,
   );
-  const [inspectionResultSearch, setInspectionResultSearch] =
-    useState<string>();
   const inspectionResultOptions = useInspectionResultShareOptions(
-    inspectionResultSearch,
+    shareRecordSearch,
     shareOpen && selectedShareDataType === SHARED_DATA_TYPE.InspectionResult,
+  );
+  const foodPoisoningOptions = useFoodPoisoningShareOptions(
+    shareRecordSearch,
+    shareOpen && selectedShareDataType === SHARED_DATA_TYPE.FoodPoisoning,
+  );
+  const licenseOptions = useLicenseShareOptions(
+    shareRecordSearch,
+    shareOpen && selectedShareDataType === SHARED_DATA_TYPE.License,
+  );
+  const productOptions = useProductShareOptions(
+    shareRecordSearch,
+    shareOpen && selectedShareDataType === SHARED_DATA_TYPE.Product,
+  );
+  const newsOptions = useNewsShareOptions(
+    shareRecordSearch,
+    shareOpen && selectedShareDataType === SHARED_DATA_TYPE.News,
+  );
+  const businessOptions = useBusinessShareOptions(
+    shareRecordSearch,
+    shareOpen && selectedShareDataType === SHARED_DATA_TYPE.Business,
   );
   const detail = useApiCallLogDetail(detailId);
   const canViewEndpoints = hasPermission(
@@ -503,6 +533,129 @@ function CallHistoryTab() {
     canViewEndpoints,
   );
   const canShare = hasPermission("FoodSafe.DataIntegration.Share");
+  const shareRecordSelect = (() => {
+    switch (selectedShareDataType) {
+      case SHARED_DATA_TYPE.Alert:
+        return {
+          label: "Cảnh báo ATTP",
+          requiredMessage: "Chọn cảnh báo ATTP cần chia sẻ",
+          placeholder: "Tìm theo mã hoặc tiêu đề cảnh báo",
+          emptyText: "Không tìm thấy cảnh báo",
+          loading: alertOptions.isFetching,
+          options: (alertOptions.data ?? []).map((alert) => ({
+            value: alert.id,
+            label: alert.alertNumber
+              ? `${alert.alertNumber} — ${alert.title}`
+              : alert.title,
+          })),
+        };
+      case SHARED_DATA_TYPE.InspectionResult:
+        return {
+          label: "Kết quả thanh, kiểm tra",
+          requiredMessage: "Chọn kết quả thanh, kiểm tra cần chia sẻ",
+          placeholder: "Tìm theo cơ sở hoặc số quyết định",
+          emptyText: "Không tìm thấy kết quả thanh, kiểm tra",
+          loading: inspectionResultOptions.isFetching,
+          options: (inspectionResultOptions.data ?? []).map((result) => ({
+            value: result.id,
+            label: [
+              result.businessName,
+              dayjs(result.inspectionDate).format("DD/MM/YYYY"),
+              result.adminDecisionNumber
+                ? `QĐ ${result.adminDecisionNumber}`
+                : undefined,
+            ]
+              .filter(Boolean)
+              .join(" — "),
+          })),
+        };
+      case SHARED_DATA_TYPE.FoodPoisoning:
+        return {
+          label: "Vụ ngộ độc thực phẩm",
+          requiredMessage: "Chọn vụ ngộ độc cần chia sẻ",
+          placeholder: "Tìm theo mã vụ ngộ độc",
+          emptyText: "Không tìm thấy vụ ngộ độc",
+          loading: foodPoisoningOptions.isFetching,
+          options: (foodPoisoningOptions.data ?? []).map((incident) => ({
+            value: incident.id,
+            label: [
+              incident.incidentCode,
+              incident.occurrenceDate
+                ? dayjs(incident.occurrenceDate).format("DD/MM/YYYY")
+                : undefined,
+            ]
+              .filter(Boolean)
+              .join(" — "),
+          })),
+        };
+      case SHARED_DATA_TYPE.License:
+        return {
+          label: "Giấy phép",
+          requiredMessage: "Chọn giấy phép cần chia sẻ",
+          placeholder: "Tìm theo số giấy phép hoặc cơ sở",
+          emptyText: "Không tìm thấy giấy phép",
+          loading: licenseOptions.isFetching,
+          options: (licenseOptions.data ?? []).map((license) => ({
+            value: license.id,
+            label: [
+              LICENSE_KIND_LABELS[license.kind] ?? license.kind,
+              license.number,
+              license.businessName,
+            ].join(" — "),
+          })),
+        };
+      case SHARED_DATA_TYPE.Product:
+        return {
+          label: "Sản phẩm, thực phẩm",
+          requiredMessage: "Chọn sản phẩm cần chia sẻ",
+          placeholder: "Tìm theo mã, tên hoặc thương hiệu",
+          emptyText: "Không tìm thấy sản phẩm",
+          loading: productOptions.isFetching,
+          options: (productOptions.data ?? []).map((product) => ({
+            value: product.id,
+            label: [product.code, product.name, product.brandName]
+              .filter(Boolean)
+              .join(" — "),
+          })),
+        };
+      case SHARED_DATA_TYPE.News:
+        return {
+          label: "Tin tức, hoạt động",
+          requiredMessage: "Chọn tin tức, hoạt động cần chia sẻ",
+          placeholder: "Tìm theo tiêu đề hoặc danh mục",
+          emptyText: "Không tìm thấy tin tức, hoạt động",
+          loading: newsOptions.isFetching,
+          options: (newsOptions.data ?? []).map((news) => ({
+            value: news.id,
+            label: [
+              news.title,
+              news.category,
+              news.publishedAt
+                ? dayjs(news.publishedAt).format("DD/MM/YYYY")
+                : undefined,
+            ]
+              .filter(Boolean)
+              .join(" — "),
+          })),
+        };
+      case SHARED_DATA_TYPE.Business:
+        return {
+          label: "Cơ sở sản xuất, kinh doanh",
+          requiredMessage: "Chọn cơ sở cần chia sẻ",
+          placeholder: "Tìm theo mã, tên hoặc mã số thuế",
+          emptyText: "Không tìm thấy cơ sở",
+          loading: businessOptions.isFetching,
+          options: (businessOptions.data ?? []).map((business) => ({
+            value: business.id,
+            label: [business.code, business.name, business.taxCode]
+              .filter(Boolean)
+              .join(" — "),
+          })),
+        };
+      default:
+        return undefined;
+    }
+  })();
 
   const columns: TableColumnsType<ApiCallLog> = [
     {
@@ -703,8 +856,7 @@ function CallHistoryTab() {
                 dataType,
               });
               setSelectedShareDataType(dataType);
-              setAlertSearch(undefined);
-              setInspectionResultSearch(undefined);
+              setShareRecordSearch(undefined);
               setShareOpen(true);
             }}
           >
@@ -730,6 +882,7 @@ function CallHistoryTab() {
         onCancel={() => {
           setShareOpen(false);
           setSelectedShareDataType(undefined);
+          setShareRecordSearch(undefined);
           shareForm.resetFields();
         }}
         onOk={() => shareForm.submit()}
@@ -747,6 +900,7 @@ function CallHistoryTab() {
               onSuccess: (result) => {
                 setShareOpen(false);
                 setSelectedShareDataType(undefined);
+                setShareRecordSearch(undefined);
                 shareForm.resetFields();
                 if (result.isSuccess) {
                   message.success("Đã chia sẻ dữ liệu thành công.");
@@ -781,6 +935,7 @@ function CallHistoryTab() {
             <Select
               onChange={(value: SharedDataType) => {
                 setSelectedShareDataType(value);
+                setShareRecordSearch(undefined);
                 shareForm.setFieldValue("entityId", undefined);
               }}
               options={Object.entries(SHARED_DATA_TYPE_LABELS).map(
@@ -788,14 +943,14 @@ function CallHistoryTab() {
               )}
             />
           </Form.Item>
-          {selectedShareDataType === SHARED_DATA_TYPE.Alert && (
+          {shareRecordSelect && (
             <Form.Item
               name="entityId"
-              label="Cảnh báo ATTP"
+              label={shareRecordSelect.label}
               rules={[
                 {
                   required: true,
-                  message: "Chọn cảnh báo ATTP cần chia sẻ",
+                  message: shareRecordSelect.requiredMessage,
                 },
               ]}
             >
@@ -803,60 +958,15 @@ function CallHistoryTab() {
                 showSearch
                 allowClear
                 filterOption={false}
-                placeholder="Tìm theo mã hoặc tiêu đề cảnh báo"
-                loading={alertOptions.isFetching}
-                onSearch={(value) => setAlertSearch(value || undefined)}
+                placeholder={shareRecordSelect.placeholder}
+                loading={shareRecordSelect.loading}
+                onSearch={(value) => setShareRecordSearch(value || undefined)}
                 notFoundContent={
-                  alertOptions.isFetching
+                  shareRecordSelect.loading
                     ? "Đang tải..."
-                    : "Không tìm thấy cảnh báo"
+                    : shareRecordSelect.emptyText
                 }
-                options={(alertOptions.data ?? []).map((alert) => ({
-                  value: alert.id,
-                  label: alert.alertNumber
-                    ? `${alert.alertNumber} — ${alert.title}`
-                    : alert.title,
-                }))}
-              />
-            </Form.Item>
-          )}
-          {selectedShareDataType === SHARED_DATA_TYPE.InspectionResult && (
-            <Form.Item
-              name="entityId"
-              label="Kết quả thanh, kiểm tra"
-              rules={[
-                {
-                  required: true,
-                  message: "Chọn kết quả thanh, kiểm tra cần chia sẻ",
-                },
-              ]}
-            >
-              <Select
-                showSearch
-                allowClear
-                filterOption={false}
-                placeholder="Tìm theo cơ sở hoặc số quyết định"
-                loading={inspectionResultOptions.isFetching}
-                onSearch={(value) =>
-                  setInspectionResultSearch(value || undefined)
-                }
-                notFoundContent={
-                  inspectionResultOptions.isFetching
-                    ? "Đang tải..."
-                    : "Không tìm thấy kết quả thanh, kiểm tra"
-                }
-                options={(inspectionResultOptions.data ?? []).map((result) => ({
-                  value: result.id,
-                  label: [
-                    result.businessName,
-                    dayjs(result.inspectionDate).format("DD/MM/YYYY"),
-                    result.adminDecisionNumber
-                      ? `QĐ ${result.adminDecisionNumber}`
-                      : undefined,
-                  ]
-                    .filter(Boolean)
-                    .join(" — "),
-                }))}
+                options={shareRecordSelect.options}
               />
             </Form.Item>
           )}

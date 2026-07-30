@@ -97,6 +97,47 @@ describe("dataIntegrationApi", () => {
     expect(result[0]?.id).toBe("result-1");
   });
 
+  it("loads shareable options for requirements 53-57 with filters", async () => {
+    const cases = [
+      {
+        path: "food-poisoning-options",
+        load: () => dataIntegrationApi.getFoodPoisoningShareOptions("search"),
+      },
+      {
+        path: "license-options",
+        load: () => dataIntegrationApi.getLicenseShareOptions("search"),
+      },
+      {
+        path: "product-options",
+        load: () => dataIntegrationApi.getProductShareOptions("search"),
+      },
+      {
+        path: "news-options",
+        load: () => dataIntegrationApi.getNewsShareOptions("search"),
+      },
+      {
+        path: "business-options",
+        load: () => dataIntegrationApi.getBusinessShareOptions("search"),
+      },
+    ];
+
+    for (const testCase of cases) {
+      let requestedUrl = "";
+      server.use(
+        http.get(`*/v1/app/data-sharing/${testCase.path}`, ({ request }) => {
+          requestedUrl = request.url;
+          return HttpResponse.json([]);
+        }),
+      );
+
+      await testCase.load();
+
+      const url = new URL(requestedUrl);
+      expect(url.pathname).toBe(`/api/v1/app/data-sharing/${testCase.path}`);
+      expect(url.searchParams.get("filter")).toBe("search");
+    }
+  });
+
   it("forwards the inbound-submission keyword filter", async () => {
     let requestedUrl = "";
     server.use(

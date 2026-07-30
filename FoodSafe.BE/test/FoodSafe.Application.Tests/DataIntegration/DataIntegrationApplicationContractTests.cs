@@ -69,10 +69,46 @@ public sealed class DataIntegrationApplicationContractTests
         typeof(DataSharingAppService).GetMethod("GetAlertOptionsAsync").ShouldNotBeNull();
         typeof(DataSharingAppService)
             .GetMethod("GetInspectionResultOptionsAsync").ShouldNotBeNull();
+        var requirementOptionMethods = new[]
+        {
+            "GetFoodPoisoningOptionsAsync",
+            "GetLicenseOptionsAsync",
+            "GetProductOptionsAsync",
+            "GetNewsOptionsAsync",
+            "GetBusinessOptionsAsync",
+        };
+        foreach (var methodName in requirementOptionMethods)
+        {
+            typeof(DataSharingAppService).GetMethod(methodName).ShouldNotBeNull();
+            typeof(IDataSharingAppService).GetMethod(methodName).ShouldNotBeNull();
+        }
         typeof(IDataSharingAppService).GetMethod("GetAlertOptionsAsync").ShouldNotBeNull();
         typeof(IDataSharingAppService)
             .GetMethod("GetInspectionResultOptionsAsync").ShouldNotBeNull();
         typeof(IDataSharingAppService).GetMethod("RetryAsync").ShouldNotBeNull();
+    }
+
+    [Theory]
+    [InlineData(SharedDataType.FoodPoisoning)]
+    [InlineData(SharedDataType.License)]
+    [InlineData(SharedDataType.Product)]
+    [InlineData(SharedDataType.News)]
+    [InlineData(SharedDataType.Business)]
+    public async Task Requirements_53_57_require_a_concrete_record(
+        SharedDataType dataType)
+    {
+        var constructor = typeof(DataSharingAppService).GetConstructors().Single();
+        var service = (DataSharingAppService)constructor.Invoke(
+            constructor.GetParameters().Select(_ => (object?)null).ToArray());
+
+        var exception = await Should.ThrowAsync<Volo.Abp.UserFriendlyException>(
+            () => service.ShareAsync(new ShareDataInput
+            {
+                DataType = dataType,
+                EntityId = null,
+            }));
+
+        exception.Message.ShouldBe("Vui lòng chọn bản ghi cụ thể cần chia sẻ.");
     }
 
     [Fact]

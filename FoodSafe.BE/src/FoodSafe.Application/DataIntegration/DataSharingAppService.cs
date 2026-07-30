@@ -5,7 +5,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using FoodSafe.AlertsAndTesting;
 using FoodSafe.BusinessManagement;
+using FoodSafe.FoodPoisoning;
 using FoodSafe.Inspection;
+using FoodSafe.Licensing;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -47,7 +49,14 @@ public class DataSharingAppService :
     private readonly IRepository<ApiEndpoint, Guid> _endpoints;
     private readonly IRepository<AtpAlert, Guid> _alerts;
     private readonly IRepository<InspectionResult, Guid> _inspectionResults;
+    private readonly IRepository<FoodPoisoningIncident, Guid> _foodPoisoningIncidents;
+    private readonly IRepository<Product, Guid> _products;
+    private readonly IRepository<AtpNews, Guid> _news;
     private readonly IRepository<Business, Guid> _businesses;
+    private readonly IRepository<EligibilityCertificate, Guid> _eligibilityCertificates;
+    private readonly IRepository<CfsCertificate, Guid> _cfsCertificates;
+    private readonly IRepository<ExportFoodCertificate, Guid> _exportFoodCertificates;
+    private readonly IRepository<ProductRegistration, Guid> _productRegistrations;
     private readonly IRepository<ApiCallLog, Guid> _logs;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
@@ -59,7 +68,14 @@ public class DataSharingAppService :
         IRepository<ApiEndpoint, Guid> endpoints,
         IRepository<AtpAlert, Guid> alerts,
         IRepository<InspectionResult, Guid> inspectionResults,
+        IRepository<FoodPoisoningIncident, Guid> foodPoisoningIncidents,
+        IRepository<Product, Guid> products,
+        IRepository<AtpNews, Guid> news,
         IRepository<Business, Guid> businesses,
+        IRepository<EligibilityCertificate, Guid> eligibilityCertificates,
+        IRepository<CfsCertificate, Guid> cfsCertificates,
+        IRepository<ExportFoodCertificate, Guid> exportFoodCertificates,
+        IRepository<ProductRegistration, Guid> productRegistrations,
         IRepository<ApiCallLog, Guid> logs,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens,
@@ -70,7 +86,14 @@ public class DataSharingAppService :
         _endpoints = endpoints;
         _alerts = alerts;
         _inspectionResults = inspectionResults;
+        _foodPoisoningIncidents = foodPoisoningIncidents;
+        _products = products;
+        _news = news;
         _businesses = businesses;
+        _eligibilityCertificates = eligibilityCertificates;
+        _cfsCertificates = cfsCertificates;
+        _exportFoodCertificates = exportFoodCertificates;
+        _productRegistrations = productRegistrations;
         _logs = logs;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
@@ -159,8 +182,230 @@ public class DataSharingAppService :
             ct);
     }
 
+    public async Task<List<FoodPoisoningShareOptionDto>>
+        GetFoodPoisoningOptionsAsync(string? filter)
+    {
+        var ct = _cancellationTokens.Token;
+        var scope = await _dataScopeProvider.GetAsync(DataScopeOperation.View, ct);
+        var query = (await _foodPoisoningIncidents.GetQueryableAsync())
+            .WhereIf(!scope.HasGlobalAccess,
+                x => scope.OrganizationIds.Contains(x.OrganizationId));
+
+        if (!filter.IsNullOrWhiteSpace())
+        {
+            var keyword = filter!.Trim().ToUpperInvariant();
+            query = query.Where(x =>
+                x.IncidentCode.ToUpper().Contains(keyword));
+        }
+
+        return await AsyncExecuter.ToListAsync(
+            query.OrderByDescending(x => x.OccurrenceDate)
+                .ThenByDescending(x => x.CreationTime)
+                .Take(100)
+                .Select(x => new FoodPoisoningShareOptionDto
+                {
+                    Id = x.Id,
+                    IncidentCode = x.IncidentCode,
+                    OccurrenceDate = x.OccurrenceDate,
+                }),
+            ct);
+    }
+
+    public async Task<List<LicenseShareOptionDto>>
+        GetLicenseOptionsAsync(string? filter)
+    {
+        var ct = _cancellationTokens.Token;
+        var scope = await _dataScopeProvider.GetAsync(DataScopeOperation.View, ct);
+        var businesses = await _businesses.GetQueryableAsync();
+        var keyword = filter.IsNullOrWhiteSpace()
+            ? null
+            : filter!.Trim().ToUpperInvariant();
+
+        var eligibility =
+            from license in (await _eligibilityCertificates.GetQueryableAsync())
+                .WhereIf(!scope.HasGlobalAccess,
+                    x => scope.OrganizationIds.Contains(x.OrganizationId))
+            join business in businesses on license.BusinessId equals business.Id
+            where keyword == null ||
+                  license.CertificateNumber.ToUpper().Contains(keyword) ||
+                  business.Name.ToUpper().Contains(keyword)
+            orderby license.IssueDate descending
+            select new LicenseShareOptionDto
+            {
+                Id = license.Id,
+                Kind = "eligibility",
+                Number = license.CertificateNumber,
+                BusinessName = business.Name,
+                IssueDate = license.IssueDate,
+            };
+
+        var cfs =
+            from license in (await _cfsCertificates.GetQueryableAsync())
+                .WhereIf(!scope.HasGlobalAccess,
+                    x => scope.OrganizationIds.Contains(x.OrganizationId))
+            join business in businesses on license.BusinessId equals business.Id
+            where keyword == null ||
+                  license.CertificateNumber.ToUpper().Contains(keyword) ||
+                  business.Name.ToUpper().Contains(keyword)
+            orderby license.IssueDate descending
+            select new LicenseShareOptionDto
+            {
+                Id = license.Id,
+                Kind = "cfs",
+                Number = license.CertificateNumber,
+                BusinessName = business.Name,
+                IssueDate = license.IssueDate,
+            };
+
+        var exportFood =
+            from license in (await _exportFoodCertificates.GetQueryableAsync())
+                .WhereIf(!scope.HasGlobalAccess,
+                    x => scope.OrganizationIds.Contains(x.OrganizationId))
+            join business in businesses on license.BusinessId equals business.Id
+            where keyword == null ||
+                  license.CertificateNumber.ToUpper().Contains(keyword) ||
+                  business.Name.ToUpper().Contains(keyword)
+            orderby license.IssueDate descending
+            select new LicenseShareOptionDto
+            {
+                Id = license.Id,
+                Kind = "export-food",
+                Number = license.CertificateNumber,
+                BusinessName = business.Name,
+                IssueDate = license.IssueDate,
+            };
+
+        var registration =
+            from license in (await _productRegistrations.GetQueryableAsync())
+                .WhereIf(!scope.HasGlobalAccess,
+                    x => scope.OrganizationIds.Contains(x.OrganizationId))
+            join business in businesses on license.BusinessId equals business.Id
+            where keyword == null ||
+                  license.RegistrationNumber.ToUpper().Contains(keyword) ||
+                  business.Name.ToUpper().Contains(keyword)
+            orderby license.RegistrationDate descending
+            select new LicenseShareOptionDto
+            {
+                Id = license.Id,
+                Kind = "product-registration",
+                Number = license.RegistrationNumber,
+                BusinessName = business.Name,
+                IssueDate = license.RegistrationDate,
+            };
+
+        var records = new List<LicenseShareOptionDto>();
+        records.AddRange(await AsyncExecuter.ToListAsync(eligibility.Take(100), ct));
+        records.AddRange(await AsyncExecuter.ToListAsync(cfs.Take(100), ct));
+        records.AddRange(await AsyncExecuter.ToListAsync(exportFood.Take(100), ct));
+        records.AddRange(await AsyncExecuter.ToListAsync(registration.Take(100), ct));
+        return records.OrderByDescending(x => x.IssueDate).Take(100).ToList();
+    }
+
+    public async Task<List<ProductShareOptionDto>>
+        GetProductOptionsAsync(string? filter)
+    {
+        var ct = _cancellationTokens.Token;
+        var scope = await _dataScopeProvider.GetAsync(DataScopeOperation.View, ct);
+        var query = (await _products.GetQueryableAsync())
+            .WhereIf(!scope.HasGlobalAccess,
+                x => scope.OrganizationIds.Contains(x.OrganizationId));
+
+        if (!filter.IsNullOrWhiteSpace())
+        {
+            var keyword = filter!.Trim().ToUpperInvariant();
+            query = query.Where(x =>
+                x.Name.ToUpper().Contains(keyword) ||
+                (x.Code != null && x.Code.ToUpper().Contains(keyword)) ||
+                (x.BrandName != null &&
+                 x.BrandName.ToUpper().Contains(keyword)));
+        }
+
+        return await AsyncExecuter.ToListAsync(
+            query.OrderByDescending(x => x.CreationTime)
+                .Take(100)
+                .Select(x => new ProductShareOptionDto
+                {
+                    Id = x.Id,
+                    Code = x.Code,
+                    Name = x.Name,
+                    BrandName = x.BrandName,
+                }),
+            ct);
+    }
+
+    public async Task<List<NewsShareOptionDto>>
+        GetNewsOptionsAsync(string? filter)
+    {
+        var ct = _cancellationTokens.Token;
+        var scope = await _dataScopeProvider.GetAsync(DataScopeOperation.View, ct);
+        var query = (await _news.GetQueryableAsync())
+            .WhereIf(!scope.HasGlobalAccess,
+                x => scope.OrganizationIds.Contains(x.OrganizationId));
+
+        if (!filter.IsNullOrWhiteSpace())
+        {
+            var keyword = filter!.Trim().ToUpperInvariant();
+            query = query.Where(x =>
+                x.Title.ToUpper().Contains(keyword) ||
+                (x.Category != null &&
+                 x.Category.ToUpper().Contains(keyword)));
+        }
+
+        return await AsyncExecuter.ToListAsync(
+            query.OrderByDescending(x => x.PublishedAt)
+                .ThenByDescending(x => x.CreationTime)
+                .Take(100)
+                .Select(x => new NewsShareOptionDto
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Category = x.Category,
+                    PublishedAt = x.PublishedAt,
+                }),
+            ct);
+    }
+
+    public async Task<List<BusinessShareOptionDto>>
+        GetBusinessOptionsAsync(string? filter)
+    {
+        var ct = _cancellationTokens.Token;
+        var scope = await _dataScopeProvider.GetAsync(DataScopeOperation.View, ct);
+        var query = (await _businesses.GetQueryableAsync())
+            .WhereIf(!scope.HasGlobalAccess,
+                x => scope.OrganizationIds.Contains(x.OrganizationId));
+
+        if (!filter.IsNullOrWhiteSpace())
+        {
+            var keyword = filter!.Trim().ToUpperInvariant();
+            query = query.Where(x =>
+                x.Name.ToUpper().Contains(keyword) ||
+                (x.Code != null && x.Code.ToUpper().Contains(keyword)) ||
+                (x.TaxCode != null && x.TaxCode.ToUpper().Contains(keyword)));
+        }
+
+        return await AsyncExecuter.ToListAsync(
+            query.OrderByDescending(x => x.CreationTime)
+                .Take(100)
+                .Select(x => new BusinessShareOptionDto
+                {
+                    Id = x.Id,
+                    Code = x.Code,
+                    Name = x.Name,
+                    TaxCode = x.TaxCode,
+                }),
+            ct);
+    }
+
     public async Task<ShareDataResultDto> ShareAsync(ShareDataInput input)
     {
+        if (input.DataType is >= SharedDataType.FoodPoisoning
+            and <= SharedDataType.Business &&
+            !input.EntityId.HasValue)
+        {
+            throw new UserFriendlyException(
+                "Vui lòng chọn bản ghi cụ thể cần chia sẻ.");
+        }
+
         var ct = _cancellationTokens.Token;
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.View, ct);

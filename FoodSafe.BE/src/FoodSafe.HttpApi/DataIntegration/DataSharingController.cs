@@ -24,6 +24,31 @@ public sealed class DataSharingController(
         GetInspectionResultOptionsAsync([FromQuery] string? filter) =>
         service.GetInspectionResultOptionsAsync(filter);
 
+    [HttpGet("food-poisoning-options")]
+    public Task<List<FoodPoisoningShareOptionDto>>
+        GetFoodPoisoningOptionsAsync([FromQuery] string? filter) =>
+        service.GetFoodPoisoningOptionsAsync(filter);
+
+    [HttpGet("license-options")]
+    public Task<List<LicenseShareOptionDto>> GetLicenseOptionsAsync(
+        [FromQuery] string? filter) =>
+        service.GetLicenseOptionsAsync(filter);
+
+    [HttpGet("product-options")]
+    public Task<List<ProductShareOptionDto>> GetProductOptionsAsync(
+        [FromQuery] string? filter) =>
+        service.GetProductOptionsAsync(filter);
+
+    [HttpGet("news-options")]
+    public Task<List<NewsShareOptionDto>> GetNewsOptionsAsync(
+        [FromQuery] string? filter) =>
+        service.GetNewsOptionsAsync(filter);
+
+    [HttpGet("business-options")]
+    public Task<List<BusinessShareOptionDto>> GetBusinessOptionsAsync(
+        [FromQuery] string? filter) =>
+        service.GetBusinessOptionsAsync(filter);
+
     [HttpPost("share")]
     public Task<ShareDataResultDto> ShareAsync(
         [FromBody] ShareDataInput input) =>

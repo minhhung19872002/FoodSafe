@@ -16,6 +16,16 @@ const keys = {
     ["data-sharing", "alert-options", filter] as const,
   inspectionResultShareOptions: (filter?: string) =>
     ["data-sharing", "inspection-result-options", filter] as const,
+  foodPoisoningShareOptions: (filter?: string) =>
+    ["data-sharing", "food-poisoning-options", filter] as const,
+  licenseShareOptions: (filter?: string) =>
+    ["data-sharing", "license-options", filter] as const,
+  productShareOptions: (filter?: string) =>
+    ["data-sharing", "product-options", filter] as const,
+  newsShareOptions: (filter?: string) =>
+    ["data-sharing", "news-options", filter] as const,
+  businessShareOptions: (filter?: string) =>
+    ["data-sharing", "business-options", filter] as const,
   partners: (filter: PartnerAccountFilter) =>
     ["partner-accounts", filter] as const,
   partnerKeys: (id: string) => ["partner-keys", id] as const,
@@ -64,6 +74,46 @@ export function useInspectionResultShareOptions(
   return useQuery({
     queryKey: keys.inspectionResultShareOptions(filter),
     queryFn: () => dataIntegrationApi.getInspectionResultShareOptions(filter),
+    enabled,
+  });
+}
+
+export function useFoodPoisoningShareOptions(filter?: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.foodPoisoningShareOptions(filter),
+    queryFn: () => dataIntegrationApi.getFoodPoisoningShareOptions(filter),
+    enabled,
+  });
+}
+
+export function useLicenseShareOptions(filter?: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.licenseShareOptions(filter),
+    queryFn: () => dataIntegrationApi.getLicenseShareOptions(filter),
+    enabled,
+  });
+}
+
+export function useProductShareOptions(filter?: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.productShareOptions(filter),
+    queryFn: () => dataIntegrationApi.getProductShareOptions(filter),
+    enabled,
+  });
+}
+
+export function useNewsShareOptions(filter?: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.newsShareOptions(filter),
+    queryFn: () => dataIntegrationApi.getNewsShareOptions(filter),
+    enabled,
+  });
+}
+
+export function useBusinessShareOptions(filter?: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.businessShareOptions(filter),
+    queryFn: () => dataIntegrationApi.getBusinessShareOptions(filter),
     enabled,
   });
 }

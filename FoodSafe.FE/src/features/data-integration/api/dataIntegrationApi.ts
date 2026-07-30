@@ -3,6 +3,7 @@ import type {
   ApiEndpoint,
   ApiEndpointFilter,
   AlertShareOption,
+  BusinessShareOption,
   ApiSpecification,
   ApiSpecificationDownload,
   ApiSpecificationFilter,
@@ -12,16 +13,20 @@ import type {
   ApiCallLogFilter,
   CreatePartnerAccount,
   FileDownload,
+  FoodPoisoningShareOption,
   InboundSubmission,
   InboundSubmissionDetail,
   InboundSubmissionFilter,
   InspectionResultShareOption,
   IssuePartnerApiKeyInput,
   IssuedPartnerApiKey,
+  LicenseShareOption,
+  NewsShareOption,
   PagedResult,
   PartnerAccount,
   PartnerAccountFilter,
   PartnerApiKey,
+  ProductShareOption,
   ShareDataInput,
   ShareDataResult,
   TestConnectionResult,
@@ -95,6 +100,42 @@ export const dataIntegrationApi = {
         "/v1/app/data-sharing/inspection-result-options",
         { params: { filter } },
       )
+      .then((r) => r.data),
+
+  getFoodPoisoningShareOptions: (filter?: string) =>
+    api
+      .get<FoodPoisoningShareOption[]>(
+        "/v1/app/data-sharing/food-poisoning-options",
+        { params: { filter } },
+      )
+      .then((r) => r.data),
+
+  getLicenseShareOptions: (filter?: string) =>
+    api
+      .get<LicenseShareOption[]>("/v1/app/data-sharing/license-options", {
+        params: { filter },
+      })
+      .then((r) => r.data),
+
+  getProductShareOptions: (filter?: string) =>
+    api
+      .get<ProductShareOption[]>("/v1/app/data-sharing/product-options", {
+        params: { filter },
+      })
+      .then((r) => r.data),
+
+  getNewsShareOptions: (filter?: string) =>
+    api
+      .get<NewsShareOption[]>("/v1/app/data-sharing/news-options", {
+        params: { filter },
+      })
+      .then((r) => r.data),
+
+  getBusinessShareOptions: (filter?: string) =>
+    api
+      .get<BusinessShareOption[]>("/v1/app/data-sharing/business-options", {
+        params: { filter },
+      })
       .then((r) => r.data),
 
   shareData: (input: ShareDataInput) =>

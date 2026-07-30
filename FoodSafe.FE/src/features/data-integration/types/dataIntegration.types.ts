@@ -127,6 +127,41 @@ export interface InspectionResultShareOption {
   adminDecisionNumber?: string;
 }
 
+export interface FoodPoisoningShareOption {
+  id: string;
+  incidentCode: string;
+  occurrenceDate?: string;
+}
+
+export interface LicenseShareOption {
+  id: string;
+  kind: "eligibility" | "cfs" | "export-food" | "product-registration";
+  number: string;
+  businessName: string;
+  issueDate: string;
+}
+
+export interface ProductShareOption {
+  id: string;
+  code?: string;
+  name: string;
+  brandName?: string;
+}
+
+export interface NewsShareOption {
+  id: string;
+  title: string;
+  category?: string;
+  publishedAt?: string;
+}
+
+export interface BusinessShareOption {
+  id: string;
+  code?: string;
+  name: string;
+  taxCode?: string;
+}
+
 export interface TestConnectionResult {
   isSuccess: boolean;
   statusCode?: number;
