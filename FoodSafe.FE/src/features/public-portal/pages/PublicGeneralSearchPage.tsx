@@ -88,6 +88,10 @@ function BusinessSearchTab() {
           value={selectedTypeIds}
           onChange={setSelectedTypeIds}
           placeholder="Loại hình"
+          showSearch
+          filterOption={(input, option) =>
+            (option?.label as string)?.toLowerCase().includes(input.toLowerCase()) ?? false
+          }
           allowClear
           style={{ minWidth: 220 }}
           maxTagCount="responsive"
@@ -235,6 +239,10 @@ function ProductSearchTab() {
           value={selectedGroupId}
           onChange={setSelectedGroupId}
           placeholder="Nhóm sản phẩm"
+          showSearch
+          filterOption={(input, option) =>
+            (option?.label as string)?.toLowerCase().includes(input.toLowerCase()) ?? false
+          }
           allowClear
           style={{ minWidth: 220 }}
           options={productGroups?.map((g) => ({ label: g.name, value: g.id }))}
@@ -329,6 +337,10 @@ function TestingResultSearchTab() {
           value={selectedOutcome}
           onChange={setSelectedOutcome}
           placeholder="Kết quả"
+          showSearch
+          filterOption={(input, option) =>
+            (option?.label as string)?.toLowerCase().includes(input.toLowerCase()) ?? false
+          }
           allowClear
           style={{ minWidth: 180 }}
           options={TESTING_OUTCOME_OPTIONS}
