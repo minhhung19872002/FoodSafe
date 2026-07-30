@@ -132,6 +132,11 @@ export interface InspectionPlanItem {
 export interface InspectionPlan {
   id: string;
   organizationId: string;
+  organizationName?: string;
+  provinceId?: string;
+  provinceName?: string;
+  communeId?: string;
+  communeName?: string;
   planCode: string;
   title: string;
   planType: InspectionPlanType;
@@ -162,6 +167,9 @@ export interface CreateUpdatePlanItemInput {
 }
 
 export interface CreateUpdateInspectionPlanInput {
+  organizationId?: string;
+  provinceId?: string;
+  communeId?: string;
   planCode: string;
   title: string;
   planType: InspectionPlanType;
@@ -178,6 +186,9 @@ export interface InspectionPlanFilter {
   planType?: InspectionPlanType;
   status?: InspectionPlanStatus;
   year?: number;
+  organizationId?: string;
+  provinceId?: string;
+  communeId?: string;
   sorting?: string;
   skipCount?: number;
   maxResultCount?: number;

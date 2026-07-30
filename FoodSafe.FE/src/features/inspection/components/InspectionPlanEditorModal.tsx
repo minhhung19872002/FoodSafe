@@ -13,6 +13,8 @@ import {
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import type { ColumnsType } from "antd/es/table";
+import { useCommunesByProvince, useProvinces } from "@/hooks/useGeography";
+import { useOrganizationTree } from "@/features/organizations/api/organizationQueries";
 import {
   INSPECTION_PLAN_TYPE,
   INSPECTION_PLAN_TYPE_LABELS,
@@ -23,11 +25,16 @@ import {
   type InspectionPlanType,
 } from "../types/inspection.types";
 
+import { useAuthStore } from "@/features/auth/store/authStore";
+
 interface FormValues {
   planCode: string;
   title: string;
   planType: InspectionPlanType;
   year: number;
+  provinceId?: string;
+  communeId?: string;
+  organizationId?: string;
   startDate?: Dayjs;
   endDate?: Dayjs;
   description?: string;
@@ -51,6 +58,21 @@ interface Props {
   onSubmit: (input: CreateUpdateInspectionPlanInput) => void;
   /** Server-side search: options list is refetched with this filter. */
   onBusinessSearch?: (value: string) => void;
+  onLocationChange?: (location: { provinceId?: string; communeId?: string }) => void;
+}
+
+function flattenOrganizations(
+  items: any[] | undefined,
+  depth = 0,
+): { value: string; label: string }[] {
+  if (!items || !Array.isArray(items)) return [];
+  return items.flatMap((item) => [
+    {
+      value: item.id,
+      label: `${"\u00a0".repeat(depth * 3)}${item.code ? `${item.code} — ` : ""}${item.name}`,
+    },
+    ...flattenOrganizations(item.children || [], depth + 1),
+  ]);
 }
 
 export function InspectionPlanEditorModal(props: Props) {
@@ -59,12 +81,30 @@ export function InspectionPlanEditorModal(props: Props) {
   const [itemsError, setItemsError] = useState<string>();
   const { open, item } = props;
 
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const canViewOrgs = hasPermission("FoodSafe.Organizations.View");
+
+  const selectedProvinceId = Form.useWatch("provinceId", form);
+  const selectedCommuneId = Form.useWatch("communeId", form);
+
+  const provinces = useProvinces(true);
+  const communes = useCommunesByProvince(selectedProvinceId ?? "", true);
+  const { data: organizationTree } = useOrganizationTree({ enabled: canViewOrgs });
+
+  const flatOrganizations = useMemo(
+    () => flattenOrganizations(organizationTree?.items),
+    [organizationTree],
+  );
+
   const initialValues: Partial<FormValues> = item
     ? {
         planCode: item.planCode,
         title: item.title,
         planType: item.planType,
         year: item.year,
+        provinceId: item.provinceId,
+        communeId: item.communeId,
+        organizationId: item.organizationId,
         startDate: item.startDate ? dayjs(item.startDate) : undefined,
         endDate: item.endDate ? dayjs(item.endDate) : undefined,
         description: item.description,
@@ -92,6 +132,15 @@ export function InspectionPlanEditorModal(props: Props) {
         : [],
     );
   }, [open, item]);
+
+  useEffect(() => {
+    if (open) {
+      props.onLocationChange?.({
+        provinceId: selectedProvinceId,
+        communeId: selectedCommuneId,
+      });
+    }
+  }, [selectedProvinceId, selectedCommuneId, open]);
 
   const validateItems = (): boolean => {
     if (items.some((row) => !row.businessId)) {
@@ -125,6 +174,9 @@ export function InspectionPlanEditorModal(props: Props) {
           title: values.title.trim(),
           planType: values.planType,
           year: values.year,
+          provinceId: values.provinceId || undefined,
+          communeId: values.communeId || undefined,
+          organizationId: values.organizationId || undefined,
           startDate: values.startDate?.format("YYYY-MM-DD"),
           endDate: values.endDate?.format("YYYY-MM-DD"),
           description: values.description?.trim() || undefined,
@@ -200,6 +252,32 @@ export function InspectionPlanEditorModal(props: Props) {
           >
             <InputNumber min={2020} max={2099} style={{ width: "100%" }} />
           </Form.Item>
+          <Form.Item name="provinceId" label="Tỉnh/ thành phố">
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="Chọn tỉnh/ thành phố"
+              options={(provinces.data?.items ?? []).map((p) => ({
+                value: p.id,
+                label: p.name,
+              }))}
+              onChange={() => form.setFieldValue("communeId", undefined)}
+            />
+          </Form.Item>
+          <Form.Item name="communeId" label="Phường/ xã">
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              disabled={!selectedProvinceId}
+              placeholder="Chọn phường/ xã"
+              options={(communes.data?.items ?? []).map((c) => ({
+                value: c.id,
+                label: c.name,
+              }))}
+            />
+          </Form.Item>
           <Form.Item name="startDate" label="Ngày bắt đầu">
             <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
           </Form.Item>
@@ -221,6 +299,20 @@ export function InspectionPlanEditorModal(props: Props) {
             ]}
           >
             <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
+          </Form.Item>
+          <Form.Item
+            name="organizationId"
+            label="Đơn vị thanh tra"
+            extra="Đơn vị quản lý chịu trách nhiệm thực hiện"
+            style={{ gridColumn: "span 2" }}
+          >
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="Đơn vị quản lý"
+              options={flatOrganizations}
+            />
           </Form.Item>
         </div>
         <Form.Item name="description" label="Mô tả">

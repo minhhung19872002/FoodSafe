@@ -42,10 +42,14 @@ export const inspectionPlanApi = {
   async get(id: string): Promise<InspectionPlan> {
     return (await api.get<InspectionPlan>(`${planEndpoint}/${id}`)).data;
   },
-  async businessOptions(filter?: string): Promise<BusinessOption[]> {
+  async businessOptions(
+    filter?: string,
+    provinceId?: string,
+    communeId?: string,
+  ): Promise<BusinessOption[]> {
     return (
       await api.get<BusinessOption[]>(`${planEndpoint}/business-options`, {
-        params: { filter },
+        params: { filter, provinceId, communeId },
       })
     ).data;
   },

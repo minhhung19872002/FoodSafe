@@ -6,6 +6,8 @@ namespace FoodSafe.Inspection;
 public sealed class InspectionPlan : FullAuditedAggregateRoot<Guid>
 {
     public Guid OrganizationId { get; private set; }
+    public Guid? ProvinceId { get; private set; }
+    public Guid? CommuneId { get; private set; }
     public string PlanCode { get; private set; } = string.Empty;
     public string Title { get; private set; } = string.Empty;
     public InspectionPlanType PlanType { get; private set; }
@@ -44,18 +46,20 @@ public sealed class InspectionPlan : FullAuditedAggregateRoot<Guid>
         DateTime? startDate,
         DateTime? endDate,
         string? description,
-        string? objectives)
+        string? objectives,
+        Guid? provinceId = null,
+        Guid? communeId = null)
     {
         var plan = new InspectionPlan(id)
         {
-            OrganizationId = organizationId,
             Status = InspectionPlanStatus.Draft
         };
-        plan.SetCoreFields(planCode, title, planType, year, startDate, endDate, description, objectives);
+        plan.SetCoreFields(organizationId, planCode, title, planType, year, startDate, endDate, description, objectives, provinceId, communeId);
         return plan;
     }
 
     public void Update(
+        Guid organizationId,
         string planCode,
         string title,
         InspectionPlanType planType,
@@ -63,10 +67,12 @@ public sealed class InspectionPlan : FullAuditedAggregateRoot<Guid>
         DateTime? startDate,
         DateTime? endDate,
         string? description,
-        string? objectives)
+        string? objectives,
+        Guid? provinceId = null,
+        Guid? communeId = null)
     {
         EnsureDraft();
-        SetCoreFields(planCode, title, planType, year, startDate, endDate, description, objectives);
+        SetCoreFields(organizationId, planCode, title, planType, year, startDate, endDate, description, objectives, provinceId, communeId);
     }
 
     public InspectionPlanItem AddBusiness(
@@ -203,6 +209,7 @@ public sealed class InspectionPlan : FullAuditedAggregateRoot<Guid>
     }
 
     private void SetCoreFields(
+        Guid organizationId,
         string planCode,
         string title,
         InspectionPlanType planType,
@@ -210,7 +217,9 @@ public sealed class InspectionPlan : FullAuditedAggregateRoot<Guid>
         DateTime? startDate,
         DateTime? endDate,
         string? description,
-        string? objectives)
+        string? objectives,
+        Guid? provinceId,
+        Guid? communeId)
     {
         Check.NotNullOrWhiteSpace(planCode, nameof(planCode), 50);
         Check.NotNullOrWhiteSpace(title, nameof(title), 500);
@@ -221,6 +230,7 @@ public sealed class InspectionPlan : FullAuditedAggregateRoot<Guid>
             normalizedStart.Value > normalizedEnd.Value)
             throw new BusinessException(FoodSafeDomainErrorCodes.Inspection.InvalidDateRange);
 
+        OrganizationId = organizationId;
         PlanCode = planCode.Trim().ToUpperInvariant();
         Title = title.Trim();
         PlanType = planType;
@@ -229,6 +239,8 @@ public sealed class InspectionPlan : FullAuditedAggregateRoot<Guid>
         EndDate = normalizedEnd;
         Description = Normalize(description);
         Objectives = Normalize(objectives);
+        ProvinceId = provinceId;
+        CommuneId = communeId;
     }
 
     private void EnsureDraft()

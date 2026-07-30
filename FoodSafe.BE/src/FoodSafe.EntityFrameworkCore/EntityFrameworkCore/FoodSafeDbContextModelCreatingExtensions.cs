@@ -1015,6 +1015,8 @@ public static class FoodSafeDbContextModelCreatingExtensions
             });
             ConfigureAggregateAudit(entity, "pk_inspection_plans");
             entity.Property(x => x.OrganizationId).HasColumnName("organization_id");
+            entity.Property(x => x.ProvinceId).HasColumnName("province_id");
+            entity.Property(x => x.CommuneId).HasColumnName("commune_id");
             entity.Property(x => x.PlanCode).HasColumnName("plan_code").HasMaxLength(50).IsRequired();
             entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(500).IsRequired();
             entity.Property(x => x.PlanType).HasColumnName("plan_type").HasConversion<short>();
@@ -1044,6 +1046,18 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .WithMany()
                 .HasForeignKey(x => x.OrganizationId)
                 .HasConstraintName("fk_plans_org")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Province>()
+                .WithMany()
+                .HasForeignKey(x => x.ProvinceId)
+                .HasConstraintName("fk_plans_province")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Commune>()
+                .WithMany()
+                .HasForeignKey(x => x.CommuneId)
+                .HasConstraintName("fk_plans_commune")
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(x => new { x.PlanCode, x.OrganizationId })

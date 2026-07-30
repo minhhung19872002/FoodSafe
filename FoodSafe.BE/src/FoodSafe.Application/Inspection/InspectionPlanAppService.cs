@@ -1,4 +1,6 @@
 using FoodSafe.BusinessManagement;
+using FoodSafe.Catalogs;
+using FoodSafe.Organizations;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -18,6 +20,9 @@ public class InspectionPlanAppService : ApplicationService
     private readonly IRepository<InspectionPlan, Guid> _plans;
     private readonly IRepository<InspectionResult, Guid> _results;
     private readonly IRepository<Business, Guid> _businesses;
+    private readonly IRepository<Province, Guid> _provinces;
+    private readonly IRepository<Commune, Guid> _communes;
+    private readonly IRepository<Organization, Guid> _organizations;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
@@ -25,12 +30,18 @@ public class InspectionPlanAppService : ApplicationService
         IRepository<InspectionPlan, Guid> plans,
         IRepository<InspectionResult, Guid> results,
         IRepository<Business, Guid> businesses,
+        IRepository<Province, Guid> provinces,
+        IRepository<Commune, Guid> communes,
+        IRepository<Organization, Guid> organizations,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens)
     {
         _plans = plans;
         _results = results;
         _businesses = businesses;
+        _provinces = provinces;
+        _communes = communes;
+        _organizations = organizations;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
     }
@@ -52,6 +63,12 @@ public class InspectionPlanAppService : ApplicationService
             query = query.Where(x => x.Status == input.Status.Value);
         if (input.Year.HasValue)
             query = query.Where(x => x.Year == input.Year.Value);
+        if (input.OrganizationId.HasValue)
+            query = query.Where(x => x.OrganizationId == input.OrganizationId.Value);
+        if (input.ProvinceId.HasValue)
+            query = query.Where(x => x.ProvinceId == input.ProvinceId.Value);
+        if (input.CommuneId.HasValue)
+            query = query.Where(x => x.CommuneId == input.CommuneId.Value);
 
         var totalCount = await AsyncExecuter.CountAsync(query, _cancellationTokens.Token);
 
@@ -77,11 +94,13 @@ public class InspectionPlanAppService : ApplicationService
     {
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.Create, _cancellationTokens.Token);
-        var orgId = scope.HomeOrganizationId
+        var defaultOrgId = scope.HomeOrganizationId
             ?? (scope.OrganizationIds.Count > 0
                 ? scope.OrganizationIds.First()
                 : throw new BusinessException(
                     FoodSafeDomainErrorCodes.DataScope.OrganizationNotFound));
+
+        var orgId = input.OrganizationId ?? defaultOrgId;
 
         await EnsureUniquePlanCodeAsync(input.PlanCode, orgId, null);
 
@@ -95,7 +114,9 @@ public class InspectionPlanAppService : ApplicationService
             input.StartDate,
             input.EndDate,
             input.Description,
-            input.Objectives);
+            input.Objectives,
+            input.ProvinceId,
+            input.CommuneId);
 
         foreach (var item in input.Items)
         {
@@ -122,9 +143,11 @@ public class InspectionPlanAppService : ApplicationService
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.Edit, _cancellationTokens.Token);
 
-        await EnsureUniquePlanCodeAsync(input.PlanCode, plan.OrganizationId, id);
+        var targetOrgId = input.OrganizationId ?? plan.OrganizationId;
+        await EnsureUniquePlanCodeAsync(input.PlanCode, targetOrgId, id);
 
         plan.Update(
+            targetOrgId,
             input.PlanCode,
             input.Title,
             input.PlanType,
@@ -132,7 +155,9 @@ public class InspectionPlanAppService : ApplicationService
             input.StartDate,
             input.EndDate,
             input.Description,
-            input.Objectives);
+            input.Objectives,
+            input.ProvinceId,
+            input.CommuneId);
 
         var existingBusinessIds = plan.Items.Select(i => i.BusinessId).ToHashSet();
         var inputBusinessIds = input.Items.Select(i => i.BusinessId).ToHashSet();
@@ -252,7 +277,8 @@ public class InspectionPlanAppService : ApplicationService
         return (await ToDtosAsync([plan]))[0];
     }
 
-    public async Task<List<BusinessOption>> GetBusinessOptionsAsync(string? filter)
+    public async Task<List<BusinessOption>> GetBusinessOptionsAsync(
+        string? filter, Guid? provinceId = null, Guid? communeId = null)
     {
         var scope = await _dataScopeProvider.GetAsync(
             DataScopeOperation.View, _cancellationTokens.Token);
@@ -260,6 +286,12 @@ public class InspectionPlanAppService : ApplicationService
 
         if (!scope.HasGlobalAccess)
             query = query.Where(x => scope.OrganizationIds.Contains(x.OrganizationId));
+
+        if (provinceId.HasValue)
+            query = query.Where(x => x.AddressProvinceId == provinceId.Value);
+
+        if (communeId.HasValue)
+            query = query.Where(x => x.AddressCommuneId == communeId.Value);
 
         if (!filter.IsNullOrWhiteSpace())
         {
@@ -365,12 +397,38 @@ public class InspectionPlanAppService : ApplicationService
             _cancellationTokens.Token);
         var businesses = businessRows.ToDictionary(x => x.Id, x => x.Name);
 
+        var orgIds = plans.Select(x => x.OrganizationId).Distinct().ToArray();
+        var orgQuery = await _organizations.GetQueryableAsync();
+        var orgRows = await AsyncExecuter.ToListAsync(
+            orgQuery.Where(x => orgIds.Contains(x.Id)),
+            _cancellationTokens.Token);
+        var orgs = orgRows.ToDictionary(x => x.Id, x => x.Name);
+
+        var provinceIds = plans.Where(x => x.ProvinceId.HasValue).Select(x => x.ProvinceId!.Value).Distinct().ToArray();
+        var provinceQuery = await _provinces.GetQueryableAsync();
+        var provinceRows = await AsyncExecuter.ToListAsync(
+            provinceQuery.Where(x => provinceIds.Contains(x.Id)),
+            _cancellationTokens.Token);
+        var provinces = provinceRows.ToDictionary(x => x.Id, x => x.Name);
+
+        var communeIds = plans.Where(x => x.CommuneId.HasValue).Select(x => x.CommuneId!.Value).Distinct().ToArray();
+        var communeQuery = await _communes.GetQueryableAsync();
+        var communeRows = await AsyncExecuter.ToListAsync(
+            communeQuery.Where(x => communeIds.Contains(x.Id)),
+            _cancellationTokens.Token);
+        var communes = communeRows.ToDictionary(x => x.Id, x => x.Name);
+
         return plans.Select(plan =>
         {
             var dto = new InspectionPlanDto
             {
                 Id = plan.Id,
                 OrganizationId = plan.OrganizationId,
+                OrganizationName = orgs.GetValueOrDefault(plan.OrganizationId),
+                ProvinceId = plan.ProvinceId,
+                ProvinceName = plan.ProvinceId.HasValue ? provinces.GetValueOrDefault(plan.ProvinceId.Value) : null,
+                CommuneId = plan.CommuneId,
+                CommuneName = plan.CommuneId.HasValue ? communes.GetValueOrDefault(plan.CommuneId.Value) : null,
                 PlanCode = plan.PlanCode,
                 Title = plan.Title,
                 PlanType = plan.PlanType,
@@ -389,8 +447,9 @@ public class InspectionPlanAppService : ApplicationService
                 CreationTime = plan.CreationTime,
                 TotalItems = plan.Items.Count,
                 CompletedItems = plan.Items.Count(i =>
-                    i.Status == InspectionPlanItemStatus.Completed),
-                Items = plan.Items.Select(i => new InspectionPlanItemDto
+                    i.Status == InspectionPlanItemStatus.Completed ||
+                    i.Status == InspectionPlanItemStatus.Skipped),
+                Items = plan.Items.OrderBy(i => i.SequenceNumber).Select(i => new InspectionPlanItemDto
                 {
                     Id = i.Id,
                     PlanId = i.PlanId,
@@ -400,8 +459,8 @@ public class InspectionPlanAppService : ApplicationService
                     PlannedDate = i.PlannedDate,
                     AssignedInspectorId = i.AssignedInspectorId,
                     Status = i.Status,
-                    Notes = i.Notes
-                }).OrderBy(i => i.SequenceNumber).ToList()
+                    Notes = i.Notes,
+                }).ToList(),
             };
             return dto;
         }).ToList();

@@ -9,8 +9,8 @@ export const inspectionPlanKeys = {
   all: ["inspection-plans"] as const,
   list: (filter: InspectionPlanFilter) =>
     [...inspectionPlanKeys.all, "list", filter] as const,
-  businesses: (filter?: string) =>
-    [...inspectionPlanKeys.all, "businesses", filter ?? ""] as const,
+  businesses: (filter?: string, provinceId?: string, communeId?: string) =>
+    [...inspectionPlanKeys.all, "businesses", filter ?? "", provinceId ?? "", communeId ?? ""] as const,
 };
 
 export const inspectionResultKeys = {
@@ -27,10 +27,19 @@ export function useInspectionPlans(filter: InspectionPlanFilter) {
   });
 }
 
-export function useInspectionBusinesses(filter?: string) {
+export function useInspectionBusinesses(
+  filter?: string,
+  provinceId?: string,
+  communeId?: string,
+) {
   return useQuery({
-    queryKey: inspectionPlanKeys.businesses(filter),
-    queryFn: () => inspectionPlanApi.businessOptions(filter || undefined),
+    queryKey: inspectionPlanKeys.businesses(filter, provinceId, communeId),
+    queryFn: () =>
+      inspectionPlanApi.businessOptions(
+        filter || undefined,
+        provinceId || undefined,
+        communeId || undefined,
+      ),
     placeholderData: (previous) => previous,
   });
 }

@@ -172,7 +172,15 @@ function PlansTab() {
     }
   };
   const [businessSearch, setBusinessSearch] = useState("");
-  const businesses = useInspectionBusinesses(businessSearch);
+  const [locationFilter, setLocationFilter] = useState<{
+    provinceId?: string;
+    communeId?: string;
+  }>({});
+  const businesses = useInspectionBusinesses(
+    businessSearch,
+    locationFilter.provinceId,
+    locationFilter.communeId,
+  );
 
   // Committing on blur/Enter (instead of per keystroke) avoids one list query
   // per typed digit.
@@ -245,9 +253,25 @@ function PlansTab() {
     { title: "Mã KH", dataIndex: "planCode", width: 120 },
     { title: "Tên kế hoạch", dataIndex: "title", ellipsis: true },
     {
+      title: "Đơn vị thanh tra",
+      dataIndex: "organizationName",
+      width: 180,
+      ellipsis: true,
+      render: (v?: string) => v || "—",
+    },
+    {
+      title: "Địa bàn",
+      width: 180,
+      ellipsis: true,
+      render: (_, r) => {
+        const parts = [r.communeName, r.provinceName].filter(Boolean);
+        return parts.length > 0 ? parts.join(", ") : "—";
+      },
+    },
+    {
       title: "Loại",
       dataIndex: "planType",
-      width: 120,
+      width: 110,
       render: (v: InspectionPlanType) => INSPECTION_PLAN_TYPE_LABELS[v] ?? v,
     },
     {
@@ -503,6 +527,7 @@ function PlansTab() {
         onCancel={closeEditor}
         onSubmit={save}
         onBusinessSearch={setBusinessSearch}
+        onLocationChange={setLocationFilter}
       />
       <RecordDetailDrawer
         title="Chi tiết kế hoạch thanh kiểm tra"
@@ -512,6 +537,13 @@ function PlansTab() {
           { label: "Mã kế hoạch", render: (r) => r.planCode },
           { label: "Năm", render: (r) => r.year },
           { label: "Tên kế hoạch", render: (r) => r.title, span: 2 },
+          {
+            label: "Đơn vị thanh tra",
+            render: (r) => r.organizationName || "—",
+            span: 2,
+          },
+          { label: "Tỉnh/ thành phố", render: (r) => r.provinceName || "—" },
+          { label: "Phường/ xã", render: (r) => r.communeName || "—" },
           {
             label: "Loại kế hoạch",
             render: (r) => INSPECTION_PLAN_TYPE_LABELS[r.planType],

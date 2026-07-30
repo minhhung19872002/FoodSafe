@@ -8,6 +8,11 @@ namespace FoodSafe.Inspection;
 public class InspectionPlanDto : EntityDto<Guid>
 {
     public Guid OrganizationId { get; set; }
+    public string? OrganizationName { get; set; }
+    public Guid? ProvinceId { get; set; }
+    public string? ProvinceName { get; set; }
+    public Guid? CommuneId { get; set; }
+    public string? CommuneName { get; set; }
     public string PlanCode { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public InspectionPlanType PlanType { get; set; }
@@ -51,6 +56,10 @@ public class UpdateInspectionPlanItemStatusDto
 
 public class CreateUpdateInspectionPlanDto
 {
+    public Guid? OrganizationId { get; set; }
+    public Guid? ProvinceId { get; set; }
+    public Guid? CommuneId { get; set; }
+
     [Required]
     [StringLength(50)]
     public string PlanCode { get; set; } = string.Empty;
@@ -90,6 +99,9 @@ public class InspectionPlanFilterDto : PagedAndSortedResultRequestDto
     public InspectionPlanType? PlanType { get; set; }
     public InspectionPlanStatus? Status { get; set; }
     public int? Year { get; set; }
+    public Guid? OrganizationId { get; set; }
+    public Guid? ProvinceId { get; set; }
+    public Guid? CommuneId { get; set; }
 }
 
 public class RejectPlanDto
