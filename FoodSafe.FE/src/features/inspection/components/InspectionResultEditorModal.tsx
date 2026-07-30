@@ -12,6 +12,7 @@ import {
 } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
+import { useAdminUsers } from "@/features/identity/api/identityQueries";
 import {
   INSPECTION_OVERALL_RESULT,
   INSPECTION_OVERALL_RESULT_CONFIG,
@@ -41,7 +42,7 @@ interface FormValues {
   inspectionDate: Dayjs;
   inspectionType: InspectionType;
   teamLeader?: string;
-  teamMembersText?: string;
+  teamMembersText?: string | string[];
   overallResult: InspectionOverallResult;
   hasViolation: boolean;
   violationDescription?: string;
@@ -74,6 +75,16 @@ export function InspectionResultEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
   const { token } = theme.useToken();
   const { open, item } = props;
+
+  const { data: usersData, isLoading: isLoadingUsers } = useAdminUsers({
+    skipCount: 0,
+    maxResultCount: 200,
+  });
+
+  const userOptions = (usersData?.items ?? []).map((u) => ({
+    label: u.fullName ? `${u.fullName} (${u.userName})` : u.userName,
+    value: u.fullName || u.userName, // use name as value because API expects string
+  }));
   const selectedPlanId = Form.useWatch("planId", form);
   const selectedPlan = props.plans.find((p) => p.id === selectedPlanId);
   const planItems = selectedPlan?.items ?? [];
@@ -105,7 +116,9 @@ export function InspectionResultEditorModal(props: Props) {
         inspectionDate: dayjs(item.inspectionDate),
         inspectionType: item.inspectionType,
         teamLeader: item.teamLeader,
-        teamMembersText: item.teamMembersText,
+        teamMembersText: item.teamMembersText
+          ? item.teamMembersText.split(",").map((s) => s.trim())
+          : [],
         overallResult: item.overallResult,
         hasViolation: item.hasViolation,
         violationDescription: item.violationDescription,
@@ -168,7 +181,9 @@ export function InspectionResultEditorModal(props: Props) {
             inspectionDate: values.inspectionDate.format("YYYY-MM-DD"),
             inspectionType: values.inspectionType,
             teamLeader: values.teamLeader?.trim() || undefined,
-            teamMembersText: values.teamMembersText?.trim() || undefined,
+            teamMembersText: Array.isArray(values.teamMembersText)
+              ? values.teamMembersText.join(", ")
+              : values.teamMembersText?.trim() || undefined,
             overallResult: values.overallResult,
             hasViolation: values.hasViolation,
             violationDescription:
@@ -195,21 +210,6 @@ export function InspectionResultEditorModal(props: Props) {
           })
         }
       >
-        <Form.Item
-          name="businessId"
-          label="Cơ sở SXKD"
-          rules={[{ required: true, message: "Vui lòng chọn cơ sở." }]}
-          extra="Chọn kế hoạch bên dưới để ghi nhận kết quả này thuộc kế hoạch thanh tra."
-        >
-          <Select
-            showSearch
-            optionFilterProp="label"
-            disabled={Boolean(item)}
-            options={businessOptions}
-            onSearch={props.onBusinessSearch}
-          />
-        </Form.Item>
-
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
         >
@@ -266,6 +266,21 @@ export function InspectionResultEditorModal(props: Props) {
           </Form.Item>
         </div>
 
+        <Form.Item
+          name="businessId"
+          label="Cơ sở SXKD"
+          rules={[{ required: true, message: "Vui lòng chọn cơ sở." }]}
+          extra="Chọn kế hoạch bên trên để ghi nhận kết quả này thuộc kế hoạch thanh tra."
+        >
+          <Select
+            showSearch
+            optionFilterProp="label"
+            disabled={Boolean(item)}
+            options={businessOptions}
+            onSearch={props.onBusinessSearch}
+          />
+        </Form.Item>
+
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
         >
@@ -292,7 +307,14 @@ export function InspectionResultEditorModal(props: Props) {
             />
           </Form.Item>
           <Form.Item name="teamLeader" label="Trưởng đoàn">
-            <Input maxLength={200} />
+            <Select
+              showSearch
+              allowClear
+              options={userOptions}
+              loading={isLoadingUsers}
+              optionFilterProp="label"
+              placeholder="Chọn trưởng đoàn"
+            />
           </Form.Item>
           <Form.Item
             name="overallResult"
@@ -308,7 +330,14 @@ export function InspectionResultEditorModal(props: Props) {
         </div>
 
         <Form.Item name="teamMembersText" label="Thành viên đoàn">
-          <Input.TextArea rows={2} />
+          <Select
+            mode="multiple"
+            allowClear
+            options={userOptions}
+            loading={isLoadingUsers}
+            optionFilterProp="label"
+            placeholder="Chọn thành viên đoàn"
+          />
         </Form.Item>
 
         <div
