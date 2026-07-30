@@ -33,6 +33,7 @@ export function useSelfDeclarationProducts(businessId?: string) {
     queryKey: selfDeclarationKeys.products(businessId),
     queryFn: () => selfDeclarationApi.productOptions(businessId!),
     enabled: Boolean(businessId),
+    staleTime: 0,
   });
 }
 

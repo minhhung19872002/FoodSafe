@@ -22,6 +22,8 @@ x-backend-environment: &backend-environment
   BlobStorage__WithSsl: ${MINIO_WITH_SSL:-false}
   MalwareScan__Host: clamav
   MalwareScan__Port: "3310"
+  Redis__IsEnabled: "true"
+  Redis__Configuration: redis:6379,password=${REDIS_PASSWORD:?Set REDIS_PASSWORD}
 
 services:
   postgres:

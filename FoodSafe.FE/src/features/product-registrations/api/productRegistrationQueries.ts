@@ -34,6 +34,7 @@ export function useProductRegistrationProducts(businessId?: string) {
     queryKey: productRegistrationKeys.products(businessId),
     queryFn: () => productRegistrationApi.productOptions(businessId!),
     enabled: Boolean(businessId),
+    staleTime: 0,
   });
 }
 

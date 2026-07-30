@@ -7,6 +7,7 @@ import {
   FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
+  ReloadOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import { App, Button, Input, Select, Table } from "antd";
@@ -123,6 +124,8 @@ export default function SelfDeclarationPage() {
   const uploadMutation = useUploadSelfDeclarationAttachment();
   const downloadMutation = useDownloadSelfDeclarationAttachment();
   const deleteAttachmentMutation = useDeleteSelfDeclarationAttachment();
+
+  const refreshDeclarations = () => void declarations.refetch();
 
   const closeEditor = () => {
     setEditorOpen(false);
@@ -269,6 +272,13 @@ export default function SelfDeclarationPage() {
         subtitle="Quản lý công bố sản phẩm và cảnh báo hết hạn 30/60/90 ngày"
         actions={
           <>
+            <Button
+              icon={<ReloadOutlined />}
+              loading={declarations.isFetching}
+              onClick={refreshDeclarations}
+            >
+              Làm mới
+            </Button>
             <Button
               icon={<ExportOutlined />}
               loading={exportMutation.isPending}

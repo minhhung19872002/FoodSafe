@@ -8,8 +8,13 @@ import type {
 
 function useInvalidate() {
   const queryClient = useQueryClient();
-  return () =>
-    queryClient.invalidateQueries({ queryKey: selfDeclarationKeys.all });
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: selfDeclarationKeys.all });
+    void queryClient.invalidateQueries({
+      queryKey: ["business-related", "selfDeclarations"],
+      refetchType: "all",
+    });
+  };
 }
 
 export function useCreateSelfDeclaration() {
