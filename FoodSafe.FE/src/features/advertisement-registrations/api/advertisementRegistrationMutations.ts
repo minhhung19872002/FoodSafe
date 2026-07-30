@@ -8,8 +8,15 @@ import type {
 
 function useInvalidate() {
   const client = useQueryClient();
-  return () =>
-    client.invalidateQueries({ queryKey: advertisementRegistrationKeys.all });
+  return () => {
+    void client.invalidateQueries({
+      queryKey: advertisementRegistrationKeys.all,
+    });
+    void client.invalidateQueries({
+      queryKey: ["business-related", "adRegistrations"],
+      refetchType: "all",
+    });
+  };
 }
 
 export const useCreateAdvertisementRegistration = () =>

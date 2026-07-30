@@ -34,8 +34,13 @@ const relatedColumns: ColumnsType<BusinessRelatedRecord> = [
     render: (v?: string) => v ?? "—",
   },
   {
-    title: "Tên sản phẩm / nội dung",
+    title: "Tên sản phẩm",
     dataIndex: "name",
+    render: (v?: string) => v ?? "—",
+  },
+  {
+    title: "Nội dung",
+    dataIndex: "content",
     render: (v?: string) => v ?? "—",
   },
   {

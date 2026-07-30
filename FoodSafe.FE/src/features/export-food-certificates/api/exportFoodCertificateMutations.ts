@@ -8,10 +8,15 @@ import type {
 
 function useInvalidate() {
   const queryClient = useQueryClient();
-  return () =>
-    queryClient.invalidateQueries({
+  return () => {
+    void queryClient.invalidateQueries({
       queryKey: exportFoodCertificateKeys.all,
     });
+    void queryClient.invalidateQueries({
+      queryKey: ["business-related", "exportFoodCertificates"],
+      refetchType: "all",
+    });
+  };
 }
 
 export function useCreateExportFoodCertificate() {

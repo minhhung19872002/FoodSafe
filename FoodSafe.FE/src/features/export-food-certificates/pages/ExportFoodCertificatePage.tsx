@@ -1,11 +1,13 @@
 import { useState } from "react";
 import {
+  ClearOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
   FilePdfOutlined,
   FileTextOutlined,
   PlusOutlined,
+  ReloadOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import { App, Button, Input, Select, Space, Table } from "antd";
@@ -47,6 +49,7 @@ import { RevokeModal } from "@/components/RevokeModal";
 import { RecordDetailDrawer } from "@/components/RecordDetailDrawer";
 import { RowActions } from "@/components/RowActions";
 import { saveDownload } from "@/utils/download";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useTablePagination } from "@/hooks/useTablePagination";
 
 export default function ExportFoodCertificatePage() {
@@ -61,6 +64,7 @@ export default function ExportFoodCertificatePage() {
   );
   const pagination = useTablePagination(20);
   const [filter, setFilter] = useState("");
+  const debouncedFilter = useDebounce(filter);
   const [businessId, setBusinessId] = useState<string>();
   const [destinationCountryId, setDestinationCountryId] = useState<string>();
   const [status, setStatus] = useState<LicenseStatus>();
@@ -98,7 +102,7 @@ export default function ExportFoodCertificatePage() {
   };
 
   const queryFilter = {
-    filter: filter || undefined,
+    filter: debouncedFilter.trim() || undefined,
     businessId,
     destinationCountryId,
     status,
@@ -122,10 +126,21 @@ export default function ExportFoodCertificatePage() {
   const downloadMutation = useDownloadExportFoodCertificateAttachment();
   const deleteAttachmentMutation = useDeleteExportFoodCertificateAttachment();
 
+  const refreshRegistrations = () => void registrations.refetch();
+
   const closeEditor = () => {
     setEditorOpen(false);
     setEditing(undefined);
     setEditorBusinessId(undefined);
+  };
+
+  const resetFilters = () => {
+    setFilter("");
+    setBusinessId(undefined);
+    setDestinationCountryId(undefined);
+    setStatus(undefined);
+    setExpiringWithinDays(undefined);
+    pagination.resetToFirstPage();
   };
 
   const save = (input: ExportFoodCertificateInput) => {
@@ -280,6 +295,13 @@ export default function ExportFoodCertificatePage() {
         actions={
           <Space>
             <Button
+              icon={<ReloadOutlined />}
+              loading={registrations.isFetching}
+              onClick={refreshRegistrations}
+            >
+              Làm mới
+            </Button>
+            <Button
               icon={<ExportOutlined />}
               loading={exportMutation.isPending}
               onClick={() =>
@@ -315,8 +337,9 @@ export default function ExportFoodCertificatePage() {
               allowClear
               placeholder="Tìm theo số GCN"
               style={{ width: 310 }}
-              onSearch={(value) => {
-                setFilter(value.trim());
+              value={filter}
+              onChange={(event) => {
+                setFilter(event.target.value);
                 pagination.resetToFirstPage();
               }}
             />
@@ -327,6 +350,7 @@ export default function ExportFoodCertificatePage() {
               placeholder="Tất cả cơ sở"
               style={{ width: 260 }}
               loading={businesses.isLoading}
+              value={businessId}
               options={(businesses.data ?? []).map((item) => ({
                 value: item.id,
                 label: item.code ? `${item.code} — ${item.name}` : item.name,
@@ -343,6 +367,7 @@ export default function ExportFoodCertificatePage() {
               placeholder="Tất cả quốc gia"
               style={{ width: 220 }}
               loading={countries.isLoading}
+              value={destinationCountryId}
               options={(countries.data ?? []).map((item) => ({
                 value: item.id,
                 label: `${item.code} — ${item.name}`,
@@ -356,6 +381,7 @@ export default function ExportFoodCertificatePage() {
               allowClear
               placeholder="Tất cả trạng thái"
               style={{ width: 170 }}
+              value={status}
               options={[
                 { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
                 { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
@@ -370,6 +396,7 @@ export default function ExportFoodCertificatePage() {
               allowClear
               placeholder="Cảnh báo hết hạn"
               style={{ width: 180 }}
+              value={expiringWithinDays}
               options={[
                 { value: 30, label: "Trong 30 ngày" },
                 { value: 60, label: "Trong 60 ngày" },
@@ -380,6 +407,9 @@ export default function ExportFoodCertificatePage() {
                 pagination.resetToFirstPage();
               }}
             />
+            <Button icon={<ClearOutlined />} onClick={resetFilters}>
+              Đặt lại bộ lọc
+            </Button>
           </Space>
         </div>
 

@@ -45,25 +45,24 @@ export function AdvertisementRegistrationEditorModal(props: Props) {
     item && !props.businesses.some((x) => x.id === item.businessId)
       ? [{ id: item.businessId, name: item.businessName }, ...props.businesses]
       : props.businesses;
+  const initialValues: Partial<Values> = item
+    ? {
+        businessId: item.businessId,
+        advertisementTypeId: item.advertisementTypeId,
+        productIds: item.products.map((x) => x.id),
+        registrationNumber: item.registrationNumber,
+        registrationDate: dayjs(item.registrationDate),
+        expiryDate: item.expiryDate ? dayjs(item.expiryDate) : undefined,
+        medium: item.medium,
+        contentDescription: item.contentDescription,
+        notes: item.notes,
+      }
+    : { registrationDate: dayjs(), productIds: [] };
+
   useEffect(() => {
     if (!open) return;
-    form.setFieldsValue(
-      item
-        ? {
-            businessId: item.businessId,
-            advertisementTypeId: item.advertisementTypeId,
-            productIds: item.products.map((x) => x.id),
-            registrationNumber: item.registrationNumber,
-            registrationDate: dayjs(item.registrationDate),
-            expiryDate: item.expiryDate ? dayjs(item.expiryDate) : undefined,
-            medium: item.medium,
-            contentDescription: item.contentDescription,
-            notes: item.notes,
-          }
-        : { registrationDate: dayjs(), productIds: [] },
-    );
     onBusinessChange(item?.businessId);
-  }, [form, open, item, onBusinessChange]);
+  }, [open, item, onBusinessChange]);
 
   return (
     <Modal
@@ -82,8 +81,12 @@ export function AdvertisementRegistrationEditorModal(props: Props) {
       destroyOnHidden
     >
       <Form
+        // Remount theo đăng ký đang sửa để `initialValues` được áp dụng lại khi
+        // mở modal cho bản ghi khác trước lúc nội dung cũ bị destroy.
+        key={item?.id ?? "new"}
         form={form}
         layout="vertical"
+        initialValues={initialValues}
         preserve={false}
         onFinish={(values) =>
           props.onSubmit({

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { DatePicker, Form, Input, Modal, Select } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import type {
@@ -28,27 +27,23 @@ interface Props {
 
 export function EligibilityCertificateEditorModal(props: Props) {
   const [form] = Form.useForm<Values>();
-  const { open, item } = props;
-  useEffect(() => {
-    if (!open) return;
-    form.setFieldsValue(
-      item
-        ? {
-            businessId: item.businessId,
-            certificateNumber: item.certificateNumber,
-            issueDate: dayjs(item.issueDate),
-            expiryDate: item.expiryDate ? dayjs(item.expiryDate) : undefined,
-            certifyingAuthority: item.certifyingAuthority,
-            certificationScope: item.certificationScope,
-            notes: item.notes,
-          }
-        : { issueDate: dayjs() },
-    );
-  }, [form, open, item]);
+  const { item } = props;
+
+  const initialValues: Partial<Values> = item
+    ? {
+        businessId: item.businessId,
+        certificateNumber: item.certificateNumber,
+        issueDate: dayjs(item.issueDate),
+        expiryDate: item.expiryDate ? dayjs(item.expiryDate) : undefined,
+        certifyingAuthority: item.certifyingAuthority,
+        certificationScope: item.certificationScope,
+        notes: item.notes,
+      }
+    : { issueDate: dayjs() };
 
   return (
     <Modal
-      open={open}
+      open={props.open}
       title={
         item
           ? "Cập nhật giấy chứng nhận đủ điều kiện"
@@ -63,8 +58,12 @@ export function EligibilityCertificateEditorModal(props: Props) {
       destroyOnHidden
     >
       <Form
+        // Remount theo giấy đang sửa để `initialValues` được áp dụng lại khi
+        // mở modal cho bản ghi khác trước lúc nội dung cũ bị destroy.
+        key={item?.id ?? "new"}
         form={form}
         layout="vertical"
+        initialValues={initialValues}
         preserve={false}
         onFinish={(values) =>
           props.onSubmit({

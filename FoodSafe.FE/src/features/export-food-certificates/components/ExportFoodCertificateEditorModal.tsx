@@ -60,28 +60,27 @@ export function ExportFoodCertificateEditorModal(props: Props) {
         ]
       : props.businesses;
 
+  const initialValues: Partial<FormValues> = registration
+    ? {
+        businessId: registration.businessId,
+        productId: registration.productId,
+        destinationCountryId: registration.destinationCountryId,
+        certificateNumber: registration.certificateNumber,
+        issueDate: dayjs(registration.issueDate),
+        expiryDate: registration.expiryDate
+          ? dayjs(registration.expiryDate)
+          : undefined,
+        notes: registration.notes,
+        lotNumber: registration.lotNumber,
+        quantity: registration.quantity,
+        quantityUnit: registration.quantityUnit,
+      }
+    : { issueDate: dayjs() };
+
   useEffect(() => {
     if (!open) return;
-    form.setFieldsValue(
-      registration
-        ? {
-            businessId: registration.businessId,
-            productId: registration.productId,
-            destinationCountryId: registration.destinationCountryId,
-            certificateNumber: registration.certificateNumber,
-            issueDate: dayjs(registration.issueDate),
-            expiryDate: registration.expiryDate
-              ? dayjs(registration.expiryDate)
-              : undefined,
-            notes: registration.notes,
-            lotNumber: registration.lotNumber,
-            quantity: registration.quantity,
-            quantityUnit: registration.quantityUnit,
-          }
-        : { issueDate: dayjs() },
-    );
     onBusinessChange(registration?.businessId);
-  }, [form, open, registration, onBusinessChange]);
+  }, [open, registration, onBusinessChange]);
 
   return (
     <Modal
@@ -96,8 +95,12 @@ export function ExportFoodCertificateEditorModal(props: Props) {
       destroyOnHidden
     >
       <Form
+        // Remount theo GCN đang sửa để `initialValues` được áp dụng lại khi mở
+        // modal cho bản ghi khác trước lúc nội dung cũ bị destroy.
+        key={registration?.id ?? "new"}
         form={form}
         layout="vertical"
+        initialValues={initialValues}
         preserve={false}
         onFinish={(values) =>
           props.onSubmit({

@@ -8,10 +8,15 @@ function useRefreshMutation<TVariables>(
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
-    onSuccess: () =>
-      queryClient.invalidateQueries({
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
         queryKey: eligibilityCertificateKeys.all,
-      }),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["business-related", "eligibilityCertificates"],
+        refetchType: "all",
+      });
+    },
   });
 }
 
