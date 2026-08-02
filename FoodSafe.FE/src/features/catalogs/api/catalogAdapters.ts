@@ -42,6 +42,9 @@ function toCatalogItem(item: CatalogItem): CatalogItem {
     method: nullableToUndefined(item.method),
     price: nullableToUndefined(item.price),
     turnaroundDays: nullableToUndefined(item.turnaroundDays),
+    legalReference: nullableToUndefined(item.legalReference),
+    minFine: nullableToUndefined(item.minFine),
+    maxFine: nullableToUndefined(item.maxFine),
   };
 }
 

@@ -16,7 +16,13 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
     // --- Fixed GUIDs for deterministic data (RFC 4122 v4 compliant) ---
     // Administrative areas (internal: referenced by DemoDataSeedContributor)
     internal static readonly Guid ProvinceQuangNinhId = Guid.Parse("e2e00000-0000-4000-8001-000000000001");
-    internal static readonly Guid CommuneBachDangId = Guid.Parse("e2e00000-0000-4000-8003-000000000001");
+
+    // Primary E2E commune — Phường Hồng Gai, real code per NQ 1679/NQ-UBTVQH15
+    // and QĐ 19/2025/QĐ-TTg. The code is also seeded by
+    // ReferenceCatalogDataSeedContributor; contributor order is not guaranteed,
+    // so whichever runs first owns the row and consumers resolve it by code.
+    internal const string CommunePrimaryCode = "06685";
+    static readonly Guid CommuneHongGaiId = Guid.Parse("e2e00000-0000-4000-8003-000000000001");
 
     // Organizations (internal: referenced by DemoDataSeedContributor)
     internal static readonly Guid OrgProvinceId = Guid.Parse("e2e00000-0000-4000-8010-000000000001");
@@ -30,30 +36,33 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
         string OrganizationCode,
         string OrganizationName)[] AdditionalManagingOrganizations =
     [
+        // Real commune codes per NQ 1679/NQ-UBTVQH15 + QĐ 19/2025/QĐ-TTg
+        // (in force since 01/07/2025), shared with
+        // ReferenceCatalogDataSeedContributor — see CommunePrimaryCode note.
         (
             Guid.Parse("e2e00000-0000-4000-8003-000000000002"),
             Guid.Parse("e2e00000-0000-4000-8010-000000000004"),
-            "E2E-HG", "Phường Hồng Gai",
-            "TYT-HG", "Trạm Y tế Phường Hồng Gai"),
+            "06688", "Phường Hạ Long",
+            "TYT-HL", "Trạm Y tế Phường Hạ Long"),
         (
             Guid.Parse("e2e00000-0000-4000-8003-000000000003"),
             Guid.Parse("e2e00000-0000-4000-8010-000000000005"),
-            "E2E-BC", "Phường Bãi Cháy",
+            "06673", "Phường Bãi Cháy",
             "TYT-BC", "Trạm Y tế Phường Bãi Cháy"),
         (
             Guid.Parse("e2e00000-0000-4000-8003-000000000004"),
             Guid.Parse("e2e00000-0000-4000-8010-000000000006"),
-            "E2E-CP", "Phường Cẩm Phả",
+            "06793", "Phường Cẩm Phả",
             "TYT-CP", "Trạm Y tế Phường Cẩm Phả"),
         (
             Guid.Parse("e2e00000-0000-4000-8003-000000000005"),
             Guid.Parse("e2e00000-0000-4000-8010-000000000007"),
-            "E2E-MC", "Phường Móng Cái",
-            "TYT-MC", "Trạm Y tế Phường Móng Cái"),
+            "06712", "Phường Móng Cái 1",
+            "TYT-MC", "Trạm Y tế Phường Móng Cái 1"),
         (
             Guid.Parse("e2e00000-0000-4000-8003-000000000006"),
             Guid.Parse("e2e00000-0000-4000-8010-000000000008"),
-            "E2E-UB", "Phường Uông Bí",
+            "06811", "Phường Uông Bí",
             "TYT-UB", "Trạm Y tế Phường Uông Bí")
     ];
 
@@ -67,19 +76,19 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
     [
         (
             Guid.Parse("e2e00000-0000-4000-8010-000000000009"),
-            "KH-HG-01", "Đơn vị quản lý Hồng Gai", "E2E-HG"),
+            "KH-HG-01", "Đơn vị quản lý Hạ Long", "06688"),
         (
             Guid.Parse("e2e00000-0000-4000-8010-000000000010"),
-            "KH-BC-01", "Đơn vị quản lý Bãi Cháy", "E2E-BC"),
+            "KH-BC-01", "Đơn vị quản lý Bãi Cháy", "06673"),
         (
             Guid.Parse("e2e00000-0000-4000-8010-000000000011"),
-            "KH-CP-01", "Đơn vị quản lý Cẩm Phả", "E2E-CP"),
+            "KH-CP-01", "Đơn vị quản lý Cẩm Phả", "06793"),
         (
             Guid.Parse("e2e00000-0000-4000-8010-000000000012"),
-            "KH-MC-01", "Đơn vị quản lý Móng Cái", "E2E-MC"),
+            "KH-MC-01", "Đơn vị quản lý Móng Cái 1", "06712"),
         (
             Guid.Parse("e2e00000-0000-4000-8010-000000000013"),
-            "KH-UB-01", "Đơn vị quản lý Uông Bí", "E2E-UB")
+            "KH-UB-01", "Đơn vị quản lý Uông Bí", "06811")
     ];
 
     // Test users (not admin — admin is created by ABP)
@@ -203,10 +212,14 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
             await _provinces.InsertAsync(province, autoSave: true);
         }
 
-        if (!await _communes.AnyAsync(x => x.Id == CommuneBachDangId))
+        // The commune code is UNIQUE and also seeded by
+        // ReferenceCatalogDataSeedContributor, so check the code as well —
+        // whichever contributor runs first wins (see CommunePrimaryCode note).
+        if (!await _communes.AnyAsync(x =>
+                x.Id == CommuneHongGaiId || x.Code == CommunePrimaryCode))
         {
             var commune = Commune.Create(
-                CommuneBachDangId, "06547", "Phường Bạch Đằng",
+                CommuneHongGaiId, CommunePrimaryCode, "Phường Hồng Gai",
                 ProvinceQuangNinhId, CommuneType.Ward, 1);
             commune.CreationTime = now;
             await _communes.InsertAsync(commune, autoSave: true);
@@ -246,13 +259,20 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
 
         if (!await _organizations.AnyAsync(x => x.Id == OrgCommuneId))
         {
+            // Resolve by code: the commune row may have been inserted by
+            // ReferenceCatalogDataSeedContributor with its own id.
+            var primaryCommune = await _communes.FirstOrDefaultAsync(
+                    x => x.Code == CommunePrimaryCode)
+                ?? throw new InvalidOperationException(
+                    $"Commune {CommunePrimaryCode} must be seeded before organization TYT-BD.");
+
             var org = Organization.Create(
                 OrgCommuneId, "TYT-BD",
-                "Trạm Y tế Phường Bạch Đằng",
+                "Trạm Y tế Phường Hồng Gai",
                 OrganizationLevel.Commune,
                 parentId: OrgProvinceId,
                 provinceId: ProvinceQuangNinhId,
-                communeId: CommuneBachDangId);
+                communeId: primaryCommune.Id);
             await _organizations.InsertAsync(org, autoSave: true);
         }
 

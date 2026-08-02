@@ -24,6 +24,11 @@ public static class FoodSafeSettings
         public const string ContactAddress = Prefix + ".Homepage.ContactAddress";
     }
 
+    public static class Documents
+    {
+        public const string IssuingAgency = Prefix + ".Documents.IssuingAgency";
+    }
+
     public static class Security
     {
         public const string PasswordMaxLength =

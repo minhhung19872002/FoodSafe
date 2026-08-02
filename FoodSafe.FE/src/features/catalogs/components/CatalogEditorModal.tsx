@@ -286,6 +286,57 @@ export function CatalogEditorModal({
             />
           </>
         )}
+        {kind === "violation-type" && (
+          <>
+            <Controller
+              control={control}
+              name="legalReference"
+              render={({ field }) => (
+                <Form.Item
+                  label="Căn cứ pháp lý (điều, khoản)"
+                  required
+                  validateStatus={errors.legalReference ? "error" : undefined}
+                  help={errors.legalReference?.message}
+                >
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    maxLength={500}
+                    placeholder="VD: Khoản 1 Điều 15 Nghị định 115/2018/NĐ-CP"
+                  />
+                </Form.Item>
+              )}
+            />
+            {(
+              [
+                ["minFine", "Mức phạt tối thiểu (đ, cá nhân)"],
+                ["maxFine", "Mức phạt tối đa (đ, cá nhân)"],
+              ] as const
+            ).map(([name, label]) => (
+              <Controller
+                key={name}
+                control={control}
+                name={name}
+                render={({ field }) => (
+                  <Form.Item
+                    label={label}
+                    validateStatus={errors[name] ? "error" : undefined}
+                    help={errors[name]?.message}
+                  >
+                    <InputNumber
+                      value={field.value}
+                      onBlur={field.onBlur}
+                      onChange={(value) => field.onChange(value ?? undefined)}
+                      min={0}
+                      step={500000}
+                      style={{ width: "100%" }}
+                    />
+                  </Form.Item>
+                )}
+              />
+            ))}
+          </>
+        )}
         {kind === "testing-center" && (
           <>
             <Controller

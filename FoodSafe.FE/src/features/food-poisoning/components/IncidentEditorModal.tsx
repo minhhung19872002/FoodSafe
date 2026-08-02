@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { DatePicker, Form, Input, InputNumber, Modal, Select } from "antd";
+import { Alert, DatePicker, Form, Input, InputNumber, Modal, Select } from "antd";
 import dayjs from "dayjs";
 import {
   AddressLocationPicker,
@@ -9,7 +9,9 @@ import {
 
 import {
   CAUSE_ASSESSMENT_CONFIG,
+  CAUSE_CATEGORY_CONFIG,
   type CauseAssessment,
+  type PoisoningCauseCategory,
   type CreateUpdateIncidentInput,
   type FoodPoisoningIncident,
 } from "../types/foodPoisoning.types";
@@ -27,6 +29,7 @@ interface FormValues {
   foodSource?: string;
   foodServiceType?: string;
   causeAssessmentValue?: CauseAssessment;
+  causeCategory?: PoisoningCauseCategory;
   causativeAgent?: string;
   pathogen?: string;
   investigationTeam?: string;
@@ -67,6 +70,7 @@ export function IncidentEditorModal(props: Props) {
         foodSource: item.foodSource,
         foodServiceType: item.foodServiceType,
         causeAssessmentValue: item.causeAssessmentValue,
+        causeCategory: item.causeCategory,
         causativeAgent: item.causativeAgent,
         pathogen: item.pathogen,
         investigationTeam: item.investigationTeam,
@@ -121,6 +125,7 @@ export function IncidentEditorModal(props: Props) {
             foodSource: values.foodSource?.trim() || undefined,
             foodServiceType: values.foodServiceType?.trim() || undefined,
             causeAssessmentValue: values.causeAssessmentValue,
+            causeCategory: values.causeCategory,
             causativeAgent: values.causativeAgent?.trim() || undefined,
             pathogen: values.pathogen?.trim() || undefined,
             investigationTeam: values.investigationTeam?.trim() || undefined,
@@ -129,6 +134,15 @@ export function IncidentEditorModal(props: Props) {
           });
         }}
       >
+        {!item && (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16 }}
+            message="Báo cáo khẩn vụ ngộ độc thực phẩm"
+            description="Khi xảy ra vụ NĐTP phải báo cáo khẩn ngay cho cơ quan quản lý cấp trên bằng phương tiện nhanh nhất (Quy chế điều tra NĐTP — QĐ 39/2006/QĐ-BYT; chế độ báo cáo — QĐ 01/2006/QĐ-BYT). Việc nhập liệu vào hệ thống không thay thế báo cáo khẩn."
+          />
+        )}
         <div
           style={{
             display: "grid",
@@ -255,6 +269,18 @@ export function IncidentEditorModal(props: Props) {
             <Select
               allowClear
               options={Object.entries(CAUSE_ASSESSMENT_CONFIG).map(
+                ([value, cfg]) => ({ value: Number(value), label: cfg.label }),
+              )}
+            />
+          </Form.Item>
+          <Form.Item
+            name="causeCategory"
+            label="Nhóm căn nguyên"
+            tooltip="Phân nhóm thống kê theo điều tra NĐTP (QĐ 39/2006/QĐ-BYT)"
+          >
+            <Select
+              allowClear
+              options={Object.entries(CAUSE_CATEGORY_CONFIG).map(
                 ([value, cfg]) => ({ value: Number(value), label: cfg.label }),
               )}
             />

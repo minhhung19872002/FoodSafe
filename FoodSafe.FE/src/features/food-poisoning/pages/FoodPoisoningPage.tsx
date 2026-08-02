@@ -10,6 +10,7 @@ import {
   Table,
   Tabs,
   Tag,
+  Tooltip,
   type TableColumnsType,
 } from "antd";
 import { RowActions } from "@/components/RowActions";
@@ -60,6 +61,7 @@ import { PoisoningErrorReportsModal } from "../components/PoisoningErrorReportsM
 import { PoisoningMap } from "../components/PoisoningMap";
 import {
   CAUSE_ASSESSMENT_CONFIG,
+  CAUSE_CATEGORY_CONFIG,
   POISONING_CASE_STATUS,
   POISONING_CASE_STATUS_CONFIG,
   POISONING_INCIDENT_STATUS,
@@ -486,8 +488,16 @@ function IncidentsTab() {
     {
       title: "Mắc",
       dataIndex: "affectedCount",
-      width: 70,
+      width: 110,
       align: "right",
+      render: (_: unknown, r: FoodPoisoningIncident) =>
+        r.isLargeScale ? (
+          <Tooltip title="Vụ lớn: từ 30 người mắc trở lên (chỉ tiêu thống kê ngành y tế)">
+            <Tag color="volcano">{r.affectedCount} — Vụ lớn</Tag>
+          </Tooltip>
+        ) : (
+          r.affectedCount
+        ),
     },
     {
       title: "Nhập viện",
@@ -721,7 +731,18 @@ function IncidentsTab() {
           { label: "Ngày kết thúc", render: (r) => formatDateTime(r.endDate) },
           { label: "Địa điểm", render: (r) => r.locationDescription, span: 2 },
           { label: "Số phơi nhiễm", render: (r) => r.exposedCount },
-          { label: "Số mắc", render: (r) => r.affectedCount },
+          {
+            label: "Số mắc",
+            render: (r) =>
+              r.isLargeScale ? (
+                <>
+                  {r.affectedCount}{" "}
+                  <Tag color="volcano">Vụ lớn (≥30 người mắc)</Tag>
+                </>
+              ) : (
+                r.affectedCount
+              ),
+          },
           { label: "Nhập viện", render: (r) => r.hospitalizedCount },
           {
             label: "Tử vong",
@@ -742,6 +763,15 @@ function IncidentsTab() {
               r.causeAssessmentValue
                 ? CAUSE_ASSESSMENT_CONFIG[r.causeAssessmentValue]?.label
                 : null,
+          },
+          {
+            label: "Nhóm căn nguyên",
+            render: (r) =>
+              r.causeCategory ? (
+                <Tag color={CAUSE_CATEGORY_CONFIG[r.causeCategory]?.color}>
+                  {CAUSE_CATEGORY_CONFIG[r.causeCategory]?.label}
+                </Tag>
+              ) : null,
           },
           { label: "Tác nhân gây bệnh", render: (r) => r.causativeAgent },
           { label: "Vi sinh vật", render: (r) => r.pathogen },

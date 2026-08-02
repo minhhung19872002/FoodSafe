@@ -14,6 +14,8 @@ public class InspectionResultDto : EntityDto<Guid>
     public Guid OrganizationId { get; set; }
     public DateTime InspectionDate { get; set; }
     public InspectionType InspectionType { get; set; }
+    public string? DecisionNumber { get; set; }
+    public DateTime? DecisionDate { get; set; }
     public string? TeamLeader { get; set; }
     public string? TeamMembersText { get; set; }
     public InspectionOverallResult OverallResult { get; set; }
@@ -70,6 +72,11 @@ public class CreateUpdateInspectionResultDto
 
     [Required]
     public InspectionType InspectionType { get; set; }
+
+    [StringLength(100)]
+    public string? DecisionNumber { get; set; }
+
+    public DateTime? DecisionDate { get; set; }
 
     public string? TeamLeader { get; set; }
     public string? TeamMembersText { get; set; }

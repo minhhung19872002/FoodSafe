@@ -53,6 +53,9 @@ public static class FoodSafeDomainErrorCodes
         public const string BusinessInUse = "FoodSafe:Business:0010";
         public const string CannotModifyConfirmedCommitment = "FoodSafe:Business:0011";
         public const string CommitmentAlreadyConfirmed = "FoodSafe:Business:0012";
+        public const string InvalidEligibilityExemptionReason = "FoodSafe:Business:0013";
+        public const string InvalidQualityCertificationType = "FoodSafe:Business:0014";
+        public const string QualityCertificationRequired = "FoodSafe:Business:0015";
     }
 
     public static class Product
@@ -126,6 +129,8 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:EligibilityCertificate:0004";
         public const string CannotChangeBusiness =
             "FoodSafe:EligibilityCertificate:0005";
+        public const string ExpiryExceedsStatutoryLimit =
+            "FoodSafe:EligibilityCertificate:0006";
     }
 
     public static class CfsCertificate
@@ -162,6 +167,26 @@ public static class FoodSafeDomainErrorCodes
             "FoodSafe:ExportFoodCertificate:0007";
     }
 
+    public static class ProductRecall
+    {
+        public const string DecisionNumberRequired =
+            "FoodSafe:ProductRecall:0001";
+        public const string InvalidStatusTransition =
+            "FoodSafe:ProductRecall:0002";
+        public const string CannotModifyFinalized =
+            "FoodSafe:ProductRecall:0003";
+        public const string InvalidDateRange =
+            "FoodSafe:ProductRecall:0004";
+        public const string CancelReasonRequired =
+            "FoodSafe:ProductRecall:0005";
+        public const string InvalidQuantity =
+            "FoodSafe:ProductRecall:0006";
+        public const string ProductMismatch =
+            "FoodSafe:ProductRecall:0007";
+        public const string PostRecallActionRequired =
+            "FoodSafe:ProductRecall:0008";
+    }
+
     public static class Inspection
     {
         public const string PlanNotFound = "FoodSafe:Inspection:0001";
@@ -187,6 +212,7 @@ public static class FoodSafeDomainErrorCodes
         public const string FutureInspectionDate = "FoodSafe:Inspection:0020";
         public const string UncompletedItemsExist = "FoodSafe:Inspection:0021";
         public const string PlanItemResultAlreadyExists = "FoodSafe:Inspection:0022";
+        public const string DecisionDateAfterInspectionDate = "FoodSafe:Inspection:0023";
     }
 
     public static class Report
@@ -216,6 +242,7 @@ public static class FoodSafeDomainErrorCodes
         public const string InvalidRiskLevel = "FoodSafe:Catalog:0006";
         public const string InvalidProductGroupHierarchy = "FoodSafe:Catalog:0007";
         public const string InvalidTestingService = "FoodSafe:Catalog:0008";
+        public const string InvalidFineRange = "FoodSafe:Catalog:0009";
     }
 
     public static class FoodPoisoning

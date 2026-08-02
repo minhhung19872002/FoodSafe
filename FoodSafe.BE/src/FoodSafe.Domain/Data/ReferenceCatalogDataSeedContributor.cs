@@ -12,8 +12,10 @@ namespace FoodSafe.Data;
 /// and facility risk classifications.
 ///
 /// Sources: Nghị định 15/2018/NĐ-CP (phụ lục II–IV — phân công quản lý nhà nước
-/// giữa Bộ Y tế / Bộ NN&amp;PTNT / Bộ Công Thương) for the product groups, and the
-/// General Statistics Office administrative codes for Quảng Ninh (province 22).
+/// giữa Bộ Y tế / Bộ Nông nghiệp và Môi trường / Bộ Công Thương) for the product
+/// groups, and Quyết định 19/2025/QĐ-TTg (bảng danh mục và mã số đơn vị hành
+/// chính, hiệu lực 01/07/2025) + Nghị quyết 1679/NQ-UBTVQH15 (sắp xếp ĐVHC cấp
+/// xã tỉnh Quảng Ninh: 30 phường, 22 xã, 2 đặc khu) for the administrative areas.
 ///
 /// Every insert is guarded by a code lookup, so the contributor is idempotent
 /// and safe to re-run on an existing database.
@@ -32,44 +34,53 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
 
     private readonly IRepository<Region, Guid> _regions;
     private readonly IRepository<Province, Guid> _provinces;
+    private readonly IRepository<Commune, Guid> _communes;
     private readonly IRepository<BusinessType, Guid> _businessTypes;
     private readonly IRepository<BusinessClassification, Guid> _classifications;
     private readonly IRepository<ProductGroup, Guid> _productGroups;
     private readonly IRepository<AdvertisementType, Guid> _advertisementTypes;
     private readonly IRepository<TestingCenter, Guid> _testingCenters;
     private readonly IRepository<TestingService, Guid> _testingServices;
+    private readonly IRepository<ViolationType, Guid> _violationTypes;
     private readonly IClock _clock;
 
     public ReferenceCatalogDataSeedContributor(
         IRepository<Region, Guid> regions,
         IRepository<Province, Guid> provinces,
+        IRepository<Commune, Guid> communes,
         IRepository<BusinessType, Guid> businessTypes,
         IRepository<BusinessClassification, Guid> classifications,
         IRepository<ProductGroup, Guid> productGroups,
         IRepository<AdvertisementType, Guid> advertisementTypes,
         IRepository<TestingCenter, Guid> testingCenters,
         IRepository<TestingService, Guid> testingServices,
+        IRepository<ViolationType, Guid> violationTypes,
         IClock clock)
     {
         _regions = regions;
         _provinces = provinces;
+        _communes = communes;
         _businessTypes = businessTypes;
         _classifications = classifications;
         _productGroups = productGroups;
         _advertisementTypes = advertisementTypes;
         _testingCenters = testingCenters;
         _testingServices = testingServices;
+        _violationTypes = violationTypes;
         _clock = clock;
     }
 
     public async Task SeedAsync(DataSeedContext context)
     {
+        await EnsureQuangNinhProvinceAsync();
+        await SeedQuangNinhCommunesAsync();
         await SeedBusinessTypesAsync();
         await SeedBusinessClassificationsAsync();
         await SeedProductGroupsAsync();
         await SeedAdvertisementTypesAsync();
         await SeedTestingCenterAsync();
         await SeedTestingServicesAsync();
+        await SeedViolationTypesAsync();
     }
 
     private async Task SeedBusinessTypesAsync()
@@ -125,14 +136,17 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
     {
         var seeds = new (string Code, string Name, string Criteria, BusinessRiskLevel Risk, int SortOrder)[]
         {
+            // Tần suất kiểm tra không ghi cứng: căn cứ cũ (TT 30/2012, TT 16/2012)
+            // đã bị TT 17/2023/TT-BYT sửa đổi/bãi bỏ một phần — tần suất do kế
+            // hoạch kiểm tra hằng năm của cơ quan quản lý quyết định.
             ("LOAI-A", "Loại A — Tốt",
-                "Cơ sở đáp ứng đầy đủ điều kiện bảo đảm an toàn thực phẩm; không có lỗi nghiêm trọng hoặc lỗi nặng. Tần suất thanh kiểm tra: 01 lần/năm.",
+                "Cơ sở đáp ứng đầy đủ điều kiện bảo đảm an toàn thực phẩm; không có lỗi nghiêm trọng hoặc lỗi nặng.",
                 BusinessRiskLevel.Low, 1),
             ("LOAI-B", "Loại B — Đạt",
-                "Cơ sở cơ bản đáp ứng điều kiện bảo đảm an toàn thực phẩm; còn tồn tại lỗi nhẹ hoặc lỗi nặng nhưng đã có biện pháp khắc phục. Tần suất thanh kiểm tra: 02 lần/năm.",
+                "Cơ sở cơ bản đáp ứng điều kiện bảo đảm an toàn thực phẩm; còn tồn tại lỗi nhẹ hoặc lỗi nặng nhưng đã có biện pháp khắc phục.",
                 BusinessRiskLevel.Medium, 2),
             ("LOAI-C", "Loại C — Chưa đạt",
-                "Cơ sở không đáp ứng điều kiện bảo đảm an toàn thực phẩm; có lỗi nghiêm trọng phải khắc phục và tái kiểm tra. Tần suất thanh kiểm tra: 03 lần/năm trở lên.",
+                "Cơ sở không đáp ứng điều kiện bảo đảm an toàn thực phẩm; có lỗi nghiêm trọng phải khắc phục và tái kiểm tra.",
                 BusinessRiskLevel.High, 3)
         };
 
@@ -164,16 +178,26 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
         {
             ("BYT", "Nhóm sản phẩm thuộc quản lý của Bộ Y tế",
                 "Phụ lục II Nghị định 15/2018/NĐ-CP", 1),
-            ("BNN", "Nhóm sản phẩm thuộc quản lý của Bộ Nông nghiệp và Phát triển nông thôn",
-                "Phụ lục III Nghị định 15/2018/NĐ-CP", 2),
+            ("BNN", "Nhóm sản phẩm thuộc quản lý của Bộ Nông nghiệp và Môi trường",
+                "Phụ lục III Nghị định 15/2018/NĐ-CP (Bộ NN&PTNT cũ — hợp nhất thành Bộ Nông nghiệp và Môi trường theo Nghị định 35/2025/NĐ-CP)", 2),
             ("BCT", "Nhóm sản phẩm thuộc quản lý của Bộ Công Thương",
                 "Phụ lục IV Nghị định 15/2018/NĐ-CP", 3)
         };
 
         foreach (var parent in parents)
         {
-            if (await _productGroups.AnyAsync(x => x.Code == parent.Code))
+            var existing = await _productGroups.FirstOrDefaultAsync(x => x.Code == parent.Code);
+            if (existing is not null)
             {
+                // Data-fix cho DB đã seed trước khi Bộ NN&PTNT hợp nhất thành
+                // Bộ Nông nghiệp và Môi trường (NĐ 35/2025/NĐ-CP).
+                if (existing.Name.Contains("Phát triển nông thôn"))
+                {
+                    existing.Update(
+                        existing.Code, parent.Name, existing.Level, existing.ParentId,
+                        parent.Description, existing.SortOrder, existing.IsActive);
+                    await _productGroups.UpdateAsync(existing, autoSave: true);
+                }
                 continue;
             }
 
@@ -280,6 +304,93 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
         await _provinces.InsertAsync(province, autoSave: true);
     }
 
+    /// <summary>
+    /// Seeds the 54 commune-level units of Quảng Ninh in force since 01/07/2025
+    /// (30 phường + 22 xã + 2 đặc khu) with the official five-digit codes from
+    /// Quyết định 19/2025/QĐ-TTg, per Nghị quyết 1679/NQ-UBTVQH15.
+    /// </summary>
+    private async Task SeedQuangNinhCommunesAsync()
+    {
+        var province = await _provinces.FirstOrDefaultAsync(x => x.Code == "22");
+        if (province is null)
+        {
+            return;
+        }
+
+        var seeds = new (string Code, string Name, CommuneType Type)[]
+        {
+            ("06652", "Phường Hà Tu", CommuneType.Ward),
+            ("06658", "Phường Cao Xanh", CommuneType.Ward),
+            ("06661", "Phường Việt Hưng", CommuneType.Ward),
+            ("06673", "Phường Bãi Cháy", CommuneType.Ward),
+            ("06676", "Phường Hà Lầm", CommuneType.Ward),
+            ("06685", "Phường Hồng Gai", CommuneType.Ward),
+            ("06688", "Phường Hạ Long", CommuneType.Ward),
+            ("06706", "Phường Tuần Châu", CommuneType.Ward),
+            ("06709", "Phường Móng Cái 2", CommuneType.Ward),
+            ("06712", "Phường Móng Cái 1", CommuneType.Ward),
+            ("06724", "Xã Hải Sơn", CommuneType.Commune),
+            ("06733", "Xã Hải Ninh", CommuneType.Commune),
+            ("06736", "Phường Móng Cái 3", CommuneType.Ward),
+            ("06757", "Xã Vĩnh Thực", CommuneType.Commune),
+            ("06760", "Phường Mông Dương", CommuneType.Ward),
+            ("06778", "Phường Quang Hanh", CommuneType.Ward),
+            ("06781", "Phường Cửa Ông", CommuneType.Ward),
+            ("06793", "Phường Cẩm Phả", CommuneType.Ward),
+            ("06799", "Xã Hải Hòa", CommuneType.Commune),
+            ("06811", "Phường Uông Bí", CommuneType.Ward),
+            ("06820", "Phường Vàng Danh", CommuneType.Ward),
+            ("06832", "Phường Yên Tử", CommuneType.Ward),
+            ("06838", "Xã Bình Liêu", CommuneType.Commune),
+            ("06841", "Xã Hoành Mô", CommuneType.Commune),
+            ("06856", "Xã Lục Hồn", CommuneType.Commune),
+            ("06862", "Xã Tiên Yên", CommuneType.Commune),
+            ("06874", "Xã Điền Xá", CommuneType.Commune),
+            ("06877", "Xã Đông Ngũ", CommuneType.Commune),
+            ("06886", "Xã Hải Lạng", CommuneType.Commune),
+            ("06895", "Xã Đầm Hà", CommuneType.Commune),
+            ("06913", "Xã Quảng Tân", CommuneType.Commune),
+            ("06922", "Xã Quảng Hà", CommuneType.Commune),
+            ("06931", "Xã Quảng Đức", CommuneType.Commune),
+            ("06946", "Xã Đường Hoa", CommuneType.Commune),
+            ("06967", "Xã Cái Chiên", CommuneType.Commune),
+            ("06978", "Xã Ba Chẽ", CommuneType.Commune),
+            ("06979", "Xã Kỳ Thượng", CommuneType.Commune),
+            ("06985", "Xã Lương Minh", CommuneType.Commune),
+            ("06994", "Đặc khu Vân Đồn", CommuneType.SpecialZone),
+            ("07030", "Phường Hoành Bồ", CommuneType.Ward),
+            ("07054", "Xã Quảng La", CommuneType.Commune),
+            ("07060", "Xã Thống Nhất", CommuneType.Commune),
+            ("07069", "Phường Mạo Khê", CommuneType.Ward),
+            ("07081", "Phường Bình Khê", CommuneType.Ward),
+            ("07090", "Phường An Sinh", CommuneType.Ward),
+            ("07093", "Phường Đông Triều", CommuneType.Ward),
+            ("07114", "Phường Hoàng Quế", CommuneType.Ward),
+            ("07132", "Phường Quảng Yên", CommuneType.Ward),
+            ("07135", "Phường Đông Mai", CommuneType.Ward),
+            ("07147", "Phường Hiệp Hòa", CommuneType.Ward),
+            ("07168", "Phường Hà An", CommuneType.Ward),
+            ("07180", "Phường Liên Hòa", CommuneType.Ward),
+            ("07183", "Phường Phong Cốc", CommuneType.Ward),
+            ("07192", "Đặc khu Cô Tô", CommuneType.SpecialZone)
+        };
+
+        for (var i = 0; i < seeds.Length; i++)
+        {
+            var (code, name, type) = seeds[i];
+            if (await _communes.AnyAsync(x => x.Code == code))
+            {
+                continue;
+            }
+
+            var entity = Commune.Create(
+                DeterministicId(0x30c, i + 1),
+                code, name, province.Id, type, sortOrder: i + 1);
+            entity.CreationTime = _clock.Now;
+            await _communes.InsertAsync(entity, autoSave: true);
+        }
+    }
+
     private async Task SeedAdvertisementTypesAsync()
     {
         var seeds = new (string Code, string Name, int SortOrder)[]
@@ -319,7 +430,7 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
         var entity = TestingCenter.Create(
             TestingCenterCdcId, Code,
             "Trung tâm Kiểm soát bệnh tật tỉnh Quảng Ninh - Khoa Xét nghiệm",
-            "651 Lê Thánh Tông, phường Bạch Đằng, TP Hạ Long",
+            "651 Lê Thánh Tông, phường Hồng Gai, tỉnh Quảng Ninh",
             ProvinceQuangNinhId, communeId: null,
             contactPerson: "Phụ trách khoa Xét nghiệm",
             phone: "0203 3825 447",
@@ -366,6 +477,82 @@ public sealed class ReferenceCatalogDataSeedContributor : IDataSeedContributor, 
                 seed.Days, description: null, seed.SortOrder, isActive: true);
             entity.CreationTime = _clock.Now;
             await _testingServices.InsertAsync(entity, autoSave: true);
+        }
+    }
+
+    /// <summary>
+    /// Seeds representative administrative violation types under the health
+    /// sector's remit, per Nghị định 115/2018/NĐ-CP (amended by Nghị định
+    /// 124/2021/NĐ-CP). Fine ranges (VND) are the amounts applied to
+    /// individuals; organizations are fined double (Khoản 2 Điều 3).
+    /// </summary>
+    private async Task SeedViolationTypesAsync()
+    {
+        var seeds = new (string Code, string Name, string LegalReference, decimal? MinFine, decimal? MaxFine, int SortOrder)[]
+        {
+            ("VP-115-09-1", "Sử dụng người tiếp xúc trực tiếp với thực phẩm không mang đầy đủ bảo hộ lao động theo quy định",
+                "Khoản 1 Điều 9 Nghị định 115/2018/NĐ-CP (sửa đổi bởi Nghị định 124/2021/NĐ-CP)",
+                1_000_000m, 3_000_000m, 1),
+            ("VP-115-09-7", "Sử dụng nước không đáp ứng quy chuẩn kỹ thuật hoặc sử dụng người đang mắc bệnh không được phép tiếp xúc trực tiếp trong sản xuất, kinh doanh thực phẩm",
+                "Khoản 7 Điều 9 Nghị định 115/2018/NĐ-CP",
+                15_000_000m, 20_000_000m, 2),
+            ("VP-115-15-1", "Vi phạm điều kiện vệ sinh trong kinh doanh dịch vụ ăn uống (bày bán thực phẩm trên thiết bị, dụng cụ không bảo đảm vệ sinh; không ngăn ngừa nhiễm chéo; người chế biến không đội mũ, đeo khẩu trang)",
+                "Khoản 1 Điều 15 Nghị định 115/2018/NĐ-CP (sửa đổi bởi Nghị định 124/2021/NĐ-CP)",
+                1_000_000m, 3_000_000m, 3),
+            ("VP-115-15-2", "Không thực hiện hoặc thực hiện không đúng quy định về chế độ kiểm thực ba bước; không lưu mẫu thức ăn",
+                "Khoản 2 Điều 15 Nghị định 115/2018/NĐ-CP",
+                3_000_000m, 5_000_000m, 4),
+            ("VP-115-15-4", "Sử dụng nước không đạt quy chuẩn kỹ thuật để chế biến thức ăn, vệ sinh trang thiết bị, dụng cụ phục vụ chế biến, ăn uống",
+                "Khoản 4 Điều 15 Nghị định 115/2018/NĐ-CP",
+                7_000_000m, 10_000_000m, 5),
+            ("VP-115-15-5", "Sử dụng người đang mắc các bệnh mà theo quy định không được tham gia trực tiếp kinh doanh dịch vụ ăn uống",
+                "Khoản 5 Điều 15 Nghị định 115/2018/NĐ-CP",
+                10_000_000m, 15_000_000m, 6),
+            ("VP-115-16-1", "Kinh doanh thức ăn đường phố không có bàn, tủ, giá, kệ, thiết bị, dụng cụ đáp ứng quy định; thức ăn không được che đậy ngăn bụi bẩn; không sử dụng găng tay khi tiếp xúc trực tiếp với thực phẩm chín, thức ăn ngay",
+                "Khoản 1 Điều 16 Nghị định 115/2018/NĐ-CP",
+                500_000m, 1_000_000m, 7),
+            ("VP-115-16-2", "Kinh doanh thức ăn đường phố sử dụng dụng cụ chế biến, ăn uống, chứa đựng không bảo đảm an toàn; người chế biến đang mắc bệnh không được phép; sử dụng nước không bảo đảm vệ sinh",
+                "Khoản 2 Điều 16 Nghị định 115/2018/NĐ-CP",
+                1_000_000m, 3_000_000m, 8),
+            ("VP-115-18-1", "Kinh doanh dịch vụ ăn uống mà không có Giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm hoặc Giấy chứng nhận đã hết hiệu lực",
+                "Khoản 1 Điều 18 Nghị định 115/2018/NĐ-CP (sửa đổi bởi Nghị định 124/2021/NĐ-CP)",
+                20_000_000m, 30_000_000m, 9),
+            ("VP-115-18-2", "Sản xuất, kinh doanh thực phẩm mà không có Giấy chứng nhận cơ sở đủ điều kiện an toàn thực phẩm hoặc Giấy chứng nhận đã hết hiệu lực",
+                "Khoản 2 Điều 18 Nghị định 115/2018/NĐ-CP (sửa đổi bởi Nghị định 124/2021/NĐ-CP)",
+                30_000_000m, 40_000_000m, 10),
+            ("VP-115-20-4", "Sản xuất, nhập khẩu sản phẩm thuộc diện tự công bố sản phẩm mà không có bản tự công bố sản phẩm theo quy định",
+                "Khoản 4 Điều 20 Nghị định 115/2018/NĐ-CP",
+                40_000_000m, 50_000_000m, 11),
+            ("VP-115-21-2", "Sản xuất, nhập khẩu sản phẩm thuộc diện đăng ký bản công bố sản phẩm mà không có Giấy tiếp nhận đăng ký bản công bố sản phẩm theo quy định",
+                "Khoản 2 Điều 21 Nghị định 115/2018/NĐ-CP",
+                40_000_000m, 50_000_000m, 12),
+            ("VP-115-23-1", "Quảng cáo thực phẩm bảo vệ sức khỏe không có nội dung khuyến cáo \"Thực phẩm này không phải là thuốc, không có tác dụng thay thế thuốc chữa bệnh\"",
+                "Khoản 1 Điều 23 Nghị định 115/2018/NĐ-CP",
+                5_000_000m, 10_000_000m, 13),
+            ("VP-115-26-5", "Không thực hiện thu hồi thực phẩm không bảo đảm an toàn theo quy định",
+                "Khoản 5 Điều 26 Nghị định 115/2018/NĐ-CP",
+                20_000_000m, 30_000_000m, 14),
+        };
+
+        foreach (var seed in seeds)
+        {
+            if (await _violationTypes.AnyAsync(x => x.Code == seed.Code))
+            {
+                continue;
+            }
+
+            var entity = ViolationType.Create(
+                DeterministicId(0x30d, seed.SortOrder),
+                seed.Code,
+                seed.Name,
+                seed.LegalReference,
+                seed.MinFine,
+                seed.MaxFine,
+                description: null,
+                seed.SortOrder,
+                isActive: true);
+            entity.CreationTime = _clock.Now;
+            await _violationTypes.InsertAsync(entity, autoSave: true);
         }
     }
 

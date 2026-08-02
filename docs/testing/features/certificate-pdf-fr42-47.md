@@ -1,7 +1,9 @@
 # F-034: Certificate PDF Download
 
 **Feature ID:** F-034
-**Status:** VERIFIED
+**Status:** DIRTY
+
+> DIRTY 2026-08-02: `CertificatePdfAppService` đọc tên cơ quan từ setting `FoodSafe.Documents.IssuingAgency` thay cho const; `EligibilityCertificate` enforce hiệu lực tối đa 3 năm (Điều 37 Luật ATTP). Retest Level 2: sinh PDF các loại chứng nhận + tạo GCN với hạn > 3 năm phải bị từ chối.
 **Verified Git commit:** `86b793a`
 **Verification date:** 2026-07-27
 **Environment:** Docker Compose — PostgreSQL 15, Redis 7, MinIO, ASP.NET Core API, nginx+React frontend

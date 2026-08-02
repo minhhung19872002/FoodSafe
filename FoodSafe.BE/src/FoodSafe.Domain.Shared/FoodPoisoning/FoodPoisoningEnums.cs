@@ -23,6 +23,22 @@ public enum CauseAssessment : short
     Unknown = 4
 }
 
+/// <summary>
+/// Nhóm căn nguyên vụ ngộ độc theo phân loại thống kê ngành y tế
+/// (điều tra NĐTP theo QĐ 39/2006/QĐ-BYT).
+/// </summary>
+public enum PoisoningCauseCategory : short
+{
+    /// <summary>Vi sinh vật (vi khuẩn, virus, ký sinh trùng).</summary>
+    Microbial = 1,
+    /// <summary>Hóa chất (hóa chất bảo vệ thực vật, phụ gia ngoài danh mục...).</summary>
+    Chemical = 2,
+    /// <summary>Độc tố tự nhiên (nấm độc, cá nóc, cóc, độc tố hải sản...).</summary>
+    NaturalToxin = 3,
+    /// <summary>Không xác định được căn nguyên.</summary>
+    Undetermined = 4
+}
+
 public enum TreatmentResult : short
 {
     Recovered = 1,

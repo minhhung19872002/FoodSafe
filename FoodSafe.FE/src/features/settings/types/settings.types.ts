@@ -19,6 +19,7 @@ export interface SystemSettings {
   contactPhone?: string;
   contactEmail?: string;
   contactAddress?: string;
+  issuingAgency?: string;
   hasLogo: boolean;
   hasLoginBackground: boolean;
   licenseExpiryNotificationDays: number;

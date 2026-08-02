@@ -26,6 +26,7 @@ export const ROUTE_PERMISSIONS = {
   vsattpCommitments: ["FoodSafe.Licensing.VsattpCommitments.View"],
   cfsCertificates: ["FoodSafe.Licensing.CfsCertificates.View"],
   exportCertificates: ["FoodSafe.Licensing.ExportCertificates.View"],
+  productRecalls: ["FoodSafe.ProductRecalls.View"],
   inspection: [
     "FoodSafe.Inspection.Plans.View",
     "FoodSafe.Inspection.Results.View",

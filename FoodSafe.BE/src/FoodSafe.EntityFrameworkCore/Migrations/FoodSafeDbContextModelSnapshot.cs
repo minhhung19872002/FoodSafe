@@ -907,6 +907,10 @@ namespace FoodSafe.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deletion_time");
 
+                    b.Property<short?>("EligibilityExemptionReason")
+                        .HasColumnType("smallint")
+                        .HasColumnName("eligibility_exemption_reason");
+
                     b.Property<int?>("EmployeeCount")
                         .HasColumnType("integer")
                         .HasColumnName("employee_count");
@@ -955,6 +959,19 @@ namespace FoodSafe.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
+
+                    b.Property<DateTime?>("QualityCertificationExpiry")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("quality_certification_expiry");
+
+                    b.Property<string>("QualityCertificationNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("quality_certification_number");
+
+                    b.Property<short?>("QualityCertificationType")
+                        .HasColumnType("smallint")
+                        .HasColumnName("quality_certification_type");
 
                     b.Property<string>("RepresentativeIdCard")
                         .HasMaxLength(50)
@@ -2387,6 +2404,87 @@ namespace FoodSafe.Migrations
                     b.ToTable("cat_testing_services", (string)null);
                 });
 
+            modelBuilder.Entity("FoodSafe.Catalogs.ViolationType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creation_time");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("creator_id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modification_time");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_modifier_id");
+
+                    b.Property<string>("LegalReference")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("legal_reference");
+
+                    b.Property<decimal?>("MaxFine")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("max_fine");
+
+                    b.Property<decimal?>("MinFine")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("min_fine");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("uq_violation_types_code");
+
+                    b.ToTable("cat_violation_types", null, t =>
+                        {
+                            t.HasCheckConstraint("chk_violation_types_fine_range", "min_fine IS NULL OR max_fine IS NULL OR min_fine <= max_fine");
+                        });
+                });
+
             modelBuilder.Entity("FoodSafe.DataIntegration.ApiCallLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3407,6 +3505,10 @@ namespace FoodSafe.Migrations
                         .HasColumnType("smallint")
                         .HasColumnName("cause_assessment");
 
+                    b.Property<short?>("CauseCategory")
+                        .HasColumnType("smallint")
+                        .HasColumnName("cause_category");
+
                     b.Property<DateTime?>("ConcludedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("concluded_at");
@@ -4026,6 +4128,15 @@ namespace FoodSafe.Migrations
                     b.Property<Guid?>("CreatorId")
                         .HasColumnType("uuid")
                         .HasColumnName("creator_id");
+
+                    b.Property<DateTime?>("DecisionDate")
+                        .HasColumnType("date")
+                        .HasColumnName("decision_date");
+
+                    b.Property<string>("DecisionNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("decision_number");
 
                     b.Property<Guid?>("DeleterId")
                         .HasColumnType("uuid")
@@ -5226,6 +5337,170 @@ namespace FoodSafe.Migrations
                     b.HasIndex("CommuneId", "ProvinceId");
 
                     b.ToTable("organizations", (string)null);
+                });
+
+            modelBuilder.Entity("FoodSafe.ProductRecalls.ProductRecall", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ActionDescription")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("action_description");
+
+                    b.Property<string>("BatchInfo")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("batch_info");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_id");
+
+                    b.Property<string>("CancelReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("cancel_reason");
+
+                    b.Property<DateTime?>("CompletedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("completed_date");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creation_time");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("creator_id");
+
+                    b.Property<DateTime?>("DecisionDate")
+                        .HasColumnType("date")
+                        .HasColumnName("decision_date");
+
+                    b.Property<string>("DecisionNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("decision_number");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleter_id");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletion_time");
+
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("extra_properties");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modification_time");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_modifier_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<short?>("PostRecallAction")
+                        .HasColumnType("smallint")
+                        .HasColumnName("post_recall_action");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("product_name");
+
+                    b.Property<decimal?>("QuantityRecalled")
+                        .HasColumnType("numeric(18,3)")
+                        .HasColumnName("quantity_recalled");
+
+                    b.Property<string>("QuantityUnit")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("quantity_unit");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("reason");
+
+                    b.Property<short>("RecallType")
+                        .HasColumnType("smallint")
+                        .HasColumnName("recall_type");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<short>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_product_recalls");
+
+                    b.HasIndex("BusinessId")
+                        .HasDatabaseName("idx_product_recalls_business")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("idx_product_recalls_org")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("BusinessId", "OrganizationId");
+
+                    b.HasIndex("Status", "RecallType")
+                        .HasDatabaseName("idx_product_recalls_status_type")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("ProductId", "BusinessId", "OrganizationId");
+
+                    b.ToTable("product_recalls", null, t =>
+                        {
+                            t.HasCheckConstraint("chk_product_recalls_action", "post_recall_action IS NULL OR post_recall_action IN (1, 2, 3, 4)");
+
+                            t.HasCheckConstraint("chk_product_recalls_cancelled", "(status != 4 AND cancel_reason IS NULL) OR (status = 4 AND cancel_reason IS NOT NULL)");
+
+                            t.HasCheckConstraint("chk_product_recalls_completed", "status != 3 OR (post_recall_action IS NOT NULL AND completed_date IS NOT NULL)");
+
+                            t.HasCheckConstraint("chk_product_recalls_dates", "completed_date IS NULL OR start_date <= completed_date");
+
+                            t.HasCheckConstraint("chk_product_recalls_decision", "recall_type != 2 OR decision_number IS NOT NULL");
+
+                            t.HasCheckConstraint("chk_product_recalls_quantity", "quantity_recalled IS NULL OR quantity_recalled >= 0");
+
+                            t.HasCheckConstraint("chk_product_recalls_status", "status IN (1, 2, 3, 4)");
+
+                            t.HasCheckConstraint("chk_product_recalls_type", "recall_type IN (1, 2)");
+                        });
                 });
 
             modelBuilder.Entity("FoodSafe.Reporting.ActionMonthReport", b =>
@@ -8619,6 +8894,31 @@ namespace FoodSafe.Migrations
                         .HasPrincipalKey("Id", "ProvinceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_organizations_commune_province");
+                });
+
+            modelBuilder.Entity("FoodSafe.ProductRecalls.ProductRecall", b =>
+                {
+                    b.HasOne("FoodSafe.Organizations.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_product_recalls_org");
+
+                    b.HasOne("FoodSafe.BusinessManagement.Business", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessId", "OrganizationId")
+                        .HasPrincipalKey("Id", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_product_recalls_business_org");
+
+                    b.HasOne("FoodSafe.BusinessManagement.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId", "BusinessId", "OrganizationId")
+                        .HasPrincipalKey("Id", "BusinessId", "OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_product_recalls_product");
                 });
 
             modelBuilder.Entity("FoodSafe.Reporting.ActionMonthReport", b =>

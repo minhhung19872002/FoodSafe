@@ -28,6 +28,8 @@ public class SystemSettingsDto
     public string? ContactEmail { get; set; }
     public string? ContactAddress { get; set; }
 
+    public string? IssuingAgency { get; set; }
+
     public bool HasLogo { get; set; }
     public bool HasLoginBackground { get; set; }
 
@@ -116,6 +118,10 @@ public class UpdateSystemSettingsDto
 
     [StringLength(500)]
     public string? ContactAddress { get; set; }
+
+    /// <summary>Tên cơ quan ban hành in trên các biểu mẫu PDF.</summary>
+    [StringLength(500)]
+    public string? IssuingAgency { get; set; }
 
     [Range(1, 365)]
     public int LicenseExpiryNotificationDays { get; set; } = 30;

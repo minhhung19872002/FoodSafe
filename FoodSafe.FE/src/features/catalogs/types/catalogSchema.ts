@@ -41,6 +41,9 @@ const catalogSchema = z.object({
   method: optionalText,
   price: z.number().min(0, "Đơn giá không được âm").optional(),
   turnaroundDays: z.number().int().min(0, "Thời gian không được âm").optional(),
+  legalReference: z.string().trim().max(500).optional().or(z.literal("")),
+  minFine: z.number().min(0, "Mức phạt không được âm").optional(),
+  maxFine: z.number().min(0, "Mức phạt không được âm").optional(),
 });
 
 function requireField(
@@ -126,6 +129,26 @@ export function createCatalogSchema(kind: CatalogKind) {
         "Vui lòng chọn ngày hết hạn",
         context,
       );
+    }
+
+    if (kind === "violation-type") {
+      requireField(
+        values.legalReference,
+        "legalReference",
+        "Vui lòng nhập căn cứ pháp lý (điều, khoản)",
+        context,
+      );
+      if (
+        values.minFine !== undefined &&
+        values.maxFine !== undefined &&
+        values.minFine > values.maxFine
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["maxFine"],
+          message: "Mức phạt tối đa phải lớn hơn hoặc bằng mức tối thiểu",
+        });
+      }
     }
 
     if (kind === "testing-service") {

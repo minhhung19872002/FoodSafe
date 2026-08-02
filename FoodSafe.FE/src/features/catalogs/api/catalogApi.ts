@@ -26,6 +26,7 @@ const pluralPaths: Record<CatalogKind, string> = {
   "document-type": "document-types",
   "testing-center": "testing-centers",
   "testing-service": "testing-services",
+  "violation-type": "violation-types",
 };
 
 /** Tên enum MasterCatalogKind phía backend, dùng làm query param. */
@@ -39,6 +40,8 @@ const importKinds: Record<CatalogKind, string> = {
   "document-type": "DocumentType",
   "testing-center": "TestingCenter",
   "testing-service": "TestingService",
+  // TODO: Excel import/export chưa hỗ trợ ViolationType phía backend.
+  "violation-type": "ViolationType",
 };
 
 export async function fetchCatalog(

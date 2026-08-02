@@ -126,6 +126,8 @@ public class InspectionResultAppService : ApplicationService
             input.Recommendations,
             input.Notes);
 
+        result.SetDecision(input.DecisionNumber, input.DecisionDate);
+
         foreach (var v in input.Violations)
         {
             result.AddViolation(
@@ -183,6 +185,8 @@ public class InspectionResultAppService : ApplicationService
             input.FollowUpScope,
             input.Recommendations,
             input.Notes);
+
+        result.SetDecision(input.DecisionNumber, input.DecisionDate);
 
         foreach (var v in input.Violations)
         {
@@ -379,6 +383,8 @@ public class InspectionResultAppService : ApplicationService
             OrganizationId = r.OrganizationId,
             InspectionDate = r.InspectionDate,
             InspectionType = r.InspectionType,
+            DecisionNumber = r.DecisionNumber,
+            DecisionDate = r.DecisionDate,
             TeamLeader = r.TeamLeader,
             TeamMembersText = r.TeamMembersText,
             OverallResult = r.OverallResult,

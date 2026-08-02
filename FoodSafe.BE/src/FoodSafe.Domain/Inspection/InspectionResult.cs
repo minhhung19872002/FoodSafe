@@ -11,6 +11,14 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
     public Guid OrganizationId { get; private set; }
     public DateTime InspectionDate { get; private set; }
     public InspectionType InspectionType { get; private set; }
+
+    /// <summary>
+    /// Inspection decision ("Quyết định kiểm tra") issued before the inspection,
+    /// per Article 9 of Circular 48/2015/TT-BYT. Distinct from the administrative
+    /// sanction decision (AdminDecisionNumber/AdminDecisionDate).
+    /// </summary>
+    public string? DecisionNumber { get; private set; }
+    public DateTime? DecisionDate { get; private set; }
     public string? TeamLeader { get; private set; }
     public string? TeamMembersText { get; private set; }
     public InspectionOverallResult OverallResult { get; private set; }
@@ -85,6 +93,24 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
             adminDecisionNumber, adminDecisionDate,
             followUpRequired, followUpDate, followUpScope, recommendations, notes);
         return result;
+    }
+
+    /// <summary>
+    /// Sets the inspection decision reference. Must be called after the core
+    /// fields are set so the decision date can be validated against the
+    /// (possibly updated) inspection date.
+    /// </summary>
+    public void SetDecision(string? decisionNumber, DateTime? decisionDate)
+    {
+        EnsureMutable();
+
+        var normalizedDate = decisionDate?.Date;
+        if (normalizedDate.HasValue && normalizedDate.Value > InspectionDate)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Inspection.DecisionDateAfterInspectionDate);
+
+        DecisionNumber = Normalize(decisionNumber);
+        DecisionDate = normalizedDate;
     }
 
     public void Finalize(Guid finalizedById, DateTime finalizedAt)

@@ -1377,7 +1377,12 @@ function ActionMonthTab() {
             icon={<PlusOutlined />}
             onClick={() => {
               form.resetFields();
-              form.setFieldsValue({ periodYear: currentYear });
+              form.setFieldsValue({
+                periodYear: currentYear,
+                // Tháng hành động vì ATTP diễn ra 15/4–15/5 hằng năm theo
+                // kế hoạch của BCĐ liên ngành TƯ về ATTP.
+                actionMonthDates: `15/04/${currentYear} - 15/05/${currentYear}`,
+              });
               setCreateOpen(true);
             }}
           >
@@ -1429,7 +1434,26 @@ function ActionMonthTab() {
             label="Năm"
             rules={[{ required: true, message: "Vui lòng nhập năm" }]}
           >
-            <InputNumber min={2020} max={2100} style={{ width: "100%" }} />
+            <InputNumber<number>
+              min={2020}
+              max={2100}
+              style={{ width: "100%" }}
+              onChange={(year) => {
+                // Giữ gợi ý 15/4–15/5 khớp với năm kỳ báo cáo, chỉ khi
+                // người dùng chưa tự sửa khoảng thời gian.
+                const dates = form.getFieldValue("actionMonthDates") as
+                  | string
+                  | undefined;
+                if (
+                  typeof year === "number" &&
+                  (!dates || /^15\/04\/\d{4} - 15\/05\/\d{4}$/.test(dates))
+                ) {
+                  form.setFieldsValue({
+                    actionMonthDates: `15/04/${year} - 15/05/${year}`,
+                  });
+                }
+              }}
+            />
           </Form.Item>
           <Form.Item name="actionMonthTheme" label="Chủ đề">
             <Input />

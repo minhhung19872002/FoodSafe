@@ -205,6 +205,11 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
             input.AddressStreet, input.AddressProvinceId,
             input.AddressCommuneId, input.AddressLatitude, input.AddressLongitude,
             input.EstablishedDate, input.EmployeeCount, input.Notes);
+        business.SetEligibilityExemption(
+            input.EligibilityExemptionReason,
+            input.QualityCertificationType,
+            input.QualityCertificationNumber,
+            input.QualityCertificationExpiry);
         await _businesses.InsertAsync(
             business,
             autoSave: true,
@@ -239,6 +244,11 @@ public class BusinessAppService : ApplicationService, IBusinessAppService
         business.SetCertificateFlags(
             input.HasEligibilityCertificate,
             input.HasVsattpCommitment);
+        business.SetEligibilityExemption(
+            input.EligibilityExemptionReason,
+            input.QualityCertificationType,
+            input.QualityCertificationNumber,
+            input.QualityCertificationExpiry);
         await _businesses.UpdateAsync(
             business,
             autoSave: true,

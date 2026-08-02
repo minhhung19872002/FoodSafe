@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Col, DatePicker, Form, Input, Modal, Row, Select } from "antd";
+import { Alert, Col, DatePicker, Form, Input, Modal, Row, Select } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import type {
   BusinessOption,
@@ -88,6 +88,15 @@ export function ProductRegistrationEditorModal(props: Props) {
       onOk={() => form.submit()}
       destroyOnHidden
     >
+      {!registration && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="Thẩm quyền tiếp nhận từ 01/7/2025 (Nghị định 148/2025/NĐ-CP)"
+          description="Thực phẩm dinh dưỡng y học, thực phẩm dùng cho chế độ ăn đặc biệt, sản phẩm dinh dưỡng dùng cho trẻ đến 36 tháng tuổi: Sở Y tế giải quyết trong 7 ngày làm việc. Thực phẩm bảo vệ sức khỏe, phụ gia thực phẩm mới: Cục An toàn thực phẩm (Bộ Y tế), 21 ngày làm việc."
+        />
+      )}
       <Form
         // Remount theo đăng ký đang sửa để `initialValues` được áp dụng lại khi
         // mở modal cho bản ghi khác trước lúc nội dung cũ bị destroy.

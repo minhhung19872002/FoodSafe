@@ -13,5 +13,6 @@ public sealed class MasterCatalogAutoMapperProfile : Profile
         CreateMap<DocumentType, MasterCatalogDto>();
         CreateMap<TestingCenter, TestingCenterDto>();
         CreateMap<TestingService, TestingServiceDto>();
+        CreateMap<ViolationType, ViolationTypeDto>();
     }
 }

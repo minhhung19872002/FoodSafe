@@ -22,6 +22,7 @@ using FoodSafe.FoodPoisoning;
 using FoodSafe.Reporting;
 using FoodSafe.DataIntegration;
 using FoodSafe.Notifications;
+using FoodSafe.ProductRecalls;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -52,6 +53,7 @@ public class FoodSafeDbContext :
     public DbSet<DocumentType> DocumentTypes { get; set; }
     public DbSet<TestingCenter> TestingCenters { get; set; }
     public DbSet<TestingService> TestingServices { get; set; }
+    public DbSet<ViolationType> ViolationTypes { get; set; }
     public DbSet<AppUserProfile> AppUserProfiles { get; set; }
     public DbSet<PasswordHistory> PasswordHistory { get; set; }
     public DbSet<ManagementScopeAssignment> ManagementScopeAssignments { get; set; }
@@ -72,6 +74,7 @@ public class FoodSafeDbContext :
     public DbSet<VsattpCommitment> VsattpCommitments { get; set; }
     public DbSet<ExportFoodCertificate> ExportFoodCertificates
     { get; set; }
+    public DbSet<ProductRecall> ProductRecalls { get; set; }
     public DbSet<InspectionPlan> InspectionPlans { get; set; }
     public DbSet<InspectionPlanItem> InspectionPlanItems { get; set; }
     public DbSet<InspectionResult> InspectionResults { get; set; }

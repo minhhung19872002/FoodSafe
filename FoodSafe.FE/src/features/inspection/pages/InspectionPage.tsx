@@ -1061,6 +1061,11 @@ function ResultsTab() {
         onClose={() => setDetailResult(null)}
         fields={[
           { label: "Cơ sở SXKD", render: (r) => r.businessName, span: 2 },
+          { label: "Số QĐ kiểm tra", render: (r) => r.decisionNumber },
+          {
+            label: "Ngày QĐ kiểm tra",
+            render: (r) => formatDate(r.decisionDate),
+          },
           {
             label: "Ngày kiểm tra",
             render: (r) => formatDate(r.inspectionDate),

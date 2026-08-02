@@ -1,10 +1,12 @@
 using FoodSafe.Permissions;
+using FoodSafe.Settings;
 using Microsoft.AspNetCore.Authorization;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Settings;
 
 namespace FoodSafe.FoodPoisoning;
 
@@ -12,8 +14,6 @@ namespace FoodSafe.FoodPoisoning;
 [Authorize(FoodSafePermissions.FoodPoisoning.Cases.View)]
 public class FoodPoisoningCasePdfAppService : ApplicationService, IFoodPoisoningCasePdfAppService
 {
-    private const string IssuingAgency = "CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH";
-
     private readonly FoodPoisoningCaseAppService _caseAppService;
 
     public FoodPoisoningCasePdfAppService(FoodPoisoningCaseAppService caseAppService)
@@ -24,10 +24,11 @@ public class FoodPoisoningCasePdfAppService : ApplicationService, IFoodPoisoning
     public async Task<byte[]> GenerateCasePdfAsync(Guid caseId)
     {
         var dto = await _caseAppService.GetAsync(caseId);
-        return BuildPdf(dto, Clock.Now);
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
+        return BuildPdf(dto, Clock.Now, issuingAgency);
     }
 
-    private static byte[] BuildPdf(FoodPoisoningCaseDto c, DateTime now)
+    private static byte[] BuildPdf(FoodPoisoningCaseDto c, DateTime now, string issuingAgency)
     {
         QuestPDF.Settings.License = LicenseType.Community;
 
@@ -55,7 +56,7 @@ public class FoodPoisoningCasePdfAppService : ApplicationService, IFoodPoisoning
                             hdr.Item().Text("───────────────").AlignCenter().FontSize(10);
                         });
                     });
-                    col.Item().PaddingTop(8).Text(IssuingAgency)
+                    col.Item().PaddingTop(8).Text(issuingAgency)
                         .Bold().AlignCenter().FontSize(11);
                     col.Item().PaddingTop(12).Text("BÁO CÁO CA NGỘ ĐỘC THỰC PHẨM")
                         .Bold().AlignCenter().FontSize(14);

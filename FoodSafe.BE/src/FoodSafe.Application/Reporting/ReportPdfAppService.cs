@@ -1,5 +1,6 @@
 using FoodSafe.Permissions;
 using FoodSafe.Security;
+using FoodSafe.Settings;
 using Microsoft.AspNetCore.Authorization;
 using QuestPDF.Elements.Table;
 using QuestPDF.Fluent;
@@ -8,6 +9,7 @@ using QuestPDF.Infrastructure;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Settings;
 using Volo.Abp.Threading;
 
 namespace FoodSafe.Reporting;
@@ -15,8 +17,6 @@ namespace FoodSafe.Reporting;
 [RemoteService(false)]
 public class ReportPdfAppService : ApplicationService, IReportPdfAppService
 {
-    private const string IssuingAgency = "CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH";
-
     private readonly IRepository<NdtpReport, Guid> _ndtpReports;
     private readonly IRepository<AtpWorkReport, Guid> _atpReports;
     private readonly IRepository<ActionMonthReport, Guid> _amrReports;
@@ -48,11 +48,12 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
         var entity = await GetScopedNdtpAsync(reportId);
         var dto = ToNdtpDto(entity);
         await _nameEnricher.EnrichAsync([dto], _cancellationTokens.Token);
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
 
         QuestPDF.Settings.License = LicenseType.Community;
         return new ReportPdfDto
         {
-            Content = BuildNdtpPdf(dto),
+            Content = BuildNdtpPdf(dto, issuingAgency),
             FileName = $"bao-cao-ndtp-{dto.PeriodYear}-thang{dto.PeriodMonth:D2}.pdf",
         };
     }
@@ -63,11 +64,12 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
         var entity = await GetScopedAtpAsync(reportId);
         var dto = ToAtpDto(entity);
         await _nameEnricher.EnrichAsync([dto], _cancellationTokens.Token);
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
 
         QuestPDF.Settings.License = LicenseType.Community;
         return new ReportPdfDto
         {
-            Content = BuildAtpWorkPdf(dto),
+            Content = BuildAtpWorkPdf(dto, issuingAgency),
             FileName = $"bao-cao-attp-{dto.PeriodYear}.pdf",
         };
     }
@@ -78,11 +80,12 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
         var entity = await GetScopedAmrAsync(reportId);
         var dto = ToAmrDto(entity);
         await _nameEnricher.EnrichAsync([dto], _cancellationTokens.Token);
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
 
         QuestPDF.Settings.License = LicenseType.Community;
         return new ReportPdfDto
         {
-            Content = BuildAmrPdf(dto),
+            Content = BuildAmrPdf(dto, issuingAgency),
             FileName = $"bao-cao-thang-hanh-dong-{dto.PeriodYear}.pdf",
         };
     }
@@ -264,7 +267,8 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
         PageDescriptor page,
         string title,
         string periodLabel,
-        string? orgName)
+        string? orgName,
+        string issuingAgency)
     {
         page.Header().Column(col =>
         {
@@ -281,10 +285,10 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
                 });
             });
 
-            col.Item().PaddingTop(8).Text(IssuingAgency)
+            col.Item().PaddingTop(8).Text(issuingAgency)
                 .Bold().AlignCenter().FontSize(11);
 
-            if (!string.IsNullOrWhiteSpace(orgName) && orgName != IssuingAgency)
+            if (!string.IsNullOrWhiteSpace(orgName) && orgName != issuingAgency)
                 col.Item().Text(orgName).AlignCenter().FontSize(10).Italic();
 
             col.Item().PaddingTop(12).Text(title)
@@ -344,7 +348,7 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
 
     // ── PDF builders ──────────────────────────────────────────────────────────
 
-    private static byte[] BuildNdtpPdf(NdtpReportDto r)
+    private static byte[] BuildNdtpPdf(NdtpReportDto r, string issuingAgency)
     {
         return Document.Create(container =>
         {
@@ -357,7 +361,8 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
                 AddPageHeader(page,
                     "BÁO CÁO TÌNH HÌNH NGỘ ĐỘC THỰC PHẨM",
                     $"Tháng {r.PeriodMonth:D2}/{r.PeriodYear}",
-                    r.OrganizationName);
+                    r.OrganizationName,
+                    issuingAgency);
 
                 page.Content().PaddingTop(12).Column(col =>
                 {
@@ -448,7 +453,7 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
         }).GeneratePdf();
     }
 
-    private static byte[] BuildAtpWorkPdf(AtpWorkReportDto r)
+    private static byte[] BuildAtpWorkPdf(AtpWorkReportDto r, string issuingAgency)
     {
         var periodLabel = r.PeriodType == ReportPeriodType.HalfYear && r.PeriodHalf.HasValue
             ? $"{PeriodTypeLabel(r.PeriodType)} {(r.PeriodHalf == 1 ? "đầu" : "cuối")} năm {r.PeriodYear}"
@@ -465,7 +470,8 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
                 AddPageHeader(page,
                     "BÁO CÁO CÔNG TÁC AN TOÀN THỰC PHẨM",
                     periodLabel,
-                    r.OrganizationName);
+                    r.OrganizationName,
+                    issuingAgency);
 
                 page.Content().PaddingTop(12).Column(col =>
                 {
@@ -604,7 +610,7 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
         }).GeneratePdf();
     }
 
-    private static byte[] BuildAmrPdf(ActionMonthReportDto r)
+    private static byte[] BuildAmrPdf(ActionMonthReportDto r, string issuingAgency)
     {
         return Document.Create(container =>
         {
@@ -617,7 +623,8 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
                 AddPageHeader(page,
                     "BÁO CÁO THÁNG HÀNH ĐỘNG QUỐC GIA VỀ AN TOÀN THỰC PHẨM",
                     $"Năm {r.PeriodYear}",
-                    r.OrganizationName);
+                    r.OrganizationName,
+                    issuingAgency);
 
                 page.Content().PaddingTop(12).Column(col =>
                 {

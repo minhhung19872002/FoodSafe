@@ -11,7 +11,7 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { RefreshListButton } from "@/components/RefreshListButton";
 import { RowActions } from "@/components/RowActions";
-import { catalogDefinitions } from "../types/catalog.types";
+import { catalogDefinitions, formatFineRange } from "../types/catalog.types";
 import type { CatalogItem, CatalogKind } from "../types/catalog.types";
 
 interface GeographyOption {
@@ -181,6 +181,22 @@ function buildColumns({
           },
         ]
       : []),
+    ...(kind === "violation-type"
+      ? [
+          {
+            title: "Điều khoản",
+            dataIndex: "legalReference",
+            ellipsis: true,
+          },
+          {
+            title: "Khung phạt (cá nhân)",
+            key: "fineRange",
+            width: 220,
+            render: (_: unknown, item: CatalogItem) =>
+              formatFineRange(item.minFine, item.maxFine),
+          },
+        ]
+      : []),
     ...(kind !== "country"
       ? [{ title: "Mô tả", dataIndex: "description", ellipsis: true }]
       : []),
@@ -263,7 +279,8 @@ export function MasterCatalogView(props: MasterCatalogViewProps) {
             Xuất Excel
           </Button>
         )}
-        {props.canCreate && (
+        {/* TODO: bật lại khi backend hỗ trợ Excel import cho hành vi vi phạm. */}
+        {props.canCreate && props.kind !== "violation-type" && (
           <Button icon={<ImportOutlined />} onClick={props.onImport}>
             Import
           </Button>

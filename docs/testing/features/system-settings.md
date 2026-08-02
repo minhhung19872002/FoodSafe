@@ -1,8 +1,9 @@
 # F-032 — System Settings (Cấu hình hệ thống)
 
-## Status: VERIFIED
+## Status: DIRTY
 
 - **Feature ID**: F-032 · **Verified Git commit**: `5444001` · **Date**: 2026-07-27
+- **DIRTY 2026-08-02**: thêm setting `FoodSafe.Documents.IssuingAgency` (tên cơ quan ban hành in trên PDF — thay hard-code ở 6 PdfAppService) + field mới trên SystemSettingsPage. Retest Level 2: lưu/đọc setting, PDF in đúng tên cơ quan đã cấu hình.
 - **Environment**: Docker Compose full stack at `http://127.0.0.1:8080` · **Database**: N/A (static page) · **API interception**: **No**
 - **Accounts**: `admin`, `district.staff@foodsafe.local`, `noperm@foodsafe.local`
 - **Frontend route**: `/administration/settings`

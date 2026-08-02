@@ -75,12 +75,17 @@ public sealed class EligibilityCertificate :
             100);
 
         var normalizedIssueDate = issueDate.Date;
-        var normalizedExpiryDate = expiryDate?.Date;
-        if (normalizedExpiryDate.HasValue &&
-            normalizedIssueDate > normalizedExpiryDate.Value)
+        // Điều 37 Luật ATTP 2010: giấy chứng nhận có hiệu lực 03 năm kể từ ngày cấp.
+        var statutoryExpiry = normalizedIssueDate.AddYears(3);
+        var normalizedExpiryDate = expiryDate?.Date ?? statutoryExpiry;
+        if (normalizedIssueDate > normalizedExpiryDate)
             throw new BusinessException(
                 FoodSafeDomainErrorCodes.EligibilityCertificate
                     .InvalidDateRange);
+        if (normalizedExpiryDate > statutoryExpiry)
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.EligibilityCertificate
+                    .ExpiryExceedsStatutoryLimit);
 
         CertificateNumber = certificateNumber.Trim().ToUpperInvariant();
         IssueDate = normalizedIssueDate;

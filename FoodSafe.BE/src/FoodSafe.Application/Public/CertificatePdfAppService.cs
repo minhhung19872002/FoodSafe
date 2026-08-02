@@ -1,5 +1,6 @@
 using FoodSafe.BusinessManagement;
 using FoodSafe.Licensing;
+using FoodSafe.Settings;
 using Microsoft.AspNetCore.Authorization;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -7,6 +8,7 @@ using QuestPDF.Infrastructure;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Settings;
 using Volo.Abp.Threading;
 
 namespace FoodSafe.PublicPortal;
@@ -15,7 +17,6 @@ namespace FoodSafe.PublicPortal;
 [AllowAnonymous]
 public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppService
 {
-    private const string IssuingAgency = "CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH";
     private const string PdfVersion = "1.0";
 
     private readonly IRepository<EligibilityCertificate, Guid> _eligibility;
@@ -52,6 +53,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
         var cert = await _eligibility.FindAsync(id, cancellationToken: _cancellationTokens.Token)
             ?? throw new UserFriendlyException("Không tìm thấy giấy đủ điều kiện.");
 
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
         var business = await _businesses.FindAsync(cert.BusinessId, cancellationToken: _cancellationTokens.Token);
         var fields = new CertificateFields
         {
@@ -63,7 +65,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
             Scope = cert.CertificationScope,
             IssueDate = cert.IssueDate,
             ExpiryDate = cert.ExpiryDate,
-            IssuingAuthority = cert.CertifyingAuthority ?? IssuingAgency,
+            IssuingAuthority = cert.CertifyingAuthority ?? issuingAgency,
             StatusLabel = StatusLabel(cert.EffectiveStatus(Clock.Now.Date)),
             ExtraRows = [],
         };
@@ -76,6 +78,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
         var decl = await _selfDeclarations.FindAsync(id, cancellationToken: _cancellationTokens.Token)
             ?? throw new UserFriendlyException("Không tìm thấy bản tự công bố.");
 
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
         var business = await _businesses.FindAsync(decl.BusinessId, cancellationToken: _cancellationTokens.Token);
         Product? product = decl.ProductId.HasValue
             ? await _products.FindAsync(decl.ProductId.Value, cancellationToken: _cancellationTokens.Token)
@@ -91,7 +94,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
             Scope = decl.ProductName,
             IssueDate = decl.DeclarationDate,
             ExpiryDate = decl.ExpiryDate,
-            IssuingAuthority = IssuingAgency,
+            IssuingAuthority = issuingAgency,
             StatusLabel = StatusLabel(decl.EffectiveStatus(Clock.Now.Date)),
             ExtraRows =
             [
@@ -109,6 +112,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
         var reg = await _productRegistrations.FindAsync(id, cancellationToken: _cancellationTokens.Token)
             ?? throw new UserFriendlyException("Không tìm thấy đăng ký công bố sản phẩm.");
 
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
         var business = await _businesses.FindAsync(reg.BusinessId, cancellationToken: _cancellationTokens.Token);
 
         var fields = new CertificateFields
@@ -121,7 +125,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
             Scope = reg.ProductName,
             IssueDate = reg.RegistrationDate,
             ExpiryDate = reg.ExpiryDate,
-            IssuingAuthority = reg.CertifyingAuthority ?? IssuingAgency,
+            IssuingAuthority = reg.CertifyingAuthority ?? issuingAgency,
             StatusLabel = StatusLabel(reg.EffectiveStatus(Clock.Now.Date)),
             ExtraRows =
             [
@@ -139,6 +143,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
         var cert = await _cfsCertificates.FindAsync(id, cancellationToken: _cancellationTokens.Token)
             ?? throw new UserFriendlyException("Không tìm thấy giấy CFS.");
 
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
         var business = await _businesses.FindAsync(cert.BusinessId, cancellationToken: _cancellationTokens.Token);
         Product? product = cert.ProductId.HasValue
             ? await _products.FindAsync(cert.ProductId.Value, cancellationToken: _cancellationTokens.Token)
@@ -154,7 +159,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
             Scope = product?.Name ?? "—",
             IssueDate = cert.IssueDate,
             ExpiryDate = cert.ExpiryDate,
-            IssuingAuthority = cert.CertifyingAuthority ?? IssuingAgency,
+            IssuingAuthority = cert.CertifyingAuthority ?? issuingAgency,
             StatusLabel = StatusLabel(cert.EffectiveStatus(Clock.Now.Date)),
             ExtraRows = [],
         };
@@ -167,6 +172,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
         var cert = await _exportCertificates.FindAsync(id, cancellationToken: _cancellationTokens.Token)
             ?? throw new UserFriendlyException("Không tìm thấy giấy chứng nhận xuất khẩu thực phẩm.");
 
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
         var business = await _businesses.FindAsync(cert.BusinessId, cancellationToken: _cancellationTokens.Token);
         Product? product = cert.ProductId.HasValue
             ? await _products.FindAsync(cert.ProductId.Value, cancellationToken: _cancellationTokens.Token)
@@ -182,7 +188,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
             Scope = product?.Name ?? "—",
             IssueDate = cert.IssueDate,
             ExpiryDate = cert.ExpiryDate,
-            IssuingAuthority = IssuingAgency,
+            IssuingAuthority = issuingAgency,
             StatusLabel = StatusLabel(cert.EffectiveStatus(Clock.Now.Date)),
             ExtraRows =
             [

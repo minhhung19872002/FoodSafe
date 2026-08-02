@@ -45,6 +45,10 @@ public sealed class BusinessDto : FullAuditedEntityDto<Guid>
     public DateTime? SuspendedAt { get; set; }
     public bool HasEligibilityCertificate { get; set; }
     public bool HasVsattpCommitment { get; set; }
+    public EligibilityExemptionReason? EligibilityExemptionReason { get; set; }
+    public QualityCertificationType? QualityCertificationType { get; set; }
+    public string? QualityCertificationNumber { get; set; }
+    public DateTime? QualityCertificationExpiry { get; set; }
     public DateTime? EstablishedDate { get; set; }
     public int? EmployeeCount { get; set; }
     public string? Notes { get; set; }
@@ -75,6 +79,10 @@ public class UpsertBusinessDto
     public DateTime? EstablishedDate { get; set; }
     [Range(0, int.MaxValue)] public int? EmployeeCount { get; set; }
     public string? Notes { get; set; }
+    public EligibilityExemptionReason? EligibilityExemptionReason { get; set; }
+    public QualityCertificationType? QualityCertificationType { get; set; }
+    [StringLength(100)] public string? QualityCertificationNumber { get; set; }
+    public DateTime? QualityCertificationExpiry { get; set; }
     public IReadOnlyList<Guid> ProductGroupIds { get; set; } = [];
 }
 

@@ -242,6 +242,31 @@ public sealed class FoodSafePermissionDefinitionProvider : PermissionDefinitionP
             LocalizableString.Create<FoodSafeResource>(
                 "Permission:ExportCertificates.Delete"));
 
+        var productRecalls = group.AddPermission(
+            FoodSafePermissions.ProductRecalls.Default,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:ProductRecalls"));
+        productRecalls.AddChild(
+            FoodSafePermissions.ProductRecalls.View,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:ProductRecalls.View"));
+        productRecalls.AddChild(
+            FoodSafePermissions.ProductRecalls.Create,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:ProductRecalls.Create"));
+        productRecalls.AddChild(
+            FoodSafePermissions.ProductRecalls.Edit,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:ProductRecalls.Edit"));
+        productRecalls.AddChild(
+            FoodSafePermissions.ProductRecalls.Delete,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:ProductRecalls.Delete"));
+        productRecalls.AddChild(
+            FoodSafePermissions.ProductRecalls.Manage,
+            LocalizableString.Create<FoodSafeResource>(
+                "Permission:ProductRecalls.Manage"));
+
         var inspection = group.AddPermission(
             FoodSafePermissions.Inspection.Default,
             LocalizableString.Create<FoodSafeResource>("Permission:Inspection"));

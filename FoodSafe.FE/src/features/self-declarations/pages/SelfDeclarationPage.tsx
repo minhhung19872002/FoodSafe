@@ -336,8 +336,9 @@ export default function SelfDeclarationPage() {
             style={{ width: 160 }}
             value={status}
             options={[
+              // Bản tự công bố không có thời hạn hiệu lực (NĐ 15/2018/NĐ-CP)
+              // nên không có trạng thái "Hết hạn".
               { value: LICENSE_STATUS.Active, label: "Còn hiệu lực" },
-              { value: LICENSE_STATUS.Expired, label: "Hết hạn" },
               { value: LICENSE_STATUS.Revoked, label: "Đã thu hồi" },
             ]}
             onChange={(value) => {

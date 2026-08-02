@@ -1,6 +1,7 @@
 using FoodSafe.Licensing;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
+using FoodSafe.Settings;
 using Microsoft.AspNetCore.Authorization;
 using QuestPDF.Elements.Table;
 using QuestPDF.Fluent;
@@ -9,6 +10,7 @@ using QuestPDF.Infrastructure;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Settings;
 using Volo.Abp.Threading;
 
 namespace FoodSafe.BusinessManagement;
@@ -19,9 +21,6 @@ public class BusinessProfilePdfAppService :
     ApplicationService,
     IBusinessProfilePdfAppService
 {
-    private const string IssuingAgency =
-        "CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH";
-
     private readonly IRepository<Business, Guid> _businesses;
     private readonly IRepository<BusinessProductGroup> _businessProductGroups;
     private readonly IRepository<Product, Guid> _products;
@@ -121,7 +120,8 @@ public class BusinessProfilePdfAppService :
 
         var slug = businessId.ToString("N")[..8];
         var fileName = $"ho-so-co-so-{slug}.pdf";
-        var bytes = BuildPdf(business, products, selfDeclarations, certs, commitments);
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
+        var bytes = BuildPdf(business, products, selfDeclarations, certs, commitments, issuingAgency);
 
         return new BusinessProfilePdfDto
         {
@@ -137,7 +137,8 @@ public class BusinessProfilePdfAppService :
         List<Product> products,
         List<SelfDeclaration> selfDeclarations,
         List<EligibilityCertificate> certs,
-        List<VsattpCommitment> commitments)
+        List<VsattpCommitment> commitments,
+        string issuingAgency)
     {
         QuestPDF.Settings.License = LicenseType.Community;
 
@@ -166,7 +167,7 @@ public class BusinessProfilePdfAppService :
                     {
                         headerRow.RelativeItem().Column(c =>
                         {
-                            c.Item().Text(IssuingAgency)
+                            c.Item().Text(issuingAgency)
                                 .Bold().FontSize(10).AlignCenter();
                             c.Item().Text("──────────────")
                                 .AlignCenter().FontSize(9);

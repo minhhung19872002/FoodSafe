@@ -15,6 +15,7 @@ import type {
 } from "../types/business.types";
 import { PRODUCT_STATUS } from "../types/business.types";
 import { useProductList } from "../api/businessQueries";
+import { BusinessExemptionTag } from "./BusinessExemptionTag";
 import { BusinessVsattpCommitmentsTab } from "./BusinessVsattpCommitmentsTab";
 import {
   ProductTabContent,
@@ -376,6 +377,11 @@ export function BusinessDetailDrawer({ business, onClose }: Props) {
       width={860}
       destroyOnHidden
     >
+      {business && business.eligibilityExemptionReason !== undefined && (
+        <div style={{ marginBottom: 12 }}>
+          <BusinessExemptionTag business={business} showDetail />
+        </div>
+      )}
       {business && (
         <Tabs
           items={[

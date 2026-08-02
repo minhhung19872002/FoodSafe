@@ -110,12 +110,14 @@ public sealed class SelfDeclaration : FullAuditedAggregateRoot<Guid>
         Status = LicenseStatus.Revoked;
     }
 
+    // Theo Nghị định 15/2018/NĐ-CP, bản tự công bố sản phẩm KHÔNG có thời hạn
+    // hiệu lực (chỉ công bố lại khi sản phẩm thay đổi). Quy tắc "hiệu lực 3 năm"
+    // thuộc NĐ 46/2026/NĐ-CP đang bị tạm ngưng (NQ 15/2026/NQ-CP) nên không áp
+    // dụng. ExpiryDate chỉ là thông tin tham khảo, không tự chuyển Expired.
     public LicenseStatus EffectiveStatus(DateTime today) =>
         Status == LicenseStatus.Revoked
             ? LicenseStatus.Revoked
-            : ExpiryDate.HasValue && ExpiryDate.Value.Date < today.Date
-                ? LicenseStatus.Expired
-                : LicenseStatus.Active;
+            : LicenseStatus.Active;
 
     private static string? Normalize(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();

@@ -468,14 +468,12 @@ public class SelfDeclarationAppService :
         {
             LicenseStatus.Revoked => query.Where(
                 x => x.Status == LicenseStatus.Revoked),
-            LicenseStatus.Expired => query.Where(
-                x => x.Status != LicenseStatus.Revoked &&
-                     x.ExpiryDate.HasValue &&
-                     x.ExpiryDate.Value < today),
+            // NĐ 15/2018/NĐ-CP: bản tự công bố không có thời hạn hiệu lực nên
+            // không tồn tại trạng thái "hết hiệu lực" (quy tắc 3 năm của
+            // NĐ 46/2026 đang tạm ngưng theo NQ 15/2026/NQ-CP).
+            LicenseStatus.Expired => query.Where(x => false),
             LicenseStatus.Active => query.Where(
-                x => x.Status != LicenseStatus.Revoked &&
-                     (!x.ExpiryDate.HasValue ||
-                      x.ExpiryDate.Value >= today)),
+                x => x.Status != LicenseStatus.Revoked),
             _ => throw new UserFriendlyException(
                 "Trạng thái hồ sơ không hợp lệ.")
         };

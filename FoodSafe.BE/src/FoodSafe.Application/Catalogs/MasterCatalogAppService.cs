@@ -24,6 +24,7 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
     private readonly IRepository<DocumentType, Guid> _documentTypes;
     private readonly IRepository<TestingCenter, Guid> _testingCenters;
     private readonly IRepository<TestingService, Guid> _testingServices;
+    private readonly IRepository<ViolationType, Guid> _violationTypes;
     private readonly IRepository<ManagementScopeAssignment, Guid> _scopeAssignments;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
@@ -37,6 +38,7 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
         IRepository<DocumentType, Guid> documentTypes,
         IRepository<TestingCenter, Guid> testingCenters,
         IRepository<TestingService, Guid> testingServices,
+        IRepository<ViolationType, Guid> violationTypes,
         IRepository<ManagementScopeAssignment, Guid> scopeAssignments,
         ICancellationTokenProvider cancellationTokens)
     {
@@ -44,7 +46,8 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
         _communes = communes; _productGroups = productGroups; _businessTypes = businessTypes;
         _classifications = classifications; _advertisementTypes = advertisementTypes;
         _documentTypes = documentTypes; _testingCenters = testingCenters;
-        _testingServices = testingServices; _scopeAssignments = scopeAssignments;
+        _testingServices = testingServices; _violationTypes = violationTypes;
+        _scopeAssignments = scopeAssignments;
         _cancellationTokens = cancellationTokens;
     }
 
@@ -278,6 +281,31 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
     }
     [Authorize(FoodSafePermissions.Catalogs.Delete)]
     public Task DeleteTestingServiceAsync(Guid id) => _testingServices.DeleteAsync(id, true, _cancellationTokens.Token);
+
+    // TODO: wire ViolationType into MasterCatalogExcelAppService (template/import/export) when needed.
+    public async Task<PagedResultDto<ViolationTypeDto>> GetViolationTypesAsync(MasterCatalogListInput input) =>
+        await PageMasterAsync<ViolationType, ViolationTypeDto>(await _violationTypes.GetQueryableAsync(), input);
+    [Authorize(FoodSafePermissions.Catalogs.Create)]
+    public async Task<ViolationTypeDto> CreateViolationTypeAsync(UpsertViolationTypeDto input)
+    {
+        await EnsureMasterCodeAsync(_violationTypes, input.Code, null);
+        var item = ViolationType.Create(GuidGenerator.Create(), input.Code, input.Name, input.LegalReference,
+            input.MinFine, input.MaxFine, input.Description, input.SortOrder, input.IsActive);
+        await _violationTypes.InsertAsync(item, true, _cancellationTokens.Token);
+        return ObjectMapper.Map<ViolationType, ViolationTypeDto>(item);
+    }
+    [Authorize(FoodSafePermissions.Catalogs.Edit)]
+    public async Task<ViolationTypeDto> UpdateViolationTypeAsync(Guid id, UpsertViolationTypeDto input)
+    {
+        await EnsureMasterCodeAsync(_violationTypes, input.Code, id);
+        var item = await _violationTypes.GetAsync(id, cancellationToken: _cancellationTokens.Token);
+        item.Update(input.Code, input.Name, input.LegalReference, input.MinFine, input.MaxFine,
+            input.Description, input.SortOrder, input.IsActive);
+        await _violationTypes.UpdateAsync(item, true, _cancellationTokens.Token);
+        return ObjectMapper.Map<ViolationType, ViolationTypeDto>(item);
+    }
+    [Authorize(FoodSafePermissions.Catalogs.Delete)]
+    public Task DeleteViolationTypeAsync(Guid id) => _violationTypes.DeleteAsync(id, true, _cancellationTokens.Token);
 
     private async Task<MasterCatalogDto> CreateSimpleAsync<TEntity>(IRepository<TEntity, Guid> repository,
         UpsertMasterCatalogDto input, Func<Guid, string, string, string?, int, bool, TEntity> factory)

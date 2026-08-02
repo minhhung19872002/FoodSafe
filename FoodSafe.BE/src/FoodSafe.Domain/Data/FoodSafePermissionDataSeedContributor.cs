@@ -148,6 +148,12 @@ public sealed class FoodSafePermissionDataSeedContributor :
         FoodSafePermissions.Licensing.ExportCertificates.Create,
         FoodSafePermissions.Licensing.ExportCertificates.Edit,
         FoodSafePermissions.Licensing.ExportCertificates.Delete,
+        FoodSafePermissions.ProductRecalls.Default,
+        FoodSafePermissions.ProductRecalls.View,
+        FoodSafePermissions.ProductRecalls.Create,
+        FoodSafePermissions.ProductRecalls.Edit,
+        FoodSafePermissions.ProductRecalls.Delete,
+        FoodSafePermissions.ProductRecalls.Manage,
         FoodSafePermissions.Inspection.Default,
         FoodSafePermissions.Inspection.Plans.Default,
         FoodSafePermissions.Inspection.Plans.View,
@@ -351,6 +357,11 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Licensing.ExportCertificates.View,
                 FoodSafePermissions.Licensing.ExportCertificates.Create,
                 FoodSafePermissions.Licensing.ExportCertificates.Edit,
+                FoodSafePermissions.ProductRecalls.Default,
+                FoodSafePermissions.ProductRecalls.View,
+                FoodSafePermissions.ProductRecalls.Create,
+                FoodSafePermissions.ProductRecalls.Edit,
+                FoodSafePermissions.ProductRecalls.Manage,
                 FoodSafePermissions.Inspection.Default,
                 FoodSafePermissions.Inspection.Plans.Default,
                 FoodSafePermissions.Inspection.Plans.View,
@@ -445,6 +456,8 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 .Append(FoodSafePermissions.Licensing.CfsCertificates.View)
                 .Append(FoodSafePermissions.Licensing.ExportCertificates.Default)
                 .Append(FoodSafePermissions.Licensing.ExportCertificates.View)
+                .Append(FoodSafePermissions.ProductRecalls.Default)
+                .Append(FoodSafePermissions.ProductRecalls.View)
                 .Append(FoodSafePermissions.Inspection.Default)
                 .Append(FoodSafePermissions.Inspection.Plans.Default)
                 .Append(FoodSafePermissions.Inspection.Plans.View)
@@ -514,6 +527,10 @@ public sealed class FoodSafePermissionDataSeedContributor :
                 FoodSafePermissions.Licensing.CfsCertificates.View,
                 FoodSafePermissions.Licensing.ExportCertificates.Default,
                 FoodSafePermissions.Licensing.ExportCertificates.View,
+                FoodSafePermissions.ProductRecalls.Default,
+                FoodSafePermissions.ProductRecalls.View,
+                FoodSafePermissions.ProductRecalls.Create,
+                FoodSafePermissions.ProductRecalls.Edit,
                 FoodSafePermissions.Inspection.Default,
                 FoodSafePermissions.Inspection.Plans.Default,
                 FoodSafePermissions.Inspection.Plans.View,

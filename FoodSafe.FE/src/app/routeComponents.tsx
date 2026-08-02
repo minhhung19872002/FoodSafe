@@ -38,6 +38,9 @@ export const BusinessManagementPage = lazy(
 export const SelfDeclarationPage = lazy(
   () => import("@/features/self-declarations/pages/SelfDeclarationPage"),
 );
+export const ProductRecallPage = lazy(
+  () => import("@/features/product-recalls/pages/ProductRecallPage"),
+);
 export const ProductRegistrationPage = lazy(
   () =>
     import("@/features/product-registrations/pages/ProductRegistrationPage"),

@@ -1,8 +1,9 @@
 # F-005 — Geographic Catalogs
 
-## Status: VERIFIED
+## Status: DIRTY
 
 - **Feature ID**: F-005 · **Verified Git commit**: `94f1f57` · **Date**: 2026-07-27
+- **DIRTY 2026-08-02**: CommuneType thêm `SpecialZone=4` (Đặc khu, Luật 72/2025/QH15), FE bỏ option tạo "Thị trấn"; seed 54 ĐVHC Quảng Ninh theo QĐ 19/2025/QĐ-TTg trong `ReferenceCatalogDataSeedContributor`. Cần retest Level 2 (feature runtime): tạo/sửa commune loại Đặc khu, danh sách commune sau seed.
 - **Environment**: Docker Compose full stack at `http://127.0.0.1:8080` · **Database**: real PostgreSQL 15 · **API interception**: **No**
 - **Accounts**: `admin`, `district.staff@foodsafe.local`, `noperm@foodsafe.local`
 - **Frontend route**: `/geography`

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { DatePicker, Form, Input, Modal, Select } from "antd";
+import { Alert, DatePicker, Form, Input, Modal, Select } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import type {
   AdvertisementRegistration,
@@ -85,6 +85,15 @@ export function AdvertisementRegistrationEditorModal(props: Props) {
       onOk={() => form.submit()}
       destroyOnHidden
     >
+      {!item && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="Lưu ý thẩm quyền xác nhận nội dung quảng cáo"
+          description="Từ 01/7/2026, xác nhận nội dung quảng cáo thực phẩm bảo vệ sức khỏe thuộc thẩm quyền Chủ tịch UBND cấp tỉnh (Nghị quyết 21/2026/NQ-CP); nội dung quảng cáo phải tuân thủ Nghị định 342/2025/NĐ-CP."
+        />
+      )}
       <Form
         // Remount theo đăng ký đang sửa để `initialValues` được áp dụng lại khi
         // mở modal cho bản ghi khác trước lúc nội dung cũ bị destroy.

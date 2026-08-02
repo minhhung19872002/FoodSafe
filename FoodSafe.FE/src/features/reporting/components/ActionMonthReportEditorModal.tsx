@@ -32,7 +32,11 @@ export function ActionMonthReportEditorModal({ report, onClose }: Props) {
         fineAmount: report.fineAmount,
         newSelfDeclarations: report.newSelfDeclarations,
         actionMonthTheme: report.actionMonthTheme,
-        actionMonthDates: report.actionMonthDates,
+        // Tháng hành động vì ATTP diễn ra 15/4–15/5 hằng năm theo kế hoạch
+        // của BCĐ liên ngành TƯ về ATTP — gợi ý sẵn khi chưa nhập.
+        actionMonthDates:
+          report.actionMonthDates ||
+          `15/04/${report.periodYear} - 15/05/${report.periodYear}`,
         achievements: report.achievements,
         limitations: report.limitations,
         lessonsLearned: report.lessonsLearned,

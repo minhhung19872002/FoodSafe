@@ -33,10 +33,12 @@ const labels: Record<GeographicKind, string> = {
   commune: "xã/phường",
 };
 
+// Thị trấn (3) không còn là loại ĐVHC hợp lệ sau 01/07/2025 (Luật 72/2025/QH15)
+// nên không cho tạo mới; bản ghi cũ vẫn hiển thị qua communeTypes map.
 const communeTypeOptions = [
   { value: 1, label: "Xã" },
   { value: 2, label: "Phường" },
-  { value: 3, label: "Thị trấn" },
+  { value: 4, label: "Đặc khu" },
 ];
 
 export function GeographicCatalogModal({

@@ -29,13 +29,13 @@ public class AdministrativeAreaTests
         var commune = Commune.Create(
             Guid.NewGuid(),
             " 00001 ",
-            " Phường Bạch Đằng ",
+            " Phường Hồng Gai ",
             Guid.NewGuid(),
             CommuneType.Ward,
             10);
 
         commune.Code.ShouldBe("00001");
-        commune.Name.ShouldBe("Phường Bạch Đằng");
+        commune.Name.ShouldBe("Phường Hồng Gai");
         commune.SortOrder.ShouldBe(10);
     }
 }

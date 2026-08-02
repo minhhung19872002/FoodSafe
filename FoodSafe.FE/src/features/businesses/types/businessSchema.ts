@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { BUSINESS_STATUS, PRODUCT_STATUS } from "./business.types";
+import {
+  BUSINESS_STATUS,
+  ELIGIBILITY_EXEMPTION_REASON,
+  PRODUCT_STATUS,
+  QUALITY_CERTIFICATION_TYPE,
+  type EligibilityExemptionReason,
+  type QualityCertificationType,
+} from "./business.types";
 
 const optionalText = z.string().trim().optional().or(z.literal(""));
 const guidPattern =
@@ -60,8 +67,52 @@ export const businessSchema = z
     suspensionReason: optionalText,
     hasEligibilityCertificate: z.boolean(),
     hasVsattpCommitment: z.boolean(),
+    eligibilityExemptionReason: z
+      .custom<EligibilityExemptionReason>(
+        (value) =>
+          Object.values(ELIGIBILITY_EXEMPTION_REASON).includes(
+            value as EligibilityExemptionReason,
+          ),
+        "Lý do miễn không hợp lệ",
+      )
+      .optional(),
+    qualityCertificationType: z
+      .custom<QualityCertificationType>(
+        (value) =>
+          Object.values(QUALITY_CERTIFICATION_TYPE).includes(
+            value as QualityCertificationType,
+          ),
+        "Loại chứng nhận không hợp lệ",
+      )
+      .optional(),
+    qualityCertificationNumber: z
+      .string()
+      .trim()
+      .max(100)
+      .optional()
+      .or(z.literal("")),
+    qualityCertificationExpiry: optionalText,
   })
   .superRefine((value, context) => {
+    if (
+      value.eligibilityExemptionReason ===
+      ELIGIBILITY_EXEMPTION_REASON.QualitySystemCertified
+    ) {
+      if (value.qualityCertificationType === undefined) {
+        context.addIssue({
+          code: "custom",
+          path: ["qualityCertificationType"],
+          message: "Vui lòng chọn loại chứng nhận hệ thống chất lượng",
+        });
+      }
+      if (!value.qualityCertificationNumber) {
+        context.addIssue({
+          code: "custom",
+          path: ["qualityCertificationNumber"],
+          message: "Vui lòng nhập số chứng nhận",
+        });
+      }
+    }
     if (value.status === BUSINESS_STATUS.Suspended && !value.suspensionReason) {
       context.addIssue({
         code: "custom",

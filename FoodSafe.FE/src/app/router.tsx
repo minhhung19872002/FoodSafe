@@ -19,6 +19,7 @@ import {
   VsattpCommitmentPage,
   CfsCertificatePage,
   ExportFoodCertificatePage,
+  ProductRecallPage,
   InspectionPage,
   AlertsNewsPage,
   FoodPoisoningPage,
@@ -350,6 +351,16 @@ const appRoutes: RouteObject[] = [
           <Suspense fallback={<RouteLoading />}>
             <PermissionRoute permission={ROUTE_PERMISSIONS.exportCertificates}>
               <ExportFoodCertificatePage />
+            </PermissionRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: "product-recalls",
+        element: (
+          <Suspense fallback={<RouteLoading />}>
+            <PermissionRoute permission={ROUTE_PERMISSIONS.productRecalls}>
+              <ProductRecallPage />
             </PermissionRoute>
           </Suspense>
         ),

@@ -25,7 +25,7 @@ import {
 import { useCatalog, useCatalogOptions } from "../api/catalogQueries";
 import { CatalogEditorModal } from "../components/CatalogEditorModal";
 import { MasterCatalogView } from "../components/MasterCatalogView";
-import { catalogDefinitions } from "../types/catalog.types";
+import { catalogDefinitions, formatFineRange } from "../types/catalog.types";
 import type {
   CatalogInput,
   CatalogItem,
@@ -188,6 +188,23 @@ export default function MasterCatalogPage() {
               r.turnaroundDays !== undefined
                 ? `${r.turnaroundDays} ngày`
                 : null,
+          },
+        ] satisfies DetailField<CatalogItem>[])
+      : []),
+    ...(kind === "violation-type"
+      ? ([
+          { label: "Căn cứ pháp lý", render: (r) => r.legalReference, span: 2 },
+          {
+            label: "Khung phạt (cá nhân)",
+            render: (r) => formatFineRange(r.minFine, r.maxFine),
+          },
+          {
+            label: "Khung phạt (tổ chức)",
+            // Tổ chức bị phạt gấp 2 lần cá nhân — Khoản 2 Điều 3 NĐ 115/2018/NĐ-CP.
+            render: (r) =>
+              r.minFine !== undefined && r.maxFine !== undefined
+                ? formatFineRange(r.minFine * 2, r.maxFine * 2)
+                : "—",
           },
         ] satisfies DetailField<CatalogItem>[])
       : []),

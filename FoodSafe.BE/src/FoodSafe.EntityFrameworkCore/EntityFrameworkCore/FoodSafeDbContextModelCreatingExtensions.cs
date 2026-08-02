@@ -14,6 +14,7 @@ using FoodSafe.FoodPoisoning;
 using FoodSafe.Reporting;
 using FoodSafe.DataIntegration;
 using FoodSafe.Notifications;
+using FoodSafe.ProductRecalls;
 
 namespace FoodSafe.EntityFrameworkCore;
 
@@ -27,6 +28,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
         ConfigureMasterCatalogs(builder);
         ConfigureDataScope(builder);
         ConfigureBusinessManagement(builder);
+        ConfigureProductRecalls(builder);
         ConfigureFileManagement(builder);
         ConfigureInspection(builder);
         ConfigureAlertsAndTesting(builder);
@@ -137,6 +139,14 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.EstablishedDate).HasColumnName("established_date").HasColumnType("date");
             entity.Property(x => x.EmployeeCount).HasColumnName("employee_count");
             entity.Property(x => x.Notes).HasColumnName("notes");
+            entity.Property(x => x.EligibilityExemptionReason)
+                .HasColumnName("eligibility_exemption_reason").HasConversion<short?>();
+            entity.Property(x => x.QualityCertificationType)
+                .HasColumnName("quality_certification_type").HasConversion<short?>();
+            entity.Property(x => x.QualityCertificationNumber)
+                .HasColumnName("quality_certification_number").HasMaxLength(100);
+            entity.Property(x => x.QualityCertificationExpiry)
+                .HasColumnName("quality_certification_expiry");
 
             entity.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId)
                 .OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_businesses_organization");
@@ -1143,6 +1153,12 @@ public static class FoodSafeDbContextModelCreatingExtensions
                 .HasColumnName("finalized_by_id");
             entity.Property(x => x.FinalizedAt)
                 .HasColumnName("finalized_at");
+            entity.Property(x => x.DecisionNumber)
+                .HasColumnName("decision_number")
+                .HasMaxLength(100);
+            entity.Property(x => x.DecisionDate)
+                .HasColumnName("decision_date")
+                .HasColumnType("date");
 
             entity.HasMany(x => x.Violations)
                 .WithOne()
@@ -1376,6 +1392,18 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.HasIndex(x => new { x.TestingCenterId, x.Code }).IsUnique()
                 .HasDatabaseName("uq_testing_services_center_code");
         });
+
+        builder.Entity<ViolationType>(entity =>
+        {
+            entity.ToTable("cat_violation_types", table =>
+                table.HasCheckConstraint("chk_violation_types_fine_range",
+                    "min_fine IS NULL OR max_fine IS NULL OR min_fine <= max_fine"));
+            ConfigureMasterCatalog(entity);
+            entity.Property(x => x.LegalReference).HasColumnName("legal_reference").HasMaxLength(500).IsRequired();
+            entity.Property(x => x.MinFine).HasColumnName("min_fine").HasPrecision(18, 2);
+            entity.Property(x => x.MaxFine).HasColumnName("max_fine").HasPrecision(18, 2);
+            entity.HasIndex(x => x.Code).IsUnique().HasDatabaseName("uq_violation_types_code");
+        });
     }
 
     private static void ConfigureGeographicCatalogs(ModelBuilder builder)
@@ -1574,6 +1602,135 @@ public static class FoodSafeDbContextModelCreatingExtensions
         entity.Property(x => x.Description).HasColumnName("description").HasMaxLength(2000);
         entity.Property(x => x.IsActive).HasColumnName("is_active");
         entity.Property(x => x.SortOrder).HasColumnName("sort_order");
+    }
+
+    private static void ConfigureProductRecalls(ModelBuilder builder)
+    {
+        builder.Entity<ProductRecall>(entity =>
+        {
+            entity.ToTable("product_recalls", table =>
+            {
+                table.HasCheckConstraint(
+                    "chk_product_recalls_status",
+                    "status IN (1, 2, 3, 4)");
+                table.HasCheckConstraint(
+                    "chk_product_recalls_type",
+                    "recall_type IN (1, 2)");
+                table.HasCheckConstraint(
+                    "chk_product_recalls_action",
+                    "post_recall_action IS NULL OR " +
+                    "post_recall_action IN (1, 2, 3, 4)");
+                table.HasCheckConstraint(
+                    "chk_product_recalls_decision",
+                    "recall_type != 2 OR decision_number IS NOT NULL");
+                table.HasCheckConstraint(
+                    "chk_product_recalls_completed",
+                    "status != 3 OR (post_recall_action IS NOT NULL AND " +
+                    "completed_date IS NOT NULL)");
+                table.HasCheckConstraint(
+                    "chk_product_recalls_cancelled",
+                    "(status != 4 AND cancel_reason IS NULL) OR " +
+                    "(status = 4 AND cancel_reason IS NOT NULL)");
+                table.HasCheckConstraint(
+                    "chk_product_recalls_quantity",
+                    "quantity_recalled IS NULL OR quantity_recalled >= 0");
+                table.HasCheckConstraint(
+                    "chk_product_recalls_dates",
+                    "completed_date IS NULL OR start_date <= completed_date");
+            });
+            ConfigureAggregateAudit(entity, "pk_product_recalls");
+            entity.Property(x => x.OrganizationId)
+                .HasColumnName("organization_id");
+            entity.Property(x => x.BusinessId).HasColumnName("business_id");
+            entity.Property(x => x.ProductId).HasColumnName("product_id");
+            entity.Property(x => x.ProductName)
+                .HasColumnName("product_name")
+                .HasMaxLength(500)
+                .IsRequired();
+            entity.Property(x => x.BatchInfo)
+                .HasColumnName("batch_info")
+                .HasMaxLength(300);
+            entity.Property(x => x.RecallType)
+                .HasColumnName("recall_type")
+                .HasConversion<short>();
+            entity.Property(x => x.Reason)
+                .HasColumnName("reason")
+                .HasMaxLength(2000)
+                .IsRequired();
+            entity.Property(x => x.DecisionNumber)
+                .HasColumnName("decision_number")
+                .HasMaxLength(100);
+            entity.Property(x => x.DecisionDate)
+                .HasColumnName("decision_date")
+                .HasColumnType("date");
+            entity.Property(x => x.StartDate)
+                .HasColumnName("start_date")
+                .HasColumnType("date");
+            entity.Property(x => x.CompletedDate)
+                .HasColumnName("completed_date")
+                .HasColumnType("date");
+            entity.Property(x => x.QuantityRecalled)
+                .HasColumnName("quantity_recalled")
+                .HasColumnType("numeric(18,3)");
+            entity.Property(x => x.QuantityUnit)
+                .HasColumnName("quantity_unit")
+                .HasMaxLength(50);
+            entity.Property(x => x.PostRecallAction)
+                .HasColumnName("post_recall_action")
+                .HasConversion<short>();
+            entity.Property(x => x.ActionDescription)
+                .HasColumnName("action_description")
+                .HasMaxLength(2000);
+            entity.Property(x => x.Status)
+                .HasColumnName("status")
+                .HasConversion<short>();
+            entity.Property(x => x.CancelReason)
+                .HasColumnName("cancel_reason")
+                .HasMaxLength(2000);
+
+            entity.HasOne<Business>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    x.Id,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_product_recalls_business_org");
+            entity.HasOne<Product>().WithMany()
+                .HasForeignKey(x => new
+                {
+                    x.ProductId,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .HasPrincipalKey(x => new
+                {
+                    ProductId = x.Id,
+                    x.BusinessId,
+                    x.OrganizationId
+                })
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_product_recalls_product");
+            entity.HasOne<Organization>().WithMany()
+                .HasForeignKey(x => x.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_product_recalls_org");
+
+            entity.HasIndex(x => x.BusinessId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_product_recalls_business");
+            entity.HasIndex(x => x.OrganizationId)
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_product_recalls_org");
+            entity.HasIndex(x => new { x.Status, x.RecallType })
+                .HasFilter("is_deleted = FALSE")
+                .HasDatabaseName("idx_product_recalls_status_type");
+        });
     }
 
     private static void ConfigureAggregateAudit<TEntity>(
@@ -1956,6 +2113,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.FoodServiceType).HasColumnName("food_service_type").HasMaxLength(200);
 
             entity.Property(x => x.CauseAssessmentValue).HasColumnName("cause_assessment");
+            entity.Property(x => x.CauseCategory).HasColumnName("cause_category");
             entity.Property(x => x.CausativeAgent).HasColumnName("causative_agent");
             entity.Property(x => x.Pathogen).HasColumnName("pathogen");
 

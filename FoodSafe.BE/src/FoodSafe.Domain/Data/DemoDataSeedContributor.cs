@@ -28,7 +28,6 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
 {
     // --- Fixed GUIDs referencing E2E base data ---
     static readonly Guid ProvinceId = E2eTestDataSeedContributor.ProvinceQuangNinhId;
-    static readonly Guid CommuneId = E2eTestDataSeedContributor.CommuneBachDangId;
     static readonly Guid OrgProvinceId = E2eTestDataSeedContributor.OrgProvinceId;
     static readonly Guid OrgCommuneId = E2eTestDataSeedContributor.OrgCommuneId;
     static readonly Guid ProvinceAdminId = E2eTestDataSeedContributor.UserProvinceAdminId;
@@ -65,6 +64,12 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
     private readonly IClock _clock;
     private readonly IDataFilter _dataFilter;
 
+    // Resolved at seed time: the primary commune (Phường Hồng Gai, 06685)
+    // carries a real, UNIQUE code that ReferenceCatalogDataSeedContributor
+    // also seeds — whichever contributor ran first owns the row and its id,
+    // so the E2E GUID cannot be assumed here.
+    private Guid _communeId;
+
     // Repositories are resolved lazily via the scoped service provider to
     // keep the constructor manageable — this contributor touches every module.
     public DemoDataSeedContributor(
@@ -93,6 +98,12 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         // overload: demo content must not create the E2E fixture accounts,
         // which cannot be seeded outside Development without Seed:TestPassword.
         await _e2eSeeder.ForceSeedBaseDataAsync();
+
+        var primaryCommune = await Repository<Commune>().FirstOrDefaultAsync(
+                x => x.Code == E2eTestDataSeedContributor.CommunePrimaryCode)
+            ?? throw new InvalidOperationException(
+                $"Commune {E2eTestDataSeedContributor.CommunePrimaryCode} must be seeded before demo data.");
+        _communeId = primaryCommune.Id;
 
         var now = _clock.Now;
 
@@ -157,8 +168,8 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await InsertIfMissingAsync(DemoTestingCenterId, () => TestingCenter.Create(
             DemoTestingCenterId, "TTKN-QN",
             "Trung tâm Kiểm soát bệnh tật tỉnh Quảng Ninh - Khoa Xét nghiệm",
-            "651 Lê Thánh Tông, phường Bạch Đằng, TP Hạ Long",
-            ProvinceId, CommuneId,
+            "651 Lê Thánh Tông, phường Hồng Gai, tỉnh Quảng Ninh",
+            ProvinceId, _communeId,
             "Nguyễn Thị Lan", "0203 3825 447", "ttkn@quangninhcdc.vn",
             "VILAS 675", "Kiểm nghiệm vi sinh, hóa lý thực phẩm và nước",
             now.AddYears(2), null, 1, true));
@@ -236,7 +247,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 BusinessId(6), OrgCommuneId, "CS-BD-0006",
                 "Cửa hàng thực phẩm Minh Phương", TypeTradingId, ClassLowRiskId,
                 null, "Vũ Minh Phương", null, "0905 112 233", null, null,
-                "Số 144 đường Lê Thánh Tông", ProvinceId, CommuneId,
+                "Số 144 đường Lê Thánh Tông", ProvinceId, _communeId,
                 20.9521, 107.0879, now.AddYears(-2), 3, null);
             business.SetStatus(BusinessStatus.Suspended,
                 "Vi phạm điều kiện bảo quản thực phẩm, chờ khắc phục",
@@ -539,7 +550,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 "Vụ ngộ độc tập thể sau tiệc cưới tại nhà hàng hải sản");
             incident.SetLocation(
                 "Nhà hàng Hải sản Biển Xanh, khu du lịch Bãi Cháy",
-                CommuneId, ProvinceId, 20.9581, 107.0453);
+                _communeId, ProvinceId, 20.9581, 107.0453);
             incident.SetStatistics(120, 32, 9, 1);
             incident.SetFoodInfo("Hàu sống, tôm hấp", "Nhà hàng Hải sản Biển Xanh",
                 "Tiệc cưới");
@@ -565,7 +576,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
         await SeedPoisoningCaseAsync(2, OrgProvinceId, "CA-QN-2026-002", now.AddDays(-44),
             now.AddDays(-45), incidentId, "Trần Thị Thu", 29, VictimGender.Female,
             "Hàu sống, tôm hấp", "Buồn nôn, tiêu chảy, mất nước nhẹ",
-            "Trạm Y tế Phường Bạch Đằng", TreatmentResult.Recovered,
+            "Trạm Y tế Phường Hồng Gai", TreatmentResult.Recovered,
             PoisoningCaseStatus.Verified, now);
         await SeedPoisoningCaseAsync(3, OrgProvinceId, "CA-QN-2026-003", now.AddDays(-44),
             now.AddDays(-45), incidentId, "Phạm Văn Cường", 68, VictimGender.Male,
@@ -576,7 +587,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             now.AddDays(-15), null, "Lê Gia Bảo", 8, VictimGender.Male,
             "Sữa chua không rõ nguồn gốc bán trước cổng trường",
             "Đau bụng, nôn nhiều lần",
-            "Trạm Y tế Phường Bạch Đằng", TreatmentResult.Recovered,
+            "Trạm Y tế Phường Hồng Gai", TreatmentResult.Recovered,
             PoisoningCaseStatus.Reported, now);
         await SeedPoisoningCaseAsync(5, OrgProvinceId, "CA-QN-2026-005", now.AddDays(-5),
             now.AddDays(-6), null, "Đặng Văn Sơn", 41, VictimGender.Male,
@@ -720,7 +731,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             "nhập lậu không nhãn phụ tiếng Việt. Đang xác minh thông tin.",
             AlertCategory.FoodSafety, AlertSeverity.Medium, AlertSource.PublicReport,
             businessId: BusinessId(6),
-            reporterName: "Người dân phường Bạch Đằng",
+            reporterName: "Người dân phường Hồng Gai",
             reporterPhone: "0904 555 777"));
 
         await InsertIfMissingAsync(DemoId(0x8061, 1), () =>
@@ -995,7 +1006,7 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
             var business = Business.Create(
                 id, organizationId, code, name, businessTypeId, classificationId,
                 taxCode, representativeName, null, contactPhone, null, null,
-                street, ProvinceId, CommuneId, latitude, longitude,
+                street, ProvinceId, _communeId, latitude, longitude,
                 establishedDate, employeeCount, null);
             business.SetCertificateFlags(hasEligibilityCertificate, hasVsattpCommitment);
             return business;
@@ -1147,8 +1158,8 @@ public sealed class DemoDataSeedContributor : IDataSeedContributor, ITransientDe
                 id, organizationId, caseCode,
                 DateOnly.FromDateTime(reportDate), occurrenceDate, incidentId);
             poisoningCase.SetLocation(
-                "Phường Bạch Đằng, TP Hạ Long",
-                CommuneId, ProvinceId, 20.951, 107.082);
+                "Phường Hồng Gai, tỉnh Quảng Ninh",
+                _communeId, ProvinceId, 20.951, 107.082);
             poisoningCase.SetVictimInfo(victimName, victimAge, victimGender, null, null);
             poisoningCase.SetFoodInfo(suspectedFood, null,
                 DateOnly.FromDateTime(occurrenceDate), symptoms,

@@ -49,6 +49,26 @@ export const CAUSE_ASSESSMENT = {
 export type CauseAssessment =
   (typeof CAUSE_ASSESSMENT)[keyof typeof CAUSE_ASSESSMENT];
 
+/** Nhóm căn nguyên vụ NĐTP theo phân loại thống kê (QĐ 39/2006/QĐ-BYT). */
+export const CAUSE_CATEGORY = {
+  Microbial: 1,
+  Chemical: 2,
+  NaturalToxin: 3,
+  Undetermined: 4,
+} as const;
+export type PoisoningCauseCategory =
+  (typeof CAUSE_CATEGORY)[keyof typeof CAUSE_CATEGORY];
+
+export const CAUSE_CATEGORY_CONFIG: Record<
+  PoisoningCauseCategory,
+  { label: string; color: string }
+> = {
+  [CAUSE_CATEGORY.Microbial]: { label: "Vi sinh vật", color: "green" },
+  [CAUSE_CATEGORY.Chemical]: { label: "Hóa chất", color: "purple" },
+  [CAUSE_CATEGORY.NaturalToxin]: { label: "Độc tố tự nhiên", color: "orange" },
+  [CAUSE_CATEGORY.Undetermined]: { label: "Không xác định", color: "default" },
+};
+
 export const CAUSE_ASSESSMENT_CONFIG: Record<
   CauseAssessment,
   { label: string }
@@ -238,6 +258,10 @@ export interface FoodPoisoningIncident {
   affectedCount: number;
   hospitalizedCount: number;
   deathCount: number;
+  /** Vụ lớn theo chỉ tiêu thống kê ngành y tế: >= 30 người mắc. */
+  isLargeScale: boolean;
+  /** Đạt định nghĩa vụ NĐTP (QĐ 39/2006/QĐ-BYT): >= 2 người mắc hoặc có tử vong. */
+  meetsIncidentDefinition: boolean;
 
   suspectedFood?: string;
   foodSource?: string;
@@ -265,6 +289,7 @@ export interface FoodPoisoningIncident {
 }
 
 export interface CreateUpdateIncidentInput {
+  causeCategory?: PoisoningCauseCategory;
   occurrenceDate: string;
   endDate?: string;
   notes?: string;

@@ -130,6 +130,19 @@ public static class FoodSafePermissions
         }
     }
 
+    /// <summary>Recall of unsafe products per Circular 23/2018/TT-BYT.</summary>
+    public static class ProductRecalls
+    {
+        public const string Default = GroupName + ".ProductRecalls";
+        public const string View = Default + ".View";
+        public const string Create = Default + ".Create";
+        public const string Edit = Default + ".Edit";
+        public const string Delete = Default + ".Delete";
+
+        /// <summary>Lifecycle transitions: start, complete, cancel a recall.</summary>
+        public const string Manage = Default + ".Manage";
+    }
+
     public static class Inspection
     {
         public const string Default = GroupName + ".Inspection";

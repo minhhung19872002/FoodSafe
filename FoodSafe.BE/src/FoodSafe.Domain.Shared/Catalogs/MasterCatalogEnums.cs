@@ -20,5 +20,6 @@ public enum MasterCatalogKind
     AdvertisementType = 6,
     DocumentType = 7,
     TestingCenter = 8,
-    TestingService = 9
+    TestingService = 9,
+    ViolationType = 10
 }

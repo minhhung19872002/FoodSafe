@@ -224,7 +224,10 @@ export function BusinessHandlersModal({
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item label="Số chứng nhận tập huấn">
+              {/* "Giấy xác nhận kiến thức ATTP" do nhà nước cấp đã bãi bỏ
+                  (NĐ 155/2018/NĐ-CP); nay là tập huấn do chủ cơ sở tự tổ chức
+                  và xác nhận, nên số hiệu chỉ là tham chiếu nội bộ (nếu có). */}
+              <Form.Item label="Số xác nhận tập huấn (chủ cơ sở cấp, nếu có)">
                 <Controller
                   control={control}
                   name="trainingCertificateNumber"
@@ -255,7 +258,7 @@ export function BusinessHandlersModal({
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item label="Đơn vị tập huấn">
+          <Form.Item label="Đơn vị tổ chức tập huấn (chủ cơ sở tự tổ chức hoặc thuê)">
             <Controller
               control={control}
               name="trainingOrganization"

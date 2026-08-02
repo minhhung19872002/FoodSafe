@@ -80,16 +80,19 @@ public sealed class BusinessManagementTests
     }
 
     [Fact]
-    public void Self_declaration_should_normalize_number_and_derive_expiry()
+    public void Self_declaration_should_normalize_number_and_stay_active_past_expiry_date()
     {
+        // NĐ 15/2018/NĐ-CP: bản tự công bố không có thời hạn hiệu lực —
+        // ExpiryDate chỉ là thông tin tham khảo, không tự chuyển Expired
+        // (quy tắc 3 năm của NĐ 46/2026 đang tạm ngưng theo NQ 15/2026/NQ-CP).
         var declaration = CreateSelfDeclaration(
             new DateTime(2026, 7, 25),
             new DateTime(2026, 7, 24));
 
         declaration.DeclarationNumber.ShouldBe("TCB-01");
-        declaration.Status.ShouldBe(LicenseStatus.Expired);
+        declaration.Status.ShouldBe(LicenseStatus.Active);
         declaration.EffectiveStatus(new DateTime(2026, 7, 25))
-            .ShouldBe(LicenseStatus.Expired);
+            .ShouldBe(LicenseStatus.Active);
     }
 
     [Fact]

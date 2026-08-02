@@ -31,6 +31,9 @@ import {
 } from "../types/businessSchema";
 import {
   BUSINESS_STATUS,
+  ELIGIBILITY_EXEMPTION_REASON,
+  EXEMPTION_REASON_LABELS,
+  QUALITY_CERT_LABELS,
   type Business,
   type BusinessInput,
   type UpdateBusinessInput,
@@ -70,6 +73,10 @@ const defaults: BusinessFormValues = {
   suspensionReason: "",
   hasEligibilityCertificate: false,
   hasVsattpCommitment: false,
+  eligibilityExemptionReason: undefined,
+  qualityCertificationType: undefined,
+  qualityCertificationNumber: "",
+  qualityCertificationExpiry: "",
 };
 
 function optional(value: string | undefined) {
@@ -110,6 +117,10 @@ export function BusinessEditorModal({
   const communeId = useWatch({ control, name: "addressCommuneId" });
   const street = useWatch({ control, name: "addressStreet" });
   const status = useWatch({ control, name: "status" });
+  const exemptionReason = useWatch({
+    control,
+    name: "eligibilityExemptionReason",
+  });
   const latitude = useWatch({ control, name: "addressLatitude" });
   const longitude = useWatch({ control, name: "addressLongitude" });
   const provinces = useProvinces(true);
@@ -174,6 +185,10 @@ export function BusinessEditorModal({
       addressCommuneId: business?.addressCommuneId ?? "",
       establishedDate: toDateInput(business?.establishedDate),
       productGroupIds: business?.productGroupIds ?? [],
+      qualityCertificationNumber: business?.qualityCertificationNumber ?? "",
+      qualityCertificationExpiry: toDateInput(
+        business?.qualityCertificationExpiry,
+      ),
     });
     resetCodeSuggestion();
     setMatchedAddress(undefined);
@@ -196,6 +211,8 @@ export function BusinessEditorModal({
       addressCommuneId: optional(values.addressCommuneId),
       establishedDate: optional(values.establishedDate),
       notes: optional(values.notes),
+      qualityCertificationNumber: optional(values.qualityCertificationNumber),
+      qualityCertificationExpiry: optional(values.qualityCertificationExpiry),
     };
     if (!business) {
       onSubmit(common);
@@ -638,6 +655,110 @@ export function BusinessEditorModal({
               )}
             />
           </Space>
+        )}
+        <Typography.Title level={5} style={{ marginTop: 16 }}>
+          Miễn Giấy chứng nhận đủ điều kiện ATTP (Điều 12 NĐ 15/2018)
+        </Typography.Title>
+        <Form.Item
+          label="Lý do miễn"
+          validateStatus={
+            errors.eligibilityExemptionReason ? "error" : undefined
+          }
+          help={errors.eligibilityExemptionReason?.message}
+        >
+          <Controller
+            control={control}
+            name="eligibilityExemptionReason"
+            render={({ field }) => (
+              <Select
+                {...field}
+                aria-label="Lý do miễn"
+                allowClear
+                placeholder="Không thuộc diện miễn"
+                popupMatchSelectWidth={600}
+                onChange={(value?: number) => {
+                  field.onChange(value ?? undefined);
+                  if (
+                    value !==
+                    ELIGIBILITY_EXEMPTION_REASON.QualitySystemCertified
+                  ) {
+                    setValue("qualityCertificationType", undefined);
+                    setValue("qualityCertificationNumber", "");
+                    setValue("qualityCertificationExpiry", "");
+                  }
+                }}
+                options={Object.entries(EXEMPTION_REASON_LABELS).map(
+                  ([value, label]) => ({ value: Number(value), label }),
+                )}
+              />
+            )}
+          />
+        </Form.Item>
+        {exemptionReason ===
+          ELIGIBILITY_EXEMPTION_REASON.QualitySystemCertified && (
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item
+                label="Loại chứng nhận"
+                required
+                validateStatus={
+                  errors.qualityCertificationType ? "error" : undefined
+                }
+                help={errors.qualityCertificationType?.message}
+              >
+                <Controller
+                  control={control}
+                  name="qualityCertificationType"
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      aria-label="Loại chứng nhận"
+                      allowClear
+                      onChange={(value?: number) =>
+                        field.onChange(value ?? undefined)
+                      }
+                      options={Object.entries(QUALITY_CERT_LABELS).map(
+                        ([value, label]) => ({ value: Number(value), label }),
+                      )}
+                    />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Số chứng nhận"
+                required
+                validateStatus={
+                  errors.qualityCertificationNumber ? "error" : undefined
+                }
+                help={errors.qualityCertificationNumber?.message}
+              >
+                <Controller
+                  control={control}
+                  name="qualityCertificationNumber"
+                  render={({ field }) => (
+                    <Input {...field} aria-label="Số chứng nhận" />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Ngày hết hạn chứng nhận">
+                <Controller
+                  control={control}
+                  name="qualityCertificationExpiry"
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      type="date"
+                      aria-label="Ngày hết hạn chứng nhận"
+                    />
+                  )}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
         )}
         <Form.Item label="Ghi chú" style={{ marginTop: 16 }}>
           <Controller

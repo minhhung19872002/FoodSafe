@@ -38,6 +38,9 @@ public class FoodSafeSettingDefinitionProvider : SettingDefinitionProvider
                 FoodSafeSettings.Homepage.ContactAddress,
                 string.Empty),
             new SettingDefinition(
+                FoodSafeSettings.Documents.IssuingAgency,
+                "CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH"),
+            new SettingDefinition(
                 FoodSafeSettings.Security.PasswordMaxLength,
                 "128"),
             new SettingDefinition(

@@ -26,6 +26,10 @@ public sealed class Business : FullAuditedAggregateRoot<Guid>
     public DateTime? SuspendedAt { get; private set; }
     public bool HasEligibilityCertificate { get; private set; }
     public bool HasVsattpCommitment { get; private set; }
+    public EligibilityExemptionReason? EligibilityExemptionReason { get; private set; }
+    public QualityCertificationType? QualityCertificationType { get; private set; }
+    public string? QualityCertificationNumber { get; private set; }
+    public DateTime? QualityCertificationExpiry { get; private set; }
     public DateTime? EstablishedDate { get; private set; }
     public int? EmployeeCount { get; private set; }
     public string? Notes { get; private set; }
@@ -143,6 +147,59 @@ public sealed class Business : FullAuditedAggregateRoot<Guid>
     {
         HasEligibilityCertificate = hasEligibilityCertificate;
         HasVsattpCommitment = hasVsattpCommitment;
+    }
+
+    /// <summary>
+    /// Records why the business is exempt from the food-safety eligibility
+    /// certificate under Clause 1, Article 12 of Decree 15/2018/ND-CP.
+    /// Quality-system details are only kept for the point-k exemption
+    /// (a valid GMP/HACCP/ISO 22000/IFS/BRC/FSSC 22000 certification).
+    /// </summary>
+    public void SetEligibilityExemption(
+        EligibilityExemptionReason? reason,
+        QualityCertificationType? qualityCertificationType,
+        string? qualityCertificationNumber,
+        DateTime? qualityCertificationExpiry)
+    {
+        if (reason is null)
+        {
+            EligibilityExemptionReason = null;
+            QualityCertificationType = null;
+            QualityCertificationNumber = null;
+            QualityCertificationExpiry = null;
+            return;
+        }
+
+        if (!Enum.IsDefined(reason.Value))
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.Business.InvalidEligibilityExemptionReason);
+
+        if (reason.Value ==
+            BusinessManagement.EligibilityExemptionReason.QualitySystemCertified)
+        {
+            if (qualityCertificationType is null ||
+                string.IsNullOrWhiteSpace(qualityCertificationNumber))
+                throw new BusinessException(
+                    FoodSafeDomainErrorCodes.Business.QualityCertificationRequired);
+            if (!Enum.IsDefined(qualityCertificationType.Value))
+                throw new BusinessException(
+                    FoodSafeDomainErrorCodes.Business.InvalidQualityCertificationType);
+
+            EligibilityExemptionReason = reason;
+            QualityCertificationType = qualityCertificationType;
+            QualityCertificationNumber =
+                Check.Length(
+                    qualityCertificationNumber.Trim(),
+                    nameof(qualityCertificationNumber),
+                    maxLength: 100);
+            QualityCertificationExpiry = qualityCertificationExpiry;
+            return;
+        }
+
+        EligibilityExemptionReason = reason;
+        QualityCertificationType = null;
+        QualityCertificationNumber = null;
+        QualityCertificationExpiry = null;
     }
 
     public void ConfirmVsattpCommitment()

@@ -7,7 +7,8 @@ export type CatalogKind =
   | "advertisement-type"
   | "document-type"
   | "testing-center"
-  | "testing-service";
+  | "testing-service"
+  | "violation-type";
 
 export interface CatalogItem {
   id: string;
@@ -38,6 +39,9 @@ export interface CatalogItem {
   method?: string;
   price?: number;
   turnaroundDays?: number;
+  legalReference?: string;
+  minFine?: number;
+  maxFine?: number;
 }
 
 export type CatalogInput = Omit<CatalogItem, "id">;
@@ -69,4 +73,11 @@ export const catalogDefinitions: readonly CatalogDefinition[] = [
   { kind: "testing-center", label: "Trung tâm kiểm nghiệm" },
   { kind: "testing-service", label: "Dịch vụ kiểm nghiệm" },
   { kind: "document-type", label: "Loại văn bản" },
+  { kind: "violation-type", label: "Hành vi vi phạm (NĐ 115/2018)" },
 ] as const;
+
+/** Khung phạt cá nhân, ví dụ "1.000.000 – 3.000.000 đ"; tổ chức gấp 2 lần. */
+export function formatFineRange(minFine?: number, maxFine?: number): string {
+  if (minFine === undefined || maxFine === undefined) return "—";
+  return `${minFine.toLocaleString("vi-VN")} – ${maxFine.toLocaleString("vi-VN")} đ`;
+}

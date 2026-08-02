@@ -222,6 +222,8 @@ export interface InspectionResult {
   organizationId: string;
   inspectionDate: string;
   inspectionType: InspectionType;
+  decisionNumber?: string;
+  decisionDate?: string;
   teamLeader?: string;
   teamMembersText?: string;
   overallResult: InspectionOverallResult;
@@ -264,6 +266,8 @@ export interface CreateUpdateInspectionResultInput {
   planItemId?: string;
   inspectionDate: string;
   inspectionType: InspectionType;
+  decisionNumber?: string;
+  decisionDate?: string;
   teamLeader?: string;
   teamMembersText?: string;
   overallResult: InspectionOverallResult;

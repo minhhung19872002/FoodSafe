@@ -40,6 +40,8 @@ interface FormValues {
   businessId: string;
   inspectionDate: Dayjs;
   inspectionType: InspectionType;
+  decisionNumber?: string;
+  decisionDate?: Dayjs;
   teamLeader?: string;
   teamMembersText?: string | string[];
   overallResult: InspectionOverallResult;
@@ -95,6 +97,8 @@ export function InspectionResultEditorModal(props: Props) {
         businessId: item.businessId,
         inspectionDate: dayjs(item.inspectionDate),
         inspectionType: item.inspectionType,
+        decisionNumber: item.decisionNumber,
+        decisionDate: item.decisionDate ? dayjs(item.decisionDate) : undefined,
         teamLeader: item.teamLeader,
         teamMembersText: item.teamMembersText
           ? item.teamMembersText.split(",").map((s) => s.trim())
@@ -162,6 +166,8 @@ export function InspectionResultEditorModal(props: Props) {
             businessId: values.businessId,
             inspectionDate: values.inspectionDate.format("YYYY-MM-DD"),
             inspectionType: values.inspectionType,
+            decisionNumber: values.decisionNumber?.trim() || undefined,
+            decisionDate: values.decisionDate?.format("YYYY-MM-DD"),
             teamLeader: values.teamLeader?.trim() || undefined,
             teamMembersText: Array.isArray(values.teamMembersText)
               ? values.teamMembersText.join(", ")
@@ -268,6 +274,42 @@ export function InspectionResultEditorModal(props: Props) {
         <Form.Item name="businessId" hidden>
           <Input />
         </Form.Item>
+
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
+        >
+          <Form.Item name="decisionNumber" label="Số quyết định kiểm tra">
+            <Input maxLength={100} placeholder="VD: 123/QĐ-ATTP" />
+          </Form.Item>
+          <Form.Item
+            name="decisionDate"
+            label="Ngày quyết định"
+            dependencies={["inspectionDate"]}
+            rules={[
+              ({ getFieldValue }) => ({
+                validator(_rule, value?: Dayjs) {
+                  const inspectionDate = getFieldValue("inspectionDate") as
+                    | Dayjs
+                    | undefined;
+                  if (
+                    value &&
+                    inspectionDate &&
+                    value.isAfter(inspectionDate, "day")
+                  ) {
+                    return Promise.reject(
+                      new Error(
+                        "Ngày quyết định kiểm tra không được sau ngày kiểm tra.",
+                      ),
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
+          >
+            <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
+          </Form.Item>
+        </div>
 
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}

@@ -1,6 +1,8 @@
 using FoodSafe.BusinessManagement;
+using FoodSafe.Catalogs;
 using FoodSafe.Permissions;
 using FoodSafe.Security;
+using FoodSafe.Settings;
 using Microsoft.AspNetCore.Authorization;
 using QuestPDF.Elements.Table;
 using QuestPDF.Fluent;
@@ -9,6 +11,7 @@ using QuestPDF.Infrastructure;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Settings;
 using Volo.Abp.Threading;
 
 namespace FoodSafe.Inspection;
@@ -19,21 +22,22 @@ public class InspectionBienBanPdfAppService :
     ApplicationService,
     IInspectionBienBanPdfAppService
 {
-    private const string IssuingAgency = "CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH";
-
     private readonly IRepository<InspectionResult, Guid> _results;
     private readonly IRepository<Business, Guid> _businesses;
+    private readonly IRepository<BusinessType, Guid> _businessTypes;
     private readonly ICurrentDataScopeProvider _dataScopeProvider;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
     public InspectionBienBanPdfAppService(
         IRepository<InspectionResult, Guid> results,
         IRepository<Business, Guid> businesses,
+        IRepository<BusinessType, Guid> businessTypes,
         ICurrentDataScopeProvider dataScopeProvider,
         ICancellationTokenProvider cancellationTokens)
     {
         _results = results;
         _businesses = businesses;
+        _businessTypes = businessTypes;
         _dataScopeProvider = dataScopeProvider;
         _cancellationTokens = cancellationTokens;
     }
@@ -59,7 +63,9 @@ public class InspectionBienBanPdfAppService :
         var idSlug = inspectionResultId.ToString("N")[..8];
         var fileName = $"bien-ban-thanh-tra-{dateSlug}-{idSlug}.pdf";
 
-        var bytes = BuildPdf(result, business);
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
+        var title = await ResolveBienBanTitleAsync(business);
+        var bytes = BuildPdf(result, business, issuingAgency, title);
 
         return new InspectionBienBanPdfDto
         {
@@ -70,7 +76,35 @@ public class InspectionBienBanPdfAppService :
 
     // ── Private ──────────────────────────────────────────────────────────────
 
-    private static byte[] BuildPdf(InspectionResult result, Business? business)
+    /// <summary>
+    /// Resolves the record ("biên bản") title per the templates annexed to
+    /// Circular 17/2023/TT-BYT, which prescribes distinct forms for food
+    /// production/trading businesses, food service establishments, and
+    /// street-food vendors. The variant is chosen by the business type code.
+    /// </summary>
+    private async Task<string> ResolveBienBanTitleAsync(Business? business)
+    {
+        const string productionTradingTitle =
+            "BIÊN BẢN KIỂM TRA AN TOÀN THỰC PHẨM ĐỐI VỚI CƠ SỞ SẢN XUẤT, KINH DOANH THỰC PHẨM";
+
+        if (business?.BusinessTypeId is not { } businessTypeId)
+            return productionTradingTitle;
+
+        var businessType = await _businessTypes.FindAsync(
+            businessTypeId, cancellationToken: _cancellationTokens.Token);
+
+        return businessType?.Code switch
+        {
+            "DV-AU" or "BATT" =>
+                "BIÊN BẢN KIỂM TRA AN TOÀN THỰC PHẨM ĐỐI VỚI CƠ SỞ KINH DOANH DỊCH VỤ ĂN UỐNG",
+            "TADP" =>
+                "BIÊN BẢN KIỂM TRA AN TOÀN THỰC PHẨM ĐỐI VỚI CƠ SỞ KINH DOANH THỨC ĂN ĐƯỜNG PHỐ",
+            _ => productionTradingTitle
+        };
+    }
+
+    private static byte[] BuildPdf(
+        InspectionResult result, Business? business, string issuingAgency, string title)
     {
         QuestPDF.Settings.License = LicenseType.Community;
 
@@ -106,7 +140,7 @@ public class InspectionBienBanPdfAppService :
                     {
                         headerRow.RelativeItem().Column(c =>
                         {
-                            c.Item().Text(IssuingAgency)
+                            c.Item().Text(issuingAgency)
                                 .Bold().FontSize(10).AlignCenter();
                             c.Item().Text("──────────────")
                                 .AlignCenter().FontSize(9);
@@ -126,12 +160,27 @@ public class InspectionBienBanPdfAppService :
                     });
 
                     col.Item().PaddingTop(12)
-                        .Text("BIÊN BẢN THANH KIỂM TRA AN TOÀN THỰC PHẨM")
+                        .Text(title)
                         .Bold().AlignCenter().FontSize(14);
+
+                    col.Item().PaddingTop(2)
+                        .Text("(Mẫu biên bản theo Phụ lục Thông tư 17/2023/TT-BYT)")
+                        .AlignCenter().FontSize(9).Italic();
 
                     col.Item().PaddingTop(2).Text(
                             $"Ngày {result.InspectionDate:dd} tháng {result.InspectionDate:MM} năm {result.InspectionDate:yyyy}")
                         .AlignCenter().FontSize(11).Italic();
+
+                    // Legal basis: the inspection decision issued prior to the
+                    // inspection (Article 9, Circular 48/2015/TT-BYT).
+                    if (!string.IsNullOrWhiteSpace(result.DecisionNumber))
+                    {
+                        var decisionLine = result.DecisionDate.HasValue
+                            ? $"Căn cứ Quyết định kiểm tra số {result.DecisionNumber} " +
+                              $"ngày {result.DecisionDate.Value:dd/MM/yyyy}"
+                            : $"Căn cứ Quyết định kiểm tra số {result.DecisionNumber}";
+                        col.Item().PaddingTop(4).Text(decisionLine).FontSize(11);
+                    }
 
                     col.Item().PaddingTop(6).LineHorizontal(1).LineColor("#1677FF");
                 });

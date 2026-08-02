@@ -44,7 +44,8 @@ interface ModalState {
 const communeTypes: Record<number, string> = {
   1: "Xã",
   2: "Phường",
-  3: "Thị trấn",
+  3: "Thị trấn (cũ)",
+  4: "Đặc khu",
 };
 
 export default function GeographicCatalogPage() {

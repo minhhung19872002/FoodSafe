@@ -99,6 +99,8 @@ public class SystemSettingsAppService :
                 FoodSafeSettings.Homepage.ContactEmail),
             ContactAddress = await _settingProvider.GetOrNullAsync(
                 FoodSafeSettings.Homepage.ContactAddress),
+            IssuingAgency = await _settingProvider.GetOrNullAsync(
+                FoodSafeSettings.Documents.IssuingAgency),
             HasLogo = !string.IsNullOrEmpty(
                 await _settingProvider.GetOrNullAsync(
                     FoodSafeSettings.Appearance.LogoBlobName)),
@@ -185,6 +187,10 @@ public class SystemSettingsAppService :
         await SetGlobalAsync(
             FoodSafeSettings.Homepage.ContactAddress,
             input.ContactAddress);
+
+        await SetGlobalAsync(
+            FoodSafeSettings.Documents.IssuingAgency,
+            input.IssuingAgency);
 
         await SetGlobalAsync(
             FoodSafeSettings.License.ExpiryNotificationDays,

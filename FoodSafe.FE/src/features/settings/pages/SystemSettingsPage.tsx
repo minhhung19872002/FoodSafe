@@ -162,6 +162,7 @@ export default function SystemSettingsPage() {
         contactPhone: data.contactPhone,
         contactEmail: data.contactEmail,
         contactAddress: data.contactAddress,
+        issuingAgency: data.issuingAgency,
         licenseExpiryNotificationDays: data.licenseExpiryNotificationDays,
       });
     }
@@ -314,6 +315,12 @@ export default function SystemSettingsPage() {
                 extra="Số ngày trước khi hết hạn để hệ thống gửi cảnh báo"
               >
                 <InputNumber min={1} max={365} style={{ width: "100%" }} />
+              </Form.Item>
+              <Form.Item
+                name="issuingAgency"
+                label="Tên cơ quan ban hành (in trên biểu mẫu PDF)"
+              >
+                <Input maxLength={500} />
               </Form.Item>
             </Card>
           </Col>

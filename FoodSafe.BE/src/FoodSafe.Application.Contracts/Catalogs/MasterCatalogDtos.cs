@@ -114,6 +114,20 @@ public sealed class UpsertTestingServiceDto : UpsertMasterCatalogDto
     [Range(0, 3650)] public int TurnaroundDays { get; set; }
 }
 
+public sealed class ViolationTypeDto : MasterCatalogDto
+{
+    public string LegalReference { get; set; } = string.Empty;
+    public decimal? MinFine { get; set; }
+    public decimal? MaxFine { get; set; }
+}
+
+public sealed class UpsertViolationTypeDto : UpsertMasterCatalogDto
+{
+    [Required, StringLength(500)] public string LegalReference { get; set; } = string.Empty;
+    [Range(0, 9999999999999999.99)] public decimal? MinFine { get; set; }
+    [Range(0, 9999999999999999.99)] public decimal? MaxFine { get; set; }
+}
+
 public interface IMasterCatalogAppService : IApplicationService
 {
     Task<PagedResultDto<CountryDto>> GetCountriesAsync(MasterCatalogListInput input);
@@ -152,4 +166,8 @@ public interface IMasterCatalogAppService : IApplicationService
     Task<TestingServiceDto> CreateTestingServiceAsync(UpsertTestingServiceDto input);
     Task<TestingServiceDto> UpdateTestingServiceAsync(Guid id, UpsertTestingServiceDto input);
     Task DeleteTestingServiceAsync(Guid id);
+    Task<PagedResultDto<ViolationTypeDto>> GetViolationTypesAsync(MasterCatalogListInput input);
+    Task<ViolationTypeDto> CreateViolationTypeAsync(UpsertViolationTypeDto input);
+    Task<ViolationTypeDto> UpdateViolationTypeAsync(Guid id, UpsertViolationTypeDto input);
+    Task DeleteViolationTypeAsync(Guid id);
 }

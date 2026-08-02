@@ -118,6 +118,38 @@ public sealed class ProductGroup : MasterCatalog
     }
 }
 
+/// <summary>
+/// Administrative violation type in food safety (Nghị định 115/2018/NĐ-CP,
+/// amended by Nghị định 124/2021/NĐ-CP). Fine amounts are the ranges applied
+/// to individuals; organizations are fined twice the individual amount
+/// (Khoản 2 Điều 3 Nghị định 115/2018/NĐ-CP).
+/// </summary>
+public sealed class ViolationType : MasterCatalog
+{
+    public string LegalReference { get; private set; } = string.Empty;
+    public decimal? MinFine { get; private set; }
+    public decimal? MaxFine { get; private set; }
+
+    private ViolationType() { }
+    public static ViolationType Create(Guid id, string code, string name, string legalReference,
+        decimal? minFine, decimal? maxFine, string? description, int sortOrder, bool isActive)
+    {
+        var item = new ViolationType { Id = id };
+        item.Update(code, name, legalReference, minFine, maxFine, description, sortOrder, isActive);
+        return item;
+    }
+    public void Update(string code, string name, string legalReference, decimal? minFine,
+        decimal? maxFine, string? description, int sortOrder, bool isActive)
+    {
+        if (minFine < 0 || maxFine < 0 || (minFine.HasValue && maxFine.HasValue && minFine > maxFine))
+            throw new BusinessException(FoodSafeDomainErrorCodes.Catalog.InvalidFineRange);
+        SetCommon(code, name, description, sortOrder, isActive);
+        LegalReference = Check.NotNullOrWhiteSpace(legalReference, nameof(legalReference), 500).Trim();
+        MinFine = minFine;
+        MaxFine = maxFine;
+    }
+}
+
 public sealed class TestingCenter : MasterCatalog
 {
     public string Address { get; private set; } = string.Empty;

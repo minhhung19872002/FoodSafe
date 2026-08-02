@@ -5,6 +5,12 @@ namespace FoodSafe.FoodPoisoning;
 
 public sealed class FoodPoisoningIncident : FullAuditedAggregateRoot<Guid>
 {
+    /// <summary>
+    /// Ngưỡng "vụ ngộ độc lớn" — chỉ tiêu thống kê ngành y tế
+    /// "số vụ NĐTP từ 30 người mắc trở lên" (TT 20/2019, cập nhật TT 23/2025/TT-BYT).
+    /// </summary>
+    public const int LargeScaleAffectedThreshold = 30;
+
     public Guid OrganizationId { get; private set; }
     public string IncidentCode { get; private set; } = string.Empty;
     public DateTime? OccurrenceDate { get; private set; }
@@ -30,6 +36,8 @@ public sealed class FoodPoisoningIncident : FullAuditedAggregateRoot<Guid>
 
     // Cause assessment
     public CauseAssessment? CauseAssessmentValue { get; private set; }
+    /// <summary>Nhóm căn nguyên: vi sinh / hóa chất / độc tố tự nhiên / không xác định.</summary>
+    public PoisoningCauseCategory? CauseCategory { get; private set; }
     public string? CausativeAgent { get; private set; }
     public string? Pathogen { get; private set; }
 
@@ -50,6 +58,15 @@ public sealed class FoodPoisoningIncident : FullAuditedAggregateRoot<Guid>
 
     private readonly List<PoisoningIncidentErrorReport> _errorReports = [];
     public IReadOnlyList<PoisoningIncidentErrorReport> ErrorReports => _errorReports;
+
+    /// <summary>Vụ lớn theo chỉ tiêu thống kê: từ 30 người mắc trở lên.</summary>
+    public bool IsLargeScale => AffectedCount >= LargeScaleAffectedThreshold;
+
+    /// <summary>
+    /// Đạt định nghĩa "vụ ngộ độc thực phẩm" theo Điều 3 Quy chế điều tra NĐTP
+    /// (QĐ 39/2006/QĐ-BYT): từ 02 người mắc trở lên, hoặc 01 người mắc nhưng tử vong.
+    /// </summary>
+    public bool MeetsIncidentDefinition => AffectedCount >= 2 || DeathCount >= 1;
 
     private FoodPoisoningIncident() { }
 
@@ -129,10 +146,15 @@ public sealed class FoodPoisoningIncident : FullAuditedAggregateRoot<Guid>
     public void SetCauseInfo(
         CauseAssessment? causeAssessment,
         string? causativeAgent,
-        string? pathogen)
+        string? pathogen,
+        PoisoningCauseCategory? causeCategory = null)
     {
         EnsureDraft();
+        if (causeCategory.HasValue && !Enum.IsDefined(causeCategory.Value))
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.FoodPoisoning.InvalidStatusTransition);
         CauseAssessmentValue = causeAssessment;
+        CauseCategory = causeCategory;
         CausativeAgent = Normalize(causativeAgent);
         Pathogen = Normalize(pathogen);
     }

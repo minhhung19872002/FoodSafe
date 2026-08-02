@@ -299,7 +299,8 @@ public class FoodPoisoningIncidentAppService : ApplicationService
             input.SuspectedFood, input.FoodSource, input.FoodServiceType);
 
         entity.SetCauseInfo(
-            input.CauseAssessmentValue, input.CausativeAgent, input.Pathogen);
+            input.CauseAssessmentValue, input.CausativeAgent, input.Pathogen,
+            input.CauseCategory);
 
         entity.SetInvestigationInfo(
             input.InvestigationTeam, input.ControlMeasures, input.PreventionMeasures);
@@ -326,10 +327,13 @@ public class FoodPoisoningIncidentAppService : ApplicationService
         AffectedCount = e.AffectedCount,
         HospitalizedCount = e.HospitalizedCount,
         DeathCount = e.DeathCount,
+        IsLargeScale = e.IsLargeScale,
+        MeetsIncidentDefinition = e.MeetsIncidentDefinition,
         SuspectedFood = e.SuspectedFood,
         FoodSource = e.FoodSource,
         FoodServiceType = e.FoodServiceType,
         CauseAssessmentValue = e.CauseAssessmentValue,
+        CauseCategory = e.CauseCategory,
         CausativeAgent = e.CausativeAgent,
         Pathogen = e.Pathogen,
         InvestigationTeam = e.InvestigationTeam,

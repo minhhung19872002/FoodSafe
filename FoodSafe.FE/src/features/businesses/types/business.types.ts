@@ -15,6 +15,70 @@ export const PRODUCT_STATUS = {
 export type ProductStatus =
   (typeof PRODUCT_STATUS)[keyof typeof PRODUCT_STATUS];
 
+/** Khoản 1 Điều 12 Nghị định 15/2018/NĐ-CP — điểm a → k. */
+export const ELIGIBILITY_EXEMPTION_REASON = {
+  SmallScalePrimaryProduction: 1,
+  NoFixedLocation: 2,
+  SmallScalePreliminaryProcessing: 3,
+  SmallScaleTrading: 4,
+  PrepackagedFoodTrading: 5,
+  PackagingMaterialProduction: 6,
+  HotelRestaurant: 7,
+  CollectiveKitchenNoRegistration: 8,
+  StreetFood: 9,
+  QualitySystemCertified: 10,
+} as const;
+
+export type EligibilityExemptionReason =
+  (typeof ELIGIBILITY_EXEMPTION_REASON)[keyof typeof ELIGIBILITY_EXEMPTION_REASON];
+
+export const QUALITY_CERTIFICATION_TYPE = {
+  Gmp: 1,
+  Haccp: 2,
+  Iso22000: 3,
+  Ifs: 4,
+  Brc: 5,
+  Fssc22000: 6,
+  Other: 99,
+} as const;
+
+export type QualityCertificationType =
+  (typeof QUALITY_CERTIFICATION_TYPE)[keyof typeof QUALITY_CERTIFICATION_TYPE];
+
+export const EXEMPTION_REASON_LABELS: Record<EligibilityExemptionReason, string> =
+  {
+    [ELIGIBILITY_EXEMPTION_REASON.SmallScalePrimaryProduction]:
+      "a) Sản xuất ban đầu nhỏ lẻ",
+    [ELIGIBILITY_EXEMPTION_REASON.NoFixedLocation]:
+      "b) Sản xuất, kinh doanh không có địa điểm cố định",
+    [ELIGIBILITY_EXEMPTION_REASON.SmallScalePreliminaryProcessing]:
+      "c) Sơ chế nhỏ lẻ",
+    [ELIGIBILITY_EXEMPTION_REASON.SmallScaleTrading]:
+      "d) Kinh doanh thực phẩm nhỏ lẻ",
+    [ELIGIBILITY_EXEMPTION_REASON.PrepackagedFoodTrading]:
+      "đ) Kinh doanh thực phẩm bao gói sẵn",
+    [ELIGIBILITY_EXEMPTION_REASON.PackagingMaterialProduction]:
+      "e) SXKD dụng cụ, vật liệu bao gói, chứa đựng thực phẩm",
+    [ELIGIBILITY_EXEMPTION_REASON.HotelRestaurant]:
+      "g) Nhà hàng trong khách sạn",
+    [ELIGIBILITY_EXEMPTION_REASON.CollectiveKitchenNoRegistration]:
+      "h) Bếp ăn tập thể không đăng ký ngành nghề KD thực phẩm",
+    [ELIGIBILITY_EXEMPTION_REASON.StreetFood]:
+      "i) Kinh doanh thức ăn đường phố",
+    [ELIGIBILITY_EXEMPTION_REASON.QualitySystemCertified]:
+      "k) Đã có chứng nhận GMP/HACCP/ISO 22000/IFS/BRC/FSSC 22000 còn hiệu lực",
+  };
+
+export const QUALITY_CERT_LABELS: Record<QualityCertificationType, string> = {
+  [QUALITY_CERTIFICATION_TYPE.Gmp]: "GMP",
+  [QUALITY_CERTIFICATION_TYPE.Haccp]: "HACCP",
+  [QUALITY_CERTIFICATION_TYPE.Iso22000]: "ISO 22000",
+  [QUALITY_CERTIFICATION_TYPE.Ifs]: "IFS",
+  [QUALITY_CERTIFICATION_TYPE.Brc]: "BRC",
+  [QUALITY_CERTIFICATION_TYPE.Fssc22000]: "FSSC 22000",
+  [QUALITY_CERTIFICATION_TYPE.Other]: "Khác",
+};
+
 export interface BusinessHandler {
   id: string;
   businessId: string;
@@ -72,6 +136,10 @@ export interface Business {
   suspendedAt?: string;
   hasEligibilityCertificate: boolean;
   hasVsattpCommitment: boolean;
+  eligibilityExemptionReason?: EligibilityExemptionReason;
+  qualityCertificationType?: QualityCertificationType;
+  qualityCertificationNumber?: string;
+  qualityCertificationExpiry?: string;
   establishedDate?: string;
   employeeCount?: number;
   notes?: string;
@@ -101,6 +169,10 @@ export interface BusinessInput {
   establishedDate?: string;
   employeeCount?: number;
   notes?: string;
+  eligibilityExemptionReason?: EligibilityExemptionReason;
+  qualityCertificationType?: QualityCertificationType;
+  qualityCertificationNumber?: string;
+  qualityCertificationExpiry?: string;
   productGroupIds: string[];
 }
 

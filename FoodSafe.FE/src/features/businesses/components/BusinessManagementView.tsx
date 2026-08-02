@@ -18,6 +18,7 @@ import type { SorterResult, SortOrder } from "antd/es/table/interface";
 import { ClearFiltersButton } from "@/components/ClearFiltersButton";
 import { RefreshListButton } from "@/components/RefreshListButton";
 import { RowActions } from "@/components/RowActions";
+import { BusinessExemptionTag } from "./BusinessExemptionTag";
 import {
   BUSINESS_STATUS,
   PRODUCT_STATUS,
@@ -259,12 +260,15 @@ export function BusinessManagementView(props: BusinessManagementViewProps) {
     {
       title: "Giấy phép",
       dataIndex: "hasEligibilityCertificate",
-      width: 130,
-      render: (value: boolean) => (
-        <Tag color={value ? "blue" : "default"}>
-          {value ? "Đang hiệu lực" : "Chưa có"}
-        </Tag>
-      ),
+      width: 160,
+      render: (value: boolean, business) =>
+        business.eligibilityExemptionReason !== undefined ? (
+          <BusinessExemptionTag business={business} />
+        ) : (
+          <Tag color={value ? "blue" : "default"}>
+            {value ? "Đang hiệu lực" : "Chưa có"}
+          </Tag>
+        ),
     },
     {
       title: "Thao tác",

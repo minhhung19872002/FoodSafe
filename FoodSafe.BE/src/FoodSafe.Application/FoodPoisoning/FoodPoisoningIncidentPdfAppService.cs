@@ -1,10 +1,12 @@
 using FoodSafe.Permissions;
+using FoodSafe.Settings;
 using Microsoft.AspNetCore.Authorization;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Settings;
 
 namespace FoodSafe.FoodPoisoning;
 
@@ -12,8 +14,6 @@ namespace FoodSafe.FoodPoisoning;
 [Authorize(FoodSafePermissions.FoodPoisoning.Incidents.View)]
 public class FoodPoisoningIncidentPdfAppService : ApplicationService, IFoodPoisoningIncidentPdfAppService
 {
-    private const string IssuingAgency = "CHI CỤC AN TOÀN VỆ SINH THỰC PHẨM TỈNH QUẢNG NINH";
-
     private readonly FoodPoisoningIncidentAppService _incidentAppService;
 
     public FoodPoisoningIncidentPdfAppService(FoodPoisoningIncidentAppService incidentAppService)
@@ -26,10 +26,11 @@ public class FoodPoisoningIncidentPdfAppService : ApplicationService, IFoodPoiso
         var dto = await _incidentAppService.GetAsync(incidentId);
         if (dto.Status != PoisoningIncidentStatus.Concluded)
             throw new BusinessException(FoodSafeDomainErrorCodes.FoodPoisoning.IncidentNotConcluded);
-        return BuildPdf(dto, Clock.Now);
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
+        return BuildPdf(dto, Clock.Now, issuingAgency);
     }
 
-    private static byte[] BuildPdf(FoodPoisoningIncidentDto inc, DateTime now)
+    private static byte[] BuildPdf(FoodPoisoningIncidentDto inc, DateTime now, string issuingAgency)
     {
         QuestPDF.Settings.License = LicenseType.Community;
 
@@ -54,7 +55,7 @@ public class FoodPoisoningIncidentPdfAppService : ApplicationService, IFoodPoiso
                             hdr.Item().Text("───────────────").AlignCenter().FontSize(10);
                         });
                     });
-                    col.Item().PaddingTop(8).Text(IssuingAgency)
+                    col.Item().PaddingTop(8).Text(issuingAgency)
                         .Bold().AlignCenter().FontSize(11);
                     col.Item().PaddingTop(12).Text("PHIẾU KẾT THÚC VỤ NGỘ ĐỘC THỰC PHẨM")
                         .Bold().AlignCenter().FontSize(14);

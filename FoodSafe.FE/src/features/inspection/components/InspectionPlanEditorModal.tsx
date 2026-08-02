@@ -89,6 +89,7 @@ export function InspectionPlanEditorModal(props: Props) {
 
   const selectedProvinceId = Form.useWatch("provinceId", form);
   const selectedCommuneId = Form.useWatch("communeId", form);
+  const selectedPlanType = Form.useWatch("planType", form);
 
   const provinces = useProvinces(true);
   const communes = useCommunesByProvince(selectedProvinceId ?? "", true);
@@ -240,6 +241,11 @@ export function InspectionPlanEditorModal(props: Props) {
             name="planType"
             label="Loại kế hoạch"
             rules={[{ required: true, message: "Vui lòng chọn loại." }]}
+            extra={
+              selectedPlanType === INSPECTION_PLAN_TYPE.Annual
+                ? "Kế hoạch kiểm tra hằng năm của cơ quan cấp tỉnh phải được phê duyệt trước ngày 15/11 năm trước (Điều 7 Thông tư 48/2015/TT-BYT)."
+                : undefined
+            }
           >
             <Select
               options={Object.entries(INSPECTION_PLAN_TYPE_LABELS).map(

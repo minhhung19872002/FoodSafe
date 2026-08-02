@@ -21,11 +21,19 @@ public class FoodPoisoningIncidentDto : EntityDto<Guid>
     public int HospitalizedCount { get; set; }
     public int DeathCount { get; set; }
 
+    /// <summary>Vụ lớn theo chỉ tiêu thống kê ngành y tế: ≥ 30 người mắc.</summary>
+    public bool IsLargeScale { get; set; }
+
+    /// <summary>Đạt định nghĩa vụ NĐTP (QĐ 39/2006/QĐ-BYT): ≥ 2 người mắc hoặc có tử vong.</summary>
+    public bool MeetsIncidentDefinition { get; set; }
+
     public string? SuspectedFood { get; set; }
     public string? FoodSource { get; set; }
     public string? FoodServiceType { get; set; }
 
     public CauseAssessment? CauseAssessmentValue { get; set; }
+    /// <summary>Nhóm căn nguyên: vi sinh / hóa chất / độc tố tự nhiên / không xác định.</summary>
+    public PoisoningCauseCategory? CauseCategory { get; set; }
     public string? CausativeAgent { get; set; }
     public string? Pathogen { get; set; }
 
@@ -77,6 +85,8 @@ public class CreateUpdateFoodPoisoningIncidentDto
     public string? FoodServiceType { get; set; }
 
     public CauseAssessment? CauseAssessmentValue { get; set; }
+    /// <summary>Nhóm căn nguyên: vi sinh / hóa chất / độc tố tự nhiên / không xác định.</summary>
+    public PoisoningCauseCategory? CauseCategory { get; set; }
     public string? CausativeAgent { get; set; }
     public string? Pathogen { get; set; }
 
