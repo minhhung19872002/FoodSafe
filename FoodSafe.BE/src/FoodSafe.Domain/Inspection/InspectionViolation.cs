@@ -6,6 +6,14 @@ namespace FoodSafe.Inspection;
 public sealed class InspectionViolation : Entity<Guid>
 {
     public Guid InspectionResultId { get; private set; }
+
+    /// <summary>
+    /// Optional link to the NĐ 115/2018 violation-type catalog entry the row
+    /// was prefilled from. Text fields keep their own copy, so the row stays
+    /// meaningful if the catalog entry is later edited or removed.
+    /// </summary>
+    public Guid? ViolationTypeId { get; private set; }
+
     public string? ViolationCode { get; private set; }
     public string Description { get; private set; } = string.Empty;
     public string? RegulationReference { get; private set; }
@@ -26,7 +34,8 @@ public sealed class InspectionViolation : Entity<Guid>
         string? regulationReference,
         decimal? fineAmount,
         string? remedyRequired,
-        DateTime? remedyDeadline) : base(id)
+        DateTime? remedyDeadline,
+        Guid? violationTypeId = null) : base(id)
     {
         Check.NotNullOrWhiteSpace(description, nameof(description));
 
@@ -34,6 +43,7 @@ public sealed class InspectionViolation : Entity<Guid>
             throw new ArgumentException("Fine amount cannot be negative.", nameof(fineAmount));
 
         InspectionResultId = inspectionResultId;
+        ViolationTypeId = violationTypeId;
         ViolationCode = string.IsNullOrWhiteSpace(violationCode) ? null : violationCode.Trim();
         Description = description.Trim();
         RegulationReference = string.IsNullOrWhiteSpace(regulationReference) ? null : regulationReference.Trim();

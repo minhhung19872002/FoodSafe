@@ -60,4 +60,7 @@ public class NdtpAggregatedStatsDto
     public int IncidentAffected { get; set; }
     public int IncidentHospitalized { get; set; }
     public int IncidentDeaths { get; set; }
+
+    /// <summary>Số vụ ≥30 người mắc (TT 20/2019, TT 23/2025/TT-BYT).</summary>
+    public int LargeScaleIncidentCount { get; set; }
 }

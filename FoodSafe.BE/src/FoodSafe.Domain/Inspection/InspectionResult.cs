@@ -162,12 +162,14 @@ public sealed class InspectionResult : FullAuditedAggregateRoot<Guid>
         string? regulationReference,
         decimal? fineAmount,
         string? remedyRequired,
-        DateTime? remedyDeadline)
+        DateTime? remedyDeadline,
+        Guid? violationTypeId = null)
     {
         EnsureMutable();
         var violation = new InspectionViolation(
             violationId, Id, violationCode, description,
-            regulationReference, fineAmount, remedyRequired, remedyDeadline);
+            regulationReference, fineAmount, remedyRequired, remedyDeadline,
+            violationTypeId);
         _violations.Add(violation);
         RecalculateViolationState();
         return violation;

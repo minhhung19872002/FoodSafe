@@ -13,6 +13,10 @@ public class PartnerAccountDto : EntityDto<Guid>
     public string? Description { get; set; }
     public PartnerAccountStatus Status { get; set; }
     public List<SharedDataType> AllowedDataTypes { get; set; } = [];
+
+    /// <summary>Optional comma-separated source-IP allowlist (SEC-002).</summary>
+    public string? AllowedIps { get; set; }
+
     public int ActiveKeyCount { get; set; }
     public DateTime CreationTime { get; set; }
 }
@@ -39,6 +43,10 @@ public class CreatePartnerAccountDto
 
     [StringLength(PartnerAccountConsts.MaxDescriptionLength)]
     public string? Description { get; set; }
+
+    /// <summary>Optional comma-separated source-IP allowlist.</summary>
+    [StringLength(1000)]
+    public string? AllowedIps { get; set; }
 }
 
 public class UpdatePartnerAccountDto
@@ -57,6 +65,10 @@ public class UpdatePartnerAccountDto
 
     [StringLength(PartnerAccountConsts.MaxDescriptionLength)]
     public string? Description { get; set; }
+
+    /// <summary>Optional comma-separated source-IP allowlist.</summary>
+    [StringLength(1000)]
+    public string? AllowedIps { get; set; }
 }
 
 public class PartnerAccountFilterDto : PagedAndSortedResultRequestDto

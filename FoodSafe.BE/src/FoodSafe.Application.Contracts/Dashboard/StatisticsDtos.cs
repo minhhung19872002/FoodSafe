@@ -33,6 +33,12 @@ public class StatisticsFilterDto
     public int? Month { get; set; }
     public int? Quarter { get; set; }
     public Guid? OrganizationId { get; set; }
+
+    /// <summary>Custom period start (inclusive) — overrides Year/Month/Quarter when both dates are set.</summary>
+    public DateTime? FromDate { get; set; }
+
+    /// <summary>Custom period end (inclusive).</summary>
+    public DateTime? ToDate { get; set; }
 }
 
 public sealed class PoisoningTrendPoint

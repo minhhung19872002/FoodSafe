@@ -17,6 +17,12 @@ public sealed class NdtpReport : BaseReport
     public int IncidentHospitalized { get; private set; }
     public int IncidentDeaths { get; private set; }
 
+    /// <summary>
+    /// Số vụ NĐTP lớn (≥30 người mắc) — chỉ tiêu thống kê riêng của ngành y tế
+    /// (TT 20/2019, TT 23/2025/TT-BYT).
+    /// </summary>
+    public int LargeScaleIncidentCount { get; private set; }
+
     public string? PreventionActivities { get; private set; }
     public string? RiskFactors { get; private set; }
     public string? Recommendations { get; private set; }
@@ -45,7 +51,8 @@ public sealed class NdtpReport : BaseReport
 
     public void UpdateStats(
         int caseCount, int caseAffected, int caseHospitalized, int caseDeaths,
-        int incidentCount, int incidentAffected, int incidentHospitalized, int incidentDeaths)
+        int incidentCount, int incidentAffected, int incidentHospitalized, int incidentDeaths,
+        int largeScaleIncidentCount = 0)
     {
         EnsureDraft();
         CaseCount = Math.Max(0, caseCount);
@@ -56,6 +63,8 @@ public sealed class NdtpReport : BaseReport
         IncidentAffected = Math.Max(0, incidentAffected);
         IncidentHospitalized = Math.Max(0, incidentHospitalized);
         IncidentDeaths = Math.Max(0, incidentDeaths);
+        LargeScaleIncidentCount = Math.Min(
+            Math.Max(0, largeScaleIncidentCount), IncidentCount);
     }
 
     public void UpdateNarrative(
@@ -93,6 +102,7 @@ public sealed class NdtpReport : BaseReport
         incidentAffected = IncidentAffected,
         incidentHospitalized = IncidentHospitalized,
         incidentDeaths = IncidentDeaths,
+        largeScaleIncidentCount = LargeScaleIncidentCount,
         preventionActivities = PreventionActivities,
         riskFactors = RiskFactors,
         recommendations = Recommendations,

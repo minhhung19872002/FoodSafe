@@ -373,4 +373,5 @@ public interface ICertificatePdfAppService
     Task<CertificatePdfDto> GetProductRegistrationPdfAsync(Guid id);
     Task<CertificatePdfDto> GetCfsCertificatePdfAsync(Guid id);
     Task<CertificatePdfDto> GetExportFoodCertificatePdfAsync(Guid id);
+    Task<CertificatePdfDto> GetAdvertisementRegistrationPdfAsync(Guid id);
 }

@@ -123,6 +123,9 @@ services:
       # the seeder refuses the built-in development password and the migrator
       # exits non-zero unless an operator-chosen secret is provided here.
       Seed__TestPassword: ${SEED_TEST_PASSWORD:-}
+      # SEC-004: e2e seeding is opt-in outside Development — pinned off unless
+      # the operator explicitly sets SEED_ENABLE_E2E_DATA=true.
+      Seed__EnableE2eData: ${SEED_ENABLE_E2E_DATA:-false}
     entrypoint: ["dotnet", "/app/migrator/FoodSafe.DbMigrator.dll"]
     depends_on:
       postgres:

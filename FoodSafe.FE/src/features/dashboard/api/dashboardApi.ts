@@ -38,6 +38,26 @@ export const dashboardApi = {
     ).data;
   },
 
+  async exportReportCompliance(
+    filter: DashboardFilter,
+  ): Promise<{ blob: Blob; fileName: string }> {
+    const response = await api.get<Blob>(
+      "/v1/app/statistics/excel/report-compliance",
+      { params: filter, responseType: "blob" },
+    );
+    const disposition = response.headers["content-disposition"] as
+      | string
+      | undefined;
+    const encoded = disposition?.match(/filename\*=UTF-8''([^;]+)/)?.[1];
+    const plain = disposition?.match(/filename="?([^";]+)"?/)?.[1];
+    return {
+      blob: response.data,
+      fileName: decodeURIComponent(
+        encoded ?? plain ?? "trang-thai-bao-cao.xlsx",
+      ),
+    };
+  },
+
   async getFoodPoisoningTrend(
     filter: DashboardFilter,
   ): Promise<PoisoningTrendPoint[]> {

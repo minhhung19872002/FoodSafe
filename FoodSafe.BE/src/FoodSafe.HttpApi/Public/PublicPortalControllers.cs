@@ -248,4 +248,11 @@ public sealed class CertificatePdfController(
         var file = await service.GetExportFoodCertificatePdfAsync(id);
         return File(file.Content, file.ContentType, file.FileName);
     }
+
+    [HttpGet("advertisement-registrations/{id:guid}/pdf")]
+    public async Task<IActionResult> GetAdvertisementRegistrationPdfAsync(Guid id)
+    {
+        var file = await service.GetAdvertisementRegistrationPdfAsync(id);
+        return File(file.Content, file.ContentType, file.FileName);
+    }
 }

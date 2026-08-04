@@ -433,6 +433,7 @@ const TAB_ITEMS = [
     label: "Đăng ký quảng cáo",
     placeholder: "Số đăng ký, tên cơ sở...",
     useHook: usePublicAdRegistrations,
+    pdfPath: "advertisement-registrations",
   },
   {
     key: "cfs",

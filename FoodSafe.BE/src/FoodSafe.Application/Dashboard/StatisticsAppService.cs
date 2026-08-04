@@ -87,6 +87,14 @@ public class StatisticsAppService : ApplicationService
 
         var year = input.Year ?? _clock.Now.Year;
         var (rangeStart, rangeEnd) = ComputeDateRange(year, input.Month, input.Quarter);
+        if (input.FromDate.HasValue && input.ToDate.HasValue &&
+            input.FromDate.Value.Date <= input.ToDate.Value.Date)
+        {
+            // Custom date range (GAP-N7) overrides the year/month/quarter period.
+            rangeStart = DateOnly.FromDateTime(input.FromDate.Value.Date);
+            rangeEnd = DateOnly.FromDateTime(input.ToDate.Value.Date).AddDays(1);
+            year = input.FromDate.Value.Year;
+        }
         var dtStart = rangeStart.ToDateTime(TimeOnly.MinValue);
         var dtEnd = rangeEnd.ToDateTime(TimeOnly.MinValue);
 

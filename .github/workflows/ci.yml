@@ -121,6 +121,112 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  e2e:
+    name: Real-stack Playwright acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: FoodSafe.FE/package-lock.json
+
+      # CI-only credentials: this stack lives for one job on an isolated runner.
+      - name: Create CI environment file
+        working-directory: FoodSafe.BE
+        run: |
+          cat > .env <<'EOF'
+          POSTGRES_DB=FoodSafe
+          POSTGRES_USER=foodsafe
+          POSTGRES_PASSWORD=ci-e2e-only-postgres-password
+          POSTGRES_PORT=5433
+          POSTGRES_SSL_MODE=Disable
+          MINIO_ROOT_USER=foodsafe-minio
+          MINIO_ROOT_PASSWORD=ci-e2e-only-minio-password
+          MINIO_API_PORT=9000
+          MINIO_CONSOLE_PORT=9001
+          STRING_ENCRYPTION_PASSPHRASE=ci-e2e-only-passphrase-32-characters!
+          CAPTCHA_SITE_KEY=1x00000000000000000000AA
+          CAPTCHA_SECRET_KEY=1x0000000000000000000000000000000AA
+          CAPTCHA_EXPECTED_HOSTNAME=localhost
+          SMTP_FROM_ADDRESS=noreply@foodsafe.local
+          SMTP_FROM_NAME=FoodSafe
+          SMTP_HOST=mailpit
+          SMTP_PORT=1025
+          MAILPIT_SMTP_PORT=1025
+          MAILPIT_WEB_PORT=8025
+          SMTP_ENABLE_SSL=false
+          SMTP_USE_DEFAULT_CREDENTIALS=true
+          SMTP_USERNAME=
+          SMTP_PASSWORD=
+          DATA_PROTECTION_CERTIFICATE_PASSWORD=
+          SEED_ADMIN_EMAIL=admin@foodsafe.local
+          SEED_ADMIN_PASSWORD=Ci-e2e-only-bootstrap-password-9!
+          PUBLIC_BASE_URL=http://localhost:8080
+          WEB_PORT=8080
+          WEB_BIND_ADDRESS=127.0.0.1
+          INFRA_BIND_ADDRESS=127.0.0.1
+          REDIS_PORT=6379
+          REDIS_PASSWORD=ci-e2e-only-redis-password
+          ASPNETCORE_ENVIRONMENT=Development
+          REQUIRE_HTTPS_METADATA=false
+          EOF
+
+      - name: Build and start the full stack
+        working-directory: FoodSafe.BE
+        run: |
+          docker compose build api migrator frontend
+          docker compose up -d
+
+      - name: Wait for the stack to become healthy
+        working-directory: FoodSafe.BE
+        run: |
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              "http://127.0.0.1:8080/api/abp/application-configuration?IncludeLocalizationResources=false" || true)
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 5
+          done
+          echo "Stack did not become healthy in time." >&2
+          docker compose ps
+          docker compose logs --tail 100 migrator api
+          exit 1
+
+      - name: Install frontend dependencies and browsers
+        working-directory: FoodSafe.FE
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      # workers=1: acceptance policy — the suite runs against one shared stack.
+      - name: Run Playwright acceptance suite (no API interception)
+        working-directory: FoodSafe.FE
+        env:
+          E2E_ADMIN_PASSWORD: Ci-e2e-only-bootstrap-password-9!
+        run: npx playwright test --workers=1
+
+      - name: Upload Playwright failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            FoodSafe.FE/test-results
+            FoodSafe.FE/playwright-report
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Tear down the stack
+        if: always()
+        working-directory: FoodSafe.BE
+        run: docker compose down -v
+
   database:
     name: Clean PostgreSQL migration
     runs-on: ubuntu-latest

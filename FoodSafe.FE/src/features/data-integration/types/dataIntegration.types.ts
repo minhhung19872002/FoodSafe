@@ -261,6 +261,8 @@ export interface PartnerAccount {
   description?: string;
   status: PartnerAccountStatus;
   allowedDataTypes: SharedDataType[];
+  /** Danh sách IP nguồn được phép (phân cách bằng dấu phẩy); trống = mọi IP. */
+  allowedIps?: string;
   activeKeyCount: number;
   creationTime: string;
 }
@@ -271,6 +273,7 @@ export interface CreatePartnerAccount {
   externalSystem: string;
   allowedDataTypes: SharedDataType[];
   description?: string;
+  allowedIps?: string;
 }
 
 export type UpdatePartnerAccount = Omit<CreatePartnerAccount, "code">;

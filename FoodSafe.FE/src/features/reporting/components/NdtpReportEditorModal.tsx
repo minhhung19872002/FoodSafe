@@ -52,6 +52,7 @@ export function NdtpReportEditorModal({ report, onClose }: Props) {
           incidentAffected: updated.incidentAffected,
           incidentHospitalized: updated.incidentHospitalized,
           incidentDeaths: updated.incidentDeaths,
+          largeScaleIncidentCount: updated.largeScaleIncidentCount,
         });
         void message.success("Đã tự động tổng hợp số liệu từ dữ liệu ngộ độc.");
       },
@@ -75,6 +76,7 @@ export function NdtpReportEditorModal({ report, onClose }: Props) {
         incidentAffected: stats.incidentAffected,
         incidentHospitalized: stats.incidentHospitalized,
         incidentDeaths: stats.incidentDeaths,
+        largeScaleIncidentCount: stats.largeScaleIncidentCount,
       });
       void message.success(
         `Đã tổng hợp từ ${stats.reportCount} báo cáo tuyến dưới. Kiểm tra lại trước khi lưu.`,
@@ -97,6 +99,7 @@ export function NdtpReportEditorModal({ report, onClose }: Props) {
         incidentAffected: report.incidentAffected,
         incidentHospitalized: report.incidentHospitalized,
         incidentDeaths: report.incidentDeaths,
+        largeScaleIncidentCount: report.largeScaleIncidentCount,
         preventionActivities: report.preventionActivities,
         riskFactors: report.riskFactors,
         recommendations: report.recommendations,
@@ -120,6 +123,7 @@ export function NdtpReportEditorModal({ report, onClose }: Props) {
         incidentAffected: values.incidentAffected ?? 0,
         incidentHospitalized: values.incidentHospitalized ?? 0,
         incidentDeaths: values.incidentDeaths ?? 0,
+        largeScaleIncidentCount: values.largeScaleIncidentCount ?? 0,
       },
     });
 
@@ -216,6 +220,17 @@ export function NdtpReportEditorModal({ report, onClose }: Props) {
           </Col>
           <Col span={6}>
             <Form.Item name="incidentDeaths" label="Tử vong">
+              <InputNumber min={0} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              name="largeScaleIncidentCount"
+              label="Số vụ lớn (≥ 30 người mắc)"
+              tooltip="Chỉ tiêu thống kê ngành y tế theo TT 20/2019 và TT 23/2025/TT-BYT"
+            >
               <InputNumber min={0} style={{ width: "100%" }} />
             </Form.Item>
           </Col>

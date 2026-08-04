@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Button,
   Card,
@@ -40,6 +41,7 @@ import { InboundSubmissionsTab } from "../components/InboundSubmissionsTab";
 import { ApiSpecsTab } from "../components/ApiSpecsTab";
 import {
   useApiEndpoints,
+  useExternalSystemOptions,
   useApiCallLogs,
   useApiCallLogDetail,
   useAlertShareOptions,
@@ -81,7 +83,6 @@ import {
 } from "../types/dataIntegration.types";
 
 const HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
-const EXTERNAL_SYSTEMS = ["Bộ Y tế", "Sở Nông nghiệp", "Sở Công thương"];
 
 const LICENSE_KIND_LABELS: Record<string, string> = {
   eligibility: "Giấy chứng nhận đủ điều kiện",
@@ -101,6 +102,7 @@ function apiErrorMessage(error: unknown, fallback: string): string {
 }
 
 function EndpointsTab() {
+  const externalSystems = useExternalSystemOptions();
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const [filter, setFilter] = useState<ApiEndpointFilter>({});
   const [filterResetKey, setFilterResetKey] = useState(0);
@@ -410,7 +412,8 @@ function EndpointsTab() {
               <Select
                 style={{ width: 200 }}
                 showSearch
-                options={EXTERNAL_SYSTEMS.map((s) => ({
+                loading={externalSystems.isLoading}
+                options={(externalSystems.data ?? []).map((s) => ({
                   value: s,
                   label: s,
                 }))}
@@ -547,6 +550,34 @@ function CallHistoryTab() {
     canViewEndpoints,
   );
   const canShare = hasPermission("FoodSafe.DataIntegration.Share");
+
+  // Quick-share deep link (GAP-N3): /data-integration?tab=history&shareType=1
+  // &shareEntityId=…&shareSearch=… opens the share modal prefilled, then the
+  // params are stripped so a reload does not reopen it.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const shareType = Number(searchParams.get("shareType"));
+    const shareEntityId = searchParams.get("shareEntityId");
+    if (!canShare || !shareType || !shareEntityId) return;
+    shareForm.setFieldsValue({
+      dataType: shareType as SharedDataType,
+      entityId: shareEntityId,
+    });
+    setSelectedShareDataType(shareType as SharedDataType);
+    setShareRecordSearch(searchParams.get("shareSearch") ?? undefined);
+    setShareOpen(true);
+    setSearchParams(
+      (params) => {
+        params.delete("shareType");
+        params.delete("shareEntityId");
+        params.delete("shareSearch");
+        return params;
+      },
+      { replace: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canShare]);
+
   const shareRecordSelect = (() => {
     switch (selectedShareDataType) {
       case SHARED_DATA_TYPE.Alert:
@@ -693,7 +724,9 @@ function CallHistoryTab() {
       width: 150,
       ellipsis: true,
     },
-    { title: "URL", dataIndex: "endpointUrl", ellipsis: true },
+    // Explicit width: as the flexible column it collapsed to 0px once the
+    // fixed-width columns filled the container (URL was invisible on screen).
+    { title: "URL", dataIndex: "endpointUrl", ellipsis: true, width: 220 },
     { title: "Method", dataIndex: "httpMethod", width: 70 },
     {
       title: "Status",
@@ -901,6 +934,7 @@ function CallHistoryTab() {
         dataSource={data?.items}
         loading={isLoading}
         size="small"
+        scroll={{ x: 1180 }}
         onRow={(record) => ({
           onDoubleClick: () => setDetailId(record.id),
           style: { cursor: "pointer" },
@@ -1119,6 +1153,7 @@ function CallHistoryTab() {
 }
 
 export default function DataIntegrationPage() {
+  const [searchParams] = useSearchParams();
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const canViewEndpoints = hasPermission(
     "FoodSafe.DataIntegration.ApiEndpoints.View",
@@ -1177,9 +1212,15 @@ export default function DataIntegrationPage() {
       : []),
   ];
 
+  const requestedTab = searchParams.get("tab");
+  const defaultTab =
+    requestedTab && tabItems.some((item) => item.key === requestedTab)
+      ? requestedTab
+      : tabItems[0]?.key;
+
   return (
     <Card>
-      <Tabs defaultActiveKey={tabItems[0]?.key} items={tabItems} />
+      <Tabs defaultActiveKey={defaultTab} items={tabItems} />
     </Card>
   );
 }

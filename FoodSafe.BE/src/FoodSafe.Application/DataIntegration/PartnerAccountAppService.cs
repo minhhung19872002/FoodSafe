@@ -113,7 +113,8 @@ public class PartnerAccountAppService :
             input.Name,
             input.ExternalSystem,
             input.AllowedDataTypes,
-            input.Description);
+            input.Description,
+            input.AllowedIps);
         await _partners.InsertAsync(partner, autoSave: true, cancellationToken: ct);
         return ToDto(partner, activeKeyCount: 0);
     }
@@ -126,7 +127,7 @@ public class PartnerAccountAppService :
         var partner = await GetScopedAsync(id, ct, DataScopeOperation.Edit);
         partner.Update(
             input.Name, input.ExternalSystem,
-            input.AllowedDataTypes, input.Description);
+            input.AllowedDataTypes, input.Description, input.AllowedIps);
         await _partners.UpdateAsync(partner, autoSave: true, cancellationToken: ct);
         var activeKeys = await _keys.CountAsync(
             k => k.PartnerAccountId == id && k.RevokedAt == null, ct);
@@ -386,6 +387,7 @@ public class PartnerAccountAppService :
             Description = x.Description,
             Status = x.Status,
             AllowedDataTypes = x.GetAllowedDataTypes().ToList(),
+            AllowedIps = x.AllowedIps,
             ActiveKeyCount = activeKeyCount,
             CreationTime = x.CreationTime,
         };

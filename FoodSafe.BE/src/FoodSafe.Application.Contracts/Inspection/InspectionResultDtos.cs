@@ -41,6 +41,7 @@ public class InspectionResultDto : EntityDto<Guid>
 public class InspectionViolationDto : EntityDto<Guid>
 {
     public Guid InspectionResultId { get; set; }
+    public Guid? ViolationTypeId { get; set; }
     public string? ViolationCode { get; set; }
     public string Description { get; set; } = string.Empty;
     public string? RegulationReference { get; set; }
@@ -103,6 +104,9 @@ public class CreateUpdateInspectionResultDto
 
 public class CreateUpdateViolationDto
 {
+    /// <summary>Catalog entry (NĐ 115/2018) the row was prefilled from, if any.</summary>
+    public Guid? ViolationTypeId { get; set; }
+
     public string? ViolationCode { get; set; }
 
     [Required]

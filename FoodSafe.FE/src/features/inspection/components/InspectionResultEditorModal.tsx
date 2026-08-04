@@ -12,6 +12,8 @@ import {
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import { useAdminUsers } from "@/features/identity/api/identityQueries";
+import { useCatalogOptions } from "@/features/catalogs/api/catalogQueries";
+import { formatFineRange } from "@/features/catalogs/types/catalog.types";
 import {
   INSPECTION_OVERALL_RESULT,
   INSPECTION_OVERALL_RESULT_CONFIG,
@@ -26,6 +28,7 @@ import {
 } from "../types/inspection.types";
 
 interface ViolationFormValue {
+  violationTypeId?: string;
   violationCode?: string;
   description: string;
   regulationReference?: string;
@@ -72,6 +75,7 @@ const groupThousands = (value: string) =>
 
 export function InspectionResultEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
+  const violationTypes = useCatalogOptions("violation-type");
   const { token } = theme.useToken();
   const { item } = props;
 
@@ -120,6 +124,7 @@ export function InspectionResultEditorModal(props: Props) {
         // must round-trip the existing rows — submitting an empty list here
         // silently destroyed every recorded violation.
         violations: item.violations.map((v) => ({
+          violationTypeId: v.violationTypeId,
           violationCode: v.violationCode,
           description: v.description,
           regulationReference: v.regulationReference,
@@ -190,6 +195,7 @@ export function InspectionResultEditorModal(props: Props) {
             recommendations: values.recommendations?.trim() || undefined,
             notes: values.notes?.trim() || undefined,
             violations: (values.violations ?? []).map((v) => ({
+              violationTypeId: v.violationTypeId,
               violationCode: v.violationCode?.trim() || undefined,
               description: v.description.trim(),
               regulationReference: v.regulationReference?.trim() || undefined,
@@ -209,9 +215,19 @@ export function InspectionResultEditorModal(props: Props) {
           <Form.Item
             name="planId"
             label="Thuộc kế hoạch thanh tra"
-            rules={[
-              { required: true, message: "Vui lòng chọn kế hoạch thanh tra." },
-            ]}
+            // Chỉ bắt buộc khi tạo mới: kết quả cũ (hoặc tạo qua API cho đợt
+            // kiểm tra đột xuất) có thể không gắn kế hoạch — sửa các trường
+            // khác không được phép bị chặn vì thiếu kế hoạch.
+            rules={
+              item
+                ? []
+                : [
+                    {
+                      required: true,
+                      message: "Vui lòng chọn kế hoạch thanh tra.",
+                    },
+                  ]
+            }
             extra={
               item
                 ? "Không thể đổi kế hoạch của kết quả đã ghi nhận."
@@ -236,12 +252,16 @@ export function InspectionResultEditorModal(props: Props) {
           <Form.Item
             name="planItemId"
             label="Cơ sở trong kế hoạch"
-            rules={[
-              {
-                required: true,
-                message: "Vui lòng chọn cơ sở trong kế hoạch.",
-              },
-            ]}
+            rules={
+              item
+                ? []
+                : [
+                    {
+                      required: true,
+                      message: "Vui lòng chọn cơ sở trong kế hoạch.",
+                    },
+                  ]
+            }
           >
             <Select
               allowClear
@@ -454,10 +474,44 @@ export function InspectionResultEditorModal(props: Props) {
                     marginBottom: 12,
                   }}
                 >
+                  <Form.Item
+                    name={[field.name, "violationTypeId"]}
+                    label="Hành vi vi phạm (danh mục NĐ 115/2018)"
+                  >
+                    <Select
+                      allowClear
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder="Chọn để tự điền mã, nội dung và căn cứ pháp lý"
+                      loading={violationTypes.isLoading}
+                      options={(violationTypes.data?.items ?? []).map((t) => ({
+                        value: t.id,
+                        label: `${t.code} — ${t.name} (${formatFineRange(t.minFine, t.maxFine)})`,
+                      }))}
+                      onChange={(value: string | undefined) => {
+                        const picked = violationTypes.data?.items.find(
+                          (t) => t.id === value,
+                        );
+                        if (!picked) return;
+                        form.setFieldValue(
+                          ["violations", field.name, "violationCode"],
+                          picked.code,
+                        );
+                        form.setFieldValue(
+                          ["violations", field.name, "description"],
+                          picked.name,
+                        );
+                        form.setFieldValue(
+                          ["violations", field.name, "regulationReference"],
+                          picked.legalReference,
+                        );
+                      }}
+                    />
+                  </Form.Item>
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "1fr 1fr auto",
+                      gridTemplateColumns: "1fr 1.4fr 1fr auto",
                       gap: 12,
                     }}
                   >
@@ -471,7 +525,21 @@ export function InspectionResultEditorModal(props: Props) {
                       name={[field.name, "regulationReference"]}
                       label="Căn cứ pháp lý"
                     >
-                      <Input maxLength={200} />
+                      <Input maxLength={500} />
+                    </Form.Item>
+                    {/* Rendered field required: antd only round-trips values that
+                        are bound to a Form.Item, so without this the stored
+                        per-violation fine was silently nulled on every edit. */}
+                    <Form.Item
+                      name={[field.name, "fineAmount"]}
+                      label="Tiền phạt (VNĐ)"
+                    >
+                      <InputNumber<number>
+                        min={0}
+                        style={{ width: "100%" }}
+                        formatter={(v) => groupThousands(`${v ?? ""}`)}
+                        parser={(v) => Number((v ?? "").replace(/,/g, ""))}
+                      />
                     </Form.Item>
                     <Form.Item label=" ">
                       <Button

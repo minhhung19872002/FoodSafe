@@ -114,6 +114,10 @@ const REPORT_DETAIL_STRATEGY: {
         { label: "Số người mắc", value: report.incidentAffected },
         { label: "Số nhập viện", value: report.incidentHospitalized },
         { label: "Số tử vong", value: report.incidentDeaths },
+        {
+          label: "Số vụ lớn (≥30 người mắc)",
+          value: report.largeScaleIncidentCount,
+        },
       ],
     },
     {

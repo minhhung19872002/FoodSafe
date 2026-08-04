@@ -59,7 +59,7 @@ export const authApi = {
     return api
       .post<void>("/account/send-password-reset-code", {
         email,
-        appName: "Angular",
+        appName: "FoodSafeWeb",
         captchaToken,
       })
       .then(() => undefined);

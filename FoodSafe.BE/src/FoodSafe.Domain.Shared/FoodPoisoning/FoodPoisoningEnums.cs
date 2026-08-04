@@ -59,3 +59,14 @@ public enum ErrorReportStatus : short
     Acknowledged = 2,
     Corrected = 3
 }
+
+/// <summary>
+/// Ba mẫu báo cáo vụ NĐTP theo chế độ báo cáo QĐ 01/2006/QĐ-BYT:
+/// khẩn ban đầu — cập nhật diễn biến — kết thúc vụ.
+/// </summary>
+public enum PoisoningEmergencyReportKind : short
+{
+    Initial = 1,
+    Update = 2,
+    Final = 3
+}

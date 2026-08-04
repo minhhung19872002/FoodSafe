@@ -45,6 +45,11 @@ function download(data: Blob, contentDisposition?: string): FileDownload {
 }
 
 export const dataIntegrationApi = {
+  getExternalSystems: () =>
+    api
+      .get<string[]>("/v1/app/data-integration/external-systems")
+      .then((r) => r.data),
+
   getEndpoints: (params: ApiEndpointFilter) =>
     api
       .get<PagedResult<ApiEndpoint>>("/v1/app/api-endpoint", { params })

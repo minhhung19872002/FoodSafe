@@ -32,6 +32,7 @@ import dayjs, { type Dayjs } from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import {
+  useExternalSystemOptions,
   usePartnerAccounts,
   usePartnerKeys,
 } from "../api/dataIntegrationQueries";
@@ -55,8 +56,6 @@ import {
   type SharedDataType,
 } from "../types/dataIntegration.types";
 
-const EXTERNAL_SYSTEMS = ["Bộ Y tế", "Sở Nông nghiệp", "Sở Công thương"];
-
 function apiErrorMessage(error: unknown, fallback: string): string {
   const serverMessage = (
     error as { response?: { data?: { error?: { message?: string } } } }
@@ -70,11 +69,13 @@ interface PartnerFormValues {
   externalSystem: string;
   allowedDataTypes: SharedDataType[];
   description?: string;
+  allowedIps?: string;
 }
 
 /** Admin UI for inbound partner accounts + API keys (INT-03, FR-50). */
 export function PartnersTab() {
   const hasPermission = useAuthStore((s) => s.hasPermission);
+  const externalSystems = useExternalSystemOptions();
   const [filter, setFilter] = useState<PartnerAccountFilter>({});
   const [filterResetKey, setFilterResetKey] = useState(0);
   const [sorting, setSorting] = useState<string | undefined>(undefined);
@@ -150,6 +151,7 @@ export function PartnersTab() {
             externalSystem: values.externalSystem,
             allowedDataTypes: values.allowedDataTypes,
             description: values.description,
+            allowedIps: values.allowedIps?.trim() || undefined,
           },
         },
         { onSuccess, onError },
@@ -162,6 +164,7 @@ export function PartnersTab() {
           externalSystem: values.externalSystem,
           allowedDataTypes: values.allowedDataTypes,
           description: values.description,
+          allowedIps: values.allowedIps?.trim() || undefined,
         },
         { onSuccess, onError },
       );
@@ -372,9 +375,16 @@ export function PartnersTab() {
             rules={[{ required: true, message: "Chọn hoặc nhập hệ thống" }]}
           >
             <AutoComplete
-              options={EXTERNAL_SYSTEMS.map((s) => ({ value: s }))}
+              options={(externalSystems.data ?? []).map((s) => ({ value: s }))}
               placeholder="Bộ Y tế / Sở Nông nghiệp / Sở Công thương / khác"
             />
+          </Form.Item>
+          <Form.Item
+            name="allowedIps"
+            label="IP nguồn được phép"
+            tooltip="Danh sách IP phân cách bằng dấu phẩy. Bỏ trống = chấp nhận mọi IP (vẫn phải có API key hợp lệ)."
+          >
+            <Input maxLength={1000} placeholder="VD: 203.113.10.5, 203.113.10.6" />
           </Form.Item>
           <Form.Item
             name="allowedDataTypes"

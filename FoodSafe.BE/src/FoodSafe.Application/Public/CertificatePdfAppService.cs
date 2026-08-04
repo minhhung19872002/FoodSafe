@@ -24,6 +24,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
     private readonly IRepository<ProductRegistration, Guid> _productRegistrations;
     private readonly IRepository<CfsCertificate, Guid> _cfsCertificates;
     private readonly IRepository<ExportFoodCertificate, Guid> _exportCertificates;
+    private readonly IRepository<AdvertisementRegistration, Guid> _adRegistrations;
     private readonly IRepository<Business, Guid> _businesses;
     private readonly IRepository<Product, Guid> _products;
     private readonly ICancellationTokenProvider _cancellationTokens;
@@ -34,6 +35,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
         IRepository<ProductRegistration, Guid> productRegistrations,
         IRepository<CfsCertificate, Guid> cfsCertificates,
         IRepository<ExportFoodCertificate, Guid> exportCertificates,
+        IRepository<AdvertisementRegistration, Guid> adRegistrations,
         IRepository<Business, Guid> businesses,
         IRepository<Product, Guid> products,
         ICancellationTokenProvider cancellationTokens)
@@ -43,6 +45,7 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
         _productRegistrations = productRegistrations;
         _cfsCertificates = cfsCertificates;
         _exportCertificates = exportCertificates;
+        _adRegistrations = adRegistrations;
         _businesses = businesses;
         _products = products;
         _cancellationTokens = cancellationTokens;
@@ -198,6 +201,44 @@ public class CertificatePdfAppService : ApplicationService, ICertificatePdfAppSe
         };
 
         return Build(fields, $"gcn-xuat-khau-{cert.CertificateNumber}.pdf");
+    }
+
+    public async Task<CertificatePdfDto> GetAdvertisementRegistrationPdfAsync(Guid id)
+    {
+        var queryable = await _adRegistrations.WithDetailsAsync(x => x.Products);
+        var reg = await AsyncExecuter.FirstOrDefaultAsync(
+                queryable.Where(x => x.Id == id), _cancellationTokens.Token)
+            ?? throw new UserFriendlyException("Không tìm thấy xác nhận nội dung quảng cáo.");
+
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
+        var business = await _businesses.FindAsync(reg.BusinessId, cancellationToken: _cancellationTokens.Token);
+
+        var productIds = reg.Products.Select(p => p.ProductId).ToArray();
+        var productNames = productIds.Length > 0
+            ? (await _products.GetListAsync(p => productIds.Contains(p.Id), cancellationToken: _cancellationTokens.Token))
+                .Select(p => p.Name).ToArray()
+            : Array.Empty<string>();
+
+        var fields = new CertificateFields
+        {
+            CertificateTitle = "GIẤY XÁC NHẬN NỘI DUNG QUẢNG CÁO",
+            CertificateNumber = reg.RegistrationNumber,
+            BusinessName = business?.Name ?? string.Empty,
+            BusinessAddress = business?.AddressStreet ?? string.Empty,
+            TaxCode = business?.TaxCode,
+            Scope = productNames.Length > 0 ? string.Join(", ", productNames) : null,
+            IssueDate = reg.RegistrationDate,
+            ExpiryDate = reg.ExpiryDate,
+            IssuingAuthority = issuingAgency,
+            StatusLabel = StatusLabel(reg.EffectiveStatus(Clock.Now.Date)),
+            ExtraRows =
+            [
+                ("Nội dung quảng cáo", reg.ContentDescription ?? "—"),
+                ("Phương tiện quảng cáo", reg.Medium ?? "—"),
+            ],
+        };
+
+        return Build(fields, $"xac-nhan-quang-cao-{reg.RegistrationNumber}.pdf");
     }
 
     // ── Private ──────────────────────────────────────────────────────────────

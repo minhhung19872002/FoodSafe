@@ -176,8 +176,10 @@ public class FoodSafeHttpApiHostModule : AbpModule
             options.Applications["MVC"].RootUrl = configuration["App:SelfUrl"];
             options.RedirectAllowedUrls.AddRange(
                 configuration["App:RedirectAllowedUrls"]?.Split(',') ?? []);
-            options.Applications["Angular"].RootUrl = configuration["App:ClientUrl"];
-            options.Applications["Angular"].Urls[AccountUrlNames.PasswordReset] =
+            // SPA client registration key — must match the AppName the FE and
+            // IdentityAdministration send with password-reset requests.
+            options.Applications["FoodSafeWeb"].RootUrl = configuration["App:ClientUrl"];
+            options.Applications["FoodSafeWeb"].Urls[AccountUrlNames.PasswordReset] =
                 "account/reset-password";
         });
     }
@@ -621,6 +623,19 @@ public class FoodSafeHttpApiHostModule : AbpModule
                     {
                         var publicLimit = isDev ? 600 : 60;
                         return FixedWindow($"public:{client}", publicLimit, TimeSpan.FromMinutes(1));
+                    }
+
+                    // Partner inbound API (SEC-002/G-18): bucket per API key so
+                    // one partner cannot exhaust the shared IP budget; the key
+                    // prefix (first 12 chars) is the non-secret lookup handle.
+                    if (path.StartsWith("/api/v1/partner", StringComparison.Ordinal))
+                    {
+                        var apiKey = httpContext.Request.Headers["X-Api-Key"].FirstOrDefault();
+                        var partnerBucket = !string.IsNullOrEmpty(apiKey)
+                            ? $"partner-key:{apiKey[..Math.Min(apiKey.Length, 12)]}"
+                            : $"partner-anon:{client}";
+                        var partnerLimit = isDev ? 600 : 60;
+                        return FixedWindow(partnerBucket, partnerLimit, TimeSpan.FromMinutes(1));
                     }
 
                     var apiLimit = isDev ? 5000 : 300;

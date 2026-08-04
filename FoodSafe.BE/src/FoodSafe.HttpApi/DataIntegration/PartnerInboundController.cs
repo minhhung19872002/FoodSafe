@@ -34,6 +34,7 @@ public sealed class PartnerInboundController(
         {
             ApiKey = Header("X-Api-Key"),
             Path = HttpContext.Request.Path.ToString(),
+            ClientIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
         };
 
         try
@@ -67,6 +68,7 @@ public sealed class PartnerInboundController(
             Timestamp = Header("X-Timestamp"),
             CorrelationId = Header("X-Correlation-Id"),
             Path = HttpContext.Request.Path.ToString(),
+            ClientIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
         };
 
         var operation = await service.ReceiveAsync(dataType, context, envelope);

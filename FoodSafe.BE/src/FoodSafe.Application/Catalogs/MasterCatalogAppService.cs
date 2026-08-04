@@ -282,7 +282,6 @@ public class MasterCatalogAppService : ApplicationService, IMasterCatalogAppServ
     [Authorize(FoodSafePermissions.Catalogs.Delete)]
     public Task DeleteTestingServiceAsync(Guid id) => _testingServices.DeleteAsync(id, true, _cancellationTokens.Token);
 
-    // TODO: wire ViolationType into MasterCatalogExcelAppService (template/import/export) when needed.
     public async Task<PagedResultDto<ViolationTypeDto>> GetViolationTypesAsync(MasterCatalogListInput input) =>
         await PageMasterAsync<ViolationType, ViolationTypeDto>(await _violationTypes.GetQueryableAsync(), input);
     [Authorize(FoodSafePermissions.Catalogs.Create)]

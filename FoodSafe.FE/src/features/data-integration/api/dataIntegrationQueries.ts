@@ -44,6 +44,15 @@ export function useApiEndpoints(filter: ApiEndpointFilter, enabled = true) {
   });
 }
 
+/** Select options served by the API instead of an FE hardcode (GAP-INT-2). */
+export function useExternalSystemOptions() {
+  return useQuery({
+    queryKey: ["data-integration", "external-systems"] as const,
+    queryFn: () => dataIntegrationApi.getExternalSystems(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useApiCallLogs(filter: ApiCallLogFilter) {
   return useQuery({
     queryKey: keys.callLogs(filter),

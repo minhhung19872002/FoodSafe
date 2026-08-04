@@ -113,7 +113,8 @@ public class NdtpReportAppService : ApplicationService
         var entity = await GetScopedAsync(id, DataScopeOperation.Edit);
         entity.UpdateStats(
             input.CaseCount, input.CaseAffected, input.CaseHospitalized, input.CaseDeaths,
-            input.IncidentCount, input.IncidentAffected, input.IncidentHospitalized, input.IncidentDeaths);
+            input.IncidentCount, input.IncidentAffected, input.IncidentHospitalized, input.IncidentDeaths,
+            input.LargeScaleIncidentCount);
         await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return ToDto(entity);
     }
@@ -163,10 +164,13 @@ public class NdtpReportAppService : ApplicationService
         var incidentAffected = incidentStats.Sum(i => i.AffectedCount);
         var incidentHospitalized = incidentStats.Sum(i => i.HospitalizedCount);
         var incidentDeaths = incidentStats.Sum(i => i.DeathCount);
+        var largeScaleIncidentCount = incidentStats.Count(i =>
+            i.AffectedCount >= FoodPoisoningIncident.LargeScaleAffectedThreshold);
 
         entity.UpdateStats(
             caseCount, caseAffected, caseHospitalized, caseDeaths,
-            incidentCount, incidentAffected, incidentHospitalized, incidentDeaths);
+            incidentCount, incidentAffected, incidentHospitalized, incidentDeaths,
+            largeScaleIncidentCount);
 
         await _reports.UpdateAsync(entity, autoSave: true, cancellationToken: _cancellationTokens.Token);
         return await ToEnrichedDtoAsync(entity);
@@ -410,6 +414,7 @@ public class NdtpReportAppService : ApplicationService
         IncidentAffected = e.IncidentAffected,
         IncidentHospitalized = e.IncidentHospitalized,
         IncidentDeaths = e.IncidentDeaths,
+        LargeScaleIncidentCount = e.LargeScaleIncidentCount,
         PreventionActivities = e.PreventionActivities,
         RiskFactors = e.RiskFactors,
         Recommendations = e.Recommendations,

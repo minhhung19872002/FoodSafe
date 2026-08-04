@@ -1143,7 +1143,7 @@ public class IdentityAdministrationAppService :
                 new SendPasswordResetCodeDto
                 {
                     Email = email,
-                    AppName = "Angular"
+                    AppName = "FoodSafeWeb"
                 });
         }
     }

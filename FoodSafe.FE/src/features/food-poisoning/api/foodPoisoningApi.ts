@@ -210,4 +210,15 @@ export const poisoningIncidentApi = {
     });
     return download(response.data, response.headers["content-disposition"]);
   },
+  /** 3 mẫu báo cáo vụ theo QĐ 01/2006/QĐ-BYT: 1=khẩn ban đầu, 2=cập nhật, 3=kết thúc. */
+  async downloadEmergencyReportPdf(
+    id: string,
+    kind: 1 | 2 | 3,
+  ): Promise<FileDownload> {
+    const response = await api.get<Blob>(
+      `${incidentEndpoint}/${id}/emergency-report-pdf`,
+      { params: { kind }, responseType: "blob" },
+    );
+    return download(response.data, response.headers["content-disposition"]);
+  },
 };

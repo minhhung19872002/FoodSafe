@@ -193,6 +193,15 @@ public class PartnerInboundAppService :
                 stopwatch, success: false, "Partner suspended.", ct);
             return Unauthorized();
         }
+        // SEC-002: optional per-partner source-IP allowlist. Same generic 401
+        // as every other credential failure so probing learns nothing.
+        if (!partner.IsIpAllowed(context.ClientIp))
+        {
+            await LogInboundAsync(partner, context, dataType, now,
+                stopwatch, success: false,
+                $"Source IP {context.ClientIp ?? "unknown"} not in the partner allowlist.", ct);
+            return Unauthorized();
+        }
 
         // ── per-partner authorization ────────────────────────────────────────
         if (!partner.IsDataTypeAllowed(dataType))
@@ -312,7 +321,8 @@ public class PartnerInboundAppService :
         bool success,
         string? errorMessage,
         CancellationToken ct,
-        string? requestBody = null)
+        string? requestBody = null,
+        string httpMethod = "POST")
     {
         stopwatch.Stop();
         var log = ApiCallLog.Create(
@@ -321,7 +331,7 @@ public class PartnerInboundAppService :
             ApiCallDirection.Inbound,
             partner.ExternalSystem,
             context.Path.IsNullOrWhiteSpace() ? "/api/v1/partner" : context.Path,
-            "POST",
+            httpMethod,
             calledAt,
             stopwatch.ElapsedMilliseconds,
             success,
@@ -376,6 +386,7 @@ public class PartnerInboundAppService :
     {
         var ct = _cancellationTokens.Token;
         var now = Clock.Now;
+        var stopwatch = Stopwatch.StartNew();
 
         // ── API key authentication (same rules as ReceiveAsync) ──────────────
         var rawKey = context.ApiKey;
@@ -393,7 +404,8 @@ public class PartnerInboundAppService :
 
         var partner = await _partners.FindAsync(key.PartnerAccountId, cancellationToken: ct);
         if (partner is null || key.IsRevoked || key.IsExpired(now) ||
-            partner.Status != PartnerAccountStatus.Active)
+            partner.Status != PartnerAccountStatus.Active ||
+            !partner.IsIpAllowed(context.ClientIp))
         {
             throw new AbpAuthorizationException("Invalid API key.");
         }
@@ -411,9 +423,22 @@ public class PartnerInboundAppService :
                  s.RequestId == requestId,
             cancellationToken: ct);
         if (submission is null)
+        {
+            // Every partner API call is audited (docs/09 — API history requirement),
+            // polls included. The controller converts the throw to 404 after the
+            // request unit-of-work commits this row.
+            await LogInboundAsync(partner, context, SharedDataType.Other, now,
+                stopwatch, success: false,
+                errorMessage: $"Submission not found for requestId '{requestId}'.",
+                ct, httpMethod: "GET");
             throw new EntityNotFoundException(
                 typeof(InboundSubmission),
                 requestId);
+        }
+
+        await LogInboundAsync(partner, context, submission.DataType, now,
+            stopwatch, success: true, errorMessage: null, ct,
+            httpMethod: "GET");
 
         return new InboundSubmissionStatusDto
         {

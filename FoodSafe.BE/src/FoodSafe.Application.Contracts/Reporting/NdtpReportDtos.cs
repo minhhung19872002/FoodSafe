@@ -20,6 +20,9 @@ public class NdtpReportDto : EntityDto<Guid>, IReportActorsDto
     public int IncidentHospitalized { get; set; }
     public int IncidentDeaths { get; set; }
 
+    /// <summary>Số vụ ≥30 người mắc (TT 20/2019, TT 23/2025/TT-BYT).</summary>
+    public int LargeScaleIncidentCount { get; set; }
+
     public string? PreventionActivities { get; set; }
     public string? RiskFactors { get; set; }
     public string? Recommendations { get; set; }
@@ -65,6 +68,10 @@ public class UpdateNdtpReportStatsDto
     public int IncidentAffected { get; set; }
     public int IncidentHospitalized { get; set; }
     public int IncidentDeaths { get; set; }
+
+    /// <summary>Số vụ ≥30 người mắc trong kỳ.</summary>
+    [Range(0, int.MaxValue)]
+    public int LargeScaleIncidentCount { get; set; }
 }
 
 public class UpdateNdtpReportNarrativeDto

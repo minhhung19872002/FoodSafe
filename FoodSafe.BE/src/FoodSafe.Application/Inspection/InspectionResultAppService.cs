@@ -137,7 +137,8 @@ public class InspectionResultAppService : ApplicationService
                 v.RegulationReference,
                 v.FineAmount,
                 v.RemedyRequired,
-                v.RemedyDeadline);
+                v.RemedyDeadline,
+                v.ViolationTypeId);
         }
 
         if (input.Inspectors.Count > 0)
@@ -197,7 +198,8 @@ public class InspectionResultAppService : ApplicationService
                 v.RegulationReference,
                 v.FineAmount,
                 v.RemedyRequired,
-                v.RemedyDeadline);
+                v.RemedyDeadline,
+                v.ViolationTypeId);
         }
 
         if (input.Inspectors.Count > 0)
@@ -407,6 +409,7 @@ public class InspectionResultAppService : ApplicationService
             {
                 Id = v.Id,
                 InspectionResultId = v.InspectionResultId,
+                ViolationTypeId = v.ViolationTypeId,
                 ViolationCode = v.ViolationCode,
                 Description = v.Description,
                 RegulationReference = v.RegulationReference,

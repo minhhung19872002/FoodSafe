@@ -138,6 +138,7 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
         IncidentAffected = e.IncidentAffected,
         IncidentHospitalized = e.IncidentHospitalized,
         IncidentDeaths = e.IncidentDeaths,
+        LargeScaleIncidentCount = e.LargeScaleIncidentCount,
         PreventionActivities = e.PreventionActivities,
         RiskFactors = e.RiskFactors,
         Recommendations = e.Recommendations,
@@ -421,6 +422,11 @@ public class ReportPdfAppService : ApplicationService, IReportPdfAppService
                         TdV(table.Cell().Row(4).Column(4), (r.CaseHospitalized + r.IncidentHospitalized).ToString("N0"));
                         TdV(table.Cell().Row(4).Column(5), (r.CaseDeaths + r.IncidentDeaths).ToString("N0"));
                     });
+
+                    // Chỉ tiêu thống kê riêng ngành y tế (TT 20/2019, TT 23/2025/TT-BYT).
+                    col.Item().PaddingTop(4).Text(
+                            $"Trong đó, số vụ ngộ độc lớn (≥ 30 người mắc): {r.LargeScaleIncidentCount:N0}")
+                        .FontSize(10).Italic();
 
                     if (!string.IsNullOrWhiteSpace(r.PreventionActivities))
                     {

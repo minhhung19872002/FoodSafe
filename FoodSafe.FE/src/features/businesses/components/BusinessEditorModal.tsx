@@ -15,6 +15,7 @@ import {
   Select,
   Space,
   Spin,
+  TreeSelect,
   Typography,
 } from "antd";
 import { AimOutlined } from "@ant-design/icons";
@@ -49,6 +50,34 @@ interface BusinessEditorModalProps {
   submitting: boolean;
   onCancel: () => void;
   onSubmit: (input: BusinessInput | UpdateBusinessInput) => void;
+}
+
+interface ProductGroupTreeNode {
+  value: string;
+  title: string;
+  children: ProductGroupTreeNode[];
+}
+
+/** Nested checkbox tree of product groups (GAP-N1) built from parentId links. */
+function buildProductGroupTree(items: CatalogItem[]): ProductGroupTreeNode[] {
+  const knownIds = new Set(items.map((item) => item.id));
+  const nodes = new Map<string, ProductGroupTreeNode>(
+    items.map((item) => [
+      item.id,
+      { value: item.id, title: `${item.code} — ${item.name}`, children: [] },
+    ]),
+  );
+  const roots: ProductGroupTreeNode[] = [];
+  for (const item of items) {
+    const node = nodes.get(item.id)!;
+    // Orphaned parent references fall back to root level.
+    if (item.parentId && knownIds.has(item.parentId)) {
+      nodes.get(item.parentId)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+  return roots;
 }
 
 const defaults: BusinessFormValues = {
@@ -375,15 +404,16 @@ export function BusinessEditorModal({
             control={control}
             name="productGroupIds"
             render={({ field }) => (
-              <Select
+              <TreeSelect
                 {...field}
-                mode="multiple"
+                multiple
+                treeCheckable
+                showCheckedStrategy={TreeSelect.SHOW_ALL}
                 showSearch
-                optionFilterProp="label"
-                options={productGroups.map((item) => ({
-                  value: item.id,
-                  label: `${item.code} — ${item.name}`,
-                }))}
+                treeNodeFilterProp="title"
+                treeDefaultExpandAll
+                placeholder="Chọn nhóm sản phẩm"
+                treeData={buildProductGroupTree(productGroups)}
               />
             )}
           />

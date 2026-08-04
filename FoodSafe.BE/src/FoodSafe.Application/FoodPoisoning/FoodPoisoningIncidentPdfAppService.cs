@@ -27,10 +27,47 @@ public class FoodPoisoningIncidentPdfAppService : ApplicationService, IFoodPoiso
         if (dto.Status != PoisoningIncidentStatus.Concluded)
             throw new BusinessException(FoodSafeDomainErrorCodes.FoodPoisoning.IncidentNotConcluded);
         var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
-        return BuildPdf(dto, Clock.Now, issuingAgency);
+        return BuildPdf(dto, Clock.Now, issuingAgency, kind: null);
     }
 
-    private static byte[] BuildPdf(FoodPoisoningIncidentDto inc, DateTime now, string issuingAgency)
+    public async Task<byte[]> GenerateEmergencyReportPdfAsync(
+        Guid incidentId, PoisoningEmergencyReportKind kind)
+    {
+        var dto = await _incidentAppService.GetAsync(incidentId);
+        // Báo cáo kết thúc vụ chỉ phát hành khi vụ đã kết luận (QĐ 01/2006).
+        if (kind == PoisoningEmergencyReportKind.Final &&
+            dto.Status != PoisoningIncidentStatus.Concluded)
+        {
+            throw new BusinessException(
+                FoodSafeDomainErrorCodes.FoodPoisoning.IncidentNotConcluded);
+        }
+        var issuingAgency = await SettingProvider.GetOrNullAsync(FoodSafeSettings.Documents.IssuingAgency) ?? "";
+        return BuildPdf(dto, Clock.Now, issuingAgency, kind);
+    }
+
+    private static string TitleOf(PoisoningEmergencyReportKind? kind) => kind switch
+    {
+        PoisoningEmergencyReportKind.Initial =>
+            "BÁO CÁO KHẨN CẤP VỤ NGỘ ĐỘC THỰC PHẨM (BAN ĐẦU)",
+        PoisoningEmergencyReportKind.Update =>
+            "BÁO CÁO CẬP NHẬT VỤ NGỘ ĐỘC THỰC PHẨM",
+        PoisoningEmergencyReportKind.Final =>
+            "BÁO CÁO KẾT THÚC VỤ NGỘ ĐỘC THỰC PHẨM",
+        _ => "PHIẾU KẾT THÚC VỤ NGỘ ĐỘC THỰC PHẨM",
+    };
+
+    private static string StatusLabel(PoisoningIncidentStatus status) => status switch
+    {
+        PoisoningIncidentStatus.Draft => "Nháp",
+        PoisoningIncidentStatus.Reported => "Đã báo cáo",
+        PoisoningIncidentStatus.Verified => "Đã xác minh",
+        PoisoningIncidentStatus.Concluded => "Đã kết luận",
+        _ => status.ToString(),
+    };
+
+    private static byte[] BuildPdf(
+        FoodPoisoningIncidentDto inc, DateTime now, string issuingAgency,
+        PoisoningEmergencyReportKind? kind)
     {
         QuestPDF.Settings.License = LicenseType.Community;
 
@@ -57,10 +94,16 @@ public class FoodPoisoningIncidentPdfAppService : ApplicationService, IFoodPoiso
                     });
                     col.Item().PaddingTop(8).Text(issuingAgency)
                         .Bold().AlignCenter().FontSize(11);
-                    col.Item().PaddingTop(12).Text("PHIẾU KẾT THÚC VỤ NGỘ ĐỘC THỰC PHẨM")
+                    col.Item().PaddingTop(12).Text(TitleOf(kind))
                         .Bold().AlignCenter().FontSize(14);
                     col.Item().Text($"Mã vụ: {inc.IncidentCode}")
                         .AlignCenter().FontSize(11).Italic();
+                    if (kind is not null)
+                    {
+                        col.Item().Text(
+                                "Chế độ báo cáo vụ NĐTP theo Quyết định 01/2006/QĐ-BYT")
+                            .AlignCenter().FontSize(9).FontColor("#888888");
+                    }
                     col.Item().PaddingTop(4).LineHorizontal(1).LineColor("#1677FF");
                 });
 
@@ -147,7 +190,7 @@ public class FoodPoisoningIncidentPdfAppService : ApplicationService, IFoodPoiso
                     col.Item().PaddingTop(8).Row(row =>
                     {
                         row.ConstantItem(170).Text("Trạng thái:").Bold();
-                        row.RelativeItem().Text("Đã kết luận");
+                        row.RelativeItem().Text(StatusLabel(inc.Status));
                     });
 
                     if (inc.ReportedAt.HasValue)

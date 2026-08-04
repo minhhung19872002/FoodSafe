@@ -46,4 +46,12 @@ public sealed class StatisticsExcelController(
         var file = await service.ExportBusinessBreakdownAsync(input);
         return File(file.Content, file.ContentType, file.FileName);
     }
+
+    [HttpGet("report-compliance")]
+    public async Task<IActionResult> ExportReportComplianceAsync(
+        [FromQuery] DashboardFilterDto input)
+    {
+        var file = await service.ExportReportComplianceAsync(input);
+        return File(file.Content, file.ContentType, file.FileName);
+    }
 }

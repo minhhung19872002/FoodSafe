@@ -192,6 +192,11 @@ const appRoutes: RouteObject[] = [
     element: <Navigate to="/tra-cuu-giay-phep?tab=ad-registrations" replace />,
   },
   {
+    // Renamed during the portal redesign; old links landed on the login page.
+    path: "/co-so-bi-canh-bao",
+    element: <Navigate to="/danh-sach-canh-bao" replace />,
+  },
+  {
     path: "/login",
     element: (
       <PublicGuard>
