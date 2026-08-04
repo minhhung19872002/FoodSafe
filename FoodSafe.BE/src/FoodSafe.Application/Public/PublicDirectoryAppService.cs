@@ -20,6 +20,7 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
     private readonly IRepository<ProductGroup, Guid> _productGroups;
     private readonly IRepository<Commune, Guid> _communes;
     private readonly IRepository<EligibilityCertificate, Guid> _eligibilityCertificates;
+    private readonly IRepository<Country, Guid> _countries;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
     public PublicDirectoryAppService(
@@ -29,6 +30,7 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
         IRepository<ProductGroup, Guid> productGroups,
         IRepository<Commune, Guid> communes,
         IRepository<EligibilityCertificate, Guid> eligibilityCertificates,
+        IRepository<Country, Guid> countries,
         ICancellationTokenProvider cancellationTokens)
     {
         _businesses = businesses;
@@ -37,6 +39,7 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
         _productGroups = productGroups;
         _communes = communes;
         _eligibilityCertificates = eligibilityCertificates;
+        _countries = countries;
         _cancellationTokens = cancellationTokens;
     }
 
@@ -158,6 +161,14 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
                 g => groupIds.Contains(g.Id), cancellationToken: _cancellationTokens.Token))
             .ToDictionary(g => g.Id, g => g.Name);
 
+        var countryIds = items.Where(p => p.ManufacturingCountryId.HasValue)
+            .Select(p => p.ManufacturingCountryId!.Value).Distinct().ToList();
+        var countryNames = countryIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : (await _countries.GetListAsync(
+                    c => countryIds.Contains(c.Id), cancellationToken: _cancellationTokens.Token))
+                .ToDictionary(c => c.Id, c => c.NameVi);
+
         return new PagedResultDto<PublicProductSummaryDto>(
             totalCount,
             items.Select(p => new PublicProductSummaryDto
@@ -166,10 +177,17 @@ public class PublicDirectoryAppService : ApplicationService, IPublicDirectoryApp
                 Code = p.Code,
                 BrandName = p.BrandName,
                 Manufacturer = p.Manufacturer,
+                BusinessId = p.BusinessId,
                 BusinessName = businessNames.GetValueOrDefault(p.BusinessId) ?? string.Empty,
                 ProductGroupName = p.ProductGroupId.HasValue
                     ? groupNames.GetValueOrDefault(p.ProductGroupId.Value)
                     : null,
+                Ingredients = p.Ingredients,
+                ExpiryPeriodMonths = p.ExpiryPeriodMonths,
+                OriginCountryName = p.ManufacturingCountryId.HasValue
+                    ? countryNames.GetValueOrDefault(p.ManufacturingCountryId.Value)
+                    : null,
+                StorageConditions = p.StorageConditions,
             }).ToList());
     }
 }

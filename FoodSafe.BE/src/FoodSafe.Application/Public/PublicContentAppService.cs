@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
+using Volo.Abp.BlobStoring;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Threading;
 
@@ -24,7 +25,11 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
     private readonly IRepository<TestingResult, Guid> _testingResults;
     private readonly IRepository<TestingCenter, Guid> _testingCenters;
     private readonly IRepository<InspectionResult, Guid> _inspectionResults;
+    private readonly IBlobContainer _blobs;
     private readonly ICancellationTokenProvider _cancellationTokens;
+
+    // Must match TestingResultPdfAppService.StorageFolder.
+    private const string TestingResultCertificateFolder = "testing-result-pdfs";
 
     public PublicContentAppService(
         IRepository<AtpNews, Guid> news,
@@ -36,6 +41,7 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
         IRepository<TestingResult, Guid> testingResults,
         IRepository<TestingCenter, Guid> testingCenters,
         IRepository<InspectionResult, Guid> inspectionResults,
+        IBlobContainer blobs,
         ICancellationTokenProvider cancellationTokens)
     {
         _news = news;
@@ -47,6 +53,7 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
         _testingResults = testingResults;
         _testingCenters = testingCenters;
         _inspectionResults = inspectionResults;
+        _blobs = blobs;
         _cancellationTokens = cancellationTokens;
     }
 
@@ -423,7 +430,39 @@ public class PublicContentAppService : ApplicationService, IPublicContentAppServ
                 ResultDate = t.ResultDate,
                 Outcome = t.Outcome,
                 HasFailedIndicators = !string.IsNullOrWhiteSpace(t.FailedCriteria),
+                HasCertificateFile = !string.IsNullOrWhiteSpace(t.StoragePath),
             }).ToList());
+    }
+
+    /// <summary>
+    /// Serves the certificate attached to a published testing result (STT 44).
+    /// Publication is re-checked here rather than trusted from the list
+    /// response, so a link kept after staff unpublish the result stops working.
+    /// </summary>
+    public async Task<PublicFileDto?> GetTestingResultCertificateAsync(Guid id)
+    {
+        var result = await _testingResults.FindAsync(
+            t => t.Id == id && t.IsPublic, cancellationToken: _cancellationTokens.Token);
+        if (result is null || string.IsNullOrWhiteSpace(result.StoragePath))
+            return null;
+
+        // Confine reads to the folder the upload path writes to; the stored
+        // value must never be usable to reach an arbitrary blob.
+        if (!result.StoragePath.StartsWith(
+                TestingResultCertificateFolder + "/", StringComparison.Ordinal))
+            return null;
+
+        var content = await _blobs.GetAllBytesOrNullAsync(
+            result.StoragePath, _cancellationTokens.Token);
+        if (content is null)
+            return null;
+
+        return new PublicFileDto
+        {
+            Content = content,
+            ContentType = "application/pdf",
+            FileName = $"phieu-kiem-nghiem-{result.SampleCode}.pdf",
+        };
     }
 
     public async Task<PagedResultDto<PublicInspectionResultDto>> GetInspectionResultsAsync(

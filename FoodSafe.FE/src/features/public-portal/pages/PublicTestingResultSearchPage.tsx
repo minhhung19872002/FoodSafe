@@ -10,11 +10,16 @@ import {
   Tag,
   Typography,
 } from "antd";
+import { DownloadOutlined } from "@ant-design/icons";
 import { useTablePagination } from "@/hooks/useTablePagination";
 import { PublicShell } from "../components/PublicShell";
-import { usePublicTestingResults } from "../api/publicPortalQueries";
+import {
+  publicTestingResultCertificateUrl,
+  usePublicTestingResults,
+} from "../api/publicPortalQueries";
 import {
   TESTING_OUTCOME_CONFIG,
+  type PublicTestingResult,
   type TestingOutcome,
 } from "../types/publicPortal.types";
 
@@ -123,6 +128,27 @@ export default function PublicTestingResultSearchPage() {
               render={(v: boolean) => (
                 <Tag color={v ? "red" : "default"}>{v ? "Có" : "Không"}</Tag>
               )}
+            />
+            <Table.Column
+              title="Phiếu kiểm nghiệm"
+              width={160}
+              render={(_v, row: PublicTestingResult) =>
+                row.hasCertificateFile ? (
+                  <Button
+                    type="link"
+                    icon={<DownloadOutlined />}
+                    href={publicTestingResultCertificateUrl(row.id)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Tải phiếu
+                  </Button>
+                ) : (
+                  <Typography.Text type="secondary">
+                    Không công khai
+                  </Typography.Text>
+                )
+              }
             />
           </Table>
         </Spin>

@@ -169,8 +169,13 @@ export interface PublicProduct {
   code: string;
   brandName: string;
   manufacturer: string | null;
+  businessId: string;
   businessName: string;
   productGroupName: string;
+  ingredients: string | null;
+  expiryPeriodMonths: number | null;
+  originCountryName: string | null;
+  storageConditions: string | null;
 }
 
 export interface PublicCertificate {
@@ -373,6 +378,7 @@ export interface PublicTestingResult {
   resultDate: string | null;
   outcome: TestingOutcome;
   hasFailedIndicators: boolean;
+  hasCertificateFile: boolean;
 }
 
 export interface PublicInspectionResult {
@@ -387,6 +393,13 @@ export interface PublicInspectionResult {
 
 // ── Alert report submission ──────────────────────────────────────────────────
 
+export interface CitizenReportEvidence {
+  fileName: string;
+  contentType: string;
+  /** Base64 payload without the data-URL prefix. */
+  contentBase64: string;
+}
+
 export interface AlertReportInput {
   title: string;
   content: string;
@@ -396,6 +409,7 @@ export interface AlertReportInput {
   reporterName?: string;
   reporterPhone?: string;
   reporterEmail?: string;
+  evidence?: CitizenReportEvidence[];
   captchaToken: string;
 }
 

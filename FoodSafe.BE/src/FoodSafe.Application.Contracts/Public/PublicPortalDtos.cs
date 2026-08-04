@@ -74,6 +74,15 @@ public class PublicProductSummaryDto
     public string? Manufacturer { get; set; }
     public string BusinessName { get; set; } = string.Empty;
     public string? ProductGroupName { get; set; }
+
+    /// <summary>Label information STT 42 requires the portal to show.</summary>
+    public string? Ingredients { get; set; }
+    public int? ExpiryPeriodMonths { get; set; }
+    public string? OriginCountryName { get; set; }
+    public string? StorageConditions { get; set; }
+
+    /// <summary>Lets the portal link through to the owning business (STT 42).</summary>
+    public Guid BusinessId { get; set; }
 }
 
 public class PublicTestingResultDto
@@ -87,6 +96,13 @@ public class PublicTestingResultDto
     public DateTime? ResultDate { get; set; }
     public TestingResultOutcome Outcome { get; set; }
     public bool HasFailedIndicators { get; set; }
+
+    /// <summary>
+    /// True when staff attached a certificate to this result, so the portal
+    /// can offer the download. The file itself is served by a separate
+    /// endpoint that re-checks publication — this flag is display only.
+    /// </summary>
+    public bool HasCertificateFile { get; set; }
 }
 
 public class PublicInspectionResultDto
@@ -213,9 +229,37 @@ public class CreateCitizenAlertReportDto
     [StringLength(200)]
     public string? ReporterEmail { get; set; }
 
+    /// <summary>
+    /// Photographic evidence (STT 49). Capped hard because this endpoint is
+    /// anonymous — every file is malware-scanned and costs storage no one has
+    /// authenticated for.
+    /// </summary>
+    [MaxLength(MaximumEvidenceFiles)]
+    public List<CitizenReportEvidenceDto> Evidence { get; set; } = [];
+
     /// <summary>Validated by LoginCaptchaMiddleware before this DTO is handled.</summary>
     [Required]
     public string CaptchaToken { get; set; } = string.Empty;
+
+    public const int MaximumEvidenceFiles = 3;
+}
+
+public class CitizenReportEvidenceDto
+{
+    [Required]
+    [StringLength(500)]
+    public string FileName { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(100)]
+    public string ContentType { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Base64 file content. The shared attachment store re-validates the
+    /// extension, MIME type and magic bytes before anything is stored.
+    /// </summary>
+    [Required]
+    public string ContentBase64 { get; set; } = string.Empty;
 }
 
 public class CitizenAlertReportResultDto
@@ -298,6 +342,14 @@ public interface IPublicCertificateSearchAppService
     Task<PublicCertificateDetailDto> GetExportFoodCertificateDetailAsync(Guid id);
 }
 
+/// <summary>A file served to anonymous portal visitors.</summary>
+public class PublicFileDto
+{
+    public byte[] Content { get; set; } = [];
+    public string ContentType { get; set; } = "application/octet-stream";
+    public string FileName { get; set; } = string.Empty;
+}
+
 public interface IPublicContentAppService
 {
     Task<PagedResultDto<PublicNewsListItemDto>> GetNewsAsync(PublicSearchRequestDto input);
@@ -311,6 +363,7 @@ public interface IPublicContentAppService
     Task<PagedResultDto<PublicRiskAnalysisDto>> GetRiskAnalysesAsync(PublicSearchRequestDto input);
     Task<PagedResultDto<PublicTestingResultDto>> GetTestingResultsAsync(PublicTestingResultSearchRequestDto input);
     Task<PagedResultDto<PublicInspectionResultDto>> GetInspectionResultsAsync(PublicSearchRequestDto input);
+    Task<PublicFileDto?> GetTestingResultCertificateAsync(Guid id);
 
     /// <summary>
     /// Returns the status of a citizen-submitted alert by its tracking code.

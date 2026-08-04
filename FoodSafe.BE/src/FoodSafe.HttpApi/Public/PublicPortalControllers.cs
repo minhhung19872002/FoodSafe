@@ -152,6 +152,20 @@ public sealed class PublicContentController(
     public Task<PagedResultDto<PublicInspectionResultDto>> GetInspectionResultsAsync(
         [FromQuery] PublicSearchRequestDto input) =>
         service.GetInspectionResultsAsync(input);
+
+    /// <summary>
+    /// Downloads the certificate of a published testing result (STT 44).
+    /// Returns 404 both when the result does not exist and when it is not
+    /// published, so the endpoint cannot be used to probe unpublished records.
+    /// </summary>
+    [HttpGet("testing-results/{id:guid}/certificate")]
+    public async Task<IActionResult> GetTestingResultCertificateAsync(Guid id)
+    {
+        var file = await service.GetTestingResultCertificateAsync(id);
+        return file is null
+            ? NotFound()
+            : File(file.Content, file.ContentType, file.FileName);
+    }
 }
 
 [RemoteService]

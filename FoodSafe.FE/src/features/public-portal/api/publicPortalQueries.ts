@@ -213,3 +213,12 @@ export function usePublicBusinessMapData(keyword?: string) {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+/**
+ * Direct link to a published testing certificate. The browser downloads it
+ * straight from the API — routing the bytes through axios would only buffer a
+ * file the user is about to save anyway.
+ */
+export function publicTestingResultCertificateUrl(id: string) {
+  return `/api/v1/public/testing-results/${id}/certificate`;
+}

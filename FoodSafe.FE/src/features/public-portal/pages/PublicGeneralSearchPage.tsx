@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   Alert,
   Button,
+  Descriptions,
   Empty,
   Input,
   Select,
@@ -274,6 +275,43 @@ function ProductSearchTab() {
           pagination={pagination.buildConfig(data?.totalCount)}
           locale={{ emptyText: <Empty description="Không có dữ liệu" /> }}
           size="middle"
+          // Label details (STT 42) live in an expandable row: putting eight
+          // more columns on the table would force horizontal scrolling on the
+          // phones most portal visitors use.
+          expandable={{
+            expandedRowRender: (row) => (
+              <Descriptions
+                size="small"
+                column={{ xs: 1, sm: 1, md: 2 }}
+                items={[
+                  {
+                    key: "ingredients",
+                    label: "Thành phần",
+                    children: row.ingredients || "Chưa có thông tin",
+                  },
+                  {
+                    key: "expiry",
+                    label: "Hạn dùng",
+                    children:
+                      row.expiryPeriodMonths != null
+                        ? `${row.expiryPeriodMonths} tháng`
+                        : "Chưa có thông tin",
+                  },
+                  {
+                    key: "origin",
+                    label: "Xuất xứ",
+                    children: row.originCountryName || "Chưa có thông tin",
+                  },
+                  {
+                    key: "storage",
+                    label: "Điều kiện bảo quản",
+                    children: row.storageConditions || "Chưa có thông tin",
+                  },
+                ]}
+              />
+            ),
+            rowExpandable: () => true,
+          }}
         >
           <Table.Column
             title="STT"
@@ -291,6 +329,12 @@ function ProductSearchTab() {
             width={180}
           />
           <Table.Column title="Cơ sở sản xuất" dataIndex="businessName" />
+          <Table.Column
+            title="Xuất xứ"
+            dataIndex="originCountryName"
+            width={140}
+            render={(value: string | null) => value || "—"}
+          />
           <Table.Column
             title="Nhóm sản phẩm"
             dataIndex="productGroupName"

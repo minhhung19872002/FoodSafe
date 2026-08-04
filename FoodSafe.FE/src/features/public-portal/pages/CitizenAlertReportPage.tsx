@@ -9,7 +9,10 @@ import {
   Select,
   Space,
   Typography,
+  Upload,
 } from "antd";
+import type { UploadFile } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,7 +23,26 @@ import { useSubmitAlertReport } from "../api/publicPortalMutations";
 import {
   ALERT_CATEGORY_CONFIG,
   type AlertCategory,
+  type CitizenReportEvidence,
 } from "../types/publicPortal.types";
+
+// Mirrors CreateCitizenAlertReportDto.MaximumEvidenceFiles and the shared
+// attachment store's size cap; the server enforces both regardless.
+const MAX_EVIDENCE_FILES = 3;
+const MAX_EVIDENCE_MB = 20;
+
+function readAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Strip the "data:<mime>;base64," prefix the API does not expect.
+      resolve(result.slice(result.indexOf(",") + 1));
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 const alertReportSchema = z.object({
   title: z
@@ -82,6 +104,7 @@ export default function CitizenAlertReportPage() {
   const submitMutation = useSubmitAlertReport();
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
   const [submitError, setSubmitError] = useState("");
+  const [evidenceFiles, setEvidenceFiles] = useState<UploadFile[]>([]);
 
   const {
     control,
@@ -110,8 +133,38 @@ export default function CitizenAlertReportPage() {
     [setValue],
   );
 
-  const onSubmit = (data: AlertReportFormData) => {
+  const handleEvidenceChange = ({ fileList }: { fileList: UploadFile[] }) => {
+    const oversized = fileList.find(
+      (file) => (file.size ?? 0) > MAX_EVIDENCE_MB * 1024 * 1024,
+    );
+    if (oversized) {
+      setSubmitError(
+        `Ảnh "${oversized.name}" vượt quá ${MAX_EVIDENCE_MB} MB.`,
+      );
+      setEvidenceFiles(fileList.filter((file) => file.uid !== oversized.uid));
+      return;
+    }
     setSubmitError("");
+    setEvidenceFiles(fileList.slice(0, MAX_EVIDENCE_FILES));
+  };
+
+  const onSubmit = async (data: AlertReportFormData) => {
+    setSubmitError("");
+
+    let evidence: CitizenReportEvidence[];
+    try {
+      evidence = await Promise.all(
+        evidenceFiles.map(async (file) => ({
+          fileName: file.name,
+          contentType: file.type ?? "application/octet-stream",
+          contentBase64: await readAsBase64(file.originFileObj as File),
+        })),
+      );
+    } catch {
+      setSubmitError("Không đọc được ảnh đính kèm. Vui lòng chọn lại.");
+      return;
+    }
+
     submitMutation.mutate(
       {
         title: data.title,
@@ -122,6 +175,7 @@ export default function CitizenAlertReportPage() {
         reporterName: data.reporterName || undefined,
         reporterPhone: data.reporterPhone || undefined,
         reporterEmail: data.reporterEmail || undefined,
+        evidence,
         captchaToken: data.captchaToken,
       },
       {
@@ -331,6 +385,30 @@ export default function CitizenAlertReportPage() {
                 />
               )}
             />
+          </Form.Item>
+
+          <Form.Item
+            label="Ảnh chứng minh (không bắt buộc)"
+            help={`Tối đa ${MAX_EVIDENCE_FILES} ảnh, mỗi ảnh không quá ${MAX_EVIDENCE_MB} MB. Chỉ nhận PNG hoặc JPEG.`}
+          >
+            <Upload
+              listType="picture"
+              multiple
+              accept="image/png,image/jpeg"
+              maxCount={MAX_EVIDENCE_FILES}
+              fileList={evidenceFiles}
+              // The portal posts the report as JSON, so the browser must not
+              // start its own upload request — files ride along as base64.
+              beforeUpload={() => false}
+              onChange={handleEvidenceChange}
+              onRemove={(file) =>
+                setEvidenceFiles((files) =>
+                  files.filter((f) => f.uid !== file.uid),
+                )
+              }
+            >
+              <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+            </Upload>
           </Form.Item>
 
           <Typography.Title
