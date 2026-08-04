@@ -1,5 +1,17 @@
 # Remaining Task Backlog
 
+> **ADDENDUM 2026-08-04 — software-functional completion sweep.** Every remaining
+> in-code software task was re-verified against the tree at `c65d882` and the open
+> ones were implemented in Batches 1–5 — see
+> [`SOFTWARE_FUNCTIONAL_COMPLETION_PLAN_2026-08-04.md`](SOFTWARE_FUNCTIONAL_COMPLETION_PLAN_2026-08-04.md)
+> §3b for what was done and what remains. Rows in this file for `FUNC-INT-002/004/005`,
+> `FUNC-USER-001`, `FUNC-UX-001`, `FUNC-DOC-001`, `FUNC-PUB-001` (ad PDF half),
+> `FUNC-EVID-001`, `SEC-002/003/006/007/008`, `SEC-004` (EnableE2eData half) and
+> `TEST-001` are now **DONE** and therefore stale. Still open: `FUNC-LIC-001`,
+> `FUNC-INT-003`, `EXT-001` (external/customer), `TEST-002/003/004/005/006`,
+> Track D (OPS) and Track E (DOC) — the operational/documentation tracks are out of
+> the software scope per the 2026-08-04 mandate.
+
 > **CLOSED 2026-07-28 — workflow completion batch.** `FUNC-INT-001` (inbound submission
 > disposition, gap `G-04`) and the moderation half of `FUNC-CIT-001` (reject-with-comment
 > persisted instead of hard delete, gap `G-09`) are **DONE and VERIFIED** against the real stack —

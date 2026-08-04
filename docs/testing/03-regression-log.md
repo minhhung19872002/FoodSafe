@@ -17,6 +17,79 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-08-04 — Đợt hoàn thiện chức năng (Batch 1–5): 4 lỗi thật bị test bắt được và đã sửa
+
+- **Cause**: Rà soát + hoàn thiện toàn bộ gap chức năng phần mềm (plan
+  `docs/planning/SOFTWARE_FUNCTIONAL_COMPLETION_PLAN_2026-08-04.md`); chạy lại
+  Playwright subset trên stack rebuild làm lộ các lỗi tồn đọng từ các commit 31/07–02/08.
+- **Commit**: working tree trên `c65d882`
+- **Affected features**: seed/migrator, hồ sơ cá nhân (F-profile), lịch sử gọi API
+  (F-019), sửa kết quả kiểm tra (F-011), spec food-poisoning/excel-exports stale
+- **Retest level**: 2 per feature + subset e2e
+- **Result**: PASSED sau khi sửa (chi tiết bên dưới)
+- **Details**:
+  1. **Migrator chết trên DB đã seed** — seed 54 ĐVHC có 2 "Đặc khu"
+     (`CommuneType=4`) nhưng check constraint `chk_cat_communes_type` chỉ cho
+     1–3 (đợt legal 02/08 quên migration). Fix: migration
+     `AllowSpecialZoneCommuneType`. Kèm theo: tên hành vi VP-115-16-1 dài 211 ký
+     tự > giới hạn 200 làm seed ném `ArgumentException` — đã rút gọn.
+  2. **Lưu hồ sơ cá nhân xong bị đá về đăng nhập** — `SetPhoneNumberAsync` xoay
+     security stamp mỗi lần lưu, trong khi `SecurityStampValidatorOptions.
+     ValidationInterval = Zero` → request kế tiếp 401. Fix:
+     `UserProfileAppService.UpdateAsync` chỉ đổi phone khi thực sự thay đổi và
+     dùng `user.SetPhoneNumber(...)` không xoay stamp.
+  3. **Cột URL trong Lịch sử gọi API rộng 0px (vô hình với người dùng)** — các
+     cột fixed-width chiếm hết container nên cột co giãn bị bóp về 0. Fix: đặt
+     `width: 220` cho cột URL + `scroll={{ x: 1180 }}`.
+  4. **Không sửa được kết quả kiểm tra không gắn kế hoạch** — refactor 31/07 bắt
+     buộc chọn kế hoạch/cơ sở trong form, trong khi API cho phép kết quả không
+     kế hoạch (kiểm tra đột xuất) → form không thể submit khi sửa. Fix: rule
+     required chỉ áp khi tạo mới.
+  - Spec stale đã sửa cho khớp UI hiện tại: `food-poisoning.spec` ("Địa điểm xảy
+    ra" → "Địa chỉ chi tiết"), `excel-exports.spec` (bảng sticky sinh 2 phần tử
+    `table` → `.first()`), `certificate-pdf-verification.spec` (nút "PDF"),
+    `MasterCatalogApplicationContractTests` (36 → 40 method sau khi thêm
+    ViolationType CRUD).
+
+### 2026-08-04 (đợt 2) — Chạy full suite lần đầu từ 28/07: 50 test đỏ, lộ thêm 2 lỗi sản phẩm
+
+- **Cause**: Sau khi hoàn thiện Batch 1–5, chạy `npx playwright test` toàn bộ
+  (lần đầu kể từ freeze 28/07). 50/321 test đỏ — phần lớn là spec lỗi thời so
+  với các thay đổi UI 29–31/07 chưa từng được chạy lại, kèm 2 lỗi sản phẩm thật.
+- **Commit**: working tree trên `c65d882`
+- **Affected features**: F-004 catalogs, F-005 geography, F-006 businesses,
+  F-007..F-012 licensing, F-013 inspection, F-015 reporting, F-019 data
+  integration, F-020 identity, F-022 dashboard, F-023 statistics, F-024..F-030
+  public portal
+- **Retest level**: 4 (full regression)
+- **Result**: PASSED sau khi sửa
+- **Details**:
+  1. **LỖI SẢN PHẨM — duyệt nội bộ báo cáo ATTP/Tháng hành động trả HTTP 500.**
+     `ReportStatus.InternallyApproved = 6` được thêm cùng cổng duyệt nội bộ,
+     nhưng 3 check constraint `chk_ndtp_status` / `chk_atp_status` /
+     `chk_amr_status` vẫn chỉ cho 1–5 → PostgreSQL 23514 khi lưu. Không thể gửi
+     báo cáo công tác ATTP hay Tháng hành động lên tuyến trên. Fix: migration
+     `AllowInternallyApprovedReportStatus` (cùng loại lỗi với `chk_cat_communes_type`
+     ở đợt 1 — enum mới không đồng bộ với constraint).
+  2. **LỖI SẢN PHẨM (nhỏ) — link cũ `/co-so-bi-canh-bao` rơi vào trang đăng nhập.**
+     Route đổi tên thành `/danh-sach-canh-bao` khi làm lại cổng công khai; 7 route
+     tra cứu khác đều có redirect, riêng route này bị bỏ sót. Fix: thêm redirect
+     trong `router.tsx`.
+  3. **Khoảng trống ghi nhận (không sửa trong đợt này)**: endpoint đăng nhập ẩn
+     danh không yêu cầu CSRF token (ABP bỏ qua antiforgery cho request chưa xác
+     thực) — "login CSRF". Ghi đã xác minh: mọi request ghi *đã đăng nhập* đều bị
+     từ chối 400 nếu thiếu token. Spec `auth-verification` nay kiểm chứng đúng
+     tính chất này thay vì khẳng định sai.
+  - Spec stale đã cập nhật (không đổi phạm vi kiểm chứng): cổng công khai gộp về
+    `/tra-cuu-chung` + `/tra-cuu-giay-phep` (19 test), địa bàn còn 2 cấp (bỏ tab
+    Huyện/Quận, API `districts` đã gỡ), RowActions đẩy action thứ 3+ vào menu
+    tràn, tab danh mục tràn viewport vào menu "⋯", cơ sở bắt buộc Điện thoại +
+    Email, kết quả kiểm tra ghi theo kế hoạch đã duyệt, tài khoản tách "Tên đăng
+    nhập" khỏi "Email nhận thư" (charset chỉ chữ/số/`_`), tạo tài khoản trả
+    modal mật khẩu tạm, drawer hồ sơ cơ sở có 10 tab (mặc định Sản phẩm).
+  - Helper e2e dùng chung mới: `helpers/rowActions.ts` (inline + menu tràn),
+    `helpers/tabs.ts` (tab tràn), `helpers/select.ts` (Select ảo hóa).
+
 ### 2026-07-31 — Phạm vi bổ sung theo đơn vị quản lý, và "bổ sung" nay đúng nghĩa cộng thêm
 
 - **Cause**: Yêu cầu từ bản review drawio: thêm dropdown "Đơn vị" vào mục

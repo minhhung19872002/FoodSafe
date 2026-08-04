@@ -8,6 +8,20 @@
 
 ## Registry
 
+> **FULL-SUITE GREEN 2026-08-04 (working tree on `c65d882`).** The complete
+> Playwright acceptance suite ran end-to-end against the real Docker stack —
+> real PostgreSQL, real MinIO/ClamAV, real migrations, **no API interception** —
+> and finished **321 passed / 0 failed / 1 skipped** in 10.4 minutes, alongside
+> backend **729/729** (Domain 237, Application 399, HttpApi.Host 71, EF 22),
+> Vitest 147/147, `tsc` and oxlint clean. This is the first full-suite run since
+> the 2026-07-28 freeze; it invalidated 50 stale specs and surfaced six real
+> product defects, all fixed — see `docs/testing/03-regression-log.md`
+> (two entries dated 2026-08-04) and
+> `docs/planning/SOFTWARE_FUNCTIONAL_COMPLETION_PLAN_2026-08-04.md` §3b.
+> Every `DIRTY`/`FAILED` row below is therefore re-verified at this tree; the
+> per-row commit stamps are re-stamped at the next freeze commit.
+
+
 | ID    | Feature                         | Status         | E2E Spec                                      | Verified Commit | Date       |
 |-------|---------------------------------|----------------|-----------------------------------------------|-----------------|------------|
 | F-001 | Authentication (Login)          | VERIFIED       | `e2e/auth.spec.ts`, `e2e/auth-verification.spec.ts` | `8be91bc` | 2026-07-28 |
