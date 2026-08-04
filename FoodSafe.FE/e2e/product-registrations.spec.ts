@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
+import { pickSearchOption } from "./helpers/select";
 
 interface ListItem {
   id: string;
@@ -120,11 +121,17 @@ test.describe("product registration management", () => {
     expect((await readFile(exportPath!)).subarray(0, 2).toString()).toBe("PK");
 
     await page.getByRole("button", { name: "Thêm đăng ký" }).click();
-    await page.getByRole("combobox", { name: "Cơ sở SXKD" }).click();
-    await page.keyboard.type(businessName);
-    await page.getByText(businessName, { exact: false }).last().click();
-    await page.getByRole("combobox", { name: "Sản phẩm liên kết" }).click();
-    await page.getByText(productName, { exact: false }).last().click();
+    await pickSearchOption(
+      page,
+      page.getByRole("combobox", { name: "Cơ sở SXKD" }),
+      businessName,
+    );
+    // The linked-product select only enables once a facility is chosen.
+    await pickSearchOption(
+      page,
+      page.getByRole("combobox", { name: "Sản phẩm liên kết" }),
+      productName,
+    );
     await page
       .getByRole("textbox", { name: "Số đăng ký" })
       .fill(registrationNumber);
@@ -150,8 +157,10 @@ test.describe("product registration management", () => {
 
     await page.context().clearCookies();
     await page.goto(`/tra-cuu-dang-ky-cong-bo`);
-    await page.getByPlaceholder("Số đăng ký").fill(registrationNumber);
-    await page.getByRole("button", { name: "Tra cứu" }).click();
+    await page
+      .getByPlaceholder("Số đăng ký, tên sản phẩm...")
+      .fill(registrationNumber);
+    await page.getByRole("button", { name: "Tìm kiếm" }).click();
     await expect(page.getByText(productName)).toBeVisible();
     await expect(page.getByText(businessName)).toBeVisible();
 

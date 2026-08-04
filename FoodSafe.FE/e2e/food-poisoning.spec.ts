@@ -82,7 +82,7 @@ test.describe("food poisoning management", () => {
       .first()
       .fill(victimName);
     await caseDialog
-      .getByRole("textbox", { name: "Địa điểm xảy ra" })
+      .getByRole("textbox", { name: "Địa chỉ chi tiết" })
       .fill("Chợ đêm TP Hạ Long");
     await caseDialog
       .getByRole("textbox", { name: "Thực phẩm nghi ngờ" })
@@ -124,7 +124,7 @@ test.describe("food poisoning management", () => {
       .fill("27/07/2026 18:00");
     await page.keyboard.press("Enter");
     await incidentDialog
-      .getByRole("textbox", { name: "Địa điểm xảy ra" })
+      .getByRole("textbox", { name: "Địa chỉ chi tiết" })
       .fill(incidentLocation);
     await incidentDialog
       .getByRole("spinbutton", { name: "Số người phơi nhiễm" })

@@ -135,11 +135,12 @@ test.describe("FR-51 P1-3 — outbound data sharing through the real UI", () => 
       await page.getByTitle(ALERT_LABEL, { exact: true }).last().click();
 
       await dialog.getByLabel("Cảnh báo ATTP").click();
-      await page
-        .locator(".ant-select-dropdown:visible")
-        .getByRole("option")
-        .first()
-        .click();
+      // The record list is virtualised; committing the highlighted entry with
+      // the keyboard avoids racing its re-renders.
+      await expect(
+        page.locator(".ant-select-dropdown:visible").getByRole("option").first(),
+      ).toBeAttached();
+      await page.keyboard.press("Enter");
 
       await dialog
         .getByPlaceholder("Mô tả nội dung dữ liệu được chia sẻ")

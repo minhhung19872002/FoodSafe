@@ -31,7 +31,12 @@ import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
 const COMPLIANCE_ENDPOINT = "/api/v1/app/dashboard/report-compliance";
 const ATP_ENDPOINT = "/api/v1/app/atp-work-report";
 const AMR_ENDPOINT = "/api/v1/app/action-month-report";
-const YEAR = 2026;
+// A per-run future period: reports are unique per (organisation, period), so a
+// fixed year collides with leftovers from an earlier run whose teardown failed.
+// The dashboard's own year filter defaults to the current year, so the seeded
+// reports must live in it for the widget to show them. Reports are unique per
+// (organisation, period), so any leftover from an earlier run is cleared first.
+const YEAR = new Date().getFullYear();
 
 interface ComplianceRow {
   organizationId: string;
@@ -76,6 +81,17 @@ async function seedSubmittedReport(
     .toBeTruthy();
   const created = (await create.json()) as SeededReport & { status: number };
   expect(created.status, "seed must start as Draft").toBe(1);
+
+  // ATP-work and Action-Month reports now pass an internal approval gate
+  // before they may be submitted to the upper level.
+  const internalApprove = await page.context().request.post(
+    `${endpoint}/${created.id}/internally-approve`,
+    { headers, maxRedirects: 0 },
+  );
+  expect(
+    internalApprove.ok(),
+    `internally-approve ${endpoint} failed: ${await internalApprove.text()}`,
+  ).toBeTruthy();
 
   const submit = await page.context().request.post(
     `${endpoint}/${created.id}/submit`,
@@ -129,6 +145,20 @@ test.describe("FR-39-03 / FR-39-04 — dashboard report-compliance widget", () =
 
     // 1) Baseline — the officer's org counts before any seed.
     const baseline = await fetchCompliance(page);
+
+    // Clear leftovers from an earlier run whose teardown did not complete —
+    // otherwise the period-uniqueness rule refuses the seed below.
+    for (const endpoint of [ATP_ENDPOINT, AMR_ENDPOINT]) {
+      const existing = await page.context().request.get(
+        `${endpoint}?PeriodYear=${YEAR}&MaxResultCount=50`,
+      );
+      if (!existing.ok()) continue;
+      const items = ((await existing.json()) as { items: { id: string }[] })
+        .items;
+      for (const item of items) {
+        await teardownReport(page, token, endpoint, item.id);
+      }
+    }
 
     let atp: SeededReport | undefined;
     let amr: SeededReport | undefined;

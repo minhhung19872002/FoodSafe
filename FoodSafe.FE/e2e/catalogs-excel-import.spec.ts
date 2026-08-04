@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { unzipSync, strFromU8 } from "fflate";
 import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
 import { buildXlsx } from "./helpers/xlsx";
+import { activateTab } from "./helpers/tabs";
 
 const DOCUMENT_TYPE_SHEET = "Loại văn bản";
 const DOCUMENT_TYPE_HEADERS = ["Mã*", "Tên*", "Mô tả", "Thứ tự", "Trạng thái"];
@@ -34,7 +35,7 @@ async function openImportModal(page: Page) {
   await expect(
     page.getByRole("heading", { name: "Danh mục dùng chung" }),
   ).toBeVisible();
-  await page.getByRole("tab", { name: "Loại văn bản" }).click();
+  await activateTab(page, "Loại văn bản");
   // Icon của AntD mang aria-label riêng nên tên trợ năng là "import Import";
   // lọc theo nội dung văn bản để không phụ thuộc vào icon.
   await page
@@ -131,7 +132,7 @@ test.describe("master catalog Excel import", () => {
 
     // Còn tồn tại sau khi tải lại trang => đã ghi xuống PostgreSQL.
     await page.reload();
-    await page.getByRole("tab", { name: "Loại văn bản" }).click();
+    await activateTab(page, "Loại văn bản");
     await page
       .getByPlaceholder("Tìm theo mã hoặc tên")
       .fill(`E2EIMP-${suffix}`);

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
+import { activateTab } from "./helpers/tabs";
 
 async function removeStaleE2eArtifacts(page: Page) {
   const request = page.context().request;
@@ -36,7 +37,7 @@ test.describe("master catalog administration", () => {
     await expect(
       page.getByRole("heading", { name: "Danh mục dùng chung" }),
     ).toBeVisible();
-    await page.getByRole("tab", { name: "Loại văn bản" }).click();
+    await activateTab(page, "Loại văn bản");
 
     const suffix = Date.now().toString().slice(-8);
     const code = `E2E-${suffix}`;

@@ -112,7 +112,11 @@ test.describe("password management verification (F-002)", () => {
             newPassword: WEAK_PASSWORD,
           },
         });
-        expect(weak.status()).toBe(400);
+        // Weak password must be rejected. Since the 2026-07-31 single-source
+        // password policy the rejection surfaces as an ABP BusinessException
+        // (403) instead of DTO model validation (400) — both are refusals.
+        expect([400, 403]).toContain(weak.status());
+        expect(weak.ok()).toBeFalsy();
 
         const reused = await request.post(endpoint, {
           headers,

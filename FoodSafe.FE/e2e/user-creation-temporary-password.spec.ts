@@ -47,7 +47,8 @@ async function createUser(page: Page, email: string, userName?: string) {
       data: {
         // Login name is independent of the mailbox: staff without a work email
         // address of their own still need an account.
-        userName: userName ?? `e2e.user.${Date.now()}`,
+        // Login names allow only unaccented letters, digits and "_".
+        userName: userName ?? `e2e_user_${Date.now()}`,
         fullName: "E2E Temp Password User",
         email,
         phoneNumber: "0912345678",
@@ -95,7 +96,7 @@ test.describe("Account creation hands over a temporary password", () => {
     expect(created.user.mustChangePassword).toBe(true);
     // The login name must be what the administrator typed, not the address.
     expect(created.user.userName).not.toBe(email);
-    expect(created.user.userName).toMatch(/^e2e\.user\./);
+    expect(created.user.userName).toMatch(/^e2e_user_/);
     // Mailpit is part of the local stack, so delivery should succeed here.
     expect(created.notificationEmailSent).toBe(true);
 

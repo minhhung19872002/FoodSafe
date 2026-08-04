@@ -6,6 +6,7 @@ import {
   type Page,
 } from "@playwright/test";
 import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
+import { runRowAction } from "./helpers/rowActions";
 
 interface ListItem {
   id: string;
@@ -159,7 +160,10 @@ test.describe("self-declaration management", () => {
 
     let row = page.getByRole("row").filter({ hasText: declarationNumber });
     await expect(row).toContainText(productName);
-    await row.getByRole("button", { name: `Tệp ${declarationNumber}` }).click();
+    await runRowAction(page, row, {
+      label: "Tệp",
+      ariaLabel: `Tệp ${declarationNumber}`,
+    });
     const attachmentDialog = page.getByRole("dialog", {
       name: `Tệp hồ sơ — ${declarationNumber}`,
     });
@@ -195,10 +199,10 @@ test.describe("self-declaration management", () => {
     await attachmentDialog.getByRole("button", { name: "Close" }).click();
 
     row = page.getByRole("row").filter({ hasText: declarationNumber });
-    await row
-      .getByRole("button", { name: `Thao tác ${declarationNumber}` })
-      .click();
-    await page.getByRole("menuitem", { name: "Thu hồi" }).click();
+    await runRowAction(page, row, {
+      label: "Thu hồi",
+      ariaLabel: `Thu hồi ${declarationNumber}`,
+    });
     const revokeDialog = page.getByRole("dialog", {
       name: `Thu hồi hồ sơ ${declarationNumber}`,
     });
@@ -236,7 +240,10 @@ test.describe("self-declaration management", () => {
     );
     expect(blockedUpload.ok()).toBeFalsy();
 
-    await row.getByRole("button", { name: `Xóa ${declarationNumber}` }).click();
+    await runRowAction(page, row, {
+      label: "Xóa",
+      ariaLabel: `Xóa ${declarationNumber}`,
+    });
     // Nhãn nút xác nhận phụ thuộc cấu hình RowActions/locale antd.
     await page
       .getByRole("dialog")

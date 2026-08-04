@@ -14,17 +14,24 @@ test.describe("public portal (STT 41-49)", () => {
   test("portal home reaches every public function", async ({ page }) => {
     await page.goto("/cong-thong-tin");
     await expect(
-      page.getByText("Cổng thông tin An toàn thực phẩm", { exact: false }).first(),
+      page.getByRole("heading", { name: /Kiểm tra giấy phép an toàn thực phẩm/ }),
     ).toBeVisible();
+    // The home page must keep every public function one click away.
     for (const path of [
       "/tra-cuu-chung",
       "/tra-cuu-giay-phep",
-      "/co-so-bi-canh-bao",
+      "/danh-sach-canh-bao",
       "/tin-tuc",
       "/tra-cuu-van-ban",
       "/gui-phan-anh",
     ]) {
       await expect(page.locator(`a[href="${path}"]`).first()).toBeVisible();
+    }
+    // Each link must actually resolve (no dead entry point).
+    for (const path of ["/tra-cuu-chung", "/danh-sach-canh-bao", "/tin-tuc"]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(new RegExp(path));
+      await expect(page.locator(".ant-table, .ant-empty, .ant-tabs").first()).toBeVisible();
     }
   });
 
@@ -143,8 +150,11 @@ test.describe("public portal (STT 41-49)", () => {
       const submitResponse = await responsePromise;
       expect(submitResponse.ok(), await submitResponse.text()).toBeTruthy();
       await expect(
-        anon.getByText(/Đã tiếp nhận phản ánh/, { exact: false }),
+        anon.getByText("Phản ánh đã được gửi thành công"),
       ).toBeVisible({ timeout: 15_000 });
+      // The citizen must leave with a tracking code they can look up later.
+      await expect(anon.getByText("Mã theo dõi của bạn")).toBeVisible();
+      await expect(anon.getByText(/^FD-[A-Z0-9]+$/)).toBeVisible();
     } finally {
       await anonContext.close();
     }
@@ -183,7 +193,9 @@ test.describe("public portal (STT 41-49)", () => {
     const anonContext = await browser.newContext();
     const anon = await anonContext.newPage();
     try {
+      // The legacy URL must still land a bookmarked citizen on the page.
       await anon.goto("/co-so-bi-canh-bao");
+      await expect(anon).toHaveURL(/danh-sach-canh-bao/);
       await expect(
         anon.getByText(/Cơ sở bị cảnh báo|cảnh báo/i).first(),
       ).toBeVisible();

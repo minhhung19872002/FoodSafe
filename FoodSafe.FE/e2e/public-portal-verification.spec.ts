@@ -650,7 +650,8 @@ test.describe("portal home and navigation", () => {
     for (const path of [
       "/tra-cuu-chung",
       "/tra-cuu-giay-phep",
-      "/co-so-bi-canh-bao",
+      // Renamed from /co-so-bi-canh-bao in the portal redesign.
+      "/danh-sach-canh-bao",
       "/tin-tuc",
       "/tra-cuu-van-ban",
       "/gui-phan-anh",

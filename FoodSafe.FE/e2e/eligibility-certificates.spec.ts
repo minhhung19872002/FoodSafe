@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
+import { runRowAction } from "./helpers/rowActions";
 
 interface ListItem {
   id: string;
@@ -140,7 +141,10 @@ test.describe("eligibility certificate management", () => {
     expect(businessRow.hasEligibilityCertificate).toBe(true);
 
     let row = page.getByRole("row").filter({ hasText: certificateNumber });
-    await row.getByRole("button", { name: `Tệp ${certificateNumber}` }).click();
+    await runRowAction(page, row, {
+      label: "Tệp",
+      ariaLabel: `Tệp ${certificateNumber}`,
+    });
     const fileDialog = page.getByRole("dialog", {
       name: `Tệp giấy chứng nhận — ${certificateNumber}`,
     });
@@ -170,8 +174,10 @@ test.describe("eligibility certificate management", () => {
 
     await page.context().clearCookies();
     await page.goto("/tra-cuu-giay-du-dieu-kien");
-    await page.getByPlaceholder("Số giấy chứng nhận").fill(certificateNumber);
-    await page.getByRole("button", { name: "Tra cứu" }).click();
+    await page
+      .getByPlaceholder("Số giấy phép, tên cơ sở...")
+      .fill(certificateNumber);
+    await page.getByRole("button", { name: "Tìm kiếm" }).click();
     await expect(page.getByText(businessName)).toBeVisible();
     await expect(
       page.getByText("Sản xuất và kinh doanh thực phẩm"),

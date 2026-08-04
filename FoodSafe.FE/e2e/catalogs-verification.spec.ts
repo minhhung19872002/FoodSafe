@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { requestVerificationToken, signIn, signInAsAdmin } from "./helpers/auth";
+import { activateTab } from "./helpers/tabs";
 
 const TEST_PASSWORD = process.env.E2E_TEST_USER_PASSWORD ?? "Admin@2026!";
 
@@ -195,7 +196,7 @@ test.describe("master catalogs verification (F-004)", () => {
     await expect(
       page.getByRole("heading", { name: "Danh mục dùng chung" }),
     ).toBeVisible({ timeout: 10_000 });
-    await page.getByRole("tab", { name: "Loại văn bản" }).click();
+    await activateTab(page, "Loại văn bản");
 
     const headers = await csrfHeaders(page);
     const suffix = Date.now().toString().slice(-8);
@@ -214,13 +215,13 @@ test.describe("master catalogs verification (F-004)", () => {
 
     try {
       await page.reload();
-      await page.getByRole("tab", { name: "Loại văn bản" }).click();
+      await activateTab(page, "Loại văn bản");
       await expect(page.getByRole("cell", { name: code })).toBeVisible({
         timeout: 10_000,
       });
 
       await page.reload();
-      await page.getByRole("tab", { name: "Loại văn bản" }).click();
+      await activateTab(page, "Loại văn bản");
       await expect(page.getByRole("cell", { name: code })).toBeVisible({
         timeout: 10_000,
       });

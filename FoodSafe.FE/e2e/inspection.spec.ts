@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
+import { runRowAction } from "./helpers/rowActions";
 
 interface ListItem {
   id: string;
@@ -150,8 +151,7 @@ test.describe("inspection management", () => {
     let row = page.getByRole("row").filter({ hasText: planCode });
     await expect(row.getByText("Nháp")).toBeVisible();
 
-    await row.getByRole("button", { name: `Thao tác ${planCode}` }).click();
-    await page.getByRole("menuitem", { name: "Gửi" }).click();
+    await runRowAction(page, row, { label: "Gửi", ariaLabel: `Gửi ${planCode}` });
     await page.getByRole("dialog").getByRole("button", { name: /^(Xóa|Đồng ý|OK)$/ }).click();
     await expect(page.getByText("Đã gửi duyệt.")).toBeVisible({
       timeout: 10_000,
@@ -176,20 +176,34 @@ test.describe("inspection management", () => {
     const resultDialog = page.getByRole("dialog", {
       name: "Ghi nhận kết quả kiểm tra",
     });
-    await resultDialog.getByRole("combobox", { name: "Cơ sở SXKD" }).click();
-    await page.keyboard.type(businessName);
+    // A result is now recorded against an approved plan: pick the plan, then
+    // the facility line inside it (the facility is derived from that line).
+    await resultDialog
+      .getByRole("combobox", { name: "Thuộc kế hoạch thanh tra" })
+      .click();
+    await page.getByText(planCode, { exact: false }).last().click();
+    await resultDialog
+      .getByRole("combobox", { name: "Cơ sở trong kế hoạch" })
+      .click();
     await page.getByText(businessName, { exact: false }).last().click();
     await resultDialog.getByRole("combobox", { name: "Loại kiểm tra" }).click();
     await page.getByText("Đột xuất", { exact: true }).last().click();
     await resultDialog.getByRole("combobox", { name: "Kết quả chung" }).click();
     await page.getByText("Đạt", { exact: true }).last().click();
-    await resultDialog
-      .getByRole("textbox", { name: "Trưởng đoàn" })
-      .fill(`Trưởng đoàn E2E-KH-${suffix}`);
+    // The team leader is now chosen from the real user directory rather than
+    // typed free-hand, so pick the first offered officer and remember them.
+    await resultDialog.getByRole("combobox", { name: "Trưởng đoàn" }).click();
+    // The option list is virtualised, so commit the highlighted entry with the
+    // keyboard instead of racing its re-renders.
+    await page.keyboard.press("Enter");
+
     await resultDialog
       .getByRole("button", { name: "Lưu", exact: true })
       .click();
-    await expect(page.getByText(`Trưởng đoàn E2E-KH-${suffix}`)).toBeVisible();
+    // The saved result is listed against the inspected facility.
+    await expect(
+      page.getByRole("row").filter({ hasText: businessName }).first(),
+    ).toBeVisible({ timeout: 15_000 });
 
     await removeStaleArtifacts(request, headers);
     await request.delete(`/api/v1/app/business/${business.id}`, {
