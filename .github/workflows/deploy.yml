@@ -28,7 +28,7 @@ jobs:
       image_repo: ${{ steps.repo.outputs.value }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Resolve image repository
         id: repo
@@ -78,7 +78,7 @@ jobs:
     needs: build-push
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up SSH
         run: |
