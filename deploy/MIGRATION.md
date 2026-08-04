@@ -11,15 +11,21 @@ Container Registry (GHCR)**, miễn phí và dùng luôn `GITHUB_TOKEN` của Ac
 
 ## Trạng thái (04/08/2026)
 
-Đã chuyển xong sang `45.119.83.83`, **chưa đổi DNS**. Máy cũ vẫn phục vụ
-`attp.bluestar.com.vn` bình thường cho tới khi đổi bản ghi A (bước 5).
+Đã chuyển xong. `https://attp.bluestar.com.vn` phục vụ từ `45.119.83.83`, chứng
+chỉ Let's Encrypt cấp lúc 07:27 UTC 04/08, hạn 02/11/2026.
 
 | Bước | Trạng thái |
 |---|---|
 | 1–4 (dựng máy, nạp dữ liệu, kiểm thử bằng IP) | Xong |
-| 5 (đổi DNS + bật HTTPS) | **Chờ người dùng đổi bản ghi A** |
+| 5 (đổi DNS + bật HTTPS) | Xong |
 | 6 (`VM_HOST` trỏ máy mới) | Xong |
 | 7 (dọn GCP) | Chưa — giữ máy cũ làm phương án lùi |
+
+> **Máy cũ vẫn đang chạy và vẫn phục vụ các client còn cache DNS cũ.** Ở trạng
+> thái này hai máy cùng nhận ghi trên cùng một tên miền: dữ liệu nhập vào máy cũ
+> sẽ không có trên máy mới. Nên dừng stack máy cũ (`docker compose stop`) ngay
+> khi TTL cũ hết hạn — giữ nguyên VM và volume để còn đường lùi. Đối chiếu lúc
+> cắt DNS: cả hai máy đều 10 cơ sở / 15 tài khoản / 11 tệp / 4 kết quả kiểm tra.
 
 ## Yêu cầu máy mới
 
