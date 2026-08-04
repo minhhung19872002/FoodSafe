@@ -212,36 +212,49 @@ public sealed class E2eTestDataSeedContributor : IDataSeedContributor, ITransien
             await _provinces.InsertAsync(province, autoSave: true);
         }
 
-        // The commune code is UNIQUE and also seeded by
-        // ReferenceCatalogDataSeedContributor, so check the code as well —
-        // whichever contributor runs first wins (see CommunePrimaryCode note).
-        if (!await _communes.AnyAsync(x =>
-                x.Id == CommuneHongGaiId || x.Code == CommunePrimaryCode))
-        {
-            var commune = Commune.Create(
-                CommuneHongGaiId, CommunePrimaryCode, "Phường Hồng Gai",
-                ProvinceQuangNinhId, CommuneType.Ward, 1);
-            commune.CreationTime = now;
-            await _communes.InsertAsync(commune, autoSave: true);
-        }
+        await EnsureCommuneAsync(
+            CommuneHongGaiId, CommunePrimaryCode, "Phường Hồng Gai", 1, now);
 
         foreach (var seed in AdditionalManagingOrganizations)
         {
-            if (await _communes.AnyAsync(x =>
-                    x.Id == seed.CommuneId || x.Code == seed.CommuneCode))
-                continue;
-
-            var commune = Commune.Create(
-                seed.CommuneId,
-                seed.CommuneCode,
-                seed.CommuneName,
-                ProvinceQuangNinhId,
-                CommuneType.Ward,
-                sortOrder: 2);
-            commune.CreationTime = now;
-            await _communes.InsertAsync(commune, autoSave: true);
+            await EnsureCommuneAsync(
+                seed.CommuneId, seed.CommuneCode, seed.CommuneName, 2, now);
         }
     }
+
+    // Consumers resolve communes by code, so the row must exist under the
+    // official code before organizations and demo data are seeded.
+    private async Task EnsureCommuneAsync(
+        Guid preferredId,
+        string code,
+        string name,
+        int sortOrder,
+        DateTime now)
+    {
+        // ReferenceCatalogDataSeedContributor seeds the same codes and
+        // contributor order is not guaranteed; whichever runs first owns the
+        // row (see CommunePrimaryCode note).
+        if (await _communes.AnyAsync(x => x.Code == code))
+            return;
+
+        // Databases seeded before the 2025 administrative reform hold
+        // unrelated communes under these ids. Rewriting one would silently
+        // relabel every business already registered against it, so leave the
+        // legacy row alone and insert under an id derived from the code.
+        var id = await _communes.AnyAsync(x => x.Id == preferredId)
+            ? CommuneIdFromCode(code)
+            : preferredId;
+
+        var commune = Commune.Create(
+            id, code, name, ProvinceQuangNinhId, CommuneType.Ward, sortOrder);
+        commune.CreationTime = now;
+        await _communes.InsertAsync(commune, autoSave: true);
+    }
+
+    // Official commune codes are five digits, so they map straight into the
+    // node field and stay stable across runs.
+    private static Guid CommuneIdFromCode(string code) =>
+        Guid.Parse($"e2e00000-0000-4000-8004-{code.PadLeft(12, '0')}");
 
     private async Task SeedOrganizationsAsync(DateTime now)
     {
