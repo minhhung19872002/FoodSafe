@@ -8,39 +8,39 @@ on:
 
 permissions:
   contents: read
-  id-token: write
+  packages: write
 
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
 env:
-  GAR_LOCATION: asia-southeast1
-  AR_REPO: foodsafe
+  # GitHub Container Registry: no cloud-provider billing or federation to keep
+  # alive, and the images stay private to this repository.
+  REGISTRY: ghcr.io
 
 jobs:
   build-push:
     name: Build & push images
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    outputs:
+      image_repo: ${{ steps.repo.outputs.value }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
-        id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_DEPLOY_SA }}
-          token_format: access_token
+      - name: Resolve image repository
+        id: repo
+        # GHCR rejects upper-case path segments; repository owners may contain them.
+        run: echo "value=${REGISTRY}/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >>"$GITHUB_OUTPUT"
 
-      - name: Log in to Artifact Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.GAR_LOCATION }}-docker.pkg.dev
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -54,8 +54,8 @@ jobs:
           pull: true
           push: true
           tags: |
-            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO }}/foodsafe-api:${{ github.sha }}
-            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO }}/foodsafe-api:latest
+            ${{ steps.repo.outputs.value }}/foodsafe-api:${{ github.sha }}
+            ${{ steps.repo.outputs.value }}/foodsafe-api:latest
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
 
@@ -66,8 +66,8 @@ jobs:
           pull: true
           push: true
           tags: |
-            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO }}/foodsafe-frontend:${{ github.sha }}
-            ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.AR_REPO }}/foodsafe-frontend:latest
+            ${{ steps.repo.outputs.value }}/foodsafe-frontend:${{ github.sha }}
+            ${{ steps.repo.outputs.value }}/foodsafe-frontend:latest
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,scope=frontend,mode=max
 
@@ -79,14 +79,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
-      - name: Authenticate to Google Cloud
-        id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_DEPLOY_SA }}
-          token_format: access_token
 
       - name: Set up SSH
         run: |
@@ -104,13 +96,25 @@ jobs:
 
       - name: Deploy stack
         env:
-          REGISTRY_TOKEN: ${{ steps.auth.outputs.access_token }}
+          # Scoped to this run and to this repository's packages — the server
+          # never stores a long-lived registry credential.
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_REPO: ${{ needs.build-push.outputs.image_repo }}
         run: |
           ssh -i ~/.ssh/deploy_key "deploy@${{ secrets.VM_HOST }}" \
-            "REGISTRY_TOKEN='$REGISTRY_TOKEN' IMAGE_TAG='${{ github.sha }}' bash -s" <<'EOS'
+            "REGISTRY_TOKEN='$REGISTRY_TOKEN' REGISTRY='${{ env.REGISTRY }}' \
+             REGISTRY_USER='${{ github.actor }}' IMAGE_REPO='$IMAGE_REPO' \
+             IMAGE_TAG='${{ github.sha }}' bash -s" <<'EOS'
           set -euo pipefail
           cd /opt/foodsafe
-          printf '%s' "$REGISTRY_TOKEN" | docker login -u oauth2accesstoken --password-stdin https://asia-southeast1-docker.pkg.dev
+          printf '%s' "$REGISTRY_TOKEN" | docker login -u "$REGISTRY_USER" --password-stdin "https://$REGISTRY"
+          # Keep .env authoritative for both the repository and the tag so a
+          # manual `docker compose up` on the box resolves the same images.
+          if grep -q '^IMAGE_REPO=' .env; then
+            sed -i "s#^IMAGE_REPO=.*#IMAGE_REPO=$IMAGE_REPO#" .env
+          else
+            echo "IMAGE_REPO=$IMAGE_REPO" >> .env
+          fi
           sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=$IMAGE_TAG/" .env
           docker compose pull --quiet
           docker compose up -d --remove-orphans

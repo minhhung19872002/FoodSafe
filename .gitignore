@@ -57,3 +57,4 @@ FoodSafe.BE/src/FoodSafe.HttpApi.Host/wwwroot/libs/
 # (testing/ui-audit/.gitignore already scopes its own screenshots/ output.)
 test-results/
 FoodSafe.FE/.results/
+migration-backup/
