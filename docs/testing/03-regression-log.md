@@ -17,6 +17,40 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-08-04 (đợt 3) — Chuyển hạ tầng sang VPS mới, lộ lỗi seed khi nâng cấp DB cũ
+
+- **Cause**: Billing của project GCP `foodsafe-prod-7a3052` bị tắt nên pipeline
+  không đẩy được image lên Artifact Registry từ 02/08 — production đứng ở bản
+  30/07. Chuyển registry sang GHCR và dựng lại toàn bộ stack trên VPS mới
+  `45.119.83.83` (Ubuntu 24.04) từ bản sao lưu production.
+- **Commit**: `ff98a76` (fix seed) trên nền `ceda10f` (chuyển GHCR)
+- **Affected features**: không feature nghiệp vụ nào đổi hành vi. Thay đổi code
+  duy nhất nằm ở `E2eTestDataSeedContributor` — chỉ chạy lúc seed.
+- **Retest level**: 3 (seed dùng chung cho mọi test tích hợp) + smoke thật trên
+  máy mới
+- **Result**: PASSED — backend **729/729**; migrator áp đủ 5 migration mới trên
+  DB production đã khôi phục; smoke HTTP trên máy mới đạt.
+- **Details**:
+  1. **LỖI SẢN PHẨM — migrator chết (exit 139) khi nâng cấp một DB có sẵn.**
+     `SeedAdministrativeAreasAsync` bỏ qua việc thêm xã khi GUID cố định đã bị
+     chiếm. DB tạo trước cải cách hành chính 2025 giữ các xã *khác* dưới đúng
+     những GUID đó, nên mã xã chính thức `06685` không bao giờ được thêm; mọi
+     nơi tra cứu xã theo mã (tổ chức, demo data) ném
+     `Commune 06685 must be seeded before demo data` và migration dừng.
+     Sửa: thêm dưới GUID suy ra từ mã xã, giữ nguyên dòng cũ. Phương án đổi mã
+     dòng cũ đã bị loại — nó âm thầm gán lại toàn bộ cơ sở đang thuộc xã đó
+     sang tên xã khác.
+  2. **Không phải lỗi**: `docker compose up` cuối script khôi phục báo `denied`
+     ở lần chạy đầu vì image GHCR chưa build xong. Dữ liệu đã nạp xong trước đó.
+- **Đối chiếu dữ liệu sau khôi phục**: 15 tài khoản, 10 cơ sở, 11 bản ghi đính
+  kèm ↔ 13 object MinIO (4.3 MB), 60 xã/phường (6 dòng cũ + 54 dòng theo
+  QĐ 19/2025/QĐ-TTg). Đăng nhập cùng thông tin cho kết quả **giống hệt máy cũ**
+  → hash mật khẩu và `STRING_ENCRYPTION_PASSPHRASE` được mang sang nguyên vẹn.
+- **Ghi chú tài nguyên**: máy mới 1 vCPU / 1967 MB RAM. Đo lúc chạy đủ 7
+  container: dùng 1574 MB, còn trống 393 MB, **đã chạm swap 515 MB**; ClamAV
+  chiếm 740 MB. 10 request đồng thời trả 200 trong <0,7 s. Đạt yêu cầu ở tải
+  hiện tại nhưng không còn dư địa — xem `deploy/MIGRATION.md`.
+
 ### 2026-08-04 — Đợt hoàn thiện chức năng (Batch 1–5): 4 lỗi thật bị test bắt được và đã sửa
 
 - **Cause**: Rà soát + hoàn thiện toàn bộ gap chức năng phần mềm (plan

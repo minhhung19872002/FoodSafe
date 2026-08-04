@@ -9,6 +9,18 @@ không đẩy được image lên Artifact Registry — deploy hỏng từ 02/08
 chuyển, hệ thống không còn phụ thuộc vào GCP: image chuyển sang **GitHub
 Container Registry (GHCR)**, miễn phí và dùng luôn `GITHUB_TOKEN` của Actions.
 
+## Trạng thái (04/08/2026)
+
+Đã chuyển xong sang `45.119.83.83`, **chưa đổi DNS**. Máy cũ vẫn phục vụ
+`attp.bluestar.com.vn` bình thường cho tới khi đổi bản ghi A (bước 5).
+
+| Bước | Trạng thái |
+|---|---|
+| 1–4 (dựng máy, nạp dữ liệu, kiểm thử bằng IP) | Xong |
+| 5 (đổi DNS + bật HTTPS) | **Chờ người dùng đổi bản ghi A** |
+| 6 (`VM_HOST` trỏ máy mới) | Xong |
+| 7 (dọn GCP) | Chưa — giữ máy cũ làm phương án lùi |
+
 ## Yêu cầu máy mới
 
 | Hạng mục | Tối thiểu | Ghi chú |
@@ -18,6 +30,13 @@ Container Registry (GHCR)**, miễn phí và dùng luôn `GITHUB_TOKEN` của Ac
 | Ổ đĩa | 40 GB | VM cũ đang dùng 17 GB |
 | Cổng mở | 22, 80, 443 | 80/443 cho Caddy tự xin chứng chỉ Let's Encrypt |
 | IP | IP tĩnh công khai | Cần cho bản ghi A của tên miền |
+
+> Máy đang dùng chỉ có **1 vCPU / 1967 MB RAM**, thấp hơn mức khuyến nghị. Đo
+> thật khi chạy đủ 7 container: dùng 1574 MB, còn trống 393 MB, đã chạm swap
+> 515 MB (ClamAV một mình chiếm 740 MB). Hiện đáp ứng được tải kiểm thử nhưng
+> không còn dư địa cho tăng trưởng dữ liệu hay quét virus nhiều tệp cùng lúc.
+> **Không tắt ClamAV để lấy RAM**: `ClamAvFileMalwareScanner` fail-closed — mất
+> ClamAV là toàn bộ chức năng tải tệp đính kèm ngừng hoạt động.
 
 ## Dữ liệu đã sao lưu
 
@@ -63,11 +82,15 @@ scp -i $KEY migration-backup/*              deploy@$NEW_HOST:/home/deploy/migrat
 scp -i $KEY migration-backup/vm.env         deploy@$NEW_HOST:/opt/foodsafe/.env
 ```
 
-Sau đó sửa hai dòng trong `/opt/foodsafe/.env` trên máy mới:
+Sau đó sửa `/opt/foodsafe/.env` trên máy mới. Bản gốc trỏ tên miền được giữ tại
+`/opt/foodsafe/.env.production-domain.bak` để khôi phục ở bước 5:
 
 ```bash
-IMAGE_REPO=ghcr.io/minhhung19872002     # thay Artifact Registry của GCP
-SITE_DOMAIN=:80                          # tạm chạy HTTP đến khi DNS trỏ xong
+IMAGE_REPO=ghcr.io/minhhung19872002       # thay Artifact Registry của GCP
+SITE_DOMAIN=:80                            # tạm chạy HTTP đến khi DNS trỏ xong
+PUBLIC_BASE_URL=http://<IP mới>            # CORS + authority phải khớp URL đang gõ
+REQUIRE_HTTPS_METADATA=false               # OpenIddict từ chối authority http://
+CAPTCHA_EXPECTED_HOSTNAME=<IP mới>         # Turnstile đối chiếu hostname
 ```
 
 Giữ `SITE_DOMAIN=:80` ở bước này là cố ý: Caddy chỉ xin được chứng chỉ khi bản
@@ -75,19 +98,26 @@ ghi A đã trỏ về IP mới, xin sớm sẽ bị Let's Encrypt tính lượt 
 
 ### 3. Kéo image và khôi phục dữ liệu
 
-Image nằm ở GHCR dạng riêng tư nên cần đăng nhập một lần bằng
-[Personal Access Token](https://github.com/settings/tokens) có quyền
-`read:packages`:
+Không cần Personal Access Token: workflow `deploy.yml` tự `docker login ghcr.io`
+bằng `GITHUB_TOKEN` của từng lần chạy, nên máy chủ không lưu thông tin đăng nhập
+registry dài hạn.
+
+Nạp dữ liệu trước, dùng image công khai (PostgreSQL + MinIO) nên không cần chờ
+build xong:
 
 ```bash
 ssh -i $KEY deploy@$NEW_HOST
-echo '<PAT>' | docker login ghcr.io -u minhhung19872002 --password-stdin
-cd /opt/foodsafe && docker compose pull
+cd /opt/foodsafe && docker compose up -d postgres minio
 RESTORE_CONFIRM=yes bash ~/restore-from-backup.sh ~/migration-backup
 ```
 
 Script sẽ dừng ứng dụng, nạp lại database, tệp đính kèm và khóa DataProtection,
-rồi khởi động lại — migrator tự áp các migration mới.
+rồi khởi động lại — migrator tự áp các migration mới. Bước `up -d` cuối sẽ báo
+`denied` nếu image chưa được build lên GHCR lần nào; dữ liệu vẫn đã nạp xong,
+lần deploy kế tiếp sẽ dựng nốt ứng dụng.
+
+Nếu script báo `set: pipefail: invalid option name` thì file bị dính ký tự xuống
+dòng kiểu Windows khi `scp` từ máy local: `sed -i 's/\r$//' ~/restore-from-backup.sh`.
 
 ### 4. Kiểm thử khi chưa đổi DNS
 
@@ -104,12 +134,25 @@ mật khẩu giữ nguyên vì database được bê nguyên sang.
 Tại PA Việt Nam, sửa bản ghi A của `attp.bluestar.com.vn` từ `136.85.108.207`
 sang IP mới. Nên hạ TTL xuống 300 giây **trước đó vài giờ** để đổi nhanh.
 
-Khi `dig +short attp.bluestar.com.vn` đã trả IP mới, bật HTTPS:
+Khi `dig +short attp.bluestar.com.vn` đã trả IP mới, khôi phục cấu hình tên miền
+(gồm cả `PUBLIC_BASE_URL`, `REQUIRE_HTTPS_METADATA`, `CAPTCHA_EXPECTED_HOSTNAME`)
+và bật HTTPS:
 
 ```bash
-ssh -i $KEY deploy@$NEW_HOST \
-  "cd /opt/foodsafe && sed -i 's/^SITE_DOMAIN=.*/SITE_DOMAIN=attp.bluestar.com.vn/' .env && docker compose up -d caddy"
+ssh -i $KEY deploy@$NEW_HOST "cd /opt/foodsafe \
+  && sed -i 's#^SITE_DOMAIN=.*#SITE_DOMAIN=attp.bluestar.com.vn#' .env \
+  && sed -i 's#^PUBLIC_BASE_URL=.*#PUBLIC_BASE_URL=https://attp.bluestar.com.vn#' .env \
+  && sed -i 's#^REQUIRE_HTTPS_METADATA=.*#REQUIRE_HTTPS_METADATA=true#' .env \
+  && sed -i 's#^CAPTCHA_EXPECTED_HOSTNAME=.*#CAPTCHA_EXPECTED_HOSTNAME=attp.bluestar.com.vn#' .env \
+  && docker compose up -d"
 ```
+
+Sửa từng dòng chứ đừng chép đè `.env.production-domain.bak`: bản sao lưu đó còn
+giữ `IMAGE_TAG` thời Artifact Registry, chép đè sẽ trỏ vào tag không tồn tại
+trên GHCR.
+
+Chỉ đổi `SITE_DOMAIN` là chưa đủ: để nguyên `PUBLIC_BASE_URL=http://<IP>` thì
+đăng nhập qua tên miền sẽ hỏng vì CORS và authority không khớp.
 
 Caddy tự xin chứng chỉ trong khoảng 30 giây. Kiểm tra:
 
@@ -126,7 +169,9 @@ Trên GitHub → Settings → Secrets and variables → Actions, sửa **một**
 | `VM_HOST` | IP máy mới |
 
 Các secret GCP (`GCP_WIF_PROVIDER`, `GCP_DEPLOY_SA`, `GCP_PROJECT_ID`) không còn
-được dùng — xóa đi cho gọn. `VM_SSH_PRIVATE_KEY` giữ nguyên.
+được workflow nào dùng. **Chỉ xóa sau khi đã đổi DNS xong và máy mới chạy ổn
+định** — còn giữ máy cũ làm phương án lùi thì giữ luôn secret.
+`VM_SSH_PRIVATE_KEY` giữ nguyên: khóa deploy dùng chung cho cả hai máy.
 
 Chạy thử: Actions → Deploy → **Run workflow**. Pipeline mới build image, đẩy lên
 GHCR, ssh sang máy mới, `docker compose pull && up -d`, rồi kiểm tra `/health`.
