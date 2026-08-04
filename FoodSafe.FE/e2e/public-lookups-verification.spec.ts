@@ -132,27 +132,27 @@ test.describe("public business lookup (F-024)", () => {
         await anon.goto("/tra-cuu-co-so");
         await expect(
           anon.getByRole("heading", {
-            name: /Tra cứu cơ sở sản xuất|Tra cứu cơ sở/i,
+            name: "Tra cứu thông tin an toàn thực phẩm",
           }),
         ).toBeVisible({ timeout: 10_000 });
 
         // Successful lookup by code
         await anon
-          .getByPlaceholder(/Tên cơ sở hoặc mã số|mã số/i)
+          .getByPlaceholder("Tên hoặc mã cơ sở...")
           .first()
           .fill(business.code);
-        await anon.getByRole("button", { name: "Tra cứu" }).click();
+        await anon.getByRole("button", { name: "Tìm kiếm" }).click();
         await expect(anon.getByText(business.name)).toBeVisible({
           timeout: 10_000,
         });
 
         // Not-found lookup
         await anon
-          .getByPlaceholder(/Tên cơ sở hoặc mã số|mã số/i)
+          .getByPlaceholder("Tên hoặc mã cơ sở...")
           .first()
           .fill("NONEXISTENT-XXXXXX-99999");
-        await anon.getByRole("button", { name: "Tra cứu" }).click();
-        await expect(anon.getByText(/Không tìm thấy/i)).toBeVisible({
+        await anon.getByRole("button", { name: "Tìm kiếm" }).click();
+        await expect(anon.getByText("Không có dữ liệu")).toBeVisible({
           timeout: 10_000,
         });
       } finally {
@@ -269,22 +269,22 @@ test.describe("public self-declaration lookup (F-025)", () => {
       try {
         await anon.goto("/tra-cuu-tu-cong-bo");
         await expect(
-          anon.getByRole("heading", { name: /Tra cứu tự công bố/i }),
+          anon.getByRole("heading", { name: "Tra cứu giấy phép & chứng nhận ATTP" }),
         ).toBeVisible({ timeout: 10_000 });
 
         await anon
-          .getByPlaceholder(/Số tự công bố/i)
+          .getByPlaceholder("Số hồ sơ, tên cơ sở...")
           .fill(declNumber);
-        await anon.getByRole("button", { name: "Tra cứu" }).click();
+        await anon.getByRole("button", { name: "Tìm kiếm" }).click();
         await expect(anon.getByText(declNumber)).toBeVisible({
           timeout: 10_000,
         });
 
         await anon
-          .getByPlaceholder(/Số tự công bố/i)
+          .getByPlaceholder("Số hồ sơ, tên cơ sở...")
           .fill("NONEXISTENT-XXXXXX-99999");
-        await anon.getByRole("button", { name: "Tra cứu" }).click();
-        await expect(anon.getByText(/Không tìm thấy/i)).toBeVisible({
+        await anon.getByRole("button", { name: "Tìm kiếm" }).click();
+        await expect(anon.getByText("Không có dữ liệu")).toBeVisible({
           timeout: 10_000,
         });
       } finally {
@@ -380,11 +380,11 @@ test.describe("public product registration lookup (F-026)", () => {
   test("UI: lookup page loads and shows not-found", async ({ page }) => {
     await page.goto("/tra-cuu-dang-ky-cong-bo");
     await expect(
-      page.getByRole("heading", { name: /Tra cứu đăng ký công bố/i }),
+      page.getByRole("heading", { name: "Tra cứu giấy phép & chứng nhận ATTP" }),
     ).toBeVisible({ timeout: 10_000 });
-    await page.getByPlaceholder(/Số đăng ký/i).fill("NONEXISTENT-99999");
-    await page.getByRole("button", { name: "Tra cứu" }).click();
-    await expect(page.getByText(/Không tìm thấy/i)).toBeVisible({
+    await page.getByPlaceholder("Số đăng ký, tên sản phẩm...").fill("NONEXISTENT-99999");
+    await page.getByRole("button", { name: "Tìm kiếm" }).click();
+    await expect(page.getByText("Không có dữ liệu")).toBeVisible({
       timeout: 10_000,
     });
   });
@@ -457,14 +457,14 @@ test.describe("public eligibility certificate lookup (F-027)", () => {
   test("UI: lookup page loads and shows not-found", async ({ page }) => {
     await page.goto("/tra-cuu-giay-du-dieu-kien");
     await expect(
-      page.getByRole("heading", { name: /Tra cứu giấy chứng nhận đủ điều kiện/i }),
+      page.getByRole("heading", { name: "Tra cứu giấy phép & chứng nhận ATTP" }),
     ).toBeVisible({ timeout: 10_000 });
     await page
-      .getByPlaceholder(/Số giấy|chứng nhận/i)
+      .getByPlaceholder("Số giấy phép, tên cơ sở...")
       .first()
       .fill("NONEXISTENT-99999");
-    await page.getByRole("button", { name: "Tra cứu" }).click();
-    await expect(page.getByText(/Không tìm thấy/i)).toBeVisible({
+    await page.getByRole("button", { name: "Tìm kiếm" }).click();
+    await expect(page.getByText("Không có dữ liệu")).toBeVisible({
       timeout: 10_000,
     });
   });
@@ -548,11 +548,13 @@ test.describe("public CFS certificate lookup (F-028)", () => {
   test("UI: lookup page loads and shows not-found", async ({ page }) => {
     await page.goto("/tra-cuu-cfs");
     await expect(
-      page.getByRole("heading", { name: /Tra cứu.*CFS/i }),
+      page.getByRole("heading", {
+        name: "Tra cứu giấy phép & chứng nhận ATTP",
+      }),
     ).toBeVisible({ timeout: 10_000 });
-    await page.getByPlaceholder(/Số CFS/i).fill("NONEXISTENT-99999");
-    await page.getByRole("button", { name: "Tra cứu" }).click();
-    await expect(page.getByText(/Không tìm thấy/i)).toBeVisible({
+    await page.getByPlaceholder("Số chứng nhận, tên cơ sở...").fill("NONEXISTENT-99999");
+    await page.getByRole("button", { name: "Tìm kiếm" }).click();
+    await expect(page.getByText("Không có dữ liệu")).toBeVisible({
       timeout: 10_000,
     });
   });
@@ -624,11 +626,11 @@ test.describe("public export food certificate lookup (F-029)", () => {
   test("UI: lookup page loads and shows not-found", async ({ page }) => {
     await page.goto("/tra-cuu-gcn-xuat-khau");
     await expect(
-      page.getByRole("heading", { name: /Tra cứu giấy chứng nhận xuất khẩu/i }),
+      page.getByRole("heading", { name: "Tra cứu giấy phép & chứng nhận ATTP" }),
     ).toBeVisible({ timeout: 10_000 });
-    await page.getByPlaceholder(/Số GCN xuất khẩu/i).fill("NONEXISTENT-99999");
-    await page.getByRole("button", { name: "Tra cứu" }).click();
-    await expect(page.getByText(/Không tìm thấy/i)).toBeVisible({
+    await page.getByPlaceholder("Số giấy chứng nhận, tên cơ sở...").fill("NONEXISTENT-99999");
+    await page.getByRole("button", { name: "Tìm kiếm" }).click();
+    await expect(page.getByText("Không có dữ liệu")).toBeVisible({
       timeout: 10_000,
     });
   });
@@ -707,11 +709,11 @@ test.describe("public advertisement registration lookup (F-030)", () => {
   test("UI: lookup page loads and shows not-found", async ({ page }) => {
     await page.goto("/tra-cuu-dang-ky-quang-cao");
     await expect(
-      page.getByRole("heading", { name: /Tra cứu đăng ký quảng cáo/i }),
+      page.getByRole("heading", { name: "Tra cứu giấy phép & chứng nhận ATTP" }),
     ).toBeVisible({ timeout: 10_000 });
-    await page.getByPlaceholder(/Số đăng ký/i).fill("NONEXISTENT-99999");
-    await page.getByRole("button", { name: "Tra cứu" }).click();
-    await expect(page.getByText(/Không tìm thấy/i)).toBeVisible({
+    await page.getByPlaceholder("Số đăng ký, tên cơ sở...").fill("NONEXISTENT-99999");
+    await page.getByRole("button", { name: "Tìm kiếm" }).click();
+    await expect(page.getByText("Không có dữ liệu")).toBeVisible({
       timeout: 10_000,
     });
   });

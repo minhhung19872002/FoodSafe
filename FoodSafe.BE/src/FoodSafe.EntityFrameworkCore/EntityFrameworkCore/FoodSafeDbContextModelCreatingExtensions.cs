@@ -1224,6 +1224,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.ConfigureByConvention();
             entity.Property(x => x.Id).HasColumnName("id");
             entity.Property(x => x.InspectionResultId).HasColumnName("inspection_result_id");
+            entity.Property(x => x.ViolationTypeId).HasColumnName("violation_type_id");
             entity.Property(x => x.ViolationCode).HasColumnName("violation_code").HasMaxLength(50);
             entity.Property(x => x.Description).HasColumnName("description").IsRequired();
             entity.Property(x => x.RegulationReference).HasColumnName("regulation_reference");
@@ -1237,6 +1238,13 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.HasIndex(x => new { x.IsRemedied, x.RemedyDeadline })
                 .HasFilter("is_remedied = FALSE AND remedy_deadline IS NOT NULL")
                 .HasDatabaseName("idx_inspection_violations_remedied");
+            // Prefill provenance only — text fields are copied, so removing the
+            // catalog entry must not invalidate recorded violations.
+            entity.HasOne<ViolationType>().WithMany().HasForeignKey(x => x.ViolationTypeId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_inspection_violations_type");
+            entity.HasIndex(x => x.ViolationTypeId)
+                .HasDatabaseName("idx_inspection_violations_type");
         });
     }
 
@@ -1447,7 +1455,8 @@ public static class FoodSafeDbContextModelCreatingExtensions
         builder.Entity<Commune>(entity =>
         {
             entity.ToTable("cat_communes", table =>
-                table.HasCheckConstraint("chk_cat_communes_type", "type IN (1, 2, 3)"));
+                // 4 = Đặc khu (SpecialZone, Luật 72/2025/QH15).
+                table.HasCheckConstraint("chk_cat_communes_type", "type IN (1, 2, 3, 4)"));
             ConfigureAdministrativeArea(entity);
             entity.HasKey(x => x.Id).HasName("pk_cat_communes");
             entity.Property(x => x.Code).HasMaxLength(10);
@@ -2373,6 +2382,9 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.IncidentAffected).HasColumnName("incident_affected");
             entity.Property(x => x.IncidentHospitalized).HasColumnName("incident_hospitalized");
             entity.Property(x => x.IncidentDeaths).HasColumnName("incident_deaths");
+            entity.Property(x => x.LargeScaleIncidentCount)
+                .HasColumnName("large_scale_incident_count")
+                .HasDefaultValue(0);
 
             entity.Property(x => x.PreventionActivities).HasColumnName("prevention_activities");
             entity.Property(x => x.RiskFactors).HasColumnName("risk_factors");
@@ -2394,7 +2406,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             entity.ToTable(t =>
             {
-                t.HasCheckConstraint("chk_ndtp_status", "status IN (1, 2, 3, 4, 5)");
+                t.HasCheckConstraint("chk_ndtp_status", "status IN (1, 2, 3, 4, 5, 6)");
                 t.HasCheckConstraint("chk_ndtp_month", "period_month >= 1 AND period_month <= 12");
             });
 
@@ -2499,7 +2511,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
 
             entity.ToTable(t =>
             {
-                t.HasCheckConstraint("chk_atp_status", "status IN (1, 2, 3, 4, 5)");
+                t.HasCheckConstraint("chk_atp_status", "status IN (1, 2, 3, 4, 5, 6)");
                 t.HasCheckConstraint("chk_atp_period_type", "period_type IN (1, 2)");
             });
 
@@ -2587,7 +2599,7 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.Notes).HasColumnName("notes");
             entity.Property(x => x.SubmissionHash).HasColumnName("submission_hash").HasMaxLength(64).IsRequired(false);
 
-            entity.ToTable(t => t.HasCheckConstraint("chk_amr_status", "status IN (1, 2, 3, 4, 5)"));
+            entity.ToTable(t => t.HasCheckConstraint("chk_amr_status", "status IN (1, 2, 3, 4, 5, 6)"));
 
             entity.HasOne<Organization>()
                 .WithMany()
@@ -2762,6 +2774,9 @@ public static class FoodSafeDbContextModelCreatingExtensions
             entity.Property(x => x.AllowedDataTypes)
                 .HasColumnName("allowed_data_types")
                 .HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AllowedIps)
+                .HasColumnName("allowed_ips")
+                .HasMaxLength(1000);
             entity.Property(x => x.CreationTime).HasColumnName("creation_time");
             entity.Property(x => x.CreatorId).HasColumnName("creator_id");
             entity.Property(x => x.LastModificationTime).HasColumnName("last_modification_time");

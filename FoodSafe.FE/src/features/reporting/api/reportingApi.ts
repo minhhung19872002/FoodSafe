@@ -332,6 +332,7 @@ export interface NdtpAggregatedStats {
   incidentAffected: number;
   incidentHospitalized: number;
   incidentDeaths: number;
+  largeScaleIncidentCount: number;
 }
 
 const calculationEndpoint = "/v1/app/report-calculation";

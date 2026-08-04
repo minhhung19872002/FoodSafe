@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
+import { runRowAction } from "./helpers/rowActions";
 
 interface ListItem {
   id: string;
@@ -140,7 +141,10 @@ test.describe("CFS certificate management", () => {
     await expect(page.getByText("Đã lưu chứng nhận CFS.")).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: certificateNumber });
-    await row.getByRole("button", { name: `Tệp ${certificateNumber}` }).click();
+    await runRowAction(page, row, {
+      label: "Tệp",
+      ariaLabel: `Tệp ${certificateNumber}`,
+    });
     const fileDialog = page.getByRole("dialog", {
       name: `Tệp CFS — ${certificateNumber}`,
     });
@@ -166,8 +170,10 @@ test.describe("CFS certificate management", () => {
 
     await page.context().clearCookies();
     await page.goto("/tra-cuu-cfs");
-    await page.getByPlaceholder("Số CFS").fill(certificateNumber);
-    await page.getByRole("button", { name: "Tra cứu" }).click();
+    await page
+      .getByPlaceholder("Số chứng nhận, tên cơ sở...")
+      .fill(certificateNumber);
+    await page.getByRole("button", { name: "Tìm kiếm" }).click();
     await expect(page.getByText(businessName)).toBeVisible();
     await expect(page.getByText("Chi cục ATVSTP Quảng Ninh")).toBeVisible();
 

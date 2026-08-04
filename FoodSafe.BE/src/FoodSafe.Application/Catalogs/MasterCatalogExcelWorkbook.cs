@@ -489,7 +489,29 @@ internal static class MasterCatalogExcelWorkbook
                     sortOrder,
                     active
                 ],
-                ["Trung tâm kiểm nghiệm phải tồn tại sẵn trong hệ thống."])
+                ["Trung tâm kiểm nghiệm phải tồn tại sẵn trong hệ thống."]),
+
+            [MasterCatalogKind.ViolationType] = new(
+                MasterCatalogKind.ViolationType,
+                "Hành vi vi phạm",
+                "hanh-vi-vi-pham",
+                [
+                    Code("VP-115-15-2"),
+                    Name("Không thực hiện chế độ kiểm thực ba bước; không lưu mẫu thức ăn"),
+                    new("LegalReference", "Căn cứ pháp lý*", Required: true,
+                        Hint: "Điều/khoản của Nghị định 115/2018/NĐ-CP (tối đa 500 ký tự).",
+                        Sample: "Khoản 2 Điều 15 Nghị định 115/2018/NĐ-CP"),
+                    new("MinFine", "Mức phạt tối thiểu (VND)", CatalogColumnType.Decimal,
+                        Hint: "Mức cá nhân; tổ chức gấp 2 lần. Để trống nếu chưa xác định.",
+                        Sample: "3000000"),
+                    new("MaxFine", "Mức phạt tối đa (VND)", CatalogColumnType.Decimal,
+                        Hint: "Phải lớn hơn hoặc bằng mức tối thiểu.",
+                        Sample: "5000000"),
+                    Description(),
+                    sortOrder,
+                    active
+                ],
+                ["Khung phạt nhập theo mức cá nhân (tổ chức gấp 2 lần theo NĐ 115/2018)."])
         };
     }
 }

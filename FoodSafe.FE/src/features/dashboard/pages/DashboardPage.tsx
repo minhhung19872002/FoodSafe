@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  App,
   Col,
   Row,
   Card,
@@ -14,11 +15,15 @@ import {
 } from "antd";
 import {
   AuditOutlined,
+  ExportOutlined,
   PlusOutlined,
   PieChartOutlined,
   BarChartOutlined,
   SolutionOutlined,
 } from "@ant-design/icons";
+import { useMutation } from "@tanstack/react-query";
+import { saveDownload } from "@/utils/download";
+import { dashboardApi } from "../api/dashboardApi";
 import { ChartCard } from "@/components/ChartCard";
 import {
   CartesianGrid,
@@ -225,6 +230,7 @@ const yearOptions = Array.from({ length: 5 }, (_, index) => ({
 }));
 
 export default function DashboardPage() {
+  const { message } = App.useApp();
   const user = useAuthStore((s) => s.user);
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const navigate = useNavigate();
@@ -234,6 +240,12 @@ export default function DashboardPage() {
     () => ({ year, organizationId }),
     [year, organizationId],
   );
+  const exportCompliance = useMutation({
+    mutationFn: () => dashboardApi.exportReportCompliance(filter),
+    onSuccess: (file) => saveDownload(file.blob, file.fileName),
+    onError: () =>
+      void message.error("Không thể xuất Excel trạng thái báo cáo."),
+  });
   const { data: stats, isLoading } = useDashboardStats(filter);
   const compliance = useReportCompliance(filter);
   const expiringLicenses = useExpiringLicenses(filter);
@@ -535,6 +547,16 @@ export default function DashboardPage() {
           <Card
             title={`Tình hình nộp báo cáo của các đơn vị — Năm ${year ?? currentYear}`}
             size="small"
+            extra={
+              <Button
+                size="small"
+                icon={<ExportOutlined />}
+                loading={exportCompliance.isPending}
+                onClick={() => exportCompliance.mutate()}
+              >
+                Xuất Excel
+              </Button>
+            }
           >
             <Table
               sticky

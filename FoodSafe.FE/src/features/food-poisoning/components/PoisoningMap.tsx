@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   CircleMarker,
   MapContainer,
   Popup,
   TileLayer,
   Tooltip,
+  useMapEvents,
 } from "react-leaflet";
 import { Empty, Tag } from "antd";
 import dayjs from "dayjs";
@@ -12,7 +13,7 @@ import type {
   FoodPoisoningCase,
   FoodPoisoningIncident,
 } from "../types/foodPoisoning.types";
-import { groupRecordsByCoordinates } from "./poisoningMapCoordinates";
+import { clusterRecordsByZoom } from "./poisoningMapCoordinates";
 import {
   POISONING_CASE_STATUS_CONFIG,
   POISONING_INCIDENT_STATUS_CONFIG,
@@ -27,13 +28,24 @@ interface PoisoningMapProps {
 }
 
 const QUANG_NINH_CENTER: [number, number] = [21.0064, 107.2925];
+const INITIAL_ZOOM = 10;
+
+/** Reports zoom changes so clusters re-form as the user zooms (GAP-N4). */
+function ZoomWatcher({ onZoom }: { onZoom: (zoom: number) => void }) {
+  useMapEvents({ zoomend: (event) => onZoom(event.target.getZoom()) });
+  return null;
+}
 
 export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
-  const caseGroups = useMemo(() => groupRecordsByCoordinates(cases), [cases]);
+  const [zoom, setZoom] = useState(INITIAL_ZOOM);
+  const caseGroups = useMemo(
+    () => clusterRecordsByZoom(cases, zoom),
+    [cases, zoom],
+  );
 
   const incidentGroups = useMemo(
-    () => groupRecordsByCoordinates(incidents),
-    [incidents],
+    () => clusterRecordsByZoom(incidents, zoom),
+    [incidents, zoom],
   );
 
   const mappedCaseCount = caseGroups.reduce(
@@ -88,9 +100,10 @@ export function PoisoningMap({ cases, incidents }: PoisoningMapProps) {
       </div>
       <MapContainer
         center={QUANG_NINH_CENTER}
-        zoom={10}
+        zoom={INITIAL_ZOOM}
         style={{ height: 520, width: "100%", borderRadius: 8 }}
       >
+        <ZoomWatcher onZoom={setZoom} />
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { requestVerificationToken, signIn, signInAsAdmin } from "./helpers/auth";
+import { runRowAction } from "./helpers/rowActions";
 
 // Real full-stack acceptance for FR-50-05 — Partner API Specification management.
 // Exercises the real React admin tab → real ASP.NET Core API → real PostgreSQL,
@@ -158,7 +159,7 @@ test.describe("partner API specification management (FR-50-05)", () => {
     expect(beforePublish.status()).toBe(404);
 
     // ---- PUBLISH via the UI ----
-    await row.getByRole("button", { name: "Xuất bản" }).click();
+    await runRowAction(page, row, { label: "Xuất bản" });
     // RowActions asks for confirmation with a modal (not a Popconfirm); the
     // AntD Vietnamese locale labels its OK button "Đồng ý".
     await page
@@ -194,7 +195,7 @@ test.describe("partner API specification management (FR-50-05)", () => {
     expect(dl.fileName).toContain(specName);
 
     // ---- UNPUBLISH via the UI → partner download 404 again ----
-    await row.getByRole("button", { name: "Gỡ" }).click();
+    await runRowAction(page, row, { label: "Gỡ xuất bản" });
     await page
       .getByRole("dialog")
       .getByRole("button", { name: /^(Đồng ý|OK)$/ })
@@ -343,6 +344,9 @@ test.describe("partner API specification management (FR-50-05)", () => {
       const userRes = await adminReq.post(`${ADMIN}/users`, {
         headers: authHeaders,
         data: {
+          // A login name is required and is independent of the mailbox.
+          // Login names allow only unaccented letters, digits and "_".
+          userName: `e2e_apispec_${suffix}`,
           fullName: "E2E ApiSpec Only",
           email,
           organizationId: orgId,
@@ -351,15 +355,15 @@ test.describe("partner API specification management (FR-50-05)", () => {
         },
       });
       expect(userRes.ok(), await userRes.text()).toBeTruthy();
-      userId = ((await userRes.json()) as { id: string }).id;
-
-      const pwdRes = await adminReq.post(
-        `${ADMIN}/users/${userId}/random-password`,
-        { headers: authHeaders },
-      );
-      expect(pwdRes.ok(), await pwdRes.text()).toBeTruthy();
-      const generated = ((await pwdRes.json()) as { password: string })
-        .password;
+      // Creation hands back the account plus its one-time temporary password.
+      const created = (await userRes.json()) as {
+        user: { id: string };
+        temporaryPassword: string;
+      };
+      userId = created.user.id;
+      const generated = created.temporaryPassword;
+      expect(userId, "created user id").toBeTruthy();
+      expect(generated, "temporary password").toBeTruthy();
 
       // Fresh browser context. ABP refuses login (result=3 NotAllowed) while
       // ShouldChangePasswordOnNextLogin is set, so complete the forced initial

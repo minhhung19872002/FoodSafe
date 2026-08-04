@@ -270,17 +270,18 @@ export function MasterCatalogView(props: MasterCatalogViewProps) {
           style={{ width: 320 }}
         />
         <RefreshListButton loading={props.loading} onClick={props.onRefresh} />
-        {props.kind === "testing-service" && props.onExport && (
-          <Button
-            icon={<ExportOutlined />}
-            loading={props.exporting}
-            onClick={props.onExport}
-          >
-            Xuất Excel
-          </Button>
-        )}
-        {/* TODO: bật lại khi backend hỗ trợ Excel import cho hành vi vi phạm. */}
-        {props.canCreate && props.kind !== "violation-type" && (
+        {(props.kind === "testing-service" ||
+          props.kind === "violation-type") &&
+          props.onExport && (
+            <Button
+              icon={<ExportOutlined />}
+              loading={props.exporting}
+              onClick={props.onExport}
+            >
+              Xuất Excel
+            </Button>
+          )}
+        {props.canCreate && (
           <Button icon={<ImportOutlined />} onClick={props.onImport}>
             Import
           </Button>

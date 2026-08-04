@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Alert, DatePicker, Form, Input, InputNumber, Modal, Select } from "antd";
+import {
+  Alert,
+  App,
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Select,
+} from "antd";
 import dayjs from "dayjs";
 import {
   AddressLocationPicker,
@@ -47,6 +56,7 @@ interface Props {
 
 export function IncidentEditorModal(props: Props) {
   const [form] = Form.useForm<FormValues>();
+  const { modal } = App.useApp();
   const { open, item } = props;
 
   const [location, setLocation] =
@@ -110,7 +120,7 @@ export function IncidentEditorModal(props: Props) {
         preserve={false}
         onFinish={(values) => {
           const street = values.locationDescription.trim();
-          props.onSubmit({
+          const submit = () => props.onSubmit({
             occurrenceDate: values.occurrenceDate.toISOString(),
             endDate: values.endDate?.toISOString(),
             notes: values.notes?.trim() || undefined,
@@ -131,6 +141,26 @@ export function IncidentEditorModal(props: Props) {
             investigationTeam: values.investigationTeam?.trim() || undefined,
             controlMeasures: values.controlMeasures?.trim() || undefined,
             preventionMeasures: values.preventionMeasures?.trim() || undefined,
+          });
+
+          // Định nghĩa vụ NĐTP (Điều 3 QĐ 39/2006/QĐ-BYT): ≥2 người mắc do
+          // cùng ăn một loại thực phẩm, hoặc chỉ 1 người nhưng có tử vong.
+          const meetsDefinition =
+            (values.affectedCount ?? 0) >= 2 || (values.deathCount ?? 0) >= 1;
+          if (meetsDefinition) {
+            submit();
+            return;
+          }
+          modal.confirm({
+            title: "Chưa đạt định nghĩa vụ ngộ độc thực phẩm",
+            content:
+              "Theo QĐ 39/2006/QĐ-BYT, một vụ NĐTP cần ≥ 2 người mắc cùng ăn " +
+              "một loại thực phẩm (hoặc 1 người mắc nhưng có tử vong). Số liệu " +
+              "hiện tại chưa đạt ngưỡng này — cân nhắc ghi nhận dưới dạng ca " +
+              "nhỏ lẻ. Vẫn lưu thành vụ ngộ độc?",
+            okText: "Vẫn lưu",
+            cancelText: "Xem lại",
+            onOk: submit,
           });
         }}
       >

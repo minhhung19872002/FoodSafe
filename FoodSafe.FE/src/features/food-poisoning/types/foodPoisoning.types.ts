@@ -268,6 +268,8 @@ export interface FoodPoisoningIncident {
   foodServiceType?: string;
 
   causeAssessmentValue?: CauseAssessment;
+  /** Nhóm căn nguyên (QĐ 39/2006): vi sinh / hóa chất / độc tố tự nhiên / không xác định. */
+  causeCategory?: PoisoningCauseCategory;
   causativeAgent?: string;
   pathogen?: string;
 

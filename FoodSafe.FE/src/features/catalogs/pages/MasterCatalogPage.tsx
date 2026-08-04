@@ -14,7 +14,7 @@ import {
 import { saveDownload } from "@/utils/download";
 import { extractApiError } from "@/lib/apiError";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { exportTestingServices } from "../api/catalogApi";
+import { exportTestingServices, exportViolationTypes } from "../api/catalogApi";
 import {
   useConfirmCatalogImport,
   useDeleteCatalog,
@@ -75,7 +75,10 @@ export default function MasterCatalogPage() {
   const saveCatalog = useSaveCatalog(kind);
   const deleteCatalog = useDeleteCatalog(kind);
   const exportServices = useMutation({
-    mutationFn: () => exportTestingServices(filter),
+    mutationFn: () =>
+      kind === "violation-type"
+        ? exportViolationTypes(filter)
+        : exportTestingServices(filter),
   });
   const downloadTemplate = useDownloadCatalogTemplate(kind);
   const previewImport = usePreviewCatalogImport(kind);

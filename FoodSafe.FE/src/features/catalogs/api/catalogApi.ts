@@ -40,7 +40,6 @@ const importKinds: Record<CatalogKind, string> = {
   "document-type": "DocumentType",
   "testing-center": "TestingCenter",
   "testing-service": "TestingService",
-  // TODO: Excel import/export chưa hỗ trợ ViolationType phía backend.
   "violation-type": "ViolationType",
 };
 
@@ -91,6 +90,19 @@ export async function exportTestingServices(
 ): Promise<FileDownload> {
   const response = await api.get<Blob>(
     `${basePath}/testing-services/excel/export`,
+    { params: { filter: filter || undefined }, responseType: "blob" },
+  );
+  return toFileDownload(
+    response.data,
+    response.headers["content-disposition"] as string | undefined,
+  );
+}
+
+export async function exportViolationTypes(
+  filter?: string,
+): Promise<FileDownload> {
+  const response = await api.get<Blob>(
+    `${basePath}/violation-types/excel/export`,
     { params: { filter: filter || undefined }, responseType: "blob" },
   );
   return toFileDownload(

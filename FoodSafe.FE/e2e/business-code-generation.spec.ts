@@ -33,13 +33,18 @@ test.describe("business code suggestion and dropdown sizing", () => {
       .getByText(/PYT-HL — Phòng Y tế TP Hạ Long/)
       .click();
     await expect(page.getByRole("textbox", { name: "Mã cơ sở" })).toHaveValue(
-      /^CS-HL-\d{4,}$/,
+      // Suggested code now carries the full unit code (CS-<orgCode>-NNNN).
+      /^CS-PYT-HL-\d{4,}$/,
     );
 
     const typeSelect = page.getByRole("combobox", { name: "Loại hình" });
     const typeControl = page.locator(".ant-select", { has: typeSelect }).first();
+    // Close the organisation dropdown first: antd keeps the leaving popup in
+    // the DOM during its fade-out, which would make ":visible" ambiguous.
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".ant-select-dropdown:visible")).toHaveCount(0);
     await typeSelect.click();
-    const typeDropdown = page.locator(".ant-select-dropdown:visible");
+    const typeDropdown = page.locator(".ant-select-dropdown:visible").first();
     await expect(typeDropdown).toBeVisible();
     const [typeControlBox, typeDropdownBox] = await Promise.all([
       typeControl.boundingBox(),

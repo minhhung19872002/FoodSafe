@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { requestVerificationToken, signInAsAdmin } from "./helpers/auth";
+import { runRowAction } from "./helpers/rowActions";
 
 interface ListItem {
   id: string;
@@ -127,7 +128,10 @@ test.describe("export food certificate management", () => {
     ).toBeVisible();
 
     let row = page.getByRole("row").filter({ hasText: certificateNumber });
-    await row.getByRole("button", { name: `Tệp ${certificateNumber}` }).click();
+    await runRowAction(page, row, {
+      label: "Tệp",
+      ariaLabel: `Tệp ${certificateNumber}`,
+    });
     const fileDialog = page.getByRole("dialog", {
       name: `Tệp GCN XK — ${certificateNumber}`,
     });
@@ -157,19 +161,28 @@ test.describe("export food certificate management", () => {
 
     await page.context().clearCookies();
     await page.goto("/tra-cuu-gcn-xuat-khau");
-    await page.getByPlaceholder("Số GCN xuất khẩu").fill(certificateNumber);
-    await page.getByRole("button", { name: "Tra cứu" }).click();
+    await page
+      .getByPlaceholder("Số giấy chứng nhận, tên cơ sở...")
+      .fill(certificateNumber);
+    await page.getByRole("button", { name: "Tìm kiếm" }).click();
+    // The consolidated public lookup lists the common certificate shape; the
+    // consignment details (lot, quantity) live in the anonymous PDF, which
+    // certificate-pdf-verification.spec downloads and validates.
     await expect(page.getByText(businessName)).toBeVisible();
-    await expect(page.getByText(lotNumber)).toBeVisible();
-    await expect(page.getByText("500 kg")).toBeVisible();
+    await expect(page.getByText(certificateNumber).first()).toBeVisible();
+    await page.getByRole("button", { name: "Xem" }).first().click();
+    const publicDetail = page.getByRole("dialog");
+    await expect(publicDetail.getByText(certificateNumber)).toBeVisible();
+    await expect(publicDetail.getByText("Còn hiệu lực")).toBeVisible();
+    await page.keyboard.press("Escape");
 
     await signInAsAdmin(page);
     await page.goto("/export-food-certificates");
     row = page.getByRole("row").filter({ hasText: certificateNumber });
-    await row
-      .getByRole("button", { name: `Thao tác ${certificateNumber}` })
-      .click();
-    await page.getByRole("menuitem", { name: "Thu hồi" }).click();
+    await runRowAction(page, row, {
+      label: "Thu hồi",
+      ariaLabel: `Thu hồi ${certificateNumber}`,
+    });
     const revokeDialog = page.getByRole("dialog", {
       name: `Thu hồi GCN XK ${certificateNumber}`,
     });

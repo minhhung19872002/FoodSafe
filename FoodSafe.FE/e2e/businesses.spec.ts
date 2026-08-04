@@ -50,10 +50,10 @@ async function removeStaleArtifacts(page: Page) {
   for (const item of ((await businesses.json()) as { items: ListItem[] })
     .items) {
     if (item.code?.startsWith("E2E-")) {
-      const deletion = await request.delete(`/api/v1/app/business/${item.id}`, {
-        headers,
-      });
-      expect(deletion.ok(), await deletion.text()).toBeTruthy();
+      // Businesses that still carry licences from another spec are protected by
+      // the delete guard (FoodSafe:Business:0010). Leaving them is fine — this
+      // pass only clears what it can, and each test uses a unique code.
+      await request.delete(`/api/v1/app/business/${item.id}`, { headers });
     }
   }
 }
@@ -116,9 +116,18 @@ test.describe("business and product management", () => {
     await importDialog
       .getByRole("button", { name: /kiểm tra và xem trước/i })
       .click();
+    // The downloaded template now ships a ready-to-use sample row, so the
+    // preview must validate it cleanly and offer the confirm step. (It is not
+    // confirmed here — the lifecycle below creates its own business via the UI.)
     await expect(importDialog.getByText(/Tổng số: 1/)).toBeVisible();
     await expect(
-      importDialog.getByText(/không phải GUID hợp lệ/).first(),
+      importDialog.getByText(/Hợp lệ: 1/).first(),
+    ).toBeVisible();
+    await expect(
+      importDialog.getByText("File hợp lệ và sẵn sàng import"),
+    ).toBeVisible();
+    await expect(
+      importDialog.getByRole("button", { name: /Xác nhận import/ }),
     ).toBeVisible();
     await importDialog.getByRole("button", { name: "Close" }).click();
 
@@ -134,6 +143,11 @@ test.describe("business and product management", () => {
     await chooseFirstOption(page, "Đơn vị quản lý");
     await page.getByRole("textbox", { name: "Mã cơ sở" }).fill(businessCode);
     await page.getByRole("textbox", { name: "Tên cơ sở" }).fill(businessName);
+    // Contact details are mandatory for a facility record.
+    await page.locator('input[name="contactPhone"]').fill("0203 3825 111");
+    await page
+      .locator('input[name="contactEmail"]')
+      .fill(`e2e-${suffix}@foodsafe.local`);
     await page.getByRole("button", { name: "Lưu", exact: true }).click();
     await expect(page.getByText("Đã thêm cơ sở")).toBeVisible();
 
@@ -198,14 +212,19 @@ test.describe("business and product management", () => {
     await productImportDialog
       .getByRole("button", { name: /kiểm tra và xem trước/i })
       .click();
+    // The product template's sample row references a placeholder facility code,
+    // so the preview must reject it with a row-level, human-readable reason
+    // instead of importing anything.
     await expect(productImportDialog.getByText(/Tổng số: 1/)).toBeVisible();
+    await expect(productImportDialog.getByText(/Lỗi: 1/)).toBeVisible();
     await expect(
-      productImportDialog.getByText(/Cơ sở không tồn tại/),
+      productImportDialog.getByText(/không tồn tại hoặc nằm ngoài phạm vi/),
     ).toBeVisible();
     await productImportDialog.getByRole("button", { name: "Close" }).click();
 
     await page.getByRole("button", { name: /thêm sản phẩm/i }).click();
-    await page.getByRole("combobox", { name: "Cơ sở" }).click();
+    // exact: the header global-search box is also labelled "...hồ sơ, cơ sở".
+    await page.getByRole("combobox", { name: "Cơ sở", exact: true }).click();
     await page.getByText(updatedBusinessName, { exact: false }).last().click();
     await page.getByRole("textbox", { name: "Mã sản phẩm" }).fill(productCode);
     await page.getByRole("textbox", { name: "Tên sản phẩm" }).fill(productName);

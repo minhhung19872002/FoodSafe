@@ -17,6 +17,7 @@
 import { test, expect, type Download, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { signInAsAdmin } from "./helpers/auth";
+import { activateTab } from "./helpers/tabs";
 
 /** Reads the downloaded file and asserts it is a non-empty real .xlsx (ZIP). */
 async function expectXlsx(download: Download): Promise<void> {
@@ -42,21 +43,21 @@ test.describe("P1-1a — Excel export downloads through the real UI", () => {
     await signInAsAdmin(page);
     await page.goto("/administration/identity");
     // Default tab is "Tài khoản" (users) for an admin; the table must load first.
-    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("table").first()).toBeVisible();
     await expectXlsx(await clickExport(page));
   });
 
   test("FR-03-03 — audit log export (Nhật ký hệ thống)", async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto("/administration/audit-logs");
-    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("table").first()).toBeVisible();
     await expectXlsx(await clickExport(page));
   });
 
   test("FR-06-06 — organization list export (Đơn vị)", async ({ page }) => {
     await signInAsAdmin(page);
     await page.goto("/organizations");
-    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("table").first()).toBeVisible();
     await expectXlsx(await clickExport(page));
   });
 
@@ -64,7 +65,7 @@ test.describe("P1-1a — Excel export downloads through the real UI", () => {
     await signInAsAdmin(page);
     await page.goto("/catalogs");
     // The "Xuất Excel" button only renders for the testing-service catalog kind.
-    await page.getByRole("tab", { name: "Dịch vụ kiểm nghiệm" }).click();
+    await activateTab(page, "Dịch vụ kiểm nghiệm");
     await expectXlsx(await clickExport(page));
   });
 
@@ -114,5 +115,23 @@ test.describe("P1-1a — Excel export downloads through the real UI", () => {
       .getByRole("tabpanel")
       .getByRole("button", { name: "Xuất Excel" });
     await expectXlsx(await clickExport(page, activeExport));
+  });
+
+  test("GAP-STAT-1 — dashboard report-compliance export (Trạng thái báo cáo theo đơn vị)", async ({
+    page,
+  }) => {
+    await signInAsAdmin(page);
+    await page.goto("/dashboard");
+
+    // The compliance card carries its own "Xuất Excel" button
+    // (GET /statistics/excel/report-compliance).
+    const complianceCard = page
+      .locator(".ant-card")
+      .filter({ hasText: "Tình hình nộp báo cáo của các đơn vị" });
+    await expect(complianceCard).toBeVisible({ timeout: 20_000 });
+    const exportButton = complianceCard.getByRole("button", {
+      name: "Xuất Excel",
+    });
+    await expectXlsx(await clickExport(page, exportButton));
   });
 });

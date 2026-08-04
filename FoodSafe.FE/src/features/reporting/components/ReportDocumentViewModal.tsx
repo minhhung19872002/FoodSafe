@@ -128,6 +128,10 @@ export function ReportDocumentViewModal({ document: doc, onClose }: Props) {
                   value={doc.report.incidentHospitalized}
                 />
                 <Line label="Số tử vong" value={doc.report.incidentDeaths} />
+                <Line
+                  label="Số vụ lớn (≥30 người mắc)"
+                  value={doc.report.largeScaleIncidentCount}
+                />
               </Section>
               <Section title="III. Nội dung">
                 <Line

@@ -17,9 +17,28 @@ test.describe("statistics page", () => {
       page.getByText("Giấy phép / Chứng nhận theo loại"),
     ).toBeVisible();
 
-    // The page now carries a year selector and an organisation selector, so
-    // the bare combobox role is ambiguous — assert on both explicitly.
-    await expect(page.getByRole("combobox")).toHaveCount(2);
-    await expect(page.getByRole("combobox").first()).toBeVisible();
+    // The period filters (year / quarter / month), the organisation filter and
+    // the custom date range are the page's real controls — assert on each
+    // rather than on a fragile combobox count.
+    const header = page.locator(".page-container > div").first();
+    await expect(header.getByRole("combobox").first()).toBeVisible();
+    await expect(header.getByText(/^Năm \d{4}$/)).toBeVisible();
+    // antd renders Select placeholders as text, not input placeholders.
+    await expect(header.getByText("Chọn quý")).toBeVisible();
+    await expect(header.getByText("Chọn tháng")).toBeVisible();
+    await expect(header.getByPlaceholder("Từ ngày")).toBeVisible();
+    await expect(header.getByPlaceholder("Đến ngày")).toBeVisible();
+
+    // Changing the year must re-query the backend, not just repaint labels.
+    const statsRequest = page.waitForResponse(
+      (response) =>
+        response.url().includes("/v1/app/statistics") && response.status() === 200,
+    );
+    await header.getByRole("combobox").first().click();
+    await page
+      .locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden)")
+      .getByText(`Năm ${new Date().getFullYear() - 1}`)
+      .click();
+    await statsRequest;
   });
 });

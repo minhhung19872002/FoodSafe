@@ -209,7 +209,11 @@ test.describe("FR-19-02 — advanced business list filters, sort & pagination", 
       await searchBusinesses(page, suffix);
       await expect(firstRowCodeCell(page)).toBeVisible({ timeout: 10_000 });
 
-      const codeHeader = page.getByRole("columnheader", { name: "Mã" });
+      // exact: "Mã" also matches the "Mã số thuế" header.
+      const codeHeader = page.getByRole("columnheader", {
+        name: "Mã",
+        exact: true,
+      });
       await codeHeader.click(); // ascending
       await expect(firstRowCodeCell(page)).toHaveText(codeA, {
         timeout: 10_000,

@@ -25,7 +25,8 @@ public sealed class MasterCatalogApplicationContractTests
             .ToArray();
 
         serviceMethods.ShouldBe(contractMethods);
-        serviceMethods.Length.ShouldBe(36);
+        // 36 catalog operations + 4 ViolationType operations (NĐ 115/2018 catalog).
+        serviceMethods.Length.ShouldBe(40);
     }
 
     [Fact]

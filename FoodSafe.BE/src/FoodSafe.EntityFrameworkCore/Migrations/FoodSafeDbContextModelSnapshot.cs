@@ -1865,7 +1865,7 @@ namespace FoodSafe.Migrations
 
                     b.ToTable("cat_communes", null, t =>
                         {
-                            t.HasCheckConstraint("chk_cat_communes_type", "type IN (1, 2, 3)");
+                            t.HasCheckConstraint("chk_cat_communes_type", "type IN (1, 2, 3, 4)");
                         });
                 });
 
@@ -2973,6 +2973,11 @@ namespace FoodSafe.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("allowed_data_types");
+
+                    b.Property<string>("AllowedIps")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("allowed_ips");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -4363,11 +4368,18 @@ namespace FoodSafe.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("violation_code");
 
+                    b.Property<Guid?>("ViolationTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("violation_type_id");
+
                     b.HasKey("Id")
                         .HasName("pk_inspection_violations");
 
                     b.HasIndex("InspectionResultId")
                         .HasDatabaseName("idx_inspection_violations_result");
+
+                    b.HasIndex("ViolationTypeId")
+                        .HasDatabaseName("idx_inspection_violations_type");
 
                     b.HasIndex("IsRemedied", "RemedyDeadline")
                         .HasDatabaseName("idx_inspection_violations_remedied")
@@ -5694,7 +5706,7 @@ namespace FoodSafe.Migrations
 
                     b.ToTable("action_month_reports", null, t =>
                         {
-                            t.HasCheckConstraint("chk_amr_status", "status IN (1, 2, 3, 4, 5)");
+                            t.HasCheckConstraint("chk_amr_status", "status IN (1, 2, 3, 4, 5, 6)");
                         });
                 });
 
@@ -6002,7 +6014,7 @@ namespace FoodSafe.Migrations
                         {
                             t.HasCheckConstraint("chk_atp_period_type", "period_type IN (1, 2)");
 
-                            t.HasCheckConstraint("chk_atp_status", "status IN (1, 2, 3, 4, 5)");
+                            t.HasCheckConstraint("chk_atp_status", "status IN (1, 2, 3, 4, 5, 6)");
                         });
                 });
 
@@ -6146,6 +6158,12 @@ namespace FoodSafe.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
 
+                    b.Property<int>("LargeScaleIncidentCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("large_scale_incident_count");
+
                     b.Property<DateTime?>("LastModificationTime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_modification_time");
@@ -6238,7 +6256,7 @@ namespace FoodSafe.Migrations
                         {
                             t.HasCheckConstraint("chk_ndtp_month", "period_month >= 1 AND period_month <= 12");
 
-                            t.HasCheckConstraint("chk_ndtp_status", "status IN (1, 2, 3, 4, 5)");
+                            t.HasCheckConstraint("chk_ndtp_status", "status IN (1, 2, 3, 4, 5, 6)");
                         });
                 });
 
@@ -8723,6 +8741,12 @@ namespace FoodSafe.Migrations
                         .HasForeignKey("InspectionResultId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("FoodSafe.Catalogs.ViolationType", null)
+                        .WithMany()
+                        .HasForeignKey("ViolationTypeId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_inspection_violations_type");
                 });
 
             modelBuilder.Entity("FoodSafe.Licensing.AdvertisementRegistration", b =>

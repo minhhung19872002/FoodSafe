@@ -46,18 +46,23 @@ test.describe("P1-1c — admin user-management lifecycle", () => {
   }) => {
     const unique = `${Date.now()}`;
     const email = `e2e.user.${unique}@foodsafe.local`;
+    // Login names allow only unaccented letters, digits and "_".
+    const userName = `e2e_user_${unique}`;
     const fullName = `E2E Throwaway ${unique}`;
 
     await signInAsAdmin(page);
     await page.goto("/administration/identity");
-    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("table").first()).toBeVisible();
 
     // --- Create through the real modal ---------------------------------------
     await page.getByRole("button", { name: "Tạo tài khoản" }).click();
     const modal = page.getByRole("dialog");
     await expect(modal.locator(".ant-modal-title")).toHaveText("Tạo tài khoản");
     await modal.getByLabel("Họ và tên").fill(fullName);
-    await modal.getByLabel("Email / tên đăng nhập").fill(email);
+    // Login name and mailbox are now separate fields: staff without a work
+    // email of their own still need an account.
+    await modal.getByLabel("Tên đăng nhập").fill(userName);
+    await modal.getByLabel("Email nhận thư").fill(email);
     // Đơn vị (required) — single-select, closes on choice.
     await selectFirst(
       page,
@@ -78,9 +83,17 @@ test.describe("P1-1c — admin user-management lifecycle", () => {
     );
     await modal.locator(".ant-modal-title").click();
     await modal.getByRole("button", { name: "Tạo và gửi hướng dẫn" }).click();
+    // Creation now hands the administrator a one-time temporary password in a
+    // confirmation modal (FR-02-07) instead of a fire-and-forget toast.
+    const createdModal = page.getByRole("dialog").filter({
+      hasText: "Đã tạo tài khoản",
+    });
+    await expect(createdModal).toBeVisible();
+    await expect(createdModal).toContainText(email);
     await expect(
-      page.getByText("Đã tạo tài khoản và gửi hướng dẫn thiết lập"),
+      createdModal.getByText("Người dùng phải đổi mật khẩu ở lần đăng nhập đầu tiên."),
     ).toBeVisible();
+    await createdModal.getByRole("button", { name: "OK" }).click();
 
     // --- The account persisted: find it via the real search API --------------
     const search = () => page.getByLabel("Tìm tài khoản");
@@ -90,7 +103,7 @@ test.describe("P1-1c — admin user-management lifecycle", () => {
 
     // --- Persistence after a full browser reload -----------------------------
     await page.reload();
-    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("table").first()).toBeVisible();
     await search().fill(email);
     await search().press("Enter");
     await expect(page.getByText(email).first()).toBeVisible();
@@ -98,7 +111,9 @@ test.describe("P1-1c — admin user-management lifecycle", () => {
     // --- FR-02-07: generate a real random password ---------------------------
     // "Tạo mật khẩu ngẫu nhiên" is in the ⋯ overflow (position 5).
     const userRow = page.getByRole("row").filter({ hasText: email });
-    await userRow.getByRole("button", { name: `Thao tác ${email}` }).click();
+    await userRow
+      .getByRole("button", { name: `Thao tác ${userName}` })
+      .click();
     await page
       .getByRole("menuitem", { name: "Tạo mật khẩu ngẫu nhiên" })
       .click();
@@ -123,7 +138,9 @@ test.describe("P1-1c — admin user-management lifecycle", () => {
     // --- FR-02-05: delete the throwaway account ------------------------------
     // "Xóa tài khoản" is in the ⋯ overflow (position 7).
     const deleteRow = page.getByRole("row").filter({ hasText: email });
-    await deleteRow.getByRole("button", { name: `Thao tác ${email}` }).click();
+    await deleteRow
+      .getByRole("button", { name: `Thao tác ${userName}` })
+      .click();
     await page.getByRole("menuitem", { name: "Xóa tài khoản" }).click();
     await page.getByRole("button", { name: /^(Đồng ý|OK)$/ }).click();
     await expect(page.getByText("Đã xóa tài khoản")).toBeVisible();
@@ -139,7 +156,7 @@ test.describe("P1-1c — admin user-management lifecycle", () => {
   }) => {
     await signInAsAdmin(page);
     await page.goto("/administration/identity");
-    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("table").first()).toBeVisible();
 
     // Applying the permission filter must issue a real GET .../users request
     // carrying `permissionName` — observed, never intercepted.

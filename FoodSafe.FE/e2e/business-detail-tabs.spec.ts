@@ -66,9 +66,10 @@ test.describe("FR-19-11..16 — business detail drawer related-record tabs", () 
     await page.getByPlaceholder("Tên, mã, MST hoặc địa chỉ").fill(businessName);
     await page.getByPlaceholder("Tên, mã, MST hoặc địa chỉ").press("Enter");
 
-    // Opening the drawer immediately fires the default tab's scoped request.
-    const selfDeclPromise = page.waitForResponse(
-      scopedGet("self-declaration", businessId),
+    // Opening the drawer immediately fires the default tab's scoped request;
+    // that default is now the products tab.
+    const productsPromise = page.waitForResponse(
+      scopedGet("product", businessId),
     );
     await page
       .getByRole("button", { name: `Hồ sơ ${businessName}` })
@@ -80,31 +81,45 @@ test.describe("FR-19-11..16 — business detail drawer related-record tabs", () 
       timeout: 10_000,
     });
 
-    // FR-19-11 — Tự công bố: real scoped GET + at least one real data row.
-    expect((await selfDeclPromise).status()).toBe(200);
-    await expect(
-      page.getByRole("tabpanel").getByRole("row").nth(1),
-    ).toBeVisible({ timeout: 10_000 });
+    // FR-19-14 — Sản phẩm (default tab): real scoped GET.
+    expect((await productsPromise).status()).toBe(200);
 
-    // FR-19-12..16 — remaining tabs each fire their own business-scoped GET.
+    // FR-19-11..16 — every other record tab fires its own business-scoped GET.
     const tabs: { label: string; endpoint: string }[] = [
+      { label: "Tự công bố", endpoint: "self-declaration" },
       { label: "Đăng ký công bố", endpoint: "product-registration" },
       { label: "Quảng cáo", endpoint: "advertisement-registration" },
       { label: "GCN đủ điều kiện", endpoint: "eligibility-certificate" },
-      { label: "Kết quả thanh kiểm tra", endpoint: "inspection-result" },
+      { label: "CFS", endpoint: "cfs-certificate" },
+      { label: "GCN xuất khẩu", endpoint: "export-food-certificate" },
+      { label: "Thanh kiểm tra", endpoint: "inspection-result" },
     ];
 
     for (const { label, endpoint } of tabs) {
+      const tab = drawer.getByRole("tab", { name: label, exact: true });
       const respPromise = page.waitForResponse(scopedGet(endpoint, businessId));
-      await drawer.getByRole("tab", { name: label }).click();
+      // The drawer animates in, so a first click can land before the tab strip
+      // settles; confirm the tab actually became active before waiting on it.
+      await expect(async () => {
+        await tab.click();
+        await expect(tab).toHaveAttribute("aria-selected", "true", {
+          timeout: 2_000,
+        });
+      }).toPass({ timeout: 15_000 });
       expect(
         (await respPromise).status(),
         `${label} tab must load ${endpoint} for the business`,
       ).toBe(200);
       // The tab's table structure renders (header row present).
       await expect(
-        page.getByRole("tabpanel").getByRole("table"),
+        page.getByRole("tabpanel").getByRole("table").first(),
       ).toBeVisible();
+      if (label === "Tự công bố") {
+        // The anchor business owns a self-declaration, so this tab has data.
+        await expect(
+          page.getByRole("tabpanel").locator("tbody tr.ant-table-row").first(),
+        ).toBeVisible({ timeout: 10_000 });
+      }
     }
   });
 });

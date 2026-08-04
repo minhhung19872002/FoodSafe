@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   App,
   Button,
@@ -22,6 +22,7 @@ import {
   UndoOutlined,
   EyeOutlined,
   ExportOutlined,
+  ShareAltOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -137,6 +138,12 @@ function AlertsTab() {
   const canEdit = hasPermission("FoodSafe.AlertsAndTesting.Alerts.Edit");
   const canDelete = hasPermission("FoodSafe.AlertsAndTesting.Alerts.Delete");
   const canPublish = hasPermission("FoodSafe.AlertsAndTesting.Alerts.Publish");
+  // Quick-share to an external system (GAP-N3) requires both halves of the
+  // data-integration surface the share modal sits behind.
+  const canShareExternal =
+    hasPermission("FoodSafe.DataIntegration.Share") &&
+    hasPermission("FoodSafe.DataIntegration.CallHistory.View");
+  const navigate = useNavigate();
 
   const hasActiveFilter = Boolean(
     filter.filter?.trim() ||
@@ -280,6 +287,20 @@ function AlertsTab() {
                 setRecallingId(record.id);
                 setRecallOpen(true);
               },
+            },
+            {
+              key: "share-external",
+              label: "Chia sẻ hệ thống ngoài",
+              ariaLabel: `Chia sẻ ${record.title} đến hệ thống ngoài`,
+              icon: <ShareAltOutlined />,
+              hidden: !(
+                record.status === ALERT_STATUS.Published && canShareExternal
+              ),
+              onClick: () =>
+                navigate(
+                  `/data-integration?tab=history&shareType=1&shareEntityId=${record.id}` +
+                    `&shareSearch=${encodeURIComponent(record.alertNumber ?? record.title)}`,
+                ),
             },
             {
               key: "delete",

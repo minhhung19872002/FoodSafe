@@ -45,7 +45,7 @@ Covers STT 19–57 gaps identified against functional requirements.
 | GAP-M8 | 33    | Auto-aggregate NdtpReport stats from poisoning records    | DONE_CODE   | 1    | ✅ NdtpReportAppService.PopulateFromPoisoningDataAsync; FE "Tự động tổng hợp từ dữ liệu ngộ độc" button in NdtpReportEditorModal |
 | GAP-M9 | 33    | Submission snapshot SHA-256 hash                          | DONE_CODE   | 1    | ✅ BaseReport.Submit() computes SHA-256; migration 20260728202755; SubmissionHash in all 3 report DTOs + FE display |
 | GAP-M10| 36    | Risk Analysis: linked product groups as FK (not text)     | DONE_CODE   | 3    | ✅ RiskAnalysis.ProductGroupIds as List<Guid> with JSON HasConversion; FE multi-Select from catalog; names displayed as tags |
-| GAP-M11| 39    | Dashboard Leaflet map widget for businesses               | DONE_CODE   | 2    | ✅ DashboardPage: BusinessLocationMap card (400px) + Recharts trend chart (demo data; TODO real API) |
+| GAP-M11| 39    | Dashboard Leaflet map widget for businesses               | DONE_CODE   | 2    | ✅ DashboardPage: BusinessLocationMap card (400px) + Recharts trend chart (2026-08-04: verified — trend chart now uses real API `/food-poisoning-trend` via useFoodPoisoningTrend) |
 | GAP-M12| 41    | Public business search — Leaflet map layer                | DONE_CODE   | 2    | ✅ PublicBusinessMap.tsx; map tab in PublicGeneralSearchPage; empty state until BE adds lat/lng to public API |
 | GAP-M13| 49    | Citizen report tracking code + status lookup endpoint     | DONE_CODE   | 2    | ✅ AtpAlert.TrackingCode generated on Create; GET /public/citizen-reports/status; CitizenReportLookupPage at /tra-cuu-phan-anh |
 | GAP-M14| 20    | Self-Declaration PDF download (FE button only)            | DONE_CODE   | 1    | ✅ selfDeclarationApi.downloadPdf + useDownloadSelfDeclarationPdf mutation + "Tải PDF" row action in SelfDeclarationPage |
@@ -56,13 +56,13 @@ Covers STT 19–57 gaps identified against functional requirements.
 
 | ID     | STT  | Description                                                | Status      | Wave | Notes |
 |--------|------|------------------------------------------------------------|-------------|------|-------|
-| GAP-N1 | 19.3 | Product group checkbox tree in BusinessEditorModal         | PENDING     | —    | FE: replace flat Select with Tree Select for product groups |
+| GAP-N1 | 19.3 | Product group checkbox tree in BusinessEditorModal         | DONE_CODE   | —    | ✅ 2026-08-04: TreeSelect treeCheckable built from parentId links (BusinessEditorModal.tsx) |
 | GAP-N2 | 28   | Violation follow-up: show regulationReference + fineAmount | DONE_CODE   | 1    | ✅ InspectionFollowUpModal.tsx: "Điều khoản vi phạm" + "Tiền phạt (VNĐ)" columns added; modal widened to 1100px |
-| GAP-N3 | 29   | Contextual "Share to external system" on alert detail      | PENDING     | —    | FE: add quick-share button in AlertDetailDrawer |
-| GAP-N4 | 31   | Poisoning map marker clustering                            | PENDING     | —    | FE: add Leaflet.markercluster to FoodPoisoningMap |
-| GAP-N5 | 39   | Dashboard poisoning trend chart                            | PENDING     | —    | FE: add line chart card to DashboardPage |
+| GAP-N3 | 29   | Contextual "Share to external system" on alert detail      | DONE_CODE   | —    | ✅ 2026-08-04: row action "Chia sẻ hệ thống ngoài" trên cảnh báo Published → deep-link mở share modal prefill (?shareType=1&shareEntityId=) |
+| GAP-N4 | 31   | Poisoning map marker clustering                            | DONE_CODE   | —    | ✅ 2026-08-04: zoom-aware grid clustering (clusterRecordsByZoom, không thêm dependency) + unit tests |
+| GAP-N5 | 39   | Dashboard poisoning trend chart                            | DONE_CODE   | —    | ✅ 2026-08-04 verified: DashboardPage.tsx:569-631 LineChart "Diễn biến ngộ độc thực phẩm (12 tháng)" with real API data |
 | GAP-N6 | 40   | Statistics chart PDF export (currently PNG only)           | PENDING     | —    | FE: print-to-PDF or QuestPDF server-side chart export |
-| GAP-N7 | 40   | Statistics advanced date-range filter (beyond year)        | PENDING     | —    | FE: add custom DatePicker range to StatisticsPage |
+| GAP-N7 | 40   | Statistics advanced date-range filter (beyond year)        | DONE_CODE   | —    | ✅ 2026-08-04: RangePicker + StatisticsFilterDto.FromDate/ToDate ghi đè kỳ năm/quý/tháng |
 | GAP-N8 | 42   | Product search by manufacturer name                        | DONE_CODE   | 1    | ✅ PublicDirectoryAppService searches manufacturer field; manufacturer shown in public product table |
 
 ---
@@ -99,8 +99,7 @@ Covers STT 19–57 gaps identified against functional requirements.
 
 ## After wave 2: remaining MINOR items (manual or deferred)
 
-GAP-N1 (product group tree), GAP-N3 (alert share shortcut), GAP-N4 (marker clustering),
-GAP-N5 (dashboard trend chart), GAP-N6 (stats PDF), GAP-N7 (stats date filter).
+~~GAP-N1, GAP-N3, GAP-N4, GAP-N5, GAP-N7~~ — đã xong 2026-08-04 (xem docs/planning/SOFTWARE_FUNCTIONAL_COMPLETION_PLAN_2026-08-04.md §3b). Còn lại: GAP-N6 (stats chart PDF server-side; đã có print-to-PDF của trình duyệt).
 
 ---
 

@@ -75,7 +75,7 @@ test.describe("identity administration", () => {
       .getByRole("textbox", { name: "Mô tả" })
       .fill("Đã cập nhật mô tả");
     await editDialog.getByRole("button", { name: "Lưu", exact: true }).click();
-    await expect(page.getByText("Đã cập nhật mô tả")).toBeVisible();
+    await expect(page.getByText("Đã cập nhật mô tả").first()).toBeVisible();
 
     row = page.getByRole("row").filter({ hasText: roleName });
     await row.getByRole("button", { name: `Thao tác ${roleName}` }).click();
@@ -90,7 +90,7 @@ test.describe("identity administration", () => {
     await expect(
       page.getByRole("columnheader", { name: "Tài khoản" }),
     ).toBeVisible();
-    await expect(page.getByRole("table").locator("tbody tr")).not.toHaveCount(
+    await expect(page.locator("tbody tr.ant-table-row")).not.toHaveCount(
       0,
     );
   });

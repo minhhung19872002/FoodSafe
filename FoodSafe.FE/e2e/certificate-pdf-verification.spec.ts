@@ -4,15 +4,15 @@
  *
  * Verifies, against the REAL stack (no API interception):
  *  1. The public certificate search endpoints return `id` for each record.
- *  2. The 5 certificate PDF endpoints return valid application/pdf bytes to an
- *     AUTHENTICATED caller.
- *  3. **The 5 certificate PDF endpoints serve the document to a FULLY
+ *  2. All 6 certificate PDF endpoints (incl. advertisement registrations,
+ *     GAP-PUB-1) return valid application/pdf bytes to an AUTHENTICATED caller.
+ *  3. **All 6 certificate PDF endpoints serve the document to a FULLY
  *     UNAUTHENTICATED browser context (zero cookies) — the citizen-facing
  *     requirement FR-4x-03/04.** This is proven by resolving the id through the
  *     anonymous public search endpoint and then downloading the PDF, all from a
  *     context that carries no session/XSRF cookie.
- *  4. The public portal UI shows a "Tải PDF" link for certificate types that
- *     have a PDF endpoint (not for ad-registrations).
+ *  4. The public portal UI shows a "Tải PDF" link for every certificate tab,
+ *     including ad-registrations.
  *
  * No API interception, no injected auth — the anonymity of the download is the
  * whole point, so it must be exercised with a cookie-less context.
@@ -27,14 +27,20 @@ const STAMP = `PD${Date.now().toString(36).slice(-6).toUpperCase()}`;
 
 /** One public certificate type: its create call, search endpoint and public PDF path. */
 interface CertFixture {
-  /** URL segment used by the public search + pdf endpoints. */
+  /** URL segment used by the public search endpoint. */
   publicSegment: string;
+  /** URL segment of the public PDF endpoint when it differs from the search one. */
+  pdfSegment?: string;
   /** Human label for test output. */
   label: string;
   /** The certificate/registration number we search by. */
   number: string;
   /** Internal Guid, filled in during beforeAll. */
   id: string;
+}
+
+function pdfPathOf(cert: CertFixture): string {
+  return `/api/v1/public/${cert.pdfSegment ?? cert.publicSegment}/${cert.id}/pdf`;
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -164,24 +170,51 @@ test.describe("F-034: Public Certificate PDF view/download", () => {
         issueDate: "2025-01-01",
       }),
     };
+
+    // Advertisement registration (GAP-PUB-1) — needs a product to advertise.
+    const productResp = await adminPage.context().request.post(
+      "/api/v1/app/product",
+      {
+        headers: await csrfHeaders(adminPage),
+        data: {
+          businessId,
+          code: `PDF-SP-${STAMP}`,
+          name: `Sản phẩm quảng cáo PDF ${STAMP}`,
+        },
+      },
+    );
+    expect(productResp.ok(), await productResp.text()).toBeTruthy();
+    const productId = ((await productResp.json()) as { id: string }).id;
+    certs.adRegistration = {
+      publicSegment: "ad-registrations",
+      pdfSegment: "advertisement-registrations",
+      label: "Đăng ký quảng cáo",
+      number: `AD-PDF-${STAMP}`,
+      id: await postCert(adminPage, "/api/v1/app/advertisement-registration", {
+        businessId,
+        registrationNumber: `AD-PDF-${STAMP}`,
+        registrationDate: "2025-01-01",
+        contentDescription: `Nội dung quảng cáo PDF ${STAMP}`,
+        medium: "Báo điện tử",
+        productIds: [productId],
+      }),
+    };
   });
 
   test.afterAll(async () => {
     await adminPage.context().close();
   });
 
-  // ── Authenticated path: PDF bytes for all 5 types ─────────────────────────
-  test("authenticated caller downloads a valid PDF for all 5 certificate types", async () => {
+  // ── Authenticated path: PDF bytes for all 6 types ─────────────────────────
+  test("authenticated caller downloads a valid PDF for all 6 certificate types", async () => {
     for (const cert of Object.values(certs)) {
-      const resp = await adminPage.context().request.get(
-        `/api/v1/public/${cert.publicSegment}/${cert.id}/pdf`,
-      );
+      const resp = await adminPage.context().request.get(pdfPathOf(cert));
       assertPdf(resp.status(), resp.headers()["content-type"], await resp.body());
     }
   });
 
-  // ── Citizen path: ANONYMOUS download for all 5 types (FR-4x-03/04) ─────────
-  test("unauthenticated citizen downloads the certificate document for all 5 types", async () => {
+  // ── Citizen path: ANONYMOUS download for all 6 types (FR-4x-03/04) ─────────
+  test("unauthenticated citizen downloads the certificate document for all 6 types", async () => {
     // A fresh context with NO storage state → no session, no XSRF cookie.
     const anonCtx = await browserRef.newContext({ baseURL: BASE_URL });
     try {
@@ -213,9 +246,7 @@ test.describe("F-034: Public Certificate PDF view/download", () => {
         expect(searchBody.items[0].id).toBe(cert.id);
 
         // 2) Download the PDF with the SAME anonymous context — still no cookies.
-        const pdfResp = await anonCtx.request.get(
-          `/api/v1/public/${cert.publicSegment}/${cert.id}/pdf`,
-        );
+        const pdfResp = await anonCtx.request.get(pdfPathOf(cert));
         assertPdf(
           pdfResp.status(),
           pdfResp.headers()["content-type"],
@@ -245,7 +276,7 @@ test.describe("F-034: Public Certificate PDF view/download", () => {
       await publicPage.keyboard.press("Enter");
       await publicPage.waitForLoadState("networkidle");
 
-      const pdfLink = publicPage.locator('a:has-text("Tải PDF")').first();
+      const pdfLink = publicPage.locator('a:has-text("PDF")').first();
       await expect(pdfLink).toBeVisible({ timeout: 10_000 });
 
       const href = await pdfLink.getAttribute("href");
@@ -274,8 +305,8 @@ test.describe("F-034: Public Certificate PDF view/download", () => {
     expect(resp.headers()["content-type"]).not.toContain("application/pdf");
   });
 
-  // ── UI: Tải PDF visibility rules ──────────────────────────────────────────
-  test("ad-registrations tab — active tabpanel has no Tải PDF link", async () => {
+  // ── UI: Tải PDF available on the ad-registrations tab (GAP-PUB-1) ─────────
+  test("ad-registrations tab — citizen downloads the ad-registration PDF from the UI", async () => {
     const publicCtx = await browserRef.newContext({ baseURL: BASE_URL });
     const publicPage = await publicCtx.newPage();
     try {
@@ -285,8 +316,23 @@ test.describe("F-034: Public Certificate PDF view/download", () => {
       await publicPage.click('div[role="tab"]:has-text("Đăng ký quảng cáo")');
       await publicPage.waitForLoadState("networkidle");
 
-      const visiblePdfLinks = publicPage.locator('a:has-text("Tải PDF"):visible');
-      await expect(visiblePdfLinks).toHaveCount(0);
+      await publicPage
+        .locator('input[placeholder*="Số đăng ký"]')
+        .first()
+        .fill(certs.adRegistration.number);
+      await publicPage.keyboard.press("Enter");
+      await publicPage.waitForLoadState("networkidle");
+
+      const pdfLink = publicPage.locator('a:has-text("PDF"):visible').first();
+      await expect(pdfLink).toBeVisible({ timeout: 10_000 });
+      const href = await pdfLink.getAttribute("href");
+      expect(href).toMatch(
+        /\/api\/v1\/public\/advertisement-registrations\/[0-9a-f-]+\/pdf/,
+      );
+
+      // The linked document is a real PDF served without any login.
+      const linked = await publicPage.request.get(href!);
+      assertPdf(linked.status(), linked.headers()["content-type"], await linked.body());
     } finally {
       await publicCtx.close();
     }

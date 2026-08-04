@@ -215,6 +215,14 @@ export function useDownloadIncidentPdf() {
   });
 }
 
+/** 3 mẫu báo cáo vụ theo QĐ 01/2006/QĐ-BYT (GAP-POIS-2). */
+export function useDownloadEmergencyReportPdf() {
+  return useMutation({
+    mutationFn: ({ id, kind }: { id: string; kind: 1 | 2 | 3 }) =>
+      poisoningIncidentApi.downloadEmergencyReportPdf(id, kind),
+  });
+}
+
 export function useExportIncidents() {
   return useMutation({
     mutationFn: (filter: IncidentFilter) =>

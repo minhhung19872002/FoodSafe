@@ -200,7 +200,8 @@ public class ReportCalculationAppService : ApplicationService
             IncidentCount = reports.Sum(r => r.IncidentCount),
             IncidentAffected = reports.Sum(r => r.IncidentAffected),
             IncidentHospitalized = reports.Sum(r => r.IncidentHospitalized),
-            IncidentDeaths = reports.Sum(r => r.IncidentDeaths)
+            IncidentDeaths = reports.Sum(r => r.IncidentDeaths),
+            LargeScaleIncidentCount = reports.Sum(r => r.LargeScaleIncidentCount)
         };
     }
 

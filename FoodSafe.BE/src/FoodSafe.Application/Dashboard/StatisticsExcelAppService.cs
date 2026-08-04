@@ -14,10 +14,14 @@ public class StatisticsExcelAppService :
     IStatisticsExcelAppService
 {
     private readonly ReportStatisticsAppService _statistics;
+    private readonly DashboardAppService _dashboard;
 
-    public StatisticsExcelAppService(ReportStatisticsAppService statistics)
+    public StatisticsExcelAppService(
+        ReportStatisticsAppService statistics,
+        DashboardAppService dashboard)
     {
         _statistics = statistics;
+        _dashboard = dashboard;
     }
 
     public async Task<ExcelDownloadDto> ExportLicensesByBusinessTypeAsync(
@@ -103,6 +107,31 @@ public class StatisticsExcelAppService :
             Content = output.ToArray(),
             FileName = $"co-so-sxkd-thong-ke-{Clock.Now:yyyyMMdd-HHmmss}.xlsx"
         };
+    }
+
+    public async Task<ExcelDownloadDto> ExportReportComplianceAsync(
+        DashboardFilterDto input)
+    {
+        var rows = await _dashboard.GetReportComplianceAsync(input);
+        return Build(
+            "Trạng thái báo cáo theo đơn vị",
+            $"trang-thai-bao-cao-theo-don-vi-{Clock.Now:yyyyMMdd-HHmmss}.xlsx",
+            [
+                "Đơn vị", "NĐTP đã nộp (tháng)", "NĐTP phải nộp (tháng)",
+                "Công tác ATTP đã nộp", "Công tác ATTP phải nộp",
+                "Tháng hành động đã nộp", "Tháng hành động phải nộp"
+            ],
+            rows.Items,
+            (sheet, row, item) =>
+            {
+                sheet.Cell(row, 1).Value = item.OrganizationName;
+                sheet.Cell(row, 2).Value = item.NdtpSubmittedMonths;
+                sheet.Cell(row, 3).Value = item.NdtpExpectedMonths;
+                sheet.Cell(row, 4).Value = item.AtpWorkSubmitted;
+                sheet.Cell(row, 5).Value = item.AtpWorkExpected;
+                sheet.Cell(row, 6).Value = item.ActionMonthSubmitted;
+                sheet.Cell(row, 7).Value = item.ActionMonthExpected;
+            });
     }
 
     private static void AddBreakdownSheet(

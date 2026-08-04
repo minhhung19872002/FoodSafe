@@ -356,6 +356,34 @@ test.describe("FR-50-05 — partner OpenAPI contract vs. running API", () => {
       expect(replayBody.duplicate).toBe(true);
       expect(replayBody.submissionId).toBe(firstSubmissionId);
 
+      // ── 2b. status poll (FUNC-INT-002) matches the spec ───────────────────
+      const statusOk = await partnerClient.get(
+        `${BASE_URL}${RECEIVE_API}/${firstRequestId}`,
+        { headers: { "X-Api-Key": allowAllKey.rawKey } });
+      expect(statusOk.status(), await statusOk.text()).toBe(200);
+      const statusBody = (await statusOk.json()) as {
+        submissionId: string;
+        requestId: string;
+        status: string;
+      };
+      expectValid(spec, statusBody, "InboundSubmissionStatus_Poll");
+      expect(statusBody.submissionId).toBe(firstSubmissionId);
+      expect(statusBody.requestId).toBe(firstRequestId);
+      expect(statusBody.status).toBe("Received");
+      covered.add("getSubmissionStatus");
+
+      // Poll without a key → same generic 401 as the receive endpoint.
+      await expectPartnerError(
+        await partnerClient.get(`${BASE_URL}${RECEIVE_API}/${firstRequestId}`),
+        401, "InvalidApiKey");
+
+      // Poll for a requestId this partner never submitted → documented 404.
+      await expectPartnerError(
+        await partnerClient.get(
+          `${BASE_URL}${RECEIVE_API}/khong-ton-tai-${RUN}`,
+          { headers: { "X-Api-Key": allowAllKey.rawKey } }),
+        404, "NotFound");
+
       // ── 3. every PartnerError code in the spec enum is reproducible ───────
       await expectPartnerError(
         await submit(partnerClient, allowAllKey.rawKey, { segment: "unknown-type" }),

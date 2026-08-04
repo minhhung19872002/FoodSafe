@@ -123,6 +123,48 @@ paths:
               schema:
                 $ref: '#/components/schemas/PartnerError'
 
+  /api/v1/partner/submissions/{requestId}:
+    get:
+      tags: [Partner]
+      operationId: getSubmissionStatus
+      summary: Poll the disposition status of a previously submitted request
+      description: >
+        Partner-facing status poll (FUNC-INT-002). Authenticated by X-Api-Key
+        only — no idempotency or timestamp headers are required for reads.
+        The submission is looked up by the partner's own X-Request-Id value
+        used at submission time (NOT by the returned submissionId). Every poll
+        is recorded in the API call history (GET row), successful or not.
+      security:
+        - PartnerApiKey: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: The X-Request-Id value the partner sent with the original POST.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+      responses:
+        '200':
+          description: Current submission status and disposition.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InboundSubmissionStatus_Poll'
+        '401':
+          description: Credential failure — same generic body as the receive endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerError'
+        '404':
+          description: No submission with this requestId exists for the authenticated partner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerError'
+
   /api/v1/app/partner-account:
     get:
       tags: [PartnerAdmin]
@@ -458,6 +500,7 @@ components:
                 - InvalidSourceSystem
                 - InvalidApiKey
                 - DataTypeNotAllowed
+                - NotFound
             message:
               type: string
               description: English diagnostic text; not part of the stable contract.
@@ -541,6 +584,23 @@ components:
               type: string
               pattern: "^fsp_[A-Za-z0-9]{40}$"
               description: Shown exactly once; never stored and never retrievable again.
+
+    InboundSubmissionStatus_Poll:
+      type: object
+      required: [submissionId, requestId, dataType, recordCount, receivedAt, status]
+      properties:
+        submissionId: { type: string, format: uuid }
+        requestId: { type: string, maxLength: 128 }
+        dataType:
+          type: string
+          description: "Enum name: Alert, InspectionResult, FoodPoisoning, License, Product, News, Business"
+        recordCount: { type: integer }
+        receivedAt: { type: string, format: date-time }
+        status:
+          type: string
+          description: "Enum name: Received, Processed, Rejected"
+        rejectionReason: { type: string, nullable: true }
+        dispositionAt: { type: string, format: date-time, nullable: true }
 
     InboundSubmission:
       type: object

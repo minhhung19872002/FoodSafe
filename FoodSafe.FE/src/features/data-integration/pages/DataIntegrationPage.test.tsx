@@ -4,6 +4,7 @@ import { HttpResponse, http } from "msw";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { server } from "@/test/server";
 import DataIntegrationPage from "./DataIntegrationPage";
@@ -16,11 +17,13 @@ function renderPage() {
     },
   });
   return render(
-    <QueryClientProvider client={client}>
-      <App>
-        <DataIntegrationPage />
-      </App>
-    </QueryClientProvider>,
+    <MemoryRouter>
+      <QueryClientProvider client={client}>
+        <App>
+          <DataIntegrationPage />
+        </App>
+      </QueryClientProvider>
+    </MemoryRouter>,
   );
 }
 

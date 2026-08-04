@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  clusterRecordsByZoom,
   groupRecordsByCoordinates,
   hasValidMapCoordinates,
 } from "./poisoningMapCoordinates";
@@ -69,5 +70,36 @@ describe("groupRecordsByCoordinates", () => {
       "case-1",
       "case-2",
     ]);
+  });
+});
+
+describe("clusterRecordsByZoom", () => {
+  const nearbyRecords = [
+    { id: "case-1", locationLatitude: 20.951, locationLongitude: 107.082 },
+    { id: "case-2", locationLatitude: 20.9581, locationLongitude: 107.0453 },
+  ];
+
+  it("merges nearby records into one cluster when zoomed out", () => {
+    const clusters = clusterRecordsByZoom(nearbyRecords, 8);
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].items).toHaveLength(2);
+    // Centroid sits between the two member coordinates.
+    expect(clusters[0].latitude).toBeCloseTo((20.951 + 20.9581) / 2, 6);
+    expect(clusters[0].longitude).toBeCloseTo((107.082 + 107.0453) / 2, 6);
+  });
+
+  it("splits the same records apart when zoomed in", () => {
+    const clusters = clusterRecordsByZoom(nearbyRecords, 15);
+    expect(clusters).toHaveLength(2);
+  });
+
+  it("omits records without valid coordinates", () => {
+    const records: Array<{
+      id: string;
+      locationLatitude?: number;
+      locationLongitude?: number;
+    }> = [...nearbyRecords, { id: "no-coords" }];
+    const clusters = clusterRecordsByZoom(records, 8);
+    expect(clusters.flatMap((c) => c.items)).toHaveLength(2);
   });
 });

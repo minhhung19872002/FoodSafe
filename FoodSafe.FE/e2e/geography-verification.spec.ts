@@ -61,12 +61,15 @@ test.describe("geographic catalogs verification (F-005)", () => {
     }
   });
 
-  test("all three geographic levels return seeded data", async ({ page }) => {
+  /**
+   * Two levels only since Luật 72/2025/QH15 removed the district tier: the
+   * districts endpoint is gone and communes hang directly off a province.
+   */
+  test("both geographic levels return seeded data", async ({ page }) => {
     await signInAsAdmin(page);
 
-    // Known seeded IDs from E2eTestDataSeedContributor
+    // Known seeded ID from E2eTestDataSeedContributor
     const PROVINCE_QN_ID = "e2e00000-0000-4000-8001-000000000001";
-    const DISTRICT_HL_ID = "e2e00000-0000-4000-8002-000000000001";
 
     // Provinces — ListResultDto (no totalCount pagination), seeded with Quảng Ninh
     const provRes = await page.context().request.get(
@@ -81,27 +84,26 @@ test.describe("geographic catalogs verification (F-005)", () => {
     const hasQN = provBody.items.some((p) => p.id === PROVINCE_QN_ID);
     expect(hasQN, "Quảng Ninh province should be seeded").toBeTruthy();
 
-    // Districts — provinceId is a route segment: GET /districts/{provinceId}
+    // Communes now hang off the province directly.
+    const comRes = await page.context().request.get(
+      `/api/v1/app/geographic-catalog/communes-by-province/${PROVINCE_QN_ID}`,
+      { maxRedirects: 0 },
+    );
+    expect(
+      comRes.ok(),
+      `communes status=${comRes.status()}: ${await comRes.text()}`,
+    ).toBeTruthy();
+    const comBody = (await comRes.json()) as {
+      items: { id: string; name: string; code: string }[];
+    };
+    expect(comBody.items.length).toBeGreaterThan(0);
+
+    // The abolished district endpoint must stay gone.
     const distRes = await page.context().request.get(
       `/api/v1/app/geographic-catalog/districts/${PROVINCE_QN_ID}`,
       { maxRedirects: 0 },
     );
-    expect(distRes.ok(), `districts status=${distRes.status()}: ${await distRes.text()}`).toBeTruthy();
-    const distBody = (await distRes.json()) as {
-      items: { id: string; name: string }[];
-    };
-    expect(distBody.items.length).toBeGreaterThan(0);
-    const hasHL = distBody.items.some((d) => d.id === DISTRICT_HL_ID);
-    expect(hasHL, "Hạ Long district should be seeded").toBeTruthy();
-
-    // Communes — districtId is a route segment: GET /communes/{districtId}
-    const comRes = await page.context().request.get(
-      `/api/v1/app/geographic-catalog/communes/${DISTRICT_HL_ID}`,
-      { maxRedirects: 0 },
-    );
-    expect(comRes.ok(), `communes status=${comRes.status()}: ${await comRes.text()}`).toBeTruthy();
-    const comBody = (await comRes.json()) as { items: { id: string }[] };
-    expect(comBody.items.length).toBeGreaterThan(0);
+    expect(distRes.status()).toBe(404);
   });
 
   test("activeOnly flag filters inactive entries", async ({ page }) => {
@@ -125,7 +127,7 @@ test.describe("geographic catalogs verification (F-005)", () => {
     expect(allBody.items.length).toBeGreaterThanOrEqual(activeBody.items.length);
   });
 
-  test("UI: all three geographic tabs load with correct column headers", async ({
+  test("UI: both geographic tabs load with correct column headers", async ({
     page,
   }) => {
     await signInAsAdmin(page);
@@ -134,37 +136,34 @@ test.describe("geographic catalogs verification (F-005)", () => {
       page.getByRole("heading", { name: "Địa bàn hành chính" }),
     ).toBeVisible({ timeout: 10_000 });
 
-    // Provinces tab (default) — must have data rows
-    const table = page.getByRole("table");
-    await expect(table.locator("tbody tr").first()).toBeVisible({
-      timeout: 10_000,
-    });
+    // Exactly two tiers — a reappearing district tab is a regression.
+    await expect(page.getByRole("tab")).toHaveCount(2);
+
+    // Scope to the ACTIVE tab panel: antd keeps a visited tab's panel mounted
+    // but hidden, so an unscoped row selector matches the previous tab's rows.
+    const rows = page
+      .getByRole("tabpanel")
+      .locator("tbody tr.ant-table-row");
+    await expect(rows.first()).toBeVisible({ timeout: 10_000 });
     await expect(
-      table.getByRole("columnheader", { name: "Mã" }),
+      page.getByRole("columnheader", { name: "Mã", exact: true }),
     ).toBeVisible();
     await expect(
-      table.getByRole("columnheader", { name: "Tên địa bàn" }),
+      page.getByRole("columnheader", { name: "Tên địa bàn" }),
     ).toBeVisible();
 
-    // Districts tab — shows empty list until province selected
-    await page.getByRole("tab", { name: "Huyện/Quận" }).click();
-    await expect(
-      table.getByRole("columnheader", { name: "Loại" }),
-    ).toBeVisible({ timeout: 5_000 });
-
-    // Communes tab — shows empty list until district selected
+    // Communes tab — seeded with the 54 Quảng Ninh units (NQ 1679).
     await page.getByRole("tab", { name: "Xã/Phường" }).click();
     await expect(
-      table.getByRole("columnheader", { name: "Loại" }),
+      page.getByRole("columnheader", { name: "Loại" }),
     ).toBeVisible({ timeout: 5_000 });
+    await expect(rows.first()).toBeVisible({ timeout: 10_000 });
 
-    // Reload — returns to provinces tab with data
+    // Reload — returns to the provinces tab with data.
     await page.reload();
     await expect(
       page.getByRole("heading", { name: "Địa bàn hành chính" }),
     ).toBeVisible({ timeout: 10_000 });
-    await expect(table.locator("tbody tr").first()).toBeVisible({
-      timeout: 10_000,
-    });
+    await expect(rows.first()).toBeVisible({ timeout: 10_000 });
   });
 });

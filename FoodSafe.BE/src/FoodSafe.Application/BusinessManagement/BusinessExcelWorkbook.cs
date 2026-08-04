@@ -119,6 +119,44 @@ internal static class BusinessExcelWorkbook
         return new WorkbookReadResult(rows, errors);
     }
 
+    // Nhãn tiếng Việt cho 4 cột miễn GCN trong file export (GAP-CAT-1).
+    private static readonly Dictionary<EligibilityExemptionReason, string>
+        ExemptionLabels = new()
+        {
+            [EligibilityExemptionReason.SmallScalePrimaryProduction] =
+                "a) Sản xuất ban đầu nhỏ lẻ",
+            [EligibilityExemptionReason.NoFixedLocation] =
+                "b) SXKD thực phẩm không có địa điểm cố định",
+            [EligibilityExemptionReason.SmallScalePreliminaryProcessing] =
+                "c) Sơ chế nhỏ lẻ",
+            [EligibilityExemptionReason.SmallScaleTrading] =
+                "d) Kinh doanh thực phẩm nhỏ lẻ",
+            [EligibilityExemptionReason.PrepackagedFoodTrading] =
+                "đ) Kinh doanh thực phẩm bao gói sẵn",
+            [EligibilityExemptionReason.PackagingMaterialProduction] =
+                "e) SXKD dụng cụ, vật liệu bao gói thực phẩm",
+            [EligibilityExemptionReason.HotelRestaurant] =
+                "g) Nhà hàng trong khách sạn",
+            [EligibilityExemptionReason.CollectiveKitchenNoRegistration] =
+                "h) Bếp ăn tập thể không đăng ký ngành nghề",
+            [EligibilityExemptionReason.StreetFood] =
+                "i) Kinh doanh thức ăn đường phố",
+            [EligibilityExemptionReason.QualitySystemCertified] =
+                "k) Đã có chứng nhận GMP/HACCP/ISO 22000/IFS/BRC/FSSC 22000",
+        };
+
+    private static readonly Dictionary<QualityCertificationType, string>
+        QualityCertLabels = new()
+        {
+            [QualityCertificationType.Gmp] = "GMP",
+            [QualityCertificationType.Haccp] = "HACCP",
+            [QualityCertificationType.Iso22000] = "ISO 22000",
+            [QualityCertificationType.Ifs] = "IFS",
+            [QualityCertificationType.Brc] = "BRC",
+            [QualityCertificationType.Fssc22000] = "FSSC 22000",
+            [QualityCertificationType.Other] = "Tương đương khác",
+        };
+
     internal static byte[] Export(
         IReadOnlyList<BusinessDto> businesses,
         CatalogData catalogs)
@@ -133,6 +171,22 @@ internal static class BusinessExcelWorkbook
         using var workbook = new XLWorkbook();
         var sheet = workbook.Worksheets.Add(SheetName);
         WriteHeaders(sheet);
+        // Extra export-only columns (import ignores columns beyond the template).
+        string[] extraHeaders =
+        [
+            "Miễn GCN ĐĐK (Điều 12 NĐ 15/2018)",
+            "Loại chứng nhận chất lượng",
+            "Số chứng nhận chất lượng",
+            "Hết hạn chứng nhận chất lượng"
+        ];
+        for (var index = 0; index < extraHeaders.Length; index++)
+        {
+            var cell = sheet.Cell(1, Headers.Length + index + 1);
+            cell.Value = extraHeaders[index];
+            cell.Style.Font.Bold = true;
+            cell.Style.Font.FontColor = XLColor.White;
+            cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#1677FF");
+        }
         var row = 2;
         foreach (var item in businesses)
         {
@@ -157,6 +211,23 @@ internal static class BusinessExcelWorkbook
                 item.ProductGroupIds
                     .Where(groupMap.ContainsKey)
                     .Select(id => groupMap[id]));
+            sheet.Cell(row, 12).Value =
+                item.EligibilityExemptionReason.HasValue &&
+                ExemptionLabels.TryGetValue(
+                    item.EligibilityExemptionReason.Value, out var exemption)
+                    ? exemption : string.Empty;
+            sheet.Cell(row, 13).Value =
+                item.QualityCertificationType.HasValue &&
+                QualityCertLabels.TryGetValue(
+                    item.QualityCertificationType.Value, out var certType)
+                    ? certType : string.Empty;
+            sheet.Cell(row, 14).Value =
+                item.QualityCertificationNumber ?? string.Empty;
+            if (item.QualityCertificationExpiry.HasValue)
+            {
+                sheet.Cell(row, 15).Value =
+                    item.QualityCertificationExpiry.Value.ToString("dd/MM/yyyy");
+            }
             row++;
         }
         sheet.SheetView.FreezeRows(1);

@@ -80,6 +80,9 @@ public class InboundRequestContext
     public string? Timestamp { get; set; }
     public string? CorrelationId { get; set; }
     public string Path { get; set; } = "";
+
+    /// <summary>Source IP of the caller — checked against the partner allowlist (SEC-002).</summary>
+    public string? ClientIp { get; set; }
 }
 
 public interface IPartnerInboundAppService : Volo.Abp.Application.Services.IApplicationService

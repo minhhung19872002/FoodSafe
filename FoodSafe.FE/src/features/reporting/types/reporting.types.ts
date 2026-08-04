@@ -78,6 +78,8 @@ export interface NdtpReport extends BaseReportFields {
   incidentAffected: number;
   incidentHospitalized: number;
   incidentDeaths: number;
+  /** Số vụ ≥30 người mắc (TT 20/2019, TT 23/2025/TT-BYT). */
+  largeScaleIncidentCount: number;
   preventionActivities: string | null;
   riskFactors: string | null;
   recommendations: string | null;
@@ -153,6 +155,7 @@ export interface UpdateNdtpReportStatsInput {
   incidentAffected: number;
   incidentHospitalized: number;
   incidentDeaths: number;
+  largeScaleIncidentCount: number;
 }
 
 export interface UpdateNdtpReportNarrativeInput {

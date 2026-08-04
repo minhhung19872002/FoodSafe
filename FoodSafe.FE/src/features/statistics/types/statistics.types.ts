@@ -27,6 +27,9 @@ export interface StatisticsFilter {
   month?: number;
   quarter?: number;
   organizationId?: string;
+  /** Khoảng ngày tùy chọn (GAP-N7) — khi đặt cả hai sẽ ghi đè năm/quý/tháng. */
+  fromDate?: string;
+  toDate?: string;
 }
 
 export interface LicensesByBusinessTypeRow {

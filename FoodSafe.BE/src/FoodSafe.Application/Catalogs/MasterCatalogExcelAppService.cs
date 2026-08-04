@@ -42,6 +42,7 @@ public class MasterCatalogExcelAppService :
     private readonly IRepository<DocumentType, Guid> _documentTypes;
     private readonly IRepository<TestingCenter, Guid> _testingCenters;
     private readonly IRepository<TestingService, Guid> _testingServices;
+    private readonly IRepository<ViolationType, Guid> _violationTypes;
     private readonly ICancellationTokenProvider _cancellationTokens;
 
     public MasterCatalogExcelAppService(
@@ -59,6 +60,7 @@ public class MasterCatalogExcelAppService :
         IRepository<DocumentType, Guid> documentTypes,
         IRepository<TestingCenter, Guid> testingCenters,
         IRepository<TestingService, Guid> testingServices,
+        IRepository<ViolationType, Guid> violationTypes,
         ICancellationTokenProvider cancellationTokens)
     {
         _catalogs = catalogs;
@@ -75,6 +77,7 @@ public class MasterCatalogExcelAppService :
         _documentTypes = documentTypes;
         _testingCenters = testingCenters;
         _testingServices = testingServices;
+        _violationTypes = violationTypes;
         _cancellationTokens = cancellationTokens;
     }
 
@@ -230,6 +233,9 @@ public class MasterCatalogExcelAppService :
         MasterCatalogKind.TestingService =>
             _catalogs.CreateTestingServiceAsync(
                 Deserialize<UpsertTestingServiceDto>(payload)),
+        MasterCatalogKind.ViolationType =>
+            _catalogs.CreateViolationTypeAsync(
+                Deserialize<UpsertViolationTypeDto>(payload)),
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
     };
 
@@ -298,6 +304,7 @@ public class MasterCatalogExcelAppService :
                 },
             MasterCatalogKind.TestingCenter => BuildTestingCenter(
                 row, references, rowErrors),
+            MasterCatalogKind.ViolationType => BuildViolationType(row, rowErrors),
             MasterCatalogKind.TestingService => new UpsertTestingServiceDto
             {
                 Code = NormalizeCode(row.Get("Code")),
@@ -349,6 +356,35 @@ public class MasterCatalogExcelAppService :
             errors.Add(error);
         }
         return rowErrors.Count == 0 ? input : null;
+    }
+
+    private static UpsertViolationTypeDto BuildViolationType(
+        CatalogRow row,
+        ICollection<ExcelImportErrorDto> rowErrors)
+    {
+        var minFine = ParseNullableDecimal(
+            row, "MinFine", "Mức phạt tối thiểu (VND)", rowErrors);
+        var maxFine = ParseNullableDecimal(
+            row, "MaxFine", "Mức phạt tối đa (VND)", rowErrors);
+        if (minFine.HasValue && maxFine.HasValue && minFine > maxFine)
+        {
+            rowErrors.Add(Error(
+                row.RowNumber,
+                "Mức phạt tối đa (VND)",
+                "Mức phạt tối đa phải lớn hơn hoặc bằng mức tối thiểu."));
+        }
+
+        return new UpsertViolationTypeDto
+        {
+            Code = NormalizeCode(row.Get("Code")),
+            Name = row.Get("Name"),
+            LegalReference = row.Get("LegalReference"),
+            MinFine = minFine,
+            MaxFine = maxFine,
+            Description = EmptyToNull(row.Get("Description")),
+            SortOrder = ParseSortOrder(row, rowErrors),
+            IsActive = ParseActive(row, rowErrors)
+        };
     }
 
     private UpsertTestingCenterDto BuildTestingCenter(
@@ -507,6 +543,7 @@ public class MasterCatalogExcelAppService :
                 await MasterCodesAsync(_advertisementTypes),
             MasterCatalogKind.DocumentType => await MasterCodesAsync(_documentTypes),
             MasterCatalogKind.TestingCenter => await MasterCodesAsync(_testingCenters),
+            MasterCatalogKind.ViolationType => await MasterCodesAsync(_violationTypes),
             _ => []
         };
 
@@ -656,6 +693,27 @@ public class MasterCatalogExcelAppService :
             header,
             $"{header} phải là số nguyên từ {minimum} đến {maximum}."));
         return 0;
+    }
+
+    private static decimal? ParseNullableDecimal(
+        CatalogRow row,
+        string field,
+        string header,
+        ICollection<ExcelImportErrorDto> rowErrors)
+    {
+        var raw = row.Get(field).Trim().Replace(",", string.Empty);
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+        if (decimal.TryParse(
+                raw,
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out var parsed) &&
+            parsed >= 0)
+        {
+            return parsed;
+        }
+        rowErrors.Add(Error(row.RowNumber, header, $"{header} phải là số không âm."));
+        return null;
     }
 
     private static decimal ParseDecimal(

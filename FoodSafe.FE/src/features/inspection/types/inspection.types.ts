@@ -197,6 +197,8 @@ export interface InspectionPlanFilter {
 export interface InspectionViolation {
   id: string;
   inspectionResultId: string;
+  /** Hành vi trong danh mục NĐ 115/2018 mà dòng này được prefill từ đó. */
+  violationTypeId?: string;
   violationCode?: string;
   description: string;
   regulationReference?: string;
@@ -247,6 +249,7 @@ export interface InspectionResult {
 }
 
 export interface CreateUpdateViolationInput {
+  violationTypeId?: string;
   violationCode?: string;
   description: string;
   regulationReference?: string;

@@ -51,6 +51,7 @@ import {
   useSubmitIncident,
   useVerifyIncident,
   useConcludeIncident,
+  useDownloadEmergencyReportPdf,
   useDownloadIncidentPdf,
   useExportIncidents,
 } from "../api/foodPoisoningMutations";
@@ -425,6 +426,15 @@ function IncidentsTab() {
   const concludeMut = useConcludeIncident();
   const exportMut = useExportIncidents();
   const downloadPdfMut = useDownloadIncidentPdf();
+  const emergencyReportMut = useDownloadEmergencyReportPdf();
+  const downloadEmergencyReport = (id: string, kind: 1 | 2 | 3) =>
+    emergencyReportMut.mutate(
+      { id, kind },
+      {
+        onSuccess: (file) => saveDownload(file.blob, file.fileName),
+        onError: (error) => message.error(extractApiError(error)),
+      },
+    );
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<FoodPoisoningIncident | undefined>();
@@ -601,6 +611,25 @@ function IncidentsTab() {
                 }),
             },
             {
+              key: "emergency-initial",
+              label: "BC khẩn ban đầu",
+              icon: <FilePdfOutlined />,
+              onClick: () => downloadEmergencyReport(record.id, 1),
+            },
+            {
+              key: "emergency-update",
+              label: "BC cập nhật",
+              icon: <FilePdfOutlined />,
+              onClick: () => downloadEmergencyReport(record.id, 2),
+            },
+            {
+              key: "emergency-final",
+              label: "BC kết thúc vụ",
+              icon: <FilePdfOutlined />,
+              hidden: record.status !== POISONING_INCIDENT_STATUS.Concluded,
+              onClick: () => downloadEmergencyReport(record.id, 3),
+            },
+            {
               key: "delete",
               label: "Xóa",
               icon: <DeleteOutlined />,
@@ -730,6 +759,18 @@ function IncidentsTab() {
           },
           { label: "Ngày kết thúc", render: (r) => formatDateTime(r.endDate) },
           { label: "Địa điểm", render: (r) => r.locationDescription, span: 2 },
+          {
+            label: "Phân loại vụ",
+            render: (r) =>
+              r.meetsIncidentDefinition ? (
+                <Tag color="green">Đạt định nghĩa vụ NĐTP (QĐ 39/2006)</Tag>
+              ) : (
+                <Tooltip title="Vụ NĐTP cần ≥2 người mắc cùng ăn một loại thực phẩm, hoặc 1 người mắc có tử vong">
+                  <Tag color="orange">Chưa đạt định nghĩa vụ</Tag>
+                </Tooltip>
+              ),
+            span: 2,
+          },
           { label: "Số phơi nhiễm", render: (r) => r.exposedCount },
           {
             label: "Số mắc",

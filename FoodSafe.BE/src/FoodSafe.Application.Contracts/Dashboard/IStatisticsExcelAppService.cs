@@ -9,4 +9,5 @@ public interface IStatisticsExcelAppService : IApplicationService
     Task<ExcelDownloadDto> ExportPoisoningByAreaAsync(ReportStatisticsFilterDto input);
     Task<ExcelDownloadDto> ExportInspectionSummaryAsync(ReportStatisticsFilterDto input);
     Task<ExcelDownloadDto> ExportBusinessBreakdownAsync(ReportStatisticsFilterDto input);
+    Task<ExcelDownloadDto> ExportReportComplianceAsync(DashboardFilterDto input);
 }

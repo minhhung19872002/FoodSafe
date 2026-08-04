@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Button, Card, Col, Row, Select, Space, Spin } from "antd";
+import { Button, Card, Col, DatePicker, Row, Select, Space, Spin } from "antd";
 import { PrinterOutlined } from "@ant-design/icons";
+import type { Dayjs } from "dayjs";
 import type { StatisticsDto } from "../types/statistics.types";
 import {
   BarChart,
@@ -143,10 +144,18 @@ export default function StatisticsPage() {
   const [year, setYear] = useState(currentYear());
   const [month, setMonth] = useState<number>();
   const [quarter, setQuarter] = useState<number>();
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [organizationId, setOrganizationId] = useState<string>();
   const filter = useMemo(
-    () => ({ year, month, quarter, organizationId }),
-    [year, month, quarter, organizationId],
+    () => ({
+      year,
+      month,
+      quarter,
+      organizationId,
+      fromDate: dateRange?.[0]?.format("YYYY-MM-DD"),
+      toDate: dateRange?.[1]?.format("YYYY-MM-DD"),
+    }),
+    [year, month, quarter, organizationId, dateRange],
   );
   const { data, isLoading } = useStatistics(filter);
   const stats = data ?? EMPTY_STATS;
@@ -199,6 +208,20 @@ export default function StatisticsPage() {
               }}
               options={monthOptions}
               style={{ width: 130 }}
+            />
+            <DatePicker.RangePicker
+              allowClear
+              placeholder={["Từ ngày", "Đến ngày"]}
+              format="DD/MM/YYYY"
+              value={dateRange}
+              onChange={(range) => {
+                setDateRange(range as [Dayjs, Dayjs] | null);
+                if (range) {
+                  setMonth(undefined);
+                  setQuarter(undefined);
+                }
+              }}
+              style={{ width: 260 }}
             />
             {canViewOrganizations && (
               <Select

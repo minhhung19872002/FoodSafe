@@ -19,4 +19,19 @@ public sealed class FoodPoisoningIncidentPdfController(
         var bytes = await service.GenerateIncidentClosurePdfAsync(id);
         return File(bytes, "application/pdf", $"vu-ngo-doc-{id:N}.pdf");
     }
+
+    /// <summary>3 mẫu báo cáo vụ theo QĐ 01/2006/QĐ-BYT: initial/update/final.</summary>
+    [HttpGet("{id:guid}/emergency-report-pdf")]
+    public async Task<IActionResult> GetEmergencyReportPdfAsync(
+        Guid id, [FromQuery] PoisoningEmergencyReportKind kind)
+    {
+        var bytes = await service.GenerateEmergencyReportPdfAsync(id, kind);
+        var slug = kind switch
+        {
+            PoisoningEmergencyReportKind.Initial => "bao-cao-khan-ban-dau",
+            PoisoningEmergencyReportKind.Update => "bao-cao-cap-nhat",
+            _ => "bao-cao-ket-thuc",
+        };
+        return File(bytes, "application/pdf", $"{slug}-{id:N}.pdf");
+    }
 }

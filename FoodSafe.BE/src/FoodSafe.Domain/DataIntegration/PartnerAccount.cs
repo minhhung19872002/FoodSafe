@@ -32,6 +32,12 @@ public class PartnerAccount : FullAuditedAggregateRoot<Guid>
     /// </summary>
     public string AllowedDataTypes { get; private set; } = "";
 
+    /// <summary>
+    /// Optional comma-separated source-IP allowlist (SEC-002). Null/empty means
+    /// any source IP is accepted — API-key authentication still applies.
+    /// </summary>
+    public string? AllowedIps { get; private set; }
+
     private PartnerAccount() { }
 
     public static PartnerAccount Create(
@@ -41,7 +47,8 @@ public class PartnerAccount : FullAuditedAggregateRoot<Guid>
         string name,
         string externalSystem,
         IEnumerable<SharedDataType> allowedDataTypes,
-        string? description = null)
+        string? description = null,
+        string? allowedIps = null)
     {
         Check.NotNullOrWhiteSpace(code, nameof(code), MaxCodeLength);
         Check.NotNullOrWhiteSpace(name, nameof(name), MaxNameLength);
@@ -59,6 +66,7 @@ public class PartnerAccount : FullAuditedAggregateRoot<Guid>
             Status = PartnerAccountStatus.Active,
         };
         partner.SetAllowedDataTypes(allowedDataTypes);
+        partner.SetAllowedIps(allowedIps);
         return partner;
     }
 
@@ -66,7 +74,8 @@ public class PartnerAccount : FullAuditedAggregateRoot<Guid>
         string name,
         string externalSystem,
         IEnumerable<SharedDataType> allowedDataTypes,
-        string? description)
+        string? description,
+        string? allowedIps = null)
     {
         Check.NotNullOrWhiteSpace(name, nameof(name), MaxNameLength);
         Check.NotNullOrWhiteSpace(
@@ -76,6 +85,26 @@ public class PartnerAccount : FullAuditedAggregateRoot<Guid>
         ExternalSystem = externalSystem.Trim();
         Description = description;
         SetAllowedDataTypes(allowedDataTypes);
+        SetAllowedIps(allowedIps);
+    }
+
+    /// <summary>True when the caller's source IP passes the allowlist.</summary>
+    public bool IsIpAllowed(string? clientIp)
+    {
+        if (string.IsNullOrWhiteSpace(AllowedIps)) return true;
+        if (string.IsNullOrWhiteSpace(clientIp)) return false;
+        return AllowedIps
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Contains(clientIp.Trim(), StringComparer.OrdinalIgnoreCase);
+    }
+
+    private void SetAllowedIps(string? allowedIps)
+    {
+        var normalized = allowedIps?.Trim();
+        if (normalized is { Length: > 1000 })
+            throw new ArgumentException(
+                "AllowedIps must be 1000 characters or fewer.", nameof(allowedIps));
+        AllowedIps = string.IsNullOrWhiteSpace(normalized) ? null : normalized;
     }
 
     public void Suspend() => Status = PartnerAccountStatus.Suspended;

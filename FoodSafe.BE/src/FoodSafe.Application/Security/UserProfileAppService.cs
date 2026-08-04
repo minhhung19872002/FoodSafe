@@ -78,11 +78,17 @@ public class UserProfileAppService :
         var userId = CurrentUser.GetId();
         var user = await _userManager.GetByIdAsync(userId);
         user.Name = input.FullName.Trim();
-        (await _userManager.SetPhoneNumberAsync(
-            user,
-            string.IsNullOrWhiteSpace(input.PhoneNumber)
-                ? null
-                : input.PhoneNumber.Trim())).CheckErrors();
+        var newPhoneNumber = string.IsNullOrWhiteSpace(input.PhoneNumber)
+            ? null
+            : input.PhoneNumber.Trim();
+        if (!string.Equals(user.PhoneNumber, newPhoneNumber, StringComparison.Ordinal))
+        {
+            // Not UserManager.SetPhoneNumberAsync: that rotates the security
+            // stamp, and with SecurityStampValidatorOptions.ValidationInterval
+            // = Zero the very next request would 401 and kick the user to the
+            // login page right after saving their own profile.
+            user.SetPhoneNumber(newPhoneNumber, false);
+        }
         (await _userManager.UpdateAsync(user)).CheckErrors();
 
         var profile = await _profiles.FirstOrDefaultAsync(
