@@ -17,6 +17,49 @@ Record every verification invalidation and retest result here.
 
 ## Entries
 
+### 2026-08-04 (đợt 4) — Rà soát lại yêu cầu lần 2: 3 chức năng cổng công khai chưa từng được làm
+
+- **Cause**: Rà lại toàn bộ `docs/01-functional-requirements.md` (57 STT) đối
+  chiếu code, không tin trạng thái ghi trong tài liệu. Toàn bộ Batch 1–5 ngày
+  04/08 xác minh lại là **có thật trên code** (17/17 mục). Nhưng phát hiện thêm
+  3 yêu cầu chưa từng có implementation — các đợt rà trước chỉ soi backlog nội
+  bộ nên không thấy.
+- **Commit**: `3959b0a`
+- **Affected features**: F-024..F-030 (cổng công khai), F-006 (sản phẩm),
+  F-017 (kết quả kiểm nghiệm)
+- **Retest level**: 2 (trong phạm vi cổng công khai) + hồi quy các suite dùng
+  chung DTO công khai
+- **Result**: PASSED — backend **732/732**; e2e mới **4/4**; hồi quy cổng công
+  khai + kiểm nghiệm + kiểm duyệt phản ánh **36/36**; Vitest **147/147**;
+  `tsc --noEmit` sạch; oxlint **11 cảnh báo trước và sau** (không thêm mới).
+- **Details**:
+  1. **STT 44 — tải phiếu kiểm nghiệm ở cổng công khai.** `TestingResult` đã có
+     sẵn `IsPublic` + `StoragePath` và có service tải cho người đăng nhập,
+     nhưng không có đường nào cho khách ẩn danh. Thêm
+     `GET /api/v1/public/testing-results/{id}/certificate`. Endpoint **kiểm tra
+     lại trạng thái công khai** thay vì tin vào id: link lưu lại sau khi cán bộ
+     gỡ công khai sẽ trả 404 — có test khẳng định đúng hành vi này.
+  2. **STT 42 — tra cứu sản phẩm thiếu thành phần / hạn dùng / xuất xứ.** Entity
+     `Product` có đủ dữ liệu, DTO công khai không chiếu ra trường nào. Bổ sung
+     kèm `businessId` để có "liên kết đến cơ sở sở hữu" như yêu cầu. Hiển thị ở
+     hàng mở rộng, không thêm cột — thêm 8 cột sẽ bắt cuộn ngang trên điện thoại.
+  3. **STT 49 — người dân không đính kèm được ảnh chứng minh.** DTO không có
+     trường tệp, form không có ô tải lên. Ảnh gửi kèm dạng base64, đi qua đúng
+     `IDocumentAttachmentStore` nên chịu cùng kiểm tra định dạng và quét mã độc
+     như tệp của cán bộ. Tệp bị từ chối thì **ghi log và bỏ qua, không làm hỏng
+     phản ánh** — người dân ẩn danh không có cách gửi lại.
+- **Chưa làm, cần quyết định** (không phải thiếu sót kỹ thuật):
+  - **Video chứng minh (STT 49)**: mới làm phần ảnh. Cho phép video cần nới
+    whitelist dùng chung, nâng giới hạn 20 MB và tính lại dung lượng máy chủ.
+  - **STT 45 — hiển thị vi phạm ở tra cứu công khai**: yêu cầu ghi "nếu được
+    phép công khai" nhưng hệ thống chưa có cờ kiểm soát mức công bố cho từng vi
+    phạm. Hiện chỉ hiện cờ "có/không vi phạm". Công bố chi tiết vi phạm của cơ
+    sở thật là quyết định nghiệp vụ, không tự làm.
+- **Ghi nhận**: 3 lần đầu grep báo "thiếu" là do sai đường dẫn tìm kiếm
+  (`alerts-news` chứ không phải `alerts`, clustering tự viết `clusterRecordsByZoom`
+  chứ không dùng thư viện, `CitizenAlertReport` nằm ở tầng Application). Đã kiểm
+  chứng lại từng mục trước khi kết luận.
+
 ### 2026-08-04 (đợt 3) — Chuyển hạ tầng sang VPS mới, lộ lỗi seed khi nâng cấp DB cũ
 
 - **Cause**: Billing của project GCP `foodsafe-prod-7a3052` bị tắt nên pipeline

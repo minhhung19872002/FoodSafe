@@ -152,6 +152,39 @@ thiếu token) — đã kiểm chứng bằng `auth-verification.spec`.
 với Chi cục), GAP-INT-4 + FR-LIC-01 + kết nối bộ/sở (blocked bên ngoài), GAP-N6
 (chart PDF server-side — đã có print-to-PDF).
 
+## 3c. Rà soát lần 2 (04/08/2026, sau khi chuyển máy chủ)
+
+Rà lại từ `docs/01-functional-requirements.md` (57 STT) thay vì từ backlog nội
+bộ. Kết quả:
+
+- **Batch 1–5 xác minh lại trên code: đúng 17/17 mục.** Không mục nào là báo cáo
+  khống.
+- **57/57 nhóm chức năng đều có route và service.**
+- **Phát hiện thêm 3 yêu cầu chưa từng làm** — các đợt rà trước soi backlog nên
+  không thấy, vì backlog không có dòng nào cho chúng:
+
+| ID | Gap | Trạng thái |
+|---|---|---|
+| GAP-PUB-2 | STT 44 — tải phiếu kiểm nghiệm ở cổng công khai | ✅ DONE `3959b0a` |
+| GAP-PUB-3 | STT 42 — thành phần / hạn dùng / xuất xứ + liên kết cơ sở | ✅ DONE `3959b0a` |
+| GAP-PUB-4 | STT 49 — ảnh chứng minh khi người dân gửi phản ánh | ✅ DONE `3959b0a` (ảnh; video chờ quyết định) |
+
+**Cần quyết định nghiệp vụ, không tự làm:**
+
+| ID | Vấn đề | Vì sao dừng |
+|---|---|---|
+| GAP-PUB-5 | STT 49 — video chứng minh | Nới whitelist tệp dùng chung + nâng trần 20 MB + tính lại dung lượng máy chủ (máy hiện tại 1 vCPU / 2 GB) |
+| GAP-PUB-6 | STT 45 — hiện chi tiết vi phạm ở tra cứu công khai | Yêu cầu ghi "nếu được phép công khai" nhưng chưa có cờ kiểm soát mức công bố. Công bố vi phạm của cơ sở thật là quyết định của Chi cục |
+| SEC-CSRF-1 | Endpoint đăng nhập không yêu cầu CSRF token | CLAUDE.md §5 yêu cầu token cho mọi POST. Sửa được nhưng đụng luồng đăng nhập đang chạy production |
+
+**Xác nhận không phải gap** (đã kiểm chứng, tránh rà lại lần sau):
+
+- STT 40 "Export biểu đồ ra PNG/PDF" — PNG có sẵn từng biểu đồ, PDF qua nút in.
+- STT 45 "xem vi phạm" — hiện có cờ có/không vi phạm; xem GAP-PUB-6.
+- Phiếu điều tra cá thể + kiểm thực 3 bước (GAP-POIS-3/4 cũ) — **không nằm trong
+  `01-functional-requirements.md`**, đến từ rà soát pháp lý. STT 32 chỉ yêu cầu
+  đoàn điều tra / tác nhân / kết luận / phiếu kết thúc — tất cả đã có.
+
 ## 4. Việc dọn docs (kèm theo, XS)
 
 - `docs/testing/80-feature-gap-remediation-tracker.md`: GAP-M11 bỏ ghi chú "demo data; TODO real API"; GAP-N5 → DONE; các dòng DONE_CODE đã verify chuyển VERIFIED theo registry.
